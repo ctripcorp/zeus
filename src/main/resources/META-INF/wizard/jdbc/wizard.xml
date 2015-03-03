@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wizard package="com.ctrip.zeus">
+   <jdbc package="com.ctrip.zeus.dal" name="zeus">
+      <datasource>
+         <driver>com.mysql.jdbc.Driver</driver>
+         <url>jdbc:mysql://localhost:3306/zeus</url>
+         <user>root</user>
+         <password>~{e4d4da51d8c450d0d1c03948b6670}</password>
+         <properties>useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</properties>
+      </datasource>
+      <group name="core" package="com.ctrip.zeus.dal.core">
+         <table name="demo"/>
+      </group>
+   </jdbc>
+</wizard>

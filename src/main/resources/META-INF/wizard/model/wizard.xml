@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wizard package="com.ctrip.zeus">
+   <model package="com.ctrip.zeus.model" name="model">
+      <sample-model>src\test\resources\com\ctrip\zeus\model\example.xml</sample-model>
+   </model>
+</wizard>
