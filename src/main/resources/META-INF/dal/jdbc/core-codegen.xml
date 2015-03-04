@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities>
   <entity name="demo" table="demo" alias="d">
-    <member name="id" field="id" value-type="int" length="10" />
+    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
     <member name="name" field="name" value-type="String" length="50" />
-    <primary-key />
+    <var name="key-id" value-type="int" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -12,19 +13,25 @@
     </updatesets>
     <query-defs>
       <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
         <statement><![CDATA[SELECT <FIELDS/>
-        FROM <TABLE/>]]></statement>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
       </query>
       <query name="insert" type="INSERT">
         <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
         VALUES(<VALUES/>)]]></statement>
       </query>
       <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
         <statement><![CDATA[UPDATE <TABLE/>
-        SET <FIELDS/>]]></statement>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
       </query>
       <query name="delete-by-PK" type="DELETE">
-        <statement><![CDATA[DELETE FROM <TABLE/>]]></statement>
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
       </query>
     </query-defs>
   </entity>

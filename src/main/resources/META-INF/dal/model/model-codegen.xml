@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model>
   <entity name="model" root="true">
-    <element name="name" value-type="String" />
+    <entity-ref name="slbServer" />
+    <entity-ref name="domain" />
+    <entity-ref name="slbCluster" />
+  </entity>
+  <entity name="slbServer">
+    <attribute name="ip" value-type="String" />
+  </entity>
+  <entity name="domain">
+    <attribute name="name" value-type="String" />
+    <attribute name="port" value-type="int" />
+    <attribute name="isSSL" value-type="String" />
+  </entity>
+  <entity name="slbCluster">
+    <attribute name="name" value-type="String" />
+    <entity-ref name="slbServer" type="list" names="slbServers" xml-indent="true" />
+    <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
   </entity>
 </model>
 

@@ -1,0 +1,14 @@
+<model>
+    <slb-server ip="192.168.1.1"/>
+    <domain name="www.ctrip.com" port="80" isSSL="true|false"/>
+    <slb-cluster name="default">
+        <slbServers>
+            <slbServer ip="192.168.1.1"/>
+            <slbServer ip="192.168.1.1"/>
+        </slbServers>
+        <domains>
+            <domain name="www.ctrip.com" port="80" isSSL="false"/>
+            <domain name="hotel.ctrip.com" port="443" isSSL="true"/>
+        </domains>
+    </slb-cluster>
+</model>
