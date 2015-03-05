@@ -4,8 +4,8 @@
 			<role>org.unidal.dal.jdbc.datasource.JdbcDataSourceDescriptorManager</role>
 			<implementation>org.unidal.dal.jdbc.datasource.JdbcDataSourceDescriptorManager</implementation>
 			<configuration>
-				<datasourceFile>datasources.xml</datasourceFile>
-				<baseDirRef>ZEUS_HOME</baseDirRef>
+				<datasourceFile>conf/datasources.xml</datasourceFile>
+				<baseDirRef>APP_HOME</baseDirRef>
 			</configuration>
 		</component>
 		<component>

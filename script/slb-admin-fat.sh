@@ -31,6 +31,7 @@ JAVA_OPS="
 -Darchaius.configurationSource.additionalUrls=http://bridge.soa.uat.qa.nt.ctripcorp.com/config/api/${APP_NAME}/${ENVIRONMENT_NAME}
 -Dserver.www.base-dir=$APP_HOME/www
 -Dserver.temp-dir=$APP_HOME/temp
+-DAPP_HOME=$APP_HOME
 -Xms5g
 -Xmx5g
 -Xmn2g

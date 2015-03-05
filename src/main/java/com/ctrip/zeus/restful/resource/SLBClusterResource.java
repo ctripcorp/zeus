@@ -21,8 +21,9 @@ public class SLBClusterResource {
     private SlbClusterRepository slbClusterRepository;
 
     @GET
-    @Produces({MediaType.APPLICATION_JSON,MediaType.APPLICATION_XML, "*/*"})
-    public Response list(){
-      return Response.ok("hello").build();
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    public Response list() {
+        slbClusterRepository.list();
+        return Response.ok("hello").build();
     }
 }

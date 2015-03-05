@@ -16,5 +16,5 @@
     <context:component-scan base-package="com.ctrip.zeus"/>
     <aop:aspectj-autoproxy/>
 
-    <bean id="demoDao" class="com.ctrip.zeus.dal.core.DemoDao"/>
+    <bean id="demoDao" class="com.ctrip.zeus.dal.core.DemoDao" init-method="initialize"/>
 </beans>
