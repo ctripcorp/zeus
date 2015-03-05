@@ -5,8 +5,10 @@ import com.ctrip.zeus.dal.core.DemoDao;
 import com.ctrip.zeus.dal.core.DemoEntity;
 import com.ctrip.zeus.model.entity.SlbCluster;
 import com.ctrip.zeus.service.SlbClusterRepository;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.lookup.ContainerLoader;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -22,12 +24,8 @@ public class SlbClusterRepositoryImpl implements SlbClusterRepository {
 
     @Override
     public List<SlbCluster> list() {
-
         try {
             Demo demo = demoDao.findByPK(1, DemoEntity.READSET_FULL);
-
-            System.out.println(demo.getName());
-
         } catch (DalException e) {
             e.printStackTrace();
         }
