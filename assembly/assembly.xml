@@ -3,7 +3,7 @@
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
     <id>slb-admin</id>
     <formats>
-        <format>zip</format>
+        <format>tar</format>
     </formats>
     <fileSets>
         <fileSet>
@@ -13,12 +13,12 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}</directory>
+            <directory>${project.basedir}/script</directory>
             <outputDirectory>/bin</outputDirectory>
             <fileMode>0755</fileMode>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}</directory>
+            <directory>${project.basedir}/conf</directory>
             <outputDirectory>/conf</outputDirectory>
             <fileMode>0755</fileMode>
         </fileSet>
