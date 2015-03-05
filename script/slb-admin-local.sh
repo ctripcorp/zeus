@@ -3,7 +3,7 @@
 APP_NAME="SlbAdmin"
 SHUTDOWN_WAIT=10
 MAIN_CLASS="com.ctrip.zeus.SlbAdminMain"
-ENVIRONMENT_NAME="fat"
+ENVIRONMENT_NAME="local"
 
 # Attempt to set APP_HOME
 # Resolve links: $0 may be a link
@@ -31,13 +31,13 @@ JAVA_OPS="
 -Darchaius.configurationSource.additionalUrls=http://bridge.soa.uat.qa.nt.ctripcorp.com/config/api/${APP_NAME}/${ENVIRONMENT_NAME}
 -Dserver.www.base-dir=$APP_HOME/www
 -Dserver.temp-dir=$APP_HOME/temp
--Xms5g
--Xmx5g
--Xmn2g
+-Xms256m
+-Xmx256m
+-Xmn64m
 -Xss256k
--XX:PermSize=128m
--XX:MaxPermSize=128m
--XX:MaxDirectMemorySize=1024m
+-XX:PermSize=64m
+-XX:MaxPermSize=64m
+-XX:MaxDirectMemorySize=128m
 
 -XX:SurvivorRatio=8
 -XX:-DisableExplicitGC

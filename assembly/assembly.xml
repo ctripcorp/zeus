@@ -9,7 +9,7 @@
         <fileSet>
             <outputDirectory>/</outputDirectory>
             <includes>
-                <include>README</include>
+                <include>README.md</include>
             </includes>
         </fileSet>
         <fileSet>
@@ -26,6 +26,12 @@
             <directory>${project.basedir}/src/main/www</directory>
             <outputDirectory>/www</outputDirectory>
             <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>/logs</outputDirectory>
+            <includes>
+                <include>README.md</include>
+            </includes>
         </fileSet>
     </fileSets>
     <dependencySets>
