@@ -18,7 +18,11 @@
 
     <bean id="daoFactory" class="com.ctrip.zeus.support.DaoFactory"/>
 
-    <bean id="demoDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.DemoDao"/>
+    <bean id="applicationDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ApplicationDao"/>
+    </bean>
+
+    <bean id="AppHealthCheckDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppHealthCheckDao"/>
     </bean>
 </beans>

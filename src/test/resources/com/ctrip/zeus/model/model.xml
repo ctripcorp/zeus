@@ -1,14 +1,49 @@
 <model>
-    <slb-server ip="192.168.1.1"/>
-    <domain name="www.ctrip.com" port="80" isSSL="true|false"/>
     <slb-cluster name="default">
+        <nginx-bin>/usr/local/nginx/bin</nginx-bin>
+        <nginx-conf>/usr/local/nginx/conf</nginx-conf>
+        <nginx-worker-processes>1</nginx-worker-processes>
+        <vips>
+            <vip ip="192.168.1.1"/>
+            <vip ip="192.168.1.2"/>
+        </vips>
         <slb-servers>
-            <slb-server ip="192.168.1.1"/>
-            <slb-server ip="192.168.1.1"/>
+            <slb-server ip="192.168.1.1" host-name="slb001" enable="true"/>
+            <slb-server ip="192.168.1.2" host-name="slb002" enable="true"/>
         </slb-servers>
-        <domains>
-            <domain name="www.ctrip.com" port="80" isSSL="false"/>
-            <domain name="hotel.ctrip.com" port="443" isSSL="true"/>
-        </domains>
+        <virtual-servers>
+            <virtual-server name="vs001" is-ssl="true|false">
+                <slb-cluster/>
+                <domains>
+                    <domain name="www.ctrip.com" port="80"/>
+                    <domain name="hotel.ctrip.com" port="80"/>
+                </domains>
+            </virtual-server>
+            <virtual-server name="vs001" is-ssl="true|false">
+                <slb-cluster/>
+                <domains>
+                    <domain name="www.ctrip.com" port="80"/>
+                    <domain name="hotel.ctrip.com" port="80"/>
+                </domains>
+            </virtual-server>
+        </virtual-servers>
     </slb-cluster>
+
+    <application name="gateway" app-id="921822">
+        <virtual-server/>
+        <health-check interval="10" fails="2" passes="2">
+            <uri>/health-check</uri>
+        </health-check>
+        <load-balancing-method type="round-robin|least-conn|ip-hash|hash">
+            <value>uri</value>
+        </load-balancing-method>
+        <app-servers>
+            <app-server port="80" weight="5" max-fails="5" fail-timeout="30" healthy="true|false" enable="true|false">
+                <server ip="192.168.1.10" host-name="vms002" up="true|false"/>
+            </app-server>
+            <app-server port="80" weight="5" max-fails="5" fail-timeout="30" healthy="true|false" enable="true|false">
+                <server ip="192.168.1.11" host-name="vms002" up="true|false"/>
+            </app-server>
+        </app-servers>
+    </application>
 </model>

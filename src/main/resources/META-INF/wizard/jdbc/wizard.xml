@@ -9,7 +9,16 @@
          <properties>useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</properties>
       </datasource>
       <group name="core" package="com.ctrip.zeus.dal.core">
-         <table name="demo"/>
+         <table name="app_health_check"/>
+         <table name="app_server"/>
+         <table name="app_load_balancing_method"/>
+         <table name="application"/>
+         <table name="server"/>
+         <table name="slb_cluster"/>
+         <table name="slb_domain"/>
+         <table name="slb_server"/>
+         <table name="slb_vip"/>
+         <table name="slb_virtual_server"/>
       </group>
    </jdbc>
 </wizard>
