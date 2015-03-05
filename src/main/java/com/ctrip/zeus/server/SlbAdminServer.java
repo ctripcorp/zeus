@@ -3,6 +3,7 @@ package com.ctrip.zeus.server;
 import com.ctrip.zeus.restful.resource.SLBResourcePackage;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
+import com.netflix.config.DynamicStringProperty;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -33,6 +34,10 @@ public class SlbAdminServer extends AbstractServer {
 
     @Override
     protected void init() throws Exception {
+        //GetConfig
+        DynamicIntProperty serverPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
+        DynamicStringProperty wwwBaseDir = DynamicPropertyFactory.getInstance().getStringProperty("server.www.base-dir", ".");
+
         //Config Jersey
         ResourceConfig config = new ResourceConfig();
         config.packages(SLBResourcePackage.class.getPackage().getName());
@@ -52,7 +57,9 @@ public class SlbAdminServer extends AbstractServer {
         ServletContextHandler handler = new ServletContextHandler();
 
         handler.setContextPath("/");
-        handler.setInitParameter("contextConfigLocation","classpath*:spring-context.xml");
+        handler.setInitParameter("contextConfigLocation", "classpath*:spring-context.xml");
+        handler.setResourceBase(wwwBaseDir.get());
+        handler.setWelcomeFiles(new String[]{"index.htm", "index.html", "index.jsp"});
 
         handler.setSessionHandler(new SessionHandler());
         handler.addEventListener(sprintContextListener);
@@ -63,8 +70,8 @@ public class SlbAdminServer extends AbstractServer {
         handler.addServlet(staticServletHolder, "/*");
 
         //Create Jetty Server
-        DynamicIntProperty serverPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
         server = new Server(serverPort.get());
+        server.setHandler(handler);
     }
 
     @Override

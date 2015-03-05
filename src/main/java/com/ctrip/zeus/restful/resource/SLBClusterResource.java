@@ -1,6 +1,5 @@
 package com.ctrip.zeus.restful.resource;
 
-import com.ctrip.zeus.model.transform.DefaultXmlBuilder;
 import com.ctrip.zeus.service.SlbClusterRepository;
 import org.springframework.stereotype.Component;
 

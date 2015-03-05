@@ -6,6 +6,7 @@ import com.ctrip.zeus.util.ShutdownHookManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -19,6 +20,13 @@ public class SlbAdminMain {
 
     private static String APPLICATION_NAME = "slb-admin";
 
+    private static void setSystemProperties() {
+        //Archaius loading configuration depends on this property.
+        setPropertyDefaultValue("archaius.deployment.applicationId","slb-admin");
+        setPropertyDefaultValue("archaius.deployment.environment","local");
+        setPropertyDefaultValue("server.www.base-dir",new File("").getAbsolutePath()+"/src/main/www");
+    }
+
     private static Server startServer() throws Exception {
         SlbAdminServer slbAdminServer = new SlbAdminServer();
         slbAdminServer.start();
@@ -26,18 +34,14 @@ public class SlbAdminMain {
     }
 
     public static void main(String[] args) {
-
-        //Archaius loading configuration depends on this property.
-        System.setProperty("archaius.deployment.applicationId", APPLICATION_NAME);
-
-        String environment = System.getProperty("archaius.deployment.environment");
-        if(environment==null || environment.equals("")){
-            System.setProperty("archaius.deployment.environment", "local");
-        }
+        //Set System Properties
+        setSystemProperties();
 
         printStartupAndShutdownMsg(args);
         Server server = null;
         try {
+
+            //Start Server
             server = startServer();
 
             final Server finalServer = server;
@@ -50,8 +54,15 @@ public class SlbAdminMain {
 
         } catch (Exception e) {
             if(server!=null)server.close();
-            LOGGER.error("Can not to start the SlbAdminServer then is going to shutdown", e);
+            LOGGER.error("Can not to start the Server then is going to shutdown", e);
             e.printStackTrace();
+        }
+    }
+
+    private static void setPropertyDefaultValue(String propertyName, String defaultValue) {
+        String val = System.getProperty(propertyName);
+        if(val==null || val.trim().isEmpty()){
+            System.setProperty(propertyName, defaultValue);
         }
     }
 
