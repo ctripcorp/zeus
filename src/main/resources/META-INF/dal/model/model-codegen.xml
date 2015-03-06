@@ -23,7 +23,7 @@
   </entity>
   <entity name="virtual-server">
     <attribute name="name" value-type="String" />
-    <attribute name="is-ssl" value-type="String" />
+    <attribute name="ssl" value-type="boolean" />
     <entity-ref name="slb-cluster" />
     <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
   </entity>
@@ -33,13 +33,13 @@
   </entity>
   <entity name="application">
     <attribute name="name" value-type="String" />
-    <attribute name="app-id" value-type="int" />
-    <entity-ref name="app-virtual-server" type="list" names="app-virtual-servers" xml-indent="true" />
+    <attribute name="app-id" value-type="String" />
+    <entity-ref name="app-slb" type="list" names="app-slbs" xml-indent="true" />
     <entity-ref name="health-check" />
     <entity-ref name="load-balancing-method" />
     <entity-ref name="app-server" type="list" names="app-servers" xml-indent="true" />
   </entity>
-  <entity name="app-virtual-server">
+  <entity name="app-slb">
     <element name="path" value-type="String" />
     <entity-ref name="virtual-server" />
   </entity>

@@ -10,4 +10,6 @@ import java.util.List;
  */
 public interface SlbClusterRepository extends Repository {
     List<SlbCluster> list();
+
+    void add(SlbCluster sc);
 }

@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS `app_health_check` (
   `passes` int(11) NOT NULL DEFAULT '0',
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `application_id` (`application_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
@@ -48,7 +49,8 @@ CREATE TABLE IF NOT EXISTS `app_load_balancing_method` (
   `value` varchar(200) NOT NULL DEFAULT '0',
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `application_id` (`application_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
@@ -67,7 +69,23 @@ CREATE TABLE IF NOT EXISTS `app_server` (
   `enable` bit(1) NOT NULL DEFAULT b'0',
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `application_id_server_id` (`application_id`,`server_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table zeus.app_slb
+CREATE TABLE IF NOT EXISTS `app_slb` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `application_id` bigint(20) NOT NULL DEFAULT '0',
+  `slb_virtual_server_id` bigint(20) NOT NULL DEFAULT '0',
+  `path` varchar(200) NOT NULL DEFAULT '0',
+  `created_time` timestamp NULL DEFAULT NULL,
+  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `application_id_slb_virtual_server_id` (`application_id`,`slb_virtual_server_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.

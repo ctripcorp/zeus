@@ -2,6 +2,7 @@ package com.ctrip.zeus;
 
 import com.ctrip.zeus.server.Server;
 import com.ctrip.zeus.server.SlbAdminServer;
+import com.ctrip.zeus.util.S;
 import com.ctrip.zeus.util.ShutdownHookManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +23,11 @@ public class SlbAdminMain {
 
     private static void setSystemProperties() {
         //Archaius loading configuration depends on this property.
-        setPropertyDefaultValue("archaius.deployment.applicationId","slb-admin");
-        setPropertyDefaultValue("archaius.deployment.environment","local");
-        setPropertyDefaultValue("server.www.base-dir",new File("").getAbsolutePath()+"/src/main/www");
-        setPropertyDefaultValue("server.temp-dir",new File("").getAbsolutePath()+"/target/temp");
-        setPropertyDefaultValue("APP_HOME",new File("").getAbsolutePath());
+        S.setPropertyDefaultValue("archaius.deployment.applicationId", "slb-admin");
+        S.setPropertyDefaultValue("archaius.deployment.environment","local");
+        S.setPropertyDefaultValue("server.www.base-dir",new File("").getAbsolutePath()+"/src/main/www");
+        S.setPropertyDefaultValue("server.temp-dir",new File("").getAbsolutePath()+"/target/temp");
+        S.setPropertyDefaultValue("APP_HOME",new File("").getAbsolutePath());
     }
 
     private static Server startServer() throws Exception {
@@ -58,13 +59,6 @@ public class SlbAdminMain {
             if(server!=null)server.close();
             LOGGER.error("Can not to start the Server then is going to shutdown", e);
             e.printStackTrace();
-        }
-    }
-
-    private static void setPropertyDefaultValue(String propertyName, String defaultValue) {
-        String val = System.getProperty(propertyName);
-        if(val==null || val.trim().isEmpty()){
-            System.setProperty(propertyName, defaultValue);
         }
     }
 
