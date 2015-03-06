@@ -34,10 +34,14 @@
   <entity name="application">
     <attribute name="name" value-type="String" />
     <attribute name="app-id" value-type="int" />
-    <entity-ref name="virtual-server" />
+    <entity-ref name="app-virtual-server" type="list" names="app-virtual-servers" xml-indent="true" />
     <entity-ref name="health-check" />
     <entity-ref name="load-balancing-method" />
     <entity-ref name="app-server" type="list" names="app-servers" xml-indent="true" />
+  </entity>
+  <entity name="app-virtual-server">
+    <element name="path" value-type="String" />
+    <entity-ref name="virtual-server" />
   </entity>
   <entity name="health-check">
     <attribute name="interval" value-type="int" />
@@ -54,14 +58,14 @@
     <attribute name="weight" value-type="int" />
     <attribute name="max-fails" value-type="int" />
     <attribute name="fail-timeout" value-type="int" />
-    <attribute name="healthy" value-type="String" />
-    <attribute name="enable" value-type="String" />
+    <attribute name="healthy" value-type="boolean" />
+    <attribute name="enable" value-type="boolean" />
     <entity-ref name="server" />
   </entity>
   <entity name="server">
     <attribute name="ip" value-type="String" />
     <attribute name="host-name" value-type="String" />
-    <attribute name="up" value-type="String" />
+    <attribute name="up" value-type="boolean" />
   </entity>
 </model>
 

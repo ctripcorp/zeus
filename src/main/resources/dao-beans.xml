@@ -1,0 +1,51 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd">
+
+    <bean id="daoFactory" class="com.ctrip.zeus.support.DaoFactory"/>
+
+    <bean id="appHealthCheckDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppHealthCheckDao"/>
+    </bean>
+
+    <bean id="applicationDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ApplicationDao"/>
+    </bean>
+
+    <bean id="appLoadBalancingMethodDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppLoadBalancingMethodDao"/>
+    </bean>
+
+    <bean id="appServerDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppServerDao"/>
+    </bean>
+
+    <bean id="appSlbDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppSlbDao"/>
+    </bean>
+
+    <bean id="serverDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ServerDao"/>
+    </bean>
+
+    <bean id="slbClusterDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.SlbClusterDao"/>
+    </bean>
+
+    <bean id="slbDomainDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.SlbDomainDao"/>
+    </bean>
+
+    <bean id="slbServerDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.SlbServerDao"/>
+    </bean>
+
+    <bean id="slbVipDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.SlbVipDao"/>
+    </bean>
+
+    <bean id="slbVirtualServerDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.SlbVirtualServerDao"/>
+    </bean>
+
+</beans>
