@@ -37,6 +37,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-name" type="SELECT">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="slb-domain" table="slb_domain" alias="sd" do-class="SlbDomainDo">
@@ -86,6 +96,7 @@
                         slb_id = values(slb_id),
                         ip = values(ip),
                         host_name = values(host_name),
+                        enable = values(enable),
                         <FIELD name="last-modified"/> = NOW()
                     ]]>
                 </statement>

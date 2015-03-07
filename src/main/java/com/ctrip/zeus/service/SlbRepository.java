@@ -11,5 +11,7 @@ import java.util.List;
 public interface SlbRepository extends Repository {
     List<Slb> list();
 
+    Slb get(String slbName);
+
     void add(Slb sc);
 }

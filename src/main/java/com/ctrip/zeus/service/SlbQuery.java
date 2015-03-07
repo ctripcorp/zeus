@@ -11,4 +11,6 @@ import java.util.List;
  */
 public interface SlbQuery {
     List<Slb> getAll() throws DalException;
+
+    Slb get(String slbName) throws DalException;
 }

@@ -33,6 +33,15 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
+    public Slb get(String slbName) {
+        try {
+            return slbQuery.get(slbName);
+        } catch (DalException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void add(Slb s) {
         try {
             slbSync.sync(s);

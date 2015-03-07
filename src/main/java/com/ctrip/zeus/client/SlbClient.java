@@ -2,10 +2,12 @@ package com.ctrip.zeus.client;
 
 
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.transform.DefaultJsonParser;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -31,6 +33,15 @@ public class SlbClient extends AbstractRestClient {
                 ));
         if (res.getStatus() != 200) {
             throw new RuntimeException(String.valueOf(res.getStatus()));
+        }
+    }
+
+    public Slb get(String slbName) {
+        String res = getTarget().path("/api/slb/" + slbName).request(MediaType.APPLICATION_JSON).get(String.class);
+        try {
+            return DefaultJsonParser.parse(Slb.class, res);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

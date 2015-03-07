@@ -64,7 +64,8 @@ public class C {
                 .setName(d.getName())
                 .setNginxBin(d.getNginxBin())
                 .setNginxConf(d.getNginxConf())
-                .setNginxWorkerProcesses(d.getNginxWorkerProcesses());
+                .setNginxWorkerProcesses(d.getNginxWorkerProcesses())
+                .setStatus(d.getStatus());
     }
 
     public static SlbServer toSlbServer(SlbServerDo d) {
@@ -147,7 +148,8 @@ public class C {
     public static SlbServerDo toSlbServerDo(SlbServer e) {
         return new SlbServerDo()
                 .setHostName(e.getHostName())
-                .setIp(e.getIp());
+                .setIp(e.getIp())
+                .setEnable(e.getEnable());
     }
 
     public static SlbVipDo toSlbVipDo(Vip e) {

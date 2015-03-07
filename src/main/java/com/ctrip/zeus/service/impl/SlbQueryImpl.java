@@ -55,6 +55,18 @@ public class SlbQueryImpl implements SlbQuery {
         return list;
     }
 
+    @Override
+    public Slb get(String slbName) throws DalException {
+        SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
+
+        Slb slb = C.toSlb(d);
+        querySlbVips(d.getId(), slb);
+        querySlbServers(d.getId(), slb);
+        queryVirtualServers(d.getId(), slb);
+
+        return slb;
+    }
+
     private void querySlbVips(long slbId, Slb slb) throws DalException {
         List<SlbVipDo> list = slbVipDao.findAllBySlb(slbId, SlbVipEntity.READSET_FULL);
         for (SlbVipDo d : list) {
