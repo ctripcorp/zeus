@@ -95,7 +95,8 @@ public class C {
     }
 
     public static AppServerDo toAppServerDo(AppServer e) {
-         return new AppServerDo()
+        return new AppServerDo()
+                .setIp(e.getServer().getIp())
                 .setEnable(e.getEnable())
                 .setFailTimeout(e.getFailTimeout())
                 .setHealthy(e.getHealthy())
@@ -106,6 +107,8 @@ public class C {
 
     public static AppSlbDo toAppSlbDo(AppSlb e) {
         return new AppSlbDo()
+                .setSlbName(e.getSlbName())
+                .setSlbVirtualServerName(e.getVirtualServer().getName())
                 .setPath(e.getPath());
     }
 

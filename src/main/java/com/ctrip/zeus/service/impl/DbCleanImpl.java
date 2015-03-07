@@ -57,4 +57,14 @@ public class DbCleanImpl implements DbClean {
     public void deleteSlbDomain(long id) throws DalException {
         slbDomainDao.deleteByPK(new SlbDomainDo().setId(id));
     }
+
+    @Override
+    public void deleteAppSlb(long id) throws DalException {
+        appSlbDao.deleteByPK(new AppSlbDo().setId(id));
+    }
+
+    @Override
+    public void deleteAppServer(long id) throws DalException {
+        appServerDao.deleteByPK(new AppServerDo().setId(id));
+    }
 }

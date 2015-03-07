@@ -14,4 +14,8 @@ public interface DbClean {
     void deleteSlbVirtualServer(long id) throws DalException;
 
     void deleteSlbDomain(long id) throws DalException;
+
+    void deleteAppSlb(long id) throws DalException;
+
+    void deleteAppServer(long id) throws DalException;
 }

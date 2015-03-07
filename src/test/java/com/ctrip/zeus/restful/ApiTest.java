@@ -1,5 +1,6 @@
 package com.ctrip.zeus.restful;
 
+import com.ctrip.zeus.client.AppClient;
 import com.ctrip.zeus.client.SlbClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.server.SlbAdminServer;
@@ -41,8 +42,10 @@ public class ApiTest {
         SlbClient c = new SlbClient("http://127.0.0.1:8099");
         c.getAll();
 
+        String slbName = "default";
+
         Slb sc = new Slb();
-        sc.setName("default").setNginxBin("/usr/local/nginx/bin").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1)
+        sc.setName(slbName).setNginxBin("/usr/local/nginx/bin").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1)
                 .addVip(new Vip().setIp("192.168.1.3"))
                 .addVip(new Vip().setIp("192.168.1.6"))
                 .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1").setEnable(true))
@@ -52,12 +55,37 @@ public class ApiTest {
                 .addVirtualServer(new VirtualServer().setName("vs003").setSsl(false)
                         .addDomain(new Domain().setName("m.ctrip.com").setPort(80))
                         .addDomain(new Domain().setName("m2.ctrip.com").setPort(80)))
-        .setStatus("TEST");
+                .setStatus("TEST");
         c.add(sc);
 
-        Slb  sc2 = c.get("default");
+        Slb sc2 = c.get(slbName);
 
         Assert.assertEquals(sc, sc2);
+
+    }
+
+    @Test
+    public void testApp() {
+        AppClient c = new AppClient("http://127.0.0.1:8099");
+        c.getAll();
+
+        String appName = "testApp";
+
+        App app = new App();
+        app.setName(appName)
+                .setAppId("999999")
+                .setHealthCheck(new HealthCheck().setFails(5).setInterval(50).setPasses(2).setUri("/hotel"))
+                .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
+                .addAppServer(new AppServer().setServer(new Server().setIp("192.168.20.1").setHostName("app001").setUp(true))
+                        .setEnable(true).setFailTimeout(30).setHealthy(true).setMaxFails(2).setPort(80).setWeight(2))
+                .addAppServer(new AppServer().setServer(new Server().setIp("192.168.20.2").setHostName("app002").setUp(true))
+                        .setEnable(true).setFailTimeout(30).setHealthy(true).setMaxFails(2).setPort(80).setWeight(2))
+                .addAppSlb(new AppSlb().setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002")).setPath("/hotel"))
+        ;
+        c.add(app);
+
+//        App app2 = c.get(appName);
+//        Assert.assertEquals(app, app2);
 
     }
 }

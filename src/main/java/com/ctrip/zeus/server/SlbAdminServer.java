@@ -1,6 +1,6 @@
 package com.ctrip.zeus.server;
 
-import com.ctrip.zeus.restful.resource.SLBResourcePackage;
+import com.ctrip.zeus.restful.resource.SlbResourcePackage;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
@@ -44,7 +44,7 @@ public class SlbAdminServer extends AbstractServer {
 
         //Config Jersey
         ResourceConfig config = new ResourceConfig();
-        config.packages(SLBResourcePackage.class.getPackage().getName());
+        config.packages(SlbResourcePackage.class.getPackage().getName());
 
         //Create and Config Jetty Request Handler
         ServletContextHandler handler = new ServletContextHandler();

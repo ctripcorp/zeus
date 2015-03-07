@@ -1,7 +1,7 @@
 package com.ctrip.zeus.client;
 
 
-import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 
 import javax.ws.rs.client.Entity;
@@ -14,21 +14,21 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/6/2015.
  */
-public class SlbClient extends AbstractRestClient {
-    public SlbClient(String url) {
+public class AppClient extends AbstractRestClient {
+    public AppClient(String url) {
         super(url);
     }
 
-    public List<Slb> getAll() {
-        String res = getTarget().path("/api/slb").request().get(String.class);
+    public List<App> getAll() {
+        String res = getTarget().path("/api/app").request().get(String.class);
         System.out.println(res);
         return null;
     }
 
-    public void add(Slb slb) {
-        Response res = getTarget().path("/api/slb").request()
+    public void add(App app) {
+        Response res = getTarget().path("/api/app").request()
                 .post(Entity.entity(
-                        String.format(Slb.JSON, slb),
+                        String.format(App.JSON, app),
                         MediaType.APPLICATION_JSON
                 ));
         if (res.getStatus() != 200) {
@@ -36,10 +36,10 @@ public class SlbClient extends AbstractRestClient {
         }
     }
 
-    public Slb get(String slbName) {
-        String res = getTarget().path("/api/slb/" + slbName).request(MediaType.APPLICATION_JSON).get(String.class);
+    public App get(String appName) {
+        String res = getTarget().path("/api/app/" + appName).request(MediaType.APPLICATION_JSON).get(String.class);
         try {
-            return DefaultJsonParser.parse(Slb.class, res);
+            return DefaultJsonParser.parse(App.class, res);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -124,7 +124,7 @@
   <entity name="app-server" table="app_server" alias="as">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="app-id" field="app_id" value-type="long" length="19" nullable="false" />
-    <member name="server-id" field="server_id" value-type="long" length="19" nullable="false" />
+    <member name="ip" field="ip" value-type="String" length="200" nullable="false" />
     <member name="port" field="port" value-type="int" length="10" nullable="false" />
     <member name="weight" field="weight" value-type="int" length="10" nullable="false" />
     <member name="max-fails" field="max_fails" value-type="int" length="10" nullable="false" />
@@ -135,7 +135,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="application_id_server_id" unique="true" members="app_id ASC, server_id ASC" />
+    <index name="app_id_ip" unique="true" members="app_id ASC, ip ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -169,13 +169,14 @@
   <entity name="app-slb" table="app_slb" alias="as2">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="app-id" field="app_id" value-type="long" length="19" nullable="false" />
-    <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" nullable="false" />
+    <member name="slb-name" field="slb_name" value-type="String" length="200" nullable="false" />
+    <member name="slb-virtual-server-name" field="slb_virtual_server_name" value-type="String" length="200" nullable="false" />
     <member name="path" field="path" value-type="String" length="200" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="application_id_slb_virtual_server_id" unique="true" members="app_id ASC, slb_virtual_server_id ASC" />
+    <index name="app_id_slb_name_slb_virtual_server_name" unique="true" members="app_id ASC, slb_name ASC, slb_virtual_server_name ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -215,6 +216,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="ip" unique="true" members="ip ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -296,6 +298,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="slb_virtual_server_id_name_port" unique="true" members="slb_virtual_server_id ASC, name ASC, port ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -415,6 +418,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="slb_id_name" unique="true" members="slb_id ASC, name ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

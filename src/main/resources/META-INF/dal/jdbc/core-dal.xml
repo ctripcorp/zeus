@@ -1,16 +1,151 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="app" table="app" alias="a" do-class="AppDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        name = values(name),
+                        app_id = values(app_id),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
     </entity>
     <entity name="app-health-check" table="app_health_check" alias="ahc" do-class="AppHealthCheckDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        app_id = values(app_id),
+                        uri = values(uri),
+                        `interval` = values(`interval`),
+                        fails = values(fails),
+                        passes = values(passes),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
     </entity>
-    <entity name="app-load-balancing-method" table="app_load_balancing_method" alias="albm" do-class="AppLoadBalancingMethodDo">
+    <entity name="app-load-balancing-method" table="app_load_balancing_method" alias="albm"
+            do-class="AppLoadBalancingMethodDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        app_id = values(app_id),
+                        type = values(type),
+                        value = values(value),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
     </entity>
-    <entity name="app-server" table="app_server" alias="as" do-class="AppServerDo">
+    <entity name="app-server" table="app_server" alias="ass" do-class="AppServerDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        app_id = values(app_id),
+                        ip = values(ip),
+                        port = values(port),
+                        weight = values(weight),
+                        max_fails = values(max_fails),
+                        fail_timeout = values(fail_timeout),
+                        healthy = values(healthy),
+                        enable = values(enable),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-app" type="SELECT" multiple="true">
+                <param name="app-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-id'/> = ${app-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
     </entity>
     <entity name="app-slb" table="app_slb" alias="as2" do-class="AppSlbDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        app_id = values(app_id),
+                        slb_name = values(slb_name),
+                        slb_virtual_server_name = values(slb_virtual_server_name),
+                        path = values(path),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-app" type="SELECT" multiple="true">
+                <param name="app-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-id'/> = ${app-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
     </entity>
     <entity name="server" table="server" alias="s" do-class="ServerDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        ip = values(ip),
+                        host_name = values(host_name),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-app" type="SELECT">
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
     </entity>
     <entity name="slb" table="slb" alias="s2" do-class="SlbDo">
         <query-defs>
