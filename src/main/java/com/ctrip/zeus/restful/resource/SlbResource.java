@@ -1,8 +1,8 @@
 package com.ctrip.zeus.restful.resource;
 
-import com.ctrip.zeus.model.entity.SlbCluster;
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
-import com.ctrip.zeus.service.SlbClusterRepository;
+import com.ctrip.zeus.service.SlbRepository;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -20,14 +20,14 @@ import java.io.IOException;
  */
 @Component
 @Path("/slb")
-public class SLBClusterResource {
+public class SlbResource {
     @Resource
-    private SlbClusterRepository slbClusterRepository;
+    private SlbRepository slbRepository;
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     public Response list() {
-        slbClusterRepository.list();
+        slbRepository.list();
         return Response.ok("hello").build();
     }
 
@@ -35,8 +35,8 @@ public class SLBClusterResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     public Response add(String slb) {
         try {
-            SlbCluster sc = DefaultJsonParser.parse(SlbCluster.class, slb);
-            slbClusterRepository.add(sc);
+            Slb sc = DefaultJsonParser.parse(Slb.class, slb);
+            slbRepository.add(sc);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -1,5 +1,5 @@
 <model>
-    <slb-cluster name="default">
+    <slb name="default">
         <nginx-bin>/usr/local/nginx/bin</nginx-bin>
         <nginx-conf>/usr/local/nginx/conf</nginx-conf>
         <nginx-worker-processes>1</nginx-worker-processes>
@@ -13,29 +13,29 @@
         </slb-servers>
         <virtual-servers>
             <virtual-server name="vs001" ssl="true">
-                <slb-cluster/>
                 <domains>
                     <domain name="www.ctrip.com" port="80"/>
                     <domain name="hotel.ctrip.com" port="80"/>
                 </domains>
             </virtual-server>
             <virtual-server name="vs001" ssl="true">
-                <slb-cluster/>
                 <domains>
                     <domain name="www.ctrip.com" port="80"/>
                     <domain name="hotel.ctrip.com" port="80"/>
                 </domains>
             </virtual-server>
         </virtual-servers>
-    </slb-cluster>
+    </slb>
 
-    <application name="gateway" app-id="app921822">
+    <app name="gateway" app-id="app921822">
         <app-slbs>
             <app-slb>
+                <slb-name>default</slb-name>
                 <path>/hotel</path>
                 <virtual-server/>
             </app-slb>
             <app-slb>
+                <slb-name>default</slb-name>
                 <path>/hotel</path>
                 <virtual-server/>
             </app-slb>
@@ -54,5 +54,5 @@
                 <server ip="192.168.1.11" host-name="vms002" up="true"/>
             </app-server>
         </app-servers>
-    </application>
+    </app>
 </model>

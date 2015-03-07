@@ -4,12 +4,12 @@
 
     <bean id="daoFactory" class="com.ctrip.zeus.support.DaoFactory"/>
 
-    <bean id="appHealthCheckDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppHealthCheckDao"/>
+    <bean id="appDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppDao"/>
     </bean>
 
-    <bean id="applicationDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ApplicationDao"/>
+    <bean id="appHealthCheckDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppHealthCheckDao"/>
     </bean>
 
     <bean id="appLoadBalancingMethodDao" factory-bean="daoFactory" factory-method="getDao">
@@ -28,8 +28,8 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ServerDao"/>
     </bean>
 
-    <bean id="slbClusterDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.SlbClusterDao"/>
+    <bean id="slbDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.SlbDao"/>
     </bean>
 
     <bean id="slbDomainDao" factory-bean="daoFactory" factory-method="getDao">

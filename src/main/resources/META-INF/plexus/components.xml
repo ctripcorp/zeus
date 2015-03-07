@@ -10,6 +10,16 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>app</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<logical-table-name>app</logical-table-name>
+				<physical-table-name>app</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>app-health-check</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -50,16 +60,6 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>application</role-hint>
-			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
-			<configuration>
-				<logical-table-name>application</logical-table-name>
-				<physical-table-name>application</physical-table-name>
-				<data-source-name>zeus</data-source-name>
-			</configuration>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -70,11 +70,11 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>slb-cluster</role-hint>
+			<role-hint>slb</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
-				<logical-table-name>slb-cluster</logical-table-name>
-				<physical-table-name>slb_cluster</physical-table-name>
+				<logical-table-name>slb</logical-table-name>
+				<physical-table-name>slb</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>
@@ -119,6 +119,15 @@
 			</configuration>
 		</component>
 		<component>
+			<role>com.ctrip.zeus.dal.core.AppDao</role>
+			<implementation>com.ctrip.zeus.dal.core.AppDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.zeus.dal.core.AppHealthCheckDao</role>
 			<implementation>com.ctrip.zeus.dal.core.AppHealthCheckDao</implementation>
 			<requirements>
@@ -155,15 +164,6 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.zeus.dal.core.ApplicationDao</role>
-			<implementation>com.ctrip.zeus.dal.core.ApplicationDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
 			<role>com.ctrip.zeus.dal.core.ServerDao</role>
 			<implementation>com.ctrip.zeus.dal.core.ServerDao</implementation>
 			<requirements>
@@ -173,8 +173,8 @@
 			</requirements>
 		</component>
 		<component>
-			<role>com.ctrip.zeus.dal.core.SlbClusterDao</role>
-			<implementation>com.ctrip.zeus.dal.core.SlbClusterDao</implementation>
+			<role>com.ctrip.zeus.dal.core.SlbDao</role>
+			<implementation>com.ctrip.zeus.dal.core.SlbDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

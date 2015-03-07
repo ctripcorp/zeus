@@ -1,8 +1,8 @@
 package com.ctrip.zeus.service.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.SlbCluster;
-import com.ctrip.zeus.service.SlbClusterRepository;
+import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.service.SlbRepository;
 import com.ctrip.zeus.support.DefaultDoBuilder;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
@@ -16,9 +16,9 @@ import java.util.Map;
  * @date: 3/5/2015.
  */
 @Repository("slbClusterRepository")
-public class SlbClusterRepositoryImpl implements SlbClusterRepository {
+public class SlbRepositoryImpl implements SlbRepository {
     @Resource
-    private SlbClusterDao slbClusterDao;
+    private SlbDao slbClusterDao;
     @Resource
     private SlbVipDao slbVipDao;
     @Resource
@@ -30,14 +30,14 @@ public class SlbClusterRepositoryImpl implements SlbClusterRepository {
 
 
     @Override
-    public List<SlbCluster> list() {
+    public List<Slb> list() {
         return null;
     }
 
     @Override
-    public void add(SlbCluster sc) {
+    public void add(Slb sc) {
         Map<Class<?>, List> map = new DefaultDoBuilder().build(sc);
-        SlbClusterDo scd = (SlbClusterDo) map.get(SlbClusterDo.class).get(0);
+        SlbDo scd = (SlbDo) map.get(SlbDo.class).get(0);
         scd.setStatus("A");
         List<SlbVipDo> svdList = map.get(SlbVipDo.class);
         List<SlbServerDo> ssdList = map.get(SlbServerDo.class);
@@ -48,13 +48,13 @@ public class SlbClusterRepositoryImpl implements SlbClusterRepository {
             slbClusterDao.insert(scd);
             if (svdList != null) {
                 for (SlbVipDo d : svdList) {
-                    d.setSlbClusterId(scd.getId());
+                    d.setSlbId(scd.getId());
                     slbVipDao.insert(d);
                 }
             }
             if (ssdList != null) {
                 for (SlbServerDo d : ssdList) {
-                    d.setSlbClusterId(scd.getId());
+                    d.setSlbId(scd.getId());
                     slbServerDao.insert(d);
                 }
             }

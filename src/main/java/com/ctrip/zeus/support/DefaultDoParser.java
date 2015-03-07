@@ -1,6 +1,6 @@
 package com.ctrip.zeus.support;
 
-import com.ctrip.zeus.dal.core.ApplicationDo;
+import com.ctrip.zeus.dal.core.AppDo;
 import com.ctrip.zeus.model.entity.*;
 
 import java.util.List;
@@ -12,9 +12,9 @@ import java.util.Map;
  */
 public class DefaultDoParser implements DoParser{
     @Override
-    public Application parseApplication(Map<Class<?>, List> map) {
-        List<ApplicationDo> list = map.get(ApplicationDo.class);
-        ApplicationDo ad = list.get(0);
+    public App parseApp(Map<Class<?>, List> map) {
+        List<AppDo> list = map.get(AppDo.class);
+        AppDo ad = list.get(0);
         return null;
     }
 
@@ -54,7 +54,7 @@ public class DefaultDoParser implements DoParser{
     }
 
     @Override
-    public SlbCluster parseSlbCluster(Map<Class<?>, List> map) {
+    public Slb parseSlb(Map<Class<?>, List> map) {
         return null;
     }
 

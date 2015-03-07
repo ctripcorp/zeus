@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model>
   <entity name="model" root="true">
-    <entity-ref name="slb-cluster" />
-    <entity-ref name="application" />
+    <entity-ref name="slb" />
+    <entity-ref name="app" />
   </entity>
-  <entity name="slb-cluster">
+  <entity name="slb">
     <attribute name="name" value-type="String" />
     <element name="nginx-bin" value-type="String" />
     <element name="nginx-conf" value-type="String" />
@@ -24,14 +24,13 @@
   <entity name="virtual-server">
     <attribute name="name" value-type="String" />
     <attribute name="ssl" value-type="boolean" />
-    <entity-ref name="slb-cluster" />
     <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
   </entity>
   <entity name="domain">
     <attribute name="name" value-type="String" />
     <attribute name="port" value-type="int" />
   </entity>
-  <entity name="application">
+  <entity name="app">
     <attribute name="name" value-type="String" />
     <attribute name="app-id" value-type="String" />
     <entity-ref name="app-slb" type="list" names="app-slbs" xml-indent="true" />
@@ -40,6 +39,7 @@
     <entity-ref name="app-server" type="list" names="app-servers" xml-indent="true" />
   </entity>
   <entity name="app-slb">
+    <element name="slb-name" value-type="String" />
     <element name="path" value-type="String" />
     <entity-ref name="virtual-server" />
   </entity>

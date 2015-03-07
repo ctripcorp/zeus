@@ -10,8 +10,8 @@ import com.ctrip.zeus.model.entity.*;
 public class EntityDoConverter {
 
 
-    public static Application toApplication(ApplicationDo d) {
-        return new Application()
+    public static App toApp(AppDo d) {
+        return new App()
                 .setAppId(d.getAppId())
                 .setName(d.getName());
     }
@@ -59,8 +59,8 @@ public class EntityDoConverter {
                 .setUp(d.isUp());
     }
 
-    public static SlbCluster toSlbCluster(SlbClusterDo d) {
-        return new SlbCluster()
+    public static Slb toSlb(SlbDo d) {
+        return new Slb()
                 .setName(d.getName())
                 .setNginxBin(d.getNginxBin())
                 .setNginxConf(d.getNginxConf())
@@ -88,8 +88,8 @@ public class EntityDoConverter {
     /*Entity to Do*/
 
 
-    public static ApplicationDo toApplicationDo(Application e) {
-        return new ApplicationDo().setAppId(e.getAppId())
+    public static AppDo toAppDo(App e) {
+        return new AppDo().setAppId(e.getAppId())
                 .setName(e.getName());
     }
 
@@ -135,8 +135,8 @@ public class EntityDoConverter {
                 .setUp(e.getUp());
     }
 
-    public static SlbClusterDo toSlbClusterDo(SlbCluster e) {
-        return new SlbClusterDo()
+    public static SlbDo toSlbDo(Slb e) {
+        return new SlbDo()
                 .setName(e.getName())
                 .setNginxBin(e.getNginxBin())
                 .setNginxConf(e.getNginxConf())

@@ -26,8 +26,8 @@ public class DefaultDoBuilder implements IVisitor {
     }
 
     @Override
-    public void visitApplication(Application application) {
-        getList(ApplicationDo.class).add(EntityDoConverter.toApplicationDo(application));
+    public void visitApp(App application) {
+        getList(AppDo.class).add(EntityDoConverter.toAppDo(application));
 
         if (!application.getAppSlbs().isEmpty()) {
             for (AppSlb appSlb : application.getAppSlbs()) {
@@ -85,12 +85,12 @@ public class DefaultDoBuilder implements IVisitor {
 
     @Override
     public void visitModel(Model model) {
-        if (model.getSlbCluster() != null) {
-            model.getSlbCluster().accept(m_visitor);
+        if (model.getSlb() != null) {
+            model.getSlb().accept(m_visitor);
         }
 
-        if (model.getApplication() != null) {
-            model.getApplication().accept(m_visitor);
+        if (model.getApp() != null) {
+            model.getApp().accept(m_visitor);
         }
     }
 
@@ -100,8 +100,8 @@ public class DefaultDoBuilder implements IVisitor {
     }
 
     @Override
-    public void visitSlbCluster(SlbCluster slbCluster) {
-        getList(SlbClusterDo.class).add(EntityDoConverter.toSlbClusterDo(slbCluster));
+    public void visitSlb(Slb slbCluster) {
+        getList(SlbDo.class).add(EntityDoConverter.toSlbDo(slbCluster));
 
         if (!slbCluster.getVips().isEmpty()) {
             for (Vip vip : slbCluster.getVips()) {
@@ -135,9 +135,6 @@ public class DefaultDoBuilder implements IVisitor {
     @Override
     public void visitVirtualServer(VirtualServer virtualServer) {
         getList(SlbVirtualServerDo.class).add(EntityDoConverter.toSlbVirtualServerDo(virtualServer));
-        if (virtualServer.getSlbCluster() != null) {
-            virtualServer.getSlbCluster().accept(m_visitor);
-        }
 
         if (!virtualServer.getDomains().isEmpty()) {
             for (Domain domain : virtualServer.getDomains()) {

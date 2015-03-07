@@ -1,6 +1,6 @@
 package com.ctrip.zeus.restful;
 
-import com.ctrip.zeus.client.SlbClusterClient;
+import com.ctrip.zeus.client.SlbClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.server.SlbAdminServer;
 import com.ctrip.zeus.util.S;
@@ -36,11 +36,11 @@ public class ApiTest {
     }
 
     @Test
-    public void testSlbCluster() {
-        SlbClusterClient c = new SlbClusterClient("http://127.0.0.1:8099");
+    public void testSlb() {
+        SlbClient c = new SlbClient("http://127.0.0.1:8099");
         c.getAll();
 
-        SlbCluster sc = new SlbCluster();
+        Slb sc = new Slb();
         sc.setName("default").setNginxBin("nginx").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1)
                 .addVip(new Vip().setIp("192.168.1.1"))
                 .addVip(new Vip().setIp("192.168.1.2"))

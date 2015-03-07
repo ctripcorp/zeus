@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public interface DoParser {
 
-    public Application parseApplication(Map<Class<?>, List> map);
+    public App parseApp(Map<Class<?>, List> map);
 
     public AppServer parseAppServer(Map<Class<?>, List> map);
 
@@ -27,7 +27,7 @@ public interface DoParser {
 
     public Server parseServer(Map<Class<?>, List> map);
 
-    public SlbCluster parseSlbCluster(Map<Class<?>, List> map);
+    public Slb parseSlb(Map<Class<?>, List> map);
 
     public SlbServer parseSlbServer(Map<Class<?>, List> map);
 
