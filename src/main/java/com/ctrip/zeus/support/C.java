@@ -7,7 +7,7 @@ import com.ctrip.zeus.model.entity.*;
  * @author:xingchaowang
  * @date: 3/6/2015.
  */
-public class EntityDoConverter {
+public class C {
 
 
     public static App toApp(AppDo d) {
@@ -140,7 +140,8 @@ public class EntityDoConverter {
                 .setName(e.getName())
                 .setNginxBin(e.getNginxBin())
                 .setNginxConf(e.getNginxConf())
-                .setNginxWorkerProcesses(e.getNginxWorkerProcesses());
+                .setNginxWorkerProcesses(e.getNginxWorkerProcesses())
+                .setStatus(e.getStatus());
     }
 
     public static SlbServerDo toSlbServerDo(SlbServer e) {

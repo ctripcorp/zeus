@@ -29,6 +29,7 @@ public class GenerateDaoBeansConfig {
                                 "        <constructor-arg type=\"java.lang.Class\" value=\"%s\"/>\n" +
                                 "    </bean>\n\n",
                         uncapitalize(clazz.getSimpleName()), clazz.getName()));
+                System.out.println(String.format("@Resource\nprivate %s %s;",clazz.getSimpleName(),uncapitalize(clazz.getSimpleName())));
             }
         }
 

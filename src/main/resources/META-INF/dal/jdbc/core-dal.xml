@@ -1,3 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do"/>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="slb" table="slb" alias="s2" do-class="SlbDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        name = values(name),
+                        nginx_bin = values(nginx_bin),
+                        nginx_conf = values(nginx_conf),
+                        nginx_worker_processes = values(nginx_worker_processes),
+                        status = values(status),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>
 

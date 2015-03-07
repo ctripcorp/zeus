@@ -9,6 +9,7 @@
     <element name="nginx-bin" value-type="String" />
     <element name="nginx-conf" value-type="String" />
     <element name="nginx-worker-processes" value-type="int" />
+    <element name="status" value-type="String" />
     <entity-ref name="vip" type="list" names="vips" xml-indent="true" />
     <entity-ref name="slb-server" type="list" names="slb-servers" xml-indent="true" />
     <entity-ref name="virtual-server" type="list" names="virtual-servers" xml-indent="true" />

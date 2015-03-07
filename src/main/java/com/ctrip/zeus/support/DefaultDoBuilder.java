@@ -27,7 +27,7 @@ public class DefaultDoBuilder implements IVisitor {
 
     @Override
     public void visitApp(App application) {
-        getList(AppDo.class).add(EntityDoConverter.toAppDo(application));
+        getList(AppDo.class).add(C.toAppDo(application));
 
         if (!application.getAppSlbs().isEmpty()) {
             for (AppSlb appSlb : application.getAppSlbs()) {
@@ -52,7 +52,7 @@ public class DefaultDoBuilder implements IVisitor {
 
     @Override
     public void visitAppServer(AppServer appServer) {
-        getList(AppServerDo.class).add(EntityDoConverter.toAppServerDo(appServer));
+        getList(AppServerDo.class).add(C.toAppServerDo(appServer));
 
         if (appServer.getServer() != null) {
             appServer.getServer().accept(m_visitor);
@@ -61,7 +61,7 @@ public class DefaultDoBuilder implements IVisitor {
 
     @Override
     public void visitAppSlb(AppSlb appSlb) {
-        getList(AppServerDo.class).add(EntityDoConverter.toAppSlbDo(appSlb));
+        getList(AppServerDo.class).add(C.toAppSlbDo(appSlb));
 
         if (appSlb.getVirtualServer() != null) {
             appSlb.getVirtualServer().accept(m_visitor);
@@ -70,17 +70,17 @@ public class DefaultDoBuilder implements IVisitor {
 
     @Override
     public void visitDomain(Domain domain) {
-        getList(SlbDomainDo.class).add(EntityDoConverter.toSlbDomainDo(domain));
+        getList(SlbDomainDo.class).add(C.toSlbDomainDo(domain));
     }
 
     @Override
     public void visitHealthCheck(HealthCheck healthCheck) {
-        getList(AppHealthCheckDo.class).add(EntityDoConverter.toAppHealthCheckDo(healthCheck));
+        getList(AppHealthCheckDo.class).add(C.toAppHealthCheckDo(healthCheck));
     }
 
     @Override
     public void visitLoadBalancingMethod(LoadBalancingMethod loadBalancingMethod) {
-        getList(AppLoadBalancingMethodDo.class).add(EntityDoConverter.toAppLoadBalancingMethodDo(loadBalancingMethod));
+        getList(AppLoadBalancingMethodDo.class).add(C.toAppLoadBalancingMethodDo(loadBalancingMethod));
     }
 
     @Override
@@ -96,12 +96,12 @@ public class DefaultDoBuilder implements IVisitor {
 
     @Override
     public void visitServer(Server server) {
-        getList(ServerDo.class).add(EntityDoConverter.toServerDo(server));
+        getList(ServerDo.class).add(C.toServerDo(server));
     }
 
     @Override
     public void visitSlb(Slb slbCluster) {
-        getList(SlbDo.class).add(EntityDoConverter.toSlbDo(slbCluster));
+        getList(SlbDo.class).add(C.toSlbDo(slbCluster));
 
         if (!slbCluster.getVips().isEmpty()) {
             for (Vip vip : slbCluster.getVips()) {
@@ -124,17 +124,17 @@ public class DefaultDoBuilder implements IVisitor {
 
     @Override
     public void visitSlbServer(SlbServer slbServer) {
-        getList(SlbServerDo.class).add(EntityDoConverter.toSlbServerDo(slbServer));
+        getList(SlbServerDo.class).add(C.toSlbServerDo(slbServer));
     }
 
     @Override
     public void visitVip(Vip vip) {
-        getList(SlbVipDo.class).add(EntityDoConverter.toSlbVipDo(vip));
+        getList(SlbVipDo.class).add(C.toSlbVipDo(vip));
     }
 
     @Override
     public void visitVirtualServer(VirtualServer virtualServer) {
-        getList(SlbVirtualServerDo.class).add(EntityDoConverter.toSlbVirtualServerDo(virtualServer));
+        getList(SlbVirtualServerDo.class).add(C.toSlbVirtualServerDo(virtualServer));
 
         if (!virtualServer.getDomains().isEmpty()) {
             for (Domain domain : virtualServer.getDomains()) {

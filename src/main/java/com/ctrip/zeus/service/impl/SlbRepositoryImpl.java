@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.service.DbSync;
 import com.ctrip.zeus.service.SlbRepository;
 import com.ctrip.zeus.support.DefaultDoBuilder;
 import org.springframework.stereotype.Repository;
@@ -28,6 +29,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
 
+    @Resource
+    private DbSync dbSync;
 
     @Override
     public List<Slb> list() {
@@ -35,7 +38,15 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public void add(Slb sc) {
+    public void add(Slb s) {
+        try {
+            dbSync.sync(s);
+        } catch (DalException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void add2(Slb sc) {
         Map<Class<?>, List> map = new DefaultDoBuilder().build(sc);
         SlbDo scd = (SlbDo) map.get(SlbDo.class).get(0);
         scd.setStatus("A");

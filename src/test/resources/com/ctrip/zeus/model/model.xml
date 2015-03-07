@@ -25,6 +25,7 @@
                 </domains>
             </virtual-server>
         </virtual-servers>
+        <status>healthy</status>
     </slb>
 
     <app name="gateway" app-id="app921822">
