@@ -41,7 +41,7 @@
                 <virtual-server/>
             </app-slb>
         </app-slbs>
-        <health-check interval="10" fails="2" passes="2">
+        <health-check intervals="10" fails="2" passes="2">
             <uri>/health-check</uri>
         </health-check>
         <load-balancing-method type="round-robin|least-conn|ip-hash|hash">

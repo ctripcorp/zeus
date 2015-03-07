@@ -74,18 +74,19 @@ public class ApiTest {
         App app = new App();
         app.setName(appName)
                 .setAppId("999999")
-                .setHealthCheck(new HealthCheck().setFails(5).setInterval(50).setPasses(2).setUri("/hotel"))
+                .setHealthCheck(new HealthCheck().setFails(5).setIntervals(50).setPasses(2).setUri("/hotel"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
                 .addAppServer(new AppServer().setServer(new Server().setIp("192.168.20.1").setHostName("app001").setUp(true))
                         .setEnable(true).setFailTimeout(30).setHealthy(true).setMaxFails(2).setPort(80).setWeight(2))
                 .addAppServer(new AppServer().setServer(new Server().setIp("192.168.20.2").setHostName("app002").setUp(true))
                         .setEnable(true).setFailTimeout(30).setHealthy(true).setMaxFails(2).setPort(80).setWeight(2))
-                .addAppSlb(new AppSlb().setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002")).setPath("/hotel"))
+                .addAppSlb(new AppSlb().setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002")
+                        .setSsl(false).addDomain(new Domain().setName("hotel.ctrip.com").setPort(80))).setPath("/hotel"))
         ;
         c.add(app);
 
-//        App app2 = c.get(appName);
-//        Assert.assertEquals(app, app2);
+        App app2 = c.get(appName);
+        Assert.assertEquals(app, app2);
 
     }
 }

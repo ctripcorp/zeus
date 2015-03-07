@@ -14,6 +14,24 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-name" type="SELECT">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="app-health-check" table="app_health_check" alias="ahc" do-class="AppHealthCheckDo">
@@ -26,10 +44,20 @@
                     ON DUPLICATE KEY UPDATE
                         app_id = values(app_id),
                         uri = values(uri),
-                        `interval` = values(`interval`),
+                        intervals = values(intervals),
                         fails = values(fails),
                         passes = values(passes),
                         <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-app" type="SELECT">
+                <param name="app-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-id'/> = ${app-id}
                     ]]>
                 </statement>
             </query>
@@ -48,6 +76,16 @@
                         type = values(type),
                         value = values(value),
                         <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-app" type="SELECT">
+                <param name="app-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-id'/> = ${app-id}
                     ]]>
                 </statement>
             </query>
@@ -127,7 +165,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-app" type="SELECT">
+            <query name="find-by-ip" type="SELECT">
                 <param name="ip"/>
                 <statement>
                     <![CDATA[
@@ -296,6 +334,18 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb-and-name" type="SELECT">
+                <param name="slb-id"/>
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        AND <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>

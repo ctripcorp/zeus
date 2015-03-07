@@ -10,7 +10,7 @@ import java.util.List;
  * @date: 3/7/2015.
  */
 public interface SlbQuery {
-    List<Slb> getAll() throws DalException;
-
     Slb get(String slbName) throws DalException;
+
+    List<Slb> getAll() throws DalException;
 }

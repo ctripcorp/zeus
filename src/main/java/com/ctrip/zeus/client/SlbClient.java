@@ -21,7 +21,6 @@ public class SlbClient extends AbstractRestClient {
 
     public List<Slb> getAll() {
         String res = getTarget().path("/api/slb").request().get(String.class);
-        System.out.println(res);
         return null;
     }
 

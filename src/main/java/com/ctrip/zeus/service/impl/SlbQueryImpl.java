@@ -41,6 +41,18 @@ public class SlbQueryImpl implements SlbQuery {
     private SlbVirtualServerDao slbVirtualServerDao;
 
     @Override
+    public Slb get(String slbName) throws DalException {
+        SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
+
+        Slb slb = C.toSlb(d);
+        querySlbVips(d.getId(), slb);
+        querySlbServers(d.getId(), slb);
+        queryVirtualServers(d.getId(), slb);
+
+        return slb;
+    }
+
+    @Override
     public List<Slb> getAll() throws DalException {
         List<Slb> list = new ArrayList<>();
         for (SlbDo d : slbDao.findAll(SlbEntity.READSET_FULL)) {
@@ -53,18 +65,6 @@ public class SlbQueryImpl implements SlbQuery {
 
         }
         return list;
-    }
-
-    @Override
-    public Slb get(String slbName) throws DalException {
-        SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
-
-        Slb slb = C.toSlb(d);
-        querySlbVips(d.getId(), slb);
-        querySlbServers(d.getId(), slb);
-        queryVirtualServers(d.getId(), slb);
-
-        return slb;
     }
 
     private void querySlbVips(long slbId, Slb slb) throws DalException {

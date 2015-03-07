@@ -45,7 +45,7 @@
     <entity-ref name="virtual-server" />
   </entity>
   <entity name="health-check">
-    <attribute name="interval" value-type="int" />
+    <attribute name="intervals" value-type="int" />
     <attribute name="fails" value-type="int" />
     <attribute name="passes" value-type="int" />
     <element name="uri" value-type="String" />

@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.impl;
 
 import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.service.AppQuery;
 import com.ctrip.zeus.service.AppRepository;
 import com.ctrip.zeus.service.AppSync;
 import org.springframework.stereotype.Repository;
@@ -17,15 +18,25 @@ import java.util.List;
 public class AppRepositoryImpl implements AppRepository {
     @Resource
     private AppSync appSync;
+    @Resource
+    private AppQuery appQuery;
 
     @Override
     public List<App> list() {
-        return null;
+        try {
+            return appQuery.getAll();
+        } catch (DalException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public App get(String appName) {
-        return null;
+        try {
+            return appQuery.get(appName);
+        } catch (DalException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

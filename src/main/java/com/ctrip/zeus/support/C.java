@@ -40,7 +40,7 @@ public class C {
     public static HealthCheck toHealthCheck(AppHealthCheckDo d) {
         return new HealthCheck()
                 .setFails(d.getFails())
-                .setInterval(d.getInterval())
+                .setIntervals(d.getIntervals())
                 .setPasses(d.getPasses())
                 .setUri(d.getUri());
     }
@@ -121,7 +121,8 @@ public class C {
     public static AppHealthCheckDo toAppHealthCheckDo(HealthCheck e) {
         return new AppHealthCheckDo()
                 .setUri(e.getUri())
-                .setId(e.getInterval())
+                .setIntervals(e.getIntervals())
+                .setId(e.getIntervals())
                 .setFails(e.getFails())
                 .setPasses(e.getPasses());
     }

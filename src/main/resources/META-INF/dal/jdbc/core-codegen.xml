@@ -43,7 +43,7 @@
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="app-id" field="app_id" value-type="long" length="19" nullable="false" />
     <member name="uri" field="uri" value-type="String" length="200" nullable="false" />
-    <member name="interval" field="interval" value-type="int" length="10" nullable="false" />
+    <member name="intervals" field="intervals" value-type="int" length="10" nullable="false" />
     <member name="fails" field="fails" value-type="int" length="10" nullable="false" />
     <member name="passes" field="passes" value-type="int" length="10" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />

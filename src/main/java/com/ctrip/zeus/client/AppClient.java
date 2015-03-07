@@ -21,7 +21,6 @@ public class AppClient extends AbstractRestClient {
 
     public List<App> getAll() {
         String res = getTarget().path("/api/app").request().get(String.class);
-        System.out.println(res);
         return null;
     }
 

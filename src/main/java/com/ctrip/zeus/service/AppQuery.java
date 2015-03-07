@@ -11,7 +11,7 @@ import java.util.List;
  * @date: 3/7/2015.
  */
 public interface AppQuery {
-    List<App> getAll() throws DalException;
-
     App get(String name) throws DalException;
+
+    List<App> getAll() throws DalException;
 }
