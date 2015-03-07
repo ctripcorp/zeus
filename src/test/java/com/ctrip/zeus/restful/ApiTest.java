@@ -51,8 +51,8 @@ public class ApiTest {
                         .addDomain(new Domain().setName("m2.ctrip.com").setPort(80)))
                 .addVirtualServer(new VirtualServer().setName("vs002").setSsl(false).addDomain(new Domain().setName("hotel.ctrip.com").setPort(80)))
         .setStatus("TEST");
-
         c.add(sc);
+
 
     }
 }

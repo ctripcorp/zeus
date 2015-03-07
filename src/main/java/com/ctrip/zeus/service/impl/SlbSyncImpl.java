@@ -60,16 +60,6 @@ public class SlbSyncImpl implements SlbSync {
         return d;
     }
 
-    @Override
-    public AppDo sync(App app) {
-        return null;
-    }
-
-    @Override
-    public ServerDo sync(Server server) {
-        return null;
-    }
-
     private void syncSlbVips(long slbId, List<Vip> vips) throws DalException {
         List<SlbVipDo> oldList = slbVipDao.findAllBySlb(slbId,SlbVipEntity.READSET_FULL);
         Map<String, SlbVipDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbVipDo, String>() {
