@@ -2,7 +2,7 @@ package com.ctrip.zeus.service.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.service.DbSync;
+import com.ctrip.zeus.service.SlbSync;
 import com.ctrip.zeus.service.SlbRepository;
 import com.ctrip.zeus.support.DefaultDoBuilder;
 import org.springframework.stereotype.Repository;
@@ -30,7 +30,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     private SlbVirtualServerDao slbVirtualServerDao;
 
     @Resource
-    private DbSync dbSync;
+    private SlbSync slbSync;
 
     @Override
     public List<Slb> list() {
@@ -40,7 +40,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Override
     public void add(Slb s) {
         try {
-            dbSync.sync(s);
+            slbSync.sync(s);
         } catch (DalException e) {
             e.printStackTrace();
         }

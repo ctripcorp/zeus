@@ -12,7 +12,7 @@ import org.unidal.dal.jdbc.DalException;
  * @author:xingchaowang
  * @date: 3/7/2015.
  */
-public interface DbSync {
+public interface SlbSync {
 
     SlbDo sync(Slb slb) throws DalException;
 

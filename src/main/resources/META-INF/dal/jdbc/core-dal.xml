@@ -19,5 +19,121 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="slb-vip" table="slb_vip" alias="sv" do-class="SlbVipDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        slb_id = values(slb_id),
+                        ip = values(ip),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="slb-server" table="slb_server" alias="ss" do-class="SlbServerDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        slb_id = values(slb_id),
+                        ip = values(ip),
+                        host_name = values(host_name),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="slb-virtual-server" table="slb_virtual_server" alias="svs" do-class="SlbVirtualServerDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        slb_id = values(slb_id),
+                        name = values(name),
+                        is_ssl = values(is_ssl),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="slb-domain" table="slb_domain" alias="sd" do-class="SlbDomainDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        slb_virtual_server_id = values(slb_virtual_server_id),
+                        name = values(name),
+                        port = values(port),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb-virtual-server" type="SELECT" multiple="true">
+                <param name="slb-virtual-server-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-all-by-slb-virtual-server" type="DELETE">
+                <param name="slb-virtual-server-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
 </entities>
 

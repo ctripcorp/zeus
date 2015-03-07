@@ -42,11 +42,11 @@ public class ApiTest {
 
         Slb sc = new Slb();
         sc.setName("default").setNginxBin("/usr/local/nginx/bin").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1)
-                .addVip(new Vip().setIp("192.168.1.1"))
-                .addVip(new Vip().setIp("192.168.1.2"))
-                .addSlbServer(new SlbServer().setHostName("slb001").setIp("192.168.10.1"))
-                .addSlbServer(new SlbServer().setHostName("slb002").setIp("192.168.10.2"))
-                .addVirtualServer(new VirtualServer().setName("vs001").setSsl(false)
+                .addVip(new Vip().setIp("192.168.1.3"))
+                .addVip(new Vip().setIp("192.168.1.6"))
+                .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1"))
+                .addSlbServer(new SlbServer().setHostName("slb003").setIp("192.168.10.3"))
+                .addVirtualServer(new VirtualServer().setName("vs003").setSsl(false)
                         .addDomain(new Domain().setName("m.ctrip.com").setPort(80))
                         .addDomain(new Domain().setName("m2.ctrip.com").setPort(80)))
                 .addVirtualServer(new VirtualServer().setName("vs002").setSsl(false).addDomain(new Domain().setName("hotel.ctrip.com").setPort(80)))

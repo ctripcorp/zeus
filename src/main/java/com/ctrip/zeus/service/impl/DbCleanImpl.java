@@ -1,23 +1,18 @@
 package com.ctrip.zeus.service.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.App;
-import com.ctrip.zeus.model.entity.Server;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.service.DbSync;
-import com.ctrip.zeus.support.C;
+import com.ctrip.zeus.service.DbClean;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.util.Date;
 
 /**
  * @author:xingchaowang
  * @date: 3/7/2015.
  */
-@Component("dbSync")
-public class DbSyncImpl implements DbSync {
+@Component("dbClean")
+public class DbCleanImpl implements DbClean {
     @Resource
     private AppDao appDao;
     @Resource
@@ -41,21 +36,25 @@ public class DbSyncImpl implements DbSync {
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
 
+
     @Override
-    public SlbDo sync(Slb slb) throws DalException {
-        SlbDo d = C.toSlbDo(slb);
-        d.setCreatedTime(new Date());
-        slbDao.insert(d);
-        return null;
+    public void deleteSlbVip(long id) throws DalException {
+        slbVipDao.deleteByPK(new SlbVipDo().setId(id));
     }
 
     @Override
-    public AppDo sync(App app) {
-        return null;
+    public void deleteSlbServer(long id) throws DalException {
+        slbServerDao.deleteByPK(new SlbServerDo().setId(id));
     }
 
     @Override
-    public ServerDo sync(Server server) {
-        return null;
+    public void deleteSlbVirtualServer(long id) throws DalException {
+        slbDomainDao.deleteAllBySlbVirtualServer(new SlbDomainDo().setSlbVirtualServerId(id));
+        slbVirtualServerDao.deleteByPK(new SlbVirtualServerDo().setId(id));
+    }
+
+    @Override
+    public void deleteSlbDomain(long id) throws DalException {
+        slbDomainDao.deleteByPK(new SlbDomainDo().setId(id));
     }
 }
