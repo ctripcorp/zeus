@@ -14,4 +14,6 @@ public interface AppQuery {
     App get(String name) throws DalException;
 
     List<App> getAll() throws DalException;
+
+    List<App> getBy(String slbName, String virtualServerName) throws DalException;
 }

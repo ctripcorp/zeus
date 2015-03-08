@@ -32,6 +32,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-keys" type="SELECT" multiple="true">
+                <param name="keys"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='id'/> in (${keys})
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="app-health-check" table="app_health_check" alias="ahc" do-class="AppHealthCheckDo">
@@ -146,6 +156,18 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='app-id'/> = ${app-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb-and-virtual-server" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <param name="slb-virtual-server-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        AND <FIELD name='slb-virtual-server-name'/> = ${slb-virtual-server-name}
                     ]]>
                 </statement>
             </query>

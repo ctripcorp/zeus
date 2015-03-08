@@ -12,6 +12,8 @@ import java.util.List;
 public interface AppRepository extends Repository {
     List<App> list();
 
+    List<App> list(String slbName, String virtualServerName);
+
     App get(String appName);
 
     void add(App app);

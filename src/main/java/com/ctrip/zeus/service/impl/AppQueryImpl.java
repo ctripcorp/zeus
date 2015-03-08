@@ -70,6 +70,16 @@ public class AppQueryImpl implements AppQuery {
         return list;
     }
 
+    @Override
+    public List<App> getBy(String slbName, String virtualServerName) throws DalException {
+        List<AppSlbDo> list = appSlbDao.findAllBySlbAndVirtualServer(slbName, virtualServerName, AppSlbEntity.READSET_FULL);
+        StringBuilder builder = new StringBuilder("128");
+        for (AppSlbDo d : list) {
+
+        }
+        return null;
+    }
+
     private void queryAppSlbs(long appKey, App app) throws DalException {
         List<AppSlbDo> list = appSlbDao.findAllByApp(appKey, AppSlbEntity.READSET_FULL);
         for (AppSlbDo d : list) {

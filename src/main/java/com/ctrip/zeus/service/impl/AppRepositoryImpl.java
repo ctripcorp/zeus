@@ -31,6 +31,11 @@ public class AppRepositoryImpl implements AppRepository {
     }
 
     @Override
+    public List<App> list(String slbName, String virtualServerName) {
+        return null;
+    }
+
+    @Override
     public App get(String appName) {
         try {
             return appQuery.get(appName);
