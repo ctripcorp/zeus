@@ -33,8 +33,7 @@ public class C {
 
     public static Domain toDomain(SlbDomainDo d) {
         return new Domain()
-                .setName(d.getName())
-                .setPort(d.getPort());
+                .setName(d.getName());
     }
 
     public static HealthCheck toHealthCheck(AppHealthCheckDo d) {
@@ -82,6 +81,7 @@ public class C {
 
     public static VirtualServer toVirtualServer(SlbVirtualServerDo d) {
         return new VirtualServer()
+                .setPort(d.getPort())
                 .setName(d.getName())
                 .setSsl(d.isIsSsl());
     }
@@ -114,8 +114,7 @@ public class C {
 
     public static SlbDomainDo toSlbDomainDo(Domain e) {
         return new SlbDomainDo()
-                .setName(e.getName())
-                .setPort(e.getPort());
+                .setName(e.getName());
     }
 
     public static AppHealthCheckDo toAppHealthCheckDo(HealthCheck e) {
@@ -163,6 +162,7 @@ public class C {
 
     public static SlbVirtualServerDo toSlbVirtualServerDo(VirtualServer e) {
         return new SlbVirtualServerDo()
+                .setPort(e.getPort())
                 .setIsSsl(e.isSsl())
                 .setName(e.getName());
     }

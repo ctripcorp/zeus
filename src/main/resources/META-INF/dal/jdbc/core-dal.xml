@@ -232,7 +232,6 @@
                     ON DUPLICATE KEY UPDATE
                         slb_virtual_server_id = values(slb_virtual_server_id),
                         name = values(name),
-                        port = values(port),
                         <FIELD name="last-modified"/> = NOW()
                     ]]>
                 </statement>
@@ -322,6 +321,7 @@
                     ON DUPLICATE KEY UPDATE
                         slb_id = values(slb_id),
                         name = values(name),
+                        port = values(port),
                         is_ssl = values(is_ssl),
                         <FIELD name="last-modified"/> = NOW()
                     ]]>

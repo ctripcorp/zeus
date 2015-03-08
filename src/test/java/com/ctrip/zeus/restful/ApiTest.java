@@ -50,11 +50,11 @@ public class ApiTest {
                 .addVip(new Vip().setIp("192.168.1.6"))
                 .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1").setEnable(true))
                 .addSlbServer(new SlbServer().setHostName("slb003").setIp("192.168.10.3").setEnable(true))
-                .addVirtualServer(new VirtualServer().setName("vs002").setSsl(false)
-                        .addDomain(new Domain().setName("hotel.ctrip.com").setPort(80)))
-                .addVirtualServer(new VirtualServer().setName("vs003").setSsl(false)
-                        .addDomain(new Domain().setName("m.ctrip.com").setPort(80))
-                        .addDomain(new Domain().setName("m2.ctrip.com").setPort(80)))
+                .addVirtualServer(new VirtualServer().setName("vs002").setPort("80").setSsl(false)
+                        .addDomain(new Domain().setName("hotel.ctrip.com")))
+                .addVirtualServer(new VirtualServer().setName("vs003").setPort("80").setSsl(false)
+                        .addDomain(new Domain().setName("m.ctrip.com"))
+                        .addDomain(new Domain().setName("m2.ctrip.com")))
                 .setStatus("TEST");
         c.add(sc);
 
@@ -80,8 +80,8 @@ public class ApiTest {
                         .setEnable(true).setFailTimeout(30).setHealthy(true).setMaxFails(2).setPort(80).setWeight(2))
                 .addAppServer(new AppServer().setServer(new Server().setIp("192.168.20.2").setHostName("app002").setUp(true))
                         .setEnable(true).setFailTimeout(30).setHealthy(true).setMaxFails(2).setPort(80).setWeight(2))
-                .addAppSlb(new AppSlb().setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002")
-                        .setSsl(false).addDomain(new Domain().setName("hotel.ctrip.com").setPort(80))).setPath("/hotel"))
+                .addAppSlb(new AppSlb().setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002").setPort("80")
+                        .setSsl(false).addDomain(new Domain().setName("hotel.ctrip.com"))).setPath("/hotel"))
         ;
         c.add(app);
 

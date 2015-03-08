@@ -25,11 +25,11 @@
   <entity name="virtual-server">
     <attribute name="name" value-type="String" />
     <attribute name="ssl" value-type="boolean" />
+    <element name="port" value-type="String" />
     <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
   </entity>
   <entity name="domain">
     <attribute name="name" value-type="String" />
-    <attribute name="port" value-type="int" />
   </entity>
   <entity name="app">
     <attribute name="name" value-type="String" />

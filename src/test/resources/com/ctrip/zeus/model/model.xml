@@ -13,15 +13,17 @@
         </slb-servers>
         <virtual-servers>
             <virtual-server name="vs001" ssl="true">
+                <port>80,8099</port>
                 <domains>
-                    <domain name="www.ctrip.com" port="80"/>
-                    <domain name="hotel.ctrip.com" port="80"/>
+                    <domain name="www.ctrip.com"/>
+                    <domain name="hotel.ctrip.com"/>
                 </domains>
             </virtual-server>
             <virtual-server name="vs001" ssl="true">
+                <port>80</port>
                 <domains>
-                    <domain name="www.ctrip.com" port="80"/>
-                    <domain name="hotel.ctrip.com" port="80"/>
+                    <domain name="www.ctrip.com"/>
+                    <domain name="hotel.ctrip.com"/>
                 </domains>
             </virtual-server>
         </virtual-servers>

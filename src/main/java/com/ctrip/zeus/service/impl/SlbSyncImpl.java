@@ -141,13 +141,13 @@ public class SlbSyncImpl implements SlbSync {
         Map<String, SlbDomainDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbDomainDo, String>() {
             @Override
             public String apply(SlbDomainDo input) {
-                return input.getName() + input.getPort();
+                return input.getName();
             }
         });
 
         //Update existed if necessary, and insert new ones.
         for (Domain e : domains) {
-            SlbDomainDo old = oldMap.get(e.getName() + e.getPort());
+            SlbDomainDo old = oldMap.get(e.getName());
             if (old != null) {
                 oldList.remove(old);
             }
