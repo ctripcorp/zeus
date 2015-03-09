@@ -9,6 +9,7 @@ import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -72,12 +73,25 @@ public class AppQueryImpl implements AppQuery {
 
     @Override
     public List<App> getBy(String slbName, String virtualServerName) throws DalException {
-        List<AppSlbDo> list = appSlbDao.findAllBySlbAndVirtualServer(slbName, virtualServerName, AppSlbEntity.READSET_FULL);
-        StringBuilder builder = new StringBuilder("128");
-        for (AppSlbDo d : list) {
+        List<AppSlbDo> l = appSlbDao.findAllBySlbAndVirtualServer(slbName, virtualServerName, AppSlbEntity.READSET_FULL);
+        int size = l.size();
+        long[] ids = new long[size];
+        for (int i = 0; i < size; i++) {
+            ids[i] = l.get(i).getAppId();
+        }
+
+        List<App> list = new ArrayList<>();
+        for (AppDo d : appDao.findAllByIds(ids, AppEntity.READSET_FULL)) {
+            App app = C.toApp(d);
+            list.add(app);
+
+            queryAppSlbs(d.getId(), app);
+            queryAppHealthCheck(d.getId(), app);
+            queryLoadBalancingMethod(d.getId(), app);
+            queryAppServers(d.getId(), app);
 
         }
-        return null;
+        return list;
     }
 
     private void queryAppSlbs(long appKey, App app) throws DalException {

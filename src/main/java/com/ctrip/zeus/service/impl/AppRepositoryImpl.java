@@ -32,7 +32,11 @@ public class AppRepositoryImpl implements AppRepository {
 
     @Override
     public List<App> list(String slbName, String virtualServerName) {
-        return null;
+        try {
+            return appQuery.getBy(slbName, virtualServerName);
+        } catch (DalException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
