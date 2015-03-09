@@ -1,4 +1,4 @@
-package com.ctrip.zeus.nginx;
+package com.ctrip.zeus.nginx.conf;
 
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;

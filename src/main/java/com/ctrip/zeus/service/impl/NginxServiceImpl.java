@@ -3,10 +3,12 @@ package com.ctrip.zeus.service.impl;
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.nginx.ConfReload;
-import com.ctrip.zeus.nginx.ConfWriter;
-import com.ctrip.zeus.nginx.NginxConf;
-import com.ctrip.zeus.nginx.ServerConf;
+import com.ctrip.zeus.nginx.NginxConfService;
+import com.ctrip.zeus.nginx.NginxOperator;
+import com.ctrip.zeus.nginx.conf.ConfReload;
+import com.ctrip.zeus.nginx.conf.ConfWriter;
+import com.ctrip.zeus.nginx.conf.NginxConf;
+import com.ctrip.zeus.nginx.conf.ServerConf;
 import com.ctrip.zeus.service.AppRepository;
 import com.ctrip.zeus.service.NginxService;
 import com.ctrip.zeus.service.SlbRepository;
@@ -27,16 +29,24 @@ public class NginxServiceImpl implements NginxService {
     @Resource
     private AppRepository appRepository;
 
+    @Resource
+    private NginxConfService nginxConfService;
+    @Resource
+    private NginxOperator nginxOperator;
+
     @Override
     public void load() throws IOException {
         Slb slb = slbRepository.get("default");
 
-        ConfWriter.writeNginxConf(slb, NginxConf.generate(slb));
+        String nginxConf = nginxConfService.generateNginxConf(slb);
+        nginxOperator.writeNginxConf(slb, nginxConf);
         for (VirtualServer vs : slb.getVirtualServers()) {
             List<App> list = appRepository.list(slb.getName(), vs.getName());
-            ConfWriter.writeServerConf(slb, vs, ServerConf.generate(slb, vs, list));
+
+            String serverConf = nginxConfService.generateNginxServerConf(slb, vs, list);
+            nginxOperator.writeNginxServerConf(slb, vs, serverConf);
         }
 
-        ConfReload.reload(slb);
+        nginxOperator.reloadConf(slb);
     }
 }

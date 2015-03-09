@@ -1,6 +1,7 @@
 package com.ctrip.zeus.nginx;
 
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.nginx.conf.ServerConf;
 import org.junit.Test;
 
 import java.util.ArrayList;

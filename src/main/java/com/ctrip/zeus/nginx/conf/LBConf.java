@@ -1,4 +1,4 @@
-package com.ctrip.zeus.nginx;
+package com.ctrip.zeus.nginx.conf;
 
 import com.ctrip.zeus.domain.LBMethod;
 import com.ctrip.zeus.model.entity.App;
