@@ -1,6 +1,5 @@
 package com.ctrip.zeus.build;
 
-import com.sun.javafx.binding.StringFormatter;
 import org.unidal.dal.jdbc.AbstractDao;
 
 import java.io.FileWriter;
