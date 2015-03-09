@@ -121,7 +121,6 @@ public class C {
         return new AppHealthCheckDo()
                 .setUri(e.getUri())
                 .setIntervals(e.getIntervals())
-                .setId(e.getIntervals())
                 .setFails(e.getFails())
                 .setPasses(e.getPasses());
     }
