@@ -32,7 +32,8 @@ public class UpstreamsConf {
         //LBMethod
         b.append("    ").append(LBConf.generate(slb, vs, app));
 
-        b.append("    ").append("zone " + upstreamName + " 64K").append(";\n");
+        //ToDo:
+        //b.append("    ").append("zone " + upstreamName + " 64K").append(";\n");
 
         for (AppServer as : app.getAppServers()) {
             Server s = as.getServer();
