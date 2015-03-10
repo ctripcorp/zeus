@@ -23,6 +23,7 @@ public class SlbAdminMain {
 
     private static void setSystemProperties() {
         //Archaius loading configuration depends on this property.
+        S.setPropertyDefaultValue("server.port", "8099");
         S.setPropertyDefaultValue("archaius.deployment.applicationId", "slb-admin");
         S.setPropertyDefaultValue("archaius.deployment.environment","local");
         S.setPropertyDefaultValue("server.www.base-dir",new File("").getAbsolutePath()+"/src/main/www");

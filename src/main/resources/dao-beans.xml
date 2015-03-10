@@ -4,6 +4,10 @@
 
     <bean id="daoFactory" class="com.ctrip.zeus.support.DaoFactory"/>
 
+    <bean id="transactionManager" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="org.unidal.dal.jdbc.transaction.TransactionManager"/>
+    </bean>
+
     <bean id="appDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppDao"/>
     </bean>

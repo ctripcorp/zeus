@@ -1,6 +1,7 @@
 package com.ctrip.zeus.support;
 
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.ContainerLoader;
 
 /**
@@ -9,6 +10,7 @@ import org.unidal.lookup.ContainerLoader;
  */
 public class DaoFactory {
     public <T> T getDao(Class<T> clazz) throws ComponentLookupException {
-        return ContainerLoader.getDefaultContainer().lookup(clazz);
+        T lookup = ContainerLoader.getDefaultContainer().lookup(clazz);
+        return lookup;
     }
 }

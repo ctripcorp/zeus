@@ -1,6 +1,7 @@
 package com.ctrip.zeus.build;
 
 import org.unidal.dal.jdbc.AbstractDao;
+import org.unidal.dal.jdbc.transaction.TransactionManager;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -18,6 +19,13 @@ public class GenerateDaoBeansConfig {
                 "       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
                 "       xsi:schemaLocation=\"http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd\">\n\n");
         builder.append("    <bean id=\"daoFactory\" class=\"com.ctrip.zeus.support.DaoFactory\"/>\n\n");
+
+        Class c= TransactionManager.class;
+        builder.append(String.format("" +
+                        "    <bean id=\"%s\" factory-bean=\"daoFactory\" factory-method=\"getDao\">\n" +
+                        "        <constructor-arg type=\"java.lang.Class\" value=\"%s\"/>\n" +
+                        "    </bean>\n\n",
+                uncapitalize(c.getSimpleName()), c.getName()));
 
         String daoPackage="com.ctrip.zeus.dal.core";
         List<Class<?>> list = ClassFinder.find(daoPackage);
