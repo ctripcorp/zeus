@@ -26,7 +26,7 @@ public class NginxResource {
     @Path("/load")
     @Produces({"*/*"})
     public Response list() throws IOException {
-        nginxService.load();
-        return Response.ok("hello").type(MediaType.TEXT_PLAIN).build();
+        String result = nginxService.load();
+        return Response.ok(result).type(MediaType.TEXT_PLAIN).build();
     }
 }

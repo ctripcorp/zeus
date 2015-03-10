@@ -32,8 +32,8 @@ public class NginxOperatorImpl implements NginxOperator {
     }
 
     @Override
-    public void reloadConf(Slb slb) {
-        ConfReload.reload(slb);
+    public String reloadConf(Slb slb) {
+        return ConfReload.reload(slb);
     }
 
     @Override

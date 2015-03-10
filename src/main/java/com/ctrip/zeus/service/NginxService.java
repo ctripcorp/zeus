@@ -7,5 +7,5 @@ import java.io.IOException;
  * @date: 3/8/2015.
  */
 public interface NginxService {
-    void load() throws IOException;
+    String load() throws IOException;
 }

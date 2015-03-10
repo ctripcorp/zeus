@@ -31,7 +31,7 @@ public class NginxServiceImpl implements NginxService {
     private NginxOperator nginxOperator;
 
     @Override
-    public void load() throws IOException {
+    public String load() throws IOException {
         Slb slb = slbRepository.get("default");
 
         String nginxConf = nginxConfService.generateNginxConf(slb);
@@ -46,6 +46,6 @@ public class NginxServiceImpl implements NginxService {
             nginxOperator.writeServerConf(slb, vs, serverConf);
         }
 
-        nginxOperator.reloadConf(slb);
+        return nginxOperator.reloadConf(slb);
     }
 }

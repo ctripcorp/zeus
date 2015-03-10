@@ -18,7 +18,7 @@ public interface NginxOperator {
 
     void writeUpstreamsConf(Slb slb, VirtualServer vs, String conf) throws IOException;
 
-    void reloadConf(Slb slb);
+    String reloadConf(Slb slb);
 
     void markdownServer(App app, String ip);
 
