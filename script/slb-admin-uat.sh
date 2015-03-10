@@ -4,6 +4,7 @@ APP_NAME="SlbAdmin"
 SHUTDOWN_WAIT=10
 MAIN_CLASS="com.ctrip.zeus.SlbAdminMain"
 ENVIRONMENT_NAME="uat"
+CONF_BASE_URL="http://bridge.soa.uat.qa.nt.ctripcorp.com/config/api"
 
 # Attempt to set APP_HOME
 # Resolve links: $0 may be a link
@@ -28,10 +29,10 @@ cd "$SAVED" >&-
 JAVA_OPS="
 -DAPP_HOME=$APP_HOME
 -Darchaius.deployment.environment=${ENVIRONMENT_NAME}
--Darchaius.configurationSource.additionalUrls=http://bridge.soa.uat.qa.nt.ctripcorp.com/config/api/${APP_NAME}/${ENVIRONMENT_NAME}
+-Darchaius.configurationSource.additionalUrls=${CONF_BASE_URL}/${APP_NAME}/${ENVIRONMENT_NAME}
 -Dserver.www.base-dir=$APP_HOME/www
 -Dserver.temp-dir=$APP_HOME/temp
--DAPP_HOME=$APP_HOME
+-DCONF_DIR=$APP_HOME/conf/${ENVIRONMENT_NAME}
 -Xms5g
 -Xmx5g
 -Xmn2g

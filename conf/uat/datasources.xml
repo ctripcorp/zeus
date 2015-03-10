@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-sources>
+    <data-source id="zeus">
+        <maximum-pool-size>3</maximum-pool-size>
+        <connection-timeout>1s</connection-timeout>
+        <idle-timeout>1m</idle-timeout>
+        <statement-cache-size>1000</statement-cache-size>
+        <properties>
+            <driver>com.mysql.jdbc.Driver</driver>
+            <url><![CDATA[jdbc:mysql://10.2.25.93:3306/zeus]]></url>
+            <user>root</user>
+            <password>~{f4f3e3d1c393a7d0f23179f470f0f0e430ce68565}</password>
+            <connectionProperties>
+                <![CDATA[useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true]]></connectionProperties>
+        </properties>
+    </data-source>
+</data-sources>

@@ -14,8 +14,8 @@ public class ComponentsConfigurator extends AbstractResourceConfigurator {
 
       // move following line to top-level project if necessary
 		all.add(C(JdbcDataSourceDescriptorManager.class) //
-				.config(E("datasourceFile").value("conf/datasources.xml"), //
-						E("baseDirRef").value("APP_HOME")));
+				.config(E("datasourceFile").value("datasources.xml"), //
+						E("baseDirRef").value("CONF_DIR")));
 
       all.addAll(new ZeusDatabaseConfigurator().defineComponents());
 

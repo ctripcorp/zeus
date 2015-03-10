@@ -28,7 +28,7 @@ public class SlbAdminMain {
         S.setPropertyDefaultValue("archaius.deployment.environment","local");
         S.setPropertyDefaultValue("server.www.base-dir",new File("").getAbsolutePath()+"/src/main/www");
         S.setPropertyDefaultValue("server.temp-dir",new File("").getAbsolutePath()+"/target/temp");
-        S.setPropertyDefaultValue("APP_HOME",new File("").getAbsolutePath());
+        S.setPropertyDefaultValue("CONF_DIR",new File("").getAbsolutePath() + "/conf/local");
     }
 
     private static Server startServer() throws Exception {
