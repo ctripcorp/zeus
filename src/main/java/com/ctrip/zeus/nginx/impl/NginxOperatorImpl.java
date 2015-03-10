@@ -22,8 +22,13 @@ public class NginxOperatorImpl implements NginxOperator {
     }
 
     @Override
-    public void writeNginxServerConf(Slb slb, VirtualServer vs, String conf) throws IOException {
+    public void writeServerConf(Slb slb, VirtualServer vs, String conf) throws IOException {
         ConfWriter.writeServerConf(slb, vs, conf);
+    }
+
+    @Override
+    public void writeUpstreamsConf(Slb slb, VirtualServer vs, String conf) throws IOException {
+        ConfWriter.writeUpstreamsConf(slb, vs, conf);
     }
 
     @Override

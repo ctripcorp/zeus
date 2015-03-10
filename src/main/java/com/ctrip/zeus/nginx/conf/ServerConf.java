@@ -22,7 +22,7 @@ public class ServerConf {
 
         //add locations
         for (App app : apps) {
-            b.append(LocationConf.generate(slb, vs, app));
+            b.append(LocationConf.generate(slb, vs, app, UpstreamsConf.buildUpstreamName(slb, vs, app)));
         }
 
         b.append("}").append("\n");

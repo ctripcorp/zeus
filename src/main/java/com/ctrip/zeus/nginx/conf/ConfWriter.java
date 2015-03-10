@@ -26,15 +26,28 @@ public class ConfWriter {
                 writer.close();
             }
         }
-
     }
 
-    public static void writeServerConf(Slb slb, VirtualServer vs,  String conf) throws IOException {
+    public static void writeServerConf(Slb slb, VirtualServer vs, String conf) throws IOException {
         String confDir = slb.getNginxConf();
         Writer writer = null;
         try {
             makeSureExist(confDir + "/vhosts");
             writer = new FileWriter(new File(confDir + "/vhosts/" + vs.getName() + ".conf"));
+            writer.write(conf);
+        } finally {
+            if (writer != null) {
+                writer.close();
+            }
+        }
+    }
+
+    public static void writeUpstreamsConf(Slb slb, VirtualServer vs, String conf) throws IOException {
+        String confDir = slb.getNginxConf();
+        Writer writer = null;
+        try {
+            makeSureExist(confDir + "/upstreams");
+            writer = new FileWriter(new File(confDir + "/upstreams/" + vs.getName() + ".conf"));
             writer.write(conf);
         } finally {
             if (writer != null) {

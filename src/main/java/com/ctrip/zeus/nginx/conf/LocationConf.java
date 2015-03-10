@@ -10,11 +10,8 @@ import com.ctrip.zeus.model.entity.VirtualServer;
  * @date: 3/8/2015.
  */
 public class LocationConf {
-    public static String generate(Slb slb, VirtualServer vs, App app) {
-        String upstreamName = getUpstreamName(slb, vs, app);
-
+    public static String generate(Slb slb, VirtualServer vs, App app, String upstreamName) {
         StringBuilder b = new StringBuilder(1024);
-        b.append(UpstreamConf.generate(slb, vs, app, upstreamName));
 
         b.append("    ").append("location ").append(getPath(slb, vs, app)).append("{").append("\n");
         b.append("    ").append("    proxy_pass http://").append(upstreamName).append(";\n");
@@ -22,10 +19,6 @@ public class LocationConf {
         b.append("    ").append("}").append("\n");
 
         return b.toString();
-    }
-
-    private static String getUpstreamName(Slb slb, VirtualServer vs, App app) {
-        return "backend_" + vs.getName() + "_" + app.getName();
     }
 
     private static String getPath(Slb slb, VirtualServer vs, App app) {

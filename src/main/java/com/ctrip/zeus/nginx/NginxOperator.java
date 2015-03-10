@@ -14,7 +14,9 @@ public interface NginxOperator {
 
     void writeNginxConf(Slb slb, String conf) throws IOException;
 
-    void writeNginxServerConf(Slb slb, VirtualServer vs, String conf) throws IOException;
+    void writeServerConf(Slb slb, VirtualServer vs, String conf) throws IOException;
+
+    void writeUpstreamsConf(Slb slb, VirtualServer vs, String conf) throws IOException;
 
     void reloadConf(Slb slb);
 

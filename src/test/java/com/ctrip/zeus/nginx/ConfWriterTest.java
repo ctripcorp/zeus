@@ -4,6 +4,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.conf.ConfWriter;
 import com.ctrip.zeus.nginx.conf.NginxConf;
 import com.ctrip.zeus.nginx.conf.ServerConf;
+import com.ctrip.zeus.nginx.conf.UpstreamsConf;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class ConfWriterTest {
 
         ConfWriter.writeNginxConf(slb, NginxConf.generate(slb));
         ConfWriter.writeServerConf(slb, vs002, ServerConf.generate(slb, vs002, list));
+        ConfWriter.writeUpstreamsConf(slb, vs002, UpstreamsConf.generate(slb, vs002, list));
 
     }
 

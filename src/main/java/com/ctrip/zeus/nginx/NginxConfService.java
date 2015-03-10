@@ -12,5 +12,8 @@ import java.util.List;
  */
 public interface NginxConfService {
     String generateNginxConf(Slb slb);
-    String generateNginxServerConf(Slb slb, VirtualServer vs, List<App> apps);
+
+    String generateServerConf(Slb slb, VirtualServer vs, List<App> apps);
+
+    String generateUpstreamsConf(Slb slb, VirtualServer vs, List<App> apps);
 }

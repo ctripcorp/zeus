@@ -21,6 +21,7 @@ public class NginxConf {
         b.append("    include    mime.types").append(";\n");
         b.append("    default_type    application/octet-stream").append(";\n");
         b.append("    keepalive_timeout    65").append(";\n");
+        b.append("    include    upstreams/*.conf").append(";\n");
         b.append("    include    vhosts/*.conf").append(";\n");
         b.append("}").append("\n");
 
