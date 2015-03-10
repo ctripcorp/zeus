@@ -37,7 +37,7 @@ public class UpstreamsConf {
 
         for (AppServer as : app.getAppServers()) {
             Server s = as.getServer();
-            b.append("    server ").append(s.getIp() + ":" + vs.getPort())
+            b.append("    server ").append(s.getIp() + ":" + as.getPort())
                     .append(" weight=").append(as.getWeight())
                     .append(" max_fails=").append(as.getMaxFails())
                     .append(" fail_timeout=").append(as.getFailTimeout())
