@@ -14,8 +14,11 @@ public class LocationConf {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("    ").append("location ").append(getPath(slb, vs, app)).append("{").append("\n");
+
         b.append("    ").append("    proxy_pass http://").append(upstreamName).append(";\n");
-        b.append("    ").append("    ").append(HealthCheckConf.generate(slb,vs,app)).append(";\n");
+        //ToDo:health_check
+        //b.append("    ").append("    ").append(HealthCheckConf.generate(slb,vs,app)).append(";\n");
+
         b.append("    ").append("}").append("\n");
 
         return b.toString();
