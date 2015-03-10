@@ -28,7 +28,10 @@ public class UpstreamsConf {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("upstream ").append(upstreamName).append(" {").append("\n");
-        b.append("    ").append(LBConf.generate(slb, vs, app)).append(";\n");
+
+        //LBMethod
+        b.append("    ").append(LBConf.generate(slb, vs, app));
+
         b.append("    ").append("zone " + upstreamName + " 64K").append(";\n");
 
         for (AppServer as : app.getAppServers()) {

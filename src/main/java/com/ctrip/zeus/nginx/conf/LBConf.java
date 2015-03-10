@@ -15,14 +15,14 @@ public class LBConf {
         LoadBalancingMethod lb = app.getLoadBalancingMethod();
         String type = lb.getType();
         if (LBMethod.LESS_CONN.toString().equalsIgnoreCase(type)) {
-            return "less_conn;";
+            return "less_conn;\n";
         }
         if (LBMethod.IP_HASH.toString().equalsIgnoreCase(type)) {
-            return "ip_hash;";
+            return "ip_hash;\n";
         }
         if (LBMethod.HASH.toString().equalsIgnoreCase(type)) {
-            return "hash " + lb.getValue() + ";";
+            return "hash " + lb.getValue() + ";\n";
         }
-        return "round_robin";
+        return "";
     }
 }
