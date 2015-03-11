@@ -1,2 +1,2 @@
-# Zeus [![Build Status](https://travis-ci.org/ctripcorp/hermes.png?branch=master)](https://travis-ci.org/ctripcorp/hermes)
+# Zeus [![Build Status](https://travis-ci.org/ctripcorp/zeus.png?branch=dev)](https://travis-ci.org/ctripcorp/zeus)
 Soft Load Balancer at ctrip.com
