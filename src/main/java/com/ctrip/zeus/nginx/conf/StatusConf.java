@@ -15,11 +15,15 @@ public class StatusConf {
         StringBuilder b = new StringBuilder(128);
         b.append("server {").append("\n");
         b.append("    listen    ").append(String.valueOf(nginxStatusPort.get())).append(";\n");
+
         b.append("    location / {").append("\n");
-
         b.append("        check_status").append(";\n");
-
         b.append("    }").append("\n");
+
+        b.append("    location =/status.json {").append("\n");
+        b.append("        check_status json").append(";\n");
+        b.append("    }").append("\n");
+
         b.append("}").append("\n");
 
 
