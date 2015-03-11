@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS app (
   created_time timestamp NULL ,
   last_modified timestamp NOT NULL ,
   
-  constraint name unique (name)
+  constraint con_name unique (name)
 ) ;
 
 
@@ -29,13 +29,13 @@ CREATE TABLE IF NOT EXISTS app_health_check (
   id integer NOT NULL IDENTITY,
   app_id integer NOT NULL ,
   uri varchar(200) NOT NULL ,
-  intervals int(11) NOT NULL ,
-  fails int(11) NOT NULL ,
-  passes int(11) NOT NULL ,
+  intervals int NOT NULL ,
+  fails int NOT NULL ,
+  passes int NOT NULL ,
   created_time timestamp NULL ,
   last_modified timestamp NOT NULL ,
-
-  constraint application_id unique (app_id)
+  
+  constraint con_application_id unique (app_id)
 ) ;
 
 
@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS app_load_balancing_method (
   value varchar(200) NOT NULL ,
   created_time timestamp NULL ,
   last_modified timestamp NOT NULL ,
-
-  constraint application_id unique (app_id)
+  
+  constraint con_application_id2 unique (app_id)
 ) ;
 
 
@@ -61,16 +61,16 @@ CREATE TABLE IF NOT EXISTS app_server (
   id integer NOT NULL IDENTITY,
   app_id integer NOT NULL ,
   ip varchar(200) NOT NULL ,
-  port int(11) NOT NULL ,
-  weight int(11) NOT NULL ,
-  max_fails int(11) NOT NULL ,
-  fail_timeout int(11) NOT NULL ,
+  port int NOT NULL ,
+  weight int NOT NULL ,
+  max_fails int NOT NULL ,
+  fail_timeout int NOT NULL ,
   healthy bit(1) NOT NULL ,
   enable bit(1) NOT NULL ,
   created_time timestamp NULL ,
   last_modified timestamp NOT NULL ,
-
-  constraint app_id_ip unique (app_id,ip)
+  
+  constraint con_app_id_ip unique (app_id,ip)
 ) ;
 
 
@@ -85,8 +85,8 @@ CREATE TABLE IF NOT EXISTS app_slb (
   path varchar(200) NOT NULL ,
   created_time timestamp NULL ,
   last_modified timestamp NOT NULL ,
-
-  constraint app_id_slb_name_slb_virtual_server_name unique (app_id,slb_name,slb_virtual_server_name)
+  
+  constraint con_app_id_slb_name_slb_virtual_server_name unique (app_id,slb_name,slb_virtual_server_name)
 ) ;
 
 
@@ -100,8 +100,8 @@ CREATE TABLE IF NOT EXISTS server (
   up bit(1) NOT NULL ,
   created_time timestamp NULL ,
   last_modified timestamp NOT NULL ,
-
-  constraint ip unique (ip)
+  
+  constraint con_ip unique (ip)
 ) ;
 
 
@@ -113,12 +113,75 @@ CREATE TABLE IF NOT EXISTS slb (
   name varchar(100) NOT NULL ,
   nginx_bin varchar(300) NOT NULL ,
   nginx_conf varchar(300) NOT NULL ,
-  nginx_worker_processes int(11) NOT NULL ,
+  nginx_worker_processes int NOT NULL ,
   status varchar(300) NOT NULL ,
   created_time timestamp NULL ,
   last_modified timestamp NOT NULL ,
-
-  constraint name unique (name)
+  
+  constraint con_name2 unique (name)
 ) ;
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS slb_domain (
+  id integer NOT NULL IDENTITY,
+  slb_virtual_server_id integer NOT NULL ,
+  name varchar(200) NOT NULL ,
+  created_time timestamp NULL ,
+  last_modified timestamp NOT NULL ,
+  
+  constraint con_slb_virtual_server_id_name unique (slb_virtual_server_id,name)
+) ;
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS slb_server (
+  id integer NOT NULL IDENTITY,
+  slb_id integer NOT NULL ,
+  ip varchar(50) NOT NULL ,
+  host_name varchar(200) NOT NULL ,
+  enable bit(1) NOT NULL ,
+  created_time timestamp NULL ,
+  last_modified timestamp NOT NULL ,
+  
+  constraint con_ip2 unique (ip)
+) ;
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS slb_vip (
+  id integer NOT NULL IDENTITY,
+  slb_id integer NOT NULL ,
+  ip varchar(50) NOT NULL ,
+  created_time timestamp NULL ,
+  last_modified timestamp NOT NULL ,
+  
+  constraint con_ip3 unique (ip)
+) ;
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS slb_virtual_server (
+  id integer NOT NULL IDENTITY,
+  slb_id integer NOT NULL ,
+  name varchar(200) NOT NULL ,
+  port varchar(200) NOT NULL ,
+  is_ssl bit(1) NOT NULL ,
+  created_time timestamp NULL ,
+  last_modified timestamp NOT NULL ,
+  
+  constraint con_slb_id_name unique (slb_id,name)
+) ;
+
+
+
 
 

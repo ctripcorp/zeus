@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
+import javax.sql.DataSource;
 
 /**
  * @author:xingchaowang
@@ -16,6 +17,10 @@ import javax.annotation.Resource;
  */
 @Repository
 public class DemoRepository {
+    @Resource(name = "embeddedDataSource")
+    private DataSource embeddedDataSource;
+
+
     @Resource
     private AppDao appDao;
 
