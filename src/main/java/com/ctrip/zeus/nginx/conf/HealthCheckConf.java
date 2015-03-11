@@ -15,8 +15,8 @@ public class HealthCheckConf {
 
         StringBuilder b = new StringBuilder(128);
         b.append("    ").append("check interval=").append(h.getIntervals())
-                .append(" rise").append(h.getPasses())
-                .append(" fall").append(h.getFails())
+                .append(" rise=").append(h.getPasses())
+                .append(" fall=").append(h.getFails())
                 .append(" timeout=").append(1000)
                 .append(" type=http").append(";\n");
         b.append("    ").append("check_keepalive_requests 100").append(";\n");
