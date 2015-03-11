@@ -44,6 +44,9 @@ public class UpstreamsConf {
                     .append(";\n");
         }
 
+        //HealthCheck
+        b.append(HealthCheckConf.generate(slb,vs,app));
+
         b.append("}").append("\n");
 
         return b.toString();
