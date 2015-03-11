@@ -276,7 +276,32 @@
             </plugin>
         </plugins>
     </build>
-
+   <repositories>
+      <repository>
+           <id>central</id>
+           <url>http://repo1.maven.org/maven2</url>
+      </repository>
+      <repository>
+         <id>frameworks</id>
+         <url>https://raw.githubusercontent.com/unidal/frameworks/mvn-repo</url>
+         <releases>
+            <checksumPolicy>ignore</checksumPolicy>
+         </releases>
+      </repository>
+   </repositories>
+   <pluginRepositories>
+      <pluginRepository>
+         <id>central</id>
+         <url>http://repo1.maven.org/maven2</url>
+      </pluginRepository>
+      <pluginRepository>
+         <id>maven-plugins</id>
+         <url>https://raw.githubusercontent.com/unidal/maven-plugins/mvn-repo</url>
+         <releases>
+            <checksumPolicy>ignore</checksumPolicy>
+         </releases>
+      </pluginRepository>
+   </pluginRepositories>
     <properties>
         <jersey.version>2.16</jersey.version>
         <spring.version>4.1.5.RELEASE</spring.version>
