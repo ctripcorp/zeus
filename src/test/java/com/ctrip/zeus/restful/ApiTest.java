@@ -5,10 +5,16 @@ import com.ctrip.zeus.client.SlbClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.server.SlbAdminServer;
 import com.ctrip.zeus.util.S;
+import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.unidal.dal.jdbc.datasource.DataSourceManager;
+import org.unidal.dal.jdbc.transaction.TransactionManager;
+import org.unidal.lookup.ContainerLoader;
+import support.MysqlDbServer;
 
 import javax.xml.bind.SchemaOutputResolver;
 import java.io.File;
@@ -19,29 +25,33 @@ import java.io.File;
  */
 public class ApiTest {
 
-    private static SlbAdminServer server;
+    static SlbAdminServer server;
+    static MysqlDbServer mysqlDbServer;
 
     @BeforeClass
     public static void setup() throws Exception {
-        System.out.println("###########################Before");
+        mysqlDbServer = new MysqlDbServer();
+        mysqlDbServer.start();
 
         S.setPropertyDefaultValue("archaius.deployment.applicationId", "slb-admin");
         S.setPropertyDefaultValue("archaius.deployment.environment", "local");
         S.setPropertyDefaultValue("server.www.base-dir", new File("").getAbsolutePath() + "/src/main/www");
         S.setPropertyDefaultValue("server.temp-dir", new File("").getAbsolutePath() + "/target/temp");
         S.setPropertyDefaultValue("CONF_DIR", new File("").getAbsolutePath() + "/conf/test");
-        S.setPropertyDefaultValue("server.spring.context-file","test-spring-context.xml");
-
         server = new SlbAdminServer();
         server.start();
 
-        Thread.currentThread().sleep(5000);
     }
 
     @AfterClass
-    public static void teardown() {
-        System.out.println("###########################After");
+    public static void teardown() throws InterruptedException, ComponentLifecycleException, ComponentLookupException {
         server.close();
+        mysqlDbServer.stop();
+
+        DataSourceManager ds = ContainerLoader.getDefaultContainer().lookup(DataSourceManager.class);
+        ContainerLoader.getDefaultContainer().release(ds);
+        TransactionManager ts = ContainerLoader.getDefaultContainer().lookup(TransactionManager.class);
+        ContainerLoader.getDefaultContainer().release(ts);
     }
 
     @Test
@@ -76,6 +86,22 @@ public class ApiTest {
     @Test
     public void testApp() {
         System.out.println("###########################test2");
+
+        SlbClient s = new SlbClient("http://127.0.0.1:8099");
+        String slbName = "default";
+        Slb sc = new Slb();
+        sc.setName(slbName).setNginxBin("/usr/local/nginx/bin").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1)
+                .addVip(new Vip().setIp("192.168.1.3"))
+                .addVip(new Vip().setIp("192.168.1.6"))
+                .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1").setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("slb003").setIp("192.168.10.3").setEnable(true))
+                .addVirtualServer(new VirtualServer().setName("vs002").setPort("80").setSsl(false)
+                        .addDomain(new Domain().setName("hotel.ctrip.com")))
+                .addVirtualServer(new VirtualServer().setName("vs003").setPort("80").setSsl(false)
+                        .addDomain(new Domain().setName("m.ctrip.com"))
+                        .addDomain(new Domain().setName("m2.ctrip.com")))
+                .setStatus("TEST");
+        s.add(sc);
 
         AppClient c = new AppClient("http://127.0.0.1:8099");
         c.getAll();

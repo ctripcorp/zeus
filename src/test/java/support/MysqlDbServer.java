@@ -2,6 +2,7 @@ package support;
 
 import com.mysql.management.MysqldResource;
 import com.mysql.management.MysqldResourceI;
+import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
@@ -10,6 +11,7 @@ import java.io.*;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 
 /**
@@ -67,6 +69,9 @@ public class MysqlDbServer implements SmartLifecycle {
         try {
             mysqldResource.shutdown();
             running = false;
+            if (!mysqldResource.isRunning()) {
+                FileUtils.forceDelete(mysqldResource.getBaseDir());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -95,7 +100,7 @@ public class MysqlDbServer implements SmartLifecycle {
         database_options.put(MysqldResourceI.INITIALIZE_USER, "true");
         database_options.put(MysqldResourceI.INITIALIZE_USER_NAME, userName);
         database_options.put(MysqldResourceI.INITIALIZE_PASSWORD, password);
-        mysqldResource.start("test-mysqld-thread", database_options);
+        mysqldResource.start("test-mysqld-thread" + new Random().nextInt(), database_options);
         if (!mysqldResource.isRunning()) {
             throw new RuntimeException("MySQL did not start.");
         }
