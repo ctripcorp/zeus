@@ -13,10 +13,8 @@
                            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.1.xsd
 
                            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
-    <import resource="spring-context.xml"/>
 
-    <!--embedded database for test-->
-    <jdbc:embedded-database id="embeddedDataSource">
-        <jdbc:script location="classpath:sql/hsqldb-create-table.sql"/>
-    </jdbc:embedded-database>
+    <!--For unit tests-->
+    <bean id="mysqlDbServer" class="support.MysqlDbServer"/>
+    <import resource="classpath*:spring-context.xml"/>
 </beans>

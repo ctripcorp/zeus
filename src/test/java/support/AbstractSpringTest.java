@@ -1,7 +1,6 @@
 package support;
 
 import com.ctrip.zeus.util.S;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;

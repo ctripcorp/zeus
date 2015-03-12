@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.xml.bind.SchemaOutputResolver;
 import java.io.File;
 
 /**
@@ -22,23 +23,31 @@ public class ApiTest {
 
     @BeforeClass
     public static void setup() throws Exception {
+        System.out.println("###########################Before");
+
         S.setPropertyDefaultValue("archaius.deployment.applicationId", "slb-admin");
         S.setPropertyDefaultValue("archaius.deployment.environment", "local");
         S.setPropertyDefaultValue("server.www.base-dir", new File("").getAbsolutePath() + "/src/main/www");
         S.setPropertyDefaultValue("server.temp-dir", new File("").getAbsolutePath() + "/target/temp");
-        S.setPropertyDefaultValue("APP_HOME", new File("").getAbsolutePath());
+        S.setPropertyDefaultValue("CONF_DIR", new File("").getAbsolutePath() + "/conf/test");
+        S.setPropertyDefaultValue("server.spring.context-file","test-spring-context.xml");
 
         server = new SlbAdminServer();
         server.start();
+
+        Thread.currentThread().sleep(5000);
     }
 
     @AfterClass
     public static void teardown() {
+        System.out.println("###########################After");
         server.close();
     }
 
     @Test
     public void testSlb() {
+        System.out.println("###########################test1");
+
         SlbClient c = new SlbClient("http://127.0.0.1:8099");
         c.getAll();
 
@@ -66,6 +75,8 @@ public class ApiTest {
 
     @Test
     public void testApp() {
+        System.out.println("###########################test2");
+
         AppClient c = new AppClient("http://127.0.0.1:8099");
         c.getAll();
 

@@ -41,6 +41,7 @@ public class SlbAdminServer extends AbstractServer {
         //GetConfig
         DynamicIntProperty serverPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
         DynamicStringProperty wwwBaseDir = DynamicPropertyFactory.getInstance().getStringProperty("server.www.base-dir", ".");
+        DynamicStringProperty springContextFile = DynamicPropertyFactory.getInstance().getStringProperty("server.spring.context-file", "spring-context.xml");
 
         //Config Jersey
         ResourceConfig config = new ResourceConfig();
@@ -61,7 +62,7 @@ public class SlbAdminServer extends AbstractServer {
         supportJsp(handler);
 
         //Support Spring
-        handler.setInitParameter("contextConfigLocation", "classpath*:spring-context.xml");
+        handler.setInitParameter("contextConfigLocation", "classpath*:" + springContextFile.get());
         ContextLoaderListener sprintContextListener = new ContextLoaderListener();
         handler.addEventListener(sprintContextListener);
 

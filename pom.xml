@@ -125,13 +125,13 @@
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
-            <artifactId>mysql-connector-mxj-gpl</artifactId>
+            <artifactId>mysql-connector-mxj</artifactId>
             <version>5.0.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
-            <artifactId>mysql-connector-mxj-gpl-db-files</artifactId>
+            <artifactId>mysql-connector-mxj-db-files</artifactId>
             <version>5.0.12</version>
             <scope>test</scope>
         </dependency>
