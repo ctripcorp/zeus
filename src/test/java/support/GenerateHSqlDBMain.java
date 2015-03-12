@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 public class GenerateHSqlDBMain {
 
     public static void main(String[] args) throws IOException {
+
         File f = new File("src/main/resources/sql/create-table.sql");
         BufferedReader reader = new BufferedReader(new FileReader(f));
 
@@ -44,6 +45,10 @@ public class GenerateHSqlDBMain {
         matcher = p.matcher(str);
         str = matcher.replaceAll("integer");
 
+        p = Pattern.compile("int\\(.*?\\)");
+        matcher = p.matcher(str);
+        str = matcher.replaceAll("int");
+
         p = Pattern.compile("DEFAULT.*,");
         matcher = p.matcher(str);
         str = matcher.replaceAll(",");
@@ -54,7 +59,7 @@ public class GenerateHSqlDBMain {
 
         p = Pattern.compile("UNIQUE KEY (`.*?`) (\\(.*?\\))");
         matcher = p.matcher(str);
-        str = matcher.replaceAll("constraint $1 unique $2");
+        str = matcher.replaceAll("constraint con_$1 unique $2");
 
         p = Pattern.compile("`(.*?)`");
         matcher = p.matcher(str);
