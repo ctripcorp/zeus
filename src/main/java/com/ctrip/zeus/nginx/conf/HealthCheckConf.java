@@ -20,7 +20,10 @@ public class HealthCheckConf {
                 .append(" timeout=").append(1000)
                 .append(" type=http").append(";\n");
         b.append("    ").append("check_keepalive_requests 100").append(";\n");
-        b.append("    ").append("check_http_send \"GET ").append(h.getUri()).append(" HTTP/1.0\\r\\nConnection: keep-alive\\r\\n\\r\\n\"").append(";\n");
+        b.append("    ").append("check_http_send \"")
+                .append("GET ").append(h.getUri()).append(" HTTP/1.0\\r\\n")
+                .append("Connection: keep-alive\\r\\n")
+                .append("Host: ").append(vs.getDomains().get(0).getName()).append("\\r\\n\\r\\n\"").append(";\n");
         b.append("    ").append("check_http_expect_alive http_2xx http_3xx").append(";\n");
         return b.toString();
     }
