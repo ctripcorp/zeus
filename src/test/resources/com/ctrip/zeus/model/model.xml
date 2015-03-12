@@ -30,6 +30,14 @@
         <status>healthy</status>
     </slb>
 
+    <slb-list>
+        <total>11</total>
+        <slbs>
+            <slb/>
+            <slb/>
+        </slbs>
+    </slb-list>
+
     <app name="gateway" app-id="app921822">
         <app-slbs>
             <app-slb>
@@ -58,4 +66,12 @@
             </app-server>
         </app-servers>
     </app>
+
+    <app-list>
+        <total>11</total>
+        <apps>
+            <app/>
+            <app/>
+        </apps>
+    </app-list>
 </model>
