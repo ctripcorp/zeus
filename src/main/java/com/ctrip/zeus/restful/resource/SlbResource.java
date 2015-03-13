@@ -1,15 +1,20 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
+import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.SlbRepository;
 import org.springframework.stereotype.Component;
+import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.List;
 
 /**
  * @author:xingchaowang
@@ -23,8 +28,13 @@ public class SlbResource {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response list() {
-        return Response.ok("hello").build();
+    public Response list(@Context HttpHeaders hh) {
+        SlbList slbList = slbRepository.list();
+        if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
+            return Response.status(200).entity(String.format(SlbList.XML, slbList)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(SlbList.JSON, slbList)).type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET
@@ -32,8 +42,8 @@ public class SlbResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     public Response get(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
         Slb slb = slbRepository.get(slbName);
-        if (slb != null) {
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+        if (slb.getName() != null) {
+            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
                 return Response.status(200).entity(String.format(Slb.XML, slb)).type(MediaType.APPLICATION_XML).build();
             } else {
                 return Response.status(200).entity(String.format(Slb.JSON, slb)).type(MediaType.APPLICATION_JSON).build();
@@ -44,13 +54,14 @@ public class SlbResource {
 
     @POST
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response add(String slb) {
-        try {
-            Slb sc = DefaultJsonParser.parse(Slb.class, slb);
-            slbRepository.addOrUpdate(sc);
-        } catch (IOException e) {
-            e.printStackTrace();
+    public Response addOrUpdate(@Context HttpHeaders hh, String slb) throws IOException, SAXException {
+        Slb sc = null;
+        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
+            sc = DefaultSaxParser.parseEntity(Slb.class, slb);
+        } else {
+            sc = DefaultJsonParser.parse(Slb.class, slb);
         }
+        slbRepository.addOrUpdate(sc);
         return Response.ok().build();
     }
 }

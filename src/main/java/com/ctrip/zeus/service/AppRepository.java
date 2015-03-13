@@ -13,7 +13,7 @@ import java.util.List;
 public interface AppRepository extends Repository {
     AppList list();
 
-    List<App> list(String slbName, String virtualServerName);
+    AppList list(String slbName, String virtualServerName);
 
     App get(String appName);
 

@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.impl;
 
 import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.service.AppQuery;
 import com.ctrip.zeus.service.AppRepository;
 import com.ctrip.zeus.service.AppSync;
@@ -22,18 +23,30 @@ public class AppRepositoryImpl implements AppRepository {
     private AppQuery appQuery;
 
     @Override
-    public List<App> list() {
+    public AppList list() {
         try {
-            return appQuery.getAll();
+            AppList appList = new AppList();
+
+            for (App app : appQuery.getAll()) {
+                appList.addApp(app);
+            }
+            appList.setTotal(appList.getApps().size());
+            return appList;
         } catch (DalException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<App> list(String slbName, String virtualServerName) {
+    public AppList list(String slbName, String virtualServerName) {
         try {
-            return appQuery.getBy(slbName, virtualServerName);
+            AppList appList = new AppList();
+
+            for (App app : appQuery.getBy(slbName, virtualServerName)) {
+                appList.addApp(app);
+            }
+            appList.setTotal(appList.getApps().size());
+            return appList;
         } catch (DalException e) {
             throw new RuntimeException(e);
         }

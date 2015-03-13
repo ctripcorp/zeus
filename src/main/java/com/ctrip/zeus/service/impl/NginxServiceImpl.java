@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.impl;
 
 import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.NginxConfService;
@@ -37,12 +38,12 @@ public class NginxServiceImpl implements NginxService {
         String nginxConf = nginxConfService.generateNginxConf(slb);
         nginxOperator.writeNginxConf(slb, nginxConf);
         for (VirtualServer vs : slb.getVirtualServers()) {
-            List<App> list = appRepository.list(slb.getName(), vs.getName());
+            AppList appList = appRepository.list(slb.getName(), vs.getName());
 
-            String upstreamsConf = nginxConfService.generateUpstreamsConf(slb, vs, list);
+            String upstreamsConf = nginxConfService.generateUpstreamsConf(slb, vs, appList.getApps());
             nginxOperator.writeUpstreamsConf(slb, vs, upstreamsConf);
 
-            String serverConf = nginxConfService.generateServerConf(slb, vs, list);
+            String serverConf = nginxConfService.generateServerConf(slb, vs, appList.getApps());
             nginxOperator.writeServerConf(slb, vs, serverConf);
         }
 

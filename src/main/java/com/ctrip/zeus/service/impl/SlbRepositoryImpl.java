@@ -31,6 +31,7 @@ public class SlbRepositoryImpl implements SlbRepository {
             for (Slb slb : slbQuery.getAll()) {
                 list.addSlb(slb);
             }
+            list.setTotal(list.getSlbs().size());
             return list;
         } catch (DalException e) {
             throw new RuntimeException(e);
