@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.impl;
 
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.service.SlbQuery;
 import com.ctrip.zeus.service.SlbRepository;
 import com.ctrip.zeus.service.SlbSync;
@@ -24,9 +25,13 @@ public class SlbRepositoryImpl implements SlbRepository {
     private SlbQuery slbQuery;
 
     @Override
-    public List<Slb> list() {
+    public SlbList list() {
         try {
-            return slbQuery.getAll();
+            SlbList list = new SlbList();
+            for (Slb slb : slbQuery.getAll()) {
+                list.addSlb(slb);
+            }
+            return list;
         } catch (DalException e) {
             throw new RuntimeException(e);
         }
@@ -42,7 +47,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public void add(Slb s) {
+    public void addOrUpdate(Slb s) {
         try {
             slbSync.sync(s);
         } catch (DalException e) {

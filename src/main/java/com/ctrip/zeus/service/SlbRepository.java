@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.SlbList;
 
 import java.util.List;
 
@@ -9,9 +10,10 @@ import java.util.List;
  * @date: 3/4/2015.
  */
 public interface SlbRepository extends Repository {
-    List<Slb> list();
+
+    SlbList list();
 
     Slb get(String slbName);
 
-    void add(Slb sc);
+    void addOrUpdate(Slb sc);
 }

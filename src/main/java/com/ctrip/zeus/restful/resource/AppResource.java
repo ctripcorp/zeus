@@ -34,16 +34,16 @@ public class AppResource {
     @Path("/{appName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     public Response get(@Context HttpHeaders hh, @PathParam("appName") String appName) {
-        List<App> list = appRepository.list();
-        for (App app : list) {
-            if (appName.equals(app.getName())) {
-                if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                    return Response.status(200).entity(String.format(App.XML, app)).type(MediaType.APPLICATION_XML).build();
-                }else{
-                    return Response.status(200).entity(String.format(App.JSON, app)).type(MediaType.APPLICATION_JSON).build();
-                }
+        App app = appRepository.get(appName);
+
+        if (app != null) {
+            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_ATOM_XML_TYPE)) {
+                return Response.status(200).entity(String.format(App.XML, app)).type(MediaType.APPLICATION_XML).build();
+            }else{
+                return Response.status(200).entity(String.format(App.JSON, app)).type(MediaType.APPLICATION_JSON).build();
             }
         }
+
         return Response.status(404).type(hh.getMediaType()).build();
     }
 

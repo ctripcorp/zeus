@@ -3,4 +3,7 @@
    <model package="com.ctrip.zeus.model" name="model">
       <sample-model>src\test\resources\com\ctrip\zeus\model\model.xml</sample-model>
    </model>
+   <model package="com.ctrip.zeus.page" name="page">
+      <sample-model>src/test/resources/com/ctrip/zeus/model/page.xml</sample-model>
+   </model>
 </wizard>

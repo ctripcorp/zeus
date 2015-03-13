@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.entity.Slb;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
  * @date: 3/4/2015.
  */
 public interface AppRepository extends Repository {
-    List<App> list();
+    AppList list();
 
     List<App> list(String slbName, String virtualServerName);
 

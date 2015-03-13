@@ -54,7 +54,7 @@ public class SlbAdminServer extends AbstractServer {
 
         //Add Default Servlet
         handler.setResourceBase(wwwBaseDir.get());
-        handler.setWelcomeFiles(new String[]{"index.htm", "index.html", "index.jsp"});
+        handler.setWelcomeFiles(new String[]{"index.htm", "index.html", "main.jsp", "index.jsp"});
         DefaultServlet staticServlet = new DefaultServlet();
         ServletHolder staticServletHolder = new ServletHolder(staticServlet);
 
@@ -78,6 +78,8 @@ public class SlbAdminServer extends AbstractServer {
         handler.addServlet(jerseyServletHolder, "/api/*");
         handler.addServlet(staticServletHolder, "/");
         handler.addServlet(new ServletHolder(new ForwardServlet("/index.jsp")), "/test/*");
+        handler.addServlet(new ServletHolder(new ForwardServlet("/main.jsp")), "/app");
+        handler.addServlet(new ServletHolder(new ForwardServlet("/main.jsp")), "/slb");
 
         //Create Jetty Server
         server = new Server(serverPort.get());

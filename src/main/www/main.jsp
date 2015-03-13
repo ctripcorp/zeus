@@ -1,3 +1,7 @@
+<%@ page contentType="text/html; charset=UTF-8" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="f" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,14 +87,14 @@
         <!-- sidebar goes here -->
         <ul class="nav nav-list">
             <li class="active">
-                <a href="index.html">
+                <a href="/slb">
                     <i class="menu-icon fa fa-tachometer"></i>
                     <span class="menu-text"> SLB Cluster </span>
                 </a>
                 <b class="arrow"></b>
             </li>
             <li class="">
-                <a href="apps.html" class="">
+                <a href="/app" class="">
                     <i class="menu-icon fa fa-desktop"></i>
 							<span class="menu-text">
 								Application
