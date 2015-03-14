@@ -51,6 +51,7 @@ public class AppSyncImpl implements AppSync {
     public AppDo sync(App app) throws DalException {
         AppDo d = C.toAppDo(app);
         d.setCreatedTime(new Date());
+        d.setVersion(1);
         appDao.insert(d);
 
         syncAppSlbs(d.getId(), app.getAppSlbs());
@@ -58,7 +59,9 @@ public class AppSyncImpl implements AppSync {
         syncLoadBalancingMethod(d.getId(), app.getLoadBalancingMethod());
         syncAppServers(d.getId(), app.getAppServers());
 
-        return null;
+        d = appDao.findByPK(d.getKeyId(), AppEntity.READSET_FULL);
+        app.setVersion(d.getVersion());
+        return d;
     }
 
     private void syncAppSlbs(long appKey, List<AppSlb> appSlbs) throws DalException {

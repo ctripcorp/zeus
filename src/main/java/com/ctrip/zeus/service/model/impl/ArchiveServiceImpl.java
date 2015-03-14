@@ -1,11 +1,17 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.ArchiveService;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
+import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -23,51 +29,63 @@ public class ArchiveServiceImpl implements ArchiveService {
     private ArchiveAppDao archiveAppDao;
 
     @Override
-    public int archiveSlb(String name, String content) throws DalException {
-        ArchiveSlbDo max = archiveSlbDao.findMaxVersionByName(name, ArchiveSlbEntity.READSET_FULL);
-        int version = max.getVersion() + 1;
-        ArchiveSlbDo d = new ArchiveSlbDo().setName(name).setContent(content).setVersion(version).setCreatedTime(new Date()).setLastModified(new Date());
+    public int archiveSlb(Slb slb) throws DalException {
+        String content = String.format(Slb.XML, slb);
+        ArchiveSlbDo d = new ArchiveSlbDo().setName(slb.getName()).setContent(content).setVersion(slb.getVersion()).setCreatedTime(new Date()).setLastModified(new Date());
         archiveSlbDao.insert(d);
         return d.getVersion();
     }
 
     @Override
-    public int archiveApp(String name, String content) throws DalException {
-        ArchiveAppDo max = archiveAppDao.findMaxVersionByName(name, ArchiveAppEntity.READSET_FULL);
-        int version = max.getVersion() + 1;
-        ArchiveAppDo d = new ArchiveAppDo().setName(name).setContent(content).setVersion(version).setCreatedTime(new Date()).setLastModified(new Date());
+    public int archiveApp(App app) throws DalException {
+        String content = String.format(App.XML, app);
+        ArchiveAppDo d = new ArchiveAppDo().setName(app.getName()).setContent(content).setVersion(app.getVersion()).setCreatedTime(new Date()).setLastModified(new Date());
         archiveAppDao.insert(d);
         return d.getVersion();
     }
 
     @Override
-    public String getSlb(String name, int version) throws DalException {
-        return archiveSlbDao.findByNameAndVersion(name, version, ArchiveSlbEntity.READSET_FULL).getContent();
+    public Slb getSlb(String name, int version) throws DalException, IOException, SAXException {
+        String content = archiveSlbDao.findByNameAndVersion(name, version, ArchiveSlbEntity.READSET_FULL).getContent();
+        return DefaultSaxParser.parseEntity(Slb.class, content);
     }
 
     @Override
-    public String getApp(String name, int version) throws DalException {
-        return archiveAppDao.findByNameAndVersion(name, version, ArchiveAppEntity.READSET_FULL).getContent();
+    public App getApp(String name, int version) throws DalException, IOException, SAXException {
+        String content =  archiveAppDao.findByNameAndVersion(name, version, ArchiveAppEntity.READSET_FULL).getContent();
+        return DefaultSaxParser.parseEntity(App.class, content);
     }
 
     @Override
-    public ArchiveSlbDo getMaxVersionSlb(String name) throws DalException {
-        return archiveSlbDao.findMaxVersionByName(name, ArchiveSlbEntity.READSET_FULL);
+    public Slb getMaxVersionSlb(String name) throws DalException, IOException, SAXException {
+        String content =  archiveSlbDao.findMaxVersionByName(name, ArchiveSlbEntity.READSET_FULL).getContent();
+        return DefaultSaxParser.parseEntity(Slb.class, content);
     }
 
     @Override
-    public ArchiveAppDo getMaxVersionApp(String name) throws DalException {
-        return archiveAppDao.findMaxVersionByName(name, ArchiveAppEntity.READSET_FULL);
+    public App getMaxVersionApp(String name) throws DalException, IOException, SAXException {
+        String content = archiveAppDao.findMaxVersionByName(name, ArchiveAppEntity.READSET_FULL).getContent();
+        return DefaultSaxParser.parseEntity(App.class, content);
     }
 
     @Override
-    public List<ArchiveSlbDo> getAllSlb(String name) throws DalException {
-        return archiveSlbDao.findAllByName(name, ArchiveSlbEntity.READSET_FULL);
+    public List<Slb> getAllSlb(String name) throws DalException, IOException, SAXException {
+        List<ArchiveSlbDo> l =  archiveSlbDao.findAllByName(name, ArchiveSlbEntity.READSET_FULL);
+        List<Slb> list = new ArrayList<>();
+        for (ArchiveSlbDo d : l) {
+            list.add(DefaultSaxParser.parseEntity(Slb.class, d.getContent()));
+        }
+        return list;
     }
 
     @Override
-    public List<ArchiveAppDo> getAllApp(String name) throws DalException {
-        return archiveAppDao.findAllByName(name, ArchiveAppEntity.READSET_FULL);
+    public List<App> getAllApp(String name) throws DalException, IOException, SAXException {
+        List<ArchiveAppDo> l = archiveAppDao.findAllByName(name, ArchiveAppEntity.READSET_FULL);
+        List<App> list = new ArrayList<>();
+        for (ArchiveAppDo d : l) {
+            list.add(DefaultSaxParser.parseEntity(App.class, d.getContent()));
+        }
+        return list;
     }
 
 }

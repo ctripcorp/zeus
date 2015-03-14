@@ -64,7 +64,7 @@ public class ApiTest {
         String slbName = "default";
 
         Slb sc = new Slb();
-        sc.setName(slbName).setNginxBin("/usr/local/nginx/bin").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1)
+        sc.setName(slbName).setNginxBin("/usr/local/nginx/bin").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
                 .addVip(new Vip().setIp("192.168.1.3"))
                 .addVip(new Vip().setIp("192.168.1.6"))
                 .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1").setEnable(true))
@@ -79,7 +79,7 @@ public class ApiTest {
 
         Slb sc2 = c.get(slbName);
 
-        Assert.assertEquals(sc, sc2);
+        Assert.assertEquals(sc.setVersion(sc2.getVersion()), sc2);
 
     }
 
@@ -90,7 +90,7 @@ public class ApiTest {
         SlbClient s = new SlbClient("http://127.0.0.1:8099");
         String slbName = "default";
         Slb sc = new Slb();
-        sc.setName(slbName).setNginxBin("/usr/local/nginx/bin").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1)
+        sc.setName(slbName).setNginxBin("/usr/local/nginx/bin").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
                 .addVip(new Vip().setIp("192.168.1.3"))
                 .addVip(new Vip().setIp("192.168.1.6"))
                 .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1").setEnable(true))
@@ -110,7 +110,7 @@ public class ApiTest {
 
         App app = new App();
         app.setName(appName)
-                .setAppId("999999")
+                .setAppId("999999").setVersion(0)
                 .setHealthCheck(new HealthCheck().setFails(5).setIntervals(50).setPasses(2).setUri("/hotel"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
                 .addAppServer(new AppServer().setIp("192.168.20.1")
@@ -123,7 +123,7 @@ public class ApiTest {
         c.add(app);
 
         App app2 = c.get(appName);
-        Assert.assertEquals(app, app2);
+        Assert.assertEquals(app.setVersion(1), app2);
 
     }
 }

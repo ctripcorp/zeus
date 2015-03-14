@@ -1,5 +1,5 @@
 <model>
-    <slb name="default">
+    <slb name="default" version="1">
         <nginx-bin>/usr/local/nginx/bin</nginx-bin>
         <nginx-conf>/usr/local/nginx/conf</nginx-conf>
         <nginx-worker-processes>1</nginx-worker-processes>
@@ -38,7 +38,7 @@
         </slbs>
     </slb-list>
 
-    <app name="gateway" app-id="app921822">
+    <app name="gateway" app-id="app921822" version="1">
         <app-slbs>
             <app-slb>
                 <slb-name>default</slb-name>

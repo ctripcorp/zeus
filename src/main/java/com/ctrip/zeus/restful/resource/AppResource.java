@@ -56,14 +56,14 @@ public class AppResource {
 
     @POST
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response add(@Context HttpHeaders hh, String app) throws IOException, SAXException {
+    public Response addOrUpdate(@Context HttpHeaders hh, String app) throws IOException, SAXException {
         App a = null;
         if (hh.getMediaType().equals(MediaType.APPLICATION_ATOM_XML_TYPE)) {
             a = DefaultSaxParser.parseEntity(App.class, app);
         }else{
             a = DefaultJsonParser.parse(App.class, app);
         }
-        appRepository.add(a);
+        appRepository.addOrUpdate(a);
         return Response.ok().build();
     }
 }

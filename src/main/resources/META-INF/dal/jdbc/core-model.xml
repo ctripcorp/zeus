@@ -11,6 +11,7 @@
                     ON DUPLICATE KEY UPDATE
                         name = values(name),
                         app_id = values(app_id),
+                        version = version + 1,
                         <FIELD name="last-modified"/> = NOW()
                     ]]>
                 </statement>
@@ -219,6 +220,7 @@
                         nginx_conf = values(nginx_conf),
                         nginx_worker_processes = values(nginx_worker_processes),
                         status = values(status),
+                        version = version + 1,
                         <FIELD name="last-modified"/> = NOW()
                     ]]>
                 </statement>

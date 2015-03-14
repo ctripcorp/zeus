@@ -51,12 +51,15 @@ public class SlbSyncImpl implements SlbSync {
     public SlbDo sync(Slb slb) throws DalException {
         SlbDo d = C.toSlbDo(slb);
         d.setCreatedTime(new Date());
+        d.setVersion(1);
         slbDao.insert(d);
 
         syncSlbVips(d.getId(), slb.getVips());
         syncSlbServers(d.getId(), slb.getSlbServers());
         syncVirtualServers(d.getId(), slb.getVirtualServers());
 
+        d = slbDao.findByPK(d.getKeyId(), SlbEntity.READSET_FULL);
+        slb.setVersion(d.getVersion());
         return d;
     }
 

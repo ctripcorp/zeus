@@ -18,5 +18,5 @@ public interface AppRepository extends Repository {
 
     App get(String appName);
 
-    void add(App app);
+    void addOrUpdate(App app);
 }

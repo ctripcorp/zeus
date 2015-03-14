@@ -5,11 +5,17 @@
 -- HeidiSQL Version:             9.1.0.4867
 -- --------------------------------------------------------
 
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
 -- Dumping structure for table zeus.app
 CREATE TABLE IF NOT EXISTS `app` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `name` varchar(200) NOT NULL DEFAULT '0',
   `app_id` varchar(200) NOT NULL DEFAULT '0',
+  `version` int(11) NOT NULL DEFAULT '0',
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -60,8 +66,6 @@ CREATE TABLE IF NOT EXISTS `app_server` (
   `weight` int(11) NOT NULL DEFAULT '0',
   `max_fails` int(11) NOT NULL DEFAULT '0',
   `fail_timeout` int(11) NOT NULL DEFAULT '0',
-  `healthy` bit(1) NOT NULL DEFAULT b'0',
-  `enable` bit(1) NOT NULL DEFAULT b'0',
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -87,12 +91,41 @@ CREATE TABLE IF NOT EXISTS `app_slb` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table zeus.archive_app
+CREATE TABLE IF NOT EXISTS `archive_app` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) DEFAULT NULL,
+  `content` mediumtext,
+  `version` int(11) DEFAULT NULL,
+  `created_time` timestamp NULL DEFAULT NULL,
+  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_version` (`name`,`version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table zeus.archive_slb
+CREATE TABLE IF NOT EXISTS `archive_slb` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) DEFAULT NULL,
+  `content` mediumtext,
+  `version` int(11) DEFAULT NULL,
+  `created_time` timestamp NULL DEFAULT NULL,
+  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_version` (`name`,`version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table zeus.server
 CREATE TABLE IF NOT EXISTS `server` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `ip` varchar(100) NOT NULL DEFAULT '0',
   `host_name` varchar(100) NOT NULL DEFAULT '0',
-  `up` bit(1) NOT NULL DEFAULT b'1',
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -110,6 +143,7 @@ CREATE TABLE IF NOT EXISTS `slb` (
   `nginx_conf` varchar(300) NOT NULL DEFAULT '0',
   `nginx_worker_processes` int(11) NOT NULL DEFAULT '0',
   `status` varchar(300) NOT NULL DEFAULT '0',
+  `version` int(11) NOT NULL DEFAULT '0',
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -176,3 +210,36 @@ CREATE TABLE IF NOT EXISTS `slb_virtual_server` (
   UNIQUE KEY `slb_id_name` (`slb_id`,`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table zeus.status_app_server
+CREATE TABLE IF NOT EXISTS `status_app_server` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `app_name` varchar(200) NOT NULL,
+  `ip` varchar(200) NOT NULL,
+  `up` bit(1) NOT NULL,
+  `created_time` timestamp NULL DEFAULT NULL,
+  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `app_name_ip` (`app_name`,`ip`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table zeus.status_server
+CREATE TABLE IF NOT EXISTS `status_server` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `ip` varchar(200) NOT NULL,
+  `up` bit(1) NOT NULL,
+  `created_time` timestamp NULL DEFAULT NULL,
+  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ip` (`ip`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -17,5 +17,5 @@ public interface StatusAppServerService {
 
     List<StatusAppServerDo> listByServer(String ip) throws DalException;
 
-    void updateStatusAppServer(StatusAppServerDo statusAppServerDo) throws DalException;
+    void updateStatusAppServer(StatusAppServerDo d) throws DalException;
 }

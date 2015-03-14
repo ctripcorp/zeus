@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -35,7 +36,8 @@ public class StatusAppServerServiceImpl implements StatusAppServerService {
     }
 
     @Override
-    public void updateStatusAppServer(StatusAppServerDo statusAppServerDo) throws DalException {
-        statusAppServerDao.insert(statusAppServerDo);
+    public void updateStatusAppServer(StatusAppServerDo d) throws DalException {
+        d.setCreatedTime(new Date());
+        statusAppServerDao.insert(d);
     }
 }

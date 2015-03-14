@@ -13,7 +13,8 @@ public class C {
     public static App toApp(AppDo d) {
         return new App()
                 .setAppId(d.getAppId())
-                .setName(d.getName());
+                .setName(d.getName())
+                .setVersion(d.getVersion());
     }
 
     public static AppServer toAppServer(AppServerDo d) {
@@ -56,7 +57,8 @@ public class C {
                 .setNginxBin(d.getNginxBin())
                 .setNginxConf(d.getNginxConf())
                 .setNginxWorkerProcesses(d.getNginxWorkerProcesses())
-                .setStatus(d.getStatus());
+                .setStatus(d.getStatus())
+                .setVersion(d.getVersion());
     }
 
     public static SlbServer toSlbServer(SlbServerDo d) {
@@ -83,7 +85,8 @@ public class C {
 
     public static AppDo toAppDo(App e) {
         return new AppDo().setAppId(e.getAppId())
-                .setName(e.getName());
+                .setName(e.getName())
+                .setVersion(e.getVersion());
     }
 
     public static AppServerDo toAppServerDo(AppServer e) {
@@ -127,7 +130,8 @@ public class C {
                 .setNginxBin(e.getNginxBin())
                 .setNginxConf(e.getNginxConf())
                 .setNginxWorkerProcesses(e.getNginxWorkerProcesses())
-                .setStatus(e.getStatus());
+                .setStatus(e.getStatus())
+                .setVersion(e.getVersion());
     }
 
     public static SlbServerDo toSlbServerDo(SlbServer e) {

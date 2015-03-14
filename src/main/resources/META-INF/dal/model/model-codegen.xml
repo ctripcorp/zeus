@@ -8,6 +8,7 @@
   </entity>
   <entity name="slb">
     <attribute name="name" value-type="String" />
+    <attribute name="version" value-type="int" />
     <element name="nginx-bin" value-type="String" />
     <element name="nginx-conf" value-type="String" />
     <element name="nginx-worker-processes" value-type="int" />
@@ -40,6 +41,7 @@
   <entity name="app">
     <attribute name="name" value-type="String" />
     <attribute name="app-id" value-type="String" />
+    <attribute name="version" value-type="int" />
     <entity-ref name="app-slb" type="list" names="app-slbs" xml-indent="true" />
     <entity-ref name="health-check" />
     <entity-ref name="load-balancing-method" />

@@ -4,6 +4,7 @@
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="name" field="name" value-type="String" length="200" nullable="false" />
     <member name="app-id" field="app_id" value-type="String" length="200" nullable="false" />
+    <member name="version" field="version" value-type="int" length="10" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
@@ -214,6 +215,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="name_version" unique="true" members="name ASC, version ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -253,6 +255,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="name_version" unique="true" members="name ASC, version ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -329,6 +332,7 @@
     <member name="nginx-conf" field="nginx_conf" value-type="String" length="300" nullable="false" />
     <member name="nginx-worker-processes" field="nginx_worker_processes" value-type="int" length="10" nullable="false" />
     <member name="status" field="status" value-type="String" length="300" nullable="false" />
+    <member name="version" field="version" value-type="int" length="10" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />

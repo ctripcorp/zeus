@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.service.model.AppQuery;
 import com.ctrip.zeus.service.model.AppRepository;
 import com.ctrip.zeus.service.model.AppSync;
+import com.ctrip.zeus.service.model.ArchiveService;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
@@ -20,6 +21,8 @@ public class AppRepositoryImpl implements AppRepository {
     private AppSync appSync;
     @Resource
     private AppQuery appQuery;
+    @Resource
+    private ArchiveService archiveService;
 
     @Override
     public AppList list() {
@@ -61,9 +64,10 @@ public class AppRepositoryImpl implements AppRepository {
     }
 
     @Override
-    public void add(App app) {
+    public void addOrUpdate(App app) {
         try {
             appSync.sync(app);
+            archiveService.archiveApp(app);
         } catch (DalException e) {
             e.printStackTrace();
         }
