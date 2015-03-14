@@ -24,6 +24,8 @@
          <table name="status_server"/>
          <table name="archive_app"/>
          <table name="archive_slb"/>
+         <table name="conf_app_active"/>
+         <table name="conf_slb_active"/>
       </group>
    </jdbc>
 </wizard>

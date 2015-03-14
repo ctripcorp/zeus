@@ -121,6 +121,36 @@ CREATE TABLE IF NOT EXISTS `archive_slb` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table zeus.conf_app_active
+CREATE TABLE IF NOT EXISTS `conf_app_active` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) DEFAULT NULL,
+  `content` mediumtext,
+  `version` int(11) DEFAULT NULL,
+  `created_time` timestamp NULL DEFAULT NULL,
+  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table zeus.conf_slb_active
+CREATE TABLE IF NOT EXISTS `conf_slb_active` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) DEFAULT NULL,
+  `content` mediumtext,
+  `version` int(11) DEFAULT NULL,
+  `created_time` timestamp NULL DEFAULT NULL,
+  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table zeus.server
 CREATE TABLE IF NOT EXISTS `server` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
