@@ -372,77 +372,73 @@
             </query>
         </query-defs>
     </entity>
-    <entity name="status-app-server" table="status_app_server" alias="sas" do-class="StatusAppServerDo">
+    <entity name="archive-app" table="archive_app" alias="aa" do-class="ArchiveAppDo">
         <query-defs>
-            <query name="insert" type="INSERT">
+            <query name="find-max-version-by-name" type="SELECT">
+                <param name="name"/>
                 <statement>
                     <![CDATA[
-                    INSERT INTO <TABLE/>(<FIELDS/>)
-                    VALUES(<VALUES/>)
-                    ON DUPLICATE KEY UPDATE
-                        up = values(up),
-                        <FIELD name="last-modified"/> = NOW()
+                    SELECT id, name, content, max(version) as version, created_time, last_modified
+                    FROM <TABLE/>
+                        WHERE  <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all" type="SELECT" multiple="true">
+            <query name="find-by-name-and-version" type="SELECT">
+                <param name="name"/>
+                <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
+                        WHERE <FIELD name='name'/> = ${version}
+                        AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-app" type="SELECT" multiple="true">
-                <param name="app-name"/>
+            <query name="find-all-by-name" type="SELECT" multiple="true">
+                <param name="name"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-name'/> = ${app-name}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-ip" type="SELECT" multiple="true">
-                <param name="ip"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='ip'/> = ${ip}
+                        WHERE <FIELD name='name'/> = ${version}
                     ]]>
                 </statement>
             </query>
         </query-defs>
     </entity>
-    <entity name="status-server" table="status_server" alias="ss" do-class="StatusServerDo">
+    <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
         <query-defs>
-            <query name="insert" type="INSERT">
+            <query name="find-max-version-by-name" type="SELECT">
+                <param name="name"/>
                 <statement>
                     <![CDATA[
-                    INSERT INTO <TABLE/>(<FIELDS/>)
-                    VALUES(<VALUES/>)
-                    ON DUPLICATE KEY UPDATE
-                        up = values(up),
-                        <FIELD name="last-modified"/> = NOW()
+                    SELECT id, name, content, max(version) as version, created_time, last_modified
+                    FROM <TABLE/>
+                        WHERE  <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all" type="SELECT" multiple="true">
+            <query name="find-by-name-and-version" type="SELECT">
+                <param name="name"/>
+                <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
+                        WHERE <FIELD name='name'/> = ${version}
+                        AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-ip" type="SELECT" multiple="true">
-                <param name="ip"/>
+            <query name="find-all-by-name" type="SELECT" multiple="true">
+                <param name="name"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='ip'/> = ${ip}
+                        WHERE <FIELD name='name'/> = ${version}
                     ]]>
                 </statement>
             </query>

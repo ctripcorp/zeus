@@ -22,6 +22,8 @@
          <table name="slb_virtual_server"/>
          <table name="status_app_server"/>
          <table name="status_server"/>
+         <table name="archive_app"/>
+         <table name="archive_slb"/>
       </group>
    </jdbc>
 </wizard>

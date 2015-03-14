@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.model.impl;
+package com.ctrip.zeus.service.nginx.impl;
 
 import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.entity.Slb;
@@ -6,7 +6,7 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.NginxConfService;
 import com.ctrip.zeus.nginx.NginxOperator;
 import com.ctrip.zeus.service.model.AppRepository;
-import com.ctrip.zeus.service.NginxService;
+import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service;
+package com.ctrip.zeus.service.nginx;
 
 import java.io.IOException;
 

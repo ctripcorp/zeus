@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-  <file path="core-codegen.xml" />
-  <file path="core-dal.xml" />
+    <file path="core-codegen.xml"/>
+    <file path="core-model.xml"/>
+    <file path="core-status.xml"/>
 </manifest>
 

@@ -1,6 +1,6 @@
 package com.ctrip.zeus.restful.resource;
 
-import com.ctrip.zeus.service.NginxService;
+import com.ctrip.zeus.service.nginx.NginxService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;

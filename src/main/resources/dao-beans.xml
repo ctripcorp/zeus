@@ -28,6 +28,14 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppSlbDao"/>
     </bean>
 
+    <bean id="archiveAppDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ArchiveAppDao"/>
+    </bean>
+
+    <bean id="archiveSlbDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ArchiveSlbDao"/>
+    </bean>
+
     <bean id="serverDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ServerDao"/>
     </bean>
