@@ -4,7 +4,7 @@ import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
-import com.ctrip.zeus.service.AppRepository;
+import com.ctrip.zeus.service.model.AppRepository;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 

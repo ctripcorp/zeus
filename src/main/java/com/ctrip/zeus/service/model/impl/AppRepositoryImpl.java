@@ -1,15 +1,14 @@
-package com.ctrip.zeus.service.impl;
+package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppList;
-import com.ctrip.zeus.service.AppQuery;
-import com.ctrip.zeus.service.AppRepository;
-import com.ctrip.zeus.service.AppSync;
+import com.ctrip.zeus.service.model.AppQuery;
+import com.ctrip.zeus.service.model.AppRepository;
+import com.ctrip.zeus.service.model.AppSync;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author:xingchaowang

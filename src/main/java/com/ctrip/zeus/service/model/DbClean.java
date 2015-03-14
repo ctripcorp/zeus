@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service;
+package com.ctrip.zeus.service.model;
 
 import org.unidal.dal.jdbc.DalException;
 

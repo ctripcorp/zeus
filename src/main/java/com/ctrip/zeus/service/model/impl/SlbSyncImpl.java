@@ -1,9 +1,9 @@
-package com.ctrip.zeus.service.impl;
+package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.DbClean;
-import com.ctrip.zeus.service.SlbSync;
+import com.ctrip.zeus.service.model.DbClean;
+import com.ctrip.zeus.service.model.SlbSync;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;

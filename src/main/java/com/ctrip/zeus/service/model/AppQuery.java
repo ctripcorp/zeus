@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service;
+package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.Slb;
