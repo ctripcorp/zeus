@@ -116,8 +116,6 @@
                         weight = values(weight),
                         max_fails = values(max_fails),
                         fail_timeout = values(fail_timeout),
-                        healthy = values(healthy),
-                        enable = values(enable),
                         <FIELD name="last-modified"/> = NOW()
                     ]]>
                 </statement>
@@ -369,6 +367,82 @@
                     FROM <TABLE/>
                         WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="status-app-server" table="status_app_server" alias="sas" do-class="StatusAppServerDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        up = values(up),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-app" type="SELECT" multiple="true">
+                <param name="app-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-name'/> = ${app-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ip" type="SELECT" multiple="true">
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="status-server" table="status_server" alias="ss" do-class="StatusServerDo">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        up = values(up),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ip" type="SELECT" multiple="true">
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='ip'/> = ${ip}
                     ]]>
                 </statement>
             </query>

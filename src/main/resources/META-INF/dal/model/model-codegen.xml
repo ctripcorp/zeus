@@ -65,14 +65,11 @@
     <attribute name="weight" value-type="int" />
     <attribute name="max-fails" value-type="int" />
     <attribute name="fail-timeout" value-type="int" />
-    <attribute name="healthy" value-type="boolean" />
-    <attribute name="enable" value-type="boolean" />
     <entity-ref name="server" />
   </entity>
   <entity name="server">
     <attribute name="ip" value-type="String" />
     <attribute name="host-name" value-type="String" />
-    <attribute name="up" value-type="boolean" />
   </entity>
   <entity name="app-list">
     <element name="total" value-type="int" />

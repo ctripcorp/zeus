@@ -58,11 +58,11 @@
             <value>uri</value>
         </load-balancing-method>
         <app-servers>
-            <app-server port="80" weight="5" max-fails="5" fail-timeout="30" healthy="true" enable="true">
-                <server ip="192.168.1.10" host-name="vms002" up="true"/>
+            <app-server port="80" weight="5" max-fails="5" fail-timeout="30">
+                <server ip="192.168.1.10" host-name="vms002"/>
             </app-server>
-            <app-server port="80" weight="5" max-fails="5" fail-timeout="30" healthy="true" enable="true">
-                <server ip="192.168.1.11" host-name="vms002" up="true"/>
+            <app-server port="80" weight="5" max-fails="5" fail-timeout="30">
+                <server ip="192.168.1.11" host-name="vms002"/>
             </app-server>
         </app-servers>
     </app>

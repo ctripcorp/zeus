@@ -20,6 +20,8 @@
          <table name="slb_server"/>
          <table name="slb_vip"/>
          <table name="slb_virtual_server"/>
+         <table name="status_app_server"/>
+         <table name="status_server"/>
       </group>
    </jdbc>
 </wizard>

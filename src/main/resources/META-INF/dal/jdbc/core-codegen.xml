@@ -129,8 +129,6 @@
     <member name="weight" field="weight" value-type="int" length="10" nullable="false" />
     <member name="max-fails" field="max_fails" value-type="int" length="10" nullable="false" />
     <member name="fail-timeout" field="fail_timeout" value-type="int" length="10" nullable="false" />
-    <member name="healthy" field="healthy" value-type="boolean" nullable="false" />
-    <member name="enable" field="enable" value-type="boolean" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
@@ -211,7 +209,6 @@
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="ip" field="ip" value-type="String" length="100" nullable="false" />
     <member name="host-name" field="host_name" value-type="String" length="100" nullable="false" />
-    <member name="up" field="up" value-type="boolean" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
@@ -419,6 +416,84 @@
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="slb_id_name" unique="true" members="slb_id ASC, name ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="status-app-server" table="status_app_server" alias="sas">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="app-name" field="app_name" value-type="String" length="200" nullable="false" />
+    <member name="ip" field="ip" value-type="String" length="200" nullable="false" />
+    <member name="up" field="up" value-type="boolean" nullable="false" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="app_name_ip" unique="true" members="app_name ASC, ip ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="status-server" table="status_server" alias="ss2">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="ip" field="ip" value-type="String" length="200" nullable="false" />
+    <member name="up" field="up" value-type="boolean" nullable="false" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
