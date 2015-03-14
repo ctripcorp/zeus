@@ -18,6 +18,7 @@ public class C {
 
     public static AppServer toAppServer(AppServerDo d) {
         return new AppServer()
+                .setIp(d.getIp())
                 .setFailTimeout(d.getFailTimeout())
                 .setMaxFails(d.getMaxFails())
                 .setPort(d.getPort())
@@ -48,12 +49,6 @@ public class C {
                 .setValue(d.getValue());
     }
 
-
-    public static Server toServer(ServerDo d) {
-        return new Server()
-                .setHostName(d.getHostName())
-                .setIp(d.getIp());
-    }
 
     public static Slb toSlb(SlbDo d) {
         return new Slb()
@@ -93,7 +88,7 @@ public class C {
 
     public static AppServerDo toAppServerDo(AppServer e) {
         return new AppServerDo()
-                .setIp(e.getServer().getIp())
+                .setIp(e.getIp())
                 .setFailTimeout(e.getFailTimeout())
                 .setMaxFails(e.getMaxFails())
                 .setPort(e.getPort())
@@ -124,12 +119,6 @@ public class C {
         return new AppLoadBalancingMethodDo()
                 .setType(e.getType())
                 .setValue(e.getValue());
-    }
-
-    public static ServerDo toServerDo(Server e) {
-        return new ServerDo()
-                .setHostName(e.getHostName())
-                .setIp(e.getIp());
     }
 
     public static SlbDo toSlbDo(Slb e) {

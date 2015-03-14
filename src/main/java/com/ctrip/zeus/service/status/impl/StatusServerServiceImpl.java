@@ -19,6 +19,7 @@ public class StatusServerServiceImpl implements StatusServerService {
 
     @Resource
     private StatusServerDao statusServerDao;
+
     @Override
     public List<com.ctrip.zeus.dal.core.StatusServerDo> list() throws DalException {
         return statusServerDao.findAll(StatusServerEntity.READSET_FULL);

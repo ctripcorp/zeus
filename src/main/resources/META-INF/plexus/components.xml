@@ -119,6 +119,26 @@
 			</configuration>
 		</component>
 		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>status-app-server</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<logical-table-name>status-app-server</logical-table-name>
+				<physical-table-name>status_app_server</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>status-server</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<logical-table-name>status-server</logical-table-name>
+				<physical-table-name>status_server</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
 			<role>com.ctrip.zeus.dal.core.AppDao</role>
 			<implementation>com.ctrip.zeus.dal.core.AppDao</implementation>
 			<requirements>
@@ -211,6 +231,24 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.SlbVirtualServerDao</role>
 			<implementation>com.ctrip.zeus.dal.core.SlbVirtualServerDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.StatusAppServerDao</role>
+			<implementation>com.ctrip.zeus.dal.core.StatusAppServerDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.StatusServerDao</role>
+			<implementation>com.ctrip.zeus.dal.core.StatusServerDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

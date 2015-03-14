@@ -110,14 +110,13 @@ public class AppSyncImpl implements AppSync {
 
         //Update existed if necessary, and insert new ones.
         for (AppServer e : appServers) {
-            AppServerDo old = oldMap.get(appKey + e.getServer().getIp());
+            AppServerDo old = oldMap.get(appKey + e.getIp());
             if (old != null) {
                 oldList.remove(old);
             }
             appServerDao.insert(C.toAppServerDo(e)
                     .setAppId(appKey)
                     .setCreatedTime(new Date()));
-            syncServer(e.getServer());
         }
 
         //Remove unused ones.
@@ -126,7 +125,4 @@ public class AppSyncImpl implements AppSync {
         }
     }
 
-    private void syncServer(Server server) throws DalException {
-        serverDao.insert(C.toServerDo(server).setCreatedTime(new Date()));
-    }
 }

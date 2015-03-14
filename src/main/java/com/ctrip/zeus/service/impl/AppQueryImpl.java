@@ -9,7 +9,6 @@ import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -139,14 +138,6 @@ public class AppQueryImpl implements AppQuery {
         for (AppServerDo d : list) {
             AppServer e = C.toAppServer(d);
             app.addAppServer(e);
-
-            queryServer(d.getIp(), e);
         }
-    }
-
-    private void queryServer(String ip, AppServer appServer) throws DalException {
-        ServerDo d = serverDao.findByIp(ip, ServerEntity.READSET_FULL);
-        Server e = C.toServer(d);
-        appServer.setServer(e);
     }
 }

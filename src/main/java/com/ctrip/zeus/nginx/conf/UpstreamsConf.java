@@ -36,8 +36,7 @@ public class UpstreamsConf {
         //b.append("    ").append("zone " + upstreamName + " 64K").append(";\n");
 
         for (AppServer as : app.getAppServers()) {
-            Server s = as.getServer();
-            b.append("    server ").append(s.getIp() + ":" + as.getPort())
+            b.append("    server ").append(as.getIp() + ":" + as.getPort())
                     .append(" weight=").append(as.getWeight())
                     .append(" max_fails=").append(as.getMaxFails())
                     .append(" fail_timeout=").append(as.getFailTimeout())

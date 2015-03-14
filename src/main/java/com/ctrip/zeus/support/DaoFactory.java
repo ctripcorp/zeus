@@ -1,7 +1,6 @@
 package com.ctrip.zeus.support;
 
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.ContainerLoader;
 
 /**
