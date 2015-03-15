@@ -40,7 +40,7 @@ public class NginxServiceImpl implements NginxService {
         SlbDo slbDo = slbDao.findByName(nginxServerDo.getSlbName(), SlbEntity.READSET_FULL);
         String slbName = slbDo.getName();
         BuildInfoDo buildInfoDo = buildInfoDao.findByName(slbName, BuildInfoEntity.READSET_FULL);
-        int version = buildInfoDo.getCurrentPendingTicket();
+        int version = buildInfoDo.getCurrentTicket();
 
         String nginxConf = nginxConfDao.findBySlbNameAndVersion(slbName,version, NginxConfEntity.READSET_FULL).getContent();
         nginxOperator.writeNginxConf(slbDo.getNginxConf() + "/nginx.conf", nginxConf);
