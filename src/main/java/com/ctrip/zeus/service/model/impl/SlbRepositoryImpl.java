@@ -1,15 +1,20 @@
 package com.ctrip.zeus.service.model.impl;
 
+import com.ctrip.zeus.dal.core.NginxServerDao;
+import com.ctrip.zeus.dal.core.NginxServerDo;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbList;
+import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.SlbQuery;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.SlbSync;
+import com.ctrip.zeus.service.nginx.NginxService;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
+import java.util.Date;
 
 /**
  * @author:xingchaowang
@@ -25,6 +30,9 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Resource
     private ArchiveService archiveService;
+
+    @Resource
+    private NginxServerDao nginxServerDao;
 
     @Override
     public SlbList list() {
@@ -54,6 +62,14 @@ public class SlbRepositoryImpl implements SlbRepository {
         try {
             slbSync.sync(s);
             archiveService.archiveSlb(s);
+
+            for (SlbServer slbServer : s.getSlbServers()) {
+                nginxServerDao.insert(new NginxServerDo()
+                        .setIp(slbServer.getIp())
+                        .setSlbName(s.getName())
+                        .setVersion(0)
+                        .setCreatedTime(new Date()));
+            }
         } catch (DalException e) {
             e.printStackTrace();
         }

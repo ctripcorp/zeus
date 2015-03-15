@@ -30,6 +30,7 @@
          <table name="nginx_conf"/>
          <table name="nginx_conf_server"/>
          <table name="nginx_conf_upstream"/>
+         <table name="nginx_server"/>
       </group>
    </jdbc>
 </wizard>

@@ -14,6 +14,139 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-name-and-version" type="SELECT">
+                <param name="name"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> = ${name}
+                        AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="nginx-conf-server" table="nginx_conf_server" alias="ncs">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        content = values(content),
+                        version = values(version),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb-name-and-version" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="nginx-conf-upstream" table="nginx_conf_upstream" alias="ncs">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        content = values(content),
+                        version = values(version),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb-name-and-version" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="nginx-server" table="nginx_server" alias="ns">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        slb_name = values(slb_name),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-ip" type="SELECT">
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
 </entities>

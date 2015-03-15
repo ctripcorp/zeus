@@ -1,6 +1,5 @@
 package com.ctrip.zeus.nginx.conf;
 
-import com.ctrip.zeus.model.entity.Slb;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
@@ -13,10 +12,9 @@ import java.io.ByteArrayOutputStream;
  */
 public class ConfReload {
 
-    public static String reload(Slb slb) {
+    public static String reload(String command) {
         try {
 
-            String command = slb.getNginxBin() + "/nginx -s reload";
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
             CommandLine commandline = CommandLine.parse(command);

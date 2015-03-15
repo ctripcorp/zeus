@@ -14,12 +14,10 @@ import java.io.Writer;
  */
 public class ConfWriter {
 
-    public static void writeNginxConf(Slb slb, String conf) throws IOException {
-        String confDir = slb.getNginxConf();
+    public static void writeNginxConf(String path, String conf) throws IOException {
         Writer writer = null;
         try {
-            makeSureExist(confDir);
-            writer = new FileWriter(new File(confDir + "/nginx.conf"));
+            writer = new FileWriter(new File(path));
             writer.write(conf);
         } finally {
             if (writer != null) {
@@ -28,12 +26,10 @@ public class ConfWriter {
         }
     }
 
-    public static void writeServerConf(Slb slb, VirtualServer vs, String conf) throws IOException {
-        String confDir = slb.getNginxConf();
+    public static void writeServerConf(String path, String conf) throws IOException {
         Writer writer = null;
         try {
-            makeSureExist(confDir + "/vhosts");
-            writer = new FileWriter(new File(confDir + "/vhosts/" + vs.getName() + ".conf"));
+            writer = new FileWriter(new File(path));
             writer.write(conf);
         } finally {
             if (writer != null) {
@@ -42,12 +38,10 @@ public class ConfWriter {
         }
     }
 
-    public static void writeUpstreamsConf(Slb slb, VirtualServer vs, String conf) throws IOException {
-        String confDir = slb.getNginxConf();
+    public static void writeUpstreamsConf(String path, String conf) throws IOException {
         Writer writer = null;
         try {
-            makeSureExist(confDir + "/upstreams");
-            writer = new FileWriter(new File(confDir + "/upstreams/" + vs.getName() + ".conf"));
+            writer = new FileWriter(new File(path));
             writer.write(conf);
         } finally {
             if (writer != null) {

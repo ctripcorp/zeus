@@ -45,9 +45,9 @@ public class ConfWriterTest {
         List<App> list = new ArrayList<>();
         list.add(app);
 
-        ConfWriter.writeNginxConf(slb, NginxConf.generate(slb));
-        ConfWriter.writeServerConf(slb, vs002, ServerConf.generate(slb, vs002, list));
-        ConfWriter.writeUpstreamsConf(slb, vs002, UpstreamsConf.generate(slb, vs002, list));
+//        ConfWriter.writeNginxConf(slb, NginxConf.generate(slb));
+//        ConfWriter.writeServerConf(slb, vs002, ServerConf.generate(slb, vs002, list));
+//        ConfWriter.writeUpstreamsConf(slb, vs002, UpstreamsConf.generate(slb, vs002, list));
 
     }
 

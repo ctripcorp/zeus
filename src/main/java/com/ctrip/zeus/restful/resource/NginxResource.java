@@ -2,6 +2,7 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.service.nginx.NginxService;
 import org.springframework.stereotype.Component;
+import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import javax.ws.rs.GET;
@@ -25,7 +26,7 @@ public class NginxResource {
     @GET
     @Path("/load")
     @Produces({"*/*"})
-    public Response list() throws IOException {
+    public Response load() throws IOException, DalException {
         String result = nginxService.load();
         return Response.ok(result).type(MediaType.TEXT_PLAIN).build();
     }

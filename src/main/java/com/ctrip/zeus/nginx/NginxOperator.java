@@ -12,15 +12,11 @@ import java.io.IOException;
  */
 public interface NginxOperator {
 
-    void writeNginxConf(Slb slb, String conf) throws IOException;
+    void writeNginxConf(String path, String conf) throws IOException;
 
-    void writeServerConf(Slb slb, VirtualServer vs, String conf) throws IOException;
+    void writeServerConf(String path, String conf) throws IOException;
 
-    void writeUpstreamsConf(Slb slb, VirtualServer vs, String conf) throws IOException;
+    void writeUpstreamsConf(String path, String conf) throws IOException;
 
-    String reloadConf(Slb slb);
-
-    void markdownServer(App app, String ip);
-
-    void markupServer(App app, String ip);
+    String reloadConf(String command);
 }
