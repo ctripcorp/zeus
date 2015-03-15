@@ -181,6 +181,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-slb-and-virtual-server" type="SELECT" multiple="true">
                 <param name="slb-name"/>
                 <param name="slb-virtual-server-name"/>
@@ -426,7 +436,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${version}
+                        WHERE <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>
@@ -462,7 +472,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${version}
+                        WHERE <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>

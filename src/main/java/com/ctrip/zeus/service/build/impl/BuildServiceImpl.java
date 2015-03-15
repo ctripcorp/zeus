@@ -5,8 +5,10 @@ import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfService;
 import org.springframework.stereotype.Service;
 import org.unidal.dal.jdbc.DalException;
+import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 
 /**
  * @author:xingchaowang
@@ -21,7 +23,7 @@ public class BuildServiceImpl implements BuildService {
     private NginxConfService nginxConfService;
 
     @Override
-    public void build(String name) throws DalException {
+    public void build(String name) throws DalException, IOException, SAXException {
         int ticket = buildInfoService.getTicket(name);
         nginxConfService.build(name, ticket);
     }

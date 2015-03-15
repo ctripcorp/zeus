@@ -6,12 +6,10 @@ import com.ctrip.zeus.dal.core.AppSlbEntity;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.conf.ActivateService;
 import com.ctrip.zeus.service.conf.ConfService;
-import com.ctrip.zeus.service.model.AppRepository;
 import org.springframework.stereotype.Service;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +52,7 @@ public class ConfServiceImpl implements ConfService {
                 buildService.build(buildName);
             }
 
-        } catch (DalException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
