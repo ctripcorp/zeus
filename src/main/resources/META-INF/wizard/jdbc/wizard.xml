@@ -26,6 +26,10 @@
          <table name="archive_slb"/>
          <table name="conf_app_active"/>
          <table name="conf_slb_active"/>
+         <table name="build_info"/>
+         <table name="nginx_conf"/>
+         <table name="nginx_conf_server"/>
+         <table name="nginx_conf_upstream"/>
       </group>
    </jdbc>
 </wizard>

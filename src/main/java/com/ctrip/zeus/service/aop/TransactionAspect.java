@@ -29,7 +29,8 @@ public class TransactionAspect {
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Around("execution(* com.ctrip.zeus.service.*Repository.*(*))")
+    @Around("execution(* com.ctrip.zeus.service..*Repository.*(..)) || " +
+            "execution(* com.ctrip.zeus.service..*Service.*(..))")
     public Object validate(ProceedingJoinPoint point) throws Throwable {
         String objectName = point.getSignature().getDeclaringTypeName();
         String methodName = point.getSignature().getName();

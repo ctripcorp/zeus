@@ -27,7 +27,7 @@ public class AppResource {
     private AppRepository appRepository;
 
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response list(@Context HttpHeaders hh) {
         AppList appList = appRepository.list();
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
@@ -39,7 +39,7 @@ public class AppResource {
 
     @GET
     @Path("/{appName:[a-zA-Z0-9_-]+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response get(@Context HttpHeaders hh, @PathParam("appName") String appName) {
         App app = appRepository.get(appName);
 

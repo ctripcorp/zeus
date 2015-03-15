@@ -27,7 +27,7 @@ public class SlbResource {
     private SlbRepository slbRepository;
 
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response list(@Context HttpHeaders hh) {
         SlbList slbList = slbRepository.list();
         if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
@@ -39,7 +39,7 @@ public class SlbResource {
 
     @GET
     @Path("/{slbName:[a-zA-Z0-9_-]+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response get(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
         Slb slb = slbRepository.get(slbName);
         if (slb.getName() != null) {

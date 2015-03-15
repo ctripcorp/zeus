@@ -36,12 +36,28 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ArchiveSlbDao"/>
     </bean>
 
+    <bean id="buildInfoDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.BuildInfoDao"/>
+    </bean>
+
     <bean id="confAppActiveDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfAppActiveDao"/>
     </bean>
 
     <bean id="confSlbActiveDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfSlbActiveDao"/>
+    </bean>
+
+    <bean id="nginxConfDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.NginxConfDao"/>
+    </bean>
+
+    <bean id="nginxConfServerDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.NginxConfServerDao"/>
+    </bean>
+
+    <bean id="nginxConfUpstreamDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.NginxConfUpstreamDao"/>
     </bean>
 
     <bean id="serverDao" factory-bean="daoFactory" factory-method="getDao">
