@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS `nginx_conf_server` (
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name_version` (`name`,`version`)
+  UNIQUE KEY `slb_name_name_version` (`slb_name`,`name`,`version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
@@ -207,7 +207,22 @@ CREATE TABLE IF NOT EXISTS `nginx_conf_upstream` (
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name_version` (`name`,`version`)
+  UNIQUE KEY `slb_name_name_version` (`slb_name`,`name`,`version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table zeus.nginx_server
+CREATE TABLE IF NOT EXISTS `nginx_server` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `slb_name` varchar(200) DEFAULT NULL,
+  `ip` varchar(200) DEFAULT NULL,
+  `version` int(11) DEFAULT NULL,
+  `created_time` timestamp NULL DEFAULT NULL,
+  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ip` (`ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
