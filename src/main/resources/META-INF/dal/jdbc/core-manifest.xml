@@ -4,5 +4,6 @@
     <file path="core-model.xml"/>
     <file path="core-status.xml"/>
     <file path="core-conf.xml"/>
+    <file path="core-build.xml"/>
 </manifest>
 

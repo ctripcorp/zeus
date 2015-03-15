@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="build-info" table="build_info" alias="bi">
+        <var name="current-pending-ticket" value-type="int"/>
+        <query-defs>
+            <query name="find-by-name" type="SELECT">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-name-and-pending-ticket" type="UPDATE">
+                <param name="name"/>
+                <param name="current-pending-ticket"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELDS/>
+                        WHERE <FIELD name='name'/> = ${name}
+                        AND <FIELD name='pending-ticket'/> = ${current-pending-ticket}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-name" type="UPDATE">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELDS/>
+                        WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>
+

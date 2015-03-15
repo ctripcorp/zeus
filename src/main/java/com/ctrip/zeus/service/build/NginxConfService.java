@@ -5,5 +5,5 @@ package com.ctrip.zeus.service.build;
  * @date: 3/15/2015.
  */
 public interface NginxConfService {
-    public void build(String slbName);
+    public void build(String slbName, int version);
 }

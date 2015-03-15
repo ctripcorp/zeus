@@ -10,7 +10,7 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/9/2015.
  */
-public interface NginxConfService {
+public interface NginxConfBuilder {
     String generateNginxConf(Slb slb);
 
     String generateServerConf(Slb slb, VirtualServer vs, List<App> apps);

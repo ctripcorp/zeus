@@ -3,7 +3,7 @@ package com.ctrip.zeus.nginx.impl;
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.nginx.NginxConfService;
+import com.ctrip.zeus.nginx.NginxConfBuilder;
 import com.ctrip.zeus.nginx.conf.NginxConf;
 import com.ctrip.zeus.nginx.conf.ServerConf;
 import com.ctrip.zeus.nginx.conf.UpstreamsConf;
@@ -15,8 +15,8 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/9/2015.
  */
-@Service("nginxConfService")
-public class NginxConfServiceImpl implements NginxConfService {
+@Service("nginxConfBuilder")
+public class NginxConfBuilderImpl implements NginxConfBuilder {
 
     @Override
     public String generateNginxConf(Slb slb) {

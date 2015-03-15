@@ -46,7 +46,7 @@ public class AppQueryImpl implements AppQuery {
         AppDo d = appDao.findByName(name, AppEntity.READSET_FULL);
         App app = C.toApp(d);
 
-        queryAppSlbs(d.getId(), app);
+        queryAppSlbs(d.getName(), app);
         queryAppHealthCheck(d.getId(), app);
         queryLoadBalancingMethod(d.getId(), app);
         queryAppServers(d.getId(), app);
@@ -61,7 +61,7 @@ public class AppQueryImpl implements AppQuery {
             App app = C.toApp(d);
             list.add(app);
 
-            queryAppSlbs(d.getId(), app);
+            queryAppSlbs(d.getName(), app);
             queryAppHealthCheck(d.getId(), app);
             queryLoadBalancingMethod(d.getId(), app);
             queryAppServers(d.getId(), app);
@@ -74,17 +74,17 @@ public class AppQueryImpl implements AppQuery {
     public List<App> getBy(String slbName, String virtualServerName) throws DalException {
         List<AppSlbDo> l = appSlbDao.findAllBySlbAndVirtualServer(slbName, virtualServerName, AppSlbEntity.READSET_FULL);
         int size = l.size();
-        long[] ids = new long[size];
+        String[] names = new String[size];
         for (int i = 0; i < size; i++) {
-            ids[i] = l.get(i).getAppId();
+            names[i] = l.get(i).getAppName();
         }
 
         List<App> list = new ArrayList<>();
-        for (AppDo d : appDao.findAllByIds(ids, AppEntity.READSET_FULL)) {
+        for (AppDo d : appDao.findAllByNames(names, AppEntity.READSET_FULL)) {
             App app = C.toApp(d);
             list.add(app);
 
-            queryAppSlbs(d.getId(), app);
+            queryAppSlbs(d.getName(), app);
             queryAppHealthCheck(d.getId(), app);
             queryLoadBalancingMethod(d.getId(), app);
             queryAppServers(d.getId(), app);
@@ -93,8 +93,8 @@ public class AppQueryImpl implements AppQuery {
         return list;
     }
 
-    private void queryAppSlbs(long appKey, App app) throws DalException {
-        List<AppSlbDo> list = appSlbDao.findAllByApp(appKey, AppSlbEntity.READSET_FULL);
+    private void queryAppSlbs(String appName, App app) throws DalException {
+        List<AppSlbDo> list = appSlbDao.findAllByApp(appName, AppSlbEntity.READSET_FULL);
         for (AppSlbDo d : list) {
             AppSlb e = C.toAppSlb(d);
             app.addAppSlb(e);

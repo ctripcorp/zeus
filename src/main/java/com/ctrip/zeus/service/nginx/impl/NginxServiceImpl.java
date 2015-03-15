@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.nginx.impl;
 import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.nginx.NginxConfService;
+import com.ctrip.zeus.nginx.NginxConfBuilder;
 import com.ctrip.zeus.nginx.NginxOperator;
 import com.ctrip.zeus.service.model.AppRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
@@ -25,7 +25,7 @@ public class NginxServiceImpl implements NginxService {
     private AppRepository appRepository;
 
     @Resource
-    private NginxConfService nginxConfService;
+    private NginxConfBuilder nginxConfBuilder;
     @Resource
     private NginxOperator nginxOperator;
 
@@ -33,15 +33,15 @@ public class NginxServiceImpl implements NginxService {
     public String load() throws IOException {
         Slb slb = slbRepository.get("default");
 
-        String nginxConf = nginxConfService.generateNginxConf(slb);
+        String nginxConf = nginxConfBuilder.generateNginxConf(slb);
         nginxOperator.writeNginxConf(slb, nginxConf);
         for (VirtualServer vs : slb.getVirtualServers()) {
             AppList appList = appRepository.list(slb.getName(), vs.getName());
 
-            String upstreamsConf = nginxConfService.generateUpstreamsConf(slb, vs, appList.getApps());
+            String upstreamsConf = nginxConfBuilder.generateUpstreamsConf(slb, vs, appList.getApps());
             nginxOperator.writeUpstreamsConf(slb, vs, upstreamsConf);
 
-            String serverConf = nginxConfService.generateServerConf(slb, vs, appList.getApps());
+            String serverConf = nginxConfBuilder.generateServerConf(slb, vs, appList.getApps());
             nginxOperator.writeServerConf(slb, vs, serverConf);
         }
 

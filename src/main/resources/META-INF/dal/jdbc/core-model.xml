@@ -2,6 +2,7 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="app" table="app" alias="a" do-class="AppDo">
         <var name="ids" value-type="long[]"/>
+        <var name="names" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -41,6 +42,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-names" type="SELECT" multiple="true">
+                <param name="names"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> in <IN>${names}</IN>
                     ]]>
                 </statement>
             </query>
@@ -134,6 +145,7 @@
         </query-defs>
     </entity>
     <entity name="app-slb" table="app_slb" alias="as2" do-class="AppSlbDo">
+        <var name="app-names" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -141,7 +153,7 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_id = values(app_id),
+                        app_name = values(app_name),
                         slb_name = values(slb_name),
                         slb_virtual_server_name = values(slb_virtual_server_name),
                         path = values(path),
@@ -150,12 +162,22 @@
                 </statement>
             </query>
             <query name="find-all-by-app" type="SELECT" multiple="true">
-                <param name="app-id"/>
+                <param name="app-name"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-id'/> = ${app-id}
+                        WHERE <FIELD name='app-name'/> = ${app-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-apps" type="SELECT" multiple="true">
+                <param name="app-names"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-name'/> in <IN> ${app-names} </IN>
                     ]]>
                 </statement>
             </query>

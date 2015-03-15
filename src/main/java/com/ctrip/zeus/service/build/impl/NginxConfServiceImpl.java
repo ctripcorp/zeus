@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service("nginxConfService")
 public class NginxConfServiceImpl implements NginxConfService {
     @Override
-    public void build(String slbName) {
+    public void build(String slbName, int version) {
 
     }
 }

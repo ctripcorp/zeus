@@ -54,7 +54,7 @@ public class AppSyncImpl implements AppSync {
         d.setVersion(1);
         appDao.insert(d);
 
-        syncAppSlbs(d.getId(), app.getAppSlbs());
+        syncAppSlbs(app.getName(), app.getAppSlbs());
         syncAppHealthCheck(d.getId(), app.getHealthCheck());
         syncLoadBalancingMethod(d.getId(), app.getLoadBalancingMethod());
         syncAppServers(d.getId(), app.getAppServers());
@@ -64,23 +64,23 @@ public class AppSyncImpl implements AppSync {
         return d;
     }
 
-    private void syncAppSlbs(long appKey, List<AppSlb> appSlbs) throws DalException {
-        List<AppSlbDo> oldList = appSlbDao.findAllByApp(appKey, AppSlbEntity.READSET_FULL);
+    private void syncAppSlbs(String appName, List<AppSlb> appSlbs) throws DalException {
+        List<AppSlbDo> oldList = appSlbDao.findAllByApp(appName, AppSlbEntity.READSET_FULL);
         Map<String, AppSlbDo> oldMap = Maps.uniqueIndex(oldList, new Function<AppSlbDo, String>() {
             @Override
             public String apply(AppSlbDo input) {
-                return input.getAppId() + input.getSlbName() + input.getSlbVirtualServerName();
+                return input.getAppName() + input.getSlbName() + input.getSlbVirtualServerName();
             }
         });
 
         //Update existed if necessary, and insert new ones.
         for (AppSlb e : appSlbs) {
-            AppSlbDo old = oldMap.get(appKey + e.getSlbName() + e.getVirtualServer().getName());
+            AppSlbDo old = oldMap.get(appName + e.getSlbName() + e.getVirtualServer().getName());
             if (old != null) {
                 oldList.remove(old);
             }
             appSlbDao.insert(C.toAppSlbDo(e)
-                    .setAppId(appKey)
+                    .setAppName(appName)
                     .setCreatedTime(new Date()));
         }
 
