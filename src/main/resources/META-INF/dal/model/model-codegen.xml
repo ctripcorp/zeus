@@ -73,21 +73,14 @@
   </entity>
   <entity name="app-list">
     <element name="total" value-type="int" />
-    <entity-ref name="apps" />
-  </entity>
-  <entity name="apps">
-    <entity-ref name="app" type="list" names="apps" />
-    <entity-ref name="app-action" type="list" names="app-actions" />
+    <entity-ref name="app" type="list" names="apps" xml-indent="true" />
   </entity>
   <entity name="member-action">
-    <entity-ref name="apps" />
-  </entity>
-  <entity name="app-action">
     <element name="app-name" value-type="String" />
-    <element name="ip" value-type="String" type="list" names="servers" xml-indent="true" />
+    <element name="ip" value-type="String" type="list" names="ips" xml-indent="true" />
   </entity>
   <entity name="server-action">
-    <element name="ip" value-type="String" type="list" names="servers" xml-indent="true" />
+    <element name="ip" value-type="String" type="list" names="ips" xml-indent="true" />
   </entity>
 </model>
 

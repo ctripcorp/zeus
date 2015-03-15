@@ -77,16 +77,16 @@
 
     <member-action>
         <app-name>app002</app-name>
-        <servers>
+        <ips>
             <ip>192.68.1</ip>
             <ip>192.68.2</ip>
-        </servers>
+        </ips>
     </member-action>
 
     <server-action>
-        <servers>
+        <ips>
             <ip>192.68.1</ip>
             <ip>192.68.3</ip>
-        </servers>
+        </ips>
     </server-action>
 </model>

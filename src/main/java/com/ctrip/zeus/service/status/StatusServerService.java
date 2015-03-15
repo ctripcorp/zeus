@@ -15,5 +15,5 @@ public interface StatusServerService {
 
     List<com.ctrip.zeus.dal.core.StatusServerDo> listByServer(String ip) throws DalException;
 
-    void updateStatusAppServer(StatusServerDo statusServerDo) throws DalException;
+    void updateStatusServer(StatusServerDo statusServerDo) throws DalException;
 }

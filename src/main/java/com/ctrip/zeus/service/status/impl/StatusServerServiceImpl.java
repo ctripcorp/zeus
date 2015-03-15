@@ -32,7 +32,7 @@ public class StatusServerServiceImpl implements StatusServerService {
     }
 
     @Override
-    public void updateStatusAppServer(StatusServerDo d) throws DalException {
+    public void updateStatusServer(StatusServerDo d) throws DalException {
         d.setCreatedTime(new Date());
         statusServerDao.insert(d);
 
