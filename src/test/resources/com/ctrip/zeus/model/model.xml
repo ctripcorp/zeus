@@ -74,4 +74,19 @@
             <app/>
         </apps>
     </app-list>
+
+    <member-action>
+        <app-name>app002</app-name>
+        <servers>
+            <ip>192.68.1</ip>
+            <ip>192.68.2</ip>
+        </servers>
+    </member-action>
+
+    <server-action>
+        <servers>
+            <ip>192.68.1</ip>
+            <ip>192.68.3</ip>
+        </servers>
+    </server-action>
 </model>
