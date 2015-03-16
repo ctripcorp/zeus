@@ -229,7 +229,7 @@
             );
         }
         $scope.activate = function (appName) {
-            $http.get("/api/conf/activate?appName"+appName).success(
+            $http.get("/api/conf/activate?appName="+appName).success(
                     function (response) {
                     }
             );

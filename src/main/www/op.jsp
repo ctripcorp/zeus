@@ -217,13 +217,13 @@
             $scope.appName= x.name;
         }
         $scope.upMember=function(appName, ip){
-            $http.get("/api/op/upMember?appName=" + appName + "&ip+" + ip).success(
+            $http.get("/api/op/upMember?appName=" + appName + "&ip=" + ip).success(
                     function (response) {
                     }
             );
         }
         $scope.downMember=function(appName, ip){
-            $http.get("/api/op/downMember?appName=" + appName + "&ip+" + ip).success(
+            $http.get("/api/op/downMember?appName=" + appName + "&ip=" + ip).success(
                     function (response) {
                     }
             );

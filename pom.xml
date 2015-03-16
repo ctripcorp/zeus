@@ -247,6 +247,8 @@
                         <configuration>
                             <manifest><![CDATA[
                         ${basedir}/src/main/resources/META-INF/dal/model/model-manifest.xml,
+                        ${basedir}/src/main/resources/META-INF/dal/model/page-manifest.xml,
+                        ${basedir}/src/main/resources/META-INF/dal/model/status-manifest.xml,
                      ]]></manifest>
                         </configuration>
                     </execution>
