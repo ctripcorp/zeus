@@ -78,8 +78,10 @@ public class SlbAdminServer extends AbstractServer {
         handler.addServlet(jerseyServletHolder, "/api/*");
         handler.addServlet(staticServletHolder, "/");
         handler.addServlet(new ServletHolder(new ForwardServlet("/index.jsp")), "/test/*");
-        handler.addServlet(new ServletHolder(new ForwardServlet("/main.jsp")), "/app");
         handler.addServlet(new ServletHolder(new ForwardServlet("/main.jsp")), "/slb");
+        handler.addServlet(new ServletHolder(new ForwardServlet("/app.jsp")), "/app");
+        handler.addServlet(new ServletHolder(new ForwardServlet("/op.jsp")), "/op");
+        handler.addServlet(new ServletHolder(new ForwardServlet("/status.jsp")), "/status");
 
         //Create Jetty Server
         server = new Server(serverPort.get());

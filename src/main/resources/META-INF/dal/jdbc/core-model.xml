@@ -443,17 +443,6 @@
         </query-defs>
     </entity>
     <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
-        <member name="max-version" field="max(version)" value-type="int" length="10" all="false"/>
-        <readsets>
-            <readset name="MAX_VERSION">
-                <member name="id"/>
-                <member name="name"/>
-                <member name="content"/>
-                <member name="max-version"/>
-                <member name="created-time"/>
-                <member name="last-modified"/>
-            </readset>
-        </readsets>
         <query-defs>
             <query name="find-max-version-by-name" type="SELECT">
                 <param name="name"/>

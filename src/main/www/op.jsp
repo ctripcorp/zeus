@@ -86,14 +86,14 @@
 
         <!-- sidebar goes here -->
         <ul class="nav nav-list">
-            <li class="active">
+            <li class="">
                 <a href="/slb">
                     <i class="menu-icon fa fa-tachometer"></i>
                     <span class="menu-text"> SLB Cluster </span>
                 </a>
                 <b class="arrow"></b>
             </li>
-            <li class="">
+            <li class="active">
                 <a href="/app" class="">
                     <i class="menu-icon fa fa-desktop"></i>
 							<span class="menu-text">
@@ -164,14 +164,20 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <!-- page content goes here -->
-                        <div ng-app="" ng-controller="slbController">
-                            <textarea cols="100" rows="20" ng-model="slb">
-
-                            </textarea>
+                        <div ng-app="" ng-controller="mainController">
                             <div>
-                                <button ng-click="save()">submit</button>
-                                <button ng-click="activate()">activate</button>
+                                <span ng-repeat="x in apps">
+                                <button  ng-click="showa(x)">
+                                    {{x.name}}
+                                </button>
+                                </span>
                             </div>
+                            <ul>
+                                <li>appName:<input type="text" ng-model="appName"> server:<input type="text" ng-model="serverIp"/><button  ng-click="upMember(appName, serverIp)">upMember</button> </li>
+                                <li>appName:<input type="text" ng-model="appName"> server:<input type="text" ng-model="serverIp"/><button  ng-click="downMember(appName, serverIp)">downMember</button> </li>
+                                <li>server:<input type="text" ng-model="serverIp"/><button  ng-click="upServer(serverIp)">upServer</button> </li>
+                                <li>server:<input type="text" ng-model="serverIp"/><button  ng-click="downServer(serverIp)">downServer</button> </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -198,25 +204,39 @@
 <!-- list of script files -->
 <script src="../dist/js/angular.min.js"></script>
 <script>
-    function slbController($scope, $http) {
-        $scope.lll=function(){
-            $http.get("/api/slb/default").success(
+    function mainController($scope, $http) {
+        $scope.lll = function () {
+            $http.get("/api/app").success(
                     function (response) {
-                        $scope.slb=JSON.stringify(response,null,"    ");
+                        $scope.apps = response.apps;
                     }
             );
         }
         $scope.lll();
-        $scope.save=function(){
-            $http.post("/api/slb", $scope.slb).success(
-                    function(response){
-                        $scope.lll();
+        $scope.showa = function(x) {
+            $scope.appName= x.name;
+        }
+        $scope.upMember=function(appName, ip){
+            $http.get("/api/op/upMember?appName=" + appName + "&ip+" + ip).success(
+                    function (response) {
                     }
             );
         }
-        $scope.activate=function(){
-            $http.get("/api/conf/activate?slbName=default").success(
-                    function(response){
+        $scope.downMember=function(appName, ip){
+            $http.get("/api/op/downMember?appName=" + appName + "&ip+" + ip).success(
+                    function (response) {
+                    }
+            );
+        }
+        $scope.downServer=function(ip){
+            $http.get("/api/op/downServer?ip="  + ip).success(
+                    function (response) {
+                    }
+            );
+        }
+        $scope.upServer=function(ip){
+            $http.get("/api/op/upServer?ip="  + ip).success(
+                    function (response) {
                     }
             );
         }

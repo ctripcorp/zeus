@@ -86,14 +86,14 @@
 
         <!-- sidebar goes here -->
         <ul class="nav nav-list">
-            <li class="active">
+            <li class="">
                 <a href="/slb">
                     <i class="menu-icon fa fa-tachometer"></i>
                     <span class="menu-text"> SLB Cluster </span>
                 </a>
                 <b class="arrow"></b>
             </li>
-            <li class="">
+            <li class="active">
                 <a href="/app" class="">
                     <i class="menu-icon fa fa-desktop"></i>
 							<span class="menu-text">
@@ -164,13 +164,21 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <!-- page content goes here -->
-                        <div ng-app="" ng-controller="slbController">
-                            <textarea cols="100" rows="20" ng-model="slb">
+                        <div ng-app="" ng-controller="mainController">
+                            <div>
+                                <span ng-repeat="x in apps">
+                                <button  ng-click="showa(x)">
+                                    {{x.name}}
+                                </button>
+                                </span>
+                            </div>
+                            <textarea cols="100" rows="20" ng-model="current">
 
                             </textarea>
+
                             <div>
-                                <button ng-click="save()">submit</button>
-                                <button ng-click="activate()">activate</button>
+                                <button ng-click="save(current)">submit {{currentAppName}}</button>
+                                <button ng-click="activate(currentAppName)">activate {{currentAppName}}</button>
                             </div>
                         </div>
                     </div>
@@ -198,25 +206,31 @@
 <!-- list of script files -->
 <script src="../dist/js/angular.min.js"></script>
 <script>
-    function slbController($scope, $http) {
-        $scope.lll=function(){
-            $http.get("/api/slb/default").success(
+    function mainController($scope, $http) {
+        $scope.lll = function () {
+            $http.get("/api/app").success(
                     function (response) {
-                        $scope.slb=JSON.stringify(response,null,"    ");
+                        $scope.apps = response.apps;
                     }
             );
         }
         $scope.lll();
-        $scope.save=function(){
-            $http.post("/api/slb", $scope.slb).success(
-                    function(response){
+        $scope.showa = function(x) {
+            $scope.currentAppName= x.name;
+            delete x['$$hashKey'];
+            $scope.current = JSON.stringify(x, null, "    ");
+        }
+        $scope.save = function (content) {
+            alert(content);
+            $http.post("/api/app", content).success(
+                    function (response) {
                         $scope.lll();
                     }
             );
         }
-        $scope.activate=function(){
-            $http.get("/api/conf/activate?slbName=default").success(
-                    function(response){
+        $scope.activate = function (appName) {
+            $http.get("/api/conf/activate?appName"+appName).success(
+                    function (response) {
                     }
             );
         }
