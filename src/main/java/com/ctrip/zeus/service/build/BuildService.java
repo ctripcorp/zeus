@@ -11,4 +11,5 @@ import java.io.IOException;
  */
 public interface BuildService {
     void build(String name) throws DalException, IOException, SAXException;
+    void build2(String name) throws DalException, IOException, SAXException;
 }

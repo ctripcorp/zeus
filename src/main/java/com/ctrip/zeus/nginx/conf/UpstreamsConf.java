@@ -40,7 +40,7 @@ public class UpstreamsConf {
             String ip = as.getIp();
             boolean isDown = allDownServers.contains(ip);
             if (!isDown) {
-                allDownAppServers.contains(slb.getName() + "_" + vs.getName() + "_" + app.getName() + "_" + ip);
+                isDown = allDownAppServers.contains(slb.getName() + "_" + vs.getName() + "_" + app.getName() + "_" + ip);
             }
             b.append("    server ").append(ip + ":" + as.getPort())
                     .append(" weight=").append(as.getWeight())

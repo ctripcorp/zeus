@@ -48,4 +48,11 @@ public class BuildServiceImpl implements BuildService {
             }
         }
     }
+
+    @Override
+    public void build2(String name) throws DalException, IOException, SAXException {
+        int ticket = buildInfoService.getTicket(name);
+        nginxConfService.build(name, ticket);
+        buildInfoService.updateTicket(name, ticket);
+    }
 }

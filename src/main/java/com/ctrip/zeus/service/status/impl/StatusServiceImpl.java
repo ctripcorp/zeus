@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.status.impl;
 
-import com.ctrip.zeus.dal.core.StatusAppServerDo;
-import com.ctrip.zeus.dal.core.StatusServerDo;
+import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.status.StatusAppServerService;
 import com.ctrip.zeus.service.status.StatusServerService;
 import com.ctrip.zeus.service.status.StatusService;
@@ -22,6 +22,11 @@ public class StatusServiceImpl implements StatusService {
     private StatusServerService statusServerService;
     @Resource
     private StatusAppServerService statusAppServerService;
+    @Resource
+    private AppSlbDao appSlbDao;
+
+    @Resource
+    private BuildService buildService;
 
     @Override
     public Set<String> findAllDownServers() {
@@ -47,6 +52,62 @@ public class StatusServiceImpl implements StatusService {
                 allDownAppServers.add(d.getSlbName() + "_" + d.getVirtualServerName() + "_" + d.getAppName() + "_" + d.getIp());
             }
             return allDownAppServers;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void upServer(String ip) {
+        try {
+            statusServerService.updateStatusServer(new StatusServerDo().setIp(ip).setUp(true));
+            //ToDo:
+            buildService.build("default");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Override
+    public void downServer(String ip) {
+        try {
+            statusServerService.updateStatusServer(new StatusServerDo().setIp(ip).setUp(false));
+            //ToDo:
+            buildService.build("default");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Override
+    public void upMember(String appName, String ip) {
+        try {
+            List<AppSlbDo> list = appSlbDao.findAllByApp(appName, AppSlbEntity.READSET_FULL);
+            for (AppSlbDo d : list) {
+                statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
+                .setVirtualServerName(d.getSlbVirtualServerName())
+                .setAppName(appName).setIp(ip).setUp(true));
+            }
+            //ToDo:
+            buildService.build("default");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void downMember(String appName, String ip) {
+        try {
+            List<AppSlbDo> list = appSlbDao.findAllByApp(appName, AppSlbEntity.READSET_FULL);
+            for (AppSlbDo d : list) {
+                statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
+                        .setVirtualServerName(d.getSlbVirtualServerName())
+                        .setAppName(appName).setIp(ip).setUp(false));
+            }
+            //ToDo:
+            buildService.build("default");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
