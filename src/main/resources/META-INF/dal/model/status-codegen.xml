@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model>
+  <entity name="status" root="true">
+    <entity-ref name="slb-status" />
+  </entity>
+  <entity name="slb-status">
+    <attribute name="name" value-type="String" />
+    <entity-ref name="vhost" type="list" names="vhosts" xml-indent="true" />
+  </entity>
+  <entity name="vhost">
+    <attribute name="name" value-type="String" />
+    <entity-ref name="app-status" type="list" names="apps" xml-indent="true" />
+  </entity>
+  <entity name="app-status">
+    <attribute name="name" value-type="String" />
+    <entity-ref name="server" type="list" names="servers" xml-indent="true" />
+  </entity>
+  <entity name="server">
+    <attribute name="ip" value-type="String" />
+    <attribute name="up" value-type="boolean" />
+  </entity>
+</model>
+

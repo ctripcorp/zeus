@@ -77,10 +77,11 @@
   </entity>
   <entity name="member-action">
     <element name="app-name" value-type="String" />
-    <element name="ip" value-type="String" type="list" names="ips" xml-indent="true" />
+    <element name="ip" value-type="String" type="list" names="ips" />
   </entity>
   <entity name="server-action">
-    <element name="ip" value-type="String" type="list" names="ips" xml-indent="true" />
+    <element name="name" value-type="String" />
+    <element name="ip" value-type="String" type="list" names="ips" />
   </entity>
 </model>
 

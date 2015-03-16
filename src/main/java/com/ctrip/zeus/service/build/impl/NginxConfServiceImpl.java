@@ -7,6 +7,7 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.nginx.NginxConfBuilder;
 import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.service.status.StatusService;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,9 @@ public class NginxConfServiceImpl implements NginxConfService {
 
     @Resource
     private NginxConfBuilder nginxConfBuilder;
+
+    @Resource
+    private StatusService statusService;
 
     @Override
     public void build(String slbName, int version) throws DalException, IOException, SAXException {
@@ -85,6 +89,9 @@ public class NginxConfServiceImpl implements NginxConfService {
                 .setContent(conf)
                 .setVersion(version));
 
+
+        Set<String> allDownServers = statusService.findAllDownServers();
+        Set<String> allDownAppServers = statusService.findAllDownAppServers(slbName);
         for (VirtualServer vs : slb.getVirtualServers()) {
             List<App> apps = appsMap.get(vs.getName());
             if (apps == null) {
@@ -92,7 +99,7 @@ public class NginxConfServiceImpl implements NginxConfService {
             }
 
             String serverConf = nginxConfBuilder.generateServerConf(slb, vs, apps);
-            String upstreamConf = nginxConfBuilder.generateUpstreamsConf(slb, vs, apps);
+            String upstreamConf = nginxConfBuilder.generateUpstreamsConf(slb, vs, apps, allDownServers, allDownAppServers);
 
             nginxConfServerDao.insert(new NginxConfServerDo().setCreatedTime(new Date())
                     .setSlbName(slb.getName())

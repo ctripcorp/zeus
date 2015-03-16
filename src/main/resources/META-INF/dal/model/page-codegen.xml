@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model>
-  <entity name="model" root="true">
+  <entity name="page" root="true">
     <entity-ref name="page-context" />
   </entity>
   <entity name="page-context">

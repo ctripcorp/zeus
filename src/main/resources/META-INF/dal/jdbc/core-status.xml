@@ -41,6 +41,18 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-slb-name-and-is-up" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <param name="up"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        AND <FIELD name='up'/> = ${up}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="status-server" table="status_server" alias="ss" do-class="StatusServerDo">
@@ -71,6 +83,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-is-up" type="SELECT" multiple="true">
+                <param name="up"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='up'/> = ${up}
                     ]]>
                 </statement>
             </query>

@@ -3,18 +3,19 @@ package com.ctrip.zeus.nginx.conf;
 import com.ctrip.zeus.model.entity.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
  * @date: 3/10/2015.
  */
 public class UpstreamsConf {
-    public static String generate(Slb slb, VirtualServer vs, List<App> apps) {
+    public static String generate(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers) {
         StringBuilder b = new StringBuilder(1024);
 
         //add upstreams
         for (App app : apps) {
-            b.append(buildUpstreamConf(slb, vs, app, buildUpstreamName(slb, vs, app)));
+            b.append(buildUpstreamConf(slb, vs, app, buildUpstreamName(slb, vs, app), allDownServers, allDownAppServers));
         }
 
         return b.toString();
@@ -24,7 +25,7 @@ public class UpstreamsConf {
         return "backend_" + vs.getName() + "_" + app.getName();
     }
 
-    public static String buildUpstreamConf(Slb slb, VirtualServer vs, App app, String upstreamName) {
+    public static String buildUpstreamConf(Slb slb, VirtualServer vs, App app, String upstreamName, Set<String> allDownServers, Set<String> allDownAppServers) {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("upstream ").append(upstreamName).append(" {").append("\n");
@@ -36,10 +37,16 @@ public class UpstreamsConf {
         //b.append("    ").append("zone " + upstreamName + " 64K").append(";\n");
 
         for (AppServer as : app.getAppServers()) {
-            b.append("    server ").append(as.getIp() + ":" + as.getPort())
+            String ip = as.getIp();
+            boolean isDown = allDownServers.contains(ip);
+            if (!isDown) {
+                allDownAppServers.contains(slb.getName() + "_" + vs.getName() + "_" + app.getName() + "_" + ip);
+            }
+            b.append("    server ").append(ip + ":" + as.getPort())
                     .append(" weight=").append(as.getWeight())
                     .append(" max_fails=").append(as.getMaxFails())
                     .append(" fail_timeout=").append(as.getFailTimeout())
+                    .append(isDown?" down":"")
                     .append(";\n");
         }
 

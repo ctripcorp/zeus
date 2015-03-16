@@ -11,9 +11,11 @@ import java.util.List;
  */
 public interface StatusServerService {
 
-    List<com.ctrip.zeus.dal.core.StatusServerDo> list() throws DalException;
+    List<StatusServerDo> list() throws DalException;
 
-    List<com.ctrip.zeus.dal.core.StatusServerDo> listByServer(String ip) throws DalException;
+    List<StatusServerDo> listAllDown() throws DalException;
+
+    List<StatusServerDo> listByServer(String ip) throws DalException;
 
     void updateStatusServer(StatusServerDo statusServerDo) throws DalException;
 }

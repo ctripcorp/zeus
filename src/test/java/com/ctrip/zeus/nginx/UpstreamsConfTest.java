@@ -31,7 +31,7 @@ public class UpstreamsConfTest {
 
         ArrayList<App> apps = new ArrayList<>();
         apps.add(app);
-        System.out.println(UpstreamsConf.generate(new Slb().setName("default"), vs, apps));
+//        System.out.println(UpstreamsConf.generate(new Slb().setName("default"), vs, apps, allDownServers, allDownAppServers));
 
     }
 }

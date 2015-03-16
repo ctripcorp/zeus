@@ -13,6 +13,8 @@ public interface StatusAppServerService {
 
     List<StatusAppServerDo> list() throws DalException;
 
+    List<StatusAppServerDo> listAllDownBySlbName(String slbName) throws DalException;
+
     List<StatusAppServerDo> listByAppName(String appName) throws DalException;
 
     List<StatusAppServerDo> listByServer(String ip) throws DalException;

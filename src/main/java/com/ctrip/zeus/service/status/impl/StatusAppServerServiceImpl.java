@@ -26,6 +26,11 @@ public class StatusAppServerServiceImpl implements StatusAppServerService {
     }
 
     @Override
+    public List<StatusAppServerDo> listAllDownBySlbName(String slbName) throws DalException {
+        return statusAppServerDao.findAllBySlbNameAndIsUp(slbName, false, StatusAppServerEntity.READSET_FULL);
+    }
+
+    @Override
     public List<StatusAppServerDo> listByAppName(String appName) throws DalException {
         return statusAppServerDao.findAllByApp(appName, StatusAppServerEntity.READSET_FULL);
     }

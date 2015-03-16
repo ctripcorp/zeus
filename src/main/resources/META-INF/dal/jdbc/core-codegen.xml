@@ -456,7 +456,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="name_version" unique="true" members="name ASC, version ASC" />
+    <index name="slb_name_name_version" unique="true" members="slb_name ASC, name ASC, version ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -497,7 +497,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="name_version" unique="true" members="name ASC, version ASC" />
+    <index name="slb_name_name_version" unique="true" members="slb_name ASC, name ASC, version ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -537,7 +537,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="slb_name_ip" unique="true" members="slb_name ASC, ip ASC" />
+    <index name="ip" unique="true" members="ip ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -812,6 +812,8 @@
   </entity>
   <entity name="status-app-server" table="status_app_server" alias="sas">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="slb-name" field="slb_name" value-type="String" length="200" nullable="false" />
+    <member name="virtual-server-name" field="virtual_server_name" value-type="String" length="200" nullable="false" />
     <member name="app-name" field="app_name" value-type="String" length="200" nullable="false" />
     <member name="ip" field="ip" value-type="String" length="200" nullable="false" />
     <member name="up" field="up" value-type="boolean" nullable="false" />
@@ -819,7 +821,7 @@
     <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="app_name_ip" unique="true" members="app_name ASC, ip ASC" />
+    <index name="slb_name_virtual_server_name_app_name_ip" unique="true" members="slb_name ASC, virtual_server_name ASC, app_name ASC, ip ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

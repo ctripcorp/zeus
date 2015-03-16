@@ -6,4 +6,7 @@
    <model package="com.ctrip.zeus.page" name="page">
       <sample-model>src/test/resources/com/ctrip/zeus/model/page.xml</sample-model>
    </model>
+   <model package="com.ctrip.zeus.status" name="status">
+      <sample-model>src/test/resources/com/ctrip/zeus/model/status.xml</sample-model>
+   </model>
 </wizard>

@@ -22,12 +22,17 @@ public class StatusServerServiceImpl implements StatusServerService {
     private StatusServerDao statusServerDao;
 
     @Override
-    public List<com.ctrip.zeus.dal.core.StatusServerDo> list() throws DalException {
+    public List<StatusServerDo> list() throws DalException {
         return statusServerDao.findAll(StatusServerEntity.READSET_FULL);
     }
 
     @Override
-    public List<com.ctrip.zeus.dal.core.StatusServerDo> listByServer(String ip) throws DalException {
+    public List<StatusServerDo> listAllDown() throws DalException {
+        return statusServerDao.findAllByIsUp(false, StatusServerEntity.READSET_FULL);
+    }
+
+    @Override
+    public List<StatusServerDo> listByServer(String ip) throws DalException {
         return statusServerDao.findAllByIp(ip, StatusServerEntity.READSET_FULL);
     }
 

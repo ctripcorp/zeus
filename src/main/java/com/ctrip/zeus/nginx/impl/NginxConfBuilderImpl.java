@@ -10,6 +10,7 @@ import com.ctrip.zeus.nginx.conf.UpstreamsConf;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -29,7 +30,7 @@ public class NginxConfBuilderImpl implements NginxConfBuilder {
     }
 
     @Override
-    public String generateUpstreamsConf(Slb slb, VirtualServer vs, List<App> apps) {
-        return UpstreamsConf.generate(slb, vs, apps);
+    public String generateUpstreamsConf(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers) {
+        return UpstreamsConf.generate(slb, vs, apps, allDownServers, allDownAppServers);
     }
 }

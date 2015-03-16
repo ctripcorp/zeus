@@ -1,0 +1,38 @@
+<status>
+    <slb-status name="default">
+        <vhosts>
+            <vhost name="site1">
+                <apps>
+                    <app-status name="app2">
+                        <servers>
+                            <server ip="192.168.1.1" up="true" />
+                            <server ip="192.168.1.1" up="true" />
+                        </servers>
+                    </app-status>
+                    <app-status>
+                        <servers>
+                            <server ip="192.168.1.1" up="true" />
+                            <server ip="192.168.1.1" up="true" />
+                        </servers>
+                    </app-status>
+                </apps>
+            </vhost>
+            <vhost name="site1">
+                <apps>
+                    <app-status name="app2">
+                        <servers>
+                            <server ip="192.168.1.1" up="true" />
+                            <server ip="192.168.1.1" up="true" />
+                        </servers>
+                    </app-status>
+                    <app-status>
+                        <servers>
+                            <server ip="192.168.1.1" up="true" />
+                            <server ip="192.168.1.1" up="true" />
+                        </servers>
+                    </app-status>
+                </apps>
+            </vhost>
+        </vhosts>
+    </slb-status>
+</status>
