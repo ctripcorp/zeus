@@ -17,10 +17,12 @@ public class StatusConf {
         b.append("    listen    ").append(String.valueOf(nginxStatusPort.get())).append(";\n");
 
         b.append("    location / {").append("\n");
+        b.append("        add_header Access-Control-Allow-Origin *").append(";\n");
         b.append("        check_status").append(";\n");
         b.append("    }").append("\n");
 
         b.append("    location =/status.json {").append("\n");
+        b.append("        add_header Access-Control-Allow-Origin *").append(";\n");
         b.append("        check_status json").append(";\n");
         b.append("    }").append("\n");
 
