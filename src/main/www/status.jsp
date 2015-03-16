@@ -165,9 +165,13 @@
                     <div class="col-xs-12">
                         <!-- page content goes here -->
                         <div ng-app="" ng-controller="mainController">
-                            <div>{{ lb93 }}</div>
+                            <h2>lb93:</h2>
+                            <div ng-include="'http://10.2.25.93:10001/status'"></div>
+                            <h2>lb94:</h2>
+                            <div ng-include="'http://10.2.25.94:10001/status'"></div>
+                            <h2>lb95:</h2>
+                            <div ng-include="'http://10.2.25.95:10001/status'"></div>
                         </div>
-                        <div ng-include="http://10.2.25.93:10001/status"></div>
                     </div>
                 </div>
 
