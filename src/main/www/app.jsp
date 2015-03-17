@@ -223,6 +223,8 @@
         $scope.save = function (content) {
             $http.post("/api/app", content).success(
                     function (response) {
+                        $scope.currentAppName="";
+                        $scope.current="";
                         $scope.lll();
                     }
             );
