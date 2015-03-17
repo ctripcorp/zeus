@@ -221,7 +221,6 @@
             $scope.current = JSON.stringify(x, null, "    ");
         }
         $scope.save = function (content) {
-            alert(content);
             $http.post("/api/app", content).success(
                     function (response) {
                         $scope.lll();
