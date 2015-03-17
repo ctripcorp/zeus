@@ -93,7 +93,7 @@
                 </a>
                 <b class="arrow"></b>
             </li>
-            <li class="active">
+            <li class="">
                 <a href="/app" class="">
                     <i class="menu-icon fa fa-desktop"></i>
 							<span class="menu-text">
@@ -102,7 +102,7 @@
                 </a>
                 <b class="arrow"></b>
             </li>
-            <li class="">
+            <li class="active">
                 <a href="/op" class="">
                     <i class="menu-icon fa fa-desktop"></i>
 							<span class="menu-text">

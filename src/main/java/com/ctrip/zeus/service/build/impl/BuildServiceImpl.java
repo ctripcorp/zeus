@@ -36,17 +36,17 @@ public class BuildServiceImpl implements BuildService {
         nginxConfService.build(name, ticket);
         buildInfoService.updateTicket(name, ticket);
 
-        List<NginxServerDo> list = nginxServerDao.findAllBySlbName(name, NginxServerEntity.READSET_FULL);
-        for (NginxServerDo d : list) {
-            System.out.println(d.getIp() + "###");
-            NginxClient nginxClient = new NginxClient("http://"+d.getIp() + ":8099");
-            try {
-                nginxClient.load();
-                System.out.println(d.getIp());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+//        List<NginxServerDo> list = nginxServerDao.findAllBySlbName(name, NginxServerEntity.READSET_FULL);
+//        for (NginxServerDo d : list) {
+//            System.out.println(d.getIp() + "###");
+//            NginxClient nginxClient = new NginxClient("http://"+d.getIp() + ":8099");
+//            try {
+//                nginxClient.load();
+//                System.out.println(d.getIp());
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     @Override
