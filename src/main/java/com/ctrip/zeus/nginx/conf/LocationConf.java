@@ -15,7 +15,7 @@ public class LocationConf {
 
         b.append("    ").append("location ").append(getPath(slb, vs, app)).append("{").append("\n");
 
-        b.append("    ").append("    check_status").append(";\n");
+        b.append("    ").append("    proxy_set_header Host $host").append(";\n");
         b.append("    ").append("    proxy_pass http://").append(upstreamName).append(";\n");
 
         //ToDo:health_check
