@@ -166,19 +166,27 @@
                         <!-- page content goes here -->
                         <div ng-app="" ng-controller="mainController">
                             <div>
-                                <span ng-repeat="x in apps">
-                                <button  ng-click="showa(x)">
-                                    {{x.name}}
-                                </button>
-                                </span>
+                                <div style="float: left;margin-right:6px" ng-repeat="x in apps">
+                                    <div>
+                                        <button ng-click="showa(x)">
+                                            {{x.name}}
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button ng-click="activate(x.name)">
+                                            Activate {{x.name}}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="clear:both"></div>
                             </div>
+
                             <textarea cols="100" rows="20" ng-model="current">
 
                             </textarea>
 
                             <div>
-                                <button ng-click="save(current)">submit {{currentAppName}}</button>
-                                <button ng-click="activate(currentAppName)">activate {{currentAppName}}</button>
+                                <button ng-click="save(current)">Submit</button>
                             </div>
                         </div>
                     </div>
@@ -215,22 +223,20 @@
             );
         }
         $scope.lll();
-        $scope.showa = function(x) {
-            $scope.currentAppName= x.name;
+        $scope.showa = function (x) {
+            $scope.currentAppName = x.name;
             delete x['$$hashKey'];
             $scope.current = JSON.stringify(x, null, "    ");
         }
         $scope.save = function (content) {
             $http.post("/api/app", content).success(
                     function (response) {
-                        $scope.currentAppName="";
-                        $scope.current="";
                         $scope.lll();
                     }
             );
         }
         $scope.activate = function (appName) {
-            $http.get("/api/conf/activate?appName="+appName).success(
+            $http.get("/api/conf/activate?appName=" + appName).success(
                     function (response) {
                     }
             );
