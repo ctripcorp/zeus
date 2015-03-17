@@ -184,14 +184,23 @@
                                 <li>
                                     appName:<input type="text" ng-model="appName">
                                     server:
+                                    <select ng-model="selected" ng-options="m.ip for m in servers">
+                                        <option value="">-- please select --</option>
+                                    </select>
                                     <button ng-click="downMember(appName, selected.ip)">downMember</button>
                                 </li>
                                 <li>
                                     server:
+                                    <select ng-model="selected" ng-options="m.ip for m in servers">
+                                        <option value="">-- please select --</option>
+                                    </select>
                                     <button ng-click="upServer(selected.ip)">upServer</button>
                                 </li>
                                 <li>
                                     server:
+                                    <select ng-model="selected" ng-options="m.ip for m in servers">
+                                        <option value="">-- please select --</option>
+                                    </select>
                                     <button ng-click="downServer(selected.ip)">downServer</button>
                                 </li>
                             </ul>
