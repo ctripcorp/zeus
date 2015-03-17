@@ -95,7 +95,7 @@ public class NginxConfServiceImpl implements NginxConfService {
         for (VirtualServer vs : slb.getVirtualServers()) {
             List<App> apps = appsMap.get(vs.getName());
             if (apps == null) {
-                continue;
+                apps = new ArrayList<>();
             }
 
             String serverConf = nginxConfBuilder.generateServerConf(slb, vs, apps);
