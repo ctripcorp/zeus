@@ -167,16 +167,33 @@
                         <div ng-app="" ng-controller="mainController">
                             <div>
                                 <span ng-repeat="x in apps">
-                                <button  ng-click="showa(x)">
+                                <button ng-click="showa(x)">
                                     {{x.name}}
                                 </button>
                                 </span>
                             </div>
                             <ul>
-                                <li>appName:<input type="text" ng-model="appName"> server:<input type="text" ng-model="serverIp"/><button  ng-click="upMember(appName, serverIp)">upMember</button> </li>
-                                <li>appName:<input type="text" ng-model="appName"> server:<input type="text" ng-model="serverIp"/><button  ng-click="downMember(appName, serverIp)">downMember</button> </li>
-                                <li>server:<input type="text" ng-model="serverIp"/><button  ng-click="upServer(serverIp)">upServer</button> </li>
-                                <li>server:<input type="text" ng-model="serverIp"/><button  ng-click="downServer(serverIp)">downServer</button> </li>
+                                <li>
+                                    appName:<input type="text" ng-model="appName">
+                                    server:
+                                    <select ng-model="selected" ng-options="m.ip for m in servers">
+                                        <option value="">-- please select --</option>
+                                    </select>
+                                    <button ng-click="upMember(appName, selected.ip)">upMember</button>
+                                </li>
+                                <li>
+                                    appName:<input type="text" ng-model="appName">
+                                    server:
+                                    <button ng-click="downMember(appName, selected.ip)">downMember</button>
+                                </li>
+                                <li>
+                                    server:
+                                    <button ng-click="upServer(selected.ip)">upServer</button>
+                                </li>
+                                <li>
+                                    server:
+                                    <button ng-click="downServer(selected.ip)">downServer</button>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -213,29 +230,30 @@
             );
         }
         $scope.lll();
-        $scope.showa = function(x) {
-            $scope.appName= x.name;
+        $scope.showa = function (x) {
+            $scope.appName = x.name;
+            $scope.servers = x["app-servers"];
         }
-        $scope.upMember=function(appName, ip){
+        $scope.upMember = function (appName, ip) {
             $http.get("/api/op/upMember?appName=" + appName + "&ip=" + ip).success(
                     function (response) {
                     }
             );
         }
-        $scope.downMember=function(appName, ip){
+        $scope.downMember = function (appName, ip) {
             $http.get("/api/op/downMember?appName=" + appName + "&ip=" + ip).success(
                     function (response) {
                     }
             );
         }
-        $scope.downServer=function(ip){
-            $http.get("/api/op/downServer?ip="  + ip).success(
+        $scope.downServer = function (ip) {
+            $http.get("/api/op/downServer?ip=" + ip).success(
                     function (response) {
                     }
             );
         }
-        $scope.upServer=function(ip){
-            $http.get("/api/op/upServer?ip="  + ip).success(
+        $scope.upServer = function (ip) {
+            $http.get("/api/op/upServer?ip=" + ip).success(
                     function (response) {
                     }
             );
