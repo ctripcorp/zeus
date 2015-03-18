@@ -12,4 +12,8 @@ public class NginxClient extends AbstractRestClient {
     public void load(){
         getTarget().path("/api/nginx/load").request().get(String.class);
     }
+
+    public String getUpstreamStatus(){
+        return getTarget().path("/status.json").request().get(String.class);
+    }
 }
