@@ -1,5 +1,8 @@
 package com.ctrip.zeus.service.status;
 
+import com.ctrip.zeus.model.entity.AppStatus;
+import com.ctrip.zeus.model.entity.ServerStatus;
+
 import java.util.Set;
 
 /**
@@ -10,6 +13,8 @@ public interface StatusService {
 
     Set<String> findAllDownServers();
     Set<String> findAllDownAppServers(String slbName);
+    //Temp method
+    Set<String> findAllDownAppServers(String slbName, String appName);
 
     void upServer(String ip);
 
@@ -18,4 +23,8 @@ public interface StatusService {
     void upMember(String appName, String ip);
 
     void downMember(String appName, String ip);
+
+    AppStatus getAppStatus(String appName);
+
+    ServerStatus getServerStatus(String ip);
 }

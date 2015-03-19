@@ -93,7 +93,7 @@
             <ip>192.168.1.1</ip>
             <member>true</member>
             <server>true</server>
-            <status>true</status>
+            <up>true</up>
         </app-server-status>
         <app-server-status>
             <ip>192.168.1.1</ip>

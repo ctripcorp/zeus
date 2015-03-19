@@ -1,7 +1,11 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.nginx.NginxStatus;
+import com.ctrip.zeus.nginx.NginxStatusService;
 import com.ctrip.zeus.service.build.BuildService;
+import com.ctrip.zeus.service.model.AppRepository;
 import com.ctrip.zeus.service.status.StatusAppServerService;
 import com.ctrip.zeus.service.status.StatusServerService;
 import com.ctrip.zeus.service.status.StatusService;
@@ -24,9 +28,13 @@ public class StatusServiceImpl implements StatusService {
     private StatusAppServerService statusAppServerService;
     @Resource
     private AppSlbDao appSlbDao;
+    @Resource
+    private AppRepository appRepository;
 
     @Resource
     private BuildService buildService;
+    @Resource
+    private NginxStatusService nginxStatusService;
 
     @Override
     public Set<String> findAllDownServers() {
@@ -50,6 +58,22 @@ public class StatusServiceImpl implements StatusService {
             List<StatusAppServerDo> allDownAppServerList = statusAppServerService.listAllDownBySlbName(slbName);
             for (StatusAppServerDo d : allDownAppServerList) {
                 allDownAppServers.add(d.getSlbName() + "_" + d.getVirtualServerName() + "_" + d.getAppName() + "_" + d.getIp());
+            }
+            return allDownAppServers;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Set<String> findAllDownAppServers(String slbName, String appName) {
+        try {
+            Set<String> allDownAppServers = new HashSet<>();
+            List<StatusAppServerDo> allDownAppServerList = statusAppServerService.listAllDownBySlbName(slbName);
+            for (StatusAppServerDo d : allDownAppServerList) {
+                if (d.getAppName().equals(appName)) {
+                    allDownAppServers.add(d.getIp());
+                }
             }
             return allDownAppServers;
         } catch (Exception e) {
@@ -111,5 +135,33 @@ public class StatusServiceImpl implements StatusService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public AppStatus getAppStatus(String appName) {
+        try {
+            AppStatus appStatus = new AppStatus();
+
+            App app = appRepository.get(appName);
+            appStatus.setAppName(app.getName());
+
+            Set<String> ips = findAllDownServers();
+            Set<String> appIps = findAllDownAppServers("default", appName);
+            NginxStatus nginxStatus = nginxStatusService.getNginxStatus("default");
+            for (AppServer appServer : app.getAppServers()) {
+                AppServerStatus s = new AppServerStatus();
+                String ip = appServer.getIp();
+                s.setIp(ip).setMember(appIps.contains(ip)).setServer(ips.contains(ip)).setUp(nginxStatus.appServerIsUp(appName, ip));
+            }
+            return appStatus;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Override
+    public ServerStatus getServerStatus(String ip) {
+        return null;
     }
 }

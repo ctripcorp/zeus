@@ -93,7 +93,6 @@
     <element name="ip" value-type="String" />
     <element name="member" value-type="boolean" />
     <element name="server" value-type="boolean" />
-    <element name="status" value-type="String" />
     <element name="up" value-type="boolean" />
   </entity>
   <entity name="server-status">
