@@ -64,6 +64,6 @@ public class DefaultNginxStatus implements NginxStatus {
 
     @Override
     public boolean appServerIsUp(String appName, String ip) {
-        return false;
+        return appIpsUp.contains(appName + "_" + ip);
     }
 }
