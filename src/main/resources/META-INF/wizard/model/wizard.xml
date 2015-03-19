@@ -9,4 +9,7 @@
    <model package="com.ctrip.zeus.status" name="status">
       <sample-model>src/test/resources/com/ctrip/zeus/model/status.xml</sample-model>
    </model>
+   <model package="com.ctrip.zeus.nginx" name="nginx">
+      <sample-model>src/test/resources/com/ctrip/zeus/model/nginx.xml</sample-model>
+   </model>
 </wizard>

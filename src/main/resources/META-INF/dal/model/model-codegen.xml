@@ -7,6 +7,8 @@
     <entity-ref name="app-list" />
     <entity-ref name="member-action" />
     <entity-ref name="server-action" />
+    <entity-ref name="app-status" />
+    <entity-ref name="server-status" />
   </entity>
   <entity name="slb">
     <attribute name="name" value-type="String" />
@@ -82,6 +84,22 @@
   <entity name="server-action">
     <element name="name" value-type="String" />
     <element name="ip" value-type="String" type="list" names="ips" />
+  </entity>
+  <entity name="app-status">
+    <element name="app-name" value-type="String" />
+    <entity-ref name="app-server-status" type="list" names="app-server-statuses" />
+  </entity>
+  <entity name="app-server-status">
+    <element name="ip" value-type="String" />
+    <element name="member" value-type="boolean" />
+    <element name="server" value-type="boolean" />
+    <element name="status" value-type="String" />
+    <element name="up" value-type="boolean" />
+  </entity>
+  <entity name="server-status">
+    <element name="ip" value-type="String" />
+    <element name="up" value-type="boolean" />
+    <element name="app-name" value-type="String" type="list" names="app-names" />
   </entity>
 </model>
 

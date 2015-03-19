@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model>
+  <entity name="nginx" root="true">
+    <entity-ref name="servers" />
+  </entity>
+  <entity name="servers">
+    <element name="total" value-type="int" />
+    <element name="generateion" value-type="int" />
+    <entity-ref name="s" type="list" names="server" xml-indent="true" />
+  </entity>
+  <entity name="s">
+    <element name="index" value-type="int" />
+    <element name="upstream" value-type="String" />
+    <element name="name" value-type="String" />
+    <element name="status" value-type="String" />
+    <element name="rise" value-type="int" />
+    <element name="fail" value-type="int" />
+    <element name="type" value-type="String" />
+    <element name="port" value-type="int" />
+  </entity>
+</model>
+

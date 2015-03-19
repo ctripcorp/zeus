@@ -86,4 +86,29 @@
         <ip>192.68.1</ip>
         <ip>192.68.3</ip>
     </server-action>
+
+    <app-status>
+        <app-name>app1</app-name>
+        <app-server-status>
+            <ip>192.168.1.1</ip>
+            <member>true</member>
+            <server>true</server>
+            <status>true</status>
+        </app-server-status>
+        <app-server-status>
+            <ip>192.168.1.1</ip>
+            <member>true</member>
+            <server>true</server>
+            <up>true</up>
+        </app-server-status>
+    </app-status>
+
+    <server-status>
+        <ip>192.168.1.1</ip>
+        <up>true</up>
+        <app-name>app1</app-name>
+        <app-name>app2</app-name>
+        <app-name>app3</app-name>
+        <app-name>app4</app-name>
+    </server-status>
 </model>
