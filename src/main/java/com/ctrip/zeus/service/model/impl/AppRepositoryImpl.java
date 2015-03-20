@@ -55,6 +55,20 @@ public class AppRepositoryImpl implements AppRepository {
     }
 
     @Override
+    public AppList listLimit(long fromId, int maxCount) {
+        AppList appList = new AppList();
+        try {
+            for (App app : appQuery.getLimit(fromId, maxCount)) {
+                appList.addApp(app);
+            }
+            appList.setTotal(appList.getApps().size());
+            return appList;
+        } catch (DalException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public App get(String appName) {
         try {
             return appQuery.get(appName);
@@ -64,9 +78,37 @@ public class AppRepositoryImpl implements AppRepository {
     }
 
     @Override
-    public void addOrUpdate(App app) {
+    public App getByAppId(String appId) {
         try {
-            appSync.sync(app);
+            return appQuery.getByAppId(appId);
+        } catch (DalException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public App getByPKId(long id) {
+        try {
+            return appQuery.getById(id);
+        } catch (DalException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void add(App app) {
+        try {
+            appSync.add(app);
+            archiveService.archiveApp(app);
+        } catch (DalException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void update(App app) {
+        try {
+            appSync.update(app);
             archiveService.archiveApp(app);
         } catch (DalException e) {
             e.printStackTrace();

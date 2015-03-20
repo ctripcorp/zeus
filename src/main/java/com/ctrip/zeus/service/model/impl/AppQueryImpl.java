@@ -46,11 +46,28 @@ public class AppQueryImpl implements AppQuery {
         AppDo d = appDao.findByName(name, AppEntity.READSET_FULL);
         App app = C.toApp(d);
 
-        queryAppSlbs(d.getName(), app);
-        queryAppHealthCheck(d.getId(), app);
-        queryLoadBalancingMethod(d.getId(), app);
-        queryAppServers(d.getId(), app);
+        fillData(d, app);
+        return app;
+    }
 
+    @Override
+    public App getById(long id) throws DalException {
+        List<AppDo> list = appDao.findAllByIds(new long[] {id}, AppEntity.READSET_FULL);
+        if (list.size() > 0) {
+            AppDo d = list.get(0);
+            App app = C.toApp(d);
+            fillData(d, app);
+            return app;
+        }
+        return null;
+    }
+
+    @Override
+    public App getByAppId(String appId) throws DalException {
+        AppDo d = appDao.findByAppId(appId, AppEntity.READSET_FULL);
+        App app = C.toApp(d);
+
+        fillData(d, app);
         return app;
     }
 
@@ -61,11 +78,20 @@ public class AppQueryImpl implements AppQuery {
             App app = C.toApp(d);
             list.add(app);
 
-            queryAppSlbs(d.getName(), app);
-            queryAppHealthCheck(d.getId(), app);
-            queryLoadBalancingMethod(d.getId(), app);
-            queryAppServers(d.getId(), app);
+            fillData(d, app);
 
+        }
+        return list;
+    }
+
+    @Override
+    public List<App> getLimit(long fromId, int maxCount) throws DalException {
+        List<App> list = new ArrayList<>();
+        for(AppDo d : appDao.findLimit(fromId, maxCount, AppEntity.READSET_FULL)) {
+            App app = C.toApp(d);
+            list.add(app);
+
+            fillData(d, app);
         }
         return list;
     }
@@ -84,13 +110,16 @@ public class AppQueryImpl implements AppQuery {
             App app = C.toApp(d);
             list.add(app);
 
-            queryAppSlbs(d.getName(), app);
-            queryAppHealthCheck(d.getId(), app);
-            queryLoadBalancingMethod(d.getId(), app);
-            queryAppServers(d.getId(), app);
-
+            fillData(d, app);
         }
         return list;
+    }
+
+    private void fillData(AppDo d, App app) throws DalException {
+        queryAppSlbs(d.getName(), app);
+        queryAppHealthCheck(d.getId(), app);
+        queryLoadBalancingMethod(d.getId(), app);
+        queryAppServers(d.getId(), app);
     }
 
     private void queryAppSlbs(String appName, App app) throws DalException {

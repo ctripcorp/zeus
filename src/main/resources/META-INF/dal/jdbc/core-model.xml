@@ -3,17 +3,26 @@
     <entity name="app" table="app" alias="a" do-class="AppDo">
         <var name="ids" value-type="long[]"/>
         <var name="names" value-type="String[]"/>
+        <var name="max-count" value-type="int"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
-                    ON DUPLICATE KEY UPDATE
-                        name = values(name),
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-PK" type="UPDATE">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET name = values(name),
                         app_id = values(app_id),
                         version = version + 1,
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name='last-modified'/> = NOW()
+                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>
@@ -25,6 +34,18 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-limit" type="SELECT" multiple="true">
+                <param name="id"/>
+                <param name="max-count"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='id'/> > ${id}
+                        LIMIT ${max-count}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-name" type="SELECT">
                 <param name="name"/>
                 <statement>
@@ -32,6 +53,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-appId" type="SELECT">
+                <param name="app-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-id'/> = ${app-id}
                     ]]>
                 </statement>
             </query>

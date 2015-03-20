@@ -25,11 +25,20 @@ import java.io.IOException;
 public class AppResource {
     @Resource
     private AppRepository appRepository;
+    private static int DEFAULT_MAX_COUNT = 20;
 
     @GET
+    @Path("/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response list(@Context HttpHeaders hh) {
-        AppList appList = appRepository.list();
+public Response list(@Context HttpHeaders hh, @QueryParam("from") long fromId, @QueryParam("maxCount") int maxCount) {
+        AppList appList;
+        if (fromId <= 0 && maxCount <= 0) {
+            appList = appRepository.list();
+        } else {
+            fromId = fromId < 0 ? 0 : fromId;
+            maxCount = maxCount <= 0 ? DEFAULT_MAX_COUNT : maxCount;
+            appList = appRepository.listLimit(fromId, maxCount);
+        }
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
             return Response.status(200).entity(String.format(AppList.XML, appList)).type(MediaType.APPLICATION_XML).build();
         } else {
@@ -38,9 +47,9 @@ public class AppResource {
     }
 
     @GET
-    @Path("/{appName:[a-zA-Z0-9_-]+}")
+    @Path("/get/{appName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response get(@Context HttpHeaders hh, @PathParam("appName") String appName) {
+    public Response getByAppName(@Context HttpHeaders hh, @PathParam("appName") String appName) {
         App app = appRepository.get(appName);
 
         if (app.getName() != null) {
@@ -54,16 +63,53 @@ public class AppResource {
         return Response.status(404).type(hh.getMediaType()).build();
     }
 
+    @GET
+    @Path("/get")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response get(@Context HttpHeaders hh, @QueryParam("appId") String appId, @QueryParam("id") long id) {
+        App app = null;
+        if (!appId.isEmpty()) {
+            app = appRepository.getByAppId(appId);
+        } else if (id > 0) {
+            app = appRepository.getByPKId(id);
+        }
+
+        if (app != null && app.getName() != null) {
+            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_ATOM_XML_TYPE)) {
+                return Response.status(200).entity(String.format(App.XML, app)).type(MediaType.APPLICATION_XML).build();
+            } else {
+                return Response.status(200).entity(String.format(App.JSON, app)).type(MediaType.APPLICATION_JSON).build();
+            }
+        }
+
+        return Response.status(404).type(hh.getMediaType()).build();
+    }
+
     @POST
+    @Path("/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response addOrUpdate(@Context HttpHeaders hh, String app) throws IOException, SAXException {
-        App a = null;
+    public Response add(@Context HttpHeaders hh, String app) throws IOException, SAXException {
+        App a;
         if (hh.getMediaType().equals(MediaType.APPLICATION_ATOM_XML_TYPE)) {
             a = DefaultSaxParser.parseEntity(App.class, app);
-        }else{
+        } else {
             a = DefaultJsonParser.parse(App.class, app);
         }
-        appRepository.addOrUpdate(a);
+        appRepository.add(a);
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/update")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    public Response update(@Context HttpHeaders hh, String app) throws IOException, SAXException {
+        App a;
+        if (hh.getMediaType().equals(MediaType.APPLICATION_ATOM_XML_TYPE)) {
+            a = DefaultSaxParser.parseEntity(App.class, app);
+        } else {
+            a = DefaultJsonParser.parse(App.class, app);
+        }
+        appRepository.update(a);
         return Response.ok().build();
     }
 }

@@ -16,7 +16,15 @@ public interface AppRepository extends Repository {
 
     AppList list(String slbName, String virtualServerName);
 
+    AppList listLimit(long fromId, int maxCount);
+
     App get(String appName);
 
-    void addOrUpdate(App app);
+    App getByAppId(String appId);
+
+    App getByPKId(long id);
+
+    void add(App app);
+
+    void update(App app);
 }

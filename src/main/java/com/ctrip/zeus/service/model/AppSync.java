@@ -11,5 +11,7 @@ import org.unidal.dal.jdbc.DalException;
  * @date: 3/7/2015.
  */
 public interface AppSync {
-    AppDo sync(App app) throws DalException;
+    AppDo add(App app) throws DalException;
+
+    AppDo update(App app) throws DalException;
 }

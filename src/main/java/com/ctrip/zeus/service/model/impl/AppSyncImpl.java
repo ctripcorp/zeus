@@ -48,20 +48,34 @@ public class AppSyncImpl implements AppSync {
     private DbClean dbClean;
 
     @Override
-    public AppDo sync(App app) throws DalException {
-        AppDo d = C.toAppDo(app);
+    public AppDo add(App app) throws DalException {
+        AppDo d= C.toAppDo(app);
         d.setCreatedTime(new Date());
         d.setVersion(1);
         appDao.insert(d);
-
-        syncAppSlbs(app.getName(), app.getAppSlbs());
-        syncAppHealthCheck(d.getId(), app.getHealthCheck());
-        syncLoadBalancingMethod(d.getId(), app.getLoadBalancingMethod());
-        syncAppServers(d.getId(), app.getAppServers());
+        sync(d, app);
 
         d = appDao.findByPK(d.getKeyId(), AppEntity.READSET_FULL);
         app.setVersion(d.getVersion());
         return d;
+    }
+
+    @Override
+    public AppDo update(App app) throws DalException {
+        AppDo d= C.toAppDo(app);
+        appDao.updateByPK(d, AppEntity.UPDATESET_FULL);
+        sync(d, app);
+
+        d = appDao.findByPK(d.getKeyId(), AppEntity.READSET_FULL);
+        app.setVersion(d.getVersion());
+        return d;
+    }
+
+    private void sync(AppDo d, App app) throws DalException {
+        syncAppSlbs(app.getName(), app.getAppSlbs());
+        syncAppHealthCheck(d.getId(), app.getHealthCheck());
+        syncLoadBalancingMethod(d.getId(), app.getLoadBalancingMethod());
+        syncAppServers(d.getId(), app.getAppServers());
     }
 
     private void syncAppSlbs(String appName, List<AppSlb> appSlbs) throws DalException {
@@ -127,5 +141,4 @@ public class AppSyncImpl implements AppSync {
             dbClean.deleteAppServer(d.getId());
         }
     }
-
 }
