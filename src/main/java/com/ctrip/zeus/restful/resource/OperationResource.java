@@ -51,6 +51,11 @@ public class OperationResource {
     public Response upMember(@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip) throws IOException, SAXException {
         statusService.upMember(appName, ip);
         reloadNginxConf();
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         AppStatus as = statusService.getAppStatus(appName);
         return Response.status(200).entity(String.format(AppStatus.JSON, as)).type(MediaType.APPLICATION_JSON_TYPE).build();
     }
@@ -60,6 +65,11 @@ public class OperationResource {
     public Response downMember(@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip) throws IOException, SAXException {
         statusService.downMember(appName, ip);
         reloadNginxConf();
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         AppStatus as = statusService.getAppStatus(appName);
         return Response.status(200).entity(String.format(AppStatus.JSON, as)).type(MediaType.APPLICATION_JSON_TYPE).build();
     }
