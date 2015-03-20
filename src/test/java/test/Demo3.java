@@ -24,6 +24,7 @@ public class Demo3 {
         NginxClient c = new NginxClient("http://10.2.25.93:10001");
         UpstreamStatus s = c.getUpstreamStatus();
         System.out.println(s.getServers().getServer());
-        new DefaultNginxStatus(s);
+        DefaultNginxStatus d = new DefaultNginxStatus(s);
+        System.out.println(d.serverIsUp(""));
     }
 }

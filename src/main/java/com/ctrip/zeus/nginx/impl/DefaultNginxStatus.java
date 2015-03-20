@@ -36,7 +36,7 @@ public class DefaultNginxStatus implements NginxStatus {
 
             if (isUp) {
                 vhostAppIpsUp.add(vhostName + "_" + appName + "_" + ip);
-                appIpsUp.add(vhostName + "_" + appName + "_" + ip);
+                appIpsUp.add(appName + "_" + ip);
                 ipsUp.add(ip);
             }
         }
