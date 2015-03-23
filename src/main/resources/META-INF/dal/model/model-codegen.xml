@@ -98,7 +98,7 @@
   </entity>
   <entity name="app-status-list">
     <element name="total" value-type="int" />
-    <entity-ref name="app-status" type="list" names="app-statuses" />
+    <entity-ref name="app-status" type="list" names="app-statuses" xml-indent="true" />
   </entity>
   <entity name="server-status">
     <element name="ip" value-type="String" />

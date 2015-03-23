@@ -105,8 +105,10 @@
 
     <app-status-list>
         <total>11</total>
-        <app-status/>
-        <app-status/>
+        <app-statuses>
+            <app-status/>
+            <app-status/>
+        </app-statuses>
     </app-status-list>
 
     <server-status>
