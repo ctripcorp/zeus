@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.status;
 
 import com.ctrip.zeus.model.entity.AppStatus;
+import com.ctrip.zeus.model.entity.AppStatusList;
 import com.ctrip.zeus.model.entity.ServerStatus;
 
 import java.util.Set;
@@ -25,6 +26,8 @@ public interface StatusService {
     void downMember(String appName, String ip);
 
     AppStatus getAppStatus(String appName);
+
+    AppStatusList getAllAppStatus(String slbName);
 
     ServerStatus getServerStatus(String ip);
 }

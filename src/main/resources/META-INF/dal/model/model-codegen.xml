@@ -8,6 +8,7 @@
     <entity-ref name="member-action" />
     <entity-ref name="server-action" />
     <entity-ref name="app-status" />
+    <entity-ref name="app-status-list" />
     <entity-ref name="server-status" />
   </entity>
   <entity name="slb">
@@ -94,6 +95,10 @@
     <element name="member" value-type="boolean" />
     <element name="server" value-type="boolean" />
     <element name="up" value-type="boolean" />
+  </entity>
+  <entity name="app-status-list">
+    <element name="total" value-type="int" />
+    <entity-ref name="app-status" type="list" names="app-statuses" />
   </entity>
   <entity name="server-status">
     <element name="ip" value-type="String" />

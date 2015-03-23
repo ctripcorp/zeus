@@ -162,6 +162,35 @@ public class StatusServiceImpl implements StatusService {
     }
 
     @Override
+    public AppStatusList getAllAppStatus(String slbName) {
+        try {
+            AppStatusList appStatusList = new AppStatusList();
+            Set<String> ips = findAllDownServers();
+            NginxStatus nginxStatus = nginxStatusService.getNginxStatus("default");
+
+            AppList appList = appRepository.list();
+            for (App app : appList.getApps()) {
+                String appName = app.getName();
+                Set<String> appIps = findAllDownAppServers("default", appName);
+
+                AppStatus appStatus = new AppStatus();
+                appStatus.setAppName(appName);
+                for (AppServer appServer : app.getAppServers()) {
+                    AppServerStatus s = new AppServerStatus();
+                    String ip = appServer.getIp();
+                    s.setIp(ip).setMember(!appIps.contains(ip)).setServer(!ips.contains(ip)).setUp(nginxStatus.appServerIsUp(appName, ip));
+                    appStatus.addAppServerStatus(s);
+                }
+
+                appStatusList.addAppStatus(appStatus);
+            }
+            return appStatusList;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public ServerStatus getServerStatus(String ip) {
         return null;
     }
