@@ -52,23 +52,6 @@ public class SlbResource {
         return Response.status(404).type(hh.getMediaType()).build();
     }
 
-    @GET
-    @Path("/get")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response get(@Context HttpHeaders hh, @PathParam("id") long id) {
-        Slb slb = null;
-        if (id > 0)
-            slb = slbRepository.getByPKId(id);
-        if (slb.getName() != null) {
-            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
-                return Response.status(200).entity(String.format(Slb.XML, slb)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(Slb.JSON, slb)).type(MediaType.APPLICATION_JSON).build();
-            }
-        }
-        return Response.status(404).type(hh.getMediaType()).build();
-    }
-
     @POST
     @Path("/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})

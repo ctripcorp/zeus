@@ -87,15 +87,6 @@ public class AppRepositoryImpl implements AppRepository {
     }
 
     @Override
-    public App getByPKId(long id) {
-        try {
-            return appQuery.getById(id);
-        } catch (DalException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public void add(App app) {
         try {
             appSync.add(app);

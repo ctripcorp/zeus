@@ -229,7 +229,7 @@
             $scope.current = JSON.stringify(x, null, "    ");
         }
         $scope.save = function (content) {
-            $http.post("/api/app", content).success(
+            $http.post("/api/app/add", content).success(
                     function (response) {
                         $scope.lll();
                     }

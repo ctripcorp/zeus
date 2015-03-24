@@ -22,8 +22,6 @@ public interface AppRepository extends Repository {
 
     App getByAppId(String appId);
 
-    App getByPKId(long id);
-
     void add(App app);
 
     void update(App app);

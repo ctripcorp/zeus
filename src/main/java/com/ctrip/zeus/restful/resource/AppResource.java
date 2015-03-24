@@ -28,7 +28,6 @@ public class AppResource {
     private static int DEFAULT_MAX_COUNT = 20;
 
     @GET
-    @Path("/list")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public Response list(@Context HttpHeaders hh, @QueryParam("from") long fromId, @QueryParam("maxCount") int maxCount) {
         AppList appList;
@@ -66,12 +65,10 @@ public Response list(@Context HttpHeaders hh, @QueryParam("from") long fromId, @
     @GET
     @Path("/get")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response get(@Context HttpHeaders hh, @QueryParam("appId") String appId, @QueryParam("id") long id) {
+    public Response get(@Context HttpHeaders hh, @PathParam("appId") String appId) {
         App app = null;
         if (!appId.isEmpty()) {
             app = appRepository.getByAppId(appId);
-        } else if (id > 0) {
-            app = appRepository.getByPKId(id);
         }
 
         if (app != null && app.getName() != null) {

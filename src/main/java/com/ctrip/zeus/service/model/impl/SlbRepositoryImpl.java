@@ -58,15 +58,6 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public Slb getByPKId(long id) {
-        try {
-            return slbQuery.getById(id);
-        } catch (DalException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public void add(Slb slb) {
         if (slb == null)
             return;
