@@ -272,6 +272,7 @@
         </query-defs>
     </entity>
     <entity name="slb" table="slb" alias="s2" do-class="SlbDo">
+        <var name="names" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -289,11 +290,37 @@
                     ]]>
                 </statement>
             </query>
+            <query name="update" type="UPDATE">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET name = values(name),
+                        nginx_bin = values(nginx_bin),
+                        nginx_conf = values(nginx_conf),
+                        nginx_worker_processes = values(nginx_worker_processes),
+                        status = values(status),
+                        version = version + 1,
+                        <FIELD name="last-modified"/> = NOW()
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all" type="SELECT" multiple="true">
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-names" type="SELECT" multiple="true">
+                <param name="names"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> in <IN>${names}</IN>
                     ]]>
                 </statement>
             </query>
@@ -304,6 +331,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-id" type="SELECT">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>
@@ -367,6 +404,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ip" type="SELECT" multiple="true">
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='ip'/> = ${ip}
                     ]]>
                 </statement>
             </query>

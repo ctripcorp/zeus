@@ -45,11 +45,53 @@ public class SlbQueryImpl implements SlbQuery {
         SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
 
         Slb slb = C.toSlb(d);
-        querySlbVips(d.getId(), slb);
-        querySlbServers(d.getId(), slb);
-        queryVirtualServers(d.getId(), slb);
-
+        fillData(d, slb);
         return slb;
+    }
+
+    @Override
+    public Slb getById(long id) throws DalException {
+        SlbDo d = slbDao.findByPK(id, SlbEntity.READSET_FULL);
+
+        Slb slb = C.toSlb(d);
+        fillData(d, slb);
+        return slb;
+    }
+
+    @Override
+    public List<Slb> getByNames(String[] names) throws DalException {
+        List<Slb> list = new ArrayList<>();
+        for (SlbDo sd : slbDao.findAllByNames(names, SlbEntity.READSET_FULL)) {
+            Slb slb = C.toSlb(sd);
+            list.add(slb);
+        }
+        return list;
+    }
+
+    @Override
+    public List<Slb> getByServer(String serverIp) throws DalException {
+        List<Slb> list = new ArrayList<>();
+        for (SlbServerDo ssd : slbServerDao.findAllByIp(serverIp, SlbServerEntity.READSET_FULL)) {
+            SlbServer ss = C.toSlbServer(ssd);
+            Slb slb = getById((long) ss.getSlbId());
+            if (slb != null)
+                list.add(slb);
+        }
+        return list;
+    }
+
+    @Override
+    public List<Slb> getByMemberAndAppName(String memberIp, String[] appNames) throws DalException {
+        List<Slb> list = new ArrayList<>();
+        List<Slb> slbCandidates = getByServer(memberIp);
+        for (AppSlbDo asd : appSlbDao.findAllByApps(appNames, AppSlbEntity.READSET_FULL)) {
+            for (Slb sc : slbCandidates) {
+                if (sc.getName().equalsIgnoreCase(asd.getSlbName())) {
+                    list.add(sc);
+                }
+            }
+        }
+        return list;
     }
 
     @Override
@@ -65,6 +107,12 @@ public class SlbQueryImpl implements SlbQuery {
 
         }
         return list;
+    }
+
+    private void fillData(SlbDo d, Slb slb) throws DalException {
+        querySlbVips(d.getId(), slb);
+        querySlbServers(d.getId(), slb);
+        queryVirtualServers(d.getId(), slb);
     }
 
     private void querySlbVips(long slbId, Slb slb) throws DalException {

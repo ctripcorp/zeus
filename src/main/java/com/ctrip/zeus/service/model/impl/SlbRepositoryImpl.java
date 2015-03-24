@@ -58,15 +58,46 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public void addOrUpdate(Slb s) {
+    public Slb getByPKId(long id) {
         try {
-            slbSync.sync(s);
-            archiveService.archiveSlb(s);
+            return slbQuery.getById(id);
+        } catch (DalException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-            for (SlbServer slbServer : s.getSlbServers()) {
+    @Override
+    public void add(Slb slb) {
+        if (slb == null)
+            return;
+        try {
+            slbSync.add(slb);
+            archiveService.archiveSlb(slb);
+
+            for (SlbServer slbServer : slb.getSlbServers()) {
                 nginxServerDao.insert(new NginxServerDo()
                         .setIp(slbServer.getIp())
-                        .setSlbName(s.getName())
+                        .setSlbName(slb.getName())
+                        .setVersion(0)
+                        .setCreatedTime(new Date()));
+            }
+        } catch (DalException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void update(Slb slb) {
+        if (slb == null)
+            return;
+        try {
+            slbSync.update(slb);
+            archiveService.archiveSlb(slb);
+
+            for (SlbServer slbServer : slb.getSlbServers()) {
+                nginxServerDao.insert(new NginxServerDo()
+                        .setIp(slbServer.getIp())
+                        .setSlbName(slb.getName())
                         .setVersion(0)
                         .setCreatedTime(new Date()));
             }

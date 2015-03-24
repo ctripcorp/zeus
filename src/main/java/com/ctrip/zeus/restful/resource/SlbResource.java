@@ -38,9 +38,9 @@ public class SlbResource {
     }
 
     @GET
-    @Path("/{slbName:[a-zA-Z0-9_-]+}")
+    @Path("/get/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response get(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
+    public Response getBySlbName(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
         Slb slb = slbRepository.get(slbName);
         if (slb.getName() != null) {
             if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
@@ -52,16 +52,48 @@ public class SlbResource {
         return Response.status(404).type(hh.getMediaType()).build();
     }
 
-    @POST
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response addOrUpdate(@Context HttpHeaders hh, String slb) throws IOException, SAXException {
-        Slb sc = null;
-        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
-            sc = DefaultSaxParser.parseEntity(Slb.class, slb);
-        } else {
-            sc = DefaultJsonParser.parse(Slb.class, slb);
+    @GET
+    @Path("/get")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response get(@Context HttpHeaders hh, @PathParam("id") long id) {
+        Slb slb = null;
+        if (id > 0)
+            slb = slbRepository.getByPKId(id);
+        if (slb.getName() != null) {
+            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
+                return Response.status(200).entity(String.format(Slb.XML, slb)).type(MediaType.APPLICATION_XML).build();
+            } else {
+                return Response.status(200).entity(String.format(Slb.JSON, slb)).type(MediaType.APPLICATION_JSON).build();
+            }
         }
-        slbRepository.addOrUpdate(sc);
+        return Response.status(404).type(hh.getMediaType()).build();
+    }
+
+    @POST
+    @Path("/add")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    public Response add(@Context HttpHeaders hh, String slb) throws IOException, SAXException {
+        Slb s;
+        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
+            s = DefaultSaxParser.parseEntity(Slb.class, slb);
+        } else {
+            s = DefaultJsonParser.parse(Slb.class, slb);
+        }
+        slbRepository.add(s);
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/update")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    public Response update(@Context HttpHeaders hh, String slb) throws IOException, SAXException {
+        Slb s;
+        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
+            s = DefaultSaxParser.parseEntity(Slb.class, slb);
+        } else {
+            s = DefaultJsonParser.parse(Slb.class, slb);
+        }
+        slbRepository.update(s);
         return Response.ok().build();
     }
 }

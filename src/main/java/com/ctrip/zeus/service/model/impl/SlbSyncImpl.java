@@ -48,19 +48,33 @@ public class SlbSyncImpl implements SlbSync {
     private DbClean dbClean;
 
     @Override
-    public SlbDo sync(Slb slb) throws DalException {
+    public SlbDo add(Slb slb) throws DalException {
         SlbDo d = C.toSlbDo(slb);
         d.setCreatedTime(new Date());
         d.setVersion(1);
         slbDao.insert(d);
 
-        syncSlbVips(d.getId(), slb.getVips());
-        syncSlbServers(d.getId(), slb.getSlbServers());
-        syncVirtualServers(d.getId(), slb.getVirtualServers());
+        sync(d, slb);
+        d = slbDao.findByPK(d.getKeyId(), SlbEntity.READSET_FULL);
+        slb.setVersion(d.getVersion());
+        return d;
+    }
+
+    @Override
+    public SlbDo update(Slb slb) throws DalException {
+        SlbDo d = C.toSlbDo(slb);
+        slbDao.update(d, SlbEntity.UPDATESET_FULL);
+        sync(d, slb);
 
         d = slbDao.findByPK(d.getKeyId(), SlbEntity.READSET_FULL);
         slb.setVersion(d.getVersion());
         return d;
+    }
+
+    private void sync(SlbDo d, Slb slb) throws DalException {
+        syncSlbVips(d.getId(), slb.getVips());
+        syncSlbServers(d.getId(), slb.getSlbServers());
+        syncVirtualServers(d.getId(), slb.getVirtualServers());
     }
 
     private void syncSlbVips(long slbId, List<Vip> vips) throws DalException {
@@ -88,7 +102,7 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     private void syncSlbServers(long slbId, List<SlbServer> slbServers) throws DalException {
-        List<SlbServerDo> oldList = slbServerDao.findAllBySlb(slbId,SlbServerEntity.READSET_FULL);
+        List<SlbServerDo> oldList = slbServerDao.findAllBySlb(slbId, SlbServerEntity.READSET_FULL);
         Map<String, SlbServerDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbServerDo, String>() {
             @Override
             public String apply(SlbServerDo input) {

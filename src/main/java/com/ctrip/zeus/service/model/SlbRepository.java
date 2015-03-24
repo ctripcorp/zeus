@@ -16,5 +16,9 @@ public interface SlbRepository extends Repository {
 
     Slb get(String slbName);
 
-    void addOrUpdate(Slb sc);
+    Slb getByPKId(long id);
+
+    void add(Slb slb);
+
+    void update(Slb slb);
 }

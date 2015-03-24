@@ -11,5 +11,8 @@ import java.util.List;
  * @date: 3/7/2015.
  */
 public interface SlbSync {
-    SlbDo sync(Slb slb) throws DalException;
+
+    SlbDo add(Slb slb) throws DalException;
+
+    SlbDo update(Slb slb) throws DalException;
 }

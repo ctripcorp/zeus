@@ -26,6 +26,7 @@
     <attribute name="ip" value-type="String" />
   </entity>
   <entity name="slb-server">
+    <attribute name="slb-id" value-type="int" />
     <attribute name="ip" value-type="String" />
     <attribute name="host-name" value-type="String" />
     <attribute name="enable" value-type="boolean" />
