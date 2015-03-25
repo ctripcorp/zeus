@@ -28,15 +28,9 @@ public class AppQueryImpl implements AppQuery {
     @Resource
     private AppSlbDao appSlbDao;
     @Resource
-    private ServerDao serverDao;
-    @Resource
     private SlbDao slbDao;
     @Resource
     private SlbDomainDao slbDomainDao;
-    @Resource
-    private SlbServerDao slbServerDao;
-    @Resource
-    private SlbVipDao slbVipDao;
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
 

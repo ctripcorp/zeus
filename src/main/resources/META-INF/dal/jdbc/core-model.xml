@@ -26,6 +26,15 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-name" type="DELETE">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all" type="SELECT" multiple="true">
                 <statement>
                     <![CDATA[
@@ -105,6 +114,15 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-app" type="DELETE">
+                <param name="app-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='app_id'/> = ${app-id}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-app" type="SELECT">
                 <param name="app-id"/>
                 <statement>
@@ -130,6 +148,16 @@
                         type = values(type),
                         value = values(value),
                         <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-app" type="DELETE">
+                <param name="app-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-id'/> = ${app-id}
                     ]]>
                 </statement>
             </query>
@@ -164,6 +192,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-app" type="DELETE">
+                <param name="app-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-id'/> = ${app-id}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-app" type="SELECT" multiple="true">
                 <param name="app-id"/>
                 <statement>
@@ -190,6 +228,16 @@
                         slb_virtual_server_name = values(slb_virtual_server_name),
                         path = values(path),
                         <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-app" type="DELETE">
+                <param name="app-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-name'/> = ${app-name}
                     ]]>
                 </statement>
             </query>

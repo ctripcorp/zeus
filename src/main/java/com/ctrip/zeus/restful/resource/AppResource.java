@@ -29,7 +29,7 @@ public class AppResource {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-public Response list(@Context HttpHeaders hh, @QueryParam("from") long fromId, @QueryParam("maxCount") int maxCount) {
+    public Response list(@Context HttpHeaders hh, @QueryParam("from") long fromId, @QueryParam("maxCount") int maxCount) {
         AppList appList;
         if (fromId <= 0 && maxCount <= 0) {
             appList = appRepository.list();

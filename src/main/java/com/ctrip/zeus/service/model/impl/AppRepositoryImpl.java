@@ -87,13 +87,15 @@ public class AppRepositoryImpl implements AppRepository {
     }
 
     @Override
-    public void add(App app) {
+    public long add(App app) {
         try {
-            appSync.add(app);
+            long appId = appSync.add(app).getId();
             archiveService.archiveApp(app);
+            return appId;
         } catch (DalException e) {
             e.printStackTrace();
         }
+        return -1;
     }
 
     @Override
@@ -104,5 +106,15 @@ public class AppRepositoryImpl implements AppRepository {
         } catch (DalException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public long delete(String appName) {
+        try {
+            return appSync.delete(appName);
+        } catch (DalException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }

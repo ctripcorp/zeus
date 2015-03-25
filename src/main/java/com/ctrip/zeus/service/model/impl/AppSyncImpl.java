@@ -71,6 +71,18 @@ public class AppSyncImpl implements AppSync {
         return d;
     }
 
+    @Override
+    public int delete(String name) throws DalException {
+        AppDo d = appDao.findByName(name, AppEntity.READSET_FULL);
+
+        appSlbDao.deleteByApp(new AppSlbDo().setAppName(d.getName()));
+        appServerDao.deleteByApp(new AppServerDo().setAppId(d.getId()));
+        appHealthCheckDao.deleteByApp(new AppHealthCheckDo().setAppId(d.getId()));
+        appLoadBalancingMethodDao.deleteByApp(new AppLoadBalancingMethodDo().setAppId(d.getId()));
+
+        return appDao.deleteByName(d);
+    }
+
     private void sync(AppDo d, App app) throws DalException {
         syncAppSlbs(app.getName(), app.getAppSlbs());
         syncAppHealthCheck(d.getId(), app.getHealthCheck());

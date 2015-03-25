@@ -14,4 +14,6 @@ public interface AppSync {
     AppDo add(App app) throws DalException;
 
     AppDo update(App app) throws DalException;
+
+    int delete(String name) throws DalException;
 }

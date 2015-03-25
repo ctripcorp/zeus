@@ -22,7 +22,9 @@ public interface AppRepository extends Repository {
 
     App getByAppId(String appId);
 
-    void add(App app);
+    long add(App app);
 
     void update(App app);
+
+    long delete(String appName);
 }
