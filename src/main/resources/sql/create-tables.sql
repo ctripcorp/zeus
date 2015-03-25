@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS `app_server` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `app_id` bigint(20) NOT NULL DEFAULT '0',
   `ip` varchar(200) NOT NULL DEFAULT '0',
+  `host_name` varchar(200) NOT NULL DEFAULT '0',
   `port` int(11) NOT NULL DEFAULT '0',
   `weight` int(11) NOT NULL DEFAULT '0',
   `max_fails` int(11) NOT NULL DEFAULT '0',
@@ -323,13 +324,15 @@ CREATE TABLE IF NOT EXISTS `slb_virtual_server` (
 -- Dumping structure for table zeus.status_app_server
 CREATE TABLE IF NOT EXISTS `status_app_server` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `slb_name` varchar(200) NOT NULL DEFAULT '0',
+  `virtual_server_name` varchar(200) NOT NULL DEFAULT '0',
   `app_name` varchar(200) NOT NULL,
   `ip` varchar(200) NOT NULL,
   `up` bit(1) NOT NULL,
   `created_time` timestamp NULL DEFAULT NULL,
   `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `app_name_ip` (`app_name`,`ip`)
+  UNIQUE KEY `slb_name_virtual_server_name_app_name_ip` (`slb_name`,`virtual_server_name`,`app_name`,`ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.

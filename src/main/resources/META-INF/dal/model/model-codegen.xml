@@ -72,6 +72,7 @@
     <attribute name="weight" value-type="int" />
     <attribute name="max-fails" value-type="int" />
     <attribute name="fail-timeout" value-type="int" />
+    <element name="host-name" value-type="String" />
     <element name="ip" value-type="String" />
   </entity>
   <entity name="app-list">

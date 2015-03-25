@@ -20,6 +20,7 @@ public class C {
     public static AppServer toAppServer(AppServerDo d) {
         return new AppServer()
                 .setIp(d.getIp())
+                .setHostName(d.getHostName())
                 .setFailTimeout(d.getFailTimeout())
                 .setMaxFails(d.getMaxFails())
                 .setPort(d.getPort())
@@ -92,6 +93,7 @@ public class C {
     public static AppServerDo toAppServerDo(AppServer e) {
         return new AppServerDo()
                 .setIp(e.getIp())
+                .setHostName(e.getHostName())
                 .setFailTimeout(e.getFailTimeout())
                 .setMaxFails(e.getMaxFails())
                 .setPort(e.getPort())

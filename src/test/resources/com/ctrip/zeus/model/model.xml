@@ -59,9 +59,11 @@
         </load-balancing-method>
         <app-servers>
             <app-server port="80" weight="5" max-fails="5" fail-timeout="30">
+                <host-name>local</host-name>
                 <ip>192.168.1.10</ip>
             </app-server>
             <app-server port="80" weight="5" max-fails="5" fail-timeout="30">
+                <host-name>local</host-name>
                 <ip>192.168.1.11</ip>
             </app-server>
         </app-servers>
