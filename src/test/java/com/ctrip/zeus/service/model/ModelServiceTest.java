@@ -3,21 +3,24 @@ package com.ctrip.zeus.service.model;
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
+import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.*;
 import org.unidal.dal.jdbc.datasource.DataSourceManager;
 import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.ContainerLoader;
+import support.AbstractSpringTest;
 import support.MysqlDbServer;
 
 import javax.annotation.Resource;
+import java.io.File;
 import java.io.IOException;
 
 /**
  * Created by zhoumy on 2015/3/24.
  */
-public class AppRepoTest {
+public class ModelServiceTest extends AbstractSpringTest {
 
     private static MysqlDbServer mysqlDbServer;
 
@@ -37,15 +40,16 @@ public class AppRepoTest {
         return app;
     }
 
-    private void batchAdd(int count) {
-        for(int i = 0; i < count; i++) {
-            String appJsonData1 = "{\"name\": \"testApp" + count + "\", \"app-id\": \"000000\", \"version\": 1, \"app-slbs\": [{\"slb-name\": \"default\", \"path\": \"/\", \"virtual-server\": {\"name\": \"testsite1\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"tests1.ctrip.com\"} ] } } ], \"health-check\": {\"intervals\": 5000, \"fails\": 1, \"passes\": 1, \"uri\": \"/domaininfo/OnService.html\"}, \"load-balancing-method\": {\"type\": \"roundrobin\", \"value\": \"test\"}, \"app-servers\": [{\"port\": 8080, \"weight\": 1, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.201\"}, {\"port\": 8080, \"weight\": 2, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.202\"} ] }";
+    private void batchAdd() {
+        for(int i = 0; i < 6; i++) {
+            String appJsonData1 = "{\"name\": \"testApp" + i + "\", \"app-id\": \"000000\", \"version\": 1, \"app-slbs\": [{\"slb-name\": \"default\", \"path\": \"/\", \"virtual-server\": {\"name\": \"testsite1\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"tests1.ctrip.com\"} ] } } ], \"health-check\": {\"intervals\": 5000, \"fails\": 1, \"passes\": 1, \"uri\": \"/domaininfo/OnService.html\"}, \"load-balancing-method\": {\"type\": \"roundrobin\", \"value\": \"test\"}, \"app-servers\": [{\"port\": 8080, \"weight\": 1, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.201\"}, {\"port\": 8080, \"weight\": 2, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.202\"} ] }";
             repo.add(parseApp(appJsonData1));
         }
     }
 
     @BeforeClass
     public static void setup() throws ComponentLookupException, ComponentLifecycleException {
+        S.setPropertyDefaultValue("CONF_DIR", new File("").getAbsolutePath() + "/conf/test");
         mysqlDbServer = new MysqlDbServer();
         mysqlDbServer.start();
     }
@@ -57,7 +61,7 @@ public class AppRepoTest {
         insertedTestAppId = repo.add(testApp);
         Assert.assertTrue(insertedTestAppId > 0);
 
-        batchAdd(6);
+        batchAdd();
     }
 
     @Test
@@ -101,11 +105,11 @@ public class AppRepoTest {
     }
 
     @After
-    public void shutDown() {
+    public void tearDown() {
         String appName = "testApp";
         Assert.assertEquals(insertedTestAppId, repo.delete(appName));
         for (int i = 0; i < 6; i++) {
-            Assert.assertEquals(insertedTestAppId + i + 1, repo.delete(appName + insertedTestAppId));
+            Assert.assertEquals(insertedTestAppId + i, repo.delete(appName + insertedTestAppId));
         }
     }
 
