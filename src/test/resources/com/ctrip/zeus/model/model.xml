@@ -91,12 +91,14 @@
         <app-name>app1</app-name>
         <app-server-status>
             <ip>192.168.1.1</ip>
+            <port>80</port>
             <member>true</member>
             <server>true</server>
             <up>true</up>
         </app-server-status>
         <app-server-status>
             <ip>192.168.1.1</ip>
+            <port>80</port>
             <member>true</member>
             <server>true</server>
             <up>true</up>

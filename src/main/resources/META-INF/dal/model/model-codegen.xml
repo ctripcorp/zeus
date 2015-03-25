@@ -92,6 +92,7 @@
   </entity>
   <entity name="app-server-status">
     <element name="ip" value-type="String" />
+    <element name="port" value-type="String" />
     <element name="member" value-type="boolean" />
     <element name="server" value-type="boolean" />
     <element name="up" value-type="boolean" />

@@ -151,7 +151,8 @@ public class StatusServiceImpl implements StatusService {
             for (AppServer appServer : app.getAppServers()) {
                 AppServerStatus s = new AppServerStatus();
                 String ip = appServer.getIp();
-                s.setIp(ip).setMember(!appIps.contains(ip)).setServer(!ips.contains(ip)).setUp(nginxStatus.appServerIsUp(appName, ip));
+                int port = appServer.getPort();
+                s.setIp(ip).setPort(String.valueOf(port)).setMember(!appIps.contains(ip)).setServer(!ips.contains(ip)).setUp(nginxStatus.appServerIsUp(appName, ip));
                 appStatus.addAppServerStatus(s);
             }
             return appStatus;
@@ -178,7 +179,8 @@ public class StatusServiceImpl implements StatusService {
                 for (AppServer appServer : app.getAppServers()) {
                     AppServerStatus s = new AppServerStatus();
                     String ip = appServer.getIp();
-                    s.setIp(ip).setMember(!appIps.contains(ip)).setServer(!ips.contains(ip)).setUp(nginxStatus.appServerIsUp(appName, ip));
+                    int port = appServer.getPort();
+                    s.setIp(ip).setPort(String.valueOf(port)).setMember(!appIps.contains(ip)).setServer(!ips.contains(ip)).setUp(nginxStatus.appServerIsUp(appName, ip));
                     appStatus.addAppServerStatus(s);
                 }
 
