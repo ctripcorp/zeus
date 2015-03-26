@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.SlbRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
@@ -77,6 +78,14 @@ public class SlbResource {
             s = DefaultJsonParser.parse(Slb.class, slb);
         }
         slbRepository.update(s);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/delete")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response delete(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
+        slbRepository.delete(slbName);
         return Response.ok().build();
     }
 }

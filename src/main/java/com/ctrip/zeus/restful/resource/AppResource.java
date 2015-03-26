@@ -109,4 +109,12 @@ public class AppResource {
         appRepository.update(a);
         return Response.ok().build();
     }
+
+    @GET
+    @Path("/delete")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response delete(@Context HttpHeaders hh, @PathParam("appName") String appName) {
+        appRepository.delete(appName);
+        return Response.ok().build();
+    }
 }
