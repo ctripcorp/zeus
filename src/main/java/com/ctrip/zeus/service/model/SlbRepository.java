@@ -19,4 +19,6 @@ public interface SlbRepository extends Repository {
     void add(Slb slb);
 
     void update(Slb slb);
+
+    int delete(String slbName);
 }

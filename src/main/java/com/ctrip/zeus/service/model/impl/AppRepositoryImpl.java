@@ -1,11 +1,14 @@
 package com.ctrip.zeus.service.model.impl;
 
+import com.ctrip.zeus.dal.core.AppDo;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.service.model.AppQuery;
 import com.ctrip.zeus.service.model.AppRepository;
 import com.ctrip.zeus.service.model.AppSync;
 import com.ctrip.zeus.service.model.ArchiveService;
+import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
@@ -89,10 +92,12 @@ public class AppRepositoryImpl implements AppRepository {
     @Override
     public long add(App app) {
         try {
-            long appId = appSync.add(app).getId();
-            archiveService.archiveApp(app);
-            return appId;
+            AppDo d = appSync.add(app);
+            archiveService.archiveApp(C.toApp(d));
+            return d.getKeyId();
         } catch (DalException e) {
+            e.printStackTrace();
+        } catch (ValidationException e) {
             e.printStackTrace();
         }
         return -1;
@@ -101,20 +106,24 @@ public class AppRepositoryImpl implements AppRepository {
     @Override
     public void update(App app) {
         try {
-            appSync.update(app);
+            app = C.toApp(appSync.update(app));
             archiveService.archiveApp(app);
         } catch (DalException e) {
+            e.printStackTrace();
+        } catch (ValidationException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public long delete(String appName) {
+    public int delete(String appName) {
         try {
-            return appSync.delete(appName);
+            int count = appSync.delete(appName);
+            archiveService.deleteAppArchive(appName);
+            return count;
         } catch (DalException e) {
             e.printStackTrace();
         }
-        return -1;
+        return 0;
     }
 }

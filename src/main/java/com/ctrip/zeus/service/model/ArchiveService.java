@@ -16,6 +16,9 @@ public interface ArchiveService {
     public int archiveSlb(Slb slb) throws DalException;
     public int archiveApp(App app) throws DalException;
 
+    public int deleteSlbArchive(String slbName) throws DalException;
+    public int deleteAppArchive(String appName) throws DalException;
+
     public Slb getSlb(String name, int version) throws DalException, IOException, SAXException;
     public App getApp(String name, int version) throws DalException, IOException, SAXException;
 

@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.DbClean;
 import com.ctrip.zeus.service.model.SlbSync;
@@ -63,12 +64,30 @@ public class SlbSyncImpl implements SlbSync {
     @Override
     public SlbDo update(Slb slb) throws DalException {
         SlbDo d = C.toSlbDo(slb);
-        slbDao.update(d, SlbEntity.UPDATESET_FULL);
-        sync(d, slb);
+        slbDao.updateByName(d, SlbEntity.UPDATESET_FULL);
 
-        d = slbDao.findByPK(d.getKeyId(), SlbEntity.READSET_FULL);
-        slb.setVersion(d.getVersion());
+        SlbDo updated = slbDao.findByName(d.getName(), SlbEntity.READSET_FULL);
+        d.setId(updated.getId());
+        d.setVersion(updated.getVersion());
+
+        sync(d, slb);
         return d;
+    }
+
+    @Override
+    public int delete(String slbName) throws DalException, ValidationException {
+        SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
+        if(removable(d)) {
+            return slbDao.deleteByPK(d);
+        }
+        throw new ValidationException(slbName + " cannot be deleted. Dependency exists");
+    }
+
+    private boolean removable(SlbDo d) throws DalException {
+        List<AppSlbDo> list = appSlbDao.findAllBySlb(d.getName(), AppSlbEntity.READSET_FULL);
+        if (list == null || list.size() == 0)
+            return true;
+        return false;
     }
 
     private void sync(SlbDo d, Slb slb) throws DalException {

@@ -1,7 +1,9 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.server.Server;
 import com.ctrip.zeus.service.model.AppSync;
 import com.ctrip.zeus.service.model.DbClean;
 import com.ctrip.zeus.support.C;
@@ -48,7 +50,9 @@ public class AppSyncImpl implements AppSync {
     private DbClean dbClean;
 
     @Override
-    public AppDo add(App app) throws DalException {
+    public AppDo add(App app) throws DalException, ValidationException {
+        if (!validate(app))
+            throw new ValidationException("app contains invalid information.");
         AppDo d= C.toAppDo(app);
         d.setCreatedTime(new Date());
         d.setVersion(1);
@@ -61,13 +65,18 @@ public class AppSyncImpl implements AppSync {
     }
 
     @Override
-    public AppDo update(App app) throws DalException {
+    public AppDo update(App app) throws DalException, ValidationException {
+        if (!validate(app)) {
+            throw new ValidationException("app contains invalid information.");
+        }
         AppDo d= C.toAppDo(app);
-        appDao.updateByPK(d, AppEntity.UPDATESET_FULL);
-        sync(d, app);
+        appDao.updateByName(d, AppEntity.UPDATESET_FULL);
 
-        d = appDao.findByPK(d.getKeyId(), AppEntity.READSET_FULL);
-        app.setVersion(d.getVersion());
+        AppDo updated = appDao.findByName(app.getName(), AppEntity.READSET_FULL);
+        d.setId(updated.getId());
+        d.setVersion(updated.getVersion());
+
+        sync(d, app);
         return d;
     }
 
@@ -81,6 +90,14 @@ public class AppSyncImpl implements AppSync {
         appLoadBalancingMethodDao.deleteByApp(new AppLoadBalancingMethodDo().setAppId(d.getId()));
 
         return appDao.deleteByName(d);
+    }
+
+    private boolean validate(App app) throws DalException {
+        for (AppSlb as : app.getAppSlbs()) {
+            if (slbDao.findByName(as.getSlbName(), SlbEntity.READSET_FULL) == null)
+                return false;
+        }
+        return true;
     }
 
     private void sync(AppDo d, App app) throws DalException {

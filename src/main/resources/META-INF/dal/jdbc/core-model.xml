@@ -13,16 +13,15 @@
                     ]]>
                 </statement>
             </query>
-            <query name="update-by-PK" type="UPDATE">
-                <param name="id"/>
+            <query name="update-by-name" type="UPDATE">
+                <param name="name"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET name = values(name),
-                        app_id = values(app_id),
+                    SET <FIELD name='app-id'/> = ${app-id},
                         version = version + 1,
                         <FIELD name='last-modified'/> = NOW()
-                    WHERE <FIELD name='id'/> = ${id}
+                    WHERE <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>
@@ -119,7 +118,7 @@
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app_id'/> = ${app-id}
+                    WHERE <FIELD name='app-id'/> = ${app-id}
                     ]]>
                 </statement>
             </query>
@@ -155,9 +154,8 @@
                 <param name="app-id"/>
                 <statement>
                     <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='app-id'/> = ${app-id}
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='app-id'/> = ${app-id}
                     ]]>
                 </statement>
             </query>
@@ -196,9 +194,8 @@
                 <param name="app-id"/>
                 <statement>
                     <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='app-id'/> = ${app-id}
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='app-id'/> = ${app-id}
                     ]]>
                 </statement>
             </query>
@@ -235,9 +232,8 @@
                 <param name="app-name"/>
                 <statement>
                     <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='app-name'/> = ${app-name}
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='app-name'/> = ${app-name}
                     ]]>
                 </statement>
             </query>
@@ -338,19 +334,18 @@
                     ]]>
                 </statement>
             </query>
-            <query name="update" type="UPDATE">
-                <param name="id"/>
+            <query name="update-by-name" type="UPDATE">
+                <param name="name"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET name = values(name),
-                        nginx_bin = values(nginx_bin),
-                        nginx_conf = values(nginx_conf),
-                        nginx_worker_processes = values(nginx_worker_processes),
-                        status = values(status),
+                    SET <FIELD name='nginx-bin'/> = ${nginx-bin},
+                        <FIELD name='nginx-conf'/> = ${nginx-conf},
+                        <FIELD name='nginx-worker-processes'/> = ${nginx-worker-processes},
+                        <FIELD name='status'/> = ${status},
                         version = version + 1,
                         <FIELD name="last-modified"/> = NOW()
-                    WHERE <FIELD name='id'/> = ${id}
+                    WHERE <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>
@@ -535,6 +530,15 @@
     </entity>
     <entity name="archive-app" table="archive_app" alias="aa" do-class="ArchiveAppDo">
         <query-defs>
+            <query name="delete-by-app" type="DELETE">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-max-version-by-name" type="SELECT">
                 <param name="name"/>
                 <statement>
@@ -571,6 +575,15 @@
     </entity>
     <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
         <query-defs>
+            <query name="delete-by-slb" type="DELETE">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-max-version-by-name" type="SELECT">
                 <param name="name"/>
                 <statement>

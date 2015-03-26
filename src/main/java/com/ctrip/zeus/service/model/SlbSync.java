@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.dal.core.SlbDo;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import org.unidal.dal.jdbc.DalException;
 
@@ -15,4 +16,6 @@ public interface SlbSync {
     SlbDo add(Slb slb) throws DalException;
 
     SlbDo update(Slb slb) throws DalException;
+
+    int delete(String slbName) throws DalException, ValidationException;
 }

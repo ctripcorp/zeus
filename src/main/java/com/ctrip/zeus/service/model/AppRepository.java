@@ -26,5 +26,5 @@ public interface AppRepository extends Repository {
 
     void update(App app);
 
-    long delete(String appName);
+    int delete(String appName);
 }

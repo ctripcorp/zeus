@@ -45,6 +45,18 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     @Override
+    public int deleteSlbArchive(String slbName) throws DalException {
+        ArchiveSlbDo d = new ArchiveSlbDo().setName(slbName);
+        return archiveSlbDao.deleteBySlb(d);
+    }
+
+    @Override
+    public int deleteAppArchive(String appName) throws DalException {
+        ArchiveAppDo d = new ArchiveAppDo().setName(appName);
+        return archiveAppDao.deleteByApp(d);
+    }
+
+    @Override
     public Slb getSlb(String name, int version) throws DalException, IOException, SAXException {
         String content = archiveSlbDao.findByNameAndVersion(name, version, ArchiveSlbEntity.READSET_FULL).getContent();
         return DefaultSaxParser.parseEntity(Slb.class, content);

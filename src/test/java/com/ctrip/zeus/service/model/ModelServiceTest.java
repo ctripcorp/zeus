@@ -2,6 +2,8 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppList;
+import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
@@ -25,27 +27,13 @@ public class ModelServiceTest extends AbstractSpringTest {
     private static MysqlDbServer mysqlDbServer;
 
     @Resource
-    private AppRepository repo;
+    private AppRepository appRepo;
+    @Resource
+    private SlbRepository slbRepo;
 
+    private Slb defaultSlb;
     private App testApp;
     private long insertedTestAppId;
-
-    private static App parseApp(String appJsonData)  {
-        App app = null;
-        try {
-            app = DefaultJsonParser.parse(App.class, appJsonData);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return app;
-    }
-
-    private void batchAdd() {
-        for(int i = 0; i < 6; i++) {
-            String appJsonData1 = "{\"name\": \"testApp" + i + "\", \"app-id\": \"000000\", \"version\": 1, \"app-slbs\": [{\"slb-name\": \"default\", \"path\": \"/\", \"virtual-server\": {\"name\": \"testsite1\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"tests1.ctrip.com\"} ] } } ], \"health-check\": {\"intervals\": 5000, \"fails\": 1, \"passes\": 1, \"uri\": \"/domaininfo/OnService.html\"}, \"load-balancing-method\": {\"type\": \"roundrobin\", \"value\": \"test\"}, \"app-servers\": [{\"port\": 8080, \"weight\": 1, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.201\"}, {\"port\": 8080, \"weight\": 2, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.202\"} ] }";
-            repo.add(parseApp(appJsonData1));
-        }
-    }
 
     @BeforeClass
     public static void setup() throws ComponentLookupException, ComponentLifecycleException {
@@ -56,61 +44,109 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Before
     public void setUp() {
+        addSlb();
+        addApps();
+    }
+
+    private void addSlb() {
+        String slbJsonData = "{\"name\": \"default\", \"version\": 1, \"nginx-bin\": \"/opt/app/nginx/sbin\", \"nginx-conf\": \"/opt/app/nginx/conf\", \"nginx-worker-processes\": 2, \"status\": \"TEST\", \"vips\": [{\"ip\": \"10.2.25.93\"} ], \"slb-servers\": [{\"ip\": \"10.2.25.93\", \"host-name\": \"uat0358\", \"enable\": true }, {\"ip\": \"10.2.25.94\", \"host-name\": \"uat0359\", \"enable\": true }, {\"ip\": \"10.2.25.95\", \"host-name\": \"uat0360\", \"enable\": true } ], \"virtual-servers\": [{\"name\": \"testsite1\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"s1.ctrip.com\"} ] }, {\"name\": \"testsite2\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"s2a.ctrip.com\"}, {\"name\": \"s2b.ctrip.com\"} ] } ] }";
+        defaultSlb = parseSlb(slbJsonData);
+        slbRepo.add(defaultSlb);
+    }
+
+    private void addApps() {
         String appJsonData = "{\"name\": \"testApp\", \"app-id\": \"000000\", \"version\": 1, \"app-slbs\": [{\"slb-name\": \"default\", \"path\": \"/\", \"virtual-server\": {\"name\": \"testsite2\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"tests2.ctrip.com\"} ] } } ], \"health-check\": {\"intervals\": 5000, \"fails\": 1, \"passes\": 1, \"uri\": \"/domaininfo/OnService.html\"}, \"load-balancing-method\": {\"type\": \"roundrobin\", \"value\": \"test\"}, \"app-servers\": [{\"port\": 8080, \"weight\": 1, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.201\"}, {\"port\": 8080, \"weight\": 2, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.202\"} ] }";
         testApp = parseApp(appJsonData);
-        insertedTestAppId = repo.add(testApp);
+        insertedTestAppId = appRepo.add(testApp);
         Assert.assertTrue(insertedTestAppId > 0);
-
-        batchAdd();
+        for(int i = 0; i < 6; i++) {
+            String appJsonData1 = "{\"name\": \"testApp" + i + "\", \"app-id\": \"000000\", \"version\": 1, \"app-slbs\": [{\"slb-name\": \"default\", \"path\": \"/\", \"virtual-server\": {\"name\": \"testsite1\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"tests1.ctrip.com\"} ] } } ], \"health-check\": {\"intervals\": 5000, \"fails\": 1, \"passes\": 1, \"uri\": \"/domaininfo/OnService.html\"}, \"load-balancing-method\": {\"type\": \"roundrobin\", \"value\": \"test\"}, \"app-servers\": [{\"port\": 8080, \"weight\": 1, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.201\"}, {\"port\": 8080, \"weight\": 2, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.202\"} ] }";
+            appRepo.add(parseApp(appJsonData1));
+        }
     }
 
     @Test
-    public void testGet() {
-        App app = repo.get(testApp.getName());
+    public void testListSlbs() {
+        SlbList list = slbRepo.list();
+        Assert.assertTrue(list.getSlbs().size() >= 1);
+    }
+
+    @Test
+    public void testGetSlb() {
+        Slb slb = slbRepo.get(defaultSlb.getName());
+        assertSlbEquals(defaultSlb, slb);
+    }
+
+    @Test
+    public void testUpdateSlb() {
+        Slb originSlb = slbRepo.get(defaultSlb.getName());
+        originSlb.setStatus("HANG");
+        slbRepo.update(originSlb);
+        Slb updatedSlb = slbRepo.get(defaultSlb.getName());
+        assertSlbEquals(originSlb, updatedSlb);
+        Assert.assertEquals(originSlb.getVersion().intValue() + 1, updatedSlb.getVersion().intValue());
+    }
+
+    @Test
+    public void testGetApp() {
+        App app = appRepo.get(testApp.getName());
         assertAppEquals(app, testApp);
     }
 
     @Test
-    public void testGetByAppId() {
-        App app = repo.getByAppId(testApp.getAppId());
+    public void testGetAppByAppId() {
+        App app = appRepo.getByAppId(testApp.getAppId());
         assertAppEquals(app, testApp);
     }
 
     @Test
-    public void testList() {
-        AppList list = repo.list();
+    public void testListApps() {
+        AppList list = appRepo.list();
         Assert.assertTrue(list.getApps().size() >= 7);
     }
 
     @Test
-    public void testListLimit() {
-        AppList list = repo.listLimit(insertedTestAppId, 3);
+    public void testListLimitApps() {
+        AppList list = appRepo.listLimit(insertedTestAppId, 3);
         Assert.assertTrue(list.getApps().size() == 3);
     }
 
     @Test
-    public void testListBy() {
+    public void testListAppsBy() {
         String slbName = "default";
-        String virtualServerName = "testsite2";
-        AppList list = repo.list(slbName, virtualServerName);
+        String virtualServerName = "testsite1";
+        AppList list = appRepo.list(slbName, virtualServerName);
         Assert.assertTrue(list.getApps().size() >= 6);
     }
 
     @Test
-    public void testUpdate() {
-        App toUpdateApp = parseApp("{\"name\": \"testApp\", \"app-id\": \"921812\", \"version\": 1, \"app-slbs\": [{\"slb-name\": \"default\", \"path\": \"/\", \"virtual-server\": {\"name\": \"site1\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"s1.ctrip.com\"} ] } } ], \"health-check\": {\"intervals\": 5000, \"fails\": 1, \"passes\": 1, \"uri\": \"/domaininfo/OnService.html\"}, \"load-balancing-method\": {\"type\": \"roundrobin\", \"value\": \"test\"}, \"app-servers\": [{\"port\": 8080, \"weight\": 1, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.201\"}, {\"port\": 8080, \"weight\": 2, \"max-fails\": 2, \"fail-timeout\": 30, \"ip\": \"10.2.6.202\"} ] }");
-        repo.update(toUpdateApp);
-        App updatedApp = repo.get(toUpdateApp.getName());
-        assertAppEquals(toUpdateApp, updatedApp);
+    public void testUpdateApp() {
+        App originApp = appRepo.get(testApp.getName());
+        originApp.setAppId("921812");
+        appRepo.update(originApp);
+        App updatedApp = appRepo.get(originApp.getName());
+        assertAppEquals(originApp, updatedApp);
+        Assert.assertEquals(originApp.getVersion().intValue() + 1, updatedApp.getVersion().intValue());
     }
 
     @After
     public void tearDown() {
+        deleteApps();
+        deleteSlb();
+    }
+
+
+    private void deleteApps() {
         String appName = "testApp";
-        Assert.assertEquals(insertedTestAppId, repo.delete(appName));
+        Assert.assertEquals(1, appRepo.delete(appName));
         for (int i = 0; i < 6; i++) {
-            Assert.assertEquals(insertedTestAppId + i, repo.delete(appName + insertedTestAppId));
+            Assert.assertEquals(1, appRepo.delete(appName + i));
         }
+    }
+
+    private void deleteSlb() {
+        String slbName = "default";
+        Assert.assertEquals(1, slbRepo.delete(slbName));
     }
 
     @AfterClass
@@ -124,11 +160,43 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     private static void assertAppEquals(App origin, App another) {
-        Assert.assertNotNull(origin);
+        Assert.assertNotNull(another);
         Assert.assertEquals(origin.getName(), another.getName());
         Assert.assertEquals(origin.getAppServers().size(), another.getAppServers().size());
         Assert.assertEquals(origin.getAppSlbs().size(), another.getAppSlbs().size());
         Assert.assertEquals(origin.getHealthCheck().getUri(), another.getHealthCheck().getUri());
         Assert.assertEquals(origin.getLoadBalancingMethod().getType(), another.getLoadBalancingMethod().getType());
+    }
+
+    private static void assertSlbEquals(Slb origin, Slb another) {
+        Assert.assertNotNull(another);
+        Assert.assertEquals(origin.getName(), another.getName());
+        Assert.assertEquals(origin.getNginxBin(), another.getNginxBin());
+        Assert.assertEquals(origin.getNginxConf(), another.getNginxConf());
+        Assert.assertEquals(origin.getNginxWorkerProcesses(), another.getNginxWorkerProcesses());
+        Assert.assertEquals(origin.getStatus(), another.getStatus());
+        Assert.assertEquals(origin.getSlbServers().size(), another.getSlbServers().size());
+        Assert.assertEquals(origin.getVips().size(), another.getVips().size());
+        Assert.assertEquals(origin.getVirtualServers().size(), another.getVirtualServers().size());
+    }
+
+    private static App parseApp(String appJsonData)  {
+        App app = null;
+        try {
+            app = DefaultJsonParser.parse(App.class, appJsonData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return app;
+    }
+
+    private static Slb parseSlb(String slbJsonData) {
+        Slb slb = null;
+        try {
+            slb = DefaultJsonParser.parse(Slb.class, slbJsonData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return slb;
     }
 }
