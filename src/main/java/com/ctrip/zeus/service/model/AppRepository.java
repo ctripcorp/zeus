@@ -12,19 +12,20 @@ import java.util.List;
  * @date: 3/4/2015.
  */
 public interface AppRepository extends Repository {
-    AppList list();
 
-    AppList list(String slbName, String virtualServerName);
+    AppList list() throws Exception;
 
-    AppList listLimit(long fromId, int maxCount);
+    AppList list(String slbName, String virtualServerName) throws Exception;
 
-    App get(String appName);
+    AppList listLimit(long fromId, int maxCount) throws Exception;
 
-    App getByAppId(String appId);
+    App get(String appName) throws Exception;
 
-    long add(App app);
+    App getByAppId(String appId) throws Exception;
 
-    void update(App app);
+    long add(App app) throws Exception;
 
-    int delete(String appName);
+    void update(App app) throws Exception;
+
+    int delete(String appName) throws Exception;
 }

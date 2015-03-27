@@ -12,13 +12,13 @@ import java.util.List;
  */
 public interface SlbRepository extends Repository {
 
-    SlbList list();
+    SlbList list() throws Exception;
 
-    Slb get(String slbName);
+    Slb get(String slbName) throws Exception;
 
-    void add(Slb slb);
+    void add(Slb slb) throws Exception;
 
-    void update(Slb slb);
+    void update(Slb slb) throws Exception;
 
-    int delete(String slbName);
+    int delete(String slbName) throws Exception;
 }

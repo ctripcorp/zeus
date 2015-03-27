@@ -37,79 +37,58 @@ public class SlbRepositoryImpl implements SlbRepository {
     private NginxServerDao nginxServerDao;
 
     @Override
-    public SlbList list() {
-        try {
-            SlbList list = new SlbList();
-            for (Slb slb : slbQuery.getAll()) {
-                list.addSlb(slb);
-            }
-            list.setTotal(list.getSlbs().size());
-            return list;
-        } catch (DalException e) {
-            throw new RuntimeException(e);
+    public SlbList list() throws Exception {
+        SlbList list = new SlbList();
+        for (Slb slb : slbQuery.getAll()) {
+            list.addSlb(slb);
         }
+        list.setTotal(list.getSlbs().size());
+        return list;
     }
 
     @Override
-    public Slb get(String slbName) {
-        try {
-            return slbQuery.get(slbName);
-        } catch (DalException e) {
-            throw new RuntimeException(e);
-        }
+    public Slb get(String slbName) throws Exception {
+        return slbQuery.get(slbName);
     }
 
     @Override
-    public void add(Slb slb) {
+    public void add(Slb slb) throws Exception {
         if (slb == null)
             return;
-        try {
-            slb = C.toSlb(slbSync.add(slb));
-            archiveService.archiveSlb(slb);
 
-            for (SlbServer slbServer : slb.getSlbServers()) {
-                nginxServerDao.insert(new NginxServerDo()
-                        .setIp(slbServer.getIp())
-                        .setSlbName(slb.getName())
-                        .setVersion(0)
-                        .setCreatedTime(new Date()));
-            }
-        } catch (DalException e) {
-            e.printStackTrace();
+        slb = C.toSlb(slbSync.add(slb));
+        archiveService.archiveSlb(slb);
+
+        for (SlbServer slbServer : slb.getSlbServers()) {
+            nginxServerDao.insert(new NginxServerDo()
+                    .setIp(slbServer.getIp())
+                    .setSlbName(slb.getName())
+                    .setVersion(0)
+                    .setCreatedTime(new Date()));
         }
     }
 
     @Override
-    public void update(Slb slb) {
+    public void update(Slb slb) throws Exception {
         if (slb == null)
             return;
-        try {
-            slb = C.toSlb(slbSync.update(slb));
-            archiveService.archiveSlb(slb);
 
-            for (SlbServer slbServer : slb.getSlbServers()) {
-                nginxServerDao.insert(new NginxServerDo()
-                        .setIp(slbServer.getIp())
-                        .setSlbName(slb.getName())
-                        .setVersion(0)
-                        .setCreatedTime(new Date()));
-            }
-        } catch (DalException e) {
-            e.printStackTrace();
+        slb = C.toSlb(slbSync.update(slb));
+        archiveService.archiveSlb(slb);
+
+        for (SlbServer slbServer : slb.getSlbServers()) {
+            nginxServerDao.insert(new NginxServerDo()
+                    .setIp(slbServer.getIp())
+                    .setSlbName(slb.getName())
+                    .setVersion(0)
+                    .setCreatedTime(new Date()));
         }
     }
 
     @Override
-    public int delete(String slbName) {
-        try {
-            int count = slbSync.delete(slbName);
-            archiveService.deleteSlbArchive(slbName);
-            return count;
-        } catch (DalException e) {
-            e.printStackTrace();
-        } catch (ValidationException e) {
-            e.printStackTrace();
-        }
-        return 0;
+    public int delete(String slbName) throws Exception {
+        int count = slbSync.delete(slbName);
+        archiveService.deleteSlbArchive(slbName);
+        return count;
     }
 }

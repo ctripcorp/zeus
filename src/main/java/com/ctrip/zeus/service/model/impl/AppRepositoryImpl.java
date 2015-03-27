@@ -28,102 +28,71 @@ public class AppRepositoryImpl implements AppRepository {
     private ArchiveService archiveService;
 
     @Override
-    public AppList list() {
-        try {
-            AppList appList = new AppList();
-
-            for (App app : appQuery.getAll()) {
-                appList.addApp(app);
-            }
-            appList.setTotal(appList.getApps().size());
-            return appList;
-        } catch (DalException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public AppList list(String slbName, String virtualServerName) {
-        try {
-            AppList appList = new AppList();
-
-            for (App app : appQuery.getBy(slbName, virtualServerName)) {
-                appList.addApp(app);
-            }
-            appList.setTotal(appList.getApps().size());
-            return appList;
-        } catch (DalException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public AppList listLimit(long fromId, int maxCount) {
+    public AppList list() throws Exception {
         AppList appList = new AppList();
-        try {
-            for (App app : appQuery.getLimit(fromId, maxCount)) {
-                appList.addApp(app);
-            }
-            appList.setTotal(appList.getApps().size());
-            return appList;
-        } catch (DalException e) {
-            throw new RuntimeException(e);
+
+        for (App app : appQuery.getAll()) {
+            appList.addApp(app);
         }
+        appList.setTotal(appList.getApps().size());
+        return appList;
+
     }
 
     @Override
-    public App get(String appName) {
-        try {
-            return appQuery.get(appName);
-        } catch (DalException e) {
-            throw new RuntimeException(e);
+    public AppList list(String slbName, String virtualServerName) throws Exception {
+        AppList appList = new AppList();
+
+        for (App app : appQuery.getBy(slbName, virtualServerName)) {
+            appList.addApp(app);
         }
+        appList.setTotal(appList.getApps().size());
+        return appList;
+
     }
 
     @Override
-    public App getByAppId(String appId) {
-        try {
-            return appQuery.getByAppId(appId);
-        } catch (DalException e) {
-            throw new RuntimeException(e);
+    public AppList listLimit(long fromId, int maxCount) throws Exception {
+        AppList appList = new AppList();
+
+        for (App app : appQuery.getLimit(fromId, maxCount)) {
+            appList.addApp(app);
         }
+        appList.setTotal(appList.getApps().size());
+        return appList;
+
     }
 
     @Override
-    public long add(App app) {
-        try {
-            AppDo d = appSync.add(app);
-            archiveService.archiveApp(C.toApp(d));
-            return d.getKeyId();
-        } catch (DalException e) {
-            e.printStackTrace();
-        } catch (ValidationException e) {
-            e.printStackTrace();
-        }
-        return -1;
+    public App get(String appName) throws Exception {
+        return appQuery.get(appName);
     }
 
     @Override
-    public void update(App app) {
-        try {
-            app = C.toApp(appSync.update(app));
-            archiveService.archiveApp(app);
-        } catch (DalException e) {
-            e.printStackTrace();
-        } catch (ValidationException e) {
-            e.printStackTrace();
-        }
+    public App getByAppId(String appId) throws Exception {
+        return appQuery.getByAppId(appId);
     }
 
     @Override
-    public int delete(String appName) {
-        try {
-            int count = appSync.delete(appName);
-            archiveService.deleteAppArchive(appName);
-            return count;
-        } catch (DalException e) {
-            e.printStackTrace();
-        }
-        return 0;
+    public long add(App app) throws Exception {
+        AppDo d = appSync.add(app);
+        archiveService.archiveApp(C.toApp(d));
+        return d.getKeyId();
+
+    }
+
+    @Override
+    public void update(App app) throws Exception {
+        app = C.toApp(appSync.update(app));
+        archiveService.archiveApp(app);
+
+    }
+
+    @Override
+    public int delete(String appName) throws Exception {
+        int count = appSync.delete(appName);
+        archiveService.deleteAppArchive(appName);
+        return count;
+
     }
 }

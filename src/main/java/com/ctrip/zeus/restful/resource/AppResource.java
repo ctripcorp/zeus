@@ -30,45 +30,37 @@ public class AppResource {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response list(@Context HttpHeaders hh, @QueryParam("from") long fromId, @QueryParam("maxCount") int maxCount) {
-        AppList appList;
-        if (fromId <= 0 && maxCount <= 0) {
-            appList = appRepository.list();
-        } else {
-            fromId = fromId < 0 ? 0 : fromId;
-            maxCount = maxCount <= 0 ? DEFAULT_MAX_COUNT : maxCount;
-            appList = appRepository.listLimit(fromId, maxCount);
+        AppList appList = null;
+        try {
+            if (fromId <= 0 && maxCount <= 0) {
+                appList = appRepository.list();
+            } else {
+                fromId = fromId < 0 ? 0 : fromId;
+                maxCount = maxCount <= 0 ? DEFAULT_MAX_COUNT : maxCount;
+                appList = appRepository.listLimit(fromId, maxCount);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(AppList.XML, appList)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(AppList.JSON, appList)).type(MediaType.APPLICATION_JSON).build();
+        if (appList != null) {
+            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+                return Response.status(200).entity(String.format(AppList.XML, appList)).type(MediaType.APPLICATION_XML).build();
+            } else {
+                return Response.status(200).entity(String.format(AppList.JSON, appList)).type(MediaType.APPLICATION_JSON).build();
+            }
         }
+        return Response.status(404).type(hh.getMediaType()).build();
     }
 
     @GET
     @Path("/get/{appName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getByAppName(@Context HttpHeaders hh, @PathParam("appName") String appName) {
-        App app = appRepository.get(appName);
-
-        if (app.getName() != null) {
-            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_ATOM_XML_TYPE)) {
-                return Response.status(200).entity(String.format(App.XML, app)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(App.JSON, app)).type(MediaType.APPLICATION_JSON).build();
-            }
-        }
-
-        return Response.status(404).type(hh.getMediaType()).build();
-    }
-
-    @GET
-    @Path("/get")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response get(@Context HttpHeaders hh, @PathParam("appId") String appId) {
         App app = null;
-        if (!appId.isEmpty()) {
-            app = appRepository.getByAppId(appId);
+        try {
+            app = appRepository.get(appName);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         if (app != null && app.getName() != null) {
@@ -78,7 +70,29 @@ public class AppResource {
                 return Response.status(200).entity(String.format(App.JSON, app)).type(MediaType.APPLICATION_JSON).build();
             }
         }
+        return Response.status(404).type(hh.getMediaType()).build();
+    }
 
+    @GET
+    @Path("/get")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response get(@Context HttpHeaders hh, @PathParam("appId") String appId) {
+        App app = null;
+        if (!appId.isEmpty()) {
+            try {
+                app = appRepository.getByAppId(appId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (app != null && app.getName() != null) {
+            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_ATOM_XML_TYPE)) {
+                return Response.status(200).entity(String.format(App.XML, app)).type(MediaType.APPLICATION_XML).build();
+            } else {
+                return Response.status(200).entity(String.format(App.JSON, app)).type(MediaType.APPLICATION_JSON).build();
+            }
+        }
         return Response.status(404).type(hh.getMediaType()).build();
     }
 
@@ -92,7 +106,11 @@ public class AppResource {
         } else {
             a = DefaultJsonParser.parse(App.class, app);
         }
-        appRepository.add(a);
+        try {
+            appRepository.add(a);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Response.ok().build();
     }
 
@@ -106,7 +124,11 @@ public class AppResource {
         } else {
             a = DefaultJsonParser.parse(App.class, app);
         }
-        appRepository.update(a);
+        try {
+            appRepository.update(a);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Response.ok().build();
     }
 
@@ -114,7 +136,11 @@ public class AppResource {
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response delete(@Context HttpHeaders hh, @PathParam("appName") String appName) {
-        appRepository.delete(appName);
+        try {
+            appRepository.delete(appName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Response.ok().build();
     }
 }

@@ -30,20 +30,33 @@ public class SlbResource {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response list(@Context HttpHeaders hh) {
-        SlbList slbList = slbRepository.list();
-        if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
-            return Response.status(200).entity(String.format(SlbList.XML, slbList)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(SlbList.JSON, slbList)).type(MediaType.APPLICATION_JSON).build();
+        SlbList slbList = null;
+        try {
+            slbList = slbRepository.list();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        if (slbList != null) {
+            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
+                return Response.status(200).entity(String.format(SlbList.XML, slbList)).type(MediaType.APPLICATION_XML).build();
+            } else {
+                return Response.status(200).entity(String.format(SlbList.JSON, slbList)).type(MediaType.APPLICATION_JSON).build();
+            }
+        }
+        return Response.status(404).type(hh.getMediaType()).build();
     }
 
     @GET
     @Path("/get/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getBySlbName(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
-        Slb slb = slbRepository.get(slbName);
-        if (slb.getName() != null) {
+        Slb slb = null;
+        try {
+            slb = slbRepository.get(slbName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (slb != null && slb.getName() != null) {
             if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
                 return Response.status(200).entity(String.format(Slb.XML, slb)).type(MediaType.APPLICATION_XML).build();
             } else {
@@ -63,7 +76,11 @@ public class SlbResource {
         } else {
             s = DefaultJsonParser.parse(Slb.class, slb);
         }
-        slbRepository.add(s);
+        try {
+            slbRepository.add(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Response.ok().build();
     }
 
@@ -77,7 +94,11 @@ public class SlbResource {
         } else {
             s = DefaultJsonParser.parse(Slb.class, slb);
         }
-        slbRepository.update(s);
+        try {
+            slbRepository.update(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Response.ok().build();
     }
 
@@ -85,7 +106,11 @@ public class SlbResource {
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response delete(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
-        slbRepository.delete(slbName);
+        try {
+            slbRepository.delete(slbName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Response.ok().build();
     }
 }
