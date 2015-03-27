@@ -1,10 +1,12 @@
-package com.ctrip.zeus.service.model;
+package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
+import com.ctrip.zeus.service.model.AppRepository;
+import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;

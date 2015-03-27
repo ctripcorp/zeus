@@ -209,6 +209,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-ip" type="SELECT" multiple="true">
+                <param name="ip" />
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="app-slb" table="app_slb" alias="as2" do-class="AppSlbDo">
@@ -317,6 +327,7 @@
     </entity>
     <entity name="slb" table="slb" alias="s2" do-class="SlbDo">
         <var name="names" value-type="String[]"/>
+        <var name="ids" value-type="long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -365,6 +376,16 @@
                     FROM <TABLE/>
                         WHERE <FIELD name='name'/> in <IN>${names}</IN>
                     ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                <![CDATA[
+                SELECT <FIELDS/>
+                FROM <TABLE/>
+                    WHERE <FIELD name='id'/> in <IN>${ids}</IN>
+                ]]>
                 </statement>
             </query>
             <query name="find-by-name" type="SELECT">
@@ -483,6 +504,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ip" type="SELECT" multiple="true">
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='ip'/> = ${ip}
                     ]]>
                 </statement>
             </query>

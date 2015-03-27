@@ -14,11 +14,15 @@ public interface SlbQuery {
 
     Slb getById(long id) throws DalException;
 
-    List<Slb> getByNames(String[] names) throws DalException;
-
-    List<Slb> getByServer(String serverIp) throws DalException;
-
-    List<Slb> getByMemberAndAppName(String memberIp, String[] appNames) throws DalException;
+    Slb getBySlbServer(String slbServerIp) throws DalException;
 
     List<Slb> getAll() throws DalException;
+
+    List<Slb> getByAppServer(String appServerIp) throws DalException;
+
+    List<Slb> getByAppName(String appName) throws DalException;
+
+    List<Slb> getByAppServerAndAppName(String appServerIp, String appName) throws DalException;
+
+    List<String> getAppServersBySlb(String slbName) throws DalException;
 }

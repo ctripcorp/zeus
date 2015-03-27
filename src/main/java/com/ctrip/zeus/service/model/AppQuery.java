@@ -21,5 +21,9 @@ public interface AppQuery {
 
     List<App> getLimit(long fromId, int maxCount) throws DalException;
 
-    List<App> getBy(String slbName, String virtualServerName) throws DalException;
+    List<App> getBySlbAndVirtualServer(String slbName, String virtualServerName) throws DalException;
+
+    List<String> getByAppServer(String appServerIp) throws DalException;
+
+    List<String> getAppServersByApp(String appName) throws DalException;
 }

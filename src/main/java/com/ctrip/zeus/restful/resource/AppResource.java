@@ -30,14 +30,18 @@ public class AppResource {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response list(@Context HttpHeaders hh, @QueryParam("from") long fromId, @QueryParam("maxCount") int maxCount) {
-        AppList appList = null;
+        AppList appList = new AppList();
         try {
             if (fromId <= 0 && maxCount <= 0) {
-                appList = appRepository.list();
+                for(App app : appRepository.list()) {
+                    appList.addApp(app);
+                }
             } else {
                 fromId = fromId < 0 ? 0 : fromId;
                 maxCount = maxCount <= 0 ? DEFAULT_MAX_COUNT : maxCount;
-                appList = appRepository.listLimit(fromId, maxCount);
+                for(App app : appRepository.listLimit(fromId, maxCount)) {
+                    appList.addApp(app);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

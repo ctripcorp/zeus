@@ -3,7 +3,6 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.server.Server;
 import com.ctrip.zeus.service.model.AppSync;
 import com.ctrip.zeus.service.model.DbClean;
 import com.ctrip.zeus.support.C;
@@ -34,17 +33,7 @@ public class AppSyncImpl implements AppSync {
     @Resource
     private AppSlbDao appSlbDao;
     @Resource
-    private ServerDao serverDao;
-    @Resource
     private SlbDao slbDao;
-    @Resource
-    private SlbDomainDao slbDomainDao;
-    @Resource
-    private SlbServerDao slbServerDao;
-    @Resource
-    private SlbVipDao slbVipDao;
-    @Resource
-    private SlbVirtualServerDao slbVirtualServerDao;
 
     @Resource
     private DbClean dbClean;

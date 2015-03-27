@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.AppDo;
+import com.ctrip.zeus.dal.core.AppServerDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppList;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author:xingchaowang
@@ -28,39 +31,31 @@ public class AppRepositoryImpl implements AppRepository {
     private ArchiveService archiveService;
 
     @Override
-    public AppList list() throws Exception {
-        AppList appList = new AppList();
-
+    public List<App> list() throws Exception {
+        List<App> list = new ArrayList<>();
         for (App app : appQuery.getAll()) {
-            appList.addApp(app);
+            list.add(app);
         }
-        appList.setTotal(appList.getApps().size());
-        return appList;
+        return list;
 
     }
 
     @Override
-    public AppList list(String slbName, String virtualServerName) throws Exception {
-        AppList appList = new AppList();
-
-        for (App app : appQuery.getBy(slbName, virtualServerName)) {
-            appList.addApp(app);
+    public List<App> list(String slbName, String virtualServerName) throws Exception {
+        List<App> list = new ArrayList<>();
+        for (App app : appQuery.getBySlbAndVirtualServer(slbName, virtualServerName)) {
+            list.add(app);
         }
-        appList.setTotal(appList.getApps().size());
-        return appList;
-
+        return list;
     }
 
     @Override
-    public AppList listLimit(long fromId, int maxCount) throws Exception {
-        AppList appList = new AppList();
-
+    public List<App> listLimit(long fromId, int maxCount) throws Exception {
+        List<App> list = new ArrayList<>();
         for (App app : appQuery.getLimit(fromId, maxCount)) {
-            appList.addApp(app);
+            list.add(app);
         }
-        appList.setTotal(appList.getApps().size());
-        return appList;
-
+        return list;
     }
 
     @Override
@@ -94,5 +89,15 @@ public class AppRepositoryImpl implements AppRepository {
         archiveService.deleteAppArchive(appName);
         return count;
 
+    }
+
+    @Override
+    public List<String> listAppsByAppServer(String appServerIp) throws Exception {
+        return appQuery.getByAppServer(appServerIp);
+    }
+
+    @Override
+    public List<String> listAppServersByApp(String appName) throws Exception {
+        return appQuery.getAppServersByApp(appName);
     }
 }

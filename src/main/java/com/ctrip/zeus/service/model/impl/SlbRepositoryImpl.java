@@ -2,7 +2,6 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.entity.SlbServer;
@@ -10,13 +9,13 @@ import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.SlbQuery;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.SlbSync;
-import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
-import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author:xingchaowang
@@ -37,18 +36,27 @@ public class SlbRepositoryImpl implements SlbRepository {
     private NginxServerDao nginxServerDao;
 
     @Override
-    public SlbList list() throws Exception {
-        SlbList list = new SlbList();
+    public List<Slb> list() throws Exception {
+        List<Slb> list = new ArrayList<>();
         for (Slb slb : slbQuery.getAll()) {
-            list.addSlb(slb);
+            list.add(slb);
         }
-        list.setTotal(list.getSlbs().size());
         return list;
     }
 
     @Override
     public Slb get(String slbName) throws Exception {
         return slbQuery.get(slbName);
+    }
+
+    @Override
+    public Slb getBySlbServer(String slbServerIp) throws Exception {
+        return slbQuery.getBySlbServer(slbServerIp);
+    }
+
+    @Override
+    public List<Slb> listByAppServerAndAppName(String appServerIp, String appName) throws Exception {
+        return slbQuery.getByAppServerAndAppName(appServerIp, appName);
     }
 
     @Override
@@ -90,5 +98,10 @@ public class SlbRepositoryImpl implements SlbRepository {
         int count = slbSync.delete(slbName);
         archiveService.deleteSlbArchive(slbName);
         return count;
+    }
+
+    @Override
+    public List<String> listAppServersBySlb(String slbName) throws Exception {
+        return slbQuery.getAppServersBySlb(slbName);
     }
 }

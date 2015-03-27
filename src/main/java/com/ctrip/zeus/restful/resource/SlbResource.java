@@ -16,6 +16,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author:xingchaowang
@@ -32,18 +33,20 @@ public class SlbResource {
     public Response list(@Context HttpHeaders hh) {
         SlbList slbList = null;
         try {
-            slbList = slbRepository.list();
+            for(Slb slb : slbRepository.list()) {
+                slbList.addSlb(slb);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (slbList != null) {
-            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
-                return Response.status(200).entity(String.format(SlbList.XML, slbList)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(SlbList.JSON, slbList)).type(MediaType.APPLICATION_JSON).build();
-            }
+        if (slbList == null || slbList.getTotal() == 0) {
+            return Response.status(404).type(hh.getMediaType()).build();
         }
-        return Response.status(404).type(hh.getMediaType()).build();
+        if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
+            return Response.status(200).entity(String.format(SlbList.XML, slbList)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(SlbList.JSON, slbList)).type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET

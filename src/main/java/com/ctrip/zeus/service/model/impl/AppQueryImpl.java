@@ -91,7 +91,7 @@ public class AppQueryImpl implements AppQuery {
     }
 
     @Override
-    public List<App> getBy(String slbName, String virtualServerName) throws DalException {
+    public List<App> getBySlbAndVirtualServer(String slbName, String virtualServerName) throws DalException {
         List<AppSlbDo> l = appSlbDao.findAllBySlbAndVirtualServer(slbName, virtualServerName, AppSlbEntity.READSET_FULL);
         int size = l.size();
         String[] names = new String[size];
@@ -107,6 +107,30 @@ public class AppQueryImpl implements AppQuery {
             fillData(d, app);
         }
         return list;
+    }
+
+    @Override
+    public List<String> getByAppServer(String appServerIp) throws DalException {
+        List<String> appNames = new ArrayList<>();
+        for (AppServerDo asd : appServerDao.findAllByIp(appServerIp, AppServerEntity.READSET_FULL)) {
+            AppDo ad = appDao.findByPK(asd.getAppId(), AppEntity.READSET_FULL);
+            if (ad == null)
+                continue;
+            appNames.add(ad.getName());
+        }
+        return appNames;
+    }
+
+    @Override
+    public List<String> getAppServersByApp(String appName) throws DalException {
+        AppDo ad = appDao.findByName(appName, AppEntity.READSET_FULL);
+        if (ad == null)
+            return null;
+        List<String> appServers = new ArrayList<>();
+        for (AppServerDo asd : appServerDao.findAllByApp(ad.getId(), AppServerEntity.READSET_FULL)) {
+            appServers.add(asd.getIp());
+        }
+        return appServers;
     }
 
     private void fillData(AppDo d, App app) throws DalException {
