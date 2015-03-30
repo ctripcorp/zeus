@@ -25,7 +25,7 @@ public class AppClient extends AbstractRestClient {
     }
 
     public void add(App app) {
-        Response res = getTarget().path("/api/app").request()
+        Response res = getTarget().path("/api/app/add").request()
                 .post(Entity.entity(
                         String.format(App.JSON, app),
                         MediaType.APPLICATION_JSON
@@ -36,7 +36,7 @@ public class AppClient extends AbstractRestClient {
     }
 
     public App get(String appName) {
-        String res = getTarget().path("/api/app/" + appName).request(MediaType.APPLICATION_JSON).get(String.class);
+        String res = getTarget().path("/api/app/get/" + appName).request(MediaType.APPLICATION_JSON).get(String.class);
         try {
             return DefaultJsonParser.parse(App.class, res);
         } catch (IOException e) {

@@ -25,7 +25,7 @@ public class SlbClient extends AbstractRestClient {
     }
 
     public void add(Slb slb) {
-        Response res = getTarget().path("/api/slb").request()
+        Response res = getTarget().path("/api/slb/add").request()
                 .post(Entity.entity(
                         String.format(Slb.JSON, slb),
                         MediaType.APPLICATION_JSON
@@ -36,7 +36,7 @@ public class SlbClient extends AbstractRestClient {
     }
 
     public Slb get(String slbName) {
-        String res = getTarget().path("/api/slb/" + slbName).request(MediaType.APPLICATION_JSON).get(String.class);
+        String res = getTarget().path("/api/slb/get/" + slbName).request(MediaType.APPLICATION_JSON).get(String.class);
         try {
             return DefaultJsonParser.parse(Slb.class, res);
         } catch (IOException e) {

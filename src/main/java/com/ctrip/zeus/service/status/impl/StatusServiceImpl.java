@@ -169,8 +169,8 @@ public class StatusServiceImpl implements StatusService {
             Set<String> ips = findAllDownServers();
             NginxStatus nginxStatus = nginxStatusService.getNginxStatus("default");
 
-            AppList appList = appRepository.list();
-            for (App app : appList.getApps()) {
+            List<App> appList = appRepository.list();
+            for (App app : appList) {
                 String appName = app.getName();
                 Set<String> appIps = findAllDownAppServers("default", appName);
 

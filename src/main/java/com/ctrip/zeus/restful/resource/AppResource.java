@@ -43,15 +43,14 @@ public class AppResource {
                     appList.addApp(app);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (appList != null) {
+            appList.setTotal(appList.getApps().size());
             if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
                 return Response.status(200).entity(String.format(AppList.XML, appList)).type(MediaType.APPLICATION_XML).build();
             } else {
                 return Response.status(200).entity(String.format(AppList.JSON, appList)).type(MediaType.APPLICATION_JSON).build();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return Response.status(404).type(hh.getMediaType()).build();
     }
