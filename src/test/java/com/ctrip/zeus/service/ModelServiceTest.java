@@ -123,8 +123,17 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     private void addSlb() {
-        String slbJsonData = "{\"name\": \"default\", \"version\": 1, \"nginx-bin\": \"/opt/app/nginx/sbin\", \"nginx-conf\": \"/opt/app/nginx/conf\", \"nginx-worker-processes\": 2, \"status\": \"TEST\", \"vips\": [{\"ip\": \"10.2.25.93\"} ], \"slb-servers\": [{\"ip\": \"10.2.25.93\", \"host-name\": \"uat0358\", \"enable\": true }, {\"ip\": \"10.2.25.94\", \"host-name\": \"uat0359\", \"enable\": true }, {\"ip\": \"10.2.25.95\", \"host-name\": \"uat0360\", \"enable\": true } ], \"virtual-servers\": [{\"name\": \"testsite1\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"s1.ctrip.com\"} ] }, {\"name\": \"testsite2\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"s2a.ctrip.com\"}, {\"name\": \"s2b.ctrip.com\"} ] } ] }";
-        defaultSlb = parseSlb(slbJsonData);
+        defaultSlb = new Slb().setName("default").setVersion(1)
+                .setNginxBin("/opt/app/nginx/sbin").setNginxConf("/opt/app/nginx/conf")
+                .setNginxWorkerProcesses(2).setStatus("TEST")
+                .addVip(new Vip().setIp("10.2.25.93"))
+                .addSlbServer(new SlbServer().setIp("10.2.25.93").setHostName("uat0358").setEnable(true))
+                .addSlbServer(new SlbServer().setIp("10.2.25.94").setHostName("uat0359").setEnable(true))
+                .addSlbServer(new SlbServer().setIp("10.2.25.95").setHostName("uat0360").setEnable(true))
+                .addVirtualServer(new VirtualServer().setName("testsite1").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("s1.ctrip.com")))
+                .addVirtualServer(new VirtualServer().setName("testsite2").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("s2b.ctrip.com")));
         try {
             slbRepo.add(defaultSlb);
         } catch (Exception e) {
@@ -239,18 +248,26 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     private void addApps() {
-        String appJsonData = "{\"name\": \"testApp\", \"app-id\": \"000000\", \"version\": 1, \"app-slbs\": [{\"slb-name\": \"default\", \"path\": \"/\", \"virtual-server\": {\"name\": \"testsite2\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"tests2.ctrip.com\"} ] } } ], \"health-check\": {\"intervals\": 5000, \"fails\": 1, \"passes\": 1, \"uri\": \"/domaininfo/OnService.html\"}, \"load-balancing-method\": {\"type\": \"roundrobin\", \"value\": \"test\"}, \"app-servers\": [{\"port\": 8080, \"weight\": 1, \"max-fails\": 2, \"fail-timeout\": 30, \"host-name\": \"0\", \"ip\": \"10.2.6.201\"}, {\"port\": 8080, \"weight\": 2, \"max-fails\": 2, \"fail-timeout\": 30, \"host-name\": \"0\", \"ip\": \"10.2.6.202\"} ] }";
-        testApp = parseApp(appJsonData);
+        testApp = generateApp("testApp", defaultSlb.getName(), defaultSlb.getVirtualServers().get(1));
         try {
             insertedTestAppId = appRepo.add(testApp);
             Assert.assertTrue(insertedTestAppId > 0);
             for(int i = 0; i < 6; i++) {
-                String appJsonData1 = "{\"name\": \"testApp" + i + "\", \"app-id\": \"000000\", \"version\": 1, \"app-slbs\": [{\"slb-name\": \"default\", \"path\": \"/\", \"virtual-server\": {\"name\": \"testsite1\", \"ssl\": false, \"port\": \"80\", \"domains\": [{\"name\": \"tests1.ctrip.com\"} ] } } ], \"health-check\": {\"intervals\": 5000, \"fails\": 1, \"passes\": 1, \"uri\": \"/domaininfo/OnService.html\"}, \"load-balancing-method\": {\"type\": \"roundrobin\", \"value\": \"test\"}, \"app-servers\": [{\"port\": 8080, \"weight\": 1, \"max-fails\": 2, \"fail-timeout\": 30, \"host-name\": \"0\", \"ip\": \"10.2.6.201\"}, {\"port\": 8080, \"weight\": 2, \"max-fails\": 2, \"fail-timeout\": 30, \"host-name\": \"0\", \"ip\": \"10.2.6.202\"} ] }";
-                appRepo.add(parseApp(appJsonData1));
+                App app = generateApp("testApp" + i, defaultSlb.getName(), defaultSlb.getVirtualServers().get(0));
+                appRepo.add(app);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private App generateApp(String appName, String slbName, VirtualServer virtualServer) {
+        return new App().setName(appName).setAppId("000000").setVersion(1)
+                .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
+                .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
+                .addAppSlb(new AppSlb().setSlbName(slbName).setPath("/").setVirtualServer(virtualServer))
+                .addAppServer(new AppServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.201"))
+                .addAppServer(new AppServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
     }
 
     private void deleteApps() {
