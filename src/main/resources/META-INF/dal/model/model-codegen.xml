@@ -4,6 +4,7 @@
     <entity-ref name="slb" />
     <entity-ref name="slb-list" />
     <entity-ref name="app" />
+    <entity-ref name="archive" />
     <entity-ref name="app-list" />
     <entity-ref name="member-action" />
     <entity-ref name="server-action" />
@@ -75,6 +76,11 @@
     <attribute name="fail-timeout" value-type="int" />
     <element name="host-name" value-type="String" />
     <element name="ip" value-type="String" />
+  </entity>
+  <entity name="archive">
+    <element name="name" value-type="String" />
+    <element name="content" value-type="String" />
+    <element name="version" value-type="int" />
   </entity>
   <entity name="app-list">
     <element name="total" value-type="int" />

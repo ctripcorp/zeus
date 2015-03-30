@@ -81,8 +81,21 @@ public class C {
                 .setSsl(d.isIsSsl());
     }
 
-    /*Entity to Do*/
+    public static Archive toAppArchive(ArchiveAppDo d) {
+        return new Archive()
+                .setName(d.getName())
+                .setContent(d.getContent())
+                .setVersion(d.getVersion());
+    }
 
+    public static Archive toSlbArchive(ArchiveSlbDo d) {
+        return new Archive()
+                .setName(d.getName())
+                .setContent(d.getContent())
+                .setVersion(d.getVersion());
+    }
+
+    /*Entity to Do*/
 
     public static AppDo toAppDo(App e) {
         return new AppDo().setAppId(e.getAppId())

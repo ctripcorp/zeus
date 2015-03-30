@@ -1,11 +1,8 @@
 package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Slb;
-import org.unidal.dal.jdbc.DalException;
-import org.xml.sax.SAXException;
-
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -13,19 +10,21 @@ import java.util.List;
  * @date: 3/14/2015.
  */
 public interface ArchiveService {
-    public int archiveSlb(Slb slb) throws DalException;
-    public int archiveApp(App app) throws DalException;
+    int archiveSlb(Slb slb) throws Exception;
+    int archiveApp(App app) throws Exception;
 
-    public int deleteSlbArchive(String slbName) throws DalException;
-    public int deleteAppArchive(String appName) throws DalException;
+    int deleteSlbArchive(String slbName) throws Exception;
+    int deleteAppArchive(String appName) throws Exception;
 
-    public Slb getSlb(String name, int version) throws DalException, IOException, SAXException;
-    public App getApp(String name, int version) throws DalException, IOException, SAXException;
+    Slb getSlb(String name, int version) throws Exception;
+    App getApp(String name, int version) throws Exception;
 
-    public Slb getMaxVersionSlb(String name) throws DalException, IOException, SAXException;
-    public App getMaxVersionApp(String name) throws DalException, IOException, SAXException;
+    Slb getMaxVersionSlb(String name) throws Exception;
+    App getMaxVersionApp(String name) throws Exception;
 
-    public List<Slb> getAllSlb(String name) throws DalException, IOException, SAXException;
-    public List<App> getAllApp(String name) throws DalException, IOException, SAXException;
+    List<Slb> getAllSlb(String name) throws Exception;
+    List<App> getAllApp(String name) throws Exception;
 
+    Archive getLatestAppArchive(String appName) throws Exception;
+    Archive getLatestSlbArchive(String slbName) throws Exception;
 }

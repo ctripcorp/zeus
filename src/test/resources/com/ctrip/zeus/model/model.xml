@@ -69,6 +69,12 @@
         </app-servers>
     </app>
 
+    <archive>
+        <name>gateway</name>
+        <content>appXmlString</content>
+        <version>1</version>
+    </archive>
+
     <app-list>
         <total>11</total>
         <apps>

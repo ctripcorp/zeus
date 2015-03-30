@@ -97,6 +97,42 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     @Test
+    public void testListSlbsByApps() {
+        try {
+            List<Slb> slbs = slbRepo.listByApps(new String[] {"testApp", "testApp1"});
+            Assert.assertEquals(1, slbs.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testListAppSlbsByApps() {
+        try {
+            List<AppSlb> appSlbs = slbRepo.listAppSlbsByApps(new String[] {"testApp", "testApp1"});
+            Assert.assertEquals(2, appSlbs.size());
+            for (AppSlb as : appSlbs) {
+                Assert.assertNotNull(as.getVirtualServer());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testListAppSlbsBySlb() {
+        try {
+            List<AppSlb> appSlbs = slbRepo.listAppSlbsBySlb(defaultSlb.getName());
+            Assert.assertEquals(7, appSlbs.size());
+            for (AppSlb as : appSlbs) {
+                Assert.assertNotNull(as.getVirtualServer());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void testUpdateSlb() {
         try {
             Slb originSlb = slbRepo.get(defaultSlb.getName());

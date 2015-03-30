@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
+import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.ArchiveService;
@@ -58,10 +59,25 @@ public class SlbRepositoryImpl implements SlbRepository {
         if (appServerIp == null && appName == null)
             return null;
         if (appServerIp == null)
-            return slbQuery.getByAppName(appName);
+            return slbQuery.getByAppNames(new String[]{appName});
         if (appName == null)
             return slbQuery.getByAppServer(appServerIp);
         return slbQuery.getByAppServerAndAppName(appServerIp, appName);
+    }
+
+    @Override
+    public List<Slb> listByApps(String[] appNames) throws Exception {
+        return slbQuery.getByAppNames(appNames);
+    }
+
+    @Override
+    public List<AppSlb> listAppSlbsByApps(String[] appNames) throws Exception {
+        return slbQuery.getAppSlbsByApps(appNames);
+    }
+
+    @Override
+    public List<AppSlb> listAppSlbsBySlb(String slbName) throws Exception {
+        return slbQuery.getAppSlbsBySlb(slbName);
     }
 
     @Override

@@ -118,8 +118,8 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
-    public List<Slb> getByAppName(String appName) throws DalException {
-        List<AppSlbDo> asdList = appSlbDao.findAllByApp(appName, AppSlbEntity.READSET_FULL);
+    public List<Slb> getByAppNames(String[] appNames) throws DalException {
+        List<AppSlbDo> asdList = appSlbDao.findAllByApps(appNames, AppSlbEntity.READSET_FULL);
         if (asdList.size() == 0)
             return null;
 
@@ -141,7 +141,7 @@ public class SlbQueryImpl implements SlbQuery {
 
     @Override
     public List<Slb> getByAppServerAndAppName(String appServerIp, String appName) throws DalException {
-        List<Slb> slbSet1 = getByAppName(appName);
+        List<Slb> slbSet1 = getByAppNames(new String[] {appName});
         List<Slb> slbSet2 = getByAppServer(appServerIp);
         if (slbSet1 == null || slbSet2 == null)
             return null;
@@ -152,7 +152,6 @@ public class SlbQueryImpl implements SlbQuery {
 
     @Override
     public List<String> getAppServersBySlb(String slbName) throws DalException {
-        List<String> appServerIps = new ArrayList<>();
         List<AppSlbDo> aslbDoList = appSlbDao.findAllBySlb(slbName, AppSlbEntity.READSET_FULL);
         if (aslbDoList.size() == 0)
             return null;
@@ -178,6 +177,34 @@ public class SlbQueryImpl implements SlbQuery {
             if (list.contains(asd.getIp()))
                 continue;
             list.add(asd.getIp());
+        }
+        return list;
+    }
+
+    @Override
+    public List<AppSlb> getAppSlbsByApps(String[] appNames) throws DalException {
+        List<AppSlb> list = new ArrayList<>();
+        for (AppSlbDo asd : appSlbDao.findAllByApps(appNames, AppSlbEntity.READSET_FULL)) {
+            AppSlb as = C.toAppSlb(asd);
+            SlbDo sd = slbDao.findByName(as.getSlbName(), SlbEntity.READSET_FULL);
+            SlbVirtualServerDo svsd = slbVirtualServerDao.findAllBySlbAndName(sd.getId(), asd.getSlbVirtualServerName(), SlbVirtualServerEntity.READSET_FULL);
+            if (svsd != null)
+                as.setVirtualServer(C.toVirtualServer(svsd));
+            list.add(as);
+        }
+        return list;
+    }
+
+    @Override
+    public List<AppSlb> getAppSlbsBySlb(String slbName) throws DalException {
+        List<AppSlb> list = new ArrayList<>();
+        for (AppSlbDo asd : appSlbDao.findAllBySlb(slbName, AppSlbEntity.READSET_FULL)) {
+            AppSlb as = C.toAppSlb(asd);
+            SlbDo sd = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
+            SlbVirtualServerDo svsd = slbVirtualServerDao.findAllBySlbAndName(sd.getId(), asd.getSlbVirtualServerName(), SlbVirtualServerEntity.READSET_FULL);
+            if (svsd != null)
+                as.setVirtualServer(C.toVirtualServer(svsd));
+            list.add(as);
         }
         return list;
     }
