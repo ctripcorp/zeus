@@ -84,6 +84,10 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Test
     public void testListSlbsByAppServerAndAppName() {
         try {
+            List<Slb> slbsByAppServer = slbRepo.listByAppServerAndAppName("10.2.6.201", null);
+            Assert.assertEquals(1, slbsByAppServer.size());
+            List<Slb> slbsByAppName = slbRepo.listByAppServerAndAppName(null, "testApp");
+            Assert.assertEquals(1, slbsByAppName.size());
             List<Slb> slbs = slbRepo.listByAppServerAndAppName("10.2.6.201", "testApp");
             Assert.assertEquals(1, slbs.size());
             assertSlbEquals(defaultSlb, slbs.get(0));

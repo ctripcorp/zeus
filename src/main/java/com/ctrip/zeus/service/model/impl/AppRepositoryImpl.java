@@ -5,7 +5,7 @@ import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.service.model.handler.AppQuery;
 import com.ctrip.zeus.service.model.AppRepository;
 import com.ctrip.zeus.service.model.handler.AppSync;
-import com.ctrip.zeus.service.model.handler.ArchiveService;
+import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
 

@@ -24,7 +24,7 @@ public interface SlbRepository extends Repository {
     Slb getBySlbServer(String slbServerIp) throws Exception;
 
     /**
-     * get the slb list which manage the app server ip and app name
+     * get the slb list which manage the app server ip or/and app name
      * @param appServerIp the app server ip
      * @param appName the app name
      * @return the list of slbs
