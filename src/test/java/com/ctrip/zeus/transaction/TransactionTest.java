@@ -2,6 +2,7 @@ package com.ctrip.zeus.transaction;
 
 import com.ctrip.zeus.dal.core.AppDo;
 import com.ctrip.zeus.service.DemoRepository;
+import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.AfterClass;
@@ -15,6 +16,7 @@ import support.AbstractSpringTest;
 import support.MysqlDbServer;
 
 import javax.annotation.Resource;
+import java.io.File;
 import java.util.UUID;
 
 /**
@@ -30,7 +32,7 @@ public class TransactionTest extends AbstractSpringTest {
     static MysqlDbServer mysqlDbServer;
     @BeforeClass
     public static void setup() throws ComponentLookupException, ComponentLifecycleException {
-
+        S.setPropertyDefaultValue("CONF_DIR", new File("").getAbsolutePath() + "/conf/test");
         mysqlDbServer = new MysqlDbServer();
         mysqlDbServer.start();
     }
