@@ -3,12 +3,11 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
 import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.entity.SlbServer;
-import com.ctrip.zeus.service.model.ArchiveService;
-import com.ctrip.zeus.service.model.SlbQuery;
+import com.ctrip.zeus.service.model.handler.ArchiveService;
+import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.model.SlbSync;
+import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
 

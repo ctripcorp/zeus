@@ -1,10 +1,10 @@
-package com.ctrip.zeus.service.model.impl;
+package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.DbClean;
-import com.ctrip.zeus.service.model.SlbSync;
+import com.ctrip.zeus.service.model.handler.DbClean;
+import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;

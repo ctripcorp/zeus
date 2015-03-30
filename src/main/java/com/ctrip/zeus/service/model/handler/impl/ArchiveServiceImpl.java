@@ -1,10 +1,10 @@
-package com.ctrip.zeus.service.model.impl;
+package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
-import com.ctrip.zeus.service.model.ArchiveService;
+import com.ctrip.zeus.service.model.handler.ArchiveService;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 import org.xml.sax.SAXException;

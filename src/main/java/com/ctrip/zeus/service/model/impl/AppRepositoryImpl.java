@@ -1,17 +1,13 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.AppDo;
-import com.ctrip.zeus.dal.core.AppServerDo;
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.App;
-import com.ctrip.zeus.model.entity.AppList;
-import com.ctrip.zeus.service.model.AppQuery;
+import com.ctrip.zeus.service.model.handler.AppQuery;
 import com.ctrip.zeus.service.model.AppRepository;
-import com.ctrip.zeus.service.model.AppSync;
-import com.ctrip.zeus.service.model.ArchiveService;
+import com.ctrip.zeus.service.model.handler.AppSync;
+import com.ctrip.zeus.service.model.handler.ArchiveService;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
-import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
