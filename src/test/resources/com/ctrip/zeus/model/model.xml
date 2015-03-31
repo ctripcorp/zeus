@@ -41,11 +41,13 @@
     <app name="gateway" app-id="app921822" version="1">
         <app-slbs>
             <app-slb>
+                <app-name>gateway</app-name>
                 <slb-name>default</slb-name>
                 <path>/hotel</path>
                 <virtual-server/>
             </app-slb>
             <app-slb>
+                <app-name>gateway</app-name>
                 <slb-name>default</slb-name>
                 <path>/hotel</path>
                 <virtual-server/>

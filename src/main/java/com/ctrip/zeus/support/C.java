@@ -115,6 +115,7 @@ public class C {
 
     public static AppSlbDo toAppSlbDo(AppSlb e) {
         return new AppSlbDo()
+                .setAppName(e.getAppName())
                 .setSlbName(e.getSlbName())
                 .setSlbVirtualServerName(e.getVirtualServer().getName())
                 .setPath(e.getPath());

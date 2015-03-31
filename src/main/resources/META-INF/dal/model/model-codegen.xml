@@ -55,6 +55,7 @@
     <entity-ref name="app-server" type="list" names="app-servers" xml-indent="true" />
   </entity>
   <entity name="app-slb">
+    <element name="app-name" value-type="String" />
     <element name="slb-name" value-type="String" />
     <element name="path" value-type="String" />
     <entity-ref name="virtual-server" />
