@@ -25,6 +25,9 @@ public class ActiveConfServiceImpl implements ActiveConfService {
         List<ConfAppActiveDo> l = confAppActiveDao.findAllByNames(appnames, ConfAppActiveEntity.READSET_FULL);
 
         List<String> res = new ArrayList<>();
+
+        if (l==null)return res;
+
         for (ConfAppActiveDo a : l)
         {
             res.add(a.getContent());
@@ -35,6 +38,8 @@ public class ActiveConfServiceImpl implements ActiveConfService {
     @Override
     public String getConfSlbActiveContentBySlbNames(String slbname) throws Exception {
          ConfSlbActiveDo d = confSlbActiveDao.findByName(slbname, ConfSlbActiveEntity.READSET_FULL);
+        if (d==null)return null;
+
         return d.getContent();
     }
 }

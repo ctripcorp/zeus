@@ -1,11 +1,13 @@
 package com.ctrip.zeus.service.build;
 
 
+import com.ctrip.zeus.service.Repository;
+
 /**
  * @author:xingchaowang
  * @date: 3/15/2015.
  */
-public interface BuildService {
+public interface BuildService extends Repository {
     void build(String name) throws Exception;
     /**
      * build config by slb name and ticket number

@@ -28,6 +28,7 @@ public class ActivateServiceImpl implements ActivateService {
     public void activeSlb(String name) throws Exception {
 
         Archive archive = archiveService.getLatestSlbArchive(name);
+        if (archive==null)return;
 
         ConfSlbActiveDo c = new ConfSlbActiveDo().setCreatedTime(new Date());
         c.setName(archive.getName()).setContent(archive.getContent()).setVersion(archive.getVersion());
@@ -37,6 +38,7 @@ public class ActivateServiceImpl implements ActivateService {
     @Override
     public void activeApp(String name) throws Exception {
         Archive archive = archiveService.getLatestAppArchive(name);
+        if (archive==null)return;
 
         ConfAppActiveDo c = new ConfAppActiveDo().setCreatedTime(new Date());
         c.setName(archive.getName()).setContent(archive.getContent()).setVersion(archive.getVersion());

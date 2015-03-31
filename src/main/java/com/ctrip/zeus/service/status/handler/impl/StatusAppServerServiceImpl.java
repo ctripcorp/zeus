@@ -1,9 +1,9 @@
-package com.ctrip.zeus.service.status.impl;
+package com.ctrip.zeus.service.status.handler.impl;
 
 import com.ctrip.zeus.dal.core.StatusAppServerDao;
 import com.ctrip.zeus.dal.core.StatusAppServerDo;
 import com.ctrip.zeus.dal.core.StatusAppServerEntity;
-import com.ctrip.zeus.service.status.StatusAppServerService;
+import com.ctrip.zeus.service.status.handler.StatusAppServerService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -37,6 +37,22 @@ public class StatusAppServerServiceImpl implements StatusAppServerService {
     @Override
     public List<StatusAppServerDo> listByServer(String ip) throws Exception {
         return statusAppServerDao.findAllByIp(ip, StatusAppServerEntity.READSET_FULL);
+    }
+
+    @Override
+    public List<StatusAppServerDo> listBySlbNameAndAppNameAndIp(String slbname, String appname, String ip) throws Exception {
+        return statusAppServerDao.findAllBySlbNameAndAppNameAndIp(slbname,appname,ip,StatusAppServerEntity.READSET_FULL);
+    }
+
+    @Override
+    public List<StatusAppServerDo> listBySlbNameAndAppName(String slbname, String appname) throws Exception {
+        return statusAppServerDao.findAllByAppNameAndSlbName(appname,slbname,StatusAppServerEntity.READSET_FULL);
+    }
+
+    @Override
+    public void deleteBySlbNameAndAppNameAndVsName(String slbname, String appname, String vsname) throws Exception {
+        statusAppServerDao.deleteByAppNameAndSlbNameAndVirtualServerName(new StatusAppServerDo()
+                .setAppName(appname).setSlbName(slbname).setVirtualServerName(vsname));
     }
 
     @Override

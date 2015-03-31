@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.build;
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.Repository;
 
 import java.util.List;
 import java.util.Set;
@@ -10,7 +11,7 @@ import java.util.Set;
 /**
  * Created by fanqq on 2015/3/30.
  */
-public interface NginxConfBuilder {
+public interface NginxConfBuilder extends Repository {
 
     /**
      * generate nginx config

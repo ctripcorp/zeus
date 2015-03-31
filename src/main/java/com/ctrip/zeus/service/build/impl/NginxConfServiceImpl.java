@@ -167,7 +167,7 @@ public class NginxConfServiceImpl implements NginxConfService {
     public void build(String slbName, int version) throws Exception {
 
         Map<String, Set<String>> appNamesMap = new HashMap<>();
-        //ToDo:AppSlb
+
         List<AppSlb> appSlbList = slbClusterRepository.listAppSlbsBySlb(slbName);
 
         for (AppSlb appslb : appSlbList)
@@ -182,20 +182,9 @@ public class NginxConfServiceImpl implements NginxConfService {
                 appNamesMap.put(vsstr,apps);
             }
 
-            apps.add(appslb.get)
+            apps.add(appslb.getAppName());
         }
 
-//        List<AppSlbDo> list = appSlbDao.findAllBySlb(slbName, AppSlbEntity.READSET_FULL);
-//        for (AppSlbDo d : list) {
-//            String vs = d.getSlbVirtualServerName();
-//
-//            Set<String> apps = appNamesMap.get(vs);
-//            if (apps == null) {
-//                apps = new HashSet<>();
-//                appNamesMap.put(vs, apps);
-//            }
-//            apps.add(d.getAppName());
-//        }
 
         Map<String, List<App>> appsMap = new HashMap<>();
         for (String vs : appNamesMap.keySet()) {

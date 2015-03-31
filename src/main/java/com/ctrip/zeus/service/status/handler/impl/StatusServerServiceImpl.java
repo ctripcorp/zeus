@@ -1,9 +1,9 @@
-package com.ctrip.zeus.service.status.impl;
+package com.ctrip.zeus.service.status.handler.impl;
 
 import com.ctrip.zeus.dal.core.StatusServerDao;
 import com.ctrip.zeus.dal.core.StatusServerDo;
 import com.ctrip.zeus.dal.core.StatusServerEntity;
-import com.ctrip.zeus.service.status.StatusServerService;
+import com.ctrip.zeus.service.status.handler.StatusServerService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -31,7 +31,7 @@ public class StatusServerServiceImpl implements StatusServerService {
     }
 
     @Override
-    public List<StatusServerDo> listByServer(String ip) throws Exception {
+    public List<StatusServerDo> listByIp(String ip) throws Exception {
         return statusServerDao.findAllByIp(ip, StatusServerEntity.READSET_FULL);
     }
 
@@ -39,6 +39,5 @@ public class StatusServerServiceImpl implements StatusServerService {
     public void updateStatusServer(StatusServerDo d) throws Exception {
         d.setLastModified(new Date());
         statusServerDao.insert(d);
-
     }
 }

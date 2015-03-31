@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.status;
+package com.ctrip.zeus.service.status.handler;
 
 import com.ctrip.zeus.dal.core.StatusServerDo;
 
@@ -14,7 +14,7 @@ public interface StatusServerService {
 
     List<StatusServerDo> listAllDown() throws Exception;
 
-    List<StatusServerDo> listByServer(String ip) throws Exception;
+    List<StatusServerDo> listByIp(String ip) throws Exception;
 
     void updateStatusServer(StatusServerDo statusServerDo) throws Exception;
 }

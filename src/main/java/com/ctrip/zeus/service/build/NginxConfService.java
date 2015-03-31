@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.build;
 
 import com.ctrip.zeus.model.entity.NginxConfServerData;
 import com.ctrip.zeus.model.entity.NginxConfUpstreamData;
+import com.ctrip.zeus.service.Repository;
 
 import java.util.List;
 
@@ -9,7 +10,7 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/15/2015.
  */
-public interface NginxConfService {
+public interface NginxConfService extends Repository {
     /**
      * build config by slb name and version number
      * @param slbName the slb name

@@ -1,6 +1,8 @@
 package com.ctrip.zeus.service.build;
 
 
+import com.ctrip.zeus.service.Repository;
+
 import java.util.List;
 import java.util.Set;
 
@@ -8,7 +10,7 @@ import java.util.Set;
  * @author:xingchaowang
  * @date: 3/15/2015.
  */
-public interface BuildInfoService {
+public interface BuildInfoService extends Repository {
 
     /**
      * get ticket by slb name
