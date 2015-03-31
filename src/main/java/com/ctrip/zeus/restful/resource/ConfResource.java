@@ -18,7 +18,7 @@ import java.util.List;
  * @date: 3/15/2015.
  */
 @Component
-@Path("/conf")
+@Path("/confbak")
 public class ConfResource {
 
     @Resource

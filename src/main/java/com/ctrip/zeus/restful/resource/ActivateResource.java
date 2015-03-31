@@ -29,7 +29,7 @@ import java.util.Set;
  */
 
 @Component
-@Path("/config")
+@Path("/conf")
 public class ActivateResource {
 
     @Resource

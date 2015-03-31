@@ -27,7 +27,7 @@ import java.util.List;
  * @date: 3/15/2015.
  */
 @Component
-@Path("/server")
+@Path("/op")
 public class ServerResource {
 
     @Resource
