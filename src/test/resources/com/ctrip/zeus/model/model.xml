@@ -131,4 +131,48 @@
         <app-name>app3</app-name>
         <app-name>app4</app-name>
     </server-status>
+
+    <!--added by fanqq-->
+    <!--activate service-->
+    <conf-req>
+        <conf-slb-name slbname="slbname">
+        </conf-slb-name>
+        <conf-slb-name slbname="slbname">
+        </conf-slb-name>
+
+        <conf-app-name appname="appname">
+        </conf-app-name>
+        <conf-app-name appname="appname">
+        </conf-app-name>
+    </conf-req>
+
+    <op-server-status-req>
+        <ip-addresses><ip-addr>addr</ip-addr></ip-addresses>
+        <ip-addresses><ip-addr>addr</ip-addr></ip-addresses>
+        <operation>upserver</operation>
+    </op-server-status-req>
+
+    <op-member-status-req>
+        <ip-appname>
+            <member-ip>str</member-ip>
+            <member-appname>str</member-appname>
+        </ip-appname>
+        <ip-appname>
+            <member-ip>str</member-ip>
+            <member-appname>str</member-appname>
+        </ip-appname>
+        <operation>upmember</operation>
+    </op-member-status-req>
+
+    <nginx-conf-upstream-data>
+        <name>name</name>
+        <content>content</content>
+    </nginx-conf-upstream-data>
+
+    <nginx-conf-server-data>
+        <name>name</name>
+        <content>content</content>
+    </nginx-conf-server-data>
+
+
 </model>

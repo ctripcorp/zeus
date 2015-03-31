@@ -1,15 +1,17 @@
 package com.ctrip.zeus.service.build.impl;
 
-import com.ctrip.zeus.dal.core.BuildInfoDao;
-import com.ctrip.zeus.dal.core.BuildInfoDo;
-import com.ctrip.zeus.dal.core.BuildInfoEntity;
+import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.service.build.BuildInfoService;
+import com.ctrip.zeus.service.model.SlbRepository;
 import org.springframework.stereotype.Component;
-import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.DalNotFoundException;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -20,8 +22,12 @@ public class BuildInfoServiceImpl implements BuildInfoService {
     @Resource
     private BuildInfoDao buildInfoDao;
 
+    @Resource
+    private SlbRepository slbClusterRepository;
+
     @Override
-    public int getTicket(String name) throws DalException {
+    public int getTicket(String name) throws Exception
+    {
         BuildInfoDo d = null;
         try {
             d = buildInfoDao.findByName(name, BuildInfoEntity.READSET_FULL);
@@ -38,9 +44,42 @@ public class BuildInfoServiceImpl implements BuildInfoService {
     }
 
     @Override
-    public void updateTicket(String name, int ticket) throws DalException {
+    public boolean updateTicket(String name, int ticket) throws Exception
+    {
         BuildInfoDo d = buildInfoDao.findByName(name, BuildInfoEntity.READSET_FULL);
-        d.setCurrentTicket(ticket);
-        buildInfoDao.updateByPK(d, BuildInfoEntity.UPDATESET_FULL);
+        if (ticket>d.getCurrentTicket())
+        {
+            d.setCurrentTicket(ticket);
+            buildInfoDao.updateByPK(d, BuildInfoEntity.UPDATESET_FULL);
+            return true;
+        }else
+        {
+            return  false;
+        }
+
+    }
+
+    @Override
+    public Set<String> getAllNeededSlb(List<String> slbname,List<String> appname) throws Exception {
+        Set<String> buildNames = new HashSet<>();
+        buildNames.addAll(slbname);
+
+
+        List<AppSlb> list = slbClusterRepository.listAppSlbsByApps(appname.toArray(new String[]{}));
+
+        if (list!=null&&list.size()>0)
+        {
+            for (AppSlb appSlb : list) {
+                buildNames.add(appSlb.getSlbName());
+            }
+        }
+
+        return buildNames;
+    }
+
+    @Override
+    public int getCurrentTicket(String slbname) throws Exception {
+        BuildInfoDo d = buildInfoDao.findByName(slbname, BuildInfoEntity.READSET_FULL);
+        return d.getCurrentTicket();
     }
 }

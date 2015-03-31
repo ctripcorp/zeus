@@ -5,7 +5,6 @@ import com.ctrip.zeus.dal.core.StatusServerDo;
 import com.ctrip.zeus.dal.core.StatusServerEntity;
 import com.ctrip.zeus.service.status.StatusServerService;
 import org.springframework.stereotype.Component;
-import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -22,23 +21,23 @@ public class StatusServerServiceImpl implements StatusServerService {
     private StatusServerDao statusServerDao;
 
     @Override
-    public List<StatusServerDo> list() throws DalException {
+    public List<StatusServerDo> list() throws Exception {
         return statusServerDao.findAll(StatusServerEntity.READSET_FULL);
     }
 
     @Override
-    public List<StatusServerDo> listAllDown() throws DalException {
+    public List<StatusServerDo> listAllDown() throws Exception {
         return statusServerDao.findAllByIsUp(false, StatusServerEntity.READSET_FULL);
     }
 
     @Override
-    public List<StatusServerDo> listByServer(String ip) throws DalException {
+    public List<StatusServerDo> listByServer(String ip) throws Exception {
         return statusServerDao.findAllByIp(ip, StatusServerEntity.READSET_FULL);
     }
 
     @Override
-    public void updateStatusServer(StatusServerDo d) throws DalException {
-        d.setCreatedTime(new Date());
+    public void updateStatusServer(StatusServerDo d) throws Exception {
+        d.setLastModified(new Date());
         statusServerDao.insert(d);
 
     }

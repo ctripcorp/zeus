@@ -1,7 +1,6 @@
 package com.ctrip.zeus.service.status;
 
 import com.ctrip.zeus.dal.core.StatusAppServerDo;
-import org.unidal.dal.jdbc.DalException;
 
 import java.util.List;
 
@@ -11,13 +10,13 @@ import java.util.List;
  */
 public interface StatusAppServerService {
 
-    List<StatusAppServerDo> list() throws DalException;
+    List<StatusAppServerDo> list() throws Exception;
 
-    List<StatusAppServerDo> listAllDownBySlbName(String slbName) throws DalException;
+    List<StatusAppServerDo> listAllDownBySlbName(String slbName) throws Exception;
 
-    List<StatusAppServerDo> listByAppName(String appName) throws DalException;
+    List<StatusAppServerDo> listByAppName(String appName) throws Exception;
 
-    List<StatusAppServerDo> listByServer(String ip) throws DalException;
+    List<StatusAppServerDo> listByServer(String ip) throws Exception;
 
-    void updateStatusAppServer(StatusAppServerDo d) throws DalException;
+    void updateStatusAppServer(StatusAppServerDo d) throws Exception;
 }

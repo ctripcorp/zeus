@@ -11,6 +11,11 @@
     <entity-ref name="app-status" />
     <entity-ref name="app-status-list" />
     <entity-ref name="server-status" />
+    <entity-ref name="conf-req" />
+    <entity-ref name="op-server-status-req" />
+    <entity-ref name="op-member-status-req" />
+    <entity-ref name="nginx-conf-upstream-data" />
+    <entity-ref name="nginx-conf-server-data" />
   </entity>
   <entity name="slb">
     <attribute name="name" value-type="String" />
@@ -114,6 +119,39 @@
     <element name="ip" value-type="String" />
     <element name="up" value-type="boolean" />
     <element name="app-name" value-type="String" type="list" names="app-names" />
+  </entity>
+  <entity name="conf-req">
+    <entity-ref name="conf-slb-name" type="list" names="conf-slb-names" />
+    <entity-ref name="conf-app-name" type="list" names="conf-app-names" />
+  </entity>
+  <entity name="conf-slb-name">
+    <attribute name="slbname" value-type="String" />
+  </entity>
+  <entity name="conf-app-name">
+    <attribute name="appname" value-type="String" />
+  </entity>
+  <entity name="op-server-status-req">
+    <element name="operation" value-type="String" />
+    <entity-ref name="ip-addresses" type="list" names="ip-addresseses" />
+  </entity>
+  <entity name="ip-addresses">
+    <element name="ip-addr" value-type="String" />
+  </entity>
+  <entity name="op-member-status-req">
+    <element name="operation" value-type="String" />
+    <entity-ref name="ip-appname" type="list" names="ip-appnames" />
+  </entity>
+  <entity name="ip-appname">
+    <element name="member-ip" value-type="String" />
+    <element name="member-appname" value-type="String" />
+  </entity>
+  <entity name="nginx-conf-upstream-data">
+    <element name="name" value-type="String" />
+    <element name="content" value-type="String" />
+  </entity>
+  <entity name="nginx-conf-server-data">
+    <element name="name" value-type="String" />
+    <element name="content" value-type="String" />
   </entity>
 </model>
 

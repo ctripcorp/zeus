@@ -27,7 +27,7 @@ public class StatusResource {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response status(@Context HttpHeaders hh) {
-        AppStatusList appStatusList = statusService.getAllAppStatus("default");
+        AppStatusList appStatusList = null;//statusService.getAllAppStatus("default");
 
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
             return Response.status(200).entity(String.format(AppStatusList.XML, appStatusList)).type(MediaType.APPLICATION_XML).build();

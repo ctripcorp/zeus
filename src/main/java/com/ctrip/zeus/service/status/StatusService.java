@@ -1,8 +1,5 @@
 package com.ctrip.zeus.service.status;
 
-import com.ctrip.zeus.model.entity.AppStatus;
-import com.ctrip.zeus.model.entity.AppStatusList;
-import com.ctrip.zeus.model.entity.ServerStatus;
 
 import java.util.Set;
 
@@ -12,22 +9,51 @@ import java.util.Set;
  */
 public interface StatusService {
 
-    Set<String> findAllDownServers();
-    Set<String> findAllDownAppServers(String slbName);
-    //Temp method
-    Set<String> findAllDownAppServers(String slbName, String appName);
+    /**
+     * get all down app servers
+     * @return app server ip list
+     * @throws Exception
+     */
+    Set<String> findAllDownServers() throws Exception;
 
-    void upServer(String ip);
+    /**
+     * get all down app servers by slbname
+     * @param slbName the slb name
+     * @return app server ip list
+     * @throws Exception
+     */
+    Set<String> findAllDownAppServersBySlbName(String slbName) throws Exception;
 
-    void downServer(String ip);
+    /**
+     * up server by app server ip
+     * @param ip the app server ip
+     * @return
+     * @throws Exception
+     */
+    void upServer(String ip) throws Exception;
 
-    void upMember(String appName, String ip);
+    /**
+     * down server by app server ip
+     * @param ip the app server ip
+     * @return
+     * @throws Exception
+     */
+    void downServer(String ip) throws Exception;
 
-    void downMember(String appName, String ip);
-
-    AppStatus getAppStatus(String appName);
-
-    AppStatusList getAllAppStatus(String slbName);
-
-    ServerStatus getServerStatus(String ip);
+    /**
+     * up member by app server ip and appname
+     * @param ip the app server ip
+     * @param appName  app name
+     * @return
+     * @throws Exception
+     */
+    void upMember(String appName, String ip)throws Exception;
+    /**
+     * down member by app server ip and appname
+     * @param ip the app server ip
+     * @param appName  app name
+     * @return
+     * @throws Exception
+     */
+    void downMember(String appName, String ip)throws Exception;
 }
