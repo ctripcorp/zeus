@@ -53,6 +53,45 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-slb-name-and-app-name-and-ip" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <param name="app-name"/>
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        AND <FIELD name='ip'/> = ${ip}
+                        AND <FIELD name='app-name'/> = ${app-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-app-name-and-slb-name" type="SELECT" multiple="true">
+                <param name="app-name"/>
+                <param name="slb-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-name'/> = ${app-name}
+                        AND <FIELD name='slb-name'/> = ${slb-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-app-name-and-slb-name-and-virtual-server-name" type="DELETE">
+                <param name="app-name"/>
+                <param name="slb-name"/>
+                <param name="virtual-server-name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='app-name'/> = ${app-name}
+                    AND <FIELD name='slb-name'/> = ${slb-name}
+                    AND <FIELD name='virtual-server-name'/> = ${virtual-server-name}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="status-server" table="status_server" alias="ss" do-class="StatusServerDo">

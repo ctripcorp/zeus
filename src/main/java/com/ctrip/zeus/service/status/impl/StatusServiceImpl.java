@@ -1,17 +1,15 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.nginx.NginxStatus;
-import com.ctrip.zeus.nginx.NginxStatusService;
-import com.ctrip.zeus.service.build.BuildService;
-import com.ctrip.zeus.service.model.AppRepository;
-import com.ctrip.zeus.service.status.StatusAppServerService;
-import com.ctrip.zeus.service.status.StatusServerService;
+import com.ctrip.zeus.model.entity.AppSlb;
+import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.status.handler.StatusAppServerService;
+import com.ctrip.zeus.service.status.handler.StatusServerService;
 import com.ctrip.zeus.service.status.StatusService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,18 +25,10 @@ public class StatusServiceImpl implements StatusService {
     @Resource
     private StatusAppServerService statusAppServerService;
     @Resource
-    private AppSlbDao appSlbDao;
-    @Resource
-    private AppRepository appRepository;
-
-    @Resource
-    private BuildService buildService;
-    @Resource
-    private NginxStatusService nginxStatusService;
+    private SlbRepository slbClusterRepository;
 
     @Override
-    public Set<String> findAllDownServers() {
-        try {
+    public Set<String> findAllDownServers() throws Exception {
             List<StatusServerDo> allDownServerList = statusServerService.listAllDown();
             Set<String> allDownIps = new HashSet<>();
             for (StatusServerDo d : allDownServerList) {
@@ -46,154 +36,116 @@ public class StatusServiceImpl implements StatusService {
             }
 
             return allDownIps;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
     }
 
     @Override
-    public Set<String> findAllDownAppServers(String slbName) {
-        try {
+    public Set<String> findAllDownAppServersBySlbName(String slbName) throws Exception {
             Set<String> allDownAppServers = new HashSet<>();
             List<StatusAppServerDo> allDownAppServerList = statusAppServerService.listAllDownBySlbName(slbName);
             for (StatusAppServerDo d : allDownAppServerList) {
                 allDownAppServers.add(d.getSlbName() + "_" + d.getVirtualServerName() + "_" + d.getAppName() + "_" + d.getIp());
             }
             return allDownAppServers;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    }
+
+    @Override
+    public void upServer(String ip) throws Exception {
+
+        serverStatusOperation(ip,true);
+    }
+
+    @Override
+    public void downServer(String ip) throws Exception {
+
+        serverStatusOperation(ip,false);
+    }
+
+    private void serverStatusOperation(String ip , boolean status) throws Exception {
+
+        statusServerService.updateStatusServer(new StatusServerDo().setIp(ip).setUp(status));
+
+    }
+
+
+    @Override
+    public void upMember(String appName, String ip) throws Exception {
+
+        List<AppSlb> appslblist = slbClusterRepository.listAppSlbsByApps(new String[]{appName});
+        if (appslblist==null||appslblist.size()==0)return;
+
+        dateAdjust(appslblist,appName);
+
+        for (AppSlb d : appslblist)
+        {
+            statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
+                    .setVirtualServerName(d.getVirtualServer().getName()).setAppName(appName).setIp(ip).setUp(true));
         }
     }
 
     @Override
-    public Set<String> findAllDownAppServers(String slbName, String appName) {
-        try {
-            Set<String> allDownAppServers = new HashSet<>();
-            List<StatusAppServerDo> allDownAppServerList = statusAppServerService.listAllDownBySlbName(slbName);
-            for (StatusAppServerDo d : allDownAppServerList) {
-                if (d.getAppName().equals(appName)) {
-                    allDownAppServers.add(d.getIp());
-                }
+    public void downMember(String appName, String ip) throws Exception {
+
+        List<AppSlb> appslblist = slbClusterRepository.listAppSlbsByApps(new String[]{appName});
+        if (appslblist==null||appslblist.size()==0)return;
+
+        dateAdjust(appslblist,appName);
+
+        for (AppSlb d : appslblist)
+        {
+            statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
+                    .setVirtualServerName(d.getVirtualServer().getName()).setAppName(appName).setIp(ip).setUp(true));
+        }
+
+    }
+
+    @Override
+    public boolean getAppServerStatus(String slbname, String appName, String vsip) throws Exception {
+
+        List<StatusAppServerDo> list = statusAppServerService.listBySlbNameAndAppNameAndIp(slbname,appName,vsip);
+        if (list!=null&&list.size()>0)
+        {
+            return list.get(0).isUp();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean getServerStatus(String vsip) throws Exception {
+        List<StatusServerDo> list = statusServerService.listByIp(vsip);
+        if (list!=null&&list.size()>0)
+        {
+            return list.get(0).isUp();
+        }
+        return false;
+    }
+
+    private boolean dateAdjust(List<AppSlb> list ,String appName)throws Exception{
+        Set<String> appvs =new HashSet<>();
+        Set<String> slbnames = new HashSet<>();
+        for (AppSlb p : list)
+        {
+            appvs.add(p.getAppName()+p.getSlbName()+p.getVirtualServer().getName());
+            slbnames.add(p.getSlbName());
+        }
+
+        List<StatusAppServerDo> statuslist = new ArrayList<>();
+        for (String slbname:slbnames){
+            List<StatusAppServerDo> tmplist = statusAppServerService.listBySlbNameAndAppName(slbname,appName);
+            if (tmplist!=null)
+            {
+                statuslist.addAll(tmplist);
             }
-            return allDownAppServers;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void upServer(String ip) {
-        try {
-            statusServerService.updateStatusServer(new StatusServerDo().setIp(ip).setUp(true));
-            //ToDo:
-            buildService.build("default");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
 
-    }
-
-    @Override
-    public void downServer(String ip) {
-        try {
-            statusServerService.updateStatusServer(new StatusServerDo().setIp(ip).setUp(false));
-            //ToDo:
-            buildService.build("default");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    @Override
-    public void upMember(String appName, String ip) {
-        try {
-            List<AppSlbDo> list = appSlbDao.findAllByApp(appName, AppSlbEntity.READSET_FULL);
-            for (AppSlbDo d : list) {
-                statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
-                .setVirtualServerName(d.getSlbVirtualServerName())
-                .setAppName(appName).setIp(ip).setUp(true));
+        for (StatusAppServerDo d:statuslist)
+        {
+            if(!appvs.contains(d.getAppName()+d.getSlbName()+d.getVirtualServerName()))
+            {
+                statusAppServerService.deleteBySlbNameAndAppNameAndVsName(d.getSlbName(),d.getAppName(),d.getVirtualServerName());
             }
-            //ToDo:
-            buildService.build("default");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void downMember(String appName, String ip) {
-        try {
-            List<AppSlbDo> list = appSlbDao.findAllByApp(appName, AppSlbEntity.READSET_FULL);
-            for (AppSlbDo d : list) {
-                statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
-                        .setVirtualServerName(d.getSlbVirtualServerName())
-                        .setAppName(appName).setIp(ip).setUp(false));
-            }
-            //ToDo:
-            buildService.build("default");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public AppStatus getAppStatus(String appName) {
-        try {
-            AppStatus appStatus = new AppStatus();
-
-            App app = appRepository.get(appName);
-            appStatus.setAppName(app.getName());
-
-            Set<String> ips = findAllDownServers();
-            Set<String> appIps = findAllDownAppServers("default", appName);
-            NginxStatus nginxStatus = nginxStatusService.getNginxStatus("default");
-            for (AppServer appServer : app.getAppServers()) {
-                AppServerStatus s = new AppServerStatus();
-                String ip = appServer.getIp();
-                int port = appServer.getPort();
-                s.setIp(ip).setPort(port).setMember(!appIps.contains(ip)).setServer(!ips.contains(ip)).setUp(nginxStatus.appServerIsUp(appName, ip));
-                appStatus.addAppServerStatus(s);
-            }
-            return appStatus;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
 
-    }
-
-    @Override
-    public AppStatusList getAllAppStatus(String slbName) {
-        try {
-            AppStatusList appStatusList = new AppStatusList();
-            Set<String> ips = findAllDownServers();
-            NginxStatus nginxStatus = nginxStatusService.getNginxStatus("default");
-
-            List<App> appList = appRepository.list();
-            for (App app : appList) {
-                String appName = app.getName();
-                Set<String> appIps = findAllDownAppServers("default", appName);
-
-                AppStatus appStatus = new AppStatus();
-                appStatus.setAppName(appName);
-                for (AppServer appServer : app.getAppServers()) {
-                    AppServerStatus s = new AppServerStatus();
-                    String ip = appServer.getIp();
-                    int port = appServer.getPort();
-                    s.setIp(ip).setPort(port).setMember(!appIps.contains(ip)).setServer(!ips.contains(ip)).setUp(nginxStatus.appServerIsUp(appName, ip));
-                    appStatus.addAppServerStatus(s);
-                }
-
-                appStatusList.addAppStatus(appStatus);
-            }
-            return appStatusList;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public ServerStatus getServerStatus(String ip) {
-        return null;
+        return true;
     }
 }

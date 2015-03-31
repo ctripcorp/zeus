@@ -84,9 +84,49 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Test
     public void testListSlbsByAppServerAndAppName() {
         try {
+            List<Slb> slbsByAppServer = slbRepo.listByAppServerAndAppName("10.2.6.201", null);
+            Assert.assertEquals(1, slbsByAppServer.size());
+            List<Slb> slbsByAppName = slbRepo.listByAppServerAndAppName(null, "testApp");
+            Assert.assertEquals(1, slbsByAppName.size());
             List<Slb> slbs = slbRepo.listByAppServerAndAppName("10.2.6.201", "testApp");
             Assert.assertEquals(1, slbs.size());
             assertSlbEquals(defaultSlb, slbs.get(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testListSlbsByApps() {
+        try {
+            List<Slb> slbs = slbRepo.listByApps(new String[] {"testApp", "testApp1"});
+            Assert.assertEquals(1, slbs.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testListAppSlbsByApps() {
+        try {
+            List<AppSlb> appSlbs = slbRepo.listAppSlbsByApps(new String[] {"testApp", "testApp1"});
+            Assert.assertEquals(2, appSlbs.size());
+            for (AppSlb as : appSlbs) {
+                Assert.assertNotNull(as.getVirtualServer());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testListAppSlbsBySlb() {
+        try {
+            List<AppSlb> appSlbs = slbRepo.listAppSlbsBySlb(defaultSlb.getName());
+            Assert.assertEquals(7, appSlbs.size());
+            for (AppSlb as : appSlbs) {
+                Assert.assertNotNull(as.getVirtualServer());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

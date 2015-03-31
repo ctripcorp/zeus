@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.model.handler;
 
+import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import org.unidal.dal.jdbc.DalException;
 
@@ -20,9 +21,13 @@ public interface SlbQuery {
 
     List<Slb> getByAppServer(String appServerIp) throws DalException;
 
-    List<Slb> getByAppName(String appName) throws DalException;
+    List<Slb> getByAppNames(String[] appNames) throws DalException;
 
     List<Slb> getByAppServerAndAppName(String appServerIp, String appName) throws DalException;
 
     List<String> getAppServersBySlb(String slbName) throws DalException;
+
+    List<AppSlb> getAppSlbsByApps(String[] appNames) throws DalException;
+
+    List<AppSlb> getAppSlbsBySlb(String slbName) throws DalException;
 }
