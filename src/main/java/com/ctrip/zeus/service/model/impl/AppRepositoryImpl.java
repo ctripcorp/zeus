@@ -67,16 +67,16 @@ public class AppRepositoryImpl implements AppRepository {
     @Override
     public long add(App app) throws Exception {
         AppDo d = appSync.add(app);
-        archiveService.archiveApp(C.toApp(d));
+        archiveService.archiveApp(appQuery.getById(d.getId()));
         return d.getKeyId();
 
     }
 
     @Override
     public void update(App app) throws Exception {
-        app = C.toApp(appSync.update(app));
+        AppDo d = appSync.update(app);
+        app = appQuery.getById(d.getId());
         archiveService.archiveApp(app);
-
     }
 
     @Override
