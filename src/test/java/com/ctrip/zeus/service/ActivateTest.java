@@ -1,9 +1,9 @@
 package com.ctrip.zeus.service;
 
-import com.ctrip.zeus.util.AbstractAPITest;
-import com.ctrip.zeus.util.AopSpring;
-import com.ctrip.zeus.util.Checker;
-import com.ctrip.zeus.util.ReqClient;
+import com.ctrip.zeus.ao.AbstractAPITest;
+import com.ctrip.zeus.ao.AopSpring;
+import com.ctrip.zeus.ao.Checker;
+import com.ctrip.zeus.ao.ReqClient;
 import org.junit.Test;
 
 /**
@@ -20,7 +20,7 @@ public class ActivateTest extends AbstractAPITest {
             }
         });
 
-        new ReqClient("http://127.0.0.1:8099").request("/api/config/activate","{\n" +
+        new ReqClient("http://127.0.0.1:8099").request("/api/conf/activate","{\n" +
                 "   \"conf-slb-names\": [\n" +
                 "      {\n" +
                 "         \"slbname\": \"default\"\n" +

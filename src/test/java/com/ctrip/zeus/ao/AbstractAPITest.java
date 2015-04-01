@@ -1,6 +1,7 @@
-package com.ctrip.zeus.util;
+package com.ctrip.zeus.ao;
 
 import com.ctrip.zeus.server.SlbAdminServer;
+import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.AfterClass;

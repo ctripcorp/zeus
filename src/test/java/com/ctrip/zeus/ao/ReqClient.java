@@ -1,4 +1,4 @@
-package com.ctrip.zeus.util;
+package com.ctrip.zeus.ao;
 
 import com.ctrip.zeus.client.AbstractRestClient;
 

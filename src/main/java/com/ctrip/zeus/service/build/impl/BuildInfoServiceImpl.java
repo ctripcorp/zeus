@@ -62,6 +62,13 @@ public class BuildInfoServiceImpl implements BuildInfoService {
     @Override
     public Set<String> getAllNeededSlb(List<String> slbname,List<String> appname) throws Exception {
         Set<String> buildNames = new HashSet<>();
+        for (String s:slbname)
+        {
+            if (slbClusterRepository.get(s)==null)
+            {
+                slbname.remove(s);
+            }
+        }
         buildNames.addAll(slbname);
 
 
