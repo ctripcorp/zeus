@@ -3,6 +3,7 @@ package com.ctrip.zeus.service;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.model.AppRepository;
+import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
@@ -31,6 +32,8 @@ public class ModelServiceTest extends AbstractSpringTest {
     private AppRepository appRepo;
     @Resource
     private SlbRepository slbRepo;
+    @Resource
+    private ArchiveService archiveService;
 
     private Slb defaultSlb;
     private App testApp;
@@ -320,6 +323,29 @@ public class ModelServiceTest extends AbstractSpringTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /********************* test ArchiveService *********************/
+
+    @Test
+    public void testGetLatestAppArchive() {
+        try {
+            Archive archive = archiveService.getLatestAppArchive(testApp.getName());
+            Assert.assertTrue(archive.getVersion() > 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testGetLatestSlbArchive() {
+        try {
+            Archive archive = archiveService.getLatestAppArchive(defaultSlb.getName());
+            Assert.assertTrue(archive.getVersion() > 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     /********************* test end *********************/

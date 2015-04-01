@@ -574,9 +574,11 @@
                 <param name="name"/>
                 <statement>
                     <![CDATA[
-                    SELECT id, name, content, max(version) as version, created_time, last_modified
+                    SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE  <FIELD name='name'/> = ${name}
+                        ORDER BY <FIELD name='version'/>
+                        LIMIT 1
                     ]]>
                 </statement>
             </query>
@@ -622,6 +624,8 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE  <FIELD name='name'/> = ${name}
+                        ORDER BY <FIELD name='version'/>
+                        LIMIT 1
                     ]]>
                 </statement>
             </query>
