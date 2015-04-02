@@ -255,6 +255,7 @@
                         ${basedir}/src/main/resources/META-INF/dal/model/page-manifest.xml,
                         ${basedir}/src/main/resources/META-INF/dal/model/status-manifest.xml,
                         ${basedir}/src/main/resources/META-INF/dal/model/nginx-manifest.xml,
+                        ${basedir}/src/main/resources/META-INF/dal/model/message-manifest.xml,
                      ]]></manifest>
                         </configuration>
                     </execution>
