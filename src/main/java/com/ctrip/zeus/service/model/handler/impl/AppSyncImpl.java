@@ -48,8 +48,6 @@ public class AppSyncImpl implements AppSync {
         appDao.insert(d);
         sync(d, app);
 
-        d = appDao.findByPK(d.getKeyId(), AppEntity.READSET_FULL);
-        app.setVersion(d.getVersion());
         return d;
     }
 
