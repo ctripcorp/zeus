@@ -29,6 +29,8 @@ public class C {
 
     public static AppSlb toAppSlb(AppSlbDo d) {
         return new AppSlb()
+                .setAppName(d.getAppName())
+                .setSlbName(d.getSlbName())
                 .setPath(d.getPath());
     }
 

@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
+import com.ctrip.zeus.dal.core.SlbDo;
 import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
@@ -85,7 +86,8 @@ public class SlbRepositoryImpl implements SlbRepository {
         if (slb == null)
             return;
 
-        slb = C.toSlb(slbSync.add(slb));
+        SlbDo d = slbSync.add(slb);
+        slb = slbQuery.getById(d.getId());
         archiveService.archiveSlb(slb);
 
         for (SlbServer slbServer : slb.getSlbServers()) {
@@ -102,8 +104,8 @@ public class SlbRepositoryImpl implements SlbRepository {
         if (slb == null)
             return;
 
-        slb = C.toSlb(slbSync.update(slb));
-        archiveService.archiveSlb(slb);
+        SlbDo d = slbSync.update(slb);
+        archiveService.archiveSlb(slbQuery.getById(d.getId()));
 
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()

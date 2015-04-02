@@ -56,8 +56,6 @@ public class SlbSyncImpl implements SlbSync {
         slbDao.insert(d);
 
         sync(d, slb);
-        d = slbDao.findByPK(d.getKeyId(), SlbEntity.READSET_FULL);
-        slb.setVersion(d.getVersion());
         return d;
     }
 
