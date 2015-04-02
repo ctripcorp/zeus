@@ -235,8 +235,13 @@
                     }
             );
         }
+
+
         $scope.activate = function (appName) {
-            $http.get("/api/conf/activate?appName=" + appName).success(
+            var req = {"conf-app-names": [{"appname": appName}]};
+            var reqtotle = {"conf-slb-names": [{"slbname": "default"}],"conf-app-names": [{"appname": appName}]};
+
+            $http.post("/api/conf/activate",JSON.stringify(req)).success(
                     function (response) {
                     }
             );
