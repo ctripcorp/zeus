@@ -129,6 +129,9 @@ public class NginxServiceImpl implements NginxService {
 
     private void writeNginxConf(String slbName, int version, NginxOperator nginxOperator) throws Exception {
         String nginxConf = nginxConfService.getNginxConf(slbName, version);
+        if (nginxConf == null || nginxConf.isEmpty()){
+            throw new IllegalStateException("the nginx conf must not be empty!");
+        }
         nginxOperator.writeNginxConf(nginxConf);
     }
 

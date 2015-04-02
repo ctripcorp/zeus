@@ -48,56 +48,45 @@ public class NginxResource {
     @GET
     @Path("/status")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response status(@Context HttpHeaders hh) {
-        try {
-            NginxServerStatus status = nginxService.getStatus();
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(NginxServerStatus.XML, status)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(NginxServerStatus.JSON, status)).type(MediaType.APPLICATION_JSON).build();
-            }
-        } catch (Exception e) {
-            return Response.serverError().build();
+    public Response status(@Context HttpHeaders hh) throws Exception {
+        NginxServerStatus status = nginxService.getStatus();
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(NginxServerStatus.XML, status)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(NginxServerStatus.JSON, status)).type(MediaType.APPLICATION_JSON).build();
         }
     }
 
     @GET
     @Path("/loadAll/slb/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response loadAll(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
-        try {
-            List<NginxResponse> nginxResponseList = nginxService.loadAll(slbName);
-            NginxResponseList result = new NginxResponseList();
-            for (NginxResponse nginxResponse : nginxResponseList) {
-                result.addNginxResponse(nginxResponse);
-            }
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(NginxResponseList.XML, result)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(NginxResponseList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-            }
-        }catch (Exception e){
-            return Response.serverError().build();
+    public Response loadAll(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
+
+        List<NginxResponse> nginxResponseList = nginxService.loadAll(slbName);
+        NginxResponseList result = new NginxResponseList();
+        for (NginxResponse nginxResponse : nginxResponseList) {
+            result.addNginxResponse(nginxResponse);
+        }
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(NginxResponseList.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(NginxResponseList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
         }
     }
 
     @GET
     @Path("/allStatus/slb/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response allStatus(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
-        try {
-            List<NginxServerStatus> nginxServerStatusList = nginxService.getStatusAll(slbName);
-            NginxServerStatusList result = new NginxServerStatusList();
-            for (NginxServerStatus nginxServerStatus : nginxServerStatusList) {
-                result.addNginxServerStatus(nginxServerStatus);
-            }
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(NginxServerStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(NginxServerStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-            }
-        }catch (Exception e){
-            return Response.serverError().build();
+    public Response allStatus(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
+        List<NginxServerStatus> nginxServerStatusList = nginxService.getStatusAll(slbName);
+        NginxServerStatusList result = new NginxServerStatusList();
+        for (NginxServerStatus nginxServerStatus : nginxServerStatusList) {
+            result.addNginxServerStatus(nginxServerStatus);
+        }
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(NginxServerStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(NginxServerStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
         }
     }
 }

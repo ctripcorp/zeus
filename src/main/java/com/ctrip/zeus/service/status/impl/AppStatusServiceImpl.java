@@ -103,7 +103,7 @@ public class AppStatusServiceImpl implements AppStatusService {
 
     //TODO: should include port to get accurate upstream
     private boolean getUpstreamStatus(String ip) throws IOException {
-        NginxClient nginxClient = new NginxClient("127.0.0.1:" + nginxStatusPort.get());
+        NginxClient nginxClient = new NginxClient("http://127.0.0.1:" + nginxStatusPort.get());
         UpstreamStatus upstreamStatus = nginxClient.getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
         for (S server : servers) {
