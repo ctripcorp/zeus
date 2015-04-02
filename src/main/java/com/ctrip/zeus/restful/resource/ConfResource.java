@@ -1,7 +1,7 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.service.conf.ConfService;
-import com.ctrip.zeus.service.nginx.NginxAgentService;
+import com.ctrip.zeus.service.nginx.NginxService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -24,7 +24,7 @@ public class ConfResource {
     @Resource
     private ConfService confService;
     @Resource
-    private NginxAgentService nginxAgentService;
+    private NginxService nginxAgentService;
 
     @GET
     @Path("/activate")
@@ -35,6 +35,10 @@ public class ConfResource {
     }
 
     private void reloadNginxConf() {
-        nginxAgentService.reloadConf("default");
+        try {
+            nginxAgentService.loadAll("default");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

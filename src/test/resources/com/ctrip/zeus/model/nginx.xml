@@ -27,4 +27,29 @@
             </server>
         </servers>
     </upstream-status>
+    <nginx-response>
+        <succeed>true</succeed>
+        <server-ip>127.0.0.1</server-ip>
+        <err-msg>error</err-msg>
+        <out-msg></out-msg>
+    </nginx-response>
+    <nginx-server-status>
+        <server-ip>127.0.0.1</server-ip>
+        <status>up</status>
+        <active-connections>100</active-connections>
+    </nginx-server-status>
+    <nginx-response-list>
+        <total>11</total>
+        <nginx-responses>
+            <nginx-response/>
+            <nginx-response/>
+        </nginx-responses>
+    </nginx-response-list>
+    <nginx-server-status-list>
+        <total>11</total>
+        <nginx-server-statuses>
+            <nginx-server-status/>
+            <nginx-server-status/>
+        </nginx-server-statuses>
+    </nginx-server-status-list>
 </nginx>

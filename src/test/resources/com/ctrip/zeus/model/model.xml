@@ -99,6 +99,7 @@
 
     <app-status>
         <app-name>app1</app-name>
+        <slb-name>default</slb-name>
         <app-server-status>
             <ip>192.168.1.1</ip>
             <port>80</port>

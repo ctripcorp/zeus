@@ -1,8 +1,7 @@
 package com.ctrip.zeus.service.nginx;
 
-import com.ctrip.zeus.nginx.NginxResponse;
-import com.ctrip.zeus.nginx.NginxServerStatus;
-import com.ctrip.zeus.service.SlbException;
+import com.ctrip.zeus.nginx.entity.NginxResponse;
+import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 
 import java.util.List;
 
@@ -11,12 +10,28 @@ import java.util.List;
  * @date: 3/8/2015.
  */
 public interface NginxService {
-    NginxResponse load() throws SlbException;
+    /**
+     * load the colocated nginx server conf
+     * @return
+     * @throws Exception
+     */
+    NginxResponse load() throws Exception;
 
-    NginxServerStatus getStatus() throws SlbException;
+    /**
+     * fetch the status of colocated nginx server status
+     * @return
+     * @throws Exception
+     */
+    NginxServerStatus getStatus() throws Exception;
 
-    List<NginxResponse> loadAll() throws SlbException;
+    /**
+     * load all nginx server conf in the slb
+     * @param slbName
+     * @return
+     * @throws Exception
+     */
+    List<NginxResponse> loadAll(String slbName) throws Exception;
 
-    List<NginxServerStatus> getStatusAll() throws SlbException;
+    List<NginxServerStatus> getStatusAll(String slbName) throws Exception;
 
 }

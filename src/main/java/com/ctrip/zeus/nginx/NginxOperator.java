@@ -1,5 +1,7 @@
 package com.ctrip.zeus.nginx;
 
+import com.ctrip.zeus.nginx.entity.NginxResponse;
+import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
@@ -56,8 +58,8 @@ public class NginxOperator {
             String error = errorStream.toString("UTF-8");
 
             NginxResponse response = new NginxResponse();
-            response.setOutMessage(out);
-            response.setErrMessage(error);
+            response.setOutMsg(out);
+            response.setErrMsg(error);
             response.setSucceed(!failed);
 
             return response;

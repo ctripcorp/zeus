@@ -6,7 +6,7 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.nginx.NginxAgentService;
+import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.StatusService;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
@@ -37,7 +37,7 @@ public class ServerResource {
     @Resource
     private BuildInfoService buildInfoService;
     @Resource
-    private NginxAgentService nginxAgentService;
+    private NginxService nginxAgentService;
     @Resource
     private SlbRepository slbClusterRepository;
 
@@ -70,7 +70,7 @@ public class ServerResource {
                 int ticket = buildInfoService.getTicket(slbname);
                 if(buildService.build(slbname,ticket))
                 {
-                    nginxAgentService.reloadConf(slbname);
+                    nginxAgentService.loadAll(slbname);
                 }
             }
 
@@ -108,7 +108,7 @@ public class ServerResource {
                 //build config
                 if (buildService.build(slbname, ticket)) {
                     //push
-                    nginxAgentService.reloadConf(slbname);
+                    nginxAgentService.loadAll(slbname);
                 }
             }
         }
@@ -145,7 +145,7 @@ public class ServerResource {
                 if(buildService.build(slbname,ticket))
                 {
                     //push
-                    nginxAgentService.reloadConf(slbname);
+                    nginxAgentService.loadAll(slbname);
                 }
             }
 
@@ -185,7 +185,7 @@ public class ServerResource {
                 //build config
                 if (buildService.build(slbname, ticket)) {
                     //push
-                    nginxAgentService.reloadConf(slbname);
+                    nginxAgentService.loadAll(slbname);
                 }
             }
         }
