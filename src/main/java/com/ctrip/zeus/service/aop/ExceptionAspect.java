@@ -6,13 +6,13 @@ import com.ctrip.zeus.util.ExceptionUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -21,25 +21,34 @@ import java.lang.reflect.InvocationTargetException;
 @Aspect
 @Component
 public class ExceptionAspect {
-//    @AfterThrowing(throwing = "ex",
-//            pointcut = "execution(* com.ctrip.zeus.service..*Repository.*(..)) || " +
-//                    "execution(* com.ctrip.zeus.service..*Service.*(..))")
-
     @Resource
     private ErrorResponseHandler errorResponseHandler;
-    Logger logger = LoggerFactory.getLogger(this.getClass());
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Around("execution(* com.ctrip.zeus.restful.resource.*Resource.*(..))")
     public Object interceptException(ProceedingJoinPoint point) {
-        Object target = point.getTarget();
+        String objectName = point.getSignature().getDeclaringTypeName();
+        String methodName = point.getSignature().getName();
         try {
             return point.proceed();
         } catch (Throwable throwable) {
+            logger.error(objectName + " throws an error when calling " + methodName + ".");
             Throwable cause = (throwable instanceof InvocationTargetException) ? ((InvocationTargetException) throwable).getTargetException() : throwable;
-            ErrorMessage err = ExceptionUtils.getErrorMessage(cause);
             try {
-                return (Object) errorResponseHandler.handle(err, MediaType.APPLICATION_XML_TYPE);
+                MediaType mediaType = null;
+                for (Object arg : point.getArgs()) {
+                    if (arg instanceof ContainerRequest) {
+                        ContainerRequest cr = (ContainerRequest) arg;
+                        mediaType = cr.getMediaType();
+                        break;
+                    }
+                }
+                if (mediaType == null) {
+                    logger.warn("Request media type cannot be found - use json by default.");
+                }
+                return errorResponseHandler.handle(cause, mediaType);
             } catch (Exception e) {
+                logger.error("Error response handler doesn't work.");
                 return null;
             }
         }

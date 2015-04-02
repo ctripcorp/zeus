@@ -15,12 +15,13 @@ public class ExceptionUtils {
     }
 
     public static String getStackTrace(Throwable throwable) {
-        String print = "";
+        StringBuilder builder = new StringBuilder();
         StackTraceElement[] stackTraces = throwable.getStackTrace();
-        for (StackTraceElement e : stackTraces) {
-            print += e.getClassName();
+        int count = stackTraces.length > 10 ? 10 : stackTraces.length;
+        for (int i = 0; i < count; i++) {
+            builder.append(stackTraces[i].toString() + "\n");
         }
-        return print;
+        return builder.toString();
     }
 
     public static ErrorMessage getErrorMessage(Throwable throwable) {

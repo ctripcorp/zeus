@@ -7,7 +7,16 @@ import java.io.Serializable;
  */
 public interface Message {
 
+    /**
+     * Get http response status code
+     * reference: http://docs.oracle.com/javaee/6/api/javax/ws/rs/core/Response.Status.html
+     * @return
+     */
     int getStatus();
 
+    /**
+     * Get serialized object
+     * @return
+     */
     Serializable getResponse();
 }

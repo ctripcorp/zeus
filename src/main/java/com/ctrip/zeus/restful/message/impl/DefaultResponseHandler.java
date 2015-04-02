@@ -3,14 +3,13 @@ package com.ctrip.zeus.restful.message.impl;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.restful.message.Message;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.support.GenericSerializer;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -18,45 +17,44 @@ import java.util.Set;
  */
 @Component("responseHandler")
 public class DefaultResponseHandler implements ResponseHandler {
-    private static final List<MediaType> registeredMediaTypes = registerDefault();
-    private final Set<MediaType> acceptedMediaTypes;
-    private MediaType mediaType;
+    private static final Set<MediaType> acceptedMediaTypes  = getDefault();
+    private static final MediaType defaultMediaType = MediaType.APPLICATION_JSON_TYPE;
 
-    public DefaultResponseHandler() {
-        acceptedMediaTypes = new HashSet<>();
-        acceptedMediaTypes.addAll(registeredMediaTypes);
-    }
+    public Message generateMessage(Object object, String type) throws Exception {
+        ZeusResponse zr = new ZeusResponse();
+        if (object == null)
+            return zr;
 
-    @Override
-    public Message generateMessage(Object object) throws Exception {
-        if (object instanceof Serializable) {
-            return new ZeusResponse().setResponse((Serializable)object);
+        if (type.equals(MediaType.APPLICATION_JSON)) {
+            zr.setResponse(GenericSerializer.writeJson(object));
+        } else if (type.equals(MediaType.APPLICATION_XML)) {
+            zr.setResponse(GenericSerializer.writeXml(object));
+        } else if (object instanceof Serializable) {
+            zr.setResponse((Serializable)object);
+        } else {
+            throw new ValidationException("Response object cannot be serialized.");
         }
-        throw new ValidationException("Response object is not serializable");
+        return zr;
     }
 
     @Override
     public Response handle(Object object, MediaType mediaType) throws Exception {
-        Message response = generateMessage(object);
-        if (acceptedMediaTypes.contains(mediaType)) {
-            this.mediaType = mediaType;
-            return Response.status(response.getStatus())
-                    .entity(response.getResponse())
-                    .type(mediaType.getType())
-                    .build();
+        if (mediaType == null) {
+            mediaType = defaultMediaType;
         }
-        throw new ValidationException("Unaccepted media type: " + mediaType.getType());
+
+        if (acceptedMediaTypes.contains(mediaType)) {
+            Message response = generateMessage(object, mediaType.toString());
+            return Response.status(response.getStatus()).entity(response.getResponse())
+                    .type(mediaType).build();
+        }
+        throw new ValidationException("Unaccepted media type: " + mediaType.toString());
     }
 
-    @Override
-    public MediaType getMediaType() {
-        return mediaType;
-    }
-
-    private static List<MediaType> registerDefault() {
-        List<MediaType> list = new ArrayList<>();
-        list.add(MediaType.APPLICATION_JSON_TYPE);
-        list.add(MediaType.APPLICATION_XML_TYPE);
-        return list;
+    private static Set<MediaType> getDefault() {
+        Set<MediaType> set = new HashSet<>();
+        set.add(MediaType.APPLICATION_JSON_TYPE);
+        set.add(MediaType.APPLICATION_XML_TYPE);
+        return set;
     }
 }

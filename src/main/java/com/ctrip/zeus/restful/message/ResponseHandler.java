@@ -8,9 +8,12 @@ import javax.ws.rs.core.Response;
  */
 public interface ResponseHandler {
 
-    Message generateMessage(Object object) throws Exception;
-
+    /**
+     * Serializing and handle the given object according to its media type
+     * @param object the (un)serialized object
+     * @param mediaType the media type, accept application/json and application/xml by default
+     * @return http response
+     * @throws Exception
+     */
     Response handle(Object object, MediaType mediaType) throws Exception;
-
-    MediaType getMediaType();
 }
