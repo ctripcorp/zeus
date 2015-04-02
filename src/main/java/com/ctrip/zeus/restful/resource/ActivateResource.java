@@ -8,7 +8,7 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.Activate.ActivateService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
-import com.ctrip.zeus.service.nginx.NginxAgentService;
+import com.ctrip.zeus.service.nginx.NginxService;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import org.springframework.stereotype.Component;
@@ -35,7 +35,7 @@ public class ActivateResource {
     @Resource
     private ActivateService activateConfService;
     @Resource
-    private NginxAgentService nginxAgentService;
+    private NginxService nginxAgentService;
     @Resource
     private BuildInfoService buildInfoService;
     @Resource
@@ -94,7 +94,7 @@ public class ActivateResource {
                     if(buildService.build(buildslbName,ticket))
                     {
                         //Push Service
-                        nginxAgentService.reloadConf(buildslbName);
+                        nginxAgentService.loadAll(buildslbName);
                     }
                 }
             }else {

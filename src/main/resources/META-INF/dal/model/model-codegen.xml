@@ -102,6 +102,7 @@
   </entity>
   <entity name="app-status">
     <element name="app-name" value-type="String" />
+    <element name="slb-name" value-type="String" />
     <entity-ref name="app-server-status" type="list" names="app-server-statuses" />
   </entity>
   <entity name="app-server-status">
