@@ -4,6 +4,7 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.SlbRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -27,92 +28,65 @@ import java.util.List;
 public class SlbResource {
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private ResponseHandler responseHandler;
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response list(@Context HttpHeaders hh) {
+    public Response list(@Context HttpHeaders hh) throws Exception {
         SlbList slbList = new SlbList();
-        try {
-            for(Slb slb : slbRepository.list()) {
-                slbList.addSlb(slb);
-            }
-            slbList.setTotal(slbList.getSlbs().size());
-            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
-                return Response.status(200).entity(String.format(SlbList.XML, slbList)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(SlbList.JSON, slbList)).type(MediaType.APPLICATION_JSON).build();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        for (Slb slb : slbRepository.list()) {
+            slbList.addSlb(slb);
         }
-        return Response.status(404).type(hh.getMediaType()).build();
+        slbList.setTotal(slbList.getSlbs().size());
+        return responseHandler.handle(slbList, hh.getMediaType());
     }
 
     @GET
     @Path("/get/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getBySlbName(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
-        Slb slb = null;
-        try {
-            slb = slbRepository.get(slbName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (slb != null && slb.getName() != null) {
-            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE)) {
-                return Response.status(200).entity(String.format(Slb.XML, slb)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(Slb.JSON, slb)).type(MediaType.APPLICATION_JSON).build();
-            }
-        }
-        return Response.status(404).type(hh.getMediaType()).build();
+    public Response getBySlbName(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
+        Slb slb = slbRepository.get(slbName);
+        return responseHandler.handle(slb, hh.getMediaType());
     }
 
     @POST
     @Path("/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response add(@Context HttpHeaders hh, String slb) throws IOException, SAXException {
+    public Response add(@Context HttpHeaders hh, String slb) throws Exception {
         Slb s;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             s = DefaultSaxParser.parseEntity(Slb.class, slb);
-        } else {
+        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
             s = DefaultJsonParser.parse(Slb.class, slb);
+        } else {
+            throw new Exception("Unacceptable type.");
         }
-        try {
-            slbRepository.add(s);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        slbRepository.add(s);
         return Response.ok().build();
     }
 
     @POST
     @Path("/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response update(@Context HttpHeaders hh, String slb) throws IOException, SAXException {
+    public Response update(@Context HttpHeaders hh, String slb) throws Exception {
         Slb s;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             s = DefaultSaxParser.parseEntity(Slb.class, slb);
-        } else {
+        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
             s = DefaultJsonParser.parse(Slb.class, slb);
+        } else {
+            throw new Exception("Unacceptable type.");
         }
-        try {
-            slbRepository.update(s);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        slbRepository.update(s);
         return Response.ok().build();
     }
 
     @GET
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response delete(@Context HttpHeaders hh, @PathParam("slbName") String slbName) {
-        try {
-            slbRepository.delete(slbName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public Response delete(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
+        slbRepository.delete(slbName);
         return Response.ok().build();
     }
 }

@@ -5,10 +5,8 @@ import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.restful.message.impl.ZeusResponse;
 import com.ctrip.zeus.service.model.AppRepository;
 import org.springframework.stereotype.Component;
-import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
 import javax.ws.rs.*;
@@ -16,8 +14,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.Serializable;
 
 /**
  * @author:xingchaowang
@@ -51,103 +47,65 @@ public class AppResource {
             }
         }
         appList.setTotal(appList.getApps().size());
-
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return responseHandler.handle(String.format(AppList.XML, appList), hh.getMediaType());
-        } else {
-            return responseHandler.handle(String.format(AppList.JSON, appList), hh.getMediaType());
-        }
+        return responseHandler.handle(appList, hh.getMediaType());
     }
 
     @GET
     @Path("/get/{appName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getByAppName(@Context HttpHeaders hh, @PathParam("appName") String appName) {
-        App app = null;
-        try {
-            app = appRepository.get(appName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if (app != null && app.getName() != null) {
-            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_ATOM_XML_TYPE)) {
-                return Response.status(200).entity(String.format(App.XML, app)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(App.JSON, app)).type(MediaType.APPLICATION_JSON).build();
-            }
-        }
-        return Response.status(404).type(hh.getMediaType()).build();
+    public Response getByAppName(@Context HttpHeaders hh, @PathParam("appName") String appName) throws Exception {
+        App app = appRepository.get(appName);
+        return responseHandler.handle(app, hh.getMediaType());
     }
 
     @GET
     @Path("/get")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response get(@Context HttpHeaders hh, @PathParam("appId") String appId) {
-        App app = null;
-        if (!appId.isEmpty()) {
-            try {
-                app = appRepository.getByAppId(appId);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+    public Response get(@Context HttpHeaders hh, @PathParam("appId") String appId) throws Exception {
+        if (appId == null || appId.isEmpty()) {
+            throw new Exception("Missing parameter or value.");
         }
-
-        if (app != null && app.getName() != null) {
-            if (hh.getAcceptableMediaTypes().contains(MediaType.APPLICATION_ATOM_XML_TYPE)) {
-                return Response.status(200).entity(String.format(App.XML, app)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(App.JSON, app)).type(MediaType.APPLICATION_JSON).build();
-            }
-        }
-        return Response.status(404).type(hh.getMediaType()).build();
+        App app = appRepository.getByAppId(appId);
+        return responseHandler.handle(app, hh.getMediaType());
     }
 
     @POST
     @Path("/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response add(@Context HttpHeaders hh, String app) throws IOException, SAXException {
+    public Response add(@Context HttpHeaders hh, String app) throws Exception {
         App a;
-        if (hh.getMediaType().equals(MediaType.APPLICATION_ATOM_XML_TYPE)) {
+        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             a = DefaultSaxParser.parseEntity(App.class, app);
-        } else {
+        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
             a = DefaultJsonParser.parse(App.class, app);
+        } else {
+            throw new Exception("Unacceptable type.");
         }
-        try {
-            appRepository.add(a);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        appRepository.add(a);
         return Response.ok().build();
     }
 
     @POST
     @Path("/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response update(@Context HttpHeaders hh, String app) throws IOException, SAXException {
+    public Response update(@Context HttpHeaders hh, String app) throws Exception {
         App a;
-        if (hh.getMediaType().equals(MediaType.APPLICATION_ATOM_XML_TYPE)) {
+        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             a = DefaultSaxParser.parseEntity(App.class, app);
-        } else {
+        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
             a = DefaultJsonParser.parse(App.class, app);
+        } else {
+            throw new Exception("Unacceptable type.");
         }
-        try {
-            appRepository.update(a);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        appRepository.update(a);
         return Response.ok().build();
     }
 
     @GET
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response delete(@Context HttpHeaders hh, @PathParam("appName") String appName) {
-        try {
-            appRepository.delete(appName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public Response delete(@Context HttpHeaders hh, @PathParam("appName") String appName) throws Exception {
+        appRepository.delete(appName);
         return Response.ok().build();
     }
 }
