@@ -4,6 +4,8 @@ import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.restful.message.impl.ZeusResponse;
 import com.ctrip.zeus.service.model.AppRepository;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
@@ -15,6 +17,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * @author:xingchaowang
@@ -23,36 +26,37 @@ import java.io.IOException;
 @Component
 @Path("/app")
 public class AppResource {
+    private static int DEFAULT_MAX_COUNT = 20;
     @Resource
     private AppRepository appRepository;
-    private static int DEFAULT_MAX_COUNT = 20;
+    @Resource
+    private ResponseHandler responseHandler;
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response list(@Context HttpHeaders hh, @QueryParam("from") long fromId, @QueryParam("maxCount") int maxCount) {
+    public Response list(@Context HttpHeaders hh,
+                         @QueryParam("from") long fromId,
+                         @QueryParam("maxCount") int maxCount) throws Exception {
         AppList appList = new AppList();
-        try {
-            if (fromId <= 0 && maxCount <= 0) {
-                for(App app : appRepository.list()) {
-                    appList.addApp(app);
-                }
-            } else {
-                fromId = fromId < 0 ? 0 : fromId;
-                maxCount = maxCount <= 0 ? DEFAULT_MAX_COUNT : maxCount;
-                for(App app : appRepository.listLimit(fromId, maxCount)) {
-                    appList.addApp(app);
-                }
+
+        if (fromId <= 0 && maxCount <= 0) {
+            for (App app : appRepository.list()) {
+                appList.addApp(app);
             }
-            appList.setTotal(appList.getApps().size());
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(AppList.XML, appList)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(AppList.JSON, appList)).type(MediaType.APPLICATION_JSON).build();
+        } else {
+            fromId = fromId < 0 ? 0 : fromId;
+            maxCount = maxCount <= 0 ? DEFAULT_MAX_COUNT : maxCount;
+            for (App app : appRepository.listLimit(fromId, maxCount)) {
+                appList.addApp(app);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return Response.status(404).type(hh.getMediaType()).build();
+        appList.setTotal(appList.getApps().size());
+
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return responseHandler.handle(String.format(AppList.XML, appList), hh.getMediaType());
+        } else {
+            return responseHandler.handle(String.format(AppList.JSON, appList), hh.getMediaType());
+        }
     }
 
     @GET
