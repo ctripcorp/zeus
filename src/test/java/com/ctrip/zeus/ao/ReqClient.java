@@ -1,6 +1,7 @@
 package com.ctrip.zeus.ao;
 
 import com.ctrip.zeus.client.AbstractRestClient;
+import test.StringDemo;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -22,5 +23,10 @@ public class ReqClient extends AbstractRestClient {
 
         return res;
     }
+    public String request(){
+        String res = getTarget().request()
+                .get(String.class);
 
+        return res;
+    }
 }

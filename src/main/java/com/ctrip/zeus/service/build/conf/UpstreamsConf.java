@@ -47,10 +47,10 @@ public class UpstreamsConf {
                 isDown = allDownAppServers.contains(slb.getName() + "_" + vs.getName() + "_" + app.getName() + "_" + ip);
             }
             b.append("server ").append(ip + ":" + as.getPort())
-                    .append("weight=").append(as.getWeight())
-                    .append("max_fails=").append(as.getMaxFails())
-                    .append("fail_timeout=").append(as.getFailTimeout())
-                    .append(isDown?"down":"")
+                    .append(" weight=").append(as.getWeight())
+                    .append(" max_fails=").append(as.getMaxFails())
+                    .append(" fail_timeout=").append(as.getFailTimeout())
+                    .append(isDown?" down":"")
                     .append(";\n");
         }
 

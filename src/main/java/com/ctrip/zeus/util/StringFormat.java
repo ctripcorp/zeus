@@ -18,7 +18,7 @@ public class StringFormat {
                 tabcount--;
             }
             if (data.charAt(i)=='\n'){
-                sb.append(data.substring(tmp_i,i)).append(getTabByCount(tabcount));
+                sb.append(data.substring(tmp_i,i)).append('\n').append(getTabByCount(tabcount));
                 tmp_i=i+1;
             }
 

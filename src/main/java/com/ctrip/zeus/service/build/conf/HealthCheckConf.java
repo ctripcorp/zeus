@@ -15,15 +15,15 @@ public class HealthCheckConf {
 
         StringBuilder b = new StringBuilder(128);
         b.append("check interval=").append(h.getIntervals())
-                .append("rise=").append(h.getPasses())
-                .append("fall=").append(h.getFails())
-                .append("timeout=").append(1000)
-                .append("type=http").append(";\n")
-                .append("check_keepalive_requests 100").append(";\n")
-                .append("check_http_send \"")
-                .append("GET ").append(h.getUri()).append(" HTTP/1.0\\r\\n")
-                .append("Connection: keep-alive\\r\\n")
-                .append("Host: ").append(vs.getDomains().get(0).getName()).append("\\r\\n\\r\\n\"").append(";\n")
+                .append(" rise=").append(h.getPasses())
+                .append(" fall=").append(h.getFails())
+                .append(" timeout=").append(1000)
+                .append(" type=http").append(";\n")
+                .append(" check_keepalive_requests 100").append(";\n")
+                .append(" check_http_send \"")
+                .append("GET ").append(h.getUri()).append(" HTTP/1.0\r\n")
+                .append(" Connection: keep-alive\r\n")
+                .append(" Host: ").append(vs.getDomains().get(0).getName()).append("\r\n\r\n\"").append(";\n")
                 .append("check_http_expect_alive http_2xx http_3xx").append(";\n");
         return b.toString();
     }
