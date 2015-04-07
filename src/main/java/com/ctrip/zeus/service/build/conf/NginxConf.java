@@ -11,15 +11,17 @@ import com.netflix.config.DynamicPropertyFactory;
  */
 public class NginxConf {
     private static DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
-
+    private static final int DEFAULT_WORKERS = 4;
 
     public static String generate(Slb slb) {
         StringBuilder b = new StringBuilder(1024);
 
-        b.append("worker_processes ").append(slb.getNginxWorkerProcesses()).append(";\n");
+        Integer worker = slb.getNginxWorkerProcesses();
+
+        b.append("worker_processes ").append((worker==null||worker==0)?DEFAULT_WORKERS:worker).append(";\n");
 
         b.append("events {").append("\n");
-        b.append("worker_connections 1024;\n");
+        b.append("worker_connections 1024000;\n");
 //        b.append("use epoll; \n");//要求linux 内核 2.6+
         b.append("}").append("\n");
 
@@ -27,7 +29,6 @@ public class NginxConf {
         b.append("include    mime.types").append(";\n");
         b.append("default_type    application/octet-stream").append(";\n");
         b.append("keepalive_timeout    65").append(";\n");
-//        b.append("sendfile        on;\n");
         b.append(statusConf());
         b.append("include    upstreams/*.conf").append(";\n");
         b.append("include    vhosts/*.conf").append(";\n");

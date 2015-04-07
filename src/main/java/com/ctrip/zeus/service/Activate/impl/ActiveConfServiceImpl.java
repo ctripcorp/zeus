@@ -2,6 +2,8 @@ package com.ctrip.zeus.service.Activate.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.Activate.ActiveConfService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -18,6 +20,8 @@ public class ActiveConfServiceImpl implements ActiveConfService {
     @Resource
     private ConfSlbActiveDao confSlbActiveDao;
 
+    private Logger logger = LoggerFactory.getLogger(ActiveConfServiceImpl.class);
+
     @Override
     public List<String> getConfAppActiveContentByAppNames(String[] appnames) throws Exception {
 
@@ -26,7 +30,11 @@ public class ActiveConfServiceImpl implements ActiveConfService {
 
         List<String> res = new ArrayList<>();
 
-        if (l==null)return res;
+        if (l==null)
+        {
+            logger.warn("No ConfAppActive for apps:"+appnames.toString());
+            return res;
+        }
 
         for (ConfAppActiveDo a : l)
         {
@@ -38,7 +46,11 @@ public class ActiveConfServiceImpl implements ActiveConfService {
     @Override
     public String getConfSlbActiveContentBySlbNames(String slbname) throws Exception {
          ConfSlbActiveDo d = confSlbActiveDao.findByName(slbname, ConfSlbActiveEntity.READSET_FULL);
-        if (d==null)return null;
+        if (d==null)
+        {
+            logger.warn("No conf slb active for Slbname: "+slbname);
+            return null;
+        }
 
         return d.getContent();
     }

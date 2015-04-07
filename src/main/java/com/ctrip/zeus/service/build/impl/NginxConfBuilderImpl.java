@@ -23,12 +23,12 @@ public class NginxConfBuilderImpl implements NginxConfBuilder {
     }
 
     @Override
-    public String generateServerConf(Slb slb, VirtualServer vs, List<App> apps) {
+    public String generateServerConf(Slb slb, VirtualServer vs, List<App> apps) throws Exception{
         return ServerConf.generate(slb,vs,apps);
     }
 
     @Override
-    public String generateUpstreamsConf(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers) {
+    public String generateUpstreamsConf(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception{
         return UpstreamsConf.generate(slb,vs,apps,allDownServers,allDownAppServers);
     }
 }
