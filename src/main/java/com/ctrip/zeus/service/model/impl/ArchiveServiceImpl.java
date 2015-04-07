@@ -35,8 +35,7 @@ public class ArchiveServiceImpl implements ArchiveService {
         String content = String.format(Slb.XML, slb);
         ArchiveSlbDo d = new ArchiveSlbDo().setName(slb.getName()).setContent(content).setVersion(slb.getVersion()).setCreatedTime(new Date()).setLastModified(new Date());
         archiveSlbDao.insert(d);
-        throw new DalException("archive failed");
-//        return d.getVersion();
+        return d.getVersion();
     }
 
     @Override

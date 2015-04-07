@@ -24,15 +24,12 @@ public class SlbClient extends AbstractRestClient {
         return null;
     }
 
-    public void add(Slb slb) {
-        Response res = getTarget().path("/api/slb/add").request()
+    public Response add(Slb slb) {
+        return getTarget().path("/api/slb/add").request()
                 .post(Entity.entity(
                         String.format(Slb.JSON, slb),
                         MediaType.APPLICATION_JSON
                 ));
-        if (res.getStatus() != 200) {
-            throw new RuntimeException(String.valueOf(res.getStatus()));
-        }
     }
 
     public Slb get(String slbName) {

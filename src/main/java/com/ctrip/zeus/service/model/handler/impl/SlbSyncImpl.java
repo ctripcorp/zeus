@@ -3,11 +3,12 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.handler.DbClean;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
@@ -23,17 +24,7 @@ import java.util.Map;
 @Component("dbSync")
 public class SlbSyncImpl implements SlbSync {
     @Resource
-    private AppDao appDao;
-    @Resource
-    private AppHealthCheckDao appHealthCheckDao;
-    @Resource
-    private AppLoadBalancingMethodDao appLoadBalancingMethodDao;
-    @Resource
-    private AppServerDao appServerDao;
-    @Resource
     private AppSlbDao appSlbDao;
-    @Resource
-    private ServerDao serverDao;
     @Resource
     private SlbDao slbDao;
     @Resource
@@ -45,57 +36,72 @@ public class SlbSyncImpl implements SlbSync {
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
 
-    @Resource
-    private DbClean dbClean;
+    Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public SlbDo add(Slb slb) throws DalException {
+    public SlbDo add(Slb slb) throws DalException, ValidationException {
+        validate(slb);
         SlbDo d = C.toSlbDo(slb);
         d.setCreatedTime(new Date());
         d.setVersion(1);
-        slbDao.insert(d);
 
-        sync(d, slb);
+        slbDao.insert(d);
+        cascadeSync(d, slb);
         return d;
     }
 
     @Override
-    public SlbDo update(Slb slb) throws DalException {
+    public SlbDo update(Slb slb) throws DalException, ValidationException {
+        validate(slb);
         SlbDo d = C.toSlbDo(slb);
         slbDao.updateByName(d, SlbEntity.UPDATESET_FULL);
 
         SlbDo updated = slbDao.findByName(d.getName(), SlbEntity.READSET_FULL);
         d.setId(updated.getId());
         d.setVersion(updated.getVersion());
-
-        sync(d, slb);
+        cascadeSync(d, slb);
         return d;
     }
 
     @Override
     public int delete(String slbName) throws DalException, ValidationException {
         SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
+        if (d == null)
+            return 0;
         if(removable(d)) {
+            slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(d.getId()));
+            slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(d.getId()));
+            for (SlbVirtualServerDo svsd : slbVirtualServerDao.findAllBySlb(d.getId(), SlbVirtualServerEntity.READSET_FULL)) {
+                deleteSlbVirtualServer(svsd.getId());
+            }
             return slbDao.deleteByPK(d);
         }
         throw new ValidationException(slbName + " cannot be deleted. Dependency exists");
     }
 
+    private void validate(Slb slb) throws ValidationException {
+        if (slb == null) {
+            throw new ValidationException("Slb with null value cannot be persisted.");
+        }
+    }
+
     private boolean removable(SlbDo d) throws DalException {
         List<AppSlbDo> list = appSlbDao.findAllBySlb(d.getName(), AppSlbEntity.READSET_FULL);
-        if (list == null || list.size() == 0)
+        if (list.size() == 0)
             return true;
         return false;
     }
 
-    private void sync(SlbDo d, Slb slb) throws DalException {
+    private void cascadeSync(SlbDo d, Slb slb) throws DalException {
         syncSlbVips(d.getId(), slb.getVips());
         syncSlbServers(d.getId(), slb.getSlbServers());
         syncVirtualServers(d.getId(), slb.getVirtualServers());
     }
 
     private void syncSlbVips(long slbId, List<Vip> vips) throws DalException {
-        List<SlbVipDo> oldList = slbVipDao.findAllBySlb(slbId,SlbVipEntity.READSET_FULL);
+        if (vips == null || vips.size() == 0)
+            return;
+        List<SlbVipDo> oldList = slbVipDao.findAllBySlb(slbId, SlbVipEntity.READSET_FULL);
         Map<String, SlbVipDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbVipDo, String>() {
             @Override
             public String apply(SlbVipDo input) {
@@ -114,11 +120,15 @@ public class SlbSyncImpl implements SlbSync {
 
         //Remove unused ones.
         for (SlbVipDo d : oldList) {
-            dbClean.deleteSlbVip(d.getId());
+            slbVipDao.deleteByPK(new SlbVipDo().setId(d.getId()));
         }
     }
 
     private void syncSlbServers(long slbId, List<SlbServer> slbServers) throws DalException {
+        if (slbServers == null || slbServers.size() == 0) {
+            logger.warn("No slb server is given when adding/updating slb with id " + slbId);
+            return;
+        }
         List<SlbServerDo> oldList = slbServerDao.findAllBySlb(slbId, SlbServerEntity.READSET_FULL);
         Map<String, SlbServerDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbServerDo, String>() {
             @Override
@@ -138,11 +148,13 @@ public class SlbSyncImpl implements SlbSync {
 
         //Remove unused ones.
         for (SlbServerDo d : oldList) {
-            dbClean.deleteSlbServer(d.getId());
+            slbServerDao.deleteByPK(new SlbServerDo().setId(d.getId()));
         }
     }
 
     private void syncVirtualServers(long slbId, List<VirtualServer> virtualServers) throws DalException {
+        if (virtualServers == null || virtualServers.size() == 0)
+            return;
         List<SlbVirtualServerDo> oldList = slbVirtualServerDao.findAllBySlb(slbId,SlbVirtualServerEntity.READSET_FULL);
         Map<String, SlbVirtualServerDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbVirtualServerDo, String>() {
             @Override
@@ -166,11 +178,13 @@ public class SlbSyncImpl implements SlbSync {
 
         //Remove unused ones.
         for (SlbVirtualServerDo d : oldList) {
-            dbClean.deleteSlbVirtualServer(d.getId());
+            deleteSlbVirtualServer(d.getId());
         }
     }
 
     private void syncSlbDomain(long slbVirtualServerId, List<Domain> domains) throws DalException {
+        if (domains == null || domains.size() == 0)
+            return;
         List<SlbDomainDo> oldList = slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL);
         Map<String, SlbDomainDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbDomainDo, String>() {
             @Override
@@ -190,7 +204,12 @@ public class SlbSyncImpl implements SlbSync {
 
         //Remove unused ones.
         for (SlbDomainDo d : oldList) {
-            dbClean.deleteSlbDomain(d.getId());
+            slbDomainDao.deleteByPK(new SlbDomainDo().setId(d.getId()));
         }
+    }
+
+    private void deleteSlbVirtualServer(long id) throws DalException {
+        slbDomainDao.deleteAllBySlbVirtualServer(new SlbDomainDo().setSlbVirtualServerId(id));
+        slbVirtualServerDao.deleteByPK(new SlbVirtualServerDo().setId(id));
     }
 }

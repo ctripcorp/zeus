@@ -37,42 +37,30 @@ public class SlbQueryImpl implements SlbQuery {
     @Override
     public Slb get(String slbName) throws DalException {
         SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
-
-        Slb slb = C.toSlb(d);
-        fillData(d, slb);
-        return slb;
+        return createSlb(d);
     }
 
     @Override
     public Slb getById(long id) throws DalException {
         SlbDo d = slbDao.findByPK(id, SlbEntity.READSET_FULL);
-
-        Slb slb = C.toSlb(d);
-        fillData(d, slb);
-        return slb;
+        return createSlb(d);
     }
 
     @Override
     public Slb getBySlbServer(String slbServerIp) throws DalException {
-        Slb slb = null;
-        for (SlbServerDo ssd : slbServerDao.findAllByIp(slbServerIp, SlbServerEntity.READSET_FULL)) {
-            slb = getById(ssd.getSlbId());
-            break;
-        }
-        return slb;
+        List<SlbServerDo> list = slbServerDao.findAllByIp(slbServerIp, SlbServerEntity.READSET_FULL);
+        if (list.size() == 0)
+            return null;
+        return getById(list.get(0).getSlbId());
     }
 
     @Override
     public List<Slb> getAll() throws DalException {
         List<Slb> list = new ArrayList<>();
         for (SlbDo d : slbDao.findAll(SlbEntity.READSET_FULL)) {
-            Slb slb = C.toSlb(d);
-            list.add(slb);
-
-            querySlbVips(d.getId(), slb);
-            querySlbServers(d.getId(), slb);
-            queryVirtualServers(d.getId(), slb);
-
+            Slb slb = createSlb(d);
+            if (slb != null)
+                list.add(slb);
         }
         return list;
     }
@@ -141,7 +129,16 @@ public class SlbQueryImpl implements SlbQuery {
 
     @Override
     public List<Slb> getByAppServerAndAppName(String appServerIp, String appName) throws DalException {
-        List<Slb> slbSet1 = getByAppNames(new String[] {appName});
+        if ((appServerIp == null || appServerIp.isEmpty())
+            && (appName == null || appName.isEmpty())) {
+            return null;
+        }
+        if (appServerIp == null || appServerIp.isEmpty())
+            return getByAppNames(new String[]{appName});
+        if (appName == null || appName.isEmpty())
+            return getByAppServer(appServerIp);
+
+        List<Slb> slbSet1 = getByAppNames(new String[]{appName});
         List<Slb> slbSet2 = getByAppServer(appServerIp);
         if (slbSet1 == null || slbSet2 == null)
             return null;
@@ -209,7 +206,17 @@ public class SlbQueryImpl implements SlbQuery {
         return list;
     }
 
-    private void fillData(SlbDo d, Slb slb) throws DalException {
+    private Slb createSlb(SlbDo d) throws DalException {
+        if (d == null)
+            return null;
+        if (d.getName() == null || d.getName().isEmpty())
+            return null;
+        Slb slb = C.toSlb(d);
+        cascadeQuery(d, slb);
+        return slb;
+    }
+
+    private void cascadeQuery(SlbDo d, Slb slb) throws DalException {
         querySlbVips(d.getId(), slb);
         querySlbServers(d.getId(), slb);
         queryVirtualServers(d.getId(), slb);

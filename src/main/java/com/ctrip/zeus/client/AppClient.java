@@ -24,15 +24,13 @@ public class AppClient extends AbstractRestClient {
         return null;
     }
 
-    public void add(App app) {
-        Response res = getTarget().path("/api/app/add").request()
+    public Response add(App app) {
+        return getTarget().path("/api/app/add").request()
                 .post(Entity.entity(
                         String.format(App.JSON, app),
                         MediaType.APPLICATION_JSON
                 ));
-        if (res.getStatus() != 200) {
-            throw new RuntimeException(String.valueOf(res.getStatus()));
-        }
+
     }
 
     public App get(String appName) {

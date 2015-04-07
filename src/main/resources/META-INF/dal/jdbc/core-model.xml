@@ -481,6 +481,15 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-slb" type="DELETE">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="slb-vip" table="slb_vip" alias="sv" do-class="SlbVipDo">
@@ -514,6 +523,15 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb" type="DELETE">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>

@@ -47,7 +47,7 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     @Before
-    public void fillDb() {
+    public void fillDb() throws Exception {
         addSlb();
         addApps();
     }
@@ -55,117 +55,81 @@ public class ModelServiceTest extends AbstractSpringTest {
     /********************* test SlbRepository *********************/
 
     @Test
-    public void testListSlbs() {
-        try {
-            List<Slb> list = slbRepo.list();
-            Assert.assertTrue(list.size() >= 1);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void testListSlbs() throws Exception {
+        List<Slb> list = slbRepo.list();
+        Assert.assertTrue(list.size() >= 1);
+    }
+
+    @Test
+    public void testGetSlb() throws Exception {
+        Slb slb = slbRepo.get(defaultSlb.getName());
+        assertSlbEquals(defaultSlb, slb);
+    }
+
+    @Test
+    public void testGetSlbBySlbServer() throws Exception {
+        Slb slb = slbRepo.getBySlbServer(defaultSlb.getVips().get(0).getIp());
+        assertSlbEquals(defaultSlb, slb);
+    }
+
+    @Test
+    public void testListSlbsByAppServerAndAppName() throws Exception {
+        List<Slb> slbsByAppServer = slbRepo.listByAppServerAndAppName("10.2.6.201", null);
+        Assert.assertEquals(1, slbsByAppServer.size());
+        List<Slb> slbsByAppName = slbRepo.listByAppServerAndAppName(null, "testApp");
+        Assert.assertEquals(1, slbsByAppName.size());
+        List<Slb> slbs = slbRepo.listByAppServerAndAppName("10.2.6.201", "testApp");
+        Assert.assertEquals(1, slbs.size());
+        assertSlbEquals(defaultSlb, slbs.get(0));
+    }
+
+    @Test
+    public void testListSlbsByApps() throws Exception {
+        List<Slb> slbs = slbRepo.listByApps(new String[]{"testApp", "testApp1"});
+        Assert.assertEquals(1, slbs.size());
+    }
+
+    @Test
+    public void testListAppSlbsByApps() throws Exception {
+        List<AppSlb> appSlbs = slbRepo.listAppSlbsByApps(new String[]{"testApp", "testApp1"});
+        Assert.assertEquals(2, appSlbs.size());
+        for (AppSlb as : appSlbs) {
+            Assert.assertNotNull(as.getVirtualServer());
         }
     }
 
     @Test
-    public void testGetSlb() {
-        try {
-            Slb slb = slbRepo.get(defaultSlb.getName());
-            assertSlbEquals(defaultSlb, slb);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void testListAppSlbsBySlb() throws Exception {
+        List<AppSlb> appSlbs = slbRepo.listAppSlbsBySlb(defaultSlb.getName());
+        Assert.assertEquals(7, appSlbs.size());
+        for (AppSlb as : appSlbs) {
+            Assert.assertNotNull(as.getVirtualServer());
         }
     }
 
     @Test
-    public void testGetSlbBySlbServer() {
-        try {
-            Slb slb = slbRepo.getBySlbServer(defaultSlb.getVips().get(0).getIp());
-            assertSlbEquals(defaultSlb, slb);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testUpdateSlb() throws Exception {
+        Slb originSlb = slbRepo.get(defaultSlb.getName());
+        originSlb.setStatus("HANG");
+        slbRepo.update(originSlb);
+        Slb updatedSlb = slbRepo.get(defaultSlb.getName());
+        assertSlbEquals(originSlb, updatedSlb);
+        Assert.assertEquals(originSlb.getVersion().intValue() + 1, updatedSlb.getVersion().intValue());
     }
 
     @Test
-    public void testListSlbsByAppServerAndAppName() {
-        try {
-            List<Slb> slbsByAppServer = slbRepo.listByAppServerAndAppName("10.2.6.201", null);
-            Assert.assertEquals(1, slbsByAppServer.size());
-            List<Slb> slbsByAppName = slbRepo.listByAppServerAndAppName(null, "testApp");
-            Assert.assertEquals(1, slbsByAppName.size());
-            List<Slb> slbs = slbRepo.listByAppServerAndAppName("10.2.6.201", "testApp");
-            Assert.assertEquals(1, slbs.size());
-            assertSlbEquals(defaultSlb, slbs.get(0));
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void testListAppServersBySlb() throws Exception {
+        List<String> appServers = slbRepo.listAppServersBySlb(defaultSlb.getName());
+        Assert.assertEquals(testApp.getAppServers().size(), appServers.size());
+
+        List<String> appServersRef = new ArrayList<>();
+        for (AppServer as : testApp.getAppServers()) {
+            appServersRef.add(as.getIp());
         }
+        Assert.assertFalse(appServersRef.retainAll(appServers));
     }
 
-    @Test
-    public void testListSlbsByApps() {
-        try {
-            List<Slb> slbs = slbRepo.listByApps(new String[] {"testApp", "testApp1"});
-            Assert.assertEquals(1, slbs.size());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testListAppSlbsByApps() {
-        try {
-            List<AppSlb> appSlbs = slbRepo.listAppSlbsByApps(new String[] {"testApp", "testApp1"});
-            Assert.assertEquals(2, appSlbs.size());
-            for (AppSlb as : appSlbs) {
-                Assert.assertNotNull(as.getVirtualServer());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testListAppSlbsBySlb() {
-        try {
-            List<AppSlb> appSlbs = slbRepo.listAppSlbsBySlb(defaultSlb.getName());
-            Assert.assertEquals(7, appSlbs.size());
-            for (AppSlb as : appSlbs) {
-                Assert.assertNotNull(as.getVirtualServer());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testUpdateSlb() {
-        try {
-            Slb originSlb = slbRepo.get(defaultSlb.getName());
-            originSlb.setStatus("HANG");
-            slbRepo.update(originSlb);
-            Slb updatedSlb = slbRepo.get(defaultSlb.getName());
-            assertSlbEquals(originSlb, updatedSlb);
-            Assert.assertEquals(originSlb.getVersion().intValue() + 1, updatedSlb.getVersion().intValue());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testListAppServersBySlb() {
-        try {
-            List<String> appServers = slbRepo.listAppServersBySlb(defaultSlb.getName());
-            Assert.assertEquals(testApp.getAppServers().size(), appServers.size());
-
-            List<String> appServersRef = new ArrayList<>();
-            for(AppServer as : testApp.getAppServers()) {
-                appServersRef.add(as.getIp());
-            }
-            Assert.assertFalse(appServersRef.retainAll(appServers));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void addSlb() {
+    private void addSlb() throws Exception {
         defaultSlb = new Slb().setName("default").setVersion(1)
                 .setNginxBin("/opt/app/nginx/sbin").setNginxConf("/opt/app/nginx/conf")
                 .setNginxWorkerProcesses(2).setStatus("TEST")
@@ -177,130 +141,87 @@ public class ModelServiceTest extends AbstractSpringTest {
                         .addDomain(new Domain().setName("s1.ctrip.com")))
                 .addVirtualServer(new VirtualServer().setName("testsite2").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("s2b.ctrip.com")));
-        try {
-            slbRepo.add(defaultSlb);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        slbRepo.add(defaultSlb);
     }
 
-    private void deleteSlb() {
+    private void deleteSlb() throws Exception {
         String slbName = "default";
-        try {
-            Assert.assertEquals(1, slbRepo.delete(slbName));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Assert.assertEquals(1, slbRepo.delete(slbName));
     }
 
     /********************* test AppRepository *********************/
 
     @Test
-    public void testGetApp() {
-        try {
-            App app = appRepo.get(testApp.getName());
-            assertAppEquals(app, testApp);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testGetApp() throws Exception {
+        App app = appRepo.get(testApp.getName());
+        assertAppEquals(app, testApp);
     }
 
     @Test
-    public void testGetAppByAppId() {
-        try {
-            App app = appRepo.getByAppId(testApp.getAppId());
-            assertAppEquals(app, testApp);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testGetAppByAppId() throws Exception {
+        App app = appRepo.getByAppId(testApp.getAppId());
+        assertAppEquals(app, testApp);
     }
 
     @Test
-    public void testListApps() {
-        try {
-            List<App> list = appRepo.list();
-            Assert.assertTrue(list.size() >= 7);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testListApps() throws Exception {
+        List<App> list = appRepo.list();
+        Assert.assertTrue(list.size() >= 7);
     }
 
     @Test
-    public void testListLimitApps() {
-        try {
-            List<App> list = appRepo.listLimit(insertedTestAppId, 3);
-            Assert.assertTrue(list.size() == 3);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testListLimitApps() throws Exception {
+        List<App> list = appRepo.listLimit(insertedTestAppId, 3);
+        Assert.assertTrue(list.size() == 3);
     }
 
     @Test
-    public void testListAppsBy() {
+    public void testListAppsBy() throws Exception {
         String slbName = "default";
         String virtualServerName = "testsite1";
-        try {
-            List<App> list = appRepo.list(slbName, virtualServerName);
-            Assert.assertTrue(list.size() >= 6);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        List<App> list = appRepo.list(slbName, virtualServerName);
+        Assert.assertTrue(list.size() >= 6);
     }
 
     @Test
-    public void testUpdateApp() {
-        try {
-            App originApp = appRepo.get(testApp.getName());
-            originApp.setAppId("921812");
-            appRepo.update(originApp);
-            App updatedApp = appRepo.get(originApp.getName());
-            assertAppEquals(originApp, updatedApp);
-            Assert.assertEquals(originApp.getVersion().intValue() + 1, updatedApp.getVersion().intValue());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testUpdateApp() throws Exception {
+        App originApp = appRepo.get(testApp.getName());
+        originApp.setAppId("921812");
+        appRepo.update(originApp);
+        App updatedApp = appRepo.get(originApp.getName());
+        assertAppEquals(originApp, updatedApp);
+        Assert.assertEquals(originApp.getVersion().intValue() + 1, updatedApp.getVersion().intValue());
     }
 
     @Test
-    public void testListAppsByAppServer() {
-        try {
-            List<String> appNames = appRepo.listAppsByAppServer(testApp.getAppServers().get(0).getIp());
-            boolean containsTestApp = false;
-            for (String appName : appNames) {
-                if(appName.equals(testApp.getName()))
-                    containsTestApp = true;
-            }
-            Assert.assertTrue(containsTestApp);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void testListAppsByAppServer() throws Exception {
+        List<String> appNames = appRepo.listAppsByAppServer(testApp.getAppServers().get(0).getIp());
+        boolean containsTestApp = false;
+        for (String appName : appNames) {
+            if (appName.equals(testApp.getName()))
+                containsTestApp = true;
         }
+        Assert.assertTrue(containsTestApp);
     }
 
     @Test
-    public void testListAppServersByApp() {
-        try {
-            List<String> appServers = appRepo.listAppServersByApp(testApp.getName());
-            List<String> appServersRef = new ArrayList<>();
-            for(AppServer as : testApp.getAppServers()) {
-                appServersRef.add(as.getIp());
-            }
-            Assert.assertFalse(appServersRef.retainAll(appServers));
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void testListAppServersByApp() throws Exception {
+        List<String> appServers = appRepo.listAppServersByApp(testApp.getName());
+        List<String> appServersRef = new ArrayList<>();
+        for (AppServer as : testApp.getAppServers()) {
+            appServersRef.add(as.getIp());
         }
+        Assert.assertFalse(appServersRef.retainAll(appServers));
+
     }
 
-    private void addApps() {
+    private void addApps() throws Exception {
         testApp = generateApp("testApp", defaultSlb.getName(), defaultSlb.getVirtualServers().get(1));
-        try {
-            insertedTestAppId = appRepo.add(testApp);
-            Assert.assertTrue(insertedTestAppId > 0);
-            for(int i = 0; i < 6; i++) {
-                App app = generateApp("testApp" + i, defaultSlb.getName(), defaultSlb.getVirtualServers().get(0));
-                appRepo.add(app);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        insertedTestAppId = appRepo.add(testApp);
+        Assert.assertTrue(insertedTestAppId > 0);
+        for (int i = 0; i < 6; i++) {
+            App app = generateApp("testApp" + i, defaultSlb.getName(), defaultSlb.getVirtualServers().get(0));
+            appRepo.add(app);
         }
     }
 
@@ -313,45 +234,32 @@ public class ModelServiceTest extends AbstractSpringTest {
                 .addAppServer(new AppServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
     }
 
-    private void deleteApps() {
+    private void deleteApps() throws Exception {
         String appName = "testApp";
-        try {
-            Assert.assertEquals(1, appRepo.delete(appName));
-            for (int i = 0; i < 6; i++) {
-                Assert.assertEquals(1, appRepo.delete(appName + i));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        Assert.assertEquals(1, appRepo.delete(appName));
+        for (int i = 0; i < 6; i++) {
+            Assert.assertEquals(1, appRepo.delete(appName + i));
         }
     }
 
     /********************* test ArchiveService *********************/
 
     @Test
-    public void testGetLatestAppArchive() {
-        try {
-            Archive archive = archiveService.getLatestAppArchive(testApp.getName());
-            Assert.assertTrue(archive.getVersion() > 0);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testGetLatestAppArchive() throws Exception {
+        Archive archive = archiveService.getLatestAppArchive(testApp.getName());
+        Assert.assertTrue(archive.getVersion() > 0);
     }
 
     @Test
-    public void testGetLatestSlbArchive() {
-        try {
-            Archive archive = archiveService.getLatestAppArchive(defaultSlb.getName());
-            Assert.assertTrue(archive.getVersion() > 0);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+    public void testGetLatestSlbArchive() throws Exception {
+        Archive archive = archiveService.getLatestSlbArchive(defaultSlb.getName());
+        Assert.assertTrue(archive.getVersion() > 0);
     }
 
     /********************* test end *********************/
 
     @After
-    public void clearDb() {
+    public void clearDb() throws Exception {
         deleteApps();
         deleteSlb();
     }
@@ -385,25 +293,5 @@ public class ModelServiceTest extends AbstractSpringTest {
         Assert.assertEquals(origin.getSlbServers().size(), another.getSlbServers().size());
         Assert.assertEquals(origin.getVips().size(), another.getVips().size());
         Assert.assertEquals(origin.getVirtualServers().size(), another.getVirtualServers().size());
-    }
-
-    private static App parseApp(String appJsonData)  {
-        App app = null;
-        try {
-            app = DefaultJsonParser.parse(App.class, appJsonData);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return app;
-    }
-
-    private static Slb parseSlb(String slbJsonData) {
-        Slb slb = null;
-        try {
-            slb = DefaultJsonParser.parse(Slb.class, slbJsonData);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return slb;
     }
 }
