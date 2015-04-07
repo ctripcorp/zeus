@@ -6,6 +6,9 @@ import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.handler.StatusAppServerService;
 import com.ctrip.zeus.service.status.handler.StatusServerService;
 import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.util.AssertUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -26,6 +29,8 @@ public class StatusServiceImpl implements StatusService {
     private StatusAppServerService statusAppServerService;
     @Resource
     private SlbRepository slbClusterRepository;
+
+    private Logger logger = LoggerFactory.getLogger(StatusServiceImpl.class);
 
     @Override
     public Set<String> findAllDownServers() throws Exception {
@@ -65,6 +70,7 @@ public class StatusServiceImpl implements StatusService {
 
         statusServerService.updateStatusServer(new StatusServerDo().setIp(ip).setUp(status));
 
+        logger.info("server status up ; server ip :"+ip+",Status: "+(status?"UP":"Down"));
     }
 
 
@@ -72,14 +78,20 @@ public class StatusServiceImpl implements StatusService {
     public void upMember(String appName, String ip) throws Exception {
 
         List<AppSlb> appslblist = slbClusterRepository.listAppSlbsByApps(new String[]{appName});
-        if (appslblist==null||appslblist.size()==0)return;
+        if (appslblist==null||appslblist.size()==0)
+        {
+            logger.warn("[down member]: Can not find appslb by appName! AppName: "+appName);
+            AssertUtils.isNull(appslblist,"[up member]: Can not find appslb by appName! Please Check the Configuration or param again!");
+            return;
+        }
 
-        dateAdjust(appslblist,appName);
+        dataAdjust(appslblist,appName);
 
         for (AppSlb d : appslblist)
         {
             statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
                     .setVirtualServerName(d.getVirtualServer().getName()).setAppName(appName).setIp(ip).setUp(true));
+            logger.info("[up Member]: AppSlb:"+d.toString());
         }
     }
 
@@ -87,14 +99,20 @@ public class StatusServiceImpl implements StatusService {
     public void downMember(String appName, String ip) throws Exception {
 
         List<AppSlb> appslblist = slbClusterRepository.listAppSlbsByApps(new String[]{appName});
-        if (appslblist==null||appslblist.size()==0)return;
+        if (appslblist==null||appslblist.size()==0)
+        {
+            logger.warn("[down member]: Can not find appslb by appName! AppName: "+appName);
+            AssertUtils.isNull(appslblist,"[down member]: Can not find appslb by appName! Please Check the Configuration or param again!");
+            return;
+        }
 
-        dateAdjust(appslblist,appName);
+        dataAdjust(appslblist,appName);
 
         for (AppSlb d : appslblist)
         {
             statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
-                    .setVirtualServerName(d.getVirtualServer().getName()).setAppName(appName).setIp(ip).setUp(true));
+                    .setVirtualServerName(d.getVirtualServer().getName()).setAppName(appName).setIp(ip).setUp(false));
+            logger.info("[down Member]: AppSlb:"+d.toString());
         }
 
     }
@@ -107,7 +125,7 @@ public class StatusServiceImpl implements StatusService {
         {
             return list.get(0).isUp();
         }
-        return false;
+        return true;
     }
 
     @Override
@@ -117,10 +135,10 @@ public class StatusServiceImpl implements StatusService {
         {
             return list.get(0).isUp();
         }
-        return false;
+        return true;
     }
 
-    private boolean dateAdjust(List<AppSlb> list ,String appName)throws Exception{
+    private boolean dataAdjust(List<AppSlb> list ,String appName)throws Exception{
         Set<String> appvs =new HashSet<>();
         Set<String> slbnames = new HashSet<>();
         for (AppSlb p : list)
@@ -143,6 +161,7 @@ public class StatusServiceImpl implements StatusService {
             if(!appvs.contains(d.getAppName()+d.getSlbName()+d.getVirtualServerName()))
             {
                 statusAppServerService.deleteBySlbNameAndAppNameAndVsName(d.getSlbName(),d.getAppName(),d.getVirtualServerName());
+                logger.info("[status adjust]remove StatusAppServer :"+d.toString());
             }
         }
 

@@ -23,7 +23,7 @@ public class NginxConfBuilderImpl implements NginxConfBuilder {
     }
 
     @Override
-    public String generateServerConf(Slb slb, VirtualServer vs, List<App> apps) {
+    public String generateServerConf(Slb slb, VirtualServer vs, List<App> apps) throws Exception{
         return ServerConf.generate(slb,vs,apps);
     }
 

@@ -29,7 +29,7 @@ public interface NginxConfBuilder extends Repository {
      * @return nginx upstream config data
      * @throws Exception
      */
-    String generateServerConf(Slb slb, VirtualServer vs, List<App> apps);
+    String generateServerConf(Slb slb, VirtualServer vs, List<App> apps)throws Exception;
 
     /**
      * get nginx upstream config

@@ -4,13 +4,14 @@ import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.util.AssertUtils;
 
 /**
  * @author:xingchaowang
  * @date: 3/8/2015.
  */
 public class LocationConf {
-    public static String generate(Slb slb, VirtualServer vs, App app, String upstreamName) {
+    public static String generate(Slb slb, VirtualServer vs, App app, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("location ").append(getPath(slb, vs, app)).append("{\n");
@@ -26,13 +27,15 @@ public class LocationConf {
         return b.toString();
     }
 
-    private static String getPath(Slb slb, VirtualServer vs, App app) {
+    private static String getPath(Slb slb, VirtualServer vs, App app) throws Exception{
+        String res=null;
         for (AppSlb appSlb : app.getAppSlbs()) {
             if (slb.getName().equals(appSlb.getSlbName()) && vs.getName().equals(appSlb.getVirtualServer().getName())) {
-                return appSlb.getPath();
+                res= appSlb.getPath();
             }
         }
-        //ToDo:
-        throw new RuntimeException("IllegalState");
+
+        AssertUtils.isNull(res,"Location path is null,Please check your configuration of SlbName:["+slb.getName()+"] VirtualServer :["+vs.getName()+"]");
+        return res;
     }
 }

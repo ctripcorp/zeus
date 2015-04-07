@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class ServerConf {
 
-    public static String generate(Slb slb, VirtualServer vs, List<App> apps) {
+    public static String generate(Slb slb, VirtualServer vs, List<App> apps) throws Exception{
         StringBuilder b = new StringBuilder(1024);
 
         b.append("server {").append("\n");

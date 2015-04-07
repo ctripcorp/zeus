@@ -136,7 +136,7 @@ public class ServerResource {
             if(buildService.build(slbname,ticket))
             {
                 //push
-//                nginxAgentService.loadAll(slbname);
+                nginxAgentService.loadAll(slbname);
             }
         }
 

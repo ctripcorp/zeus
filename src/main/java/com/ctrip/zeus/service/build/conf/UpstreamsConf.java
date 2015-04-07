@@ -15,7 +15,7 @@ import java.util.Set;
  */
 public class UpstreamsConf {
     public static String generate(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers) {
-        StringBuilder b = new StringBuilder(1024);
+        StringBuilder b = new StringBuilder(10240);
 
         //add upstreams
         for (App app : apps) {

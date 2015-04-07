@@ -9,8 +9,11 @@ import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
@@ -45,6 +48,8 @@ public class NginxConfServiceImpl implements NginxConfService {
     @Resource
     private ActiveConfService activeConfService;
 
+
+    private Logger logger = LoggerFactory.getLogger(NginxConfServiceImpl.class);
 
     @Override
     public String getNginxConf(String slbName , int _version) throws Exception {
@@ -197,19 +202,23 @@ public class NginxConfServiceImpl implements NginxConfService {
                         return DefaultSaxParser.parseEntity(App.class, content);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        throw new RuntimeException(e);
+                        throw new RuntimeException("DefaultSaxParser fail! Class: App ,Content: ["+content+']',e);
                     }
                 }
             }));
         }
 
-        Slb slb = DefaultSaxParser.parseEntity(Slb.class, activeConfService.getConfSlbActiveContentBySlbNames(slbName));
+        String slbContent =activeConfService.getConfSlbActiveContentBySlbNames(slbName);
+        AssertUtils.isNull(slbContent,"Slb: ["+slbName+"] never be activated!");
+
+        Slb slb = DefaultSaxParser.parseEntity(Slb.class, slbContent);
 
         String conf = nginxConfigBuilder.generateNginxConf(slb);
         nginxConfDao.insert(new NginxConfDo().setCreatedTime(new Date())
                 .setName(slb.getName())
                 .setContent(conf)
                 .setVersion(version));
+        logger.debug("Nginx Conf build sucess! slbName: "+slb+",version: "+version);
 
 
         Set<String> allDownServers = statusService.findAllDownServers();
@@ -229,11 +238,14 @@ public class NginxConfServiceImpl implements NginxConfService {
                     .setContent(serverConf)
                     .setVersion(version));
 
+            logger.debug("Nginx Server Conf build sucess! slbName: "+slb+",virtualserver: "+vs.getName()+",version: "+version);
+
             nginxConfUpstreamDao.insert(new NginxConfUpstreamDo().setCreatedTime(new Date())
                     .setSlbName(slb.getName())
                     .setName(vs.getName())
                     .setContent(upstreamConf)
                     .setVersion(version));
+            logger.debug("Nginx Upstream Conf build sucess! slbName: "+slb+",virtualserver: "+vs.getName()+",version: "+version);
         }
 
     }
