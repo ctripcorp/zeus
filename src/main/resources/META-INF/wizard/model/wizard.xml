@@ -12,4 +12,7 @@
    <model package="com.ctrip.zeus.nginx" name="nginx">
       <sample-model>src/test/resources/com/ctrip/zeus/model/nginx.xml</sample-model>
    </model>
+   <model package="com.ctrip.zeus.restful.response" name="message">
+      <sample-model>src/test/resources/com/ctrip/zeus/model/message.xml</sample-model>
+   </model>
 </wizard>
