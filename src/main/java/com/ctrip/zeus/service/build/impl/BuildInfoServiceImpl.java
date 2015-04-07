@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.service.Activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -105,12 +106,19 @@ public class BuildInfoServiceImpl implements BuildInfoService {
 
         List<AppSlb> list = slbClusterRepository.listAppSlbsByApps(appname.toArray(new String[]{}));
 
+
+        if (appname.size()>0)
+        {
+            AssertUtils.isNull(list,"[BuildInfoService getAllNeededSlb]get appslb by appnames failed! Please check the configuration of appnames: "+appname.toString());
+        }
+
         if (list!=null&&list.size()>0)
         {
             for (AppSlb appSlb : list) {
                 buildNames.add(appSlb.getSlbName());
             }
         }
+
 
         return buildNames;
     }

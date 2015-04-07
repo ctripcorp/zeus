@@ -118,7 +118,7 @@ public class ActivateResource {
             return Response.ok().status(200).build();
         }else
         {
-            return Response.status(500).type(hh.getMediaType()).entity("No slb need activate! Please check your configuration!").build();
+            return Response.status(500).type(hh.getMediaType()).entity("No slb need activate! Please check the configuration!").build();
         }
 
 

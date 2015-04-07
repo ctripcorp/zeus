@@ -175,6 +175,11 @@ public class NginxConfServiceImpl implements NginxConfService {
 
         List<AppSlb> appSlbList = slbClusterRepository.listAppSlbsBySlb(slbName);
 
+        if (appSlbList==null)
+        {
+            appSlbList = new ArrayList<>();
+        }
+
         for (AppSlb appslb : appSlbList)
         {
             VirtualServer vs = appslb.getVirtualServer();
@@ -209,7 +214,7 @@ public class NginxConfServiceImpl implements NginxConfService {
         }
 
         String slbContent =activeConfService.getConfSlbActiveContentBySlbNames(slbName);
-        AssertUtils.isNull(slbContent,"Slb: ["+slbName+"] never be activated!");
+        AssertUtils.isNull(slbContent,"Slb: ["+slbName+"] has not submit or submit failed!");
 
         Slb slb = DefaultSaxParser.parseEntity(Slb.class, slbContent);
 

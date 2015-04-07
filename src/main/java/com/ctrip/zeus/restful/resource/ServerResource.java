@@ -10,6 +10,7 @@ import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.AppStatusService;
 import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 
@@ -64,6 +65,8 @@ public class ServerResource {
 
         //get slb by serverip
         List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(serverip,null);
+        AssertUtils.isNull(slblist,"[UpServer] Can not find slb by server ip :["+serverip+"],Please check the configuration and server ip!");
+
         for (Slb slb : slblist)
         {
             String slbname = slb.getName();
@@ -75,9 +78,14 @@ public class ServerResource {
         }
 
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
-        for (String name : appRepository.listAppsByAppServer(serverip))
+        List<String> applist = appRepository.listAppsByAppServer(serverip);
+
+        if (applist!=null)
         {
-            ss.addAppName(name);
+            for (String name : applist)
+            {
+                ss.addAppName(name);
+            }
         }
 
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {

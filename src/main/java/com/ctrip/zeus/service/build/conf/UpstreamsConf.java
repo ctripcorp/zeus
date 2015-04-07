@@ -4,8 +4,10 @@ import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.StringFormat;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +16,7 @@ import java.util.Set;
  * @date: 3/10/2015.
  */
 public class UpstreamsConf {
-    public static String generate(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers) {
+    public static String generate(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers)throws Exception {
         StringBuilder b = new StringBuilder(10240);
 
         //add upstreams
@@ -25,11 +27,13 @@ public class UpstreamsConf {
         return b.toString();
     }
 
-    public static String buildUpstreamName(Slb slb, VirtualServer vs, App app) {
+    public static String buildUpstreamName(Slb slb, VirtualServer vs, App app) throws Exception{
+        AssertUtils.isNull(vs.getName(),"virtual server name is null!");
+        AssertUtils.isNull(app.getName(),"app name is null!");
         return "backend_" + vs.getName() + "_" + app.getName();
     }
 
-    public static String buildUpstreamConf(Slb slb, VirtualServer vs, App app, String upstreamName, Set<String> allDownServers, Set<String> allDownAppServers) {
+    public static String buildUpstreamConf(Slb slb, VirtualServer vs, App app, String upstreamName, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("upstream ").append(upstreamName).append(" {").append("\n");
@@ -40,12 +44,25 @@ public class UpstreamsConf {
         //ToDo:
         //b.append("    ").append("zone " + upstreamName + " 64K").append(";\n");
 
-        for (AppServer as : app.getAppServers()) {
+        List<AppServer> appServers = app.getAppServers();
+
+        if (appServers==null)
+        {
+            appServers = new ArrayList<>();
+        }
+
+        for (AppServer as : appServers) {
             String ip = as.getIp();
             boolean isDown = allDownServers.contains(ip);
             if (!isDown) {
                 isDown = allDownAppServers.contains(slb.getName() + "_" + vs.getName() + "_" + app.getName() + "_" + ip);
             }
+
+            AssertUtils.isNull(as.getPort(),"AppServer Port config is null! virtual server "+vs.getName());
+            AssertUtils.isNull(as.getWeight(),"AppServer Weight config is null! virtual server "+vs.getName());
+            AssertUtils.isNull(as.getMaxFails(),"AppServer MaxFails config is null! virtual server "+vs.getName());
+            AssertUtils.isNull(as.getFailTimeout(),"AppServer FailTimeout config is null! virtual server "+vs.getName());
+
             b.append("server ").append(ip + ":" + as.getPort())
                     .append(" weight=").append(as.getWeight())
                     .append(" max_fails=").append(as.getMaxFails())

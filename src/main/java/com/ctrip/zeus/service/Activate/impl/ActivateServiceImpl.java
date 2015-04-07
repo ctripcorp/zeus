@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.service.Activate.ActivateService;
 import com.ctrip.zeus.service.model.ArchiveService;
+import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,7 @@ public class ActivateServiceImpl implements ActivateService {
         if (archive==null)
         {
             logger.info("getLatestSlbArchive return Null! SlbName: "+name);
+            AssertUtils.isNull(archive,"[Activate]getLatestSlbArchive return Null! SlbName: "+name);
             return;
         }
 
@@ -52,6 +54,7 @@ public class ActivateServiceImpl implements ActivateService {
         if (archive==null)
         {
             logger.info("getLatestAppArchive return Null! AppName: "+name);
+            AssertUtils.isNull(archive,"[Activate]getLatestAppArchive return Null! SlbName: "+name);
             return;
         }
 

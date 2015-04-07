@@ -41,6 +41,6 @@ public interface NginxConfBuilder extends Repository {
      * @return nginx upstream config data
      * @throws Exception
      */
-    String generateUpstreamsConf(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers);
+    String generateUpstreamsConf(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers)throws Exception;
 
 }

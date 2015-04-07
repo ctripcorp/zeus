@@ -5,15 +5,19 @@ import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.LoadBalancingMethod;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.util.AssertUtils;
 
 /**
  * @author:xingchaowang
  * @date: 3/8/2015.
  */
 public class LBConf {
-    public static String generate(Slb slb, VirtualServer vs, App app) {
+    public static String generate(Slb slb, VirtualServer vs, App app) throws Exception {
         LoadBalancingMethod lb = app.getLoadBalancingMethod();
+        AssertUtils.isNull(lb,"LoadBalancingMethod is null! AppName: "+app.getName());
+
         String type = lb.getType();
+
         if (LBMethod.LESS_CONN.toString().equalsIgnoreCase(type)) {
             return "less_conn;\n";
         }
