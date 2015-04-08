@@ -8,6 +8,7 @@ import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.AppRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -34,6 +35,7 @@ public class AppResource {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @PreAuthorize("hasRole('ROLE_DUMMY')")
     public Response list(@Context HttpHeaders hh,
                          @QueryParam("from") long fromId,
                          @QueryParam("maxCount") int maxCount) throws Exception {

@@ -65,7 +65,6 @@ public class StatusResource {
     @Path("/app/{appName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response appStatus(@Context HttpHeaders hh, @PathParam("appName") String appName) throws Exception {
-
         List<AppStatus> statusList = appStatusService.getAppStatus(appName);
         AppStatusList result = new AppStatusList();
         for (AppStatus appStatus : statusList) {
@@ -83,7 +82,6 @@ public class StatusResource {
     @Path("/app/{appName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response appSlbStatus(@Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName) throws Exception {
-
         AppStatus appStatus = appStatusService.getAppStatus(appName, slbName);
 
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {

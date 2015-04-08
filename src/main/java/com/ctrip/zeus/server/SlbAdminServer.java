@@ -8,6 +8,7 @@ import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.GzipFilter;
@@ -16,6 +17,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.filter.DelegatingFilterProxy;
 
 import javax.servlet.DispatcherType;
 import java.io.File;
@@ -62,7 +64,7 @@ public class SlbAdminServer extends AbstractServer {
         supportJsp(handler);
 
         //Support Spring
-        handler.setInitParameter("contextConfigLocation", "classpath*:" + springContextFile.get());
+        handler.setInitParameter("contextConfigLocation", "classpath*:" + springContextFile.get() + ",classpath*:spring-context-security.xml");
         ContextLoaderListener sprintContextListener = new ContextLoaderListener();
         handler.addEventListener(sprintContextListener);
 
@@ -73,6 +75,8 @@ public class SlbAdminServer extends AbstractServer {
         //Support GZip
         handler.addFilter(GzipFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST))
                 .setInitParameter("mimeTypes", "application/json, application/xml,text/xml, text/html");
+
+        handler.addFilter(new FilterHolder(new DelegatingFilterProxy("springSecurityFilterChain")), "/*", EnumSet.of(DispatcherType.REQUEST));
 
         //Config Servlet
         handler.addServlet(jerseyServletHolder, "/api/*");

@@ -33,6 +33,11 @@
          <table name="nginx_server"/>
          <table name="conf_app_slb_active"/>
          <table name="dist_lock"/>
+         <table name="auth_resource"/>
+         <table name="auth_role_group"/>
+         <table name="auth_role"/>
+         <table name="auth_role_resource"/>
+         <table name="auth_user_role"/>
       </group>
    </jdbc>
 </wizard>

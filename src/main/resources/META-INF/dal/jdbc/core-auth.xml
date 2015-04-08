@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="auth-user-role" table="auth-user-role" alias="aur" do-class="AuthUserRoleDo">
+        <query-defs>
+            <query name="update-by-name" type="UPDATE">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='app-id'/> = ${app-id},
+                        version = version + 1,
+                        <FIELD name='last-modified'/> = NOW()
+                    WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-name" type="DELETE">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-limit" type="SELECT" multiple="true">
+                <param name="id"/>
+                <param name="max-count"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='id'/> > ${id}
+                        LIMIT ${max-count}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-user-name" type="SELECT" multiple="true">
+                <param name="user-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='user-name'/> = ${user-name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+
+</entities>
+

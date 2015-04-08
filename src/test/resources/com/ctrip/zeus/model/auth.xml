@@ -1,0 +1,36 @@
+<auth>
+    <user-roles>
+        <user-name>user1</user-name>
+        <role-groups>
+            <role-group>
+                <role-name>SlbAdmin</role-name>
+                <group-name>slb1</group-name>
+                <description>slb admin</description>
+            </role-group>
+            <role-group>
+                <role-name>AppAdmin</role-name>
+                <group-name>app1</group-name>
+                <description>app admin</description>
+            </role-group>
+            <role-group>
+                <role-name>SuperAdmin</role-name>
+                <group-name>none</group-name>
+                <description>super admin</description>
+            </role-group>
+        </role-groups>
+    </user-roles>
+
+    <resource>
+        <resource-name>createSLB</resource-name>
+        <resource-type>action</resource-type>
+        <description>create slb cluster</description>
+    </resource>
+
+    <resource-roles>
+        <resource/>
+        <roles>
+            <role-name>role1</role-name>
+            <role-name>role1</role-name>
+        </roles>
+    </resource-roles>
+</auth>
