@@ -47,6 +47,8 @@ public class NginxConfServiceImpl implements NginxConfService {
     private BuildInfoService buildInfoService;
     @Resource
     private ActiveConfService activeConfService;
+    @Resource
+    ConfAppSlbActiveDao confAppSlbActiveDao;
 
 
     private Logger logger = LoggerFactory.getLogger(NginxConfServiceImpl.class);
@@ -173,27 +175,46 @@ public class NginxConfServiceImpl implements NginxConfService {
 
         Map<String, Set<String>> appNamesMap = new HashMap<>();
 
-        List<AppSlb> appSlbList = slbClusterRepository.listAppSlbsBySlb(slbName);
 
-        if (appSlbList==null)
-        {
-            appSlbList = new ArrayList<>();
+        List<ConfAppSlbActiveDo> appSlbActiveList = confAppSlbActiveDao.findBySlbName(slbName,ConfAppSlbActiveEntity.READSET_FULL);
+        if (appSlbActiveList==null){
+            appSlbActiveList=new ArrayList<>();
         }
 
-        for (AppSlb appslb : appSlbList)
+        for (ConfAppSlbActiveDo appSlb : appSlbActiveList)
         {
-            VirtualServer vs = appslb.getVirtualServer();
-            String vsstr = vs.getName();
-
-            Set<String> apps = appNamesMap.get(vsstr);
+            String vs = appSlb.getSlbVirtualServerName();
+            Set<String> apps = appNamesMap.get(vs);
             if (apps==null)
             {
                 apps = new HashSet<>();
-                appNamesMap.put(vsstr,apps);
+                appNamesMap.put(vs,apps);
             }
 
-            apps.add(appslb.getAppName());
+            apps.add(appSlb.getAppName());
         }
+
+//        List<AppSlb> appSlbList = slbClusterRepository.listAppSlbsBySlb(slbName);
+//
+//        if (appSlbList==null)
+//        {
+//            appSlbList = new ArrayList<>();
+//        }
+//
+//        for (AppSlb appslb : appSlbList)
+//        {
+//            VirtualServer vs = appslb.getVirtualServer();
+//            String vsstr = vs.getName();
+//
+//            Set<String> apps = appNamesMap.get(vsstr);
+//            if (apps==null)
+//            {
+//                apps = new HashSet<>();
+//                appNamesMap.put(vsstr,apps);
+//            }
+//
+//            apps.add(appslb.getAppName());
+//        }
 
 
         Map<String, List<App>> appsMap = new HashMap<>();

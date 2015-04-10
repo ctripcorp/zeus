@@ -100,6 +100,16 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>conf-app-slb-active</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<logical-table-name>conf-app-slb-active</logical-table-name>
+				<physical-table-name>conf_app_slb_active</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>conf-slb-active</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -303,6 +313,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.ConfAppActiveDao</role>
 			<implementation>com.ctrip.zeus.dal.core.ConfAppActiveDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.ConfAppSlbActiveDao</role>
+			<implementation>com.ctrip.zeus.dal.core.ConfAppSlbActiveDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

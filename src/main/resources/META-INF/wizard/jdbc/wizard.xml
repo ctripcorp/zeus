@@ -31,6 +31,7 @@
          <table name="nginx_conf_server"/>
          <table name="nginx_conf_upstream"/>
          <table name="nginx_server"/>
+         <table name="conf_app_slb_active"/>
       </group>
    </jdbc>
 </wizard>

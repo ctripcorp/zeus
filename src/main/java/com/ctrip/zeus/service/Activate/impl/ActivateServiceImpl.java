@@ -1,15 +1,20 @@
 package com.ctrip.zeus.service.Activate.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.model.entity.Archive;
+import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.Activate.ActivateService;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -26,6 +31,8 @@ public class ActivateServiceImpl implements ActivateService {
     private ConfSlbActiveDao confSlbActiveDao;
     @Resource
     private ArchiveService archiveService;
+    @Resource
+    ConfAppSlbActiveDao confAppSlbActiveDao;
 
     private Logger logger = LoggerFactory.getLogger(ActivateServiceImpl.class);
 
@@ -54,7 +61,7 @@ public class ActivateServiceImpl implements ActivateService {
         if (archive==null)
         {
             logger.info("getLatestAppArchive return Null! AppName: "+name);
-            AssertUtils.isNull(archive,"[Activate]getLatestAppArchive return Null! SlbName: "+name);
+            AssertUtils.isNull(archive,"[Activate]getLatestAppArchive return Null! AppName: "+name);
             return;
         }
 
@@ -63,6 +70,20 @@ public class ActivateServiceImpl implements ActivateService {
         confAppActiveDao.insert(c);
 
         logger.debug("Conf App Active Inserted: [name: "+c.getName()+",Content: "+c.getContent()+",Version: "+c.getVersion()+"]");
+
+
+        App app =  DefaultSaxParser.parseEntity(App.class, c.getContent());
+
+        AssertUtils.isNull(app,"App_ctive.content XML is illegal!");
+
+        confAppSlbActiveDao.deleteByAppName(new ConfAppSlbActiveDo().setAppName(name));
+
+        for (AppSlb appSlb:app.getAppSlbs())
+        {
+            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setAppName(appSlb.getAppName())
+                                            .setSlbVirtualServerName(appSlb.getVirtualServer().getName())
+                                            .setSlbName(appSlb.getSlbName()));
+        }
 
     }
 

@@ -64,5 +64,42 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="conf-app-slb-active" table="conf_app_slb_active" alias="casa">
+        <var name="names" value-type="String[]"/>
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        app_name = values(app_name),
+                        slb_name = values(slb_name),
+                        slb_virtual_server_name = values(slb_virtual_server_name),
+                        <FIELD name="last-modified"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-name" type="SELECT" multiple="true">
+                <param name="slb-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-app-name" type="DELETE">
+                <param name="app-name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='app-name'/> = ${app-name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
 </entities>
 
