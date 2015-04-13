@@ -421,7 +421,7 @@ public class IntegrationTest {
             {
                 if (ass.getIp().equals(slb1_server_0)||ass.getIp().equals(slb1_server_1))
                 {
-                    Assert.assertEquals(false,ass.getServer());
+                    Assert.assertEquals(true,ass.getServer());
                 }
             }
         }
