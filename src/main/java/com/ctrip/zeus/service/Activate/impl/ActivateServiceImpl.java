@@ -82,7 +82,7 @@ public class ActivateServiceImpl implements ActivateService {
         {
             confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setAppName(name)
                                             .setSlbVirtualServerName(appSlb.getVirtualServer().getName())
-                                            .setSlbName(appSlb.getSlbName()));
+                                            .setSlbName(appSlb.getSlbName()).setLastModified(new Date()));
         }
 
     }
