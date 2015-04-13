@@ -80,7 +80,7 @@ public class ActivateServiceImpl implements ActivateService {
 
         for (AppSlb appSlb:app.getAppSlbs())
         {
-            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setAppName(appSlb.getAppName())
+            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setAppName(name)
                                             .setSlbVirtualServerName(appSlb.getVirtualServer().getName())
                                             .setSlbName(appSlb.getSlbName()));
         }
