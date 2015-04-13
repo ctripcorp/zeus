@@ -274,7 +274,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         ContainerLoader.getDefaultContainer().release(ts);
     }
 
-    private static void assertAppEquals(App origin, App another) {
+    public static void assertAppEquals(App origin, App another) {
         Assert.assertNotNull(another);
         Assert.assertEquals(origin.getName(), another.getName());
         Assert.assertEquals(origin.getAppServers().size(), another.getAppServers().size());
@@ -283,7 +283,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         Assert.assertEquals(origin.getLoadBalancingMethod().getType(), another.getLoadBalancingMethod().getType());
     }
 
-    private static void assertSlbEquals(Slb origin, Slb another) {
+    public static void assertSlbEquals(Slb origin, Slb another) {
         Assert.assertNotNull(another);
         Assert.assertEquals(origin.getName(), another.getName());
         Assert.assertEquals(origin.getNginxBin(), another.getNginxBin());

@@ -61,7 +61,7 @@ public class AppResource {
     @GET
     @Path("/get")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response get(@Context HttpHeaders hh, @PathParam("appId") String appId) throws Exception {
+    public Response get(@Context HttpHeaders hh, @QueryParam("appId") String appId) throws Exception {
         if (appId == null || appId.isEmpty()) {
             throw new Exception("Missing parameter or value.");
         }
@@ -104,7 +104,9 @@ public class AppResource {
     @GET
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response delete(@Context HttpHeaders hh, @PathParam("appName") String appName) throws Exception {
+    public Response delete(@Context HttpHeaders hh, @QueryParam("appName") String appName) throws Exception {
+        if (appName == null || appName.isEmpty())
+            throw new Exception("Missing parameter or value.");
         appRepository.delete(appName);
         return Response.ok().build();
     }

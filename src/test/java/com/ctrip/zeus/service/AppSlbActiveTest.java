@@ -24,7 +24,7 @@ public class AppSlbActiveTest extends AbstractAPITest {
         try{
             confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb").setAppName("app1").setSlbVirtualServerName("vs1"));
             confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb").setAppName("app2").setSlbVirtualServerName("vs2"));
-            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb").setAppName("app3").setSlbVirtualServerName("vs3"));
+            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb").setAppName("app1").setSlbVirtualServerName("vs1"));
             confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb2").setAppName("app2").setSlbVirtualServerName("vs1"));
             confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb2").setAppName("app4").setSlbVirtualServerName("vs3"));
 

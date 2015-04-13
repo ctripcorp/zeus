@@ -171,13 +171,13 @@ public class StatusTest extends AbstractAPITest {
                 "   ]\n" +
                 "}\n");
 
-        String responseup = new ReqClient("http://127.0.0.1:8099/api/op/upServer?ip=101.2.6.201").request();
-        String responsedown = new ReqClient("http://127.0.0.1:8099/api/op/downServer?ip=101.2.6.201").request();
+        String responseup = new ReqClient("http://127.0.0.1:8099/api/op/upServer?ip=101.2.6.201").getstr();
+        String responsedown = new ReqClient("http://127.0.0.1:8099/api/op/downServer?ip=101.2.6.201").getstr();
         System.out.println(responseup);
         System.out.println(responsedown);
 
-        String responseupM = new ReqClient("http://127.0.0.1:8099/api/op/upMember?appName=Test&ip=101.2.6.201").request();
-        String responsedownM = new ReqClient("http://127.0.0.1:8099/api/op/downMember?appName=Test&ip=101.2.6.201").request();
+        String responseupM = new ReqClient("http://127.0.0.1:8099/api/op/upMember?appName=Test&ip=101.2.6.201").getstr();
+        String responsedownM = new ReqClient("http://127.0.0.1:8099/api/op/downMember?appName=Test&ip=101.2.6.201").getstr();
 
         System.out.println(responseupM);
         System.out.println(responsedownM);

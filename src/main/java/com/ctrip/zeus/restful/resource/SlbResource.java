@@ -1,5 +1,6 @@
 package com.ctrip.zeus.restful.resource;
 
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
@@ -85,7 +86,10 @@ public class SlbResource {
     @GET
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response delete(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
+    public Response delete(@Context HttpHeaders hh, @QueryParam("slbName") String slbName) throws Exception {
+        if (slbName == null || slbName.isEmpty()) {
+            throw new Exception("Missing parameter or value.");
+        }
         slbRepository.delete(slbName);
         return Response.ok().build();
     }
