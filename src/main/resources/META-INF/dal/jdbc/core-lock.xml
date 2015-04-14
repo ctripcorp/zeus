@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="dist-lock" table="dist_lock" alias="l" do-class="DistLockDo">
+        <query-defs>
+            <query name="get-by-key" type="SELECT">
+                <param name="lock-key"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='lock-key'/> = ${lock-key}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-key" type="UPDATE">
+                <param name="lock-key"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='created-time'/> = ${created-time},
+                        <FIELD name='timeout'/> = ${timeout}
+                    WHERE <FIELD name='lock-key'/> = ${lock-key}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-key" type="DELETE">
+                <param name="lock-key"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='lock-key'/> = ${lock-key}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>
+

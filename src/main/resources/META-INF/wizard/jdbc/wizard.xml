@@ -32,6 +32,7 @@
          <table name="nginx_conf_upstream"/>
          <table name="nginx_server"/>
          <table name="conf_app_slb_active"/>
+         <table name="dist_lock"/>
       </group>
    </jdbc>
 </wizard>
