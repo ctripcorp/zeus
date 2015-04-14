@@ -137,7 +137,7 @@ public class IntegrationTest {
         App app1 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v1))
                 .addAppServer(appServer1)
                 .addAppServer(appServer2);
@@ -153,7 +153,7 @@ public class IntegrationTest {
         App app2 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v2))
                 .addAppServer(appServer1);
 
@@ -168,7 +168,7 @@ public class IntegrationTest {
         App app3 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v3))
                 .addAppServer(appServer3);
 
@@ -183,7 +183,7 @@ public class IntegrationTest {
         App app4 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v4))
                 .addAppServer(appServer2);
 
@@ -198,7 +198,7 @@ public class IntegrationTest {
         App app5 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v5))
                 .addAppServer(appServer1);
 
@@ -213,7 +213,7 @@ public class IntegrationTest {
         App app6 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v3))
                 .addAppServer(appServer2);
 
@@ -227,7 +227,7 @@ public class IntegrationTest {
         App app7 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v2))
                 .addAppServer(appServer1);
 
@@ -243,9 +243,9 @@ public class IntegrationTest {
         App app8 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v2))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname1).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname1).setPath(appslbpath)
                         .setVirtualServer(v5))
                 .addAppServer(appServer3);
 
@@ -261,9 +261,9 @@ public class IntegrationTest {
         App app9 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v1))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname1).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname1).setPath(appslbpath)
                         .setVirtualServer(v3))
                 .addAppServer(appServer1)
                 .addAppServer(appServer2);
@@ -279,9 +279,9 @@ public class IntegrationTest {
         App app10 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v2))
-                .addAppSlb(new AppSlb().setAppName(appname).setSlbName(slbname1).setPath(appslbpath)
+                .addAppSlb(new AppSlb().setSlbName(slbname1).setPath(appslbpath)
                         .setVirtualServer(v5))
                 .addAppServer(appServer3);
 
