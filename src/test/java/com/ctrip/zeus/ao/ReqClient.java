@@ -16,7 +16,7 @@ public class ReqClient extends AbstractRestClient {
         super(url);
     }
 
-    public Response request(String path , String data){
+    public Response request(String path, String data) {
         Response res = getTarget().path(path).request()
                 .post(Entity.entity(data,
                         MediaType.APPLICATION_JSON
@@ -24,25 +24,26 @@ public class ReqClient extends AbstractRestClient {
 
         return res;
     }
-    public Response request(){
+
+    public Response request() {
         Response res = getTarget().request()
                 .get();
 
         return res;
     }
 
-    public Response get(){
-       return request();
+    public Response get() {
+        return request();
     }
 
-    public String getstr(){
+    public String getstr() {
         String res = getTarget().request()
                 .get(String.class);
 
         return res;
     }
 
-    public Response post(String path , String data){
-        return request(path,data);
+    public Response post(String path, String data) {
+        return request(path, data);
     }
 }
