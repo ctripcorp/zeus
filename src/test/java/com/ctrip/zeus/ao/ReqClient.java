@@ -3,6 +3,7 @@ package com.ctrip.zeus.ao;
 import com.ctrip.zeus.client.AbstractRestClient;
 import test.StringDemo;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -16,24 +17,24 @@ public class ReqClient extends AbstractRestClient {
         super(url);
     }
 
-    public Response request(String path, String data) {
+    public Response post(String path, String data) {
         Response res = getTarget().path(path).request()
                 .post(Entity.entity(data,
                         MediaType.APPLICATION_JSON
                 ));
-
         return res;
     }
 
-    public Response request() {
+    public Response get() {
         Response res = getTarget().request()
                 .get();
 
         return res;
     }
-
-    public Response get() {
-        return request();
+    public Response get(String path )
+    {
+        return getTarget().path(path).request()
+                .get();
     }
 
     public String getstr() {
@@ -45,10 +46,8 @@ public class ReqClient extends AbstractRestClient {
 
     public String getstr(String path) {
         return getTarget().path(path).request()
-                .get(String.class);
+                    .get(String.class);
+
     }
 
-    public Response post(String path, String data) {
-        return request(path, data);
-    }
 }

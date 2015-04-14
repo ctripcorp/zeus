@@ -22,7 +22,7 @@ public class StatusTest extends AbstractAPITest {
 
     @Before
     public void before() throws Exception {
-        new ReqClient("http://127.0.0.1:8099").request("/api/slb/add","{\n" +
+        new ReqClient("http://127.0.0.1:8099").post("/api/slb/add","{\n" +
                 "    \"name\": \"default\",\n" +
                 "    \"version\": 7,\n" +
                 "    \"nginx-bin\": \"/opt/app/nginx/sbin\",\n" +
@@ -78,7 +78,7 @@ public class StatusTest extends AbstractAPITest {
                 "    ]\n" +
                 "}");
 
-        new ReqClient("http://127.0.0.1:8099").request("/api/app/add","{\n" +
+        new ReqClient("http://127.0.0.1:8099").post("/api/app/add","{\n" +
                 "    \"name\": \"Test\",\n" +
                 "    \"app-id\": \"921812\",\n" +
                 "    \"version\": 1,\n" +
@@ -158,7 +158,7 @@ public class StatusTest extends AbstractAPITest {
             }
         });
 
-        new ReqClient("http://127.0.0.1:8099").request("/api/conf/activate","{\n" +
+        new ReqClient("http://127.0.0.1:8099").post("/api/conf/activate","{\n" +
                 "   \"conf-slb-names\": [\n" +
                 "      {\n" +
                 "         \"slbname\": \"default\"\n" +
