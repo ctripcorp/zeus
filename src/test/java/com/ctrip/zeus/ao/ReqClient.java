@@ -43,6 +43,11 @@ public class ReqClient extends AbstractRestClient {
         return res;
     }
 
+    public String getstr(String path) {
+        return getTarget().path(path).request()
+                .get(String.class);
+    }
+
     public Response post(String path, String data) {
         return request(path, data);
     }

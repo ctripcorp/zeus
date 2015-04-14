@@ -4,12 +4,15 @@ import com.ctrip.zeus.ao.ReqClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.ModelServiceTest;
+import com.ctrip.zeus.support.GenericSerializer;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by fanqq on 2015/4/10.
@@ -25,7 +28,7 @@ public class IntegrationTest {
     private static final String slb1_server_2 = "10.2.25.96";
     private static final String slb1_name = "__Test_slb1";
     private static final String slb2_name = "__Test_slb2";
-
+    private static final int STATUS_OK = 200;
 
     @Before
     public void before() {
@@ -315,6 +318,7 @@ public class IntegrationTest {
         appres = DefaultJsonParser.parse(App.class, appstr);
         ModelServiceTest.assertAppEquals(app10, appres);
 
+        integrationTest_update();
 
         new ReqClient(host + "/api/conf/activate?appName=__Test_app1").get();
         new ReqClient(host + "/api/conf/activate?appName=__Test_app2").get();
@@ -432,4 +436,35 @@ public class IntegrationTest {
         }
     }
 
+    private void integrationTest_update() throws IOException {
+        final String app1_name = "__Test_app1";
+        final ReqClient c = new ReqClient(host);
+        String orig, upd;
+        Response res;
+
+        // test update slb1(__Test_slb1)
+        orig = c.getstr("/api/slb/get/" + slb1_name);
+        Slb origSlb = DefaultJsonParser.parse(Slb.class, orig);
+        origSlb.setNginxWorkerProcesses(origSlb.getNginxWorkerProcesses() + 127);
+        res = c.post("/api/slb/update", GenericSerializer.writeJson(origSlb));
+        Assert.assertEquals(STATUS_OK, res.getStatus());
+        upd = c.getstr("/api/slb/get/" + slb1_name);
+        Slb updSlb = DefaultJsonParser.parse(Slb.class, upd);
+        ModelServiceTest.assertSlbEquals(origSlb, updSlb);
+
+        // test update app1(__Test_app1)
+        orig = c.getstr("/api/app/get/" + app1_name);
+        App origApp = DefaultJsonParser.parse(App.class, orig);
+        App changedApp = new App().setName(origApp.getName()).setAppId(origApp.getAppId())
+                .setHealthCheck(origApp.getHealthCheck())
+                .setLoadBalancingMethod(origApp.getLoadBalancingMethod())
+                .setVersion(origApp.getVersion())
+                .addAppServer(origApp.getAppServers().get(0))
+                .addAppSlb(origApp.getAppSlbs().get(0));
+        res = c.post("/api/app/update", GenericSerializer.writeJson(changedApp));
+        Assert.assertEquals(STATUS_OK, res.getStatus());
+        upd = c.getstr("/api/app/get/" + app1_name);
+        App updApp = DefaultJsonParser.parse(App.class, upd);
+        ModelServiceTest.assertAppEquals(changedApp, updApp);
+    }
 }
