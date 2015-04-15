@@ -12,7 +12,6 @@ import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Created by fanqq on 2015/4/10.
@@ -34,13 +33,13 @@ public class IntegrationTest {
 
     @Before
     public void before() {
+
         for (int i = 1; i < 11; i++) {
             reqClient.getstr("/api/app/delete?appName=__Test_app" + i);
         }
 
         reqClient.getstr("/api/slb/delete?slbName=" + slb1_name);
         reqClient.getstr("/api/slb/delete?slbName=" + slb2_name);
-
     }
 
     @After
@@ -52,6 +51,18 @@ public class IntegrationTest {
 
         reqClient.getstr("/api/slb/delete?slbName=" + slb1_name);
         reqClient.getstr("/api/slb/delete?slbName=" + slb2_name);
+
+
+        String res = reqClient.getstr("/api/app/get/__Test_app2");
+        Assert.assertEquals(true,res.isEmpty());
+        reqClient.markPass("/api/app/delete");
+
+        res = reqClient.getstr("/api/slb/get/" + slb2_name);
+        Assert.assertEquals(true,res.isEmpty());
+        reqClient.markPass("/api/slb/delete");
+
+        ReqClient.buildReport();
+
     }
 
     @Test
@@ -108,6 +119,9 @@ public class IntegrationTest {
 
         Assert.assertEquals(true, suc1 && suc2);
 
+        reqClient.markPass("/api/slb/add");
+        reqClient.markPass("/api/slb");
+
 
         String slb1_res = reqClient.getstr("/api/slb/get/" + slb1_name);
         Slb slb1_res_obj = DefaultJsonParser.parse(Slb.class, slb1_res);
@@ -119,10 +133,12 @@ public class IntegrationTest {
 
         ModelServiceTest.assertSlbEquals(slb2, slb2_res_obj);
 
+        reqClient.markPass("/api/slb/get/"+ slb1_name);
+        reqClient.markPass("/api/slb/get/"+ slb2_name);
+
 
         //activate test slbs
         reqClient.getstr("/api/conf/activate?slbName=__Test_slb1&slbName=__Test_slb2");
-
 
         //add apps
 
@@ -302,6 +318,11 @@ public class IntegrationTest {
                 && apps.contains("\"__Test_app7\"") && apps.contains("\"__Test_app8\"") && apps.contains("\"__Test_app9\"")
                 && apps.contains("\"__Test_app10\"");
 
+        Assert.assertEquals(true,appsuc);
+        reqClient.markPass("/api/app/add");
+        reqClient.markPass("/api/app");
+
+
         App appres = null;
         String appstr = null;
 
@@ -321,6 +342,12 @@ public class IntegrationTest {
         appres = DefaultJsonParser.parse(App.class, appstr);
         ModelServiceTest.assertAppEquals(app10, appres);
 
+        reqClient.markPass("/api/app/get/__Test_app1");
+        reqClient.markPass("/api/app/get/__Test_app2");
+        reqClient.markPass("/api/app/get/__Test_app9");
+        reqClient.markPass("/api/app/get/__Test_app10");
+
+
         integrationTest_update();
 
         reqClient.getstr("/api/conf/activate?appName=__Test_app1");
@@ -333,6 +360,9 @@ public class IntegrationTest {
         reqClient.getstr("/api/conf/activate?appName=__Test_app8");
         reqClient.getstr("/api/conf/activate?appName=__Test_app9");
         reqClient.getstr("/api/conf/activate?appName=__Test_app10");
+
+
+
 
         for (int i = 1; i < 11; i++) {
             String appstatus = reqClient.getstr("/api/status/app/__Test_app" + i);
@@ -348,8 +378,11 @@ public class IntegrationTest {
                     Assert.assertEquals(true, ass.getMember());
                 }
             }
+
+            reqClient.markPass("/api/status/app/__Test_app"+i);
         }
 
+        reqClient.markPass("/api/conf/activate");
 
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_1);
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_0);
@@ -378,6 +411,9 @@ public class IntegrationTest {
             }
         }
 
+        reqClient.markPass("/api/status/slb/"+slb1_name);
+        reqClient.markPass("/api/status/slb/"+slb2_name);
+        reqClient.markPass("/api/op/downServer");
 
         reqClient.getstr("/api/op/upServer?ip=" + slb1_server_0);
         reqClient.getstr("/api/op/upServer?ip=" + slb1_server_1);
@@ -407,6 +443,8 @@ public class IntegrationTest {
             }
         }
 
+        reqClient.markPass("/api/op/upServer");
+
 
         reqClient.getstr("/api/op/downMember?ip=" + slb1_server_2 + "&appName=__Test_app3");
 
@@ -421,6 +459,9 @@ public class IntegrationTest {
                 }
             }
         }
+
+        reqClient.markPass("/api/op/downMember");
+        reqClient.markPass("/api/status/app/__Test_app3");
 
 
         reqClient.getstr("/api/op/upMember?ip=" + slb1_server_2 + "&appName=__Test_app3");
@@ -437,6 +478,7 @@ public class IntegrationTest {
                 }
             }
         }
+        reqClient.markPass("/api/op/upMember");
     }
 
     private void integrationTest_update() throws IOException {
@@ -455,6 +497,9 @@ public class IntegrationTest {
         Slb updSlb = DefaultJsonParser.parse(Slb.class, upd);
         ModelServiceTest.assertSlbEquals(origSlb, updSlb);
 
+        c.markPass("/api/slb/get/" + slb1_name);
+        c.markPass("/api/slb/update");
+
         // test update app1(__Test_app1)
         orig = c.getstr("/api/app/get/" + app1_name);
         App origApp = DefaultJsonParser.parse(App.class, orig);
@@ -469,5 +514,8 @@ public class IntegrationTest {
         upd = c.getstr("/api/app/get/" + app1_name);
         App updApp = DefaultJsonParser.parse(App.class, upd);
         ModelServiceTest.assertAppEquals(changedApp, updApp);
+
+        c.markPass("/api/app/get/" + app1_name);
+        c.markPass("/api/app/update");
     }
 }
