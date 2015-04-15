@@ -173,7 +173,7 @@ public class ServerResource {
         statusService.downMember(appName, ip);
 
         //get slb by appname and ip
-        List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(appName,ip);
+        List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(ip,appName);
 
         for (Slb slb : slblist) {
             String slbname = slb.getName();

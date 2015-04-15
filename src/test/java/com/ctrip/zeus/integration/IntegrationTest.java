@@ -21,7 +21,7 @@ public class IntegrationTest {
 
     private static final String host = "http://10.2.25.83:8099";
 
-    //    private static final String host = "http://127.0.0.1:8099";
+//    private static final String host = "http://127.0.0.1:8099";
     private static final String hostip = "10.2.25.83";
     private static final String slb1_server_0 = "10.2.25.83";
     private static final String slb1_server_1 = "10.2.27.21";
@@ -29,26 +29,29 @@ public class IntegrationTest {
     private static final String slb1_name = "__Test_slb1";
     private static final String slb2_name = "__Test_slb2";
     private static final int STATUS_OK = 200;
+    private static ReqClient reqClient = new ReqClient(host);
+
 
     @Before
     public void before() {
         for (int i = 1; i < 11; i++) {
-            new ReqClient(host + "/api/app/delete?appName=__Test_app" + i).getstr();
+            reqClient.getstr("/api/app/delete?appName=__Test_app" + i);
         }
 
-        new ReqClient(host + "/api/slb/delete?slbName=" + slb1_name).getstr();
-        new ReqClient(host + "/api/slb/delete?slbName=" + slb2_name).getstr();
+        reqClient.getstr("/api/slb/delete?slbName=" + slb1_name);
+        reqClient.getstr("/api/slb/delete?slbName=" + slb2_name);
+
     }
 
     @After
     public void after() {
 
         for (int i = 1; i < 11; i++) {
-            new ReqClient(host + "/api/app/delete?appName=__Test_app" + i).getstr();
+            reqClient.getstr("/api/app/delete?appName=__Test_app" + i);
         }
 
-        new ReqClient(host + "/api/slb/delete?slbName=" + slb1_name).getstr();
-        new ReqClient(host + "/api/slb/delete?slbName=" + slb2_name).getstr();
+        reqClient.getstr("/api/slb/delete?slbName=" + slb1_name);
+        reqClient.getstr("/api/slb/delete?slbName=" + slb2_name);
     }
 
     @Test
@@ -73,8 +76,8 @@ public class IntegrationTest {
 
 
         //add slb and vs
-        Slb slb1 = new Slb().setName(slb1_name).addVip(new Vip().setIp(slb1_server_0)).setNginxBin("/usr/local/nginx/bin")
-                .setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
+        Slb slb1 = new Slb().setName(slb1_name).addVip(new Vip().setIp(slb1_server_0)).setNginxBin("/opt/app/nginx/sbin")
+                .setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
                 .addSlbServer(new SlbServer().setHostName("slb1_server_0").setIp(slb1_server_0).setEnable(true))
                 .addSlbServer(new SlbServer().setHostName("slb1_server_1").setIp(slb1_server_1).setEnable(true))
                 .addVirtualServer(v1)
@@ -84,8 +87,8 @@ public class IntegrationTest {
                 .addVirtualServer(v5)
                 .setStatus("Test");
 
-        Slb slb2 = new Slb().setName(slb2_name).addVip(new Vip().setIp(slb1_server_2)).setNginxBin("/usr/local/nginx/bin")
-                .setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
+        Slb slb2 = new Slb().setName(slb2_name).addVip(new Vip().setIp(slb1_server_2)).setNginxBin("/opt/app/nginx/sbin")
+                .setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
                 .addSlbServer(new SlbServer().setHostName("slb1_server_2").setIp(slb1_server_2).setEnable(true))
                 .addVirtualServer(v1)
                 .addVirtualServer(v2)
@@ -95,30 +98,30 @@ public class IntegrationTest {
                 .setStatus("Test");
 
 
-        new ReqClient(host).post("/api/slb/add", String.format(Slb.JSON, slb1));
-        new ReqClient(host).post("/api/slb/add", String.format(Slb.JSON, slb2));
+        reqClient.post("/api/slb/add", String.format(Slb.JSON, slb1));
+        reqClient.post("/api/slb/add", String.format(Slb.JSON, slb2));
 
 
         //assert slb1 slb2
-        boolean suc1 = new ReqClient(host + "/api/slb").getstr().contains(slb1_name);
-        boolean suc2 = new ReqClient(host + "/api/slb").getstr().contains(slb2_name);
+        boolean suc1 = reqClient.getstr("/api/slb").contains(slb1_name);
+        boolean suc2 = reqClient.getstr("/api/slb").contains(slb2_name);
 
         Assert.assertEquals(true, suc1 && suc2);
 
 
-        String slb1_res = new ReqClient(host + "/api/slb/get/" + slb1_name).getstr();
+        String slb1_res = reqClient.getstr("/api/slb/get/" + slb1_name);
         Slb slb1_res_obj = DefaultJsonParser.parse(Slb.class, slb1_res);
 
         ModelServiceTest.assertSlbEquals(slb1, slb1_res_obj);
 
-        String slb2_res = new ReqClient(host + "/api/slb/get/" + slb2_name).getstr();
+        String slb2_res = reqClient.getstr("/api/slb/get/" + slb2_name);
         Slb slb2_res_obj = DefaultJsonParser.parse(Slb.class, slb2_res);
 
         ModelServiceTest.assertSlbEquals(slb2, slb2_res_obj);
 
 
         //activate test slbs
-        new ReqClient(host + "/api/conf/activate?slbName=__Test_slb1&slbName=__Test_slb2").get();
+        reqClient.getstr("/api/conf/activate?slbName=__Test_slb1&slbName=__Test_slb2");
 
 
         //add apps
@@ -281,18 +284,18 @@ public class IntegrationTest {
                 .addAppServer(appServer3);
 
 
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app1));
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app2));
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app3));
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app4));
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app5));
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app6));
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app7));
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app8));
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app9));
-        new ReqClient(host).post("/api/app/add", String.format(App.JSON, app10));
+        reqClient.post("/api/app/add", String.format(App.JSON, app1));
+        reqClient.post("/api/app/add", String.format(App.JSON, app2));
+        reqClient.post("/api/app/add", String.format(App.JSON, app3));
+        reqClient.post("/api/app/add", String.format(App.JSON, app4));
+        reqClient.post("/api/app/add", String.format(App.JSON, app5));
+        reqClient.post("/api/app/add", String.format(App.JSON, app6));
+        reqClient.post("/api/app/add", String.format(App.JSON, app7));
+        reqClient.post("/api/app/add", String.format(App.JSON, app8));
+        reqClient.post("/api/app/add", String.format(App.JSON, app9));
+        reqClient.post("/api/app/add", String.format(App.JSON, app10));
 
-        String apps = new ReqClient(host + "/api/app").getstr();
+        String apps = reqClient.getstr("/api/app");
 
         boolean appsuc = apps.contains("\"__Test_app1\"") && apps.contains("\"__Test_app2\"") && apps.contains("\"__Test_app3\"")
                 && apps.contains("\"__Test_app4\"") && apps.contains("\"__Test_app5\"") && apps.contains("\"__Test_app6\"")
@@ -302,37 +305,37 @@ public class IntegrationTest {
         App appres = null;
         String appstr = null;
 
-        appstr = new ReqClient(host + "/api/app/get/__Test_app1").getstr();
+        appstr = reqClient.getstr("/api/app/get/__Test_app1");
         appres = DefaultJsonParser.parse(App.class, appstr);
         ModelServiceTest.assertAppEquals(app1, appres);
 
-        appstr = new ReqClient(host + "/api/app/get/__Test_app2").getstr();
+        appstr = reqClient.getstr("/api/app/get/__Test_app2");
         appres = DefaultJsonParser.parse(App.class, appstr);
         ModelServiceTest.assertAppEquals(app2, appres);
 
-        appstr = new ReqClient(host + "/api/app/get/__Test_app9").getstr();
+        appstr = reqClient.getstr("/api/app/get/__Test_app9");
         appres = DefaultJsonParser.parse(App.class, appstr);
         ModelServiceTest.assertAppEquals(app9, appres);
 
-        appstr = new ReqClient(host + "/api/app/get/__Test_app10").getstr();
+        appstr = reqClient.getstr("/api/app/get/__Test_app10");
         appres = DefaultJsonParser.parse(App.class, appstr);
         ModelServiceTest.assertAppEquals(app10, appres);
 
         integrationTest_update();
 
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app1").get();
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app2").get();
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app3").get();
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app4").get();
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app5").get();
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app6").get();
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app7").get();
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app8").get();
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app9").get();
-        new ReqClient(host + "/api/conf/activate?appName=__Test_app10").get();
+        reqClient.getstr("/api/conf/activate?appName=__Test_app1");
+        reqClient.getstr("/api/conf/activate?appName=__Test_app2");
+        reqClient.getstr("/api/conf/activate?appName=__Test_app3");
+        reqClient.getstr("/api/conf/activate?appName=__Test_app4");
+        reqClient.getstr("/api/conf/activate?appName=__Test_app5");
+        reqClient.getstr("/api/conf/activate?appName=__Test_app6");
+        reqClient.getstr("/api/conf/activate?appName=__Test_app7");
+        reqClient.getstr("/api/conf/activate?appName=__Test_app8");
+        reqClient.getstr("/api/conf/activate?appName=__Test_app9");
+        reqClient.getstr("/api/conf/activate?appName=__Test_app10");
 
         for (int i = 1; i < 11; i++) {
-            String appstatus = new ReqClient(host + "/api/status/app/__Test_app" + i).getstr();
+            String appstatus = reqClient.getstr("/api/status/app/__Test_app" + i);
             AppStatusList appStatusList = DefaultJsonParser.parse(AppStatusList.class, appstatus);
 
             for (AppStatus as : appStatusList.getAppStatuses()) {
@@ -348,10 +351,10 @@ public class IntegrationTest {
         }
 
 
-        new ReqClient(host + "/api/op/downServer?ip=" + slb1_server_1).get();
-        new ReqClient(host + "/api/op/downServer?ip=" + slb1_server_0).get();
+        reqClient.getstr("/api/op/downServer?ip=" + slb1_server_1);
+        reqClient.getstr("/api/op/downServer?ip=" + slb1_server_0);
 
-        String slbstatus = new ReqClient(host + "/api/status/slb/" + slb1_name).getstr();
+        String slbstatus = reqClient.getstr("/api/status/slb/" + slb1_name);
 
         AppStatusList appStatusList = DefaultJsonParser.parse(AppStatusList.class, slbstatus);
 
@@ -363,7 +366,7 @@ public class IntegrationTest {
             }
         }
 
-        slbstatus = new ReqClient(host + "/api/status/slb/" + slb2_name).getstr();
+        slbstatus = reqClient.getstr("/api/status/slb/" + slb2_name);
 
         appStatusList = DefaultJsonParser.parse(AppStatusList.class, slbstatus);
 
@@ -376,23 +379,11 @@ public class IntegrationTest {
         }
 
 
-        new ReqClient(host + "/api/op/upServer?ip=" + slb1_server_0).get();
-        new ReqClient(host + "/api/op/upServer?ip=" + slb1_server_1).get();
+        reqClient.getstr("/api/op/upServer?ip=" + slb1_server_0);
+        reqClient.getstr("/api/op/upServer?ip=" + slb1_server_1);
 
 
-        slbstatus = new ReqClient(host + "/api/status/slb/" + slb2_name).getstr();
-
-        appStatusList = DefaultJsonParser.parse(AppStatusList.class, slbstatus);
-
-        for (AppStatus as : appStatusList.getAppStatuses()) {
-            for (AppServerStatus ass : as.getAppServerStatuses()) {
-                if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
-                    Assert.assertEquals(true, ass.getServer());
-                }
-            }
-        }
-
-        slbstatus = new ReqClient(host + "/api/status/slb/" + slb1_name).getstr();
+        slbstatus = reqClient.getstr("/api/status/slb/" + slb2_name);
 
         appStatusList = DefaultJsonParser.parse(AppStatusList.class, slbstatus);
 
@@ -404,10 +395,22 @@ public class IntegrationTest {
             }
         }
 
+        slbstatus = reqClient.getstr("/api/status/slb/" + slb1_name);
 
-        new ReqClient(host + "/api/op/downMember?ip=" + slb1_server_2 + "&appName=__Test_app3").get();
+        appStatusList = DefaultJsonParser.parse(AppStatusList.class, slbstatus);
 
-        String appstatus = new ReqClient(host + "/api/status/app/__Test_app3").getstr();
+        for (AppStatus as : appStatusList.getAppStatuses()) {
+            for (AppServerStatus ass : as.getAppServerStatuses()) {
+                if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
+                    Assert.assertEquals(true, ass.getServer());
+                }
+            }
+        }
+
+
+        reqClient.getstr("/api/op/downMember?ip=" + slb1_server_2 + "&appName=__Test_app3");
+
+        String appstatus = reqClient.getstr("/api/status/app/__Test_app3");
 
         appStatusList = DefaultJsonParser.parse(AppStatusList.class, appstatus);
 
@@ -420,10 +423,10 @@ public class IntegrationTest {
         }
 
 
-        new ReqClient(host + "/api/op/upMember?ip=" + slb1_server_2 + "&appName=__Test_app3").get();
+        reqClient.getstr("/api/op/upMember?ip=" + slb1_server_2 + "&appName=__Test_app3");
 
 
-        appstatus = new ReqClient(host + "/api/status/app/__Test_app3").getstr();
+        appstatus = reqClient.getstr("/api/status/app/__Test_app3");
 
         appStatusList = DefaultJsonParser.parse(AppStatusList.class, appstatus);
 
