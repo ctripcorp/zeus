@@ -80,7 +80,7 @@ public class StatusResource {
     }
 
     @GET
-    @Path("/app/{appName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}}")
+    @Path("/app/{appName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response appSlbStatus(@Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName) throws Exception {
 
@@ -94,7 +94,7 @@ public class StatusResource {
     }
 
     @GET
-    @Path("/app/{appName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}}/server/{sip:[a-zA-Z0-9_-]+}")
+    @Path("/app/{appName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}/server/{sip:[a-zA-Z0-9._-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response appServerStatus(@Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName,@PathParam("sip") String sip) throws Exception {
             AppServerStatus appServerStatus = appStatusService.getAppServerStatus(appName, slbName, sip);
