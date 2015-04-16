@@ -183,11 +183,12 @@ public class SlbQueryImpl implements SlbQuery {
         List<AppSlb> list = new ArrayList<>();
         for (AppSlbDo asd : appSlbDao.findAllByApps(appNames, AppSlbEntity.READSET_FULL)) {
             AppSlb as = C.toAppSlb(asd);
+            list.add(as);
             SlbDo sd = slbDao.findByName(as.getSlbName(), SlbEntity.READSET_FULL);
             SlbVirtualServerDo svsd = slbVirtualServerDao.findAllBySlbAndName(sd.getId(), asd.getSlbVirtualServerName(), SlbVirtualServerEntity.READSET_FULL);
             if (svsd != null)
                 as.setVirtualServer(C.toVirtualServer(svsd));
-            list.add(as);
+            querySlbVips(sd.getId(), as);
         }
         return list;
     }
@@ -197,11 +198,12 @@ public class SlbQueryImpl implements SlbQuery {
         List<AppSlb> list = new ArrayList<>();
         for (AppSlbDo asd : appSlbDao.findAllBySlb(slbName, AppSlbEntity.READSET_FULL)) {
             AppSlb as = C.toAppSlb(asd);
+            list.add(as);
             SlbDo sd = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
             SlbVirtualServerDo svsd = slbVirtualServerDao.findAllBySlbAndName(sd.getId(), asd.getSlbVirtualServerName(), SlbVirtualServerEntity.READSET_FULL);
             if (svsd != null)
                 as.setVirtualServer(C.toVirtualServer(svsd));
-            list.add(as);
+            querySlbVips(sd.getId(), as);
         }
         return list;
     }
@@ -227,6 +229,14 @@ public class SlbQueryImpl implements SlbQuery {
         for (SlbVipDo d : list) {
             Vip e = C.toVip(d);
             slb.addVip(e);
+        }
+    }
+
+    private void querySlbVips(long slbId, AppSlb appSlb) throws DalException {
+        List<SlbVipDo> list = slbVipDao.findAllBySlb(slbId, SlbVipEntity.READSET_FULL);
+        for (SlbVipDo d : list) {
+            Vip e = C.toVip(d);
+            appSlb.addVip(e);
         }
     }
 

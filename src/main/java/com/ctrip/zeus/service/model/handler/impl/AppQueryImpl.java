@@ -33,6 +33,8 @@ public class AppQueryImpl implements AppQuery {
     private SlbDomainDao slbDomainDao;
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
+    @Resource
+    private SlbVipDao slbVipDao;
 
 
     @Override
@@ -135,7 +137,17 @@ public class AppQueryImpl implements AppQuery {
         for (AppSlbDo d : list) {
             AppSlb e = C.toAppSlb(d);
             app.addAppSlb(e);
+            querySlbVips(d.getSlbName(), e);
             queryVirtualServer(d.getSlbName(), d.getSlbVirtualServerName(), e);
+        }
+    }
+
+    private void querySlbVips(String slbName, AppSlb appSlb) throws DalException {
+        SlbDo sd = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
+        List<SlbVipDo> list = slbVipDao.findAllBySlb(sd.getId(), SlbVipEntity.READSET_FULL);
+        for (SlbVipDo d : list) {
+            Vip e = C.toVip(d);
+            appSlb.addVip(e);
         }
     }
 
