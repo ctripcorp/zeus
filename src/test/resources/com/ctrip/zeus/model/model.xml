@@ -4,8 +4,8 @@
         <nginx-conf>/usr/local/nginx/conf</nginx-conf>
         <nginx-worker-processes>1</nginx-worker-processes>
         <vips>
-            <vip ip="192.168.1.1"/>
-            <vip ip="192.168.1.2"/>
+            <vip/>
+            <vip/>
         </vips>
         <slb-servers>
             <slb-server slb-id="1" ip="192.168.1.1" host-name="slb001" enable="true"/>
@@ -38,17 +38,27 @@
         </slbs>
     </slb-list>
 
+    <vip ip="192.168.1.1"/>
+
     <app name="gateway" app-id="app921822" version="1">
         <app-slbs>
             <app-slb>
                 <app-name>gateway</app-name>
                 <slb-name>default</slb-name>
+                <slb-vips>
+                    <vip/>
+                    <vip/>
+                </slb-vips>
                 <path>/hotel</path>
                 <virtual-server/>
             </app-slb>
             <app-slb>
                 <app-name>gateway</app-name>
                 <slb-name>default</slb-name>
+                <slb-vips>
+                    <vip ip="192.168.1.1"/>
+                    <vip ip="192.168.1.2"/>
+                </slb-vips>
                 <path>/hotel</path>
                 <virtual-server/>
             </app-slb>
