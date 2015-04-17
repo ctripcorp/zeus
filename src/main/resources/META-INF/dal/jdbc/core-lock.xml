@@ -2,6 +2,14 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="dist-lock" table="dist_lock" alias="l" do-class="DistLockDo">
         <query-defs>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
             <query name="get-by-key" type="SELECT">
                 <param name="lock-key"/>
                 <statement>

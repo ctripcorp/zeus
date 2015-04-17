@@ -42,7 +42,7 @@ public class MysqlDistLock implements DistLock {
                     if (tryAddLock(d))
                         return true;
                 } else {
-                    if (existed.getTimeout() > -1 && System.currentTimeMillis() > existed.getCreatedTime() + existed.getTimeout() * 1000) {
+                    if (isExpired(existed)) {
                         if (tryReplaceExpiredLock(d))
                             return true;
                     }
@@ -71,8 +71,7 @@ public class MysqlDistLock implements DistLock {
     private boolean tryReplaceExpiredLock(DistLockDo d) throws DalException {
         dbWriteLock.lock();
         DistLockDo existed = distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL);
-        if (existed.getTimeout() > -1
-                && (System.currentTimeMillis() > existed.getCreatedTime() + existed.getTimeout() * 1000)) {
+        if (isExpired(existed)) {
             distLockDao.updateByKey(d, DistLockEntity.UPDATESET_FULL);
             dbWriteLock.unlock();
             return true;
@@ -100,6 +99,11 @@ public class MysqlDistLock implements DistLock {
         } catch (DalException e) {
             logger.warn("Fail to unlock the lock " + key);
         }
+    }
+
+    public static boolean isExpired(DistLockDo distLock) {
+        return distLock.getTimeout() > -1
+                && (System.currentTimeMillis() > distLock.getCreatedTime() + distLock.getTimeout() * 1000);
     }
 
     private boolean unlock(DistLockDo d) throws DalException {
