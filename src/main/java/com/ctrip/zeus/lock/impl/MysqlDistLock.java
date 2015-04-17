@@ -25,6 +25,11 @@ public class MysqlDistLock implements DistLock {
     private DistLockDao distLockDao;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private final Lock dbWriteLock = new ReentrantLock();
+    private final String ownerId = generateOwnerId(this);
+
+    private static String generateOwnerId(DistLock distLock) {
+        return "" + distLock.hashCode() + (System.currentTimeMillis() & 0x7FFF);
+    }
 
     @Override
     public boolean tryLock(String key) {
@@ -34,6 +39,7 @@ public class MysqlDistLock implements DistLock {
     @Override
     public boolean tryLock(String key, int timeout) {
         DistLockDo d = new DistLockDo().setLockKey(key)
+                .setOwner(ownerId)
                 .setTimeout(timeout).setCreatedTime(System.currentTimeMillis());
         for (int i = 0; i < MAX_RETRIES; i++) {
             try {
@@ -84,7 +90,7 @@ public class MysqlDistLock implements DistLock {
     @Override
     public void unlock(String key) {
         try {
-            DistLockDo d = new DistLockDo().setLockKey(key);
+            DistLockDo d = new DistLockDo().setLockKey(key).setOwner(ownerId);
             if (unlock(d))
                 return;
             for (int i = 1; i < MAX_RETRIES; i++) {
@@ -108,7 +114,7 @@ public class MysqlDistLock implements DistLock {
 
     private boolean unlock(DistLockDo d) throws DalException {
         dbWriteLock.lock();
-        int count = distLockDao.deleteByKey(d);
+        int count = distLockDao.deleteByKeyAndOwner(d);
         dbWriteLock.unlock();
 
         if (count == 1)

@@ -31,6 +31,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-key-and-owner" type="DELETE">
+                <param name="lock-key"/>
+                <param name="owner"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='lock-key'/> = ${lock-key}
+                        AND <FIELD name='owner'/> = ${owner}
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-key" type="DELETE">
                 <param name="lock-key"/>
                 <statement>

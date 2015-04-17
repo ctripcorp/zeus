@@ -35,6 +35,7 @@ public interface DistLock {
      * The number of attempts trying to get the lock is limited,
      * After the max attempt is reach, it will return regardless the result.
      * If the lock does not exist, nothing will happen.
+     * If the lock is not created by this instance, unlock fails.
      *
      * @param key the lock key.
      */

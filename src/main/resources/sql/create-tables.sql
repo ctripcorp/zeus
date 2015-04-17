@@ -202,6 +202,7 @@ CREATE TABLE `dist_lock` (
 	`lock_key` VARCHAR(255) NOT NULL,
 	`timeout` INT(11) NOT NULL,
 	`created_time` BIGINT(20) NOT NULL,
+	`owner` VARCHAR(255) NULL DEFAULT NULL,
 	PRIMARY KEY (`lock_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
