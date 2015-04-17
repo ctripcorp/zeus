@@ -35,7 +35,6 @@ public class AppResource {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @PreAuthorize("hasRole('ROLE_DUMMY')")
     public Response list(@Context HttpHeaders hh,
                          @QueryParam("from") long fromId,
                          @QueryParam("maxCount") int maxCount) throws Exception {

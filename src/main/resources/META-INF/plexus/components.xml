@@ -80,6 +80,56 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>auth-resource</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<logical-table-name>auth-resource</logical-table-name>
+				<physical-table-name>auth-resource</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>auth-resource-role</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<logical-table-name>auth-resource-role</logical-table-name>
+				<physical-table-name>auth-resource-role</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>auth-role</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<logical-table-name>auth-role</logical-table-name>
+				<physical-table-name>auth-role</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>auth-user</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<logical-table-name>auth-user</logical-table-name>
+				<physical-table-name>auth-user</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>auth-user-role</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<logical-table-name>auth-user-role</logical-table-name>
+				<physical-table-name>auth-user-role</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>build-info</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -305,6 +355,51 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.ArchiveSlbDao</role>
 			<implementation>com.ctrip.zeus.dal.core.ArchiveSlbDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.AuthResourceDao</role>
+			<implementation>com.ctrip.zeus.dal.core.AuthResourceDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.AuthResourceRoleDao</role>
+			<implementation>com.ctrip.zeus.dal.core.AuthResourceRoleDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.AuthRoleDao</role>
+			<implementation>com.ctrip.zeus.dal.core.AuthRoleDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.AuthUserDao</role>
+			<implementation>com.ctrip.zeus.dal.core.AuthUserDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.AuthUserRoleDao</role>
+			<implementation>com.ctrip.zeus.dal.core.AuthUserRoleDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

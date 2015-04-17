@@ -1,25 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
-    <entity name="auth-user-role" table="auth-user-role" alias="aur" do-class="AuthUserRoleDo">
+    <entity name="auth-user" table="auth-user" alias="au" do-class="AuthUserDo">
         <query-defs>
             <query name="update-by-name" type="UPDATE">
-                <param name="name"/>
+                <param user-name="user-name"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='app-id'/> = ${app-id},
-                        version = version + 1,
-                        <FIELD name='last-modified'/> = NOW()
-                    WHERE <FIELD name='name'/> = ${name}
+                    SET <FIELD name='description'/> = ${description}
+                    WHERE <FIELD name='user-name'/> = ${user-name}
                     ]]>
                 </statement>
             </query>
             <query name="delete-by-name" type="DELETE">
-                <param name="name"/>
+                <param name="user-name"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='name'/> = ${name}
+                    WHERE <FIELD name='user-name'/> = ${user-name}
                     ]]>
                 </statement>
             </query>
@@ -28,18 +26,6 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-limit" type="SELECT" multiple="true">
-                <param name="id"/>
-                <param name="max-count"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='id'/> > ${id}
-                        LIMIT ${max-count}
                     ]]>
                 </statement>
             </query>
@@ -55,6 +41,141 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="auth-user-role" table="auth-user-role" alias="aur" do-class="AuthUserRoleDo">
+        <query-defs>
+            <query name="find-by-user-name" type="SELECT" multiple="true">
+                <param name="user-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='user-name'/> = ${user-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-role-group" type="SELECT" multiple="true">
+                <param name="role-name"/>
+                <param name="group"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='role-name'/> = ${role-name}
+                        AND <FIELD name='group'/> = ${group}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-name" type="DELETE">
+                <param name="user-name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='user-name'/> = ${user-name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
 
+    <entity name="auth-role" table="auth-role" alias="ar" do-class="AuthRoleDo">
+        <query-defs>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-role-name" type="SELECT">
+                <param name="role-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='role-name'/> = ${role-name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+
+    <entity name="auth-resource" table="auth-resource" alias="ares" do-class="AuthResourceDo">
+        <query-defs>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-resource-name" type="SELECT">
+                <param name="resource-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='resource-name'/> = ${resource-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-resource-name" type="delete">
+                <param name="resource-name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='resource-name'/> = ${resource-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-name" type="UPDATE">
+                <param user-name="resource-name"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='resource-type'/> = ${resource-type}
+                    SET <FIELD name='description'/> = ${description}
+                    WHERE <FIELD name='resource-name'/> = ${resource-name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+
+    <entity name="auth-resource-role" table="auth-resource-role" alias="arr" do-class="AuthResourceRoleDo">
+        <query-defs>
+            <query name="find-by-resource-name" type="SELECT" multiple="true">
+                <param name="resource-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='resource-name'/> = ${resource-name}
+                    ]]>
+                </statement>
+            </query>
+
+            <query name="find-by-role-name" type="SELECT" multiple="true">
+                <param name="role-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='role-name'/> = ${role-name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-resource-name" type="delete">
+                <param name="resource-name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='resource-name'/> = ${resource-name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
 </entities>
 

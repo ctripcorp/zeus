@@ -1,24 +1,27 @@
 <auth>
-    <user-roles>
+    <user>
         <user-name>user1</user-name>
         <role-groups>
             <role-group>
-                <role-name>SlbAdmin</role-name>
+                <role/>
                 <group-name>slb1</group-name>
-                <description>slb admin</description>
             </role-group>
             <role-group>
-                <role-name>AppAdmin</role-name>
-                <group-name>app1</group-name>
-                <description>app admin</description>
+                <role/>
+                <group-name>slb2</group-name>
             </role-group>
             <role-group>
-                <role-name>SuperAdmin</role-name>
+                <role/>
                 <group-name>none</group-name>
-                <description>super admin</description>
             </role-group>
         </role-groups>
-    </user-roles>
+        <description>hotel user</description>
+    </user>
+
+    <role>
+        <role-name>SlbAdmin</role-name>
+        <description>slb admin</description>
+    </role>
 
     <resource>
         <resource-name>createSLB</resource-name>
@@ -27,10 +30,34 @@
     </resource>
 
     <resource-roles>
-        <resource/>
+        <resource-name>createSLB</resource-name>
         <roles>
-            <role-name>role1</role-name>
-            <role-name>role1</role-name>
+            <role/>
+            <role/>
         </roles>
     </resource-roles>
+
+    <resource-list>
+        <total>11</total>
+        <resources>
+            <resource/>
+            <resource/>
+        </resources>
+    </resource-list>
+
+    <user-list>
+        <total>11</total>
+        <users>
+            <user/>
+            <user/>
+        </users>
+    </user-list>
+
+    <role-list>
+        <total>11</total>
+        <roles>
+            <role/>
+            <role/>
+        </roles>
+    </role-list>
 </auth>

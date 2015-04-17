@@ -1,5 +1,6 @@
 package com.ctrip.zeus.support;
 
+import com.ctrip.zeus.auth.entity.*;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
 
@@ -97,6 +98,25 @@ public class C {
                 .setVersion(d.getVersion());
     }
 
+    public static Role toRole(AuthRoleDo roleDo){
+        return new Role()
+                .setRoleName(roleDo.getRoleName())
+                .setDescription(roleDo.getDescription());
+    }
+
+    public static User toUser(AuthUserDo userDo){
+        return new User()
+                .setUserName(userDo.getUserName())
+                .setDescription(userDo.getDescription());
+    }
+
+    public static Resource toResource(AuthResourceDo resourceDo){
+        return new Resource()
+                .setResourceName(resourceDo.getResourceName())
+                .setDescription(resourceDo.getDescription())
+                .setResourceType(resourceDo.getResourceType());
+    }
+
     /*Entity to Do*/
 
     public static AppDo toAppDo(App e) {
@@ -170,5 +190,25 @@ public class C {
                 .setIsSsl(e.isSsl())
                 .setName(e.getName());
     }
+
+    public static AuthRoleDo toRoleDo(Role role) {
+        return new AuthRoleDo()
+                .setDescription(role.getDescription())
+                .setRoleName(role.getRoleName());
+    }
+
+    public static AuthUserDo toUserDo(User user) {
+        return new AuthUserDo()
+                .setUserName(user.getUserName())
+                .setDescription(user.getDescription());
+    }
+
+    public static AuthResourceDo toResourceDo(Resource resource){
+        return new AuthResourceDo()
+                .setResourceName(resource.getResourceName())
+                .setResourceType(resource.getResourceType())
+                .setDescription(resource.getDescription());
+    }
+
 
 }

@@ -7,5 +7,6 @@
     <file path="core-build.xml"/>
     <file path="core-nginx.xml"/>
     <file path="core-lock.xml"/>
+    <file path="core-auth.xml"/>
 </manifest>
 

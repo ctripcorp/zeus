@@ -292,8 +292,50 @@
     <member name="resource-name" field="resource_name" value-type="String" length="100" nullable="false" />
     <member name="resource-type" field="resource_type" value-type="String" length="50" />
     <member name="description" field="description" value-type="String" length="100" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="auth-resource-role" table="auth_resource_role" alias="arr">
+    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="resource-name" field="resource_name" value-type="String" length="50" nullable="false" />
+    <member name="role-name" field="role_name" value-type="String" length="50" nullable="false" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="int" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="role_idx" members="role_name ASC" />
+    <index name="res_idx" members="resource_name ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -328,8 +370,11 @@
     <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
     <member name="role-name" field="role_name" value-type="String" length="50" nullable="false" />
     <member name="description" field="description" value-type="String" length="100" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="role_idx" unique="true" members="role_name ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -360,48 +405,13 @@
       </query>
     </query-defs>
   </entity>
-  <entity name="auth-role-group" table="auth_role_group" alias="arg">
+  <entity name="auth-user" table="auth_user" alias="au">
     <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
-    <member name="role-id" field="role_id" value-type="int" length="10" nullable="false" />
-    <member name="group" field="group" value-type="String" length="50" nullable="false" />
+    <member name="user-name" field="user_name" value-type="String" length="50" nullable="false" />
+    <member name="description" field="description" value-type="String" length="100" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <readsets>
-      <readset name="FULL" all="true" />
-    </readsets>
-    <updatesets>
-      <updateset name="FULL" all="true" />
-    </updatesets>
-    <query-defs>
-      <query name="find-by-PK" type="SELECT">
-        <param name="key-id" />
-        <statement><![CDATA[SELECT <FIELDS/>
-        FROM <TABLE/>
-        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
-      </query>
-      <query name="insert" type="INSERT">
-        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
-        VALUES(<VALUES/>)]]></statement>
-      </query>
-      <query name="update-by-PK" type="UPDATE">
-        <param name="key-id" />
-        <statement><![CDATA[UPDATE <TABLE/>
-        SET <FIELDS/>
-        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
-      </query>
-      <query name="delete-by-PK" type="DELETE">
-        <param name="key-id" />
-        <statement><![CDATA[DELETE FROM <TABLE/>
-        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
-      </query>
-    </query-defs>
-  </entity>
-  <entity name="auth-role-resource" table="auth_role_resource" alias="arr">
-    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
-    <member name="role-id" field="role_id" value-type="int" length="10" nullable="false" />
-    <member name="resource-id" field="resource_id" value-type="int" length="10" nullable="false" />
-    <var name="key-id" value-type="int" key-member="id" />
-    <primary-key name="PRIMARY" members="id" />
+    <index name="usr_name_idx" unique="true" members="user_name ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -433,9 +443,16 @@
     </query-defs>
   </entity>
   <entity name="auth-user-role" table="auth_user_role" alias="aur">
-    <member name="user-name" field="user_name" value-type="String" length="50" />
-    <member name="rd-id" field="rd_id" value-type="int" length="10" />
-    <primary-key />
+    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="user-name" field="user_name" value-type="String" length="50" nullable="false" />
+    <member name="role-name" field="role_name" value-type="String" length="50" nullable="false" />
+    <member name="group" field="group" value-type="String" length="50" nullable="false" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="int" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="usr_role_idx" unique="true" members="user_name ASC" />
+    <index name="usr_idx" members="user_name ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -444,19 +461,25 @@
     </updatesets>
     <query-defs>
       <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
         <statement><![CDATA[SELECT <FIELDS/>
-        FROM <TABLE/>]]></statement>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
       </query>
       <query name="insert" type="INSERT">
         <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
         VALUES(<VALUES/>)]]></statement>
       </query>
       <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
         <statement><![CDATA[UPDATE <TABLE/>
-        SET <FIELDS/>]]></statement>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
       </query>
       <query name="delete-by-PK" type="DELETE">
-        <statement><![CDATA[DELETE FROM <TABLE/>]]></statement>
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
       </query>
     </query-defs>
   </entity>
