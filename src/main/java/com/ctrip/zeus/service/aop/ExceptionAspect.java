@@ -35,6 +35,12 @@ public class ExceptionAspect {
             logger.error(objectName + " throws an error when calling " + methodName + ".");
             Throwable cause = (throwable instanceof InvocationTargetException) ? ((InvocationTargetException) throwable).getTargetException() : throwable;
             try {
+                StringBuilder builder = new StringBuilder();
+                for (StackTraceElement ste : cause.getStackTrace()) {
+                    builder.append(ste.toString() + "\n");
+                }
+                logger.error(builder.toString());
+
                 MediaType mediaType = null;
                 for (Object arg : point.getArgs()) {
                     if (arg instanceof ContainerRequest) {

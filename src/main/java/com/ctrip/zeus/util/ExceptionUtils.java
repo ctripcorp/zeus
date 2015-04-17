@@ -16,10 +16,8 @@ public class ExceptionUtils {
 
     public static String getStackTrace(Throwable throwable) {
         StringBuilder builder = new StringBuilder();
-        StackTraceElement[] stackTraces = throwable.getStackTrace();
-        int count = stackTraces.length > 10 ? 10 : stackTraces.length;
-        for (int i = 0; i < count; i++) {
-            builder.append(stackTraces[i].toString() + "\n");
+        for(StackTraceElement ste : throwable.getStackTrace()) {
+            builder.append(ste.toString() + "\n");
         }
         return builder.toString();
     }
