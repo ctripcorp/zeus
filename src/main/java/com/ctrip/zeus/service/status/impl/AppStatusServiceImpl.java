@@ -1,10 +1,7 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.client.NginxClient;
-import com.ctrip.zeus.model.entity.AppServerStatus;
-import com.ctrip.zeus.model.entity.AppSlb;
-import com.ctrip.zeus.model.entity.AppStatus;
-import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.S;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
 import com.ctrip.zeus.service.model.AppRepository;
@@ -77,18 +74,19 @@ public class AppStatusServiceImpl implements AppStatusService {
         status.setAppName(appName);
         status.setSlbName(slbName);
 
-        List<String> appServerList = appRepository.listAppServersByApp(appName);
-        for (String appServer : appServerList) {
-            AppServerStatus serverStatus = getAppServerStatus(appName, slbName, appServer);
+        List<AppServer> appServerList = appRepository.getAppServersByApp(appName);
+        for (AppServer appServer : appServerList) {
+            AppServerStatus serverStatus = getAppServerStatus(appName, slbName, appServer.getIp(), appServer.getPort());
             status.addAppServerStatus(serverStatus);
         }
         return status;
     }
 
     @Override
-    public AppServerStatus getAppServerStatus(String appName, String slbName, String ip) throws Exception {
+    public AppServerStatus getAppServerStatus(String appName, String slbName, String ip, Integer port) throws Exception {
         AppServerStatus appServerStatus = new AppServerStatus();
         appServerStatus.setIp(ip);
+        appServerStatus.setPort(port);
 
         boolean memberUp = statusService.getAppServerStatus(slbName,appName,ip);
         boolean serverUp = statusService.getServerStatus(ip);

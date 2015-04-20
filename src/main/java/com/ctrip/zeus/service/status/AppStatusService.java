@@ -30,5 +30,5 @@ public interface AppStatusService {
 
      AppStatus getAppStatus(String appName,String slbName) throws Exception;
 
-     AppServerStatus getAppServerStatus(String appName, String slbName, String ip) throws Exception;
+     AppServerStatus getAppServerStatus(String appName, String slbName, String ip, Integer port) throws Exception;
 }

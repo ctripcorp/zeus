@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.handler;
 
 import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.AppServer;
 import org.unidal.dal.jdbc.DalException;
 
 import java.util.List;
@@ -26,4 +27,6 @@ public interface AppQuery {
     List<String> getByAppServer(String appServerIp) throws DalException;
 
     List<String> getAppServersByApp(String appName) throws DalException;
+
+    List<AppServer> listAppServersByApp(String appName) throws DalException;
 }

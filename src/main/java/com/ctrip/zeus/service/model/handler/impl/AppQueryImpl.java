@@ -117,6 +117,19 @@ public class AppQueryImpl implements AppQuery {
         return appServers;
     }
 
+    @Override
+    public List<AppServer> listAppServersByApp(String appName) throws DalException {
+        AppDo d = appDao.findByName(appName, AppEntity.READSET_FULL);
+        if (d == null)
+            return null;
+        List<AppServer> appServers = new ArrayList<>();
+        for (AppServerDo asd : appServerDao.findAllByApp(d.getId(), AppServerEntity.READSET_FULL)) {
+            appServers.add(C.toAppServer(asd));
+        }
+        return appServers;
+    }
+
+
     private App createApp(AppDo d) throws DalException {
         if (d == null)
             return null;

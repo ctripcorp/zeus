@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.AppServer;
 import com.ctrip.zeus.service.Repository;
 
 import java.util.List;
@@ -54,4 +55,6 @@ public interface AppRepository extends Repository {
      * @throws Exception
      */
     List<String> listAppServersByApp(String appName) throws Exception;
+
+    List<AppServer> getAppServersByApp(String appName) throws Exception;
 }

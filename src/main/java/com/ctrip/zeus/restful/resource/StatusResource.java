@@ -32,16 +32,16 @@ public class StatusResource {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response allAppStatus(@Context HttpHeaders hh) throws Exception {
-            List<AppStatus> statusList = appStatusService.getAllAppStatus();
-            AppStatusList result = new AppStatusList();
-            for (AppStatus appStatus : statusList) {
-                result.addAppStatus(appStatus);
-            }
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(AppStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(AppStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-            }
+        List<AppStatus> statusList = appStatusService.getAllAppStatus();
+        AppStatusList result = new AppStatusList();
+        for (AppStatus appStatus : statusList) {
+            result.addAppStatus(appStatus);
+        }
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(AppStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(AppStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET
@@ -49,16 +49,16 @@ public class StatusResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response allAppStatusInSlb(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
 
-            List<AppStatus> statusList = appStatusService.getAllAppStatus(slbName);
-            AppStatusList result = new AppStatusList();
-            for (AppStatus appStatus : statusList) {
-                result.addAppStatus(appStatus);
-            }
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(AppStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(AppStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-            }
+        List<AppStatus> statusList = appStatusService.getAllAppStatus(slbName);
+        AppStatusList result = new AppStatusList();
+        for (AppStatus appStatus : statusList) {
+            result.addAppStatus(appStatus);
+        }
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(AppStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(AppStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET
@@ -66,16 +66,16 @@ public class StatusResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response appStatus(@Context HttpHeaders hh, @PathParam("appName") String appName) throws Exception {
 
-            List<AppStatus> statusList = appStatusService.getAppStatus(appName);
-            AppStatusList result = new AppStatusList();
-            for (AppStatus appStatus : statusList) {
-                result.addAppStatus(appStatus);
-            }
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(AppStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(AppStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-            }
+        List<AppStatus> statusList = appStatusService.getAppStatus(appName);
+        AppStatusList result = new AppStatusList();
+        for (AppStatus appStatus : statusList) {
+            result.addAppStatus(appStatus);
+        }
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(AppStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(AppStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
+        }
 
     }
 
@@ -84,7 +84,7 @@ public class StatusResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response appSlbStatus(@Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName) throws Exception {
 
-        AppStatus appStatus = appStatusService.getAppStatus(appName,slbName);
+        AppStatus appStatus = appStatusService.getAppStatus(appName, slbName);
 
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
             return Response.status(200).entity(String.format(AppStatusList.XML, appStatus)).type(MediaType.APPLICATION_XML).build();
@@ -94,15 +94,19 @@ public class StatusResource {
     }
 
     @GET
-    @Path("/app/{appName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}/server/{sip:[a-zA-Z0-9._-]+}")
+    @Path("/app/{appName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}/server/{sip}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response appServerStatus(@Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName,@PathParam("sip") String sip) throws Exception {
-            AppServerStatus appServerStatus = appStatusService.getAppServerStatus(appName, slbName, sip);
+    public Response appServerStatus(@Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName, @PathParam("sip") String sip) throws Exception {
+        String[] ipPort = sip.split(":");
+        if (ipPort.length != 2){
+            throw new IllegalArgumentException("server should be ip:port format");
+        }
+        AppServerStatus appServerStatus = appStatusService.getAppServerStatus(appName, slbName, ipPort[0], Integer.valueOf(ipPort[1]));
 
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(AppStatusList.XML, appServerStatus)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(AppStatusList.JSON, appServerStatus)).type(MediaType.APPLICATION_JSON).build();
-            }
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(AppStatusList.XML, appServerStatus)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(AppStatusList.JSON, appServerStatus)).type(MediaType.APPLICATION_JSON).build();
+        }
     }
 }

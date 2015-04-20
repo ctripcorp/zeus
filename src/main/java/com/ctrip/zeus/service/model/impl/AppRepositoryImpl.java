@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.AppDo;
 import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.AppServer;
 import com.ctrip.zeus.service.model.handler.AppQuery;
 import com.ctrip.zeus.service.model.AppRepository;
 import com.ctrip.zeus.service.model.handler.AppSync;
@@ -95,5 +96,10 @@ public class AppRepositoryImpl implements AppRepository {
     @Override
     public List<String> listAppServersByApp(String appName) throws Exception {
         return appQuery.getAppServersByApp(appName);
+    }
+
+    @Override
+    public List<AppServer> getAppServersByApp(String appName) throws Exception {
+        return appQuery.listAppServersByApp(appName);
     }
 }
