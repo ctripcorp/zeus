@@ -14,6 +14,10 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.GzipFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.jasig.cas.client.authentication.AuthenticationFilter;
+import org.jasig.cas.client.session.SingleSignOutFilter;
+import org.jasig.cas.client.util.HttpServletRequestWrapperFilter;
+import org.jasig.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.ContextLoaderListener;
@@ -64,7 +68,7 @@ public class SlbAdminServer extends AbstractServer {
         supportJsp(handler);
 
         //Support Spring
-        handler.setInitParameter("contextConfigLocation", "classpath*:" + springContextFile.get() + ",classpath*:spring-context-security.xml");
+        handler.setInitParameter("contextConfigLocation", "classpath*:" + springContextFile.get()); //+ ",classpath*:spring-context-security.xml");
         ContextLoaderListener sprintContextListener = new ContextLoaderListener();
         handler.addEventListener(sprintContextListener);
 
@@ -76,7 +80,21 @@ public class SlbAdminServer extends AbstractServer {
         handler.addFilter(GzipFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST))
                 .setInitParameter("mimeTypes", "application/json, application/xml,text/xml, text/html");
 
-        handler.addFilter(new FilterHolder(new DelegatingFilterProxy("springSecurityFilterChain")), "/*", EnumSet.of(DispatcherType.REQUEST));
+        //handler.addFilter(new FilterHolder(new DelegatingFilterProxy("springSecurityFilterChain")), "/*", EnumSet.of(DispatcherType.REQUEST));
+
+        //SSO filter
+        handler.addFilter(SingleSignOutFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        FilterHolder af =handler.addFilter(AuthenticationFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        af.setInitParameter("casServerLoginUrl","https://cas.uat.qa.nt.ctripcorp.com/caso/login");
+        af.setInitParameter("serverName","http://localhost:8099");
+
+        FilterHolder validateFilter = handler.addFilter(Cas20ProxyReceivingTicketValidationFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        validateFilter.setInitParameter("casServerUrlPrefix", "https://cas.uat.qa.nt.ctripcorp.com/caso");
+        validateFilter.setInitParameter("serverName", "http://localhost:8099");
+        validateFilter.setInitParameter("encoding", "UTF-8");
+
+        handler.addFilter(HttpServletRequestWrapperFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+
 
         //Config Servlet
         handler.addServlet(jerseyServletHolder, "/api/*");
