@@ -16,43 +16,25 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Created by zhoumy on 2015/4/9.
  */
-@Component("mysqlDistLock")
 public class MysqlDistLock implements DistLock {
     private static final int MAX_RETRIES = 3;
     private static final long SLEEP_INTERVAL = 500L;
 
-    @Resource
+    private final String key;
     private DistLockDao distLockDao;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final Lock dbWriteLock = new ReentrantLock();
-    private final String ownerId = generateOwnerId(this);
 
-    private static String generateOwnerId(DistLock distLock) {
-        return "" + distLock.hashCode() + (System.currentTimeMillis() & 0x7FFF);
+    public MysqlDistLock(String key) {
+        this.key = key;
     }
 
     @Override
-    public boolean tryLock(String key) {
-        return tryLock(key, -1);
-    }
-
-    @Override
-    public boolean tryLock(String key, int timeout) {
-        DistLockDo d = new DistLockDo().setLockKey(key)
-                .setOwner(ownerId)
-                .setTimeout(timeout).setCreatedTime(System.currentTimeMillis());
+    public boolean tryLock() {
+        DistLockDo d = new DistLockDo().setLockKey(key).setCreatedTime(System.currentTimeMillis());
         for (int i = 0; i < MAX_RETRIES; i++) {
             try {
-                DistLockDo existed = distLockDao.getByKey(key, DistLockEntity.READSET_FULL);
-                if (existed == null) {
-                    if (tryAddLock(d))
-                        return true;
-                } else {
-                    if (isExpired(existed)) {
-                        if (tryReplaceExpiredLock(d))
-                            return true;
-                    }
-                }
+                if (tryAddLock(d))
+                    return true;
                 retryDelay(key, i);
             } catch (DalException e) {
                 retryDelay(key, i);
@@ -62,35 +44,41 @@ public class MysqlDistLock implements DistLock {
         return false;
     }
 
-    private boolean tryAddLock(DistLockDo d) throws DalException {
-        dbWriteLock.lock();
-        if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null) {
-            distLockDao.insert(d);
-            dbWriteLock.unlock();
-            return true;
-        } else {
-            dbWriteLock.unlock();
+    @Override
+    public void lock(int timeout) throws Exception {
+        long end = System.currentTimeMillis() + timeout;
+        DistLockDo d = new DistLockDo().setLockKey(key).setCreatedTime(System.currentTimeMillis());
+        while(System.currentTimeMillis() < end) {
+            try {
+                if (tryAddLock(d))
+                    return;
+                retryDelay(key, 1);
+            } catch (DalException e) {
+                retryDelay(key, 1);
+            }
         }
-        return false;
-    }
-
-    private boolean tryReplaceExpiredLock(DistLockDo d) throws DalException {
-        dbWriteLock.lock();
-        DistLockDo existed = distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL);
-        if (isExpired(existed)) {
-            distLockDao.updateByKey(d, DistLockEntity.UPDATESET_FULL);
-            dbWriteLock.unlock();
-            return true;
-        } else {
-            dbWriteLock.unlock();
-        }
-        return false;
+        throw new Exception("Fail to get the lock " + key);
     }
 
     @Override
-    public void unlock(String key) {
+    public void lock() {
+        DistLockDo d = new DistLockDo().setLockKey(key).setCreatedTime(System.currentTimeMillis());
+        int count = 1;
+        while (true){
+            try {
+                if (tryAddLock(d))
+                    return;
+                retryDelay(key, count);
+            } catch (DalException e) {
+                retryDelay(key, count);
+            }
+        }
+    }
+
+    @Override
+    public void unlock() {
         try {
-            DistLockDo d = new DistLockDo().setLockKey(key).setOwner(ownerId);
+            DistLockDo d = new DistLockDo().setLockKey(key);
             if (unlock(d))
                 return;
             for (int i = 1; i < MAX_RETRIES; i++) {
@@ -107,23 +95,22 @@ public class MysqlDistLock implements DistLock {
         }
     }
 
-    public static boolean isExpired(DistLockDo distLock) {
-        return distLock.getTimeout() > -1
-                && (System.currentTimeMillis() > distLock.getCreatedTime() + distLock.getTimeout() * 1000);
+    private boolean tryAddLock(DistLockDo d) throws DalException {
+        if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null) {
+            distLockDao.insert(d);
+            return true;
+        }
+        return false;
     }
 
     private boolean unlock(DistLockDo d) throws DalException {
-        dbWriteLock.lock();
         int count = distLockDao.deleteByKeyAndOwner(d);
-        dbWriteLock.unlock();
-
         if (count == 1)
             return true;
         if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null)
             return true;
         return false;
     }
-
 
     private void retryDelay(String key, int attemptCount) {
         if (attemptCount > 0) {

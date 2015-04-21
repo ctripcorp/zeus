@@ -10,34 +10,30 @@ public interface DistLock {
      *
      * If the lock is currently not available, the current thread sleeps and will retry after a certain delay.
      * The number of attempts trying to get the lock is limited,
-     * After the max attempt is reach, it will return regardless the result.
-     *
-     * @param key the lock key. It should be unique.
+     * After the max attempt is reached, it will return regardless the result.
      */
-    boolean tryLock(String key);
+    boolean tryLock();
 
     /**
-     * Try to acquire the lock. The lock will automatically expire after the timeout.
+     * Acquire the lock with timeout.
      *
      * If the lock is currently not available, the current thread sleeps and will retry after a certain delay.
-     * The number of attempts trying to get the lock is limited,
-     * After the max attempt is reach, it will return regardless the result.
+     * Exception will be thrown if the lock cannot be acquired after timeout.
      *
-     * @param key the lock key. It should be unique.
-     * @param timeout expire time interval. Permanent if negative number is set, in which case this call would be the same as tryLock(String key).
+     * @param timeout the time to wait for a lock
+     * @throws Exception
      */
-    boolean tryLock(String key, int timeout);
+    void lock(int timeout) throws Exception;
 
     /**
-     * Unlock the lock.
+     * Acquire the lock.
      *
-     * If lock cannot be unlocked at the moment, the current thread sleeps and will retry after a certain delay.
-     * The number of attempts trying to get the lock is limited,
-     * After the max attempt is reach, it will return regardless the result.
-     * If the lock does not exist, nothing will happen.
-     * If the lock is not created by this instance, unlock fails.
-     *
-     * @param key the lock key.
+     * The thread holds until the lock is acquired.
      */
-    void unlock(String key);
+    void lock();
+
+    /**
+     * Release the lock.
+     */
+    void unlock();
 }
