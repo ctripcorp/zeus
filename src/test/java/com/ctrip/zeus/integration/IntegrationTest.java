@@ -81,9 +81,9 @@ public class IntegrationTest {
                 .addDomain(new Domain().setName("vs5.ctrip.com"));
 
 
-        AppServer appServer1 = new AppServer().setPort(80).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver1").setIp(slb1_server_0);
-        AppServer appServer2 = new AppServer().setPort(80).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver2").setIp(slb1_server_1);
-        AppServer appServer3 = new AppServer().setPort(80).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver3").setIp(slb1_server_2);
+        AppServer appServer1 = new AppServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver1").setIp(slb1_server_0);
+        AppServer appServer2 = new AppServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver2").setIp(slb1_server_1);
+        AppServer appServer3 = new AppServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver3").setIp(slb1_server_2);
 
 
         //add slb and vs
@@ -149,7 +149,7 @@ public class IntegrationTest {
         String appslbpath = "/app1";
 
         App app1 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
+                .setIntervals(2000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
                         .setVirtualServer(v1))

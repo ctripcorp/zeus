@@ -4,10 +4,7 @@ import com.ctrip.zeus.client.NginxClient;
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
 import com.ctrip.zeus.dal.core.NginxServerEntity;
-import com.ctrip.zeus.model.entity.NginxConfServerData;
-import com.ctrip.zeus.model.entity.NginxConfUpstreamData;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.SlbServer;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.NginxOperator;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
@@ -34,6 +31,7 @@ import java.util.List;
 public class NginxServiceImpl implements NginxService {
     private static final Logger LOGGER = LoggerFactory.getLogger(NginxServiceImpl.class);
     private static DynamicIntProperty adminServerPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
+    private static DynamicIntProperty dyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
 
     @Resource
     private SlbRepository slbRepository;
@@ -45,6 +43,61 @@ public class NginxServiceImpl implements NginxService {
     private NginxServerDao nginxServerDao;
 
     @Override
+    public NginxResponse writeToDisk() throws Exception {
+        String ip = S.getIp();
+        Slb slb = slbRepository.getBySlbServer(ip);
+        String slbName = slb.getName();
+        int version = nginxConfService.getCurrentVersion(slbName);
+
+        NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
+
+        writeConfToDisk(slbName, version, nginxOperator);
+
+        NginxResponse response = nginxOperator.reloadConfTest();
+        response.setServerIp(ip);
+
+        //ToDo: for rollback
+        return response;
+    }
+
+    @Override
+    public boolean writeALLToDisk(String slbName , List<NginxResponse> responses) throws Exception {
+        List<NginxResponse> result = null;
+        boolean sucess = true;
+        if (responses!=null)
+        {
+            result = responses;
+        }else {
+            result = new ArrayList<>();
+        }
+
+        String ip = S.getIp();
+        Slb slb = slbRepository.get(slbName);
+
+        List<SlbServer> slbServers = slb.getSlbServers();
+        for (SlbServer slbServer : slbServers) {
+            if (ip.equals(slbServer.getIp())) {
+                result.add(writeToDisk());
+                continue;
+            }
+            NginxClient nginxClient = NginxClient.GetClient(buildRemoteUrl(slbServer.getIp()));
+            NginxResponse response = nginxClient.write();
+            result.add(response);
+        }
+
+        if (result.size()==0){
+            sucess = false;
+        }
+
+        for (NginxResponse res : result)
+        {
+            sucess=sucess&&res.getSucceed();
+        }
+
+        return sucess;
+    }
+
+    @Override
     public NginxResponse load() throws Exception {
         String ip = S.getIp();
         Slb slb = slbRepository.getBySlbServer(ip);
@@ -52,38 +105,21 @@ public class NginxServiceImpl implements NginxService {
         int version = nginxConfService.getCurrentVersion(slbName);
 
         NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
-        writeConfToDisk(slbName, version, nginxOperator);
-        // reload configuration
-        NginxResponse response = reloadConf(nginxOperator);
 
-        // update the used version in the db
-        NginxServerDo nginxServerDo =nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
-        nginxServerDao.updateByPK(nginxServerDo.setVersion(version), NginxServerEntity.UPDATESET_FULL);
+        // reload configuration
+        NginxResponse response =  nginxOperator.reloadConf();
+        response.setServerIp(ip);
+
+        if (response.getSucceed())
+        {
+            // update the used version in the db
+            NginxServerDo nginxServerDo =nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
+            nginxServerDao.updateByPK(nginxServerDo.setVersion(version), NginxServerEntity.UPDATESET_FULL);
+        }
         return response;
     }
 
-    private NginxResponse reloadConf(NginxOperator nginxOperator) throws IOException {
-        LOGGER.info("Start reloading nginx configuration");
-        return nginxOperator.reloadConf();
-    }
 
-    private void writeConfToDisk(String slbName, int version, NginxOperator nginxOperator) throws Exception {
-        LOGGER.info("Start writing nginx configuration.");
-        // write nginx conf
-        writeNginxConf(slbName, version, nginxOperator);
-        // write server conf
-        writeServerConf(slbName, version, nginxOperator);
-        // write upstream conf
-        writeUpstreamConf(slbName, version, nginxOperator);
-    }
-
-    @Override
-    public NginxServerStatus getStatus() throws Exception {
-        String ip = S.getIp();
-        Slb slb = slbRepository.getBySlbServer(ip);
-        NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
-        return nginxOperator.getRuntimeStatus();
-    }
 
     @Override
     public List<NginxResponse> loadAll(String slbName) throws Exception {
@@ -97,12 +133,58 @@ public class NginxServiceImpl implements NginxService {
                 result.add(load());
                 continue;
             }
-            NginxClient nginxClient = new NginxClient(buildRemoteUrl(slbServer.getIp()));
+            NginxClient nginxClient = NginxClient.GetClient(buildRemoteUrl(slbServer.getIp()));
             NginxResponse response = nginxClient.load();
             result.add(response);
         }
         return result;
 
+    }
+
+    @Override
+    public List<NginxResponse> writeAllAndLoadAll(String slbName) throws Exception {
+        List<NginxResponse> result = new ArrayList<>();
+        if(!writeALLToDisk(slbName,result)){
+            LOGGER.error("Write All To Disk Failed!");
+            throw new Exception("Write All To Disk Failed!\nDetail:\n"+String.format(NginxResponse.JSON,result));
+        }
+        result = loadAll(slbName);
+        return result;
+    }
+
+    @Override
+    public List<NginxResponse> dyops(String slbName, List<DyUpstreamOpsData> dyups) throws Exception {
+        List<NginxResponse> result = new ArrayList<>();
+        Slb slb = slbRepository.get(slbName);
+        int version = nginxConfService.getCurrentVersion(slbName);
+        boolean flag=false;
+
+        List<SlbServer> slbServers = slb.getSlbServers();
+        for (SlbServer slbServer : slbServers) {
+            flag = true;
+            NginxClient nginxClient = NginxClient.GetClient("http://" + slbServer.getIp() + ":" + dyupsPort.get());
+            for (DyUpstreamOpsData dyup : dyups){
+                NginxResponse response = nginxClient.dyups(dyup.getUpstreamName(),dyup.getUpstreamCommands());
+                response.setServerIp(slbServer.getIp());
+                result.add(response);
+                flag=flag&&response.getSucceed();
+            }
+            if (flag){
+                // update the used version in the db
+                NginxServerDo nginxServerDo =nginxServerDao.findByIp(slbServer.getIp(), NginxServerEntity.READSET_FULL);
+                nginxServerDao.updateByPK(nginxServerDo.setVersion(version), NginxServerEntity.UPDATESET_FULL);
+            }
+        }
+        return result;
+    }
+
+
+    @Override
+    public NginxServerStatus getStatus() throws Exception {
+        String ip = S.getIp();
+        Slb slb = slbRepository.getBySlbServer(ip);
+        NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
+        return nginxOperator.getRuntimeStatus();
     }
 
     @Override
@@ -116,12 +198,25 @@ public class NginxServiceImpl implements NginxService {
                 result.add(getStatus());
                 continue;
             }
-            NginxClient nginxClient = new NginxClient(buildRemoteUrl(slbServer.getIp()));
+            NginxClient nginxClient = NginxClient.GetClient(buildRemoteUrl(slbServer.getIp()));
             NginxServerStatus response = nginxClient.getNginxServerStatus();
             result.add(response);
         }
         return result;
     }
+
+
+    private void writeConfToDisk(String slbName, int version, NginxOperator nginxOperator) throws Exception {
+        LOGGER.info("Start writing nginx configuration.");
+        // write nginx conf
+        writeNginxConf(slbName, version, nginxOperator);
+        // write server conf
+        writeServerConf(slbName, version, nginxOperator);
+        // write upstream conf
+        writeUpstreamConf(slbName, version, nginxOperator);
+    }
+
+
 
     private String buildRemoteUrl(String ip) {
         return "http://" + ip + ":" + adminServerPort.get();

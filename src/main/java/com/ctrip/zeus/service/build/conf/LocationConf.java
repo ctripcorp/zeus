@@ -18,7 +18,9 @@ public class LocationConf {
 
 
         b.append("proxy_set_header Host $host").append(";\n");
-        b.append("proxy_pass http://").append(upstreamName).append(";\n");
+        b.append("set $upstream ").append(upstreamName).append(";\n");
+        b.append("proxy_pass http://$upstream ;\n");
+//        b.append("proxy_pass http://").append(upstreamName).append(";\n");
 //        b.append("proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n");
 //        b.append("proxy_set_header X-Real-IP $remote_addr;");
 

@@ -21,6 +21,8 @@ public class NginxConf {
     );
 
 
+    private static DynamicIntProperty dyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
+
     public static String generate(Slb slb) {
         StringBuilder b = new StringBuilder(1024);
 
@@ -48,6 +50,8 @@ public class NginxConf {
         b.append("access_log /opt/logs/nginx/access.log main;\n");
 
         b.append(statusConf());
+        b.append(dyupstreamConf());
+
         b.append("include    upstreams/*.conf;\n");
         b.append("include    vhosts/*.conf;\n");
         b.append("}\n");
@@ -78,5 +82,20 @@ public class NginxConf {
 
         return b.toString();
 
+    }
+    //updown stream
+    private static String dyupstreamConf()
+    {
+        int port = dyupsPort.getValue();
+        StringBuilder b = new StringBuilder(128);
+
+        b.append("dyups_upstream_conf  conf/dyupstream.conf;\n")
+         .append("server {\n")
+         .append("listen ").append(port).append(";\n")
+         .append("location / {\n")
+         .append("dyups_interface;\n")
+         .append("}\n")
+         .append("}\n");
+        return b.toString();
     }
 }

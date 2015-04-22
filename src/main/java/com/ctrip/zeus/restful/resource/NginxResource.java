@@ -46,6 +46,23 @@ public class NginxResource {
     }
 
     @GET
+    @Path("/write")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response write(@Context HttpHeaders hh )
+    {
+        try {
+            NginxResponse result = nginxService.writeToDisk();
+            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+                return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
+            } else {
+                return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
+            }
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
+    }
+
+    @GET
     @Path("/status")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response status(@Context HttpHeaders hh) throws Exception {

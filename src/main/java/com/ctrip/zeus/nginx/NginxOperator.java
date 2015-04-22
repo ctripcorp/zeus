@@ -1,5 +1,6 @@
 package com.ctrip.zeus.nginx;
 
+import com.ctrip.zeus.nginx.entity.Nginx;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import org.apache.commons.exec.CommandLine;
@@ -39,6 +40,35 @@ public class NginxOperator {
         doWriteConf(nginxConfDir + "/upstreams", fileName, conf);
     }
 
+    public NginxResponse reloadConfTest()throws IOException{
+        try {
+            String command = nginxBinDir + "/nginx -t";
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+            CommandLine commandline = CommandLine.parse(command);
+
+            DefaultExecutor exec = new DefaultExecutor();
+            exec.setExitValues(null);
+
+            PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream,errorStream);
+            exec.setStreamHandler(streamHandler);
+
+            int exitVal = exec.execute(commandline);
+            boolean failed = exec.isFailure(exitVal);
+            String out = outputStream.toString("UTF-8");
+            String error = errorStream.toString("UTF-8");
+
+            NginxResponse response = new NginxResponse();
+            response.setOutMsg(out);
+            response.setErrMsg(error);
+            response.setSucceed(!failed);
+
+            return response;
+        } catch (IOException e) {
+            LOGGER.error("Test Nginx Conf Failed",e);
+            throw e;
+        }
+    }
     public NginxResponse reloadConf() throws IOException{
         try {
             String command = nginxBinDir + "/nginx -s reload";

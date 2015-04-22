@@ -5,6 +5,8 @@ import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
+import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.service.build.impl.NginxConfServiceImpl;
 import com.ctrip.zeus.service.model.AppRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
@@ -50,6 +52,8 @@ public class ServerResource {
     private AppStatusService appStatusService;
     @Resource
     private AppRepository appRepository;
+    @Resource
+    private NginxConfService nginxConfService;
 
 
 
@@ -63,9 +67,23 @@ public class ServerResource {
         //update status
         statusService.upServer(serverip);
 
+        return serverOps(hh,serverip);
+
+    }
+
+    @GET
+    @Path("/downServer")
+    public Response downServer(@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
+        String serverip = ip;
+        //update status
+        statusService.downServer(serverip);
+        return serverOps(hh,serverip);
+    }
+
+    private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
         //get slb by serverip
         List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(serverip,null);
-        AssertUtils.isNull(slblist,"[UpServer] Can not find slb by server ip :["+serverip+"],Please check the configuration and server ip!");
+        AssertUtils.isNull(slblist,"[UpServer/DownServer] Can not find slb by server ip :["+serverip+"],Please check the configuration and server ip!");
 
         for (Slb slb : slblist)
         {
@@ -73,7 +91,7 @@ public class ServerResource {
             int ticket = buildInfoService.getTicket(slbname);
             if(buildService.build(slbname,ticket))
             {
-                nginxAgentService.loadAll(slbname);
+                nginxAgentService.writeAllAndLoadAll(slbname);
             }
         }
 
@@ -93,38 +111,6 @@ public class ServerResource {
         } else {
             return Response.status(200).entity(String.format(ServerStatus.JSON, ss)).type(MediaType.APPLICATION_JSON).build();
         }
-
-    }
-
-    @GET
-    @Path("/downServer")
-    public Response downServer(@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-        String serverip = ip;
-        //update status
-        statusService.downServer(serverip);
-        //get slb by serverip
-        List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(serverip,null);
-        for (Slb slb : slblist)
-        {
-            String slbname = slb.getName();
-            int ticket = buildInfoService.getTicket(slbname);
-            if(buildService.build(slbname,ticket))
-            {
-                nginxAgentService.loadAll(slbname);
-            }
-        }
-
-        ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
-        for (String name : appRepository.listAppsByAppServer(serverip))
-        {
-            ss.addAppName(name);
-        }
-
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(ServerStatus.XML, ss)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(ServerStatus.JSON, ss)).type(MediaType.APPLICATION_JSON).build();
-        }
     }
 
     @GET
@@ -132,38 +118,7 @@ public class ServerResource {
     public Response upMember(@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
     {
         statusService.upMember(appName,ip);
-
-        //get slb by appname and ip
-        List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(ip,appName);
-
-        for (Slb slb : slblist) {
-            String slbname = slb.getName();
-            //get ticket
-            int ticket = buildInfoService.getTicket(slbname);
-            //build config
-            if(buildService.build(slbname,ticket))
-            {
-                //push
-                nginxAgentService.loadAll(slbname);
-            }
-        }
-
-        List<AppStatus> statuses = appStatusService.getAppStatus(appName);
-        AppStatus appStatusList = new AppStatus().setAppName(appName).setSlbName("");
-        for (AppStatus a : statuses)
-        {
-            appStatusList.setSlbName(appStatusList.getSlbName()+" "+a.getSlbName());
-            for(AppServerStatus b : a.getAppServerStatuses())
-            {
-                appStatusList.addAppServerStatus(b);
-            }
-        }
-
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(AppStatus.XML, appStatusList)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(AppStatus.JSON, appStatusList)).type(MediaType.APPLICATION_JSON).build();
-        }
+        return memberOps(hh,appName,ip);
     }
 
     @GET
@@ -171,9 +126,14 @@ public class ServerResource {
     public Response downMember(@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
     {
         statusService.downMember(appName, ip);
+        return memberOps(hh,appName,ip);
+    }
+
+    private Response memberOps(HttpHeaders hh,String appName,String ip)throws Exception{
 
         //get slb by appname and ip
         List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(ip,appName);
+        AssertUtils.isNull(slblist,"Not find slb for appName ["+appName+"] and ip ["+ip+"]");
 
         for (Slb slb : slblist) {
             String slbname = slb.getName();
@@ -183,7 +143,13 @@ public class ServerResource {
             if(buildService.build(slbname,ticket))
             {
                 //push
-                nginxAgentService.loadAll(slbname);
+                if(nginxAgentService.writeALLToDisk(slbname,null)){
+
+                    List<DyUpstreamOpsData> dyUpstreamOpsDataList=nginxConfService.buildUpstream(slb,appName);
+                    nginxAgentService.dyops(slbname,dyUpstreamOpsDataList);
+                }else {
+                    throw new Exception("write all to disk failed!");
+                }
             }
         }
 
@@ -204,8 +170,6 @@ public class ServerResource {
             return Response.status(200).entity(String.format(AppStatus.JSON, appStatusList)).type(MediaType.APPLICATION_JSON).build();
         }
     }
-
-
 
     /*
      *  for Batch operation
@@ -241,7 +205,7 @@ public class ServerResource {
                 int ticket = buildInfoService.getTicket(slbname);
                 if(buildService.build(slbname,ticket))
                 {
-                    nginxAgentService.loadAll(slbname);
+                    nginxAgentService.writeAllAndLoadAll(slbname);
                 }
             }
 
@@ -279,7 +243,7 @@ public class ServerResource {
                 //build config
                 if (buildService.build(slbname, ticket)) {
                     //push
-                    nginxAgentService.loadAll(slbname);
+                    nginxAgentService.writeAllAndLoadAll(slbname);
                 }
             }
         }
@@ -316,7 +280,13 @@ public class ServerResource {
                 if(buildService.build(slbname,ticket))
                 {
                     //push
-                    nginxAgentService.loadAll(slbname);
+                    if(nginxAgentService.writeALLToDisk(slbname,null)){
+
+                        List<DyUpstreamOpsData> dyUpstreamOpsDataList=nginxConfService.buildUpstream(slb,tmp.getMemberAppname());
+                        nginxAgentService.dyops(slbname,dyUpstreamOpsDataList);
+                    }else {
+                        throw new Exception("write all to disk failed!");
+                    }
                 }
             }
 
@@ -356,15 +326,19 @@ public class ServerResource {
                 //build config
                 if (buildService.build(slbname, ticket)) {
                     //push
-                    nginxAgentService.loadAll(slbname);
+                    if(nginxAgentService.writeALLToDisk(slbname,null)){
+
+                        List<DyUpstreamOpsData> dyUpstreamOpsDataList=nginxConfService.buildUpstream(slb,tmp.getMemberAppname());
+                        nginxAgentService.dyops(slbname,dyUpstreamOpsDataList);
+                    }else {
+                        throw new Exception("write all to disk failed!");
+                    }
                 }
             }
         }
 
         return Response.ok().build();
     }
-
-
 
 }
 

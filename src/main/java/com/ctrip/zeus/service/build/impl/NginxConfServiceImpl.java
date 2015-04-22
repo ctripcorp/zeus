@@ -7,6 +7,7 @@ import com.ctrip.zeus.service.Activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.service.build.conf.UpstreamsConf;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.util.AssertUtils;
@@ -169,6 +170,34 @@ public class NginxConfServiceImpl implements NginxConfService {
         return buildInfoService.getCurrentTicket(slbname);
     }
 
+
+    @Override
+    public List<DyUpstreamOpsData> buildUpstream(Slb slb, String appName) throws Exception {
+
+        List<DyUpstreamOpsData> result = new ArrayList<>();
+
+        Set<String> allDownServers = statusService.findAllDownServers();
+        Set<String> allDownAppServers = statusService.findAllDownAppServersBySlbName(slb.getName());
+
+        List<String> appactiveconf =activeConfService.getConfAppActiveContentByAppNames(new String[]{appName});
+
+        if (appactiveconf.size()!=1){ throw new Exception(appName+" is not activated!");}
+
+        App app = DefaultSaxParser.parseEntity(App.class, appactiveconf.get(0));
+
+        List<AppSlb> appslbList = app.getAppSlbs();
+        VirtualServer vs = null;
+        for (AppSlb appSlb : appslbList )
+        {
+            vs  = appSlb.getVirtualServer();
+
+            String upstreambody = UpstreamsConf.buildUpstreamConfBody(slb,vs,app,allDownServers,allDownAppServers);
+            String upstreamName = UpstreamsConf.buildUpstreamName(slb,vs,app);
+            result.add(new DyUpstreamOpsData().setUpstreamCommands(upstreambody).setUpstreamName(upstreamName));
+        }
+
+        return result;
+    }
 
     @Override
     public void build(String slbName, int version) throws Exception {
