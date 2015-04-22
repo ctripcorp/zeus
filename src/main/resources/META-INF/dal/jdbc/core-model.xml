@@ -595,7 +595,7 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE  <FIELD name='name'/> = ${name}
-                        ORDER BY <FIELD name='version'/>
+                        ORDER BY <FIELD name='version'/> DESC
                         LIMIT 1
                     ]]>
                 </statement>
@@ -642,7 +642,7 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE  <FIELD name='name'/> = ${name}
-                        ORDER BY <FIELD name='version'/>
+                        ORDER BY <FIELD name='version'/> DESC
                         LIMIT 1
                     ]]>
                 </statement>
