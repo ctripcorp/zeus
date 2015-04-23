@@ -39,16 +39,18 @@ public class DefaultResponseHandler implements ResponseHandler {
 
     @Override
     public Response handle(Object object, MediaType mediaType) throws Exception {
-        if (mediaType == null) {
-            mediaType = defaultMediaType;
-        }
-
-        if (acceptedMediaTypes.contains(mediaType)) {
+        if (mediaType != null && acceptedMediaTypes.contains(mediaType)) {
             Message response = generateMessage(object, mediaType.toString());
             return Response.status(response.getStatus()).entity(response.getResponse())
                     .type(mediaType).build();
         }
-        throw new ValidationException("Unaccepted media type: " + mediaType.toString());
+        try {
+            Message response = generateMessage(object, defaultMediaType.toString());
+            return Response.status(response.getStatus()).entity(response.getResponse())
+                    .type(defaultMediaType).build();
+        } catch (Exception ex) {
+            throw new ValidationException("Unaccepted media type.");
+        }
     }
 
     private static Set<MediaType> getDefault() {

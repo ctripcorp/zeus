@@ -76,10 +76,12 @@ public class AppResource {
         App a;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             a = DefaultSaxParser.parseEntity(App.class, app);
-        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-            a = DefaultJsonParser.parse(App.class, app);
         } else {
-            throw new Exception("Unacceptable type.");
+            try {
+                a = DefaultJsonParser.parse(App.class, app);
+            } catch (Exception ex) {
+                throw new Exception("Unacceptable type.");
+            }
         }
         appRepository.add(a);
         return Response.ok().build();
@@ -92,10 +94,12 @@ public class AppResource {
         App a;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             a = DefaultSaxParser.parseEntity(App.class, app);
-        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-            a = DefaultJsonParser.parse(App.class, app);
         } else {
-            throw new Exception("Unacceptable type.");
+            try {
+                a = DefaultJsonParser.parse(App.class, app);
+            } catch (Exception e) {
+                throw new Exception("Unacceptable type.");
+            }
         }
         appRepository.update(a);
         return Response.ok().build();
