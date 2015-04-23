@@ -17,6 +17,7 @@
     <entity-ref name="op-member-status-req" />
     <entity-ref name="nginx-conf-upstream-data" />
     <entity-ref name="nginx-conf-server-data" />
+    <entity-ref name="dy-upstream-ops-data" />
   </entity>
   <entity name="slb">
     <attribute name="name" value-type="String" />
@@ -155,6 +156,10 @@
   <entity name="nginx-conf-server-data">
     <element name="name" value-type="String" />
     <element name="content" value-type="String" />
+  </entity>
+  <entity name="dy-upstream-ops-data">
+    <element name="upstream-name" value-type="String" />
+    <element name="upstream-commands" value-type="String" />
   </entity>
 </model>
 

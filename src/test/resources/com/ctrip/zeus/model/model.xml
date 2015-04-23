@@ -185,5 +185,10 @@
         <content>content</content>
     </nginx-conf-server-data>
 
+    <dy-upstream-ops-data>
+        <upstream-name>name</upstream-name>
+        <upstream-commands>commands</upstream-commands>
+    </dy-upstream-ops-data>
+
 
 </model>

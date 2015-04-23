@@ -112,7 +112,7 @@ public class ActivateResource {
                 if(buildService.build(buildSlbName,ticket))
                 {
                     //Push Service
-                    nginxAgentService.loadAll(buildSlbName);
+                    nginxAgentService.writeAllAndLoadAll(buildSlbName);
                 }
             }
             return Response.ok().status(200).build();

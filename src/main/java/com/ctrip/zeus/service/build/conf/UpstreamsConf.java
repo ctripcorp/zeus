@@ -38,6 +38,15 @@ public class UpstreamsConf {
 
         b.append("upstream ").append(upstreamName).append(" {").append("\n");
 
+        b.append(buildUpstreamConfBody(slb,vs,app,allDownServers,allDownAppServers));
+
+        b.append("}").append("\n");
+
+        return StringFormat.format(b.toString());
+    }
+
+    public static String buildUpstreamConfBody(Slb slb, VirtualServer vs, App app, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception {
+        StringBuilder b = new StringBuilder(1024);
         //LBMethod
         b.append(LBConf.generate(slb, vs, app));
 
@@ -74,9 +83,7 @@ public class UpstreamsConf {
         //HealthCheck
         b.append(HealthCheckConf.generate(slb, vs, app));
 
-        b.append("}").append("\n");
-
-        return StringFormat.format(b.toString());
+        return b.toString();
     }
 
 }
