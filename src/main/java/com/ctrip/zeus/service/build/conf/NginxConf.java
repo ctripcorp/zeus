@@ -4,6 +4,7 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.util.StringFormat;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
+import com.netflix.config.DynamicStringProperty;
 
 /**
  * @author:xingchaowang
@@ -11,7 +12,14 @@ import com.netflix.config.DynamicPropertyFactory;
  */
 public class NginxConf {
     private static DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
-//    private static final int DEFAULT_WORKERS = 4;
+    private static DynamicStringProperty logFormat = DynamicPropertyFactory.getInstance().getStringProperty("slb.nginx.log-format",
+            "log_format main '[$time_local] $host $hostname $server_addr $request_method $uri '\n" +
+                    "'\"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for '\n" +
+                    "'$server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" '\n" +
+                    "'$host $status $body_bytes_sent $request_time $upstream_response_time '\n" +
+                    "'$upstream_addr $upstream_status';\n"
+    );
+
 
     public static String generate(Slb slb) {
         StringBuilder b = new StringBuilder(1024);
@@ -35,12 +43,10 @@ public class NginxConf {
         b.append("include    mime.types;\n");
         b.append("default_type    application/octet-stream;\n");
         b.append("keepalive_timeout    65;\n");
-        b.append("log_format main '[$time_local] $host $hostname $server_addr $request_method \"$uri\" ' " +
-                "'\"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for ' " +
-                "'$server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" ' " +
-                "'$host $status $body_bytes_sent $request_time $upstream_response_time ' " +
-                "'$upstream_addr $upstream_status';\n");
+
+        b.append(logFormat.get());
         b.append("access_log /opt/logs/nginx/access.log main;\n");
+
         b.append(statusConf());
         b.append("include    upstreams/*.conf;\n");
         b.append("include    vhosts/*.conf;\n");
