@@ -43,7 +43,10 @@ public class NginxConf {
         b.append("include    mime.types;\n");
         b.append("default_type    application/octet-stream;\n");
         b.append("keepalive_timeout    65;\n");
+
         b.append(logFormat.get());
+        b.append("access_log /opt/logs/nginx/access.log main;\n");
+
         b.append(statusConf());
         b.append("include    upstreams/*.conf;\n");
         b.append("include    vhosts/*.conf;\n");
