@@ -38,9 +38,6 @@ public class LockServiceImpl implements LockService {
     private static LockStatus toLockStatus(DistLockDo d) {
         LockStatus ls = new LockStatus().setKey(d.getLockKey())
                 .setCreatedTime(new Date(d.getCreatedTime()));
-        if (d.getTimeout() > -1) {
-            ls.setExpireTime(new Date(d.getCreatedTime() + d.getTimeout() * 1000));
-        }
         return ls;
     }
 }
