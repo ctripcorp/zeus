@@ -197,6 +197,14 @@ CREATE TABLE IF NOT EXISTS `conf_slb_active` (
 
 -- 数据导出被取消选择。
 
+-- Dumping structure for table zeus.conf_slb_active
+CREATE TABLE `dist_lock` (
+	`lock_key` VARCHAR(255) NOT NULL,
+	`created_time` BIGINT(20) NOT NULL,
+	PRIMARY KEY (`lock_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
 
 -- 导出  表 zeus_test.nginx_conf 结构
 DROP TABLE IF EXISTS `nginx_conf`;

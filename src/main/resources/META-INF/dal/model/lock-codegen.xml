@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model>
+  <entity name="model" root="true">
+    <entity-ref name="lock-status" />
+    <entity-ref name="lock-list" />
+  </entity>
+  <entity name="lock-status">
+    <element name="key" value-type="String" />
+    <element name="created-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+  </entity>
+  <entity name="lock-list">
+    <entity-ref name="lock-status" type="list" names="locks" xml-indent="true" />
+  </entity>
+</model>
+

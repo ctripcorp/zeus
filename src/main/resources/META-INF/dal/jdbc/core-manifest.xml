@@ -6,5 +6,6 @@
     <file path="core-conf.xml"/>
     <file path="core-build.xml"/>
     <file path="core-nginx.xml"/>
+    <file path="core-lock.xml"/>
 </manifest>
 

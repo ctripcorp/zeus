@@ -446,6 +446,41 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="dist-lock" table="dist_lock" alias="dl">
+    <member name="lock-key" field="lock_key" value-type="String" length="255" nullable="false" key="true" />
+    <member name="created-time" field="created_time" value-type="long" length="19" nullable="false" />
+    <var name="key-lock-key" value-type="String" key-member="lock-key" />
+    <primary-key name="PRIMARY" members="lock_key" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-lock-key" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='lock-key'/> = ${key-lock-key}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-lock-key" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='lock-key'/> = ${key-lock-key}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-lock-key" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='lock-key'/> = ${key-lock-key}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="nginx-conf" table="nginx_conf" alias="nc">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="name" field="name" value-type="String" length="200" />
