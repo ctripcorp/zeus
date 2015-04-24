@@ -17,5 +17,6 @@
     <!-- use cglib -->
     <aop:aspectj-autoproxy proxy-target-class="true"/>
 
+    <bean id="dbLockFactory" class="com.ctrip.zeus.lock.DbLockFactory"/>
     <import resource="dao-beans.xml"/>
 </beans>

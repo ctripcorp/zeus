@@ -14,19 +14,17 @@ import org.unidal.lookup.ContainerLoader;
 import support.AbstractSpringTest;
 import support.MysqlDbServer;
 
-import javax.annotation.Resource;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by zhoumy on 2015/4/14.
  */
 public class DistLockTest extends AbstractSpringTest {
     private static MysqlDbServer mysqlDbServer;
-    @Resource
-    MysqlDistLock mysqlDistLock;
 
     @BeforeClass
     public static void setUpDb() throws ComponentLookupException, ComponentLifecycleException {
@@ -36,84 +34,118 @@ public class DistLockTest extends AbstractSpringTest {
     }
 
     @Test
-    public void testSequentialLocking() throws InterruptedException {
+    public void testFunctions() throws InterruptedException {
         final List<Boolean> report = new ArrayList<>();
-        final CountDownLatch latch = new CountDownLatch(5);
+        final CountDownLatch latch = new CountDownLatch(4);
         new Thread() {
             public void run() {
-                // slock tryLock in th1 should be true
-                report.add(mysqlDistLock.tryLock("slock"));
+                report.add(new MysqlDistLock("slock").tryLock() == true);
                 latch.countDown();
             }
         }.run();
         new Thread() {
             public void run() {
-                // slock tryLock in th2 should be false
-                report.add(mysqlDistLock.tryLock("slock"));
-                // slock1 tryLock in th2 should be true
-                report.add(mysqlDistLock.tryLock("slock1"));
-                mysqlDistLock.unlock("slock1");
+                report.add(new MysqlDistLock("slock").tryLock() == false);
+                MysqlDistLock lock = new MysqlDistLock("slock1");
+                report.add(lock.tryLock() == true);
+                lock.unlock();
                 latch.countDown();
             }
         }.run();
         new Thread() {
             public void run() {
-                // slock1 tryLock with timeout 1s in th3 should be true
-                report.add(mysqlDistLock.tryLock("slock1", 5));
+                new MysqlDistLock("slock1").lock();
+                report.add(true);
                 latch.countDown();
             }
         }.run();
         new Thread() {
             public void run() {
-                // slock1 tryLock in th4 should be false
-                report.add(mysqlDistLock.tryLock("slock1"));
-                latch.countDown();
-            }
-        }.run();
-        System.out.println("We wait 5s");
-        Thread.sleep(5000);
-        new Thread() {
-            public void run() {
-                // slock1 tryLock in th5 should be true
-                report.add(mysqlDistLock.tryLock("slock1"));
+                try {
+                    new MysqlDistLock("slock1").lock(3);
+                    report.add(false);
+                } catch (Exception e) {
+                    report.add(true);
+                }
                 latch.countDown();
             }
         }.run();
 
         latch.await();
-        Assert.assertEquals(6, report.size());
-        Assert.assertTrue(report.get(0));
-        Assert.assertFalse(report.get(1));
-        Assert.assertTrue(report.get(2));
-        Assert.assertTrue(report.get(3));
-        Assert.assertFalse(report.get(4));
-        Assert.assertTrue(report.get(5));
+        Assert.assertEquals(5, report.size());
+
+        for (Boolean result : report) {
+            Assert.assertTrue(result);
+        }
     }
 
     @Test
-    public void testConcurrentLocking() throws ExecutionException, InterruptedException {
+    public void testConcurrentScenario() throws ExecutionException, InterruptedException {
         final List<Boolean> report = new ArrayList<>();
         final int totalThreads = 20;
         ExecutorService es = Executors.newFixedThreadPool(totalThreads);
 
-        List<Future<?>> fs = new ArrayList<>();
+        List<Future<?>> lockOne = new ArrayList<>();
         for (int i = 0; i < totalThreads; i++) {
-            fs.add(es.submit(new Runnable() {
+            lockOne.add(es.submit(new Runnable() {
                 @Override
                 public void run() {
-                    report.add(mysqlDistLock.tryLock("clock"));
+                    report.add(new MysqlDistLock("clock").tryLock());
                 }
             }));
         }
-        for (Future f : fs) {
+        for (Future f : lockOne) {
             f.get();
         }
+        es.shutdown();
         Assert.assertEquals(totalThreads, report.size());
         Assert.assertTrue(report.get(0));
         for (int i = 1; i < report.size(); i++) {
             Assert.assertFalse(report.get(i));
         }
-        es.shutdown();
+
+        final List<Boolean> report2 = new ArrayList<>();
+        final AtomicLong interval = new AtomicLong(0);
+        new Thread() {
+            public void run() {
+                MysqlDistLock lock = new MysqlDistLock("wait");
+                lock.lock();
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    report2.add(false);
+                }
+                report2.add(true);
+                lock.unlock();
+            }
+        }.run();
+        new Thread() {
+            public void run() {
+                MysqlDistLock lock = new MysqlDistLock("wait");
+                long start = System.nanoTime();
+                lock.lock();
+                report2.add(true);
+                lock.unlock();
+                interval.set(System.nanoTime() - start);
+            }
+        }.run();
+        Assert.assertEquals(report2.size(), 2);
+        Assert.assertTrue(report2.get(0));
+        Assert.assertTrue(report2.get(1));
+        Assert.assertTrue(interval.get() > 10000);
+    }
+
+    @Test
+    public void testIncorrectExecution() {
+        // Assume unlock cannot be done using different instance.
+        MysqlDistLock lock = new MysqlDistLock("mistake");
+        lock.lock();
+        MysqlDistLock anotherLock = new MysqlDistLock("mistake");
+        anotherLock.unlock();
+        Assert.assertFalse(anotherLock.tryLock());
+        lock.unlock();
+        Assert.assertTrue(anotherLock.tryLock());
+        anotherLock.unlock();
     }
 
     @AfterClass

@@ -9,6 +9,7 @@ import java.util.List;
  * Created by zhoumy on 2015/4/16.
  */
 public interface LockService {
+
     List<LockStatus> getLockStatus() throws DalException;
 
     void forceUnlock(String key) throws DalException;

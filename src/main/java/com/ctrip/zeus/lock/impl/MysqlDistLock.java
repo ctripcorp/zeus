@@ -3,15 +3,11 @@ package com.ctrip.zeus.lock.impl;
 import com.ctrip.zeus.dal.core.DistLockDao;
 import com.ctrip.zeus.dal.core.DistLockDo;
 import com.ctrip.zeus.dal.core.DistLockEntity;
+import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
-
-import javax.annotation.Resource;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by zhoumy on 2015/4/9.
@@ -21,11 +17,14 @@ public class MysqlDistLock implements DistLock {
     private static final long SLEEP_INTERVAL = 500L;
 
     private final String key;
-    private DistLockDao distLockDao;
+    private volatile boolean state;
+
+    private DistLockDao distLockDao = DbLockFactory.getDao();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public MysqlDistLock(String key) {
         this.key = key;
+        this.state = false;
     }
 
     @Override
@@ -96,19 +95,25 @@ public class MysqlDistLock implements DistLock {
     }
 
     private boolean tryAddLock(DistLockDo d) throws DalException {
-        if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null) {
-            distLockDao.insert(d);
-            return true;
+        if (compareAndSetState(false, true)) {
+            if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null) {
+                distLockDao.insert(d);
+                return true;
+            }
+            compareAndSetState(true, false);
         }
         return false;
     }
 
     private boolean unlock(DistLockDo d) throws DalException {
-        int count = distLockDao.deleteByKeyAndOwner(d);
-        if (count == 1)
-            return true;
-        if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null)
-            return true;
+        if (compareAndSetState(true, false)) {
+            int count = distLockDao.deleteByKey(d);
+            if (count == 1)
+                return true;
+            if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null)
+                return true;
+            compareAndSetState(false, true);
+        }
         return false;
     }
 
@@ -120,5 +125,13 @@ public class MysqlDistLock implements DistLock {
                 logger.debug("Fail to sleep between locking retries with the lock named " + key);
             }
         }
+    }
+
+    private final boolean compareAndSetState(boolean expected, boolean updated) {
+        if (state == expected) {
+            state = updated;
+            return true;
+        }
+        return false;
     }
 }

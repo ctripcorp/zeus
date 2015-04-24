@@ -25,9 +25,7 @@ public class LockServiceImpl implements LockService {
     public List<LockStatus> getLockStatus() throws DalException {
         List<LockStatus> list = new ArrayList<>();
         for (DistLockDo d : distLockDao.findAll(DistLockEntity.READSET_FULL)) {
-            if (!MysqlDistLock.isExpired(d)) {
-                list.add(toLockStatus(d));
-            }
+            list.add(toLockStatus(d));
         }
         return list;
     }
