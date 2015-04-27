@@ -9,6 +9,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -20,7 +21,7 @@ import java.lang.reflect.InvocationTargetException;
  */
 @Aspect
 @Component
-public class ExceptionAspect {
+public class ExceptionAspect implements Ordered{
     @Resource
     private ErrorResponseHandler errorResponseHandler;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -58,5 +59,10 @@ public class ExceptionAspect {
                 return null;
             }
         }
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
     }
 }

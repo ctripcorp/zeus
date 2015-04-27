@@ -1,5 +1,6 @@
 package com.ctrip.zeus.restful.resource;
 
+import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.auth.entity.Role;
 import com.ctrip.zeus.auth.entity.RoleList;
 import com.ctrip.zeus.auth.entity.User;
@@ -10,6 +11,7 @@ import com.ctrip.zeus.service.auth.AuthorizationService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -31,7 +33,8 @@ public class AuthResource {
     @GET
     @Path("/role")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response allRoles(@Context HttpHeaders hh) throws Exception {
+    @Authorize(name="getAuth")
+    public Response allRoles(@Context HttpServletRequest request, @Context HttpHeaders hh) throws Exception {
         List<Role> roles = authService.getAllRoles();
         RoleList roleList = new RoleList();
         for (Role role : roles) {

@@ -293,7 +293,7 @@
     <member name="resource-type" field="resource_type" value-type="String" length="50" />
     <member name="description" field="description" value-type="String" length="100" />
     <member name="created-time" field="created_time" value-type="Date" />
-    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <readsets>
@@ -331,7 +331,7 @@
     <member name="resource-name" field="resource_name" value-type="String" length="50" nullable="false" />
     <member name="role-name" field="role_name" value-type="String" length="50" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
-    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="role_idx" members="role_name ASC" />
@@ -371,7 +371,7 @@
     <member name="role-name" field="role_name" value-type="String" length="50" nullable="false" />
     <member name="description" field="description" value-type="String" length="100" />
     <member name="created-time" field="created_time" value-type="Date" />
-    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="role_idx" unique="true" members="role_name ASC" />
@@ -409,6 +409,8 @@
     <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
     <member name="user-name" field="user_name" value-type="String" length="50" nullable="false" />
     <member name="description" field="description" value-type="String" length="100" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="usr_name_idx" unique="true" members="user_name ASC" />
@@ -448,7 +450,7 @@
     <member name="role-name" field="role_name" value-type="String" length="50" nullable="false" />
     <member name="group" field="group" value-type="String" length="50" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
-    <member name="last-modified" field="last_modified" value-type="Date" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="usr_role_idx" unique="true" members="user_name ASC" />

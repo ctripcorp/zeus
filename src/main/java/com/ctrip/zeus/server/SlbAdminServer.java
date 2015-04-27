@@ -1,6 +1,8 @@
 package com.ctrip.zeus.server;
 
+import com.ctrip.zeus.auth.impl.IPAuthenticationFilter;
 import com.ctrip.zeus.restful.resource.SlbResourcePackage;
+import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
@@ -21,7 +23,6 @@ import org.jasig.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.ContextLoaderListener;
-import org.springframework.web.filter.DelegatingFilterProxy;
 
 import javax.servlet.DispatcherType;
 import java.io.File;
@@ -48,6 +49,11 @@ public class SlbAdminServer extends AbstractServer {
         DynamicIntProperty serverPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
         DynamicStringProperty wwwBaseDir = DynamicPropertyFactory.getInstance().getStringProperty("server.www.base-dir", ".");
         DynamicStringProperty springContextFile = DynamicPropertyFactory.getInstance().getStringProperty("server.spring.context-file", "spring-context.xml");
+        DynamicBooleanProperty enableAuthenticate = DynamicPropertyFactory.getInstance().getBooleanProperty("server.authentication.enable", false);
+        DynamicStringProperty casServerLoginUrl = DynamicPropertyFactory.getInstance().getStringProperty("server.sso.casServer.login.url", "");
+        DynamicStringProperty casServerUrlPrefix = DynamicPropertyFactory.getInstance().getStringProperty("server.sso.casServer.url.prefix", "");
+        DynamicStringProperty serverName = DynamicPropertyFactory.getInstance().getStringProperty("server.sso.server.name", "");
+
 
         //Config Jersey
         ResourceConfig config = new ResourceConfig();
@@ -80,21 +86,23 @@ public class SlbAdminServer extends AbstractServer {
         handler.addFilter(GzipFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST))
                 .setInitParameter("mimeTypes", "application/json, application/xml,text/xml, text/html");
 
-        //handler.addFilter(new FilterHolder(new DelegatingFilterProxy("springSecurityFilterChain")), "/*", EnumSet.of(DispatcherType.REQUEST));
-
         //SSO filter
-        handler.addFilter(SingleSignOutFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
-        FilterHolder af =handler.addFilter(AuthenticationFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
-        af.setInitParameter("casServerLoginUrl","https://cas.uat.qa.nt.ctripcorp.com/caso/login");
-        af.setInitParameter("serverName","http://localhost:8099");
+        if (enableAuthenticate.get()) {
+            handler.addFilter(SingleSignOutFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 
-        FilterHolder validateFilter = handler.addFilter(Cas20ProxyReceivingTicketValidationFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
-        validateFilter.setInitParameter("casServerUrlPrefix", "https://cas.uat.qa.nt.ctripcorp.com/caso");
-        validateFilter.setInitParameter("serverName", "http://localhost:8099");
-        validateFilter.setInitParameter("encoding", "UTF-8");
+            handler.addFilter(IPAuthenticationFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 
-        handler.addFilter(HttpServletRequestWrapperFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+            FilterHolder af = handler.addFilter(AuthenticationFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+            af.setInitParameter("casServerLoginUrl", casServerLoginUrl.get());
+            af.setInitParameter("serverName", serverName.get());
 
+            FilterHolder validateFilter = handler.addFilter(Cas20ProxyReceivingTicketValidationFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+            validateFilter.setInitParameter("casServerUrlPrefix", casServerUrlPrefix.get());
+            validateFilter.setInitParameter("serverName", serverName.get());
+            validateFilter.setInitParameter("encoding", "UTF-8");
+
+            handler.addFilter(HttpServletRequestWrapperFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        }
 
         //Config Servlet
         handler.addServlet(jerseyServletHolder, "/api/*");

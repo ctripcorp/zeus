@@ -84,7 +84,7 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<logical-table-name>auth-resource</logical-table-name>
-				<physical-table-name>auth-resource</physical-table-name>
+				<physical-table-name>auth_resource</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>
@@ -94,7 +94,7 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<logical-table-name>auth-resource-role</logical-table-name>
-				<physical-table-name>auth-resource-role</physical-table-name>
+				<physical-table-name>auth_resource_role</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>
@@ -104,7 +104,7 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<logical-table-name>auth-role</logical-table-name>
-				<physical-table-name>auth-role</physical-table-name>
+				<physical-table-name>auth_role</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>
@@ -114,7 +114,7 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<logical-table-name>auth-user</logical-table-name>
-				<physical-table-name>auth-user</physical-table-name>
+				<physical-table-name>auth_user</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>
@@ -124,7 +124,7 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<logical-table-name>auth-user-role</logical-table-name>
-				<physical-table-name>auth-user-role</physical-table-name>
+				<physical-table-name>auth_user_role</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>

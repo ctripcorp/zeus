@@ -1,6 +1,6 @@
 package com.ctrip.zeus.restful.resource;
 
-import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.Slb;
@@ -10,17 +10,14 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.SlbRepository;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * @author:xingchaowang
@@ -50,7 +47,8 @@ public class SlbResource {
     @GET
     @Path("/get/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getBySlbName(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
+    @Authorize(name="getSlb")
+    public Response getBySlbName(@Context HttpHeaders hh, @Context HttpServletRequest request, @PathParam("slbName") String slbName) throws Exception {
         Slb slb = slbRepository.get(slbName);
         return responseHandler.handle(slb, hh.getMediaType());
     }
