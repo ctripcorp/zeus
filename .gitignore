@@ -1,3 +1,5 @@
+#github .gitignore file
+#@can not merge to dev git
 /ws/*
 /target/*
 /bin/*
@@ -9,3 +11,7 @@
 .idea/
 classes/
 *.iml
+conf/uat/*
+conf/fat/*
+conf/prod/*
+conf/fws/*
