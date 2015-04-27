@@ -13,5 +13,5 @@ classes/
 *.iml
 conf/uat/*
 conf/fat/*
-conf/prod/*
+conf/prod*/*
 conf/fws/*
