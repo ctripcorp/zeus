@@ -1,6 +1,8 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.lock.DbLockFactory;
+import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
@@ -31,6 +33,8 @@ public class SlbResource {
     private SlbRepository slbRepository;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private DbLockFactory dbLockFactory;
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -79,7 +83,13 @@ public class SlbResource {
         } else {
             throw new Exception("Unacceptable type.");
         }
-        slbRepository.update(s);
+        DistLock lock = dbLockFactory.newLock(s.getName() + "_update");
+        try {
+            lock.lock();
+            slbRepository.update(s);
+        } finally {
+            lock.unlock();
+        }
         return Response.ok().build();
     }
 

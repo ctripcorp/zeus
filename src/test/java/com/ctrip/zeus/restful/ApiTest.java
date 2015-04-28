@@ -75,15 +75,13 @@ public class ApiTest {
             futures.add(es.submit(new Runnable() {
                 @Override
                 public void run() {
-                    while(!tryUpdate())
-                        continue;
-                }
-
-                private boolean tryUpdate() {
-                    Slb slb = c.get(slbName);
-                    slb.addSlbServer(new SlbServer().setHostName("slbupd" + num).setIp("192.168.11." + num).setEnable(false));
-                    Response updResponse = c.update(slb);
-                    return updResponse.getStatus() == 200;
+                    while (true) {
+                        Slb slb = c.get(slbName);
+                        slb.addSlbServer(new SlbServer().setHostName("slbupd" + num).setIp("192.168.11." + num).setEnable(false));
+                        Response updResponse = c.update(slb);
+                        if (updResponse.getStatus() == 200)
+                            break;
+                    }
                 }
             }));
         }

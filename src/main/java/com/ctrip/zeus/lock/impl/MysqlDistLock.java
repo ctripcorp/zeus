@@ -19,12 +19,13 @@ public class MysqlDistLock implements DistLock {
     private final String key;
     private volatile boolean state;
 
-    private DistLockDao distLockDao = DbLockFactory.getDao();
+    private DistLockDao distLockDao;// = DbLockFactory.getDao();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public MysqlDistLock(String key) {
+    public MysqlDistLock(String key, DistLockDao distLockDao) {
         this.key = key;
         this.state = false;
+        this.distLockDao = distLockDao;
     }
 
     @Override
@@ -96,9 +97,14 @@ public class MysqlDistLock implements DistLock {
 
     private boolean tryAddLock(DistLockDo d) throws DalException {
         if (compareAndSetState(false, true)) {
-            if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null) {
-                distLockDao.insert(d);
-                return true;
+            try {
+                if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null) {
+                    distLockDao.insert(d);
+                    return true;
+                }
+            } catch (DalException ex) {
+                compareAndSetState(true, false);
+                throw ex;
             }
             compareAndSetState(true, false);
         }
@@ -107,11 +113,16 @@ public class MysqlDistLock implements DistLock {
 
     private boolean unlock(DistLockDo d) throws DalException {
         if (compareAndSetState(true, false)) {
-            int count = distLockDao.deleteByKey(d);
-            if (count == 1)
-                return true;
-            if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null)
-                return true;
+            try {
+                int count = distLockDao.deleteByKey(d);
+                if (count == 1)
+                    return true;
+                if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null)
+                    return true;
+            } catch (DalException ex) {
+                compareAndSetState(false, true);
+                throw ex;
+            }
             compareAndSetState(false, true);
         }
         return false;

@@ -14,6 +14,7 @@ import org.unidal.lookup.ContainerLoader;
 import support.AbstractSpringTest;
 import support.MysqlDbServer;
 
+import javax.annotation.Resource;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,9 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class DistLockTest extends AbstractSpringTest {
     private static MysqlDbServer mysqlDbServer;
+
+    @Resource
+    private DbLockFactory dbLockFactory;
 
     @BeforeClass
     public static void setUpDb() throws ComponentLookupException, ComponentLifecycleException {
@@ -39,14 +43,14 @@ public class DistLockTest extends AbstractSpringTest {
         final CountDownLatch latch = new CountDownLatch(4);
         new Thread() {
             public void run() {
-                report.add(new MysqlDistLock("slock").tryLock() == true);
+                report.add(dbLockFactory.newLock("slock").tryLock() == true);
                 latch.countDown();
             }
         }.run();
         new Thread() {
             public void run() {
-                report.add(new MysqlDistLock("slock").tryLock() == false);
-                MysqlDistLock lock = new MysqlDistLock("slock1");
+                report.add(dbLockFactory.newLock("slock").tryLock() == false);
+                DistLock lock = dbLockFactory.newLock("slock1");
                 report.add(lock.tryLock() == true);
                 lock.unlock();
                 latch.countDown();
@@ -54,7 +58,7 @@ public class DistLockTest extends AbstractSpringTest {
         }.run();
         new Thread() {
             public void run() {
-                new MysqlDistLock("slock1").lock();
+                dbLockFactory.newLock("slock1").lock();
                 report.add(true);
                 latch.countDown();
             }
@@ -62,7 +66,7 @@ public class DistLockTest extends AbstractSpringTest {
         new Thread() {
             public void run() {
                 try {
-                    new MysqlDistLock("slock1").lock(3);
+                    dbLockFactory.newLock("slock1").lock(3);
                     report.add(false);
                 } catch (Exception e) {
                     report.add(true);
@@ -90,7 +94,7 @@ public class DistLockTest extends AbstractSpringTest {
             lockOne.add(es.submit(new Runnable() {
                 @Override
                 public void run() {
-                    report.add(new MysqlDistLock("clock").tryLock());
+                    report.add(dbLockFactory.newLock("clock").tryLock());
                 }
             }));
         }
@@ -108,7 +112,7 @@ public class DistLockTest extends AbstractSpringTest {
         final AtomicLong interval = new AtomicLong(0);
         new Thread() {
             public void run() {
-                MysqlDistLock lock = new MysqlDistLock("wait");
+                DistLock lock = dbLockFactory.newLock("wait");
                 lock.lock();
                 try {
                     Thread.sleep(10000);
@@ -121,7 +125,7 @@ public class DistLockTest extends AbstractSpringTest {
         }.run();
         new Thread() {
             public void run() {
-                MysqlDistLock lock = new MysqlDistLock("wait");
+                DistLock lock = dbLockFactory.newLock("wait");
                 long start = System.nanoTime();
                 lock.lock();
                 report2.add(true);
@@ -138,9 +142,9 @@ public class DistLockTest extends AbstractSpringTest {
     @Test
     public void testIncorrectExecution() {
         // Assume unlock cannot be done using different instance.
-        MysqlDistLock lock = new MysqlDistLock("mistake");
+        DistLock lock = dbLockFactory.newLock("mistake");
         lock.lock();
-        MysqlDistLock anotherLock = new MysqlDistLock("mistake");
+        DistLock anotherLock = dbLockFactory.newLock("mistake");
         anotherLock.unlock();
         Assert.assertFalse(anotherLock.tryLock());
         lock.unlock();
