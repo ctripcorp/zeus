@@ -3,6 +3,8 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
 import com.ctrip.zeus.dal.core.SlbDo;
+import com.ctrip.zeus.lock.DistLock;
+import com.ctrip.zeus.lock.impl.MysqlDistLock;
 import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
@@ -103,10 +105,9 @@ public class SlbRepositoryImpl implements SlbRepository {
     public void update(Slb slb) throws Exception {
         if (slb == null)
             return;
-
+        DistLock lock = new MysqlDistLock(slb.getName() + "_update");
         SlbDo d = slbSync.update(slb);
         archiveService.archiveSlb(slbQuery.getById(d.getId()));
-
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
                     .setIp(slbServer.getIp())
@@ -114,6 +115,7 @@ public class SlbRepositoryImpl implements SlbRepository {
                     .setVersion(0)
                     .setCreatedTime(new Date()));
         }
+        lock.unlock();
     }
 
     @Override

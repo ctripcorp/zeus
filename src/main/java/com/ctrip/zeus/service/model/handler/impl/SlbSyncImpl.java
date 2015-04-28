@@ -53,6 +53,9 @@ public class SlbSyncImpl implements SlbSync {
     @Override
     public SlbDo update(Slb slb) throws DalException, ValidationException {
         validate(slb);
+        SlbDo check = slbDao.findByName(slb.getName(), SlbEntity.READSET_FULL);
+        if (check.getVersion() > slb.getVersion())
+            throw new ValidationException("Newer Slb version is detected.");
         SlbDo d = C.toSlbDo(slb);
         slbDao.updateByName(d, SlbEntity.UPDATESET_FULL);
 

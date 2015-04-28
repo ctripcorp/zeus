@@ -54,6 +54,10 @@ public class AppSyncImpl implements AppSync {
     @Override
     public AppDo update(App app) throws DalException, ValidationException {
         validate(app);
+        AppDo check = appDao.findByName(app.getName(), AppEntity.READSET_FULL);
+        if (check.getVersion() > app.getVersion())
+            throw new ValidationException("Newer App version is detected.");
+
         AppDo d= C.toAppDo(app);
         appDao.updateByName(d, AppEntity.UPDATESET_FULL);
 

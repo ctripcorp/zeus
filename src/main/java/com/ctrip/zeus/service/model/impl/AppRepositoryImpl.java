@@ -1,6 +1,8 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.AppDo;
+import com.ctrip.zeus.lock.DistLock;
+import com.ctrip.zeus.lock.impl.MysqlDistLock;
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppServer;
 import com.ctrip.zeus.service.model.handler.AppQuery;
@@ -75,9 +77,14 @@ public class AppRepositoryImpl implements AppRepository {
 
     @Override
     public void update(App app) throws Exception {
+        if (app == null)
+            return;
+        DistLock lock = new MysqlDistLock(app.getName() + "_update");
+        lock.lock();
         AppDo d = appSync.update(app);
         app = appQuery.getById(d.getId());
         archiveService.archiveApp(app);
+        lock.unlock();
     }
 
     @Override
