@@ -6,6 +6,7 @@ import com.ctrip.zeus.dal.core.NginxServerDo;
 import com.ctrip.zeus.dal.core.NginxServerEntity;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.NginxOperator;
+import com.ctrip.zeus.nginx.entity.Nginx;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.service.build.NginxConfService;
@@ -48,6 +49,15 @@ public class NginxServiceImpl implements NginxService {
         Slb slb = slbRepository.getBySlbServer(ip);
         String slbName = slb.getName();
         int version = nginxConfService.getCurrentVersion(slbName);
+
+        NginxServerDo nginxServerDo =nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
+        if (nginxServerDo!=null&&nginxServerDo.getVersion()>=version)
+        {
+            NginxResponse res = new NginxResponse();
+            res.setServerIp(ip).setSucceed(true).setOutMsg("current version is lower then or equal the version used!current version ["
+                    +version+"],used version ["+nginxServerDo.getVersion()+"]");
+            return res;
+        }
 
         NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
 
@@ -103,6 +113,15 @@ public class NginxServiceImpl implements NginxService {
         Slb slb = slbRepository.getBySlbServer(ip);
         String slbName = slb.getName();
         int version = nginxConfService.getCurrentVersion(slbName);
+
+        NginxServerDo nginxServer =nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
+        if (nginxServer!=null&&nginxServer.getVersion()>=version)
+        {
+            NginxResponse res = new NginxResponse();
+            res.setServerIp(ip).setSucceed(true).setOutMsg("current version is lower then or equal the version used,Don't update!current version ["
+                    +version+"],used version ["+nginxServer.getVersion()+"]");
+            return res;
+        }
 
         NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
 
