@@ -45,4 +45,11 @@ public interface BuildInfoService extends Repository {
      * @throws Exception
      */
     int getCurrentTicket(String slbname) throws Exception;
+    /**
+     * get current ticket by slb name
+     * @param slbname the slb name
+     * @return padding ticket
+     * @throws Exception
+     */
+    int getPaddingTicket(String slbname) throws Exception;
 }

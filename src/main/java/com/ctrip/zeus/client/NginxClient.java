@@ -50,15 +50,10 @@ public class NginxClient extends AbstractRestClient {
     }
 
     public NginxResponse dyups(String upsName ,String upsCommands)throws IOException{
-        Response responseStr = getTarget().path("/upstream/"+upsName).request().post(Entity.entity(upsCommands,
+        String responseStr = getTarget().path("/api/nginx/dyups/"+upsName).request().post(Entity.entity(upsCommands,
                 MediaType.APPLICATION_JSON
-        ));
-        if (responseStr.getStatus()==200)
-        {
-            return new NginxResponse().setSucceed(true).setOutMsg(responseStr.getEntity().toString());
-        }else {
-            return new NginxResponse().setSucceed(false).setErrMsg(responseStr.getEntity().toString());
-        }
+        ),String.class);
+        return DefaultJsonParser.parse(NginxResponse.class,responseStr);
     }
 
     public UpstreamStatus getUpstreamStatus() throws IOException {

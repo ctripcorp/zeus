@@ -128,4 +128,10 @@ public class BuildInfoServiceImpl implements BuildInfoService {
         BuildInfoDo d = buildInfoDao.findByName(slbname, BuildInfoEntity.READSET_FULL);
         return d.getCurrentTicket();
     }
+
+    @Override
+    public int getPaddingTicket(String slbname)throws Exception{
+        BuildInfoDo d = buildInfoDao.findByName(slbname, BuildInfoEntity.READSET_FULL);
+        return d.getPendingTicket();
+    }
 }

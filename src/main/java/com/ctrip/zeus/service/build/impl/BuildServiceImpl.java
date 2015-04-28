@@ -24,15 +24,14 @@ public class BuildServiceImpl implements BuildService {
     private NginxServerDao nginxServerDao;
 
     @Override
-    public void build(String name) throws Exception {
-        int ticket = buildInfoService.getTicket(name);
-        nginxConfService.build(name, ticket);
-        buildInfoService.updateTicket(name, ticket);
-
+    public boolean build(String slbname) {
+        return false;
     }
 
     @Override
     public boolean build(String name , int ticket) throws Exception {
+        int paddingTicket = buildInfoService.getPaddingTicket(name);
+        ticket = paddingTicket>ticket?paddingTicket:ticket;
         if (!buildInfoService.updateTicket(name, ticket))
         {
             return false;

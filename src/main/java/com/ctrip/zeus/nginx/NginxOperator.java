@@ -1,5 +1,6 @@
 package com.ctrip.zeus.nginx;
 
+import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.nginx.entity.Nginx;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
@@ -20,9 +21,15 @@ public class NginxOperator {
     private String nginxBinDir;
 
 
+
     public NginxOperator(String nginxConfDir, String nginxBinDir){
         this.nginxConfDir = nginxConfDir;
         this.nginxBinDir = nginxBinDir;
+    }
+    public NginxOperator()
+    {
+        this.nginxConfDir = null;
+        this.nginxBinDir = null;
     }
 
     public void writeNginxConf(String conf) throws IOException {
@@ -38,6 +45,10 @@ public class NginxOperator {
     public void writeUpstreamsConf(String upstreamName, String conf) throws IOException {
         String fileName = upstreamName + CONF_SUFFIX;
         doWriteConf(nginxConfDir + "/upstreams", fileName, conf);
+    }
+
+    public NginxResponse dyupsLocal(String upsname,String upsdata) throws IOException {
+        return new LocalClient().dyups(upsname,upsdata);
     }
 
     public NginxResponse reloadConfTest()throws IOException{
@@ -124,3 +135,5 @@ public class NginxOperator {
     }
 
 }
+
+

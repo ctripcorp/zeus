@@ -71,6 +71,17 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
+    public boolean writeALLToDisk(String slb) throws Exception {
+        return writeALLToDisk(slb,null);
+    }
+
+    @Override
+    public List<NginxResponse> writeALLToDiskListResult(String slb) throws Exception {
+        List<NginxResponse> result = new ArrayList<>();
+        writeALLToDisk(slb,result);
+        return result;
+    }
+
     public boolean writeALLToDisk(String slbName , List<NginxResponse> responses) throws Exception {
         List<NginxResponse> result = null;
         boolean sucess = true;
@@ -172,6 +183,11 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
+    public NginxResponse dyopsLocal(String upsName,String upsCommands) throws Exception {
+        return new NginxOperator().dyupsLocal( upsName, upsCommands);
+    }
+
+    @Override
     public List<NginxResponse> dyops(String slbName, List<DyUpstreamOpsData> dyups) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
         Slb slb = slbRepository.get(slbName);
@@ -181,7 +197,7 @@ public class NginxServiceImpl implements NginxService {
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
             flag = true;
-            NginxClient nginxClient = NginxClient.GetClient("http://" + slbServer.getIp() + ":" + dyupsPort.get());
+            NginxClient nginxClient = NginxClient.GetClient("http://" + slbServer.getIp() + ":" + adminServerPort.get());
             for (DyUpstreamOpsData dyup : dyups){
                 NginxResponse response = nginxClient.dyups(dyup.getUpstreamName(),dyup.getUpstreamCommands());
                 response.setServerIp(slbServer.getIp());

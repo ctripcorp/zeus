@@ -8,7 +8,7 @@ import com.ctrip.zeus.service.Repository;
  * @date: 3/15/2015.
  */
 public interface BuildService extends Repository {
-    void build(String name) throws Exception;
+    boolean build(String slbname);
     /**
      * build config by slb name and ticket number
      * @param slbname the slb name

@@ -143,7 +143,7 @@ public class ServerResource {
             if(buildService.build(slbname,ticket))
             {
                 //push
-                if(nginxAgentService.writeALLToDisk(slbname,null)){
+                if(nginxAgentService.writeALLToDisk(slbname)){
 
                     List<DyUpstreamOpsData> dyUpstreamOpsDataList=nginxConfService.buildUpstream(slb,appName);
                     nginxAgentService.dyops(slbname,dyUpstreamOpsDataList);
@@ -280,7 +280,7 @@ public class ServerResource {
                 if(buildService.build(slbname,ticket))
                 {
                     //push
-                    if(nginxAgentService.writeALLToDisk(slbname,null)){
+                    if(nginxAgentService.writeALLToDisk(slbname)){
 
                         List<DyUpstreamOpsData> dyUpstreamOpsDataList=nginxConfService.buildUpstream(slb,tmp.getMemberAppname());
                         nginxAgentService.dyops(slbname,dyUpstreamOpsDataList);
@@ -326,7 +326,7 @@ public class ServerResource {
                 //build config
                 if (buildService.build(slbname, ticket)) {
                     //push
-                    if(nginxAgentService.writeALLToDisk(slbname,null)){
+                    if(nginxAgentService.writeALLToDisk(slbname)){
 
                         List<DyUpstreamOpsData> dyUpstreamOpsDataList=nginxConfService.buildUpstream(slb,tmp.getMemberAppname());
                         nginxAgentService.dyops(slbname,dyUpstreamOpsDataList);

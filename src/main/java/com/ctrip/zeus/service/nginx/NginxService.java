@@ -24,7 +24,13 @@ public interface NginxService {
      * @return is all success
      * @throws Exception
      */
-    boolean writeALLToDisk(String slb , List<NginxResponse> responses) throws Exception;
+    boolean writeALLToDisk(String slb) throws Exception;
+    /**
+     * write all server conf of nginx server conf in the slb
+     * @return list the results
+     * @throws Exception
+     */
+    List<NginxResponse> writeALLToDiskListResult(String slb) throws Exception;
 
     /**
      * load the colocated nginx server conf from disk
@@ -48,6 +54,12 @@ public interface NginxService {
      */
     List<NginxResponse> writeAllAndLoadAll(String slbName) throws Exception;
 
+    /**
+     *dy upstream ops api
+     * @param upsName dy upstream name
+     * @param upsCommands dy upstream commands
+     */
+    NginxResponse dyopsLocal(String upsName,String upsCommands)throws Exception;
     /**
      *dy upstream ops api
      * @param slbName slbname
