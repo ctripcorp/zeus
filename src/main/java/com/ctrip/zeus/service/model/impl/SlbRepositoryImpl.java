@@ -10,7 +10,6 @@ import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.SlbSync;
-import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -103,10 +102,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     public void update(Slb slb) throws Exception {
         if (slb == null)
             return;
-
         SlbDo d = slbSync.update(slb);
         archiveService.archiveSlb(slbQuery.getById(d.getId()));
-
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
                     .setIp(slbServer.getIp())

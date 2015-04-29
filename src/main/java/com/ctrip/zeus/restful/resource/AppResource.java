@@ -1,5 +1,7 @@
 package com.ctrip.zeus.restful.resource;
 
+import com.ctrip.zeus.lock.DbLockFactory;
+import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
@@ -27,6 +29,8 @@ public class AppResource {
     private AppRepository appRepository;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private DbLockFactory dbLockFactory;
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -101,7 +105,13 @@ public class AppResource {
                 throw new Exception("Unacceptable type.");
             }
         }
-        appRepository.update(a);
+        DistLock lock = dbLockFactory.newLock(a.getName() + "_update");
+        try {
+            lock.lock();
+            appRepository.update(a);
+        } finally {
+            lock.unlock();
+        }
         return Response.ok().build();
     }
 

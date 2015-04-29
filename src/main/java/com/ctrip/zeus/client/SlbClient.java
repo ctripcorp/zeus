@@ -32,6 +32,14 @@ public class SlbClient extends AbstractRestClient {
                 ));
     }
 
+    public Response update(Slb slb) {
+        return getTarget().path("/api/slb/update").request()
+                .post(Entity.entity(
+                        String.format(Slb.JSON, slb),
+                        MediaType.APPLICATION_JSON
+                ));
+    }
+
     public Slb get(String slbName) {
         String res = getTarget().path("/api/slb/get/" + slbName).request(MediaType.APPLICATION_JSON).get(String.class);
         try {

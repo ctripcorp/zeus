@@ -7,7 +7,6 @@ import com.ctrip.zeus.service.model.handler.AppQuery;
 import com.ctrip.zeus.service.model.AppRepository;
 import com.ctrip.zeus.service.model.handler.AppSync;
 import com.ctrip.zeus.service.model.ArchiveService;
-import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -75,6 +74,8 @@ public class AppRepositoryImpl implements AppRepository {
 
     @Override
     public void update(App app) throws Exception {
+        if (app == null)
+            return;
         AppDo d = appSync.update(app);
         app = appQuery.getById(d.getId());
         archiveService.archiveApp(app);
