@@ -88,7 +88,7 @@ public class ServerResource {
         String serverip = ip;
         //update status
         statusService.downServer(serverip);
-        return serverOps(hh,serverip);
+        return serverOps(hh, serverip);
     }
 
     private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
@@ -146,7 +146,7 @@ public class ServerResource {
     public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
     {
         statusService.upMember(appName,ip);
-        return memberOps(hh,appName,ip);
+        return memberOps(hh, appName, ip);
     }
 
     @GET
@@ -170,6 +170,7 @@ public class ServerResource {
             int ticket = buildInfoService.getTicket(slbname);
 
             boolean buildFlag = false;
+            boolean dyopsFlag = false;
             List<DyUpstreamOpsData> dyUpstreamOpsDataList = null;
             DistLock buildLock = dbLockFactory.newLock(slbname + "_build");
             try{
@@ -183,14 +184,23 @@ public class ServerResource {
                 try {
                     writeLock.lock(lockTimeout.get());
                     //push
-                    if (nginxAgentService.writeALLToDisk(slbname)) {
-                        dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, appName);
-                        nginxAgentService.dyops(slbname, dyUpstreamOpsDataList);
-                    } else {
+                    dyopsFlag=nginxAgentService.writeALLToDisk(slbname);
+                    if (!dyopsFlag)
+                    {
                         throw new Exception("write all to disk failed!");
                     }
                 } finally {
                     writeLock.unlock();
+                }
+            }
+            if (dyopsFlag){
+                DistLock dyopsLock = dbLockFactory.newLock(slbname + "_" + appName + "_dyops");
+                try{
+                    dyopsLock.lock(lockTimeout.get());
+                    dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, appName);
+                    nginxAgentService.dyops(slbname, dyUpstreamOpsDataList);
+                }finally {
+                    dyopsLock.unlock();
                 }
             }
         }
