@@ -6,6 +6,7 @@
     <entity-ref name="nginx-server-status" />
     <entity-ref name="nginx-response-list" />
     <entity-ref name="nginx-server-status-list" />
+    <entity-ref name="traffic-status" />
   </entity>
   <entity name="upstream-status">
     <entity-ref name="servers" />
@@ -43,6 +44,17 @@
   <entity name="nginx-server-status-list">
     <element name="total" value-type="int" />
     <entity-ref name="nginx-server-status" type="list" names="nginx-server-statuses" xml-indent="true" />
+  </entity>
+  <entity name="traffic-status">
+    <element name="host-name" value-type="String" />
+    <element name="uri" value-type="String" />
+    <element name="success-count" value-type="int" />
+    <element name="redirection-count" value-type="int" />
+    <element name="client-err-count" value-type="int" />
+    <element name="server-err-count" value-type="int" />
+    <element name="avg-response-time" value-type="int" />
+    <element name="bytin" value-type="int" />
+    <element name="bytout" value-type="int" />
   </entity>
 </model>
 

@@ -1,5 +1,7 @@
 package com.ctrip.zeus.nginx;
 
+import com.ctrip.zeus.nginx.entity.TrafficStatus;
+
 /**
  * @author:xingchaowang
  * @date: 3/19/2015.
@@ -7,4 +9,6 @@ package com.ctrip.zeus.nginx;
 public interface NginxStatusService {
 
     NginxStatus getNginxStatus(String slbName) throws Exception;
+
+    TrafficStatus getTrafficStatus(String hostname);
 }

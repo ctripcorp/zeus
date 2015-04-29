@@ -52,4 +52,16 @@
             <nginx-server-status/>
         </nginx-server-statuses>
     </nginx-server-status-list>
+
+    <traffic-status>
+        <host-name>localhost</host-name>
+        <uri>/uri</uri>
+        <success-count>1</success-count>
+        <redirection-count>1</redirection-count>
+        <client-err-count>1</client-err-count>
+        <server-err-count>1</server-err-count>
+        <avg-response-time>12</avg-response-time>
+        <bytin>25</bytin>
+        <bytout>36</bytout>
+    </traffic-status>
 </nginx>
