@@ -1,5 +1,6 @@
 package com.ctrip.zeus.restful.resource;
 
+import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.App;
@@ -11,6 +12,7 @@ import com.ctrip.zeus.service.model.AppRepository;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -34,7 +36,9 @@ public class AppResource {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "getAllApps")
     public Response list(@Context HttpHeaders hh,
+                         @Context HttpServletRequest request,
                          @QueryParam("from") long fromId,
                          @QueryParam("maxCount") int maxCount) throws Exception {
         AppList appList = new AppList();
@@ -57,7 +61,9 @@ public class AppResource {
     @GET
     @Path("/get/{appName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getByAppName(@Context HttpHeaders hh, @PathParam("appName") String appName) throws Exception {
+    @Authorize(name = "getApp")
+    public Response getByAppName(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                 @PathParam("appName") String appName) throws Exception {
         App app = appRepository.get(appName);
         return responseHandler.handle(app, hh.getMediaType());
     }
@@ -65,7 +71,9 @@ public class AppResource {
     @GET
     @Path("/get")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response get(@Context HttpHeaders hh, @QueryParam("appId") String appId) throws Exception {
+    @Authorize(name = "getApp")
+    public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                        @QueryParam("appId") String appId) throws Exception {
         if (appId == null || appId.isEmpty()) {
             throw new Exception("Missing parameter or value.");
         }
@@ -76,7 +84,8 @@ public class AppResource {
     @POST
     @Path("/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response add(@Context HttpHeaders hh, String app) throws Exception {
+    @Authorize(name = "addApp")
+    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String app) throws Exception {
         App a;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             a = DefaultSaxParser.parseEntity(App.class, app);
@@ -94,7 +103,8 @@ public class AppResource {
     @POST
     @Path("/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response update(@Context HttpHeaders hh, String app) throws Exception {
+    @Authorize(name = "updateApp")
+    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String app) throws Exception {
         App a;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             a = DefaultSaxParser.parseEntity(App.class, app);
@@ -118,7 +128,8 @@ public class AppResource {
     @GET
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response delete(@Context HttpHeaders hh, @QueryParam("appName") String appName) throws Exception {
+    @Authorize(name = "deleteApp")
+    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("appName") String appName) throws Exception {
         if (appName == null || appName.isEmpty())
             throw new Exception("Missing parameter or value.");
         appRepository.delete(appName);
