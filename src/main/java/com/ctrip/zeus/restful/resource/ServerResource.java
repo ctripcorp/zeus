@@ -1,5 +1,6 @@
 package com.ctrip.zeus.restful.resource;
 
+import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -68,7 +70,8 @@ public class ServerResource {
 
     @GET
     @Path("/upServer")
-    public Response upServer(@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
+    @Authorize(name="upDownServer")
+    public Response upServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
         String serverip = ip;
 
         //update status
@@ -80,7 +83,8 @@ public class ServerResource {
 
     @GET
     @Path("/downServer")
-    public Response downServer(@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
+    @Authorize(name="upDownServer")
+    public Response downServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
         String serverip = ip;
         //update status
         statusService.downServer(serverip);
@@ -138,7 +142,8 @@ public class ServerResource {
 
     @GET
     @Path("/upMember")
-    public Response upMember(@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
+    @Authorize(name="upDownMember")
+    public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
     {
         statusService.upMember(appName,ip);
         return memberOps(hh,appName,ip);
@@ -146,7 +151,8 @@ public class ServerResource {
 
     @GET
     @Path("/downMember")
-    public Response downMember(@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
+    @Authorize(name="upDownMember")
+    public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
     {
         statusService.downMember(appName, ip);
         return memberOps(hh, appName, ip);

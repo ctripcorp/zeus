@@ -1,5 +1,6 @@
 package com.ctrip.zeus.restful.resource;
 
+import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.ConfAppName;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -56,13 +58,15 @@ public class ActivateResource {
 
     @GET
     @Path("/activate")
-    public Response list(@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("appName") List<String> appNames)throws Exception{
+    @Authorize(name="activate")
+    public Response list(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("appName") List<String> appNames)throws Exception{
         return activateAll(slbNames,appNames,hh);
     }
 
     @POST
     @Path("/activate")
-    public Response activate(@Context HttpHeaders hh, String req) throws Exception {
+    @Authorize(name="activate")
+    public Response activate(@Context HttpServletRequest request,@Context HttpHeaders hh, String req) throws Exception {
         ConfReq confreq = null;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             confreq = DefaultSaxParser.parseEntity(ConfReq.class, req);
