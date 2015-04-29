@@ -1,5 +1,7 @@
 package com.ctrip.zeus.restful.resource;
 
+import com.ctrip.zeus.lock.DbLockFactory;
+import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.ConfAppName;
 import com.ctrip.zeus.model.entity.ConfReq;
 import com.ctrip.zeus.model.entity.ConfSlbName;
@@ -12,6 +14,8 @@ import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.netflix.config.DynamicIntProperty;
+import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
@@ -43,6 +47,10 @@ public class ActivateResource {
     private BuildInfoService buildInfoService;
     @Resource
     private BuildService buildService;
+    @Resource
+    private DbLockFactory dbLockFactory;
+
+    private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
 
 
 
@@ -109,10 +117,24 @@ public class ActivateResource {
             //build all slb config
             for (String buildSlbName : slbList) {
                 int ticket = buildInfoService.getTicket(buildSlbName);
-                if(buildService.build(buildSlbName,ticket))
-                {
-                    //Push Service
-                    nginxAgentService.writeAllAndLoadAll(buildSlbName);
+                boolean buildFlag = false;
+                DistLock buildLock = dbLockFactory.newLock(buildSlbName + "_build");
+                try{
+                    buildLock.lock(lockTimeout.get());
+                    buildFlag =buildService.build(buildSlbName,ticket);
+                }finally {
+                    buildLock.unlock();
+                }
+                if (buildFlag) {
+                    DistLock writeLock = dbLockFactory.newLock(buildSlbName + "_writeAndReload");
+                    try {
+                        writeLock.lock(lockTimeout.get());
+                        //Push Service
+                        nginxAgentService.writeAllAndLoadAll(buildSlbName);
+
+                    } finally {
+                        writeLock.unlock();
+                    }
                 }
             }
             return Response.ok().status(200).build();
