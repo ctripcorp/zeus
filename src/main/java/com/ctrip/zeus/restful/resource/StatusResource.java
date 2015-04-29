@@ -1,13 +1,14 @@
 package com.ctrip.zeus.restful.resource;
 
+import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.model.entity.AppServerStatus;
 import com.ctrip.zeus.model.entity.AppStatus;
 import com.ctrip.zeus.model.entity.AppStatusList;
 import com.ctrip.zeus.service.status.AppStatusService;
-import com.ctrip.zeus.service.status.StatusService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -31,7 +32,8 @@ public class StatusResource {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response allAppStatus(@Context HttpHeaders hh) throws Exception {
+    @Authorize(name = "getAppStatus")
+    public Response allAppStatus(@Context HttpServletRequest request, @Context HttpHeaders hh) throws Exception {
         List<AppStatus> statusList = appStatusService.getAllAppStatus();
         AppStatusList result = new AppStatusList();
         for (AppStatus appStatus : statusList) {
@@ -47,7 +49,8 @@ public class StatusResource {
     @GET
     @Path("/slb/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response allAppStatusInSlb(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
+    @Authorize(name = "getAppStatus", uriGroupHint = -1)
+    public Response allAppStatusInSlb(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
 
         List<AppStatus> statusList = appStatusService.getAllAppStatus(slbName);
         AppStatusList result = new AppStatusList();
@@ -64,7 +67,8 @@ public class StatusResource {
     @GET
     @Path("/app/{appName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response appStatus(@Context HttpHeaders hh, @PathParam("appName") String appName) throws Exception {
+    @Authorize(name = "getAppStatus", uriGroupHint = -1)
+    public Response appStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("appName") String appName) throws Exception {
         List<AppStatus> statusList = appStatusService.getAppStatus(appName);
         AppStatusList result = new AppStatusList();
         for (AppStatus appStatus : statusList) {
@@ -81,7 +85,8 @@ public class StatusResource {
     @GET
     @Path("/app/{appName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response appSlbStatus(@Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName) throws Exception {
+    @Authorize(name = "getAppStatus", uriGroupHint = -1)
+    public Response appSlbStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName) throws Exception {
         AppStatus appStatus = appStatusService.getAppStatus(appName, slbName);
 
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
@@ -94,7 +99,8 @@ public class StatusResource {
     @GET
     @Path("/app/{appName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}/server/{sip}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response appServerStatus(@Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName, @PathParam("sip") String sip) throws Exception {
+    @Authorize(name = "getAppStatus", uriGroupHint = -1)
+    public Response appServerStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("appName") String appName, @PathParam("slbName") String slbName, @PathParam("sip") String sip) throws Exception {
         String[] ipPort = sip.split(":");
         if (ipPort.length != 2){
             throw new IllegalArgumentException("server should be ip:port format");

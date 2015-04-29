@@ -2,12 +2,16 @@ package com.ctrip.zeus.auth.impl;
 
 import com.ctrip.zeus.auth.Authorizer;
 import com.ctrip.zeus.dal.core.*;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: mag
@@ -25,12 +29,21 @@ public class DefaultAuthorizer implements Authorizer {
     @Resource
     private AuthResourceRoleDao resRoleDao;
 
+    private Cache<String, List<AuthResourceRoleDo>> resourceRoleCache = CacheBuilder.newBuilder()
+            .maximumSize(5000)
+            .expireAfterWrite(30, TimeUnit.SECONDS)
+            .build();
+
+    private Cache<String, List<AuthUserRoleDo>> userRoleCache = CacheBuilder.newBuilder()
+            .maximumSize(5000)
+            .expireAfterWrite(30, TimeUnit.SECONDS)
+            .build();
+
     @Override
     public void authorize(String userName, String resourceName, String resGroup) throws AuthorizeException {
         try {
-            //TODO add some cache
             List<AuthUserRoleDo> userRoles = getUserRoles(userName);
-            List<AuthResourceRoleDo> resRoles = resRoleDao.findByResourceName(resourceName,AuthResourceRoleEntity.READSET_FULL);
+            List<AuthResourceRoleDo> resRoles = getResourceRoles(resourceName);
 
             //Super Admin has all authorities.
             //If resource role is not config, any role can access it.
@@ -54,20 +67,35 @@ public class DefaultAuthorizer implements Authorizer {
         throw new AuthorizeException("The user:" + userName + " is not authorized.");
     }
 
+    private List<AuthResourceRoleDo> getResourceRoles(final String resourceName) throws Exception {
+        return resourceRoleCache.get(resourceName, new Callable<List<AuthResourceRoleDo>>() {
+            @Override
+            public List<AuthResourceRoleDo> call() throws Exception {
+                return resRoleDao.findByResourceName(resourceName, AuthResourceRoleEntity.READSET_FULL);
+            }
+        });
+    }
+
     private boolean groupMatch(String userGroup, String resGroup) {
         return resGroup.matches(userGroup);
     }
 
-    private List<AuthUserRoleDo> getUserRoles(String userName) throws DalException {
-        List<AuthUserRoleDo> result = userRoleDao.findByUserName(userName, AuthUserRoleEntity.READSET_FULL);
-        if (result == null){
-            result = new ArrayList<>();
-        }
-        // add slb user role
-        result.add(new AuthUserRoleDo().setUserName(userName)
-            .setRoleName(SLB_USER)
-            .setGroup(".*"));
-        return result;
+    //todo: maybe it is better to store the user roles in session
+    private List<AuthUserRoleDo> getUserRoles(final String userName) throws Exception {
+        return userRoleCache.get(userName, new Callable<List<AuthUserRoleDo>>() {
+            @Override
+            public List<AuthUserRoleDo> call() throws Exception {
+                List<AuthUserRoleDo> result = userRoleDao.findByUserName(userName, AuthUserRoleEntity.READSET_FULL);
+                if (result == null){
+                    result = new ArrayList<>();
+                }
+                // add slb user role
+                result.add(new AuthUserRoleDo().setUserName(userName)
+                        .setRoleName(SLB_USER)
+                        .setGroup(".*"));
+                return result;
+            }
+        });
 
     }
 
