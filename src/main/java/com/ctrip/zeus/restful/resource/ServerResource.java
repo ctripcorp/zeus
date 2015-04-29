@@ -187,7 +187,7 @@ public class ServerResource {
                         dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, appName);
                         nginxAgentService.dyops(slbname, dyUpstreamOpsDataList);
                     } else {
-                        throw new Exception("write all to disk failed! Or current version is too old!");
+                        throw new Exception("write all to disk failed!");
                     }
                 } finally {
                     writeLock.unlock();

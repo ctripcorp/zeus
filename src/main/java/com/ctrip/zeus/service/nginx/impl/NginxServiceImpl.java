@@ -54,7 +54,7 @@ public class NginxServiceImpl implements NginxService {
         if (nginxServerDo!=null&&nginxServerDo.getVersion()>=version)
         {
             NginxResponse res = new NginxResponse();
-            res.setServerIp(ip).setSucceed(false).setOutMsg("current version is lower then or equal the version used!current version ["
+            res.setServerIp(ip).setSucceed(true).setOutMsg("current version is lower then or equal the version used!current version ["
                     +version+"],used version ["+nginxServerDo.getVersion()+"]");
             return res;
         }
@@ -129,7 +129,7 @@ public class NginxServiceImpl implements NginxService {
         if (nginxServer!=null&&nginxServer.getVersion()>=version)
         {
             NginxResponse res = new NginxResponse();
-            res.setServerIp(ip).setSucceed(false).setOutMsg("current version is lower then or equal the version used,Don't update!current version ["
+            res.setServerIp(ip).setSucceed(true).setOutMsg("current version is lower then or equal the version used,Don't update!current version ["
                     +version+"],used version ["+nginxServer.getVersion()+"]");
             return res;
         }
@@ -193,6 +193,18 @@ public class NginxServiceImpl implements NginxService {
         Slb slb = slbRepository.get(slbName);
         int version = nginxConfService.getCurrentVersion(slbName);
         boolean flag=false;
+        String ip = S.getIp();
+
+        NginxServerDo nginxServer =nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
+        if (nginxServer!=null&&nginxServer.getVersion()>=version)
+        {
+            NginxResponse res = new NginxResponse();
+            res.setServerIp(ip).setSucceed(true).setOutMsg("current version is lower then or equal the version used!current version ["
+                    +version+"],used version ["+nginxServer.getVersion()+"]");
+            List<NginxResponse> responses = new ArrayList<>();
+            responses.add(res);
+            return responses;
+        }
 
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {

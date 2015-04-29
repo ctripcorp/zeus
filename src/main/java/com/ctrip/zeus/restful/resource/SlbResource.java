@@ -35,7 +35,8 @@ public class SlbResource {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response list(@Context HttpHeaders hh) throws Exception {
+    @Authorize(name = "getAllSlbs")
+    public Response list(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
         SlbList slbList = new SlbList();
         for (Slb slb : slbRepository.list()) {
             slbList.addSlb(slb);
@@ -47,7 +48,7 @@ public class SlbResource {
     @GET
     @Path("/get/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name="getSlb")
+    @Authorize(name = "getSlb")
     public Response getBySlbName(@Context HttpHeaders hh, @Context HttpServletRequest request, @PathParam("slbName") String slbName) throws Exception {
         Slb slb = slbRepository.get(slbName);
         return responseHandler.handle(slb, hh.getMediaType());
@@ -56,7 +57,8 @@ public class SlbResource {
     @POST
     @Path("/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response add(@Context HttpHeaders hh, String slb) throws Exception {
+    @Authorize(name = "addSlb")
+    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
         Slb s;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             s = DefaultSaxParser.parseEntity(Slb.class, slb);
@@ -72,7 +74,8 @@ public class SlbResource {
     @POST
     @Path("/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    public Response update(@Context HttpHeaders hh, String slb) throws Exception {
+    @Authorize(name = "updateSlb")
+    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
         Slb s;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             s = DefaultSaxParser.parseEntity(Slb.class, slb);
@@ -94,7 +97,8 @@ public class SlbResource {
     @GET
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response delete(@Context HttpHeaders hh, @QueryParam("slbName") String slbName) throws Exception {
+    @Authorize(name = "deleteSlb")
+    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("slbName") String slbName) throws Exception {
         if (slbName == null || slbName.isEmpty()) {
             throw new Exception("Missing parameter or value.");
         }
