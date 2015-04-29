@@ -164,10 +164,12 @@ public class ServerResource {
             int ticket = buildInfoService.getTicket(slbname);
 
             boolean buildFlag = false;
+            List<DyUpstreamOpsData> dyUpstreamOpsDataList = null;
             DistLock buildLock = dbLockFactory.newLock(slbname + "_build");
             try{
                 buildLock.lock(lockTimeout.get());
                 buildFlag =buildService.build(slbname,ticket);
+                dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, appName);
             }finally {
                 buildLock.unlock();
             }
@@ -177,11 +179,9 @@ public class ServerResource {
                     writeLock.lock(lockTimeout.get());
                     //push
                     if (nginxAgentService.writeALLToDisk(slbname)) {
-
-                        List<DyUpstreamOpsData> dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, appName);
                         nginxAgentService.dyops(slbname, dyUpstreamOpsDataList);
                     } else {
-                        throw new Exception("write all to disk failed!");
+                        throw new Exception("write all to disk failed! Or current version is too old!");
                     }
                 } finally {
                     writeLock.unlock();
