@@ -1,6 +1,6 @@
 package test;
 
-import com.ctrip.zeus.client.NginxClient;
+import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.nginx.entity.S;
 import com.ctrip.zeus.nginx.entity.Servers;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
@@ -21,7 +21,7 @@ public class Demo3 {
                         .addS(new S().setIndex(1).setUpstream("hello").setName("10.8.9.9").setStatus("up").setRise(111).setFall(222).setType("http").setPort(0))
         );
         System.out.println(String.format(UpstreamStatus.JSON, s1));
-        NginxClient c = new NginxClient("http://10.2.25.93:10001");
+        LocalClient c = new LocalClient("http://10.2.25.93");
         UpstreamStatus s = c.getUpstreamStatus();
         System.out.println(s.getServers().getServer());
         DefaultNginxStatus d = new DefaultNginxStatus(s);

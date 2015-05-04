@@ -9,6 +9,4 @@ import com.ctrip.zeus.nginx.entity.TrafficStatus;
 public interface NginxStatusService {
 
     NginxStatus getNginxStatus(String slbName) throws Exception;
-
-    TrafficStatus getTrafficStatus(String hostname);
 }
