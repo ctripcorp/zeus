@@ -91,7 +91,7 @@ public class AppStatusServiceImpl implements AppStatusService {
 
         boolean memberUp = statusService.getAppServerStatus(slbName,appName,ip);
         boolean serverUp = statusService.getServerStatus(ip);
-        boolean backendUp = getUpstreamStatus(ip);
+        boolean backendUp = getUpstreamStatus(appName,ip);
 
         appServerStatus.setServer(serverUp);
         appServerStatus.setMember(memberUp);
@@ -101,10 +101,15 @@ public class AppStatusServiceImpl implements AppStatusService {
     }
 
     //TODO: should include port to get accurate upstream
-    private boolean getUpstreamStatus(String ip) throws IOException {
+    private boolean getUpstreamStatus(String appName , String ip) throws IOException {
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
+        String upstreamNameEndWith = "_"+appName;
         for (S server : servers) {
+            if (!server.getUpstream().endsWith(upstreamNameEndWith))
+            {
+                continue;
+            }
             String ipPort = server.getName();
             String[] ipPorts = ipPort.split(":");
             if (ipPorts.length == 2){
