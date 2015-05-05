@@ -12,6 +12,9 @@ import com.netflix.config.DynamicStringProperty;
  */
 public class NginxConf {
     private static DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
+    private static final String LINEBREAK = "\n";
+    private static String ZONENAME = "proxy_zone";
+
     private static DynamicStringProperty logFormat = DynamicPropertyFactory.getInstance().getStringProperty("slb.nginx.log-format",
             "log_format main '[$time_local] $host $hostname $server_addr $request_method $uri '\n" +
                     "'\"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for '\n" +
@@ -49,6 +52,8 @@ public class NginxConf {
         b.append(logFormat.get());
         b.append("access_log /opt/logs/nginx/access.log main;\n");
 
+        appendHttpCommand(b);
+
         b.append(statusConf());
         b.append(dyupstreamConf());
 
@@ -78,6 +83,8 @@ public class NginxConf {
         b.append("check_status json").append(";\n");
         b.append("}").append("\n");
 
+        appendServerConf(b);
+
         b.append("}").append("\n");
 
         return b.toString();
@@ -97,5 +104,19 @@ public class NginxConf {
          .append("}\n")
          .append("}\n");
         return b.toString();
+    }
+
+    public static void appendHttpCommand(StringBuilder builder) {
+        builder.append("req_status_zone " + ZONENAME + " \"$hostname/$proxy_host\" 20M;").append(LINEBREAK);
+    }
+
+    public static void appendServerConf(StringBuilder builder) {
+        builder.append("    req_status " + ZONENAME + ";").append(LINEBREAK);
+        builder.append("    location /req_status {").append(LINEBREAK)
+                .append("        req_status_show;").append(LINEBREAK)
+                .append("    }").append(LINEBREAK);
+        builder.append("    location /stub_status {").append(LINEBREAK)
+                .append("        stub_status on;").append(LINEBREAK)
+                .append("    }").append(LINEBREAK);
     }
 }
