@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.status.impl;
 
+import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.client.NginxClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.S;
@@ -101,8 +102,7 @@ public class AppStatusServiceImpl implements AppStatusService {
 
     //TODO: should include port to get accurate upstream
     private boolean getUpstreamStatus(String ip) throws IOException {
-        NginxClient nginxClient = new NginxClient("http://127.0.0.1:" + nginxStatusPort.get());
-        UpstreamStatus upstreamStatus = nginxClient.getUpstreamStatus();
+        UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
         for (S server : servers) {
             String ipPort = server.getName();

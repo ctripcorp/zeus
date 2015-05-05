@@ -3,6 +3,8 @@ package com.ctrip.zeus.service.nginx;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
+import com.ctrip.zeus.nginx.entity.TrafficStatus;
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.TransducedAccessor_field_Float;
 
 import java.util.List;
 
@@ -81,4 +83,17 @@ public interface NginxService {
      */
     List<NginxServerStatus> getStatusAll(String slbName) throws Exception;
 
+    /**
+     * get traffic status of nginx server cluster.
+     * @param slbName the slb name
+     * @return the traffic statuses
+     */
+    List<TrafficStatus> getTrafficStatusBySlb(String slbName) throws Exception;
+
+
+    /**
+     * get traffic status of local nginx server.
+     * @return the traffic status
+     */
+    TrafficStatus getLocalTrafficStatus();
 }

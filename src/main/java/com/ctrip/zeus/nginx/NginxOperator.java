@@ -48,7 +48,7 @@ public class NginxOperator {
     }
 
     public NginxResponse dyupsLocal(String upsname,String upsdata) throws IOException {
-        return LocalClient.getLocalClient().dyups(upsname,upsdata);
+        return LocalClient.getInstance().dyups(upsname,upsdata);
     }
 
     public NginxResponse reloadConfTest()throws IOException{
