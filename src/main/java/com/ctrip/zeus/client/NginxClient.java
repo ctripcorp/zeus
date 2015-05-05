@@ -2,8 +2,9 @@ package com.ctrip.zeus.client;
 
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
-import com.ctrip.zeus.nginx.entity.UpstreamStatus;
+import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
+import com.ctrip.zeus.util.IOUtils;
 import jersey.repackaged.com.google.common.cache.CacheBuilder;
 import jersey.repackaged.com.google.common.cache.CacheLoader;
 import jersey.repackaged.com.google.common.cache.LoadingCache;
@@ -12,6 +13,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -30,7 +32,7 @@ public class NginxClient extends AbstractRestClient {
                    }
             );
 
-    public static NginxClient GetClient(String url) throws ExecutionException {
+    public static NginxClient getClient(String url) throws ExecutionException {
         return cache.get(url);
     }
 
@@ -54,6 +56,16 @@ public class NginxClient extends AbstractRestClient {
                 MediaType.APPLICATION_JSON
         ),String.class);
         return DefaultJsonParser.parse(NginxResponse.class,responseStr);
+    }
+
+    public TrafficStatus getTrafficStatus() throws Exception {
+        Response response = getTarget().path("").path("/api/nginx/trafficStatus").request().get();
+        InputStream is = (InputStream)response.getEntity();
+        try {
+            return DefaultJsonParser.parse(TrafficStatus.class, IOUtils.inputStreamStringify(is));
+        } catch (Exception ex) {
+            throw new Exception("Fail to parse traffic status object.");
+        }
     }
 
     public NginxServerStatus getNginxServerStatus() throws IOException {

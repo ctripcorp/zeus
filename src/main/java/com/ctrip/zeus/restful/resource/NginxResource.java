@@ -1,11 +1,10 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.nginx.NginxOperator;
-import com.ctrip.zeus.nginx.entity.NginxResponse;
-import com.ctrip.zeus.nginx.entity.NginxResponseList;
-import com.ctrip.zeus.nginx.entity.NginxServerStatus;
-import com.ctrip.zeus.nginx.entity.NginxServerStatusList;
+import com.ctrip.zeus.nginx.entity.*;
+import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.nginx.NginxService;
+import com.ctrip.zeus.support.GenericSerializer;
 import org.jboss.logging.Param;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +26,8 @@ public class NginxResource {
 
     @Resource
     private NginxService nginxService;
+    @Resource
+    private ResponseHandler responseHandler;
 
     @GET
     @Path("/load")
@@ -90,10 +91,28 @@ public class NginxResource {
     }
 
     @GET
+    @Path("/trafficStatus/{slbName:[a-zA-Z0-9_-]+}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getTrafficStatusBySlb(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
+        TrafficStatusList list = new TrafficStatusList();
+        for(TrafficStatus ts : nginxService.getTrafficStatusBySlb(slbName)) {
+            list.addTrafficStatus(ts);
+        }
+        return responseHandler.handle(list, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/trafficStatus")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getLocalTrafficStatus(@Context HttpHeaders hh) throws Exception {
+        TrafficStatus trafficStatus = nginxService.getLocalTrafficStatus();
+        return responseHandler.handle(trafficStatus, hh.getMediaType());
+    }
+
+    @GET
     @Path("/loadAll/slb/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response loadAll(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
-
         List<NginxResponse> nginxResponseList = nginxService.loadAll(slbName);
         NginxResponseList result = new NginxResponseList();
         for (NginxResponse nginxResponse : nginxResponseList) {

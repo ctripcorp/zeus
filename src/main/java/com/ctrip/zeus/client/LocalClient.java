@@ -5,6 +5,7 @@ import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
 import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
+import com.ctrip.zeus.util.S;
 import com.google.common.base.Preconditions;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -59,6 +60,7 @@ public class LocalClient {
 
     public TrafficStatus getTrafficStatus() {
         TrafficStatus trafficStatus = new TrafficStatus();
+        trafficStatus.setServerIp(S.getIp());
         getStubStatus(trafficStatus);
         getReqStatuses(trafficStatus);
         return trafficStatus;

@@ -6,6 +6,7 @@
     <entity-ref name="nginx-server-status" />
     <entity-ref name="nginx-response-list" />
     <entity-ref name="nginx-server-status-list" />
+    <entity-ref name="traffic-status-list" />
     <entity-ref name="traffic-status" />
     <entity-ref name="req-status" />
   </entity>
@@ -46,7 +47,11 @@
     <element name="total" value-type="int" />
     <entity-ref name="nginx-server-status" type="list" names="nginx-server-statuses" xml-indent="true" />
   </entity>
+  <entity name="traffic-status-list">
+    <entity-ref name="traffic-status" type="list" names="statuses" xml-indent="true" />
+  </entity>
   <entity name="traffic-status">
+    <element name="server-ip" value-type="String" />
     <element name="active-connections" value-type="int" />
     <element name="accepts" value-type="int" />
     <element name="handled" value-type="int" />

@@ -53,7 +53,14 @@
         </nginx-server-statuses>
     </nginx-server-status-list>
 
+    <traffic-status-list>
+        <statuses>
+            <traffic-status/>
+            <traffic-status/>
+        </statuses>
+    </traffic-status-list>
     <traffic-status>
+        <server-ip>127.0.0.1</server-ip>
         <active-connections>2</active-connections>
         <accepts>6</accepts>
         <handled>6</handled>

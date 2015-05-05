@@ -1,6 +1,9 @@
 package com.ctrip.zeus.nginx;
 
+import com.ctrip.zeus.client.NginxClient;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
+import com.ctrip.zeus.nginx.entity.TrafficStatusList;
+import com.ctrip.zeus.service.nginx.NginxService;
 import org.junit.Assert;
 import org.junit.Test;
 import support.AbstractSpringTest;
@@ -12,12 +15,10 @@ import javax.annotation.Resource;
  */
 public class NginxStatusTest extends AbstractSpringTest {
 
-    @Resource
-    private NginxStatusService nginxStatusService;
-
     @Test
-    public void testTrafficStatus() {
-        TrafficStatus status = nginxStatusService.getTrafficStatus();
+    public void testTrafficStatusApi() throws Exception {
+        NginxClient client = new NginxClient("http://127.0.0.1:8099");
+        TrafficStatus status = client.getTrafficStatus();
         Assert.assertNotNull(status);
         Assert.assertTrue(status.getReqStatuses().size() > 0);
     }
