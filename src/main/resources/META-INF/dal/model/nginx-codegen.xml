@@ -6,6 +6,9 @@
     <entity-ref name="nginx-server-status" />
     <entity-ref name="nginx-response-list" />
     <entity-ref name="nginx-server-status-list" />
+    <entity-ref name="traffic-status-list" />
+    <entity-ref name="traffic-status" />
+    <entity-ref name="req-status" />
   </entity>
   <entity name="upstream-status">
     <entity-ref name="servers" />
@@ -43,6 +46,33 @@
   <entity name="nginx-server-status-list">
     <element name="total" value-type="int" />
     <entity-ref name="nginx-server-status" type="list" names="nginx-server-statuses" xml-indent="true" />
+  </entity>
+  <entity name="traffic-status-list">
+    <entity-ref name="traffic-status" type="list" names="statuses" xml-indent="true" />
+  </entity>
+  <entity name="traffic-status">
+    <element name="server-ip" value-type="String" />
+    <element name="active-connections" value-type="int" />
+    <element name="accepts" value-type="int" />
+    <element name="handled" value-type="int" />
+    <element name="requests" value-type="int" />
+    <element name="request-time" value-type="int" />
+    <element name="reading" value-type="int" />
+    <element name="writing" value-type="int" />
+    <element name="waiting" value-type="int" />
+    <entity-ref name="req-status" type="list" names="req-statuses" xml-indent="true" />
+  </entity>
+  <entity name="req-status">
+    <element name="host-name" value-type="String" />
+    <element name="up-name" value-type="String" />
+    <element name="up-requests" value-type="int" />
+    <element name="up-response-time" value-type="int" />
+    <element name="up-tries" value-type="int" />
+    <element name="total-requests" value-type="int" />
+    <element name="success-count" value-type="int" />
+    <element name="redirection-count" value-type="int" />
+    <element name="client-err-count" value-type="int" />
+    <element name="server-err-count" value-type="int" />
   </entity>
 </model>
 

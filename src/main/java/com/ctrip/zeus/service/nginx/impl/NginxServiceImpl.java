@@ -1,14 +1,15 @@
 package com.ctrip.zeus.service.nginx.impl;
 
+import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.client.NginxClient;
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
 import com.ctrip.zeus.dal.core.NginxServerEntity;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.NginxOperator;
-import com.ctrip.zeus.nginx.entity.Nginx;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
+import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,10 +36,8 @@ public class NginxServiceImpl implements NginxService {
 
     @Resource
     private SlbRepository slbRepository;
-
     @Resource
     private NginxConfService nginxConfService;
-
     @Resource
     private NginxServerDao nginxServerDao;
 
@@ -101,7 +99,7 @@ public class NginxServiceImpl implements NginxService {
                 result.add(writeToDisk());
                 continue;
             }
-            NginxClient nginxClient = NginxClient.GetClient(buildRemoteUrl(slbServer.getIp()));
+            NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             NginxResponse response = nginxClient.write();
             result.add(response);
         }
@@ -163,7 +161,7 @@ public class NginxServiceImpl implements NginxService {
                 result.add(load());
                 continue;
             }
-            NginxClient nginxClient = NginxClient.GetClient(buildRemoteUrl(slbServer.getIp()));
+            NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             NginxResponse response = nginxClient.load();
             result.add(response);
         }
@@ -209,7 +207,7 @@ public class NginxServiceImpl implements NginxService {
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
             flag = true;
-            NginxClient nginxClient = NginxClient.GetClient("http://" + slbServer.getIp() + ":" + adminServerPort.get());
+            NginxClient nginxClient = NginxClient.getClient("http://" + slbServer.getIp() + ":" + adminServerPort.get());
             for (DyUpstreamOpsData dyup : dyups){
                 NginxResponse response = nginxClient.dyups(dyup.getUpstreamName(),dyup.getUpstreamCommands());
                 response.setServerIp(slbServer.getIp());
@@ -245,11 +243,31 @@ public class NginxServiceImpl implements NginxService {
                 result.add(getStatus());
                 continue;
             }
-            NginxClient nginxClient = NginxClient.GetClient(buildRemoteUrl(slbServer.getIp()));
+            NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             NginxServerStatus response = nginxClient.getNginxServerStatus();
             result.add(response);
         }
         return result;
+    }
+
+    @Override
+    public List<TrafficStatus> getTrafficStatusBySlb(String slbName) throws Exception {
+        Slb slb = slbRepository.get(slbName);
+        List<TrafficStatus> list = new ArrayList<>();
+        for (SlbServer slbServer : slb.getSlbServers()) {
+            NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
+            try {
+                list.add(nginxClient.getTrafficStatus());
+            } catch (Exception e) {
+                LOGGER.error(e.getLocalizedMessage());
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public TrafficStatus getLocalTrafficStatus() {
+        return LocalClient.getInstance().getTrafficStatus();
     }
 
 
@@ -265,7 +283,7 @@ public class NginxServiceImpl implements NginxService {
 
 
 
-    private String buildRemoteUrl(String ip) {
+    private static String buildRemoteUrl(String ip) {
         return "http://" + ip + ":" + adminServerPort.get();
     }
 

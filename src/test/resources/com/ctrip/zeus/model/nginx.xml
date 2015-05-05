@@ -52,4 +52,38 @@
             <nginx-server-status/>
         </nginx-server-statuses>
     </nginx-server-status-list>
+
+    <traffic-status-list>
+        <statuses>
+            <traffic-status/>
+            <traffic-status/>
+        </statuses>
+    </traffic-status-list>
+    <traffic-status>
+        <server-ip>127.0.0.1</server-ip>
+        <active-connections>2</active-connections>
+        <accepts>6</accepts>
+        <handled>6</handled>
+        <requests>14</requests>
+        <request-time>2</request-time>
+        <reading>0</reading>
+        <writing>1</writing>
+        <waiting>1</waiting>
+        <req-statuses>
+            <req-status/>
+            <req-status/>
+        </req-statuses>
+    </traffic-status>
+    <req-status>
+        <host-name>ctrip.com</host-name>
+        <up-name>cluster</up-name>
+        <up-requests>2</up-requests>
+        <up-response-time>5</up-response-time>
+        <up-tries>6</up-tries>
+        <total-requests>14</total-requests>
+        <success-count>1</success-count>
+        <redirection-count>1</redirection-count>
+        <client-err-count>1</client-err-count>
+        <server-err-count>1</server-err-count>
+    </req-status>
 </nginx>
