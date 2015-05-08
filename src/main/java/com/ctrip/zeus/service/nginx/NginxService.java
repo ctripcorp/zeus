@@ -4,7 +4,6 @@ import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.TransducedAccessor_field_Float;
 
 import java.util.List;
 
