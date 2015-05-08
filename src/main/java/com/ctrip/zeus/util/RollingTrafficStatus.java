@@ -35,6 +35,14 @@ public class RollingTrafficStatus {
         buckets.addPair(new StatusPair(stubStatus, reqStatus));
     }
 
+    public void clearDirty(long stamp) {
+        buckets.clearDirty(stamp);
+    }
+
+    public void clear() {
+        buckets.clear();
+    }
+
     public TrafficStatus getAccumulatedResult() {
         TrafficStatus trafficStatus = new TrafficStatus();
         if (buckets.size() == 0)
@@ -217,6 +225,17 @@ public class RollingTrafficStatus {
             buckets.add(data);
             if (buckets.size() == length) {
                 buckets.removeFirst();
+            }
+        }
+
+        public void clearDirty(long stamp) {
+            long expectedEarlist = stamp - interval * 1000 * numberOfBuckets;
+            while(!buckets.isEmpty()) {
+                if (buckets.getFirst().time > expectedEarlist) {
+                    break;
+                } else {
+                    buckets.removeFirst();
+                }
             }
         }
 

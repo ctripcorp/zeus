@@ -3,6 +3,8 @@ package com.ctrip.zeus.util;
 import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Created by zhoumy on 2015/5/7.
  */
@@ -27,6 +29,7 @@ public class TrafficStatusCollector {
     }
 
     public void start() {
+        final AtomicInteger tick = new AtomicInteger(0);
         Thread th = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -35,6 +38,10 @@ public class TrafficStatusCollector {
                         Thread.sleep(syncInterval * 1000);
                     } catch (InterruptedException e) {
                         break;
+                    }
+                    if (tick.incrementAndGet() == 10) {
+                        clearDirtyRecords(System.currentTimeMillis());
+                        tick.set(0);
                     }
                     fetchTrafficStatus();
                 }
@@ -52,5 +59,9 @@ public class TrafficStatusCollector {
         String stubStatus = LocalClient.getInstance().getStubStatus();
         String reqStatus = LocalClient.getInstance().getReqStatuses();
         rollingTrafficStatus.add(stubStatus, reqStatus);
+    }
+
+    private void clearDirtyRecords(long stamp) {
+        rollingTrafficStatus.clearDirty(stamp);
     }
 }
