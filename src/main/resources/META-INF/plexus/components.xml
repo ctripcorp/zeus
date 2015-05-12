@@ -13,6 +13,7 @@
 			<role-hint>app</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>app</logical-table-name>
 				<physical-table-name>app</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -22,6 +23,7 @@
 			<role-hint>app-health-check</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>app-health-check</logical-table-name>
 				<physical-table-name>app_health_check</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -31,6 +33,7 @@
 			<role-hint>app-load-balancing-method</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>app-load-balancing-method</logical-table-name>
 				<physical-table-name>app_load_balancing_method</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -40,6 +43,7 @@
 			<role-hint>app-server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>app-server</logical-table-name>
 				<physical-table-name>app_server</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -49,6 +53,7 @@
 			<role-hint>app-slb</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>app-slb</logical-table-name>
 				<physical-table-name>app_slb</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -58,6 +63,7 @@
 			<role-hint>archive-app</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>archive-app</logical-table-name>
 				<physical-table-name>archive_app</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -67,6 +73,7 @@
 			<role-hint>archive-slb</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>archive-slb</logical-table-name>
 				<physical-table-name>archive_slb</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -76,6 +83,7 @@
 			<role-hint>auth-resource</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>auth-resource</logical-table-name>
 				<physical-table-name>auth_resource</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -85,6 +93,7 @@
 			<role-hint>auth-resource-role</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>auth-resource-role</logical-table-name>
 				<physical-table-name>auth_resource_role</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -94,6 +103,7 @@
 			<role-hint>auth-role</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>auth-role</logical-table-name>
 				<physical-table-name>auth_role</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -103,6 +113,7 @@
 			<role-hint>auth-user</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>auth-user</logical-table-name>
 				<physical-table-name>auth_user</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -112,6 +123,7 @@
 			<role-hint>auth-user-role</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>auth-user-role</logical-table-name>
 				<physical-table-name>auth_user_role</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -121,6 +133,7 @@
 			<role-hint>build-info</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>build-info</logical-table-name>
 				<physical-table-name>build_info</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -130,6 +143,7 @@
 			<role-hint>conf-app-active</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>conf-app-active</logical-table-name>
 				<physical-table-name>conf_app_active</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -139,6 +153,7 @@
 			<role-hint>conf-app-slb-active</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>conf-app-slb-active</logical-table-name>
 				<physical-table-name>conf_app_slb_active</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -148,6 +163,7 @@
 			<role-hint>conf-slb-active</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>conf-slb-active</logical-table-name>
 				<physical-table-name>conf_slb_active</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -157,6 +173,7 @@
 			<role-hint>dist-lock</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>dist-lock</logical-table-name>
 				<physical-table-name>dist_lock</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -166,6 +183,7 @@
 			<role-hint>nginx-conf</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>nginx-conf</logical-table-name>
 				<physical-table-name>nginx_conf</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -175,6 +193,7 @@
 			<role-hint>nginx-conf-server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>nginx-conf-server</logical-table-name>
 				<physical-table-name>nginx_conf_server</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -184,6 +203,7 @@
 			<role-hint>nginx-conf-upstream</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>nginx-conf-upstream</logical-table-name>
 				<physical-table-name>nginx_conf_upstream</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -193,6 +213,7 @@
 			<role-hint>nginx-server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>nginx-server</logical-table-name>
 				<physical-table-name>nginx_server</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -202,6 +223,7 @@
 			<role-hint>server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>server</logical-table-name>
 				<physical-table-name>server</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -211,6 +233,7 @@
 			<role-hint>slb</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>slb</logical-table-name>
 				<physical-table-name>slb</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -220,6 +243,7 @@
 			<role-hint>slb-domain</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>slb-domain</logical-table-name>
 				<physical-table-name>slb_domain</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -229,6 +253,7 @@
 			<role-hint>slb-server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>slb-server</logical-table-name>
 				<physical-table-name>slb_server</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -238,6 +263,7 @@
 			<role-hint>slb-vip</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>slb-vip</logical-table-name>
 				<physical-table-name>slb_vip</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -247,6 +273,7 @@
 			<role-hint>slb-virtual-server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>slb-virtual-server</logical-table-name>
 				<physical-table-name>slb_virtual_server</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -256,6 +283,7 @@
 			<role-hint>status-app-server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>status-app-server</logical-table-name>
 				<physical-table-name>status_app_server</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
@@ -265,6 +293,7 @@
 			<role-hint>status-server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
+				<logical-table-name>status-server</logical-table-name>
 				<physical-table-name>status_server</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
