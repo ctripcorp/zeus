@@ -83,6 +83,7 @@ public class NginxConf {
         b.append("check_status json").append(";\n");
         b.append("}").append("\n");
 
+        appendServerCommand(b);
         appendServerConf(b);
 
         b.append("}").append("\n");
@@ -110,8 +111,11 @@ public class NginxConf {
         builder.append("req_status_zone " + ZONENAME + " \"$hostname/$proxy_host\" 20M;").append(LINEBREAK);
     }
 
-    public static void appendServerConf(StringBuilder builder) {
+    public static void appendServerCommand(StringBuilder builder) {
         builder.append("    req_status " + ZONENAME + ";").append(LINEBREAK);
+    }
+
+    public static void appendServerConf(StringBuilder builder) {
         builder.append("    location /req_status {").append(LINEBREAK)
                 .append("        req_status_show;").append(LINEBREAK)
                 .append("    }").append(LINEBREAK);

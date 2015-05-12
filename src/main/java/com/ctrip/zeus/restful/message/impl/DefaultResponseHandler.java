@@ -39,6 +39,8 @@ public class DefaultResponseHandler implements ResponseHandler {
 
     @Override
     public Response handle(Object object, MediaType mediaType) throws Exception {
+        if (object == null)
+            return Response.status(Response.Status.OK).type(mediaType).build();
         if (mediaType != null && acceptedMediaTypes.contains(mediaType)) {
             Message response = generateMessage(object, mediaType.toString());
             return Response.status(response.getStatus()).entity(response.getResponse())

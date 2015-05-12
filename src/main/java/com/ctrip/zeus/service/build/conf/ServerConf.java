@@ -31,6 +31,7 @@ public class ServerConf {
         b.append("listen    ").append(vs.getPort()).append(";\n");
         b.append("server_name    ").append(getServerNames(vs)).append(";\n");
 
+        NginxConf.appendServerCommand(b);
         //add locations
         for (App app : apps) {
             b.append(LocationConf.generate(slb, vs, app, UpstreamsConf.buildUpstreamName(slb, vs, app)));
