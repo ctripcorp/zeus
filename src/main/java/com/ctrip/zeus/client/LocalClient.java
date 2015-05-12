@@ -1,10 +1,8 @@
 package com.ctrip.zeus.client;
 
 import com.ctrip.zeus.nginx.entity.NginxResponse;
-import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
 import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
-import com.ctrip.zeus.util.TrafficStatusCollector;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 
@@ -54,10 +52,6 @@ public class LocalClient {
         String result = statusClient.getTarget().path("/status.json").request().get(String.class);
         System.out.println(result);
         return DefaultJsonParser.parse(UpstreamStatus.class, result);
-    }
-
-    public TrafficStatus getTrafficStatus() {
-        return TrafficStatusCollector.getInstance().getResult();
     }
 
     public String getStubStatus() {
