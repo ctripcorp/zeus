@@ -56,7 +56,7 @@ public class RollingTrafficStatus {
         return trafficStatus;
     }
 
-    private static void extractReqStatus(Map<String, Integer[]> upstreamMap, TrafficStatus trafficStatus) {
+    protected static void extractReqStatus(Map<String, Integer[]> upstreamMap, TrafficStatus trafficStatus) {
         for (String key : upstreamMap.keySet()) {
             Integer[] data = upstreamMap.get(key);
             String[] hostUpstream = key.split("/");
@@ -85,7 +85,7 @@ public class RollingTrafficStatus {
         }
     }
 
-    private static void extractStubStatus(Integer[] data, TrafficStatus trafficStatus) {
+    protected static void extractStubStatus(Integer[] data, TrafficStatus trafficStatus) {
         Integer requests = data[StubStatusOffset.Requests.ordinal()];
         double responseTime = (requests == null || requests == 0) ? 0.0 : (double)data[StubStatusOffset.RequestTime.ordinal()] / requests;
         trafficStatus.setActiveConnections(data[StubStatusOffset.ActiveConn.ordinal()])
@@ -132,7 +132,7 @@ public class RollingTrafficStatus {
         }
     }
 
-    private static void getSum(Integer[] current, Integer[] sum) {
+    protected static void getSum(Integer[] current, Integer[] sum) {
         if (current == null)
             return;
         Preconditions.checkState(current.length == sum.length);
@@ -141,7 +141,7 @@ public class RollingTrafficStatus {
         }
     }
 
-    private static Integer[] getDelta(Integer[] current, Integer[] previous) {
+    protected static Integer[] getDelta(Integer[] current, Integer[] previous) {
         Preconditions.checkState(current.length == previous.length);
         Integer[] ans = new Integer[current.length];
         for (int i = 0; i < ans.length; i++) {
@@ -176,7 +176,7 @@ public class RollingTrafficStatus {
         return ans;
     }
 
-    private static Integer[] parseStubStatusNumber(String[] values) {
+    protected static Integer[] parseStubStatusNumber(String[] values) {
         Preconditions.checkState(values.length == 4);
         final String activeConnectionKey = "Active connections: ";
         final String readingKey = "Reading: ";
@@ -198,7 +198,7 @@ public class RollingTrafficStatus {
         return result;
     }
 
-    private Map<String, Integer[]> parseReqStautsEntries(String[] upstreamValues) {
+    protected Map<String, Integer[]> parseReqStautsEntries(String[] upstreamValues) {
         Map<String, Integer[]> result = new HashMap<>();
         for (int i = 0; i < upstreamValues.length; i++) {
             String[] values = upstreamValues[i].split(",");
