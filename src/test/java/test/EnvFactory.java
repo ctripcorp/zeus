@@ -1,5 +1,6 @@
 package test;
 
+import com.ctrip.zeus.ao.ReqClient;
 import com.ctrip.zeus.model.entity.*;
 
 import java.io.IOException;
@@ -10,13 +11,16 @@ import java.util.List;
  * Created by fanqq on 2015/5/8.
  */
 public class EnvFactory {
-    private static final String host = "http://10.2.27.21:8099";
+    private static final String host = "http://127.0.0.1:8099";
+//    private static final String host = "http://10.2.27.21:8099";
     private static final String vip="10.2.27.21";
-    private static final int vsNum=10;
-    private static final int appNum=100;
+    private static final int vsNum=10000;
+    private static final int appNum=10000;
     private static final String slbName="test-env";
     private static final String checkHealthPath="/checkHealth";
-
+    private static ReqClient reqClient = new ReqClient(host);
+    private static String[] ipList = new String[]{"10.2.25.83","10.2.25.93","10.2.25.94","10.2.25.95","10.2.25.96"};
+    private static int[] portList = new int[]{20001,20002,20003,20004};
 
     private static List<VirtualServer> vsList = new ArrayList<>();
     private static List<App> appList = new ArrayList<>();
@@ -38,14 +42,18 @@ public class EnvFactory {
 
         createApps();
 
+        reqClient.post("/api/slb/add", String.format(Slb.JSON, slb));
+
+        for ( App app : appList)
+        {
+            reqClient.post("/api/app/add", String.format(App.JSON, app));
+        }
+
         System.out.println();
 
     }
     private static void createAppServer()
     {
-        String[] ipList = new String[]{"10.2.25.83","10.2.25.93","10.2.25.94","10.2.25.95","10.2.25.96"};
-        int[] portList = new int[]{20001,20002,20003,20004};
-
         int count = ipList.length*portList.length;
 
         for ( int i = 0 ; i < count ; i++ ){
@@ -71,13 +79,16 @@ public class EnvFactory {
         App apptmp = null;
         for ( int i = 0 ; i < appNum ; i++)
         {
-            apptmp = new App().setName("App_"+ i).setAppId(String.valueOf(100000 + i)).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
+            apptmp = new App().setName("App_" + i).setAppId(String.valueOf(100000 + i)).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                     .setIntervals(2000).setPasses(1).setUri(checkHealthPath)).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                     .setValue("test"))
-                    .addAppSlb(new AppSlb().setSlbName(slbName).setPath( "App" + i )
-                            .setVirtualServer(vsList.get(i%vsNum)));
-            for (AppServer appServer : appServerList){
-                apptmp.addAppServer(appServer);
+                    .addAppSlb(new AppSlb().setSlbName(slbName).setPath("/App" + i)
+                            .setVirtualServer(vsList.get(i % vsNum)));
+            int tmp = i % portList.length;
+            int portlength = portList.length;
+            for ( int j = 0 ; j < ipList.length ; j++ )
+            {
+                apptmp.addAppServer(appServerList.get(j*portlength+tmp));
             }
             appList.add(apptmp);
         }
