@@ -52,11 +52,11 @@ public class RollingTrafficStatus {
         Map<String, Integer[]> reqStatusResult = new HashMap<>();
         buckets.getAccumulatedStubStatus(stubStatusResult, reqStatusResult);
         extractStubStatus(stubStatusResult, trafficStatus);
-        extractReqStatus(reqStatusResult, reqStatusResult.size(), trafficStatus);
+        extractReqStatus(reqStatusResult, trafficStatus);
         return trafficStatus;
     }
 
-    private static void extractReqStatus(Map<String, Integer[]> upstreamMap, int count, TrafficStatus trafficStatus) {
+    private static void extractReqStatus(Map<String, Integer[]> upstreamMap, TrafficStatus trafficStatus) {
         for (String key : upstreamMap.keySet()) {
             Integer[] data = upstreamMap.get(key);
             String[] hostUpstream = key.split("/");
@@ -67,11 +67,16 @@ public class RollingTrafficStatus {
                 if (hostUpstream.length > 1)
                     upstreamName = hostUpstream[1];
             }
+            Integer upRequests = data[ReqStatusOffset.UpstreamReq.ordinal()];
+            double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double)data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
+            Integer requests = data[ReqStatusOffset.ReqTotal.ordinal()];
+            double responseTime = (requests == null || requests == 0) ? 0 :  (double)data[ReqStatusOffset.RtTotal.ordinal()] / requests;
             trafficStatus.addReqStatus(new ReqStatus().setHostName(hostName)
-                    .setTotalRequests(data[ReqStatusOffset.ReqTotal.ordinal()])
+                    .setResponseTime(responseTime)
+                    .setTotalRequests(requests)
                     .setUpName(upstreamName)
-                    .setUpRequests(data[ReqStatusOffset.UpstreamReq.ordinal()])
-                    .setUpResponseTime(data[ReqStatusOffset.UpstreamRt.ordinal()])
+                    .setUpRequests(upRequests)
+                    .setUpResponseTime(upResponseTime)
                     .setUpTries(data[ReqStatusOffset.UpstreamTries.ordinal()])
                     .setSuccessCount(data[ReqStatusOffset.SuccessCount.ordinal()])
                     .setRedirectionCount(data[ReqStatusOffset.RedirectionCount.ordinal()])
@@ -81,11 +86,13 @@ public class RollingTrafficStatus {
     }
 
     private static void extractStubStatus(Integer[] data, TrafficStatus trafficStatus) {
+        Integer requests = data[StubStatusOffset.Requests.ordinal()];
+        double responseTime = (requests == null || requests == 0) ? 0.0 : (double)data[StubStatusOffset.RequestTime.ordinal()] / requests;
         trafficStatus.setActiveConnections(data[StubStatusOffset.ActiveConn.ordinal()])
                 .setAccepts(data[StubStatusOffset.Accepts.ordinal()])
                 .setHandled(data[StubStatusOffset.Handled.ordinal()])
-                .setRequests(data[StubStatusOffset.Requests.ordinal()])
-                .setRequestTime(data[StubStatusOffset.RequestTime.ordinal()])
+                .setRequests(requests)
+                .setResponseTime(responseTime)
                 .setReading(data[StubStatusOffset.Reading.ordinal()])
                 .setWriting(data[StubStatusOffset.Writing.ordinal()])
                 .setWaiting(data[StubStatusOffset.Waiting.ordinal()]);
@@ -204,7 +211,6 @@ public class RollingTrafficStatus {
         }
         return result;
     }
-
 
     private class CircularArray implements Iterable<StatusPair> {
         private final LinkedList<StatusPair> buckets;

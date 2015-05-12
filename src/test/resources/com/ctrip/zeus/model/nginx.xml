@@ -65,7 +65,7 @@
         <accepts>6</accepts>
         <handled>6</handled>
         <requests>14</requests>
-        <request-time>2</request-time>
+        <response-time>2.88</response-time>
         <reading>0</reading>
         <writing>1</writing>
         <waiting>1</waiting>
@@ -78,8 +78,9 @@
         <host-name>ctrip.com</host-name>
         <up-name>cluster</up-name>
         <up-requests>2</up-requests>
-        <up-response-time>5</up-response-time>
+        <up-response-time>5.685</up-response-time>
         <up-tries>6</up-tries>
+        <response-time>0.12</response-time>
         <total-requests>14</total-requests>
         <success-count>1</success-count>
         <redirection-count>1</redirection-count>
