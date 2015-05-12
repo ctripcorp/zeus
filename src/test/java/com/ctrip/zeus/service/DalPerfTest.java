@@ -40,7 +40,8 @@ public class DalPerfTest extends AbstractSpringTest {
     }
     @Test
     public void perfTest()throws Exception{
-        NginxConfUpstreamDo tmpdata = new NginxConfUpstreamDo().setCreatedTime(new Date())
+
+        NginxConfUpstreamDo tmpdata = new NginxConfUpstreamDo()
                 .setContent("upstream backend_VS_1007_App_1007 {\n" +
                         "    server 10.2.25.83:20004 weight=1 max_fails=10 fail_timeout=30;\n" +
                         "    server 10.2.25.93:20004 weight=1 max_fails=10 fail_timeout=30;\n" +
@@ -53,12 +54,31 @@ public class DalPerfTest extends AbstractSpringTest {
                         "    check_http_expect_alive http_2xx http_3xx;\n" +
                         "    }\n");
 
+        tmpdata.setSlbName("slbname2_").setVersion(0).setName("vs_"+5);
+        nginxConfUpstreamDao.insert(tmpdata);
+
         long start = new Date().getTime();
-        for (int i = 0 ; i < 1000 ; i ++)
+        NginxConfUpstreamDo[] dos = new NginxConfUpstreamDo[10000];
+
+        for (int i = 0 ; i < 10000 ; i ++)
         {
-            tmpdata.setSlbName("slbname_"+i).setVersion(i).setName("vs_"+i);
-            nginxConfUpstreamDao.insert(tmpdata);
+             tmpdata = new NginxConfUpstreamDo()
+                    .setContent("upstream backend_VS_1007_App_1007 {\n" +
+                            "    server 10.2.25.83:20004 weight=1 max_fails=10 fail_timeout=30;\n" +
+                            "    server 10.2.25.93:20004 weight=1 max_fails=10 fail_timeout=30;\n" +
+                            "    server 10.2.25.94:20004 weight=1 max_fails=10 fail_timeout=30;\n" +
+                            "    server 10.2.25.95:20004 weight=1 max_fails=10 fail_timeout=30;\n" +
+                            "    server 10.2.25.96:20004 weight=1 max_fails=10 fail_timeout=30;\n" +
+                            "    check interval=2000 rise=1 fall=1 timeout=1000 type=http;\n" +
+                            "    check_keepalive_requests 100;\n" +
+                            "    check_http_send \"GET /checkHealth HTTP/1.0\\r\\n Connection: keep-alive\\r\\n Host: 1007.ctrip.com\\r\\n\\r\\n\";\n" +
+                            "    check_http_expect_alive http_2xx http_3xx;\n" +
+                            "    }\n");
+
+            tmpdata.setSlbName("slbname5_"+i).setVersion(i).setName("vs_"+i);
+            dos[i]=tmpdata;
         }
+        nginxConfUpstreamDao.insert(dos);
         long end = new Date().getTime();
         System.out.println("Time cost :"+(end-start));
     }

@@ -11,11 +11,11 @@ import java.util.List;
  * Created by fanqq on 2015/5/8.
  */
 public class EnvFactory {
-    private static final String host = "http://127.0.0.1:8099";
-//    private static final String host = "http://10.2.27.21:8099";
+//    private static final String host = "http://127.0.0.1:8099";
+    private static final String host = "http://10.2.27.21:8099";
     private static final String vip="10.2.27.21";
-    private static final int vsNum=10000;
-    private static final int appNum=10000;
+    private static final int vsNum=1000;
+    private static final int appNum=5000;
     private static final String slbName="test-env";
     private static final String checkHealthPath="/checkHealth";
     private static ReqClient reqClient = new ReqClient(host);
@@ -80,7 +80,7 @@ public class EnvFactory {
         for ( int i = 0 ; i < appNum ; i++)
         {
             apptmp = new App().setName("App_" + i).setAppId(String.valueOf(100000 + i)).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                    .setIntervals(2000).setPasses(1).setUri(checkHealthPath)).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
+                    .setIntervals(2000*appNum/100).setPasses(1).setUri(checkHealthPath)).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                     .setValue("test"))
                     .addAppSlb(new AppSlb().setSlbName(slbName).setPath("/App" + i)
                             .setVirtualServer(vsList.get(i % vsNum)));
