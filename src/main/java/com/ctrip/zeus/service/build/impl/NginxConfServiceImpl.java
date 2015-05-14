@@ -222,30 +222,6 @@ public class NginxConfServiceImpl implements NginxConfService {
 
             apps.add(appSlb.getAppName());
         }
-
-//        List<AppSlb> appSlbList = slbClusterRepository.listAppSlbsBySlb(slbName);
-//
-//        if (appSlbList==null)
-//        {
-//            appSlbList = new ArrayList<>();
-//        }
-//
-//        for (AppSlb appslb : appSlbList)
-//        {
-//            VirtualServer vs = appslb.getVirtualServer();
-//            String vsstr = vs.getName();
-//
-//            Set<String> apps = appNamesMap.get(vsstr);
-//            if (apps==null)
-//            {
-//                apps = new HashSet<>();
-//                appNamesMap.put(vsstr,apps);
-//            }
-//
-//            apps.add(appslb.getAppName());
-//        }
-
-
         Map<String, List<App>> appsMap = new HashMap<>();
         for (String vs : appNamesMap.keySet()) {
             List<String> l = activeConfService.getConfAppActiveContentByAppNames(appNamesMap.get(vs).toArray(new String[]{}));
@@ -278,6 +254,12 @@ public class NginxConfServiceImpl implements NginxConfService {
 
         Set<String> allDownServers = statusService.findAllDownServers();
         Set<String> allDownAppServers = statusService.findAllDownAppServersBySlbName(slbName);
+
+        int length = slb.getVirtualServers().size();
+        NginxConfServerDo[] nginxConfServerDos = new NginxConfServerDo[length];
+        NginxConfUpstreamDo[] nginxConfUpstreamDos = new NginxConfUpstreamDo[length];
+        int index = 0 ;
+
         for (VirtualServer vs : slb.getVirtualServers()) {
             List<App> apps = appsMap.get(vs.getName());
             if (apps == null) {
@@ -287,21 +269,22 @@ public class NginxConfServiceImpl implements NginxConfService {
             String serverConf = nginxConfigBuilder.generateServerConf(slb, vs, apps);
             String upstreamConf = nginxConfigBuilder.generateUpstreamsConf(slb, vs, apps, allDownServers, allDownAppServers);
 
-            nginxConfServerDao.insert(new NginxConfServerDo().setCreatedTime(new Date())
+            nginxConfServerDos[index] = new NginxConfServerDo().setCreatedTime(new Date())
                     .setSlbName(slb.getName())
                     .setName(vs.getName())
                     .setContent(serverConf)
-                    .setVersion(version));
+                    .setVersion(version);
 
-            logger.debug("Nginx Server Conf build sucess! slbName: "+slb+",virtualserver: "+vs.getName()+",version: "+version);
-
-            nginxConfUpstreamDao.insert(new NginxConfUpstreamDo().setCreatedTime(new Date())
+            nginxConfUpstreamDos[index] = new NginxConfUpstreamDo().setCreatedTime(new Date())
                     .setSlbName(slb.getName())
                     .setName(vs.getName())
                     .setContent(upstreamConf)
-                    .setVersion(version));
+                    .setVersion(version);
+            index++;
+            logger.debug("Nginx Server Conf build sucess! slbName: "+slb+",virtualserver: "+vs.getName()+",version: "+version);
             logger.debug("Nginx Upstream Conf build sucess! slbName: "+slb+",virtualserver: "+vs.getName()+",version: "+version);
         }
-
+        nginxConfServerDao.insert(nginxConfServerDos);
+        nginxConfUpstreamDao.insert(nginxConfUpstreamDos);
     }
 }

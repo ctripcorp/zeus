@@ -39,8 +39,10 @@
         </query-defs>
     </entity>
     <entity name="nginx-conf-server" table="nginx_conf_server" alias="ncs">
+        <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
+        <member name="last-modified" field="last_modified" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <query-defs>
-            <query name="insert" type="INSERT">
+            <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
@@ -77,8 +79,10 @@
         </query-defs>
     </entity>
     <entity name="nginx-conf-upstream" table="nginx_conf_upstream" alias="ncs">
+        <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
+        <member name="last-modified" field="last_modified" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <query-defs>
-            <query name="insert" type="INSERT">
+            <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)

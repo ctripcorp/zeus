@@ -14,6 +14,7 @@ import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.util.S;
+import com.ctrip.zeus.util.TrafficStatusCollector;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.slf4j.Logger;
@@ -267,9 +268,8 @@ public class NginxServiceImpl implements NginxService {
 
     @Override
     public TrafficStatus getLocalTrafficStatus() {
-        return LocalClient.getInstance().getTrafficStatus();
+        return TrafficStatusCollector.getInstance().getResult();
     }
-
 
     private void writeConfToDisk(String slbName, int version, NginxOperator nginxOperator) throws Exception {
         LOGGER.info("Start writing nginx configuration.");
