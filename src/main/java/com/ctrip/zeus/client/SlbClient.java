@@ -20,12 +20,12 @@ public class SlbClient extends AbstractRestClient {
     }
 
     public List<Slb> getAll() {
-        String res = getTarget().path("/api/slb").request().get(String.class);
+        String res = getTarget().path("/api/slb").request().headers(getDefaultHeaders()).get(String.class);
         return null;
     }
 
     public Response add(Slb slb) {
-        return getTarget().path("/api/slb/add").request()
+        return getTarget().path("/api/slb/add").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
                         String.format(Slb.JSON, slb),
                         MediaType.APPLICATION_JSON
@@ -33,7 +33,7 @@ public class SlbClient extends AbstractRestClient {
     }
 
     public Response update(Slb slb) {
-        return getTarget().path("/api/slb/update").request()
+        return getTarget().path("/api/slb/update").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
                         String.format(Slb.JSON, slb),
                         MediaType.APPLICATION_JSON
@@ -41,7 +41,7 @@ public class SlbClient extends AbstractRestClient {
     }
 
     public Slb get(String slbName) {
-        String res = getTarget().path("/api/slb/get/" + slbName).request(MediaType.APPLICATION_JSON).get(String.class);
+        String res = getTarget().path("/api/slb/get/" + slbName).request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
         try {
             return DefaultJsonParser.parse(Slb.class, res);
         } catch (IOException e) {

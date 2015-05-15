@@ -287,6 +287,42 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="auth-private-key" table="auth_private_key" alias="apk">
+    <member name="private-key" field="private_key" value-type="String" length="50" nullable="false" key="true" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-private-key" value-type="String" key-member="private-key" />
+    <primary-key name="PRIMARY" members="private_key" />
+    <index name="time idx" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-private-key" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='private-key'/> = ${key-private-key}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-private-key" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='private-key'/> = ${key-private-key}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-private-key" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='private-key'/> = ${key-private-key}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="auth-resource" table="auth_resource" alias="ar">
     <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
     <member name="resource-name" field="resource_name" value-type="String" length="100" nullable="false" />
@@ -296,6 +332,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="time_idx" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -336,6 +373,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="role_idx" members="role_name ASC" />
     <index name="res_idx" members="resource_name ASC" />
+    <index name="time_idx" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -375,6 +413,7 @@
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="role_idx" unique="true" members="role_name ASC" />
+    <index name="time_idx" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -407,13 +446,14 @@
   </entity>
   <entity name="auth-user" table="auth_user" alias="au">
     <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
-    <member name="user-name" field="user_name" value-type="String" length="50" nullable="false" />
+    <member name="user-name" field="user_name" value-type="String" length="50" />
     <member name="description" field="description" value-type="String" length="100" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="usr_name_idx" unique="true" members="user_name ASC" />
+    <index name="time_idx" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -446,15 +486,15 @@
   </entity>
   <entity name="auth-user-role" table="auth_user_role" alias="aur">
     <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
-    <member name="user-name" field="user_name" value-type="String" length="50" nullable="false" />
-    <member name="role-name" field="role_name" value-type="String" length="50" nullable="false" />
-    <member name="group" field="group" value-type="String" length="50" nullable="false" />
+    <member name="user-name" field="user_name" value-type="String" length="50" />
+    <member name="role-name" field="role_name" value-type="String" length="50" />
+    <member name="group" field="group" value-type="String" length="50" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="usr_role_idx" unique="true" members="user_name ASC" />
     <index name="usr_idx" members="user_name ASC" />
+    <index name="time_idx" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -566,7 +606,7 @@
     </query-defs>
   </entity>
   <entity name="conf-app-slb-active" table="conf_app_slb_active" alias="casa">
-    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" />
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="app-name" field="app_name" value-type="String" length="200" nullable="false" />
     <member name="slb-name" field="slb_name" value-type="String" length="200" nullable="false" />
     <member name="slb-virtual-server-name" field="slb_virtual_server_name" value-type="String" length="200" nullable="false" />
@@ -646,9 +686,11 @@
   </entity>
   <entity name="dist-lock" table="dist_lock" alias="dl">
     <member name="lock-key" field="lock_key" value-type="String" length="255" nullable="false" key="true" />
-    <member name="created-time" field="created_time" value-type="long" length="19" nullable="false" />
+    <member name="created-time" field="created_time" value-type="long" length="19" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-lock-key" value-type="String" key-member="lock-key" />
     <primary-key name="PRIMARY" members="lock_key" />
+    <index name="dcl_key" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

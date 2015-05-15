@@ -42,24 +42,24 @@ public class NginxClient extends AbstractRestClient {
 
 
     public NginxResponse load() throws IOException{
-        String responseStr = getTarget().path("/api/nginx/load").request().get(String.class);
+        String responseStr = getTarget().path("/api/nginx/load").request().headers(getDefaultHeaders()).get(String.class);
         return DefaultJsonParser.parse(NginxResponse.class, responseStr);
     }
 
     public NginxResponse write()throws IOException{
-        String responseStr = getTarget().path("/api/nginx/write").request().get(String.class);
+        String responseStr = getTarget().path("/api/nginx/write").request().headers(getDefaultHeaders()).get(String.class);
         return DefaultJsonParser.parse(NginxResponse.class, responseStr);
     }
 
     public NginxResponse dyups(String upsName ,String upsCommands)throws IOException{
-        String responseStr = getTarget().path("/api/nginx/dyups/"+upsName).request().post(Entity.entity(upsCommands,
+        String responseStr = getTarget().path("/api/nginx/dyups/" + upsName).request().headers(getDefaultHeaders()).post(Entity.entity(upsCommands,
                 MediaType.APPLICATION_JSON
         ),String.class);
         return DefaultJsonParser.parse(NginxResponse.class,responseStr);
     }
 
     public TrafficStatus getTrafficStatus() throws Exception {
-        Response response = getTarget().path("").path("/api/nginx/trafficStatus").request().get();
+        Response response = getTarget().path("").path("/api/nginx/trafficStatus").request().headers(getDefaultHeaders()).get();
         InputStream is = (InputStream)response.getEntity();
         try {
             return DefaultJsonParser.parse(TrafficStatus.class, IOUtils.inputStreamStringify(is));

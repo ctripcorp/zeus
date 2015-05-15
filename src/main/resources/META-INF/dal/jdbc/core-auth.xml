@@ -177,5 +177,17 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="auth-private-key" table="auth_private_key" alias="apk" do-class="AuthPrivateKeyDo">
+        <query-defs>
+            <query name="find-first" type="SELECT">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
 </entities>
 

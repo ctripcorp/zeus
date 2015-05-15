@@ -20,12 +20,12 @@ public class AppClient extends AbstractRestClient {
     }
 
     public List<App> getAll() {
-        String res = getTarget().path("/api/app").request().get(String.class);
+        String res = getTarget().path("/api/app").request().headers(getDefaultHeaders()).get(String.class);
         return null;
     }
 
     public Response add(App app) {
-        return getTarget().path("/api/app/add").request()
+        return getTarget().path("/api/app/add").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
                         String.format(App.JSON, app),
                         MediaType.APPLICATION_JSON
@@ -34,7 +34,7 @@ public class AppClient extends AbstractRestClient {
     }
 
     public App get(String appName) {
-        String res = getTarget().path("/api/app/get/" + appName).request(MediaType.APPLICATION_JSON).get(String.class);
+        String res = getTarget().path("/api/app/get/" + appName).request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
         try {
             return DefaultJsonParser.parse(App.class, res);
         } catch (IOException e) {

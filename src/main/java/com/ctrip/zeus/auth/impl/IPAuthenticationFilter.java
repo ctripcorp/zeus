@@ -26,6 +26,8 @@ import java.util.Map;
 public class IPAuthenticationFilter implements Filter{
     private static final Logger logger = LoggerFactory.getLogger(IPAuthenticationFilter.class);
     DynamicStringProperty ipUserStr = DynamicPropertyFactory.getInstance().getStringProperty("ip.authentication", "127.0.0.1,172.16.144.61=releaseSys");
+    private static final String SLB_SERVER_USER = "slbServer";
+    public static final String SERVER_TOKEN_HEADER = "SlbServerToken";
 
     private volatile Map<String, String> ipUserMap = new HashMap<>();
 
@@ -52,16 +54,30 @@ public class IPAuthenticationFilter implements Filter{
             return;
         }
 
+        // check whether it is called from other slb servers.
+        String slbServerToken = request.getHeader(SERVER_TOKEN_HEADER);
+        if (slbServerToken != null){
+            if (TokenManager.validateToken(slbServerToken)){
+                setAssertion(request, SLB_SERVER_USER);
+                filterChain.doFilter(request,response);
+                return;
+            }
+        }
+
         // if the request is from in ip white list, then authenticate it using the ip white list.
         String clientIP = getClientIP(request);
         String ipUser = getIpUser(clientIP);
         if (ipUser != null){
             logger.info("Authenticated by IP: " + clientIP + " Assigned userName:" + ipUser);
-            assertion = new AssertionImpl(ipUser);
-            request.setAttribute(AbstractCasFilter.CONST_CAS_ASSERTION, assertion);
-            request.getSession().setAttribute(AbstractCasFilter.CONST_CAS_ASSERTION, assertion);
+            setAssertion(request, ipUser);
         }
         filterChain.doFilter(request,response);
+    }
+
+    private void setAssertion(HttpServletRequest request, String userName) {
+        Assertion assertion = new AssertionImpl(userName);
+        request.setAttribute(AbstractCasFilter.CONST_CAS_ASSERTION, assertion);
+        request.getSession().setAttribute(AbstractCasFilter.CONST_CAS_ASSERTION, assertion);
     }
 
     @Override

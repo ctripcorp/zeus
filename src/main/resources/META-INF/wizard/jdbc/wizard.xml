@@ -38,6 +38,7 @@
          <table name="auth_resource_role"/>
          <table name="auth_user_role"/>
          <table name="auth_user"/>
+         <table name="auth_private_key"/>
       </group>
    </jdbc>
 </wizard>
