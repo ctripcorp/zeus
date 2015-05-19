@@ -71,7 +71,8 @@ public class TokenManager {
 
 
     private static String encryptBASE64(byte[] key) throws Exception {
-        return (new BASE64Encoder()).encodeBuffer(key);
+        String encode = (new BASE64Encoder()).encodeBuffer(key);
+        return encode.replace('\n',' ');
     }
 
     private static Key toKey(byte[] key) throws Exception {
