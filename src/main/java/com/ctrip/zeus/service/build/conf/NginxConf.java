@@ -55,9 +55,9 @@ public class NginxConf {
 
         b.append(logFormat.get());
         b.append("access_log /opt/logs/nginx/access.log main;\n");
-        b.append("server_names_hash_max_size ").append(serverNamesHashMaxSize).append(";\n");
-        b.append("server_names_hash_bucket_size ").append(serverNamesHashBucketSize).append(";\n");
-        b.append("check_shm_size ").append(checkShmSize).append("M;\n");
+        b.append("server_names_hash_max_size ").append(serverNamesHashMaxSize.get()).append(";\n");
+        b.append("server_names_hash_bucket_size ").append(serverNamesHashBucketSize.get()).append(";\n");
+        b.append("check_shm_size ").append(checkShmSize.get()).append("M;\n");
         b.append("client_max_body_size 2m;\n");
 
         appendHttpCommand(b);
