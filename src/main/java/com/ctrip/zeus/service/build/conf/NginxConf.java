@@ -44,6 +44,7 @@ public class NginxConf {
 
         b.append("events {\n")
          .append("worker_connections 30720;\n")
+         .append("multi_accept on;\n")
          .append("use epoll; \n")
          .append("}\n");
 
@@ -57,7 +58,8 @@ public class NginxConf {
         b.append("server_names_hash_max_size ").append(serverNamesHashMaxSize).append(";\n");
         b.append("server_names_hash_bucket_size ").append(serverNamesHashBucketSize).append(";\n");
         b.append("check_shm_size ").append(checkShmSize).append("M;\n");
-        
+        b.append("client_max_body_size 2m;\n");
+
         appendHttpCommand(b);
 
         b.append(statusConf());
