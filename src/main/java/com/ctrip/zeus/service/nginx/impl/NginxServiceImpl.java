@@ -175,7 +175,14 @@ public class NginxServiceImpl implements NginxService {
         List<NginxResponse> result = new ArrayList<>();
         if(!writeALLToDisk(slbName,result)){
             LOGGER.error("Write All To Disk Failed!");
-            throw new Exception("Write All To Disk Failed!\nDetail:\n"+String.format(NginxResponse.JSON,result));
+            StringBuilder sb = new StringBuilder(128);
+            sb.append("[");
+            for (NginxResponse res : result)
+            {
+                sb.append(String.format(NginxResponse.JSON,res)).append(",\n");
+            }
+            sb.append("]");
+            throw new Exception("Write All To Disk Failed!\nDetail:\n"+sb.toString());
         }
         result = loadAll(slbName);
         return result;
