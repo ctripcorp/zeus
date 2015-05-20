@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.client.NginxClient;
+import com.ctrip.zeus.client.StatusClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.S;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
@@ -26,6 +27,7 @@ import java.util.List;
 @Service("appStatusService")
 public class AppStatusServiceImpl implements AppStatusService {
     private static DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
+    private static DynamicIntProperty adminServerPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
 
     @Resource
     SlbRepository slbRepository;
@@ -35,6 +37,8 @@ public class AppStatusServiceImpl implements AppStatusService {
 
     @Resource
     StatusService statusService;
+
+    private static String currentSlbName = null;
 
     @Override
     public List<AppStatus> getAllAppStatus() throws Exception {
@@ -71,6 +75,12 @@ public class AppStatusServiceImpl implements AppStatusService {
 
     @Override
     public AppStatus getAppStatus(String appName, String slbName) throws Exception {
+        if (!isCurrentSlb(slbName))
+        {
+            Slb slb = slbRepository.get(slbName);
+            StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort);
+            return client.getAppStatus(appName,slbName);
+        }
         AppStatus status = new AppStatus();
         status.setAppName(appName);
         status.setSlbName(slbName);
@@ -85,6 +95,13 @@ public class AppStatusServiceImpl implements AppStatusService {
 
     @Override
     public AppServerStatus getAppServerStatus(String appName, String slbName, String ip, Integer port) throws Exception {
+        if (!isCurrentSlb(slbName))
+        {
+            Slb slb = slbRepository.get(slbName);
+            StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort);
+            return client.getAppServerStatus(appName,slbName,ip+":"+port);
+        }
+
         AppServerStatus appServerStatus = new AppServerStatus();
         appServerStatus.setIp(ip);
         appServerStatus.setPort(port);
@@ -119,5 +136,14 @@ public class AppStatusServiceImpl implements AppStatusService {
             }
         }
         return false;
+    }
+    private boolean isCurrentSlb(String slbName) throws Exception {
+        if (currentSlbName==null)
+        {
+            String ip = com.ctrip.zeus.util.S.getIp();
+            Slb slb = slbRepository.getBySlbServer(ip);
+            currentSlbName = slb.getName();
+        }
+        return slbName==currentSlbName;
     }
 }
