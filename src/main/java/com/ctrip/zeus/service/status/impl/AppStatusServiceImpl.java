@@ -38,7 +38,7 @@ public class AppStatusServiceImpl implements AppStatusService {
     @Resource
     StatusService statusService;
 
-    private static String currentSlbName = null;
+    private String currentSlbName = null;
 
     @Override
     public List<AppStatus> getAllAppStatus() throws Exception {
@@ -78,7 +78,7 @@ public class AppStatusServiceImpl implements AppStatusService {
         if (!isCurrentSlb(slbName))
         {
             Slb slb = slbRepository.get(slbName);
-            StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort);
+            StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
             return client.getAppStatus(appName,slbName);
         }
         AppStatus status = new AppStatus();
@@ -98,7 +98,7 @@ public class AppStatusServiceImpl implements AppStatusService {
         if (!isCurrentSlb(slbName))
         {
             Slb slb = slbRepository.get(slbName);
-            StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort);
+            StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
             return client.getAppServerStatus(appName,slbName,ip+":"+port);
         }
 
@@ -138,12 +138,15 @@ public class AppStatusServiceImpl implements AppStatusService {
         return false;
     }
     private boolean isCurrentSlb(String slbName) throws Exception {
-        if (currentSlbName==null)
+        if (currentSlbName == null)
         {
             String ip = com.ctrip.zeus.util.S.getIp();
             Slb slb = slbRepository.getBySlbServer(ip);
-            currentSlbName = slb.getName();
+            if (slb != null )
+            {
+                currentSlbName = slb.getName();
+            }
         }
-        return slbName==currentSlbName;
+        return slbName.equals(currentSlbName);
     }
 }
