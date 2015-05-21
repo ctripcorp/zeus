@@ -226,7 +226,7 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     private App generateApp(String appName, String slbName, VirtualServer virtualServer) {
-        return new App().setName(appName).setAppId("000000").setVersion(1)
+        return new App().setName(appName).setAppId("000000").setVersion(1).setSsl(false)
                 .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbName).setPath("/").setVirtualServer(virtualServer))
@@ -277,6 +277,7 @@ public class ModelServiceTest extends AbstractSpringTest {
     public static void assertAppEquals(App origin, App another) {
         Assert.assertNotNull(another);
         Assert.assertEquals(origin.getName(), another.getName());
+        Assert.assertEquals(origin.getSsl(), another.getSsl());
         Assert.assertEquals(origin.getAppServers().size(), another.getAppServers().size());
         Assert.assertEquals(origin.getAppSlbs().size(), another.getAppSlbs().size());
         Assert.assertEquals(origin.getHealthCheck().getUri(), another.getHealthCheck().getUri());
