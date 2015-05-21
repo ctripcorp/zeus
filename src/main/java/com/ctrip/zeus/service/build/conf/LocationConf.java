@@ -15,12 +15,10 @@ public class LocationConf {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("location ").append(getPath(slb, vs, app)).append("{\n");
-
-
         b.append("proxy_set_header Host $host").append(";\n");
         b.append("set $upstream ").append(upstreamName).append(";\n");
+        addRewriteCommand(b,slb,vs,app);
         b.append("proxy_pass http://$upstream ;\n");
-//        b.append("proxy_pass http://").append(upstreamName).append(";\n");
         b.append("proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n");
         b.append("proxy_set_header X-Real-IP $remote_addr;");
 
@@ -39,5 +37,30 @@ public class LocationConf {
 
         AssertUtils.isNull(res,"Location path is null,Please check your configuration of SlbName:["+slb.getName()+"] VirtualServer :["+vs.getName()+"]");
         return res;
+    }
+
+    private static String getRewrite(Slb slb, VirtualServer vs, App app) throws Exception{
+        String res=null;
+        for (AppSlb appSlb : app.getAppSlbs()) {
+            if (slb.getName().equals(appSlb.getSlbName()) && vs.getName().equals(appSlb.getVirtualServer().getName())) {
+                res= appSlb.getRewrite();
+            }
+        }
+
+        return res;
+    }
+
+    private static void addRewriteCommand(StringBuilder sb, Slb slb , VirtualServer vs , App app) throws Exception {
+        if (sb != null){
+            String rewrite = getRewrite(slb,vs,app);
+            if (rewrite==null){
+                return;
+            }
+            String[] rewrites = rewrite.split(";");
+            for (int i = 0 ; i < rewrites.length ; i ++)
+            {
+                sb.append("rewrite ").append(rewrites[i]).append(" break;\n");
+            }
+        }
     }
 }

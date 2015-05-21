@@ -202,7 +202,7 @@ public class NginxConfServiceImpl implements NginxConfService {
     @Override
     public void build(String slbName, int version) throws Exception {
 
-        Map<String, Set<String>> appNamesMap = new HashMap<>();
+        Map<String, Map<String,Integer>> appNamesMap = new HashMap<>();
 
 
         List<ConfAppSlbActiveDo> appSlbActiveList = confAppSlbActiveDao.findBySlbName(slbName,ConfAppSlbActiveEntity.READSET_FULL);
@@ -213,19 +213,22 @@ public class NginxConfServiceImpl implements NginxConfService {
         for (ConfAppSlbActiveDo appSlb : appSlbActiveList)
         {
             String vs = appSlb.getSlbVirtualServerName();
-            Set<String> apps = appNamesMap.get(vs);
+            Map<String,Integer> apps = appNamesMap.get(vs);
             if (apps==null)
             {
-                apps = new HashSet<>();
+                apps = new HashMap<>();
                 appNamesMap.put(vs,apps);
             }
 
-            apps.add(appSlb.getAppName());
+            apps.put(appSlb.getAppName(),appSlb.getPriority());
         }
+
         Map<String, List<App>> appsMap = new HashMap<>();
         for (String vs : appNamesMap.keySet()) {
-            List<String> l = activeConfService.getConfAppActiveContentByAppNames(appNamesMap.get(vs).toArray(new String[]{}));
-            appsMap.put(vs, Lists.transform(l, new Function<String, App>() {
+            final Map<String,Integer> appPriorityMap = appNamesMap.get(vs);
+
+            List<String> l = activeConfService.getConfAppActiveContentByAppNames(appPriorityMap.keySet().toArray(new String[]{}));
+            List<App> appList = Lists.transform(l, new Function<String, App>() {
                 @Nullable
                 @Override
                 public App apply(@Nullable String content) {
@@ -233,10 +236,16 @@ public class NginxConfServiceImpl implements NginxConfService {
                         return DefaultSaxParser.parseEntity(App.class, content);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        throw new RuntimeException("DefaultSaxParser fail! Class: App ,Content: ["+content+']',e);
+                        throw new RuntimeException("DefaultSaxParser fail! Class: App ,Content: [" + content + ']', e);
                     }
                 }
-            }));
+            });
+            Collections.sort(appList,new Comparator<App>(){
+                public int compare(App app0, App app1) {
+                    return appPriorityMap.get(app0.getName())-appPriorityMap.get(app1.getName());
+                }
+            });
+            appsMap.put(vs, appList);
         }
 
         String slbContent =activeConfService.getConfSlbActiveContentBySlbNames(slbName);
