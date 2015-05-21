@@ -19,12 +19,13 @@ USE `zeus_test`;
 -- 导出  表 zeus_test.app 结构
 DROP TABLE IF EXISTS `app`;
 CREATE TABLE IF NOT EXISTS `app` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `name` varchar(200) NOT NULL DEFAULT '0',
-  `app_id` varchar(200) NOT NULL DEFAULT '0',
-  `version` int(11) NOT NULL DEFAULT '0',
-  `created_time` timestamp NULL DEFAULT NULL,
-  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`name` VARCHAR(200) NOT NULL DEFAULT '0',
+	`app_id` VARCHAR(200) NOT NULL DEFAULT '0',
+	`version` INT(11) NOT NULL DEFAULT '0',
+	`ssl` BIT(1) NOT NULL DEFAULT b'0',
+	`created_time` TIMESTAMP NULL DEFAULT NULL,
+	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -89,13 +90,14 @@ CREATE TABLE IF NOT EXISTS `app_server` (
 -- 导出  表 zeus_test.app_slb 结构
 DROP TABLE IF EXISTS `app_slb`;
 CREATE TABLE IF NOT EXISTS `app_slb` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `app_name` varchar(200) NOT NULL DEFAULT '0',
-  `slb_name` varchar(200) NOT NULL DEFAULT '0',
-  `slb_virtual_server_name` varchar(200) NOT NULL DEFAULT '0',
-  `path` varchar(200) NOT NULL DEFAULT '0',
-  `created_time` timestamp NULL DEFAULT NULL,
-  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`app_name` VARCHAR(200) NOT NULL DEFAULT '0',
+	`slb_name` VARCHAR(200) NOT NULL DEFAULT '0',
+	`slb_virtual_server_name` VARCHAR(200) NOT NULL DEFAULT '0',
+	`path` VARCHAR(200) NOT NULL DEFAULT '0',
+	`rewrite` VARCHAR(255) NULL DEFAULT NULL,
+	`created_time` TIMESTAMP NULL DEFAULT NULL,
+	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `app_name_slb_name_slb_virtual_server_name` (`app_name`,`slb_name`,`slb_virtual_server_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -357,13 +359,13 @@ CREATE TABLE IF NOT EXISTS `slb_vip` (
 -- 导出  表 zeus_test.slb_virtual_server 结构
 DROP TABLE IF EXISTS `slb_virtual_server`;
 CREATE TABLE IF NOT EXISTS `slb_virtual_server` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `slb_id` bigint(20) NOT NULL DEFAULT '0',
-  `name` varchar(200) NOT NULL DEFAULT '0',
-  `port` varchar(200) NOT NULL DEFAULT '0',
-  `is_ssl` bit(1) NOT NULL DEFAULT b'0',
-  `created_time` timestamp NULL DEFAULT NULL,
-  `last_modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`slb_id` BIGINT(20) NOT NULL DEFAULT '0',
+	`name` VARCHAR(200) NOT NULL DEFAULT '0',
+	`port` VARCHAR(200) NOT NULL DEFAULT '0',
+	`is_ssl` BIT(1) NOT NULL DEFAULT b'0',
+	`created_time` TIMESTAMP NULL DEFAULT NULL,
+	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `slb_id_name` (`slb_id`,`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

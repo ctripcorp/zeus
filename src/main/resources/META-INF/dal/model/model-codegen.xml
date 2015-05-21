@@ -56,15 +56,18 @@
     <attribute name="name" value-type="String" />
     <attribute name="app-id" value-type="String" />
     <attribute name="version" value-type="int" />
+    <attribute name="ssl" value-type="boolean" />
     <entity-ref name="app-slb" type="list" names="app-slbs" xml-indent="true" />
     <entity-ref name="health-check" />
     <entity-ref name="load-balancing-method" />
     <entity-ref name="app-server" type="list" names="app-servers" xml-indent="true" />
   </entity>
   <entity name="app-slb">
+    <attribute name="priority" value-type="int" />
     <element name="app-name" value-type="String" />
     <element name="slb-name" value-type="String" />
     <element name="path" value-type="String" />
+    <element name="rewrite" value-type="String" />
     <entity-ref name="vip" type="list" names="slb-vips" xml-indent="true" />
     <entity-ref name="virtual-server" />
   </entity>
