@@ -51,9 +51,13 @@ public class RollingTrafficStatus {
         Integer[] stubStatusResult = new Integer[StubStatusOffset.values().length];
         Map<String, Integer[]> reqStatusResult = new HashMap<>();
         buckets.getAccumulatedStubStatus(stubStatusResult, reqStatusResult);
-        extractStubStatus(stubStatusResult, trafficStatus);
+        extractStubStatus(stubStatusResult, trafficStatus, getLast().stubStatus);
         extractReqStatus(reqStatusResult, trafficStatus);
         return trafficStatus;
+    }
+
+    public StatusPair getLast() {
+        return buckets.buckets.getLast();
     }
 
     protected static void extractReqStatus(Map<String, Integer[]> upstreamMap, TrafficStatus trafficStatus) {
@@ -85,17 +89,17 @@ public class RollingTrafficStatus {
         }
     }
 
-    protected static void extractStubStatus(Integer[] data, TrafficStatus trafficStatus) {
+    protected static void extractStubStatus(Integer[] data, TrafficStatus trafficStatus, Integer[] currentStubStatus) {
         Integer requests = data[StubStatusOffset.Requests.ordinal()];
         double responseTime = (requests == null || requests == 0) ? 0.0 : (double)data[StubStatusOffset.RequestTime.ordinal()] / requests;
-        trafficStatus.setActiveConnections(data[StubStatusOffset.ActiveConn.ordinal()])
+        trafficStatus.setActiveConnections(currentStubStatus[StubStatusOffset.ActiveConn.ordinal()])
                 .setAccepts(data[StubStatusOffset.Accepts.ordinal()])
                 .setHandled(data[StubStatusOffset.Handled.ordinal()])
                 .setRequests(requests)
                 .setResponseTime(responseTime)
-                .setReading(data[StubStatusOffset.Reading.ordinal()])
-                .setWriting(data[StubStatusOffset.Writing.ordinal()])
-                .setWaiting(data[StubStatusOffset.Waiting.ordinal()]);
+                .setReading(currentStubStatus[StubStatusOffset.Reading.ordinal()])
+                .setWriting(currentStubStatus[StubStatusOffset.Writing.ordinal()])
+                .setWaiting(currentStubStatus[StubStatusOffset.Waiting.ordinal()]);
     }
 
     private enum StubStatusOffset {
