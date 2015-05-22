@@ -18,9 +18,9 @@ import java.io.IOException;
  */
 public class IntegrationTest {
 
-    private static final String host = "http://10.2.25.83:8099";
+//    private static final String host = "http://10.2.25.83:8099";
 
-//    private static final String host = "http://127.0.0.1:8099";
+    private static final String host = "http://127.0.0.1:8099";
     private static final String hostip = "10.2.25.83";
     private static final String slb1_server_0 = "10.2.25.83";
     private static final String slb1_server_1 = "10.2.27.21";
@@ -70,14 +70,14 @@ public class IntegrationTest {
 
         VirtualServer v1 = new VirtualServer().setName("__Test_vs1").setPort("80").setSsl(false)
                 .addDomain(new Domain().setName("vs1.ctrip.com"));
-        VirtualServer v2 = new VirtualServer().setName("__Test_vs2").setPort("80").setSsl(false)
+        VirtualServer v2 = new VirtualServer().setName("__Test_vs2").setPort("80").setSsl(true)
                 .addDomain(new Domain().setName("vs2.ctrip.com"))
                 .addDomain(new Domain().setName("vs6.ctrip.com"));
         VirtualServer v3 = new VirtualServer().setName("__Test_vs3").setPort("80").setSsl(false)
                 .addDomain(new Domain().setName("vs3.ctrip.com"));
         VirtualServer v4 = new VirtualServer().setName("__Test_vs4").setPort("80").setSsl(false)
                 .addDomain(new Domain().setName("vs4.ctrip.com"));
-        VirtualServer v5 = new VirtualServer().setName("__Test_vs5").setPort("80").setSsl(false)
+        VirtualServer v5 = new VirtualServer().setName("__Test_vs5").setPort("80").setSsl(true)
                 .addDomain(new Domain().setName("vs5.ctrip.com"));
 
 
@@ -138,7 +138,7 @@ public class IntegrationTest {
 
 
         //activate test slbs
-        reqClient.getstr("/api/conf/activate?slbName=__Test_slb1&slbName=__Test_slb2");
+//        reqClient.getstr("/api/conf/activate?slbName=__Test_slb1&slbName=__Test_slb2");
 
         //add apps
 
@@ -152,7 +152,7 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v1))
+                        .setVirtualServer(v1).setRewrite(null).setPriority(0))
                 .addAppServer(appServer1)
                 .addAppServer(appServer2);
 
@@ -168,7 +168,7 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v2))
+                        .setVirtualServer(v2).setRewrite(null).setPriority(0))
                 .addAppServer(appServer1);
 
 
@@ -183,7 +183,7 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v3))
+                        .setVirtualServer(v3).setRewrite(null).setPriority(0))
                 .addAppServer(appServer3);
 
 
@@ -198,7 +198,7 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v4))
+                        .setVirtualServer(v4).setRewrite(null).setPriority(0))
                 .addAppServer(appServer2);
 
 
@@ -213,7 +213,7 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v5))
+                        .setVirtualServer(v5).setRewrite(null).setPriority(0))
                 .addAppServer(appServer1);
 
 
@@ -228,7 +228,7 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v3))
+                        .setVirtualServer(v3).setRewrite(null).setPriority(0))
                 .addAppServer(appServer2);
 
         //app7 v2 appserver1
@@ -242,8 +242,8 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v2))
-                .addAppServer(appServer1);
+                        .setVirtualServer(v2).setRewrite(null).setPriority(0))
+                .addAppServer(appServer1).setSsl(true);
 
 
         //app8 v2 v5 appserver3
@@ -258,10 +258,10 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v2))
+                        .setVirtualServer(v2).setRewrite(null).setPriority(0))
                 .addAppSlb(new AppSlb().setSlbName(slbname1).setPath(appslbpath)
-                        .setVirtualServer(v5))
-                .addAppServer(appServer3);
+                        .setVirtualServer(v5).setRewrite(null).setPriority(2))
+                .addAppServer(appServer3).setSsl(true);
 
 
         //app9 v1 v3 appserver1 appserver2
@@ -276,9 +276,9 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v1))
+                        .setVirtualServer(v1).setRewrite(null).setPriority(2))
                 .addAppSlb(new AppSlb().setSlbName(slbname1).setPath(appslbpath)
-                        .setVirtualServer(v3))
+                        .setVirtualServer(v3).setRewrite(null).setPriority(0))
                 .addAppServer(appServer1)
                 .addAppServer(appServer2);
 
@@ -294,10 +294,10 @@ public class IntegrationTest {
                 .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                 .setValue("test"))
                 .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v2))
+                        .setVirtualServer(v2).setRewrite("/a1 /aa1").setPriority(2))
                 .addAppSlb(new AppSlb().setSlbName(slbname1).setPath(appslbpath)
-                        .setVirtualServer(v5))
-                .addAppServer(appServer3);
+                        .setVirtualServer(v5).setRewrite("/app10 /abb10").setPriority(1))
+                .addAppServer(appServer3).setSsl(true);
 
 
         reqClient.post("/api/app/add", String.format(App.JSON, app1));
@@ -350,16 +350,16 @@ public class IntegrationTest {
 
         integrationTest_update();
 
-        reqClient.getstr("/api/conf/activate?appName=__Test_app1");
-        reqClient.getstr("/api/conf/activate?appName=__Test_app2");
-        reqClient.getstr("/api/conf/activate?appName=__Test_app3");
-        reqClient.getstr("/api/conf/activate?appName=__Test_app4");
-        reqClient.getstr("/api/conf/activate?appName=__Test_app5");
-        reqClient.getstr("/api/conf/activate?appName=__Test_app6");
-        reqClient.getstr("/api/conf/activate?appName=__Test_app7");
-        reqClient.getstr("/api/conf/activate?appName=__Test_app8");
-        reqClient.getstr("/api/conf/activate?appName=__Test_app9");
-        reqClient.getstr("/api/conf/activate?appName=__Test_app10");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app1");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app2");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app3");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app4");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app5");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app6");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app7");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app8");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app9");
+//        reqClient.getstr("/api/conf/activate?appName=__Test_app10");
 
 
 

@@ -228,21 +228,14 @@ public class NginxConfServiceImpl implements NginxConfService {
             final Map<String,Integer> appPriorityMap = appNamesMap.get(vs);
 
             List<String> l = activeConfService.getConfAppActiveContentByAppNames(appPriorityMap.keySet().toArray(new String[]{}));
-            List<App> appList = Lists.transform(l, new Function<String, App>() {
-                @Nullable
-                @Override
-                public App apply(@Nullable String content) {
-                    try {
-                        return DefaultSaxParser.parseEntity(App.class, content);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        throw new RuntimeException("DefaultSaxParser fail! Class: App ,Content: [" + content + ']', e);
-                    }
-                }
-            });
+            List<App> appList = new ArrayList<>();
+            for (String content :  l ){
+                appList.add(DefaultSaxParser.parseEntity(App.class, content));
+            }
+
             Collections.sort(appList,new Comparator<App>(){
                 public int compare(App app0, App app1) {
-                    return appPriorityMap.get(app0.getName())-appPriorityMap.get(app1.getName());
+                    return appPriorityMap.get(app1.getName())-appPriorityMap.get(app0.getName());
                 }
             });
             appsMap.put(vs, appList);

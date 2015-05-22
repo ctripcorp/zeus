@@ -16,9 +16,14 @@ public class LocationConf {
 
         b.append("location ").append(getPath(slb, vs, app)).append("{\n");
         b.append("proxy_set_header Host $host").append(";\n");
-        b.append("set $upstream ").append(upstreamName).append(";\n");
         addRewriteCommand(b,slb,vs,app);
-        b.append("proxy_pass http://$upstream ;\n");
+        b.append("set $upstream ").append(upstreamName).append(";\n");
+        if (app.getSsl())
+        {
+            b.append("proxy_pass https://$upstream ;\n");
+        }else {
+            b.append("proxy_pass http://$upstream ;\n");
+        }
         b.append("proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n");
         b.append("proxy_set_header X-Real-IP $remote_addr;");
 
