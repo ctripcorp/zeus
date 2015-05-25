@@ -73,8 +73,8 @@ public class TrafficStatusTest {
         TrafficStatus trafficStatus2 = new TrafficStatus();
         Integer[] arr1 = RollingTrafficStatus.parseStubStatusNumber(stubStatus[0].split("\n"));
         Integer[] arr2 = RollingTrafficStatus.parseStubStatusNumber(stubStatus[1].split("\n"));
-        RollingTrafficStatus.extractStubStatus(arr1, trafficStatus1);
-        RollingTrafficStatus.extractStubStatus(arr2, trafficStatus2);
+        RollingTrafficStatus.extractStubStatus(arr1, trafficStatus1, arr1);
+        RollingTrafficStatus.extractStubStatus(arr2, trafficStatus2, arr2);
 
         TrafficStatus ref1 = new TrafficStatus().setActiveConnections(1)
                 .setAccepts(1140).setHandled(1140).setRequests(1140).setResponseTime((double)75806/1140)
@@ -114,8 +114,8 @@ public class TrafficStatusTest {
                 .setTotalRequests(29).setSuccessCount(30)
                 .setRedirectionCount(31).setClientErrCount(32).setServerErrCount(33)
                 .setResponseTime((double)34/29).setUpRequests(35).setUpResponseTime((double)36/35).setUpTries(37);
-        ref.setActiveConnections(0).setAccepts(10).setHandled(12).setRequests(14).setResponseTime((double)16/14)
-                .setReading(0).setWriting(0).setWaiting(2);
+        ref.setActiveConnections(1).setAccepts(10).setHandled(12).setRequests(14).setResponseTime((double)16/14)
+                .setReading(0).setWriting(1).setWaiting(2);
         TrafficStatus result = obj.getAccumulatedResult();
         assertStubStatusEquals(ref, result);
         assertReqStatusEquals(reqref, result.getReqStatuses().get(0));

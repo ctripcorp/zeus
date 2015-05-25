@@ -15,6 +15,7 @@ public class C {
         return new App()
                 .setAppId(d.getAppId())
                 .setName(d.getName())
+                .setSsl(d.isSsl())
                 .setVersion(d.getVersion());
     }
 
@@ -32,7 +33,9 @@ public class C {
         return new AppSlb()
                 .setAppName(d.getAppName())
                 .setSlbName(d.getSlbName())
-                .setPath(d.getPath());
+                .setPath(d.getPath())
+                .setRewrite(d.getRewrite())
+                .setPriority(d.getPriority());
     }
 
     public static Domain toDomain(SlbDomainDo d) {
@@ -122,6 +125,7 @@ public class C {
     public static AppDo toAppDo(App e) {
         return new AppDo().setAppId(e.getAppId())
                 .setName(e.getName())
+                .setSsl(e.isSsl())
                 .setVersion(e.getVersion());
     }
 
@@ -140,7 +144,9 @@ public class C {
                 .setAppName(e.getAppName())
                 .setSlbName(e.getSlbName())
                 .setSlbVirtualServerName(e.getVirtualServer().getName())
-                .setPath(e.getPath());
+                .setPath(e.getPath())
+                .setRewrite(e.getRewrite())
+                .setPriority(e.getPriority());
     }
 
     public static SlbDomainDo toSlbDomainDo(Domain e) {

@@ -29,7 +29,7 @@ public class ConfWriterTest {
         String appName = "testApp";
         App app = new App();
         app.setName(appName)
-                .setAppId("999999")
+                .setAppId("999999").setSsl(true)
                 .setHealthCheck(new HealthCheck().setFails(5).setIntervals(50).setPasses(2).setUri("/hotel"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
                 .addAppServer(new AppServer().setIp("192.168.20.1")

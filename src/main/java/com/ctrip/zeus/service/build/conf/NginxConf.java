@@ -14,6 +14,9 @@ public class NginxConf {
     private static DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
     private static final String LINEBREAK = "\n";
     private static String ZONENAME = "proxy_zone";
+    private static DynamicIntProperty serverNamesHashMaxSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.serverNames-maxSize", 10000);
+    private static DynamicIntProperty serverNamesHashBucketSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.serverNames-bucketSize", 128);
+    private static DynamicIntProperty checkShmSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.checkShmSize", 32);
 
     private static DynamicStringProperty logFormat = DynamicPropertyFactory.getInstance().getStringProperty("slb.nginx.log-format",
             "log_format main '[$time_local] $host $hostname $server_addr $request_method $uri '\n" +
@@ -41,6 +44,7 @@ public class NginxConf {
 
         b.append("events {\n")
          .append("worker_connections 30720;\n")
+         .append("multi_accept on;\n")
          .append("use epoll; \n")
          .append("}\n");
 
@@ -51,6 +55,10 @@ public class NginxConf {
 
         b.append(logFormat.get());
         b.append("access_log /opt/logs/nginx/access.log main;\n");
+        b.append("server_names_hash_max_size ").append(serverNamesHashMaxSize.get()).append(";\n");
+        b.append("server_names_hash_bucket_size ").append(serverNamesHashBucketSize.get()).append(";\n");
+        b.append("check_shm_size ").append(checkShmSize.get()).append("M;\n");
+        b.append("client_max_body_size 2m;\n");
 
         appendHttpCommand(b);
 

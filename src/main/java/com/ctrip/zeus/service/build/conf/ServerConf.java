@@ -30,7 +30,12 @@ public class ServerConf {
         b.append("server {").append("\n");
         b.append("listen    ").append(vs.getPort()).append(";\n");
         b.append("server_name    ").append(getServerNames(vs)).append(";\n");
-
+        if (vs.getSsl())
+        {
+            b.append("ssl on;\n")
+             .append("ssl_certificate /data/nginx/").append(vs.getName()).append("/ssl.crt;\n")
+             .append("ssl_certificate_key /data/nginx/").append(vs.getName()).append("/ssl.key;\n");
+        }
         NginxConf.appendServerCommand(b);
         //add locations
         for (App app : apps) {

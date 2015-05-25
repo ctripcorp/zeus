@@ -40,9 +40,9 @@
 
     <vip ip="192.168.1.1"/>
 
-    <app name="gateway" app-id="app921822" version="1">
+    <app name="gateway" app-id="app921822" version="1" ssl="false">
         <app-slbs>
-            <app-slb>
+            <app-slb priority="0">
                 <app-name>gateway</app-name>
                 <slb-name>default</slb-name>
                 <slb-vips>
@@ -50,9 +50,10 @@
                     <vip/>
                 </slb-vips>
                 <path>/hotel</path>
+                <rewrite>^/regex</rewrite>
                 <virtual-server/>
             </app-slb>
-            <app-slb>
+            <app-slb priority="0">
                 <app-name>gateway</app-name>
                 <slb-name>default</slb-name>
                 <slb-vips>
@@ -60,6 +61,7 @@
                     <vip ip="192.168.1.2"/>
                 </slb-vips>
                 <path>/hotel</path>
+                <rewrite>*/regex</rewrite>
                 <virtual-server/>
             </app-slb>
         </app-slbs>

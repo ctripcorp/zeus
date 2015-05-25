@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="app" table="app" alias="a" do-class="AppDo">
+        <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
+        <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <var name="ids" value-type="long[]"/>
         <var name="names" value-type="String[]"/>
         <var name="max-count" value-type="int"/>
@@ -19,8 +21,8 @@
                     <![CDATA[
                     UPDATE <TABLE/>
                     SET <FIELD name='app-id'/> = ${app-id},
-                        version = version + 1,
-                        <FIELD name='last-modified'/> = NOW()
+                        <FIELD name='ssl'/> = ${ssl},
+                        version = version + 1
                     WHERE <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
@@ -222,6 +224,8 @@
         </query-defs>
     </entity>
     <entity name="app-slb" table="app_slb" alias="as2" do-class="AppSlbDo">
+        <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
+        <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <var name="app-names" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
@@ -234,7 +238,8 @@
                         slb_name = values(slb_name),
                         slb_virtual_server_name = values(slb_virtual_server_name),
                         path = values(path),
-                        <FIELD name="last-modified"/> = NOW()
+                        rewrite = values(rewrite),
+                        priority = values(priority)
                     ]]>
                 </statement>
             </query>
@@ -538,6 +543,8 @@
         </query-defs>
     </entity>
     <entity name="slb-virtual-server" table="slb_virtual_server" alias="svs" do-class="SlbVirtualServerDo">
+        <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
+        <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -548,8 +555,7 @@
                         slb_id = values(slb_id),
                         name = values(name),
                         port = values(port),
-                        is_ssl = values(is_ssl),
-                        <FIELD name="last-modified"/> = NOW()
+                        is_ssl = values(is_ssl)
                     ]]>
                 </statement>
             </query>
