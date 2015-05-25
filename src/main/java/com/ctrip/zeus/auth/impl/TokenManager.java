@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.AuthPrivateKeyDao;
 import com.ctrip.zeus.dal.core.AuthPrivateKeyDo;
 import com.ctrip.zeus.dal.core.AuthPrivateKeyEntity;
 import com.ctrip.zeus.support.DaoFactory;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.BASE64Decoder;
@@ -66,12 +67,12 @@ public class TokenManager {
     }
 
     private static byte[] decryptBASE64(String key) throws Exception {
-        return (new BASE64Decoder()).decodeBuffer(key);
+        return new Base64(-1).decode(key);
     }
 
 
     private static String encryptBASE64(byte[] key) throws Exception {
-        return (new BASE64Encoder()).encodeBuffer(key);
+        return new Base64(-1).encodeToString(key);
     }
 
     private static Key toKey(byte[] key) throws Exception {
