@@ -9,7 +9,7 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         up = values(up),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -103,7 +103,7 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         up = values(up),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>

@@ -11,7 +11,7 @@
                     ON DUPLICATE KEY UPDATE
                         content = values(content),
                         version = values(version),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -38,7 +38,7 @@
                     ON DUPLICATE KEY UPDATE
                         content = values(content),
                         version = values(version),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -76,7 +76,7 @@
                         app_name = values(app_name),
                         slb_name = values(slb_name),
                         slb_virtual_server_name = values(slb_virtual_server_name),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>

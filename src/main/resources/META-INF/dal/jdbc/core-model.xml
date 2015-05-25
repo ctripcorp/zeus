@@ -111,7 +111,7 @@
                         intervals = values(intervals),
                         fails = values(fails),
                         passes = values(passes),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -148,7 +148,7 @@
                         app_id = values(app_id),
                         type = values(type),
                         value = values(value),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -188,7 +188,7 @@
                         weight = values(weight),
                         max_fails = values(max_fails),
                         fail_timeout = values(fail_timeout),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -306,7 +306,7 @@
                     ON DUPLICATE KEY UPDATE
                         ip = values(ip),
                         host_name = values(host_name),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -346,7 +346,7 @@
                         nginx_worker_processes = values(nginx_worker_processes),
                         status = values(status),
                         version = version + 1,
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -360,7 +360,7 @@
                         <FIELD name='nginx-worker-processes'/> = ${nginx-worker-processes},
                         <FIELD name='status'/> = ${status},
                         version = version + 1,
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     WHERE <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
@@ -425,7 +425,7 @@
                     ON DUPLICATE KEY UPDATE
                         slb_virtual_server_id = values(slb_virtual_server_id),
                         name = values(name),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -462,7 +462,7 @@
                         ip = values(ip),
                         host_name = values(host_name),
                         enable = values(enable),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -507,7 +507,7 @@
                     ON DUPLICATE KEY UPDATE
                         slb_id = values(slb_id),
                         ip = values(ip),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>

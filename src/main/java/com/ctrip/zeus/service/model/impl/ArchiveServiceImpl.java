@@ -33,7 +33,7 @@ public class ArchiveServiceImpl implements ArchiveService {
     @Override
     public int archiveSlb(Slb slb) throws Exception {
         String content = String.format(Slb.XML, slb);
-        ArchiveSlbDo d = new ArchiveSlbDo().setName(slb.getName()).setContent(content).setVersion(slb.getVersion()).setCreatedTime(new Date()).setLastModified(new Date());
+        ArchiveSlbDo d = new ArchiveSlbDo().setName(slb.getName()).setContent(content).setVersion(slb.getVersion()).setCreatedTime(new Date()).setDataChangeLastTime(new Date());
         archiveSlbDao.insert(d);
         return d.getVersion();
     }
@@ -41,7 +41,7 @@ public class ArchiveServiceImpl implements ArchiveService {
     @Override
     public int archiveApp(App app) throws Exception {
         String content = String.format(App.XML, app);
-        ArchiveAppDo d = new ArchiveAppDo().setName(app.getName()).setContent(content).setVersion(app.getVersion()).setCreatedTime(new Date()).setLastModified(new Date());
+        ArchiveAppDo d = new ArchiveAppDo().setName(app.getName()).setContent(content).setVersion(app.getVersion()).setCreatedTime(new Date()).setDataChangeLastTime(new Date());
         archiveAppDao.insert(d);
         return d.getVersion();
     }

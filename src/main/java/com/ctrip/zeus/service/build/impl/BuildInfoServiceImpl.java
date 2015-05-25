@@ -42,7 +42,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
             d = buildInfoDao.findByName(name, BuildInfoEntity.READSET_FULL);
         } catch (DalNotFoundException e) {
             d = new BuildInfoDo();
-            d.setName(name).setCreatedTime(new Date()).setLastModified(new Date()).setPendingTicket(1).setCurrentTicket(0);
+            d.setName(name).setCreatedTime(new Date()).setDataChangeLastTime(new Date()).setPendingTicket(1).setCurrentTicket(0);
             buildInfoDao.insert(d);
             return 1;
         }
@@ -50,7 +50,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
         if (d==null)
         {
             d = new BuildInfoDo();
-            d.setName(name).setCreatedTime(new Date()).setLastModified(new Date()).setPendingTicket(1).setCurrentTicket(0);
+            d.setName(name).setCreatedTime(new Date()).setDataChangeLastTime(new Date()).setPendingTicket(1).setCurrentTicket(0);
             buildInfoDao.insert(d);
 
             logger.debug("Ticket created. Ticket Num: " + d.getPendingTicket() + "Slb Name: " + name);
@@ -58,7 +58,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
         }
 
         int pending = d.getPendingTicket();
-        d.setPendingTicket(pending + 1).setLastModified(new Date());
+        d.setPendingTicket(pending + 1).setDataChangeLastTime(new Date());
         buildInfoDao.updateByName(d, BuildInfoEntity.UPDATESET_FULL);
 
         logger.debug("Get Ticket success. Ticket Num: " + d.getPendingTicket() + "Slb Name: " + name);
