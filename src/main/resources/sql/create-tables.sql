@@ -138,6 +138,100 @@ CREATE TABLE IF NOT EXISTS `archive_slb` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table auth_private_key
+DROP TABLE IF EXISTS `auth_private_key`;
+CREATE TABLE IF NOT EXISTS `auth_private_key` (
+  `private_key` varchar(50) NOT NULL DEFAULT '' COMMENT 'private key',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last change time',
+  PRIMARY KEY (`private_key`),
+  KEY `time idx` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='store the private key';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table auth_resource
+DROP TABLE IF EXISTS `auth_resource`;
+CREATE TABLE IF NOT EXISTS `auth_resource` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `resource_name` varchar(100) CHARACTER SET latin1 NOT NULL DEFAULT '0' COMMENT 'resource name',
+  `resource_type` varchar(50) CHARACTER SET latin1 DEFAULT NULL COMMENT 'resource type',
+  `description` varchar(100) CHARACTER SET latin1 DEFAULT NULL COMMENT 'description',
+  `created_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time ',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update time',
+  PRIMARY KEY (`id`),
+  KEY `time_idx` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='resource table';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table auth_resource_role
+DROP TABLE IF EXISTS `auth_resource_role`;
+CREATE TABLE IF NOT EXISTS `auth_resource_role` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `resource_name` varchar(50) CHARACTER SET latin1 NOT NULL DEFAULT '0' COMMENT 'resource name',
+  `role_name` varchar(50) NOT NULL DEFAULT '0' COMMENT 'role name',
+  `created_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update time',
+  PRIMARY KEY (`id`),
+  KEY `role_idx` (`role_name`),
+  KEY `res_idx` (`resource_name`),
+  KEY `time_idx` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='resource role table';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table auth_role
+DROP TABLE IF EXISTS `auth_role`;
+CREATE TABLE IF NOT EXISTS `auth_role` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `role_name` varchar(50) CHARACTER SET latin1 NOT NULL DEFAULT '0' COMMENT 'role name',
+  `description` varchar(100) DEFAULT '0' COMMENT 'description',
+  `created_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `role_idx` (`role_name`),
+  KEY `time_idx` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='auth role table';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table auth_user
+DROP TABLE IF EXISTS `auth_user`;
+CREATE TABLE IF NOT EXISTS `auth_user` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `user_name` varchar(50) DEFAULT NULL COMMENT 'user name',
+  `description` varchar(100) DEFAULT NULL COMMENT 'description',
+  `created_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `usr_name_idx` (`user_name`),
+  KEY `time_idx` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='auth user table';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table auth_user_role
+DROP TABLE IF EXISTS `auth_user_role`;
+CREATE TABLE IF NOT EXISTS `auth_user_role` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `user_name` varchar(50) DEFAULT NULL COMMENT 'user name',
+  `role_name` varchar(50) DEFAULT NULL COMMENT 'role name',
+  `group` varchar(50) DEFAULT NULL COMMENT 'group name',
+  `created_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update time',
+  PRIMARY KEY (`id`),
+  KEY `usr_idx` (`user_name`),
+  KEY `time_idx` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='auth user role';
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table build_info
 DROP TABLE IF EXISTS `build_info`;
 CREATE TABLE IF NOT EXISTS `build_info` (
