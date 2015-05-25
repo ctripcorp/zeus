@@ -146,7 +146,7 @@ public class C {
                 .setSlbVirtualServerName(e.getVirtualServer().getName())
                 .setPath(e.getPath())
                 .setRewrite(e.getRewrite())
-                .setPriority(e.getPriority());
+                .setPriority(e.getPriority() == null ? 0 : e.getPriority().intValue());
     }
 
     public static SlbDomainDo toSlbDomainDo(Domain e) {

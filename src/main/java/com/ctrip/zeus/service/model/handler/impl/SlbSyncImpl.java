@@ -83,8 +83,11 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     private void validate(Slb slb) throws ValidationException {
-        if (slb == null) {
+        if (slb == null || slb.getName() == null) {
             throw new ValidationException("Slb with null value cannot be persisted.");
+        }
+        if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
+            throw new ValidationException("Slb with invalid server data cannot be persisted.");
         }
     }
 

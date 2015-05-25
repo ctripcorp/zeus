@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.ModelServiceTest;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.util.ModelAssert;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -126,12 +127,12 @@ public class IntegrationTest {
         String slb1_res = reqClient.getstr("/api/slb/get/" + slb1_name);
         Slb slb1_res_obj = DefaultJsonParser.parse(Slb.class, slb1_res);
 
-        ModelServiceTest.assertSlbEquals(slb1, slb1_res_obj);
+        ModelAssert.assertSlbEquals(slb1, slb1_res_obj);
 
         String slb2_res = reqClient.getstr("/api/slb/get/" + slb2_name);
         Slb slb2_res_obj = DefaultJsonParser.parse(Slb.class, slb2_res);
 
-        ModelServiceTest.assertSlbEquals(slb2, slb2_res_obj);
+        ModelAssert.assertSlbEquals(slb2, slb2_res_obj);
 
         reqClient.markPass("/api/slb/get/"+ slb1_name);
         reqClient.markPass("/api/slb/get/"+ slb2_name);
@@ -328,19 +329,19 @@ public class IntegrationTest {
 
         appstr = reqClient.getstr("/api/app/get/__Test_app1");
         appres = DefaultJsonParser.parse(App.class, appstr);
-        ModelServiceTest.assertAppEquals(app1, appres);
+        ModelAssert.assertAppEquals(app1, appres);
 
         appstr = reqClient.getstr("/api/app/get/__Test_app2");
         appres = DefaultJsonParser.parse(App.class, appstr);
-        ModelServiceTest.assertAppEquals(app2, appres);
+        ModelAssert.assertAppEquals(app2, appres);
 
         appstr = reqClient.getstr("/api/app/get/__Test_app9");
         appres = DefaultJsonParser.parse(App.class, appstr);
-        ModelServiceTest.assertAppEquals(app9, appres);
+        ModelAssert.assertAppEquals(app9, appres);
 
         appstr = reqClient.getstr("/api/app/get/__Test_app10");
         appres = DefaultJsonParser.parse(App.class, appstr);
-        ModelServiceTest.assertAppEquals(app10, appres);
+        ModelAssert.assertAppEquals(app10, appres);
 
         reqClient.markPass("/api/app/get/__Test_app1");
         reqClient.markPass("/api/app/get/__Test_app2");
@@ -495,7 +496,7 @@ public class IntegrationTest {
         Assert.assertEquals(STATUS_OK, res.getStatus());
         upd = c.getstr("/api/slb/get/" + slb1_name);
         Slb updSlb = DefaultJsonParser.parse(Slb.class, upd);
-        ModelServiceTest.assertSlbEquals(origSlb, updSlb);
+        ModelAssert.assertSlbEquals(origSlb, updSlb);
 
         c.markPass("/api/slb/get/" + slb1_name);
         c.markPass("/api/slb/update");
@@ -513,7 +514,7 @@ public class IntegrationTest {
         Assert.assertEquals(STATUS_OK, res.getStatus());
         upd = c.getstr("/api/app/get/" + app1_name);
         App updApp = DefaultJsonParser.parse(App.class, upd);
-        ModelServiceTest.assertAppEquals(changedApp, updApp);
+        ModelAssert.assertAppEquals(changedApp, updApp);
 
         c.markPass("/api/app/get/" + app1_name);
         c.markPass("/api/app/update");

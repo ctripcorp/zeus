@@ -4,6 +4,8 @@ import com.ctrip.zeus.client.AppClient;
 import com.ctrip.zeus.client.SlbClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.server.SlbAdminServer;
+import com.ctrip.zeus.service.ModelServiceTest;
+import com.ctrip.zeus.util.ModelAssert;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -107,8 +109,8 @@ public class ApiTest {
 
         Slb sc2 = c.get(slbName);
 
-        Assert.assertEquals(sc.setVersion(sc2.getVersion()), sc2);
-
+        Assert.assertEquals(sc.getVersion().intValue() + 1, sc2.getVersion().intValue());
+        ModelAssert.assertSlbEquals(sc, sc2);
     }
 
     @Test
@@ -140,7 +142,8 @@ public class ApiTest {
         c.add(app);
 
         App app2 = c.get(appName);
-        Assert.assertEquals(app.setVersion(1), app2);
+        Assert.assertEquals(1, app2.getVersion().intValue());
+        ModelAssert.assertAppEquals(app, app2);
     }
 
     private Slb generateSlb(String slbName) {

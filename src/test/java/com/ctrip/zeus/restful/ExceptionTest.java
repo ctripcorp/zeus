@@ -73,7 +73,7 @@ public class ExceptionTest extends AbstractSpringTest {
 
         SlbClient sc = new SlbClient("http://127.0.0.1:8099");
         Response slbResponse = sc.add(new Slb());
-        Assert.assertEquals(500, appResponse.getStatus());
+        Assert.assertEquals(500, slbResponse.getStatus());
 
         String slbString = IOUtils.inputStreamStringify((InputStream) slbResponse.getEntity());
         ErrorMessage sem = DefaultJsonParser.parse(ErrorMessage.class, slbString);
@@ -85,7 +85,6 @@ public class ExceptionTest extends AbstractSpringTest {
         System.out.println("*************** Error message ***************");
         System.out.println("code:\n" + em.getCode());
         System.out.println("message:\n" + em.getMessage());
-        System.out.println("stack trace:\n" + em.getCode());
         System.out.println("*********************************************");
     }
 

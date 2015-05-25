@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.model.AppRepository;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.util.ModelAssert;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -63,13 +64,13 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Test
     public void testGetSlb() throws Exception {
         Slb slb = slbRepo.get(defaultSlb.getName());
-        assertSlbEquals(defaultSlb, slb);
+        ModelAssert.assertSlbEquals(defaultSlb, slb);
     }
 
     @Test
     public void testGetSlbBySlbServer() throws Exception {
         Slb slb = slbRepo.getBySlbServer(defaultSlb.getVips().get(0).getIp());
-        assertSlbEquals(defaultSlb, slb);
+        ModelAssert.assertSlbEquals(defaultSlb, slb);
     }
 
     @Test
@@ -80,7 +81,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         Assert.assertEquals(1, slbsByAppName.size());
         List<Slb> slbs = slbRepo.listByAppServerAndAppName("10.2.6.201", "testApp");
         Assert.assertEquals(1, slbs.size());
-        assertSlbEquals(defaultSlb, slbs.get(0));
+        ModelAssert.assertSlbEquals(defaultSlb, slbs.get(0));
     }
 
     @Test
@@ -113,7 +114,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         originSlb.setStatus("HANG");
         slbRepo.update(originSlb);
         Slb updatedSlb = slbRepo.get(defaultSlb.getName());
-        assertSlbEquals(originSlb, updatedSlb);
+        ModelAssert.assertSlbEquals(originSlb, updatedSlb);
         Assert.assertEquals(originSlb.getVersion().intValue() + 1, updatedSlb.getVersion().intValue());
     }
 
@@ -154,13 +155,13 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Test
     public void testGetApp() throws Exception {
         App app = appRepo.get(testApp.getName());
-        assertAppEquals(app, testApp);
+        ModelAssert.assertAppEquals(testApp, app);
     }
 
     @Test
     public void testGetAppByAppId() throws Exception {
         App app = appRepo.getByAppId(testApp.getAppId());
-        assertAppEquals(app, testApp);
+        ModelAssert.assertAppEquals(testApp, app);
     }
 
     @Test
@@ -189,7 +190,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         originApp.setAppId("921812");
         appRepo.update(originApp);
         App updatedApp = appRepo.get(originApp.getName());
-        assertAppEquals(originApp, updatedApp);
+        ModelAssert.assertAppEquals(originApp, updatedApp);
         Assert.assertEquals(originApp.getVersion().intValue() + 1, updatedApp.getVersion().intValue());
     }
 
@@ -272,27 +273,5 @@ public class ModelServiceTest extends AbstractSpringTest {
         ContainerLoader.getDefaultContainer().release(ds);
         TransactionManager ts = ContainerLoader.getDefaultContainer().lookup(TransactionManager.class);
         ContainerLoader.getDefaultContainer().release(ts);
-    }
-
-    public static void assertAppEquals(App origin, App another) {
-        Assert.assertNotNull(another);
-        Assert.assertEquals(origin.getName(), another.getName());
-        Assert.assertEquals(origin.getSsl(), another.getSsl());
-        Assert.assertEquals(origin.getAppServers().size(), another.getAppServers().size());
-        Assert.assertEquals(origin.getAppSlbs().size(), another.getAppSlbs().size());
-        Assert.assertEquals(origin.getHealthCheck().getUri(), another.getHealthCheck().getUri());
-        Assert.assertEquals(origin.getLoadBalancingMethod().getType(), another.getLoadBalancingMethod().getType());
-    }
-
-    public static void assertSlbEquals(Slb origin, Slb another) {
-        Assert.assertNotNull(another);
-        Assert.assertEquals(origin.getName(), another.getName());
-        Assert.assertEquals(origin.getNginxBin(), another.getNginxBin());
-        Assert.assertEquals(origin.getNginxConf(), another.getNginxConf());
-        Assert.assertEquals(origin.getNginxWorkerProcesses(), another.getNginxWorkerProcesses());
-        Assert.assertEquals(origin.getStatus(), another.getStatus());
-        Assert.assertEquals(origin.getSlbServers().size(), another.getSlbServers().size());
-        Assert.assertEquals(origin.getVips().size(), another.getVips().size());
-        Assert.assertEquals(origin.getVirtualServers().size(), another.getVirtualServers().size());
     }
 }
