@@ -20,6 +20,7 @@
     <entity-ref name="dy-upstream-ops-data" />
   </entity>
   <entity name="slb">
+    <attribute name="id" value-type="int" />
     <attribute name="name" value-type="String" />
     <attribute name="version" value-type="int" />
     <element name="nginx-bin" value-type="String" />
@@ -53,6 +54,7 @@
     <entity-ref name="slb" type="list" names="slbs" xml-indent="true" />
   </entity>
   <entity name="group">
+    <attribute name="id" value-type="int" />
     <attribute name="name" value-type="String" />
     <attribute name="app-id" value-type="String" />
     <attribute name="version" value-type="int" />

@@ -17,5 +17,5 @@ public interface SlbSync {
 
     SlbDo update(Slb slb) throws DalException, ValidationException;
 
-    int delete(String slbName) throws DalException, ValidationException;
+    int delete(long slbId) throws DalException, ValidationException;
 }

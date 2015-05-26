@@ -13,18 +13,18 @@ public interface ArchiveService {
     int archiveSlb(Slb slb) throws Exception;
     int archiveGroup(Group app) throws Exception;
 
-    int deleteSlbArchive(String slbName) throws Exception;
-    int deleteGroupArchive(String appName) throws Exception;
+    int deleteSlbArchive(long slbId) throws Exception;
+    int deleteGroupArchive(long groupId) throws Exception;
 
-    Slb getSlb(String name, int version) throws Exception;
-    Group getGroup(String name, int version) throws Exception;
+    Slb getSlb(long slbId, int version) throws Exception;
+    Group getGroup(long groupId, int version) throws Exception;
 
-    Slb getMaxVersionSlb(String name) throws Exception;
-    Group getMaxVersionGroup(String name) throws Exception;
+    Slb getMaxVersionSlb(long slbId) throws Exception;
+    Group getMaxVersionGroup(long groupId) throws Exception;
 
-    List<Slb> getAllSlb(String name) throws Exception;
-    List<Group> getAllGroup(String name) throws Exception;
+    List<Slb> getAllSlb(long slbId) throws Exception;
+    List<Group> getAllGroup(long groupId) throws Exception;
 
-    Archive getLatestGroupArchive(String appName) throws Exception;
-    Archive getLatestSlbArchive(String slbName) throws Exception;
+    Archive getLatestSlbArchive(long slbId) throws Exception;
+    Archive getLatestGroupArchive(long groupId) throws Exception;
 }

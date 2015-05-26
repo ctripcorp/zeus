@@ -62,12 +62,12 @@ public interface SlbRepository extends Repository {
     void update(Slb slb) throws Exception;
 
     /**
-     * delete the slb by its name
-     * @param slbName the slb name
+     * delete the slb by its primary id
+     * @param slbId the slb primary id
      * @return the number of rows deleted
      * @throws Exception
      */
-    int delete(String slbName) throws Exception;
+    int delete(long slbId) throws Exception;
 
     /**
      * get the server list managed by the given slb

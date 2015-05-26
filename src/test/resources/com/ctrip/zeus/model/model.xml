@@ -1,5 +1,5 @@
 <model>
-    <slb name="default" version="1">
+    <slb id="111111" name="default" version="1">
         <nginx-bin>/usr/local/nginx/bin</nginx-bin>
         <nginx-conf>/usr/local/nginx/conf</nginx-conf>
         <nginx-worker-processes>1</nginx-worker-processes>
@@ -40,7 +40,7 @@
 
     <vip ip="192.168.1.1"/>
 
-    <group name="gateway" app-id="app921822" version="1" ssl="false">
+    <group id="111111" name="gateway" app-id="app921822" version="1" ssl="false">
         <group-slbs>
             <group-slb priority="0">
                 <group-name>gateway</group-name>

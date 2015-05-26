@@ -56,8 +56,8 @@ public class SlbSyncImpl implements SlbSync {
         SlbDo check = slbDao.findByName(slb.getName(), SlbEntity.READSET_FULL);
         if (check.getVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        SlbDo d = C.toSlbDo(slb);
-        slbDao.updateByName(d, SlbEntity.UPDATESET_FULL);
+        SlbDo d = C.toSlbDo(slb).setId(slb.getId());
+        slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
 
         SlbDo updated = slbDao.findByName(d.getName(), SlbEntity.READSET_FULL);
         d.setId(updated.getId());
@@ -67,8 +67,8 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     @Override
-    public int delete(String slbName) throws DalException, ValidationException {
-        SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
+    public int delete(long slbId) throws DalException, ValidationException {
+        SlbDo d = slbDao.findById(slbId, SlbEntity.READSET_FULL);
         if (d == null)
             return 0;
         if(removable(d)) {
@@ -79,7 +79,7 @@ public class SlbSyncImpl implements SlbSync {
             }
             return slbDao.deleteByPK(d);
         }
-        throw new ValidationException(slbName + " cannot be deleted. Dependency exists");
+        throw new ValidationException(d.getName() + " cannot be deleted. Dependency exists");
     }
 
     private void validate(Slb slb) throws ValidationException {
@@ -92,7 +92,7 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     private boolean removable(SlbDo d) throws DalException {
-        List<GroupSlbDo> list = appSlbDao.findAllBySlb(d.getName(), GroupSlbEntity.READSET_FULL);
+        List<GroupSlbDo> list = appSlbDao.findAllBySlb(d.getId(), GroupSlbEntity.READSET_FULL);
         if (list.size() == 0)
             return true;
         return false;

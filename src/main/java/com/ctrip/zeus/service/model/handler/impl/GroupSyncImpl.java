@@ -24,138 +24,137 @@ import java.util.Map;
 @Component("groupSync")
 public class GroupSyncImpl implements GroupSync {
     @Resource
-    private GroupDao appDao;
+    private GroupDao groupDao;
     @Resource
-    private GroupHealthCheckDao appHealthCheckDao;
+    private GroupHealthCheckDao groupHealthCheckDao;
     @Resource
-    private GroupLoadBalancingMethodDao appLoadBalancingMethodDao;
+    private GroupLoadBalancingMethodDao groupLoadBalancingMethodDao;
     @Resource
-    private GroupServerDao appServerDao;
+    private GroupServerDao groupServerDao;
     @Resource
-    private GroupSlbDao appSlbDao;
+    private GroupSlbDao groupSlbDao;
     @Resource
     private SlbDao slbDao;
+    @Resource
+    private SlbVirtualServerDao slbVirtualServerDao;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public GroupDo add(Group app) throws DalException, ValidationException {
-        validate(app);
-        GroupDo d= C.toGroupDo(app);
+    public GroupDo add(Group group) throws DalException, ValidationException {
+        validate(group);
+        GroupDo d= C.toGroupDo(group);
         d.setCreatedTime(new Date());
         d.setVersion(1);
 
-        appDao.insert(d);
-        cascadeSync(d, app);
+        groupDao.insert(d);
+        cascadeSync(d, group);
 
         return d;
     }
 
     @Override
-    public GroupDo update(Group app) throws DalException, ValidationException {
-        validate(app);
-        GroupDo check = appDao.findByName(app.getName(), GroupEntity.READSET_FULL);
-        if (check.getVersion() > app.getVersion())
+    public GroupDo update(Group group) throws DalException, ValidationException {
+        validate(group);
+        GroupDo check = groupDao.findByName(group.getName(), GroupEntity.READSET_FULL);
+        if (check.getVersion() > group.getVersion())
             throw new ValidationException("Newer Group version is detected.");
 
-        GroupDo d= C.toGroupDo(app);
-        appDao.updateByName(d, GroupEntity.UPDATESET_FULL);
+        GroupDo d= C.toGroupDo(group).setId(group.getId());
+        groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
 
-        GroupDo updated = appDao.findByName(app.getName(), GroupEntity.READSET_FULL);
-        d.setId(updated.getId());
+        GroupDo updated = groupDao.findByName(group.getName(), GroupEntity.READSET_FULL);
         d.setVersion(updated.getVersion());
-        cascadeSync(d, app);
+        cascadeSync(d, group);
         return d;
     }
 
     @Override
-    public int delete(String name) throws DalException {
-        GroupDo d = appDao.findByName(name, GroupEntity.READSET_FULL);
-        if (d == null)
-            return 0;
-        appSlbDao.deleteByGroup(new GroupSlbDo().setGroupName(d.getName()));
-        appServerDao.deleteByGroup(new GroupServerDo().setGroupId(d.getId()));
-        appHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(d.getId()));
-        appLoadBalancingMethodDao.deleteByGroup(new GroupLoadBalancingMethodDo().setGroupId(d.getId()));
-
-        return appDao.deleteByName(d);
+    public int delete(long groupId) throws DalException {
+        groupSlbDao.deleteByGroup(new GroupSlbDo().setGroupId(groupId));
+        groupServerDao.deleteByGroup(new GroupServerDo().setGroupId(groupId));
+        groupHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(groupId));
+        groupLoadBalancingMethodDao.deleteByGroup(new GroupLoadBalancingMethodDo().setGroupId(groupId));
+        return groupDao.deleteById(new GroupDo().setId(groupId));
     }
 
-    private void validate(Group app) throws DalException, ValidationException {
-        if (app == null) {
+    private void validate(Group group) throws DalException, ValidationException {
+        if (group == null) {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
-        if (!validateSlb(app))
+        if (!validateSlb(group))
             throw new ValidationException("Group with invalid slb data cannot be persisted.");
     }
 
-    private boolean validateSlb(Group app) throws DalException {
-        if (app.getGroupSlbs().size() == 0)
+    private boolean validateSlb(Group group) throws DalException {
+        if (group.getGroupSlbs().size() == 0)
             return false;
-        for (GroupSlb as : app.getGroupSlbs()) {
+        for (GroupSlb as : group.getGroupSlbs()) {
             if (slbDao.findByName(as.getSlbName(), SlbEntity.READSET_FULL) == null)
                 return false;
         }
         return true;
     }
 
-    private void cascadeSync(GroupDo d, Group app) throws DalException {
-        syncGroupSlbs(app.getName(), app.getGroupSlbs());
-        syncGroupHealthCheck(d.getId(), app.getHealthCheck());
-        syncLoadBalancingMethod(d.getId(), app.getLoadBalancingMethod());
-        syncGroupServers(d.getId(), app.getGroupServers());
+    private void cascadeSync(GroupDo d, Group group) throws DalException {
+        syncGroupSlbs(group.getId(), group.getGroupSlbs());
+        syncGroupHealthCheck(d.getId(), group.getHealthCheck());
+        syncLoadBalancingMethod(d.getId(), group.getLoadBalancingMethod());
+        syncGroupServers(d.getId(), group.getGroupServers());
     }
 
-    private void syncGroupSlbs(String appName, List<GroupSlb> appSlbs) throws DalException {
-        List<GroupSlbDo> oldList = appSlbDao.findAllByGroup(appName, GroupSlbEntity.READSET_FULL);
+    private void syncGroupSlbs(long groupId, List<GroupSlb> groupSlbs) throws DalException {
+        List<GroupSlbDo> oldList = groupSlbDao.findAllByGroup(groupId, GroupSlbEntity.READSET_FULL);
         Map<String, GroupSlbDo> oldMap = Maps.uniqueIndex(oldList, new Function<GroupSlbDo, String>() {
             @Override
             public String apply(GroupSlbDo input) {
-                return input.getGroupName() + input.getSlbName() + input.getSlbVirtualServerName();
+                return input.getGroupId() + "" + input.getSlbVirtualServerId();
             }
         });
 
         //Update existed if necessary, and insert new ones.
-        for (GroupSlb e : appSlbs) {
-            GroupSlbDo old = oldMap.get(appName + e.getSlbName() + e.getVirtualServer().getName());
+        for (GroupSlb e : groupSlbs) {
+            long slbId = slbDao.findByName(e.getSlbName(), SlbEntity.READSET_FULL).getId();
+            long vsId = slbVirtualServerDao.findBySlbAndName(slbId, e.getVirtualServer().getName(), SlbVirtualServerEntity.READSET_FULL).getId();
+            GroupSlbDo old = oldMap.get(groupId + "" + vsId);
             if (old != null) {
                 oldList.remove(old);
             }
-            appSlbDao.insert(C.toGroupSlbDo(e)
-                    .setGroupName(appName)
+            groupSlbDao.insert(C.toGroupSlbDo(e)
+                    .setGroupId(groupId)
                     .setCreatedTime(new Date()));
         }
 
         //Remove unused ones.
         for (GroupSlbDo d : oldList) {
-            appSlbDao.deleteByPK(new GroupSlbDo().setId(d.getId()));
+            groupSlbDao.deleteByPK(new GroupSlbDo().setId(d.getId()));
         }
     }
 
-    private void syncGroupHealthCheck(long appKey, HealthCheck healthCheck) throws DalException {
+    private void syncGroupHealthCheck(long groupKey, HealthCheck healthCheck) throws DalException {
         if (healthCheck == null) {
-            logger.info("No health check method is found when adding/updating app with id " + appKey);
+            logger.info("No health check method is found when adding/updating group with id " + groupKey);
             return;
         }
-        appHealthCheckDao.insert(C.toGroupHealthCheckDo(healthCheck)
-                .setGroupId(appKey)
+        groupHealthCheckDao.insert(C.toGroupHealthCheckDo(healthCheck)
+                .setGroupId(groupKey)
                 .setCreatedTime(new Date()));
     }
 
-    private void syncLoadBalancingMethod(long appKey, LoadBalancingMethod loadBalancingMethod) throws DalException {
+    private void syncLoadBalancingMethod(long groupKey, LoadBalancingMethod loadBalancingMethod) throws DalException {
         if (loadBalancingMethod == null)
             return;
-        appLoadBalancingMethodDao.insert(C.toGroupLoadBalancingMethodDo(loadBalancingMethod)
-                .setGroupId(appKey)
+        groupLoadBalancingMethodDao.insert(C.toGroupLoadBalancingMethodDo(loadBalancingMethod)
+                .setGroupId(groupKey)
                 .setCreatedTime(new Date()));
     }
 
-    private void syncGroupServers(long appKey, List<GroupServer> appServers) throws DalException {
-        if (appServers == null || appServers.size() == 0) {
-            logger.warn("No app server is given when adding/update app with id " + appKey);
+    private void syncGroupServers(long groupKey, List<GroupServer> groupServers) throws DalException {
+        if (groupServers == null || groupServers.size() == 0) {
+            logger.warn("No group server is given when adding/update group with id " + groupKey);
             return;
         }
-        List<GroupServerDo> oldList = appServerDao.findAllByGroup(appKey, GroupServerEntity.READSET_FULL);
+        List<GroupServerDo> oldList = groupServerDao.findAllByGroup(groupKey, GroupServerEntity.READSET_FULL);
         Map<String, GroupServerDo> oldMap = Maps.uniqueIndex(oldList, new Function<GroupServerDo, String>() {
             @Override
             public String apply(GroupServerDo input) {
@@ -164,19 +163,19 @@ public class GroupSyncImpl implements GroupSync {
         });
 
         //Update existed if necessary, and insert new ones.
-        for (GroupServer e : appServers) {
-            GroupServerDo old = oldMap.get(appKey + e.getIp());
+        for (GroupServer e : groupServers) {
+            GroupServerDo old = oldMap.get(groupKey + e.getIp());
             if (old != null) {
                 oldList.remove(old);
             }
-            appServerDao.insert(C.toGroupServerDo(e)
-                    .setGroupId(appKey)
+            groupServerDao.insert(C.toGroupServerDo(e)
+                    .setGroupId(groupKey)
                     .setCreatedTime(new Date()));
         }
 
         //Remove unused ones.
         for (GroupServerDo d : oldList) {
-            appServerDao.deleteByPK(new GroupServerDo().setId(d.getId()));
+            groupServerDao.deleteByPK(new GroupServerDo().setId(d.getId()));
         }
     }
 }
