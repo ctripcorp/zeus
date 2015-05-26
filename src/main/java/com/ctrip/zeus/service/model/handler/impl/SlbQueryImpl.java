@@ -18,11 +18,11 @@ import java.util.List;
 @Component("slbQuery")
 public class SlbQueryImpl implements SlbQuery {
     @Resource
-    private GroupDao appDao;
+    private GroupDao groupDao;
     @Resource
-    private GroupSlbDao appSlbDao;
+    private GroupSlbDao groupSlbDao;
     @Resource
-    private GroupServerDao appServerDao;
+    private GroupServerDao groupServerDao;
     @Resource
     private SlbDao slbDao;
     @Resource
@@ -66,26 +66,26 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
-    public List<Slb> getByGroupServer(String appServerIp) throws DalException {
-        List<GroupServerDo> asvrDoList = appServerDao.findAllByIp(appServerIp, GroupServerEntity.READSET_FULL);
+    public List<Slb> getByGroupServer(String groupServerIp) throws DalException {
+        List<GroupServerDo> asvrDoList = groupServerDao.findAllByIp(groupServerIp, GroupServerEntity.READSET_FULL);
         if (asvrDoList.size() == 0)
             return null;
 
-        long[] appIds = new long[asvrDoList.size()];
+        long[] groupIds = new long[asvrDoList.size()];
         int i = 0;
         for (GroupServerDo asd : asvrDoList) {
-            appIds[i++] = asd.getGroupId();
+            groupIds[i++] = asd.getGroupId();
         }
-        List<GroupDo> adList = appDao.findAllByIds(appIds, GroupEntity.READSET_FULL);
+        List<GroupDo> adList = groupDao.findAllByIds(groupIds, GroupEntity.READSET_FULL);
         if (adList.size() == 0)
             return null;
 
-        String[] appNames = new String[adList.size()];
+        String[] groupNames = new String[adList.size()];
         int j = 0;
         for (GroupDo ad : adList) {
-            appNames[j++] = ad.getName();
+            groupNames[j++] = ad.getName();
         }
-        List<GroupSlbDo> aslbDoList = appSlbDao.findAllByGroups(appNames, GroupSlbEntity.READSET_FULL);
+        List<GroupSlbDo> aslbDoList = groupSlbDao.findAllByGroups(groupNames, GroupSlbEntity.READSET_FULL);
         if (aslbDoList.size() == 0)
             return null;
 
@@ -106,8 +106,8 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
-    public List<Slb> getByGroupNames(String[] appNames) throws DalException {
-        List<GroupSlbDo> asdList = appSlbDao.findAllByGroups(appNames, GroupSlbEntity.READSET_FULL);
+    public List<Slb> getByGroupNames(String[] groupNames) throws DalException {
+        List<GroupSlbDo> asdList = groupSlbDao.findAllByGroups(groupNames, GroupSlbEntity.READSET_FULL);
         if (asdList.size() == 0)
             return null;
 
@@ -128,18 +128,18 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
-    public List<Slb> getByGroupServerAndGroupName(String appServerIp, String appName) throws DalException {
-        if ((appServerIp == null || appServerIp.isEmpty())
-            && (appName == null || appName.isEmpty())) {
+    public List<Slb> getByGroupServerAndGroupName(String groupServerIp, String groupName) throws DalException {
+        if ((groupServerIp == null || groupServerIp.isEmpty())
+            && (groupName == null || groupName.isEmpty())) {
             return null;
         }
-        if (appServerIp == null || appServerIp.isEmpty())
-            return getByGroupNames(new String[]{appName});
-        if (appName == null || appName.isEmpty())
-            return getByGroupServer(appServerIp);
+        if (groupServerIp == null || groupServerIp.isEmpty())
+            return getByGroupNames(new String[]{groupName});
+        if (groupName == null || groupName.isEmpty())
+            return getByGroupServer(groupServerIp);
 
-        List<Slb> slbSet1 = getByGroupNames(new String[]{appName});
-        List<Slb> slbSet2 = getByGroupServer(appServerIp);
+        List<Slb> slbSet1 = getByGroupNames(new String[]{groupName});
+        List<Slb> slbSet2 = getByGroupServer(groupServerIp);
         if (slbSet1 == null || slbSet2 == null)
             return null;
         // Intersection, get slbSet1 as the result.
@@ -149,22 +149,22 @@ public class SlbQueryImpl implements SlbQuery {
 
     @Override
     public List<String> getGroupServersBySlb(String slbName) throws DalException {
-        List<GroupSlbDo> aslbDoList = appSlbDao.findAllBySlb(slbName, GroupSlbEntity.READSET_FULL);
+        List<GroupSlbDo> aslbDoList = groupSlbDao.findAllBySlb(slbName, GroupSlbEntity.READSET_FULL);
         if (aslbDoList.size() == 0)
             return null;
 
-        String[] appNames = new String[aslbDoList.size()];
+        String[] groupNames = new String[aslbDoList.size()];
         int i = 0;
         for (GroupSlbDo asd : aslbDoList) {
-            appNames[i++] = asd.getGroupName();
+            groupNames[i++] = asd.getGroupName();
         }
-        List<GroupDo> adList = appDao.findAllByNames(appNames, GroupEntity.READSET_FULL);
+        List<GroupDo> adList = groupDao.findAllByNames(groupNames, GroupEntity.READSET_FULL);
         if (adList.size() == 0)
             return null;
 
         List<GroupServerDo> asvrDoList = new ArrayList<>();
         for (GroupDo ad : adList) {
-            asvrDoList.addAll(appServerDao.findAllByGroup(ad.getId(), GroupServerEntity.READSET_FULL));
+            asvrDoList.addAll(groupServerDao.findAllByGroup(ad.getId(), GroupServerEntity.READSET_FULL));
         }
         if (asvrDoList.size() == 0)
             return null;
@@ -179,9 +179,9 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
-    public List<GroupSlb> getGroupSlbsByGroups(String[] appNames) throws DalException {
+    public List<GroupSlb> getGroupSlbsByGroups(String[] groupNames) throws DalException {
         List<GroupSlb> list = new ArrayList<>();
-        for (GroupSlbDo asd : appSlbDao.findAllByGroups(appNames, GroupSlbEntity.READSET_FULL)) {
+        for (GroupSlbDo asd : groupSlbDao.findAllByGroups(groupNames, GroupSlbEntity.READSET_FULL)) {
             GroupSlb as = C.toGroupSlb(asd);
             list.add(as);
             SlbDo sd = slbDao.findByName(as.getSlbName(), SlbEntity.READSET_FULL);
@@ -196,7 +196,7 @@ public class SlbQueryImpl implements SlbQuery {
     @Override
     public List<GroupSlb> getGroupSlbsBySlb(String slbName) throws DalException {
         List<GroupSlb> list = new ArrayList<>();
-        for (GroupSlbDo asd : appSlbDao.findAllBySlb(slbName, GroupSlbEntity.READSET_FULL)) {
+        for (GroupSlbDo asd : groupSlbDao.findAllBySlb(slbName, GroupSlbEntity.READSET_FULL)) {
             GroupSlb as = C.toGroupSlb(asd);
             list.add(as);
             SlbDo sd = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
@@ -232,11 +232,11 @@ public class SlbQueryImpl implements SlbQuery {
         }
     }
 
-    private void querySlbVips(long slbId, GroupSlb appSlb) throws DalException {
+    private void querySlbVips(long slbId, GroupSlb groupSlb) throws DalException {
         List<SlbVipDo> list = slbVipDao.findAllBySlb(slbId, SlbVipEntity.READSET_FULL);
         for (SlbVipDo d : list) {
             Vip e = C.toVip(d);
-            appSlb.addVip(e);
+            groupSlb.addVip(e);
         }
     }
 

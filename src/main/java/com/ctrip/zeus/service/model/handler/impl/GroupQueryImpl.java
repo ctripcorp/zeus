@@ -15,7 +15,7 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/7/2015.
  */
-@Component("appQuery")
+@Component("groupQuery")
 public class GroupQueryImpl implements GroupQuery {
     @Resource
     private GroupDao appDao;
@@ -52,7 +52,7 @@ public class GroupQueryImpl implements GroupQuery {
     }
 
     @Override
-    public Group getByGroupId(String appId) throws DalException {
+    public Group getByAppId(String appId) throws DalException {
         GroupDo d = appDao.findByAppId(appId, GroupEntity.READSET_FULL);
         return createGroup(d);
     }

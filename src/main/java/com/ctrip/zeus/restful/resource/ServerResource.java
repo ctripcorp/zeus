@@ -4,13 +4,10 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfService;
-import com.ctrip.zeus.service.build.impl.NginxConfServiceImpl;
-import com.ctrip.zeus.service.model.AppRepository;
+import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.AppStatusService;
@@ -19,19 +16,16 @@ import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
-import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -57,7 +51,7 @@ public class ServerResource {
     @Resource
     private AppStatusService appStatusService;
     @Resource
-    private AppRepository appRepository;
+    private GroupRepository groupRepository;
     @Resource
     private NginxConfService nginxConfService;
     @Resource
@@ -123,7 +117,7 @@ public class ServerResource {
         }
 
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
-        List<String> applist = appRepository.listAppsByAppServer(serverip);
+        List<String> applist = groupRepository.listAppsByAppServer(serverip);
 
         if (applist!=null)
         {

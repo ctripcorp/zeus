@@ -21,7 +21,7 @@ import java.util.Map;
  * @author:xingchaowang
  * @date: 3/7/2015.
  */
-@Component("appSync")
+@Component("groupSync")
 public class GroupSyncImpl implements GroupSync {
     @Resource
     private GroupDao appDao;
@@ -41,7 +41,7 @@ public class GroupSyncImpl implements GroupSync {
     @Override
     public GroupDo add(Group app) throws DalException, ValidationException {
         validate(app);
-        GroupDo d= C.toAppDo(app);
+        GroupDo d= C.toGroupDo(app);
         d.setCreatedTime(new Date());
         d.setVersion(1);
 

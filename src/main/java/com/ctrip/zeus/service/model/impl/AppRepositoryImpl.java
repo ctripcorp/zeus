@@ -1,11 +1,11 @@
 package com.ctrip.zeus.service.model.impl;
 
-import com.ctrip.zeus.dal.core.AppDo;
-import com.ctrip.zeus.model.entity.App;
-import com.ctrip.zeus.model.entity.AppServer;
-import com.ctrip.zeus.service.model.handler.AppQuery;
-import com.ctrip.zeus.service.model.AppRepository;
-import com.ctrip.zeus.service.model.handler.AppSync;
+import com.ctrip.zeus.dal.core.GroupDo;
+import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
+import com.ctrip.zeus.service.model.handler.GroupQuery;
+import com.ctrip.zeus.service.model.GroupRepository;
+import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.ArchiveService;
 import org.springframework.stereotype.Repository;
 
@@ -17,90 +17,90 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/7/2015.
  */
-@Repository("appRepository")
-public class AppRepositoryImpl implements AppRepository {
+@Repository("groupRepository")
+public class AppRepositoryImpl implements GroupRepository {
     @Resource
-    private AppSync appSync;
+    private GroupSync groupSync;
     @Resource
-    private AppQuery appQuery;
+    private GroupQuery groupQuery;
     @Resource
     private ArchiveService archiveService;
 
     @Override
-    public List<App> list() throws Exception {
-        List<App> list = new ArrayList<>();
-        for (App app : appQuery.getAll()) {
-            list.add(app);
+    public List<Group> list() throws Exception {
+        List<Group> list = new ArrayList<>();
+        for (Group group : groupQuery.getAll()) {
+            list.add(group);
         }
         return list;
 
     }
 
     @Override
-    public List<App> list(String slbName, String virtualServerName) throws Exception {
-        List<App> list = new ArrayList<>();
-        for (App app : appQuery.getBySlbAndVirtualServer(slbName, virtualServerName)) {
-            list.add(app);
+    public List<Group> list(String slbName, String virtualServerName) throws Exception {
+        List<Group> list = new ArrayList<>();
+        for (Group group : groupQuery.getBySlbAndVirtualServer(slbName, virtualServerName)) {
+            list.add(group);
         }
         return list;
     }
 
     @Override
-    public List<App> listLimit(long fromId, int maxCount) throws Exception {
-        List<App> list = new ArrayList<>();
-        for (App app : appQuery.getLimit(fromId, maxCount)) {
-            list.add(app);
+    public List<Group> listLimit(long fromId, int maxCount) throws Exception {
+        List<Group> list = new ArrayList<>();
+        for (Group group : groupQuery.getLimit(fromId, maxCount)) {
+            list.add(group);
         }
         return list;
     }
 
     @Override
-    public App get(String appName) throws Exception {
-        return appQuery.get(appName);
+    public Group get(String groupName) throws Exception {
+        return groupQuery.get(groupName);
     }
 
     @Override
-    public App getByAppId(String appId) throws Exception {
-        return appQuery.getByAppId(appId);
+    public Group getByAppId(String groupId) throws Exception {
+        return groupQuery.getByAppId(groupId);
     }
 
     @Override
-    public long add(App app) throws Exception {
-        AppDo d = appSync.add(app);
-        archiveService.archiveApp(appQuery.getById(d.getId()));
+    public long add(Group group) throws Exception {
+        GroupDo d = groupSync.add(group);
+        archiveService.archiveGroup(groupQuery.getById(d.getId()));
         return d.getKeyId();
 
     }
 
     @Override
-    public void update(App app) throws Exception {
-        if (app == null)
+    public void update(Group group) throws Exception {
+        if (group == null)
             return;
-        AppDo d = appSync.update(app);
-        app = appQuery.getById(d.getId());
-        archiveService.archiveApp(app);
+        GroupDo d = groupSync.update(group);
+        group = groupQuery.getById(d.getId());
+        archiveService.archiveGroup(group);
     }
 
     @Override
-    public int delete(String appName) throws Exception {
-        int count = appSync.delete(appName);
-        archiveService.deleteAppArchive(appName);
+    public int delete(String groupName) throws Exception {
+        int count = groupSync.delete(groupName);
+        archiveService.deleteGroupArchive(groupName);
         return count;
 
     }
 
     @Override
-    public List<String> listAppsByAppServer(String appServerIp) throws Exception {
-        return appQuery.getByAppServer(appServerIp);
+    public List<String> listGroupsByGroupServer(String groupServerIp) throws Exception {
+        return groupQuery.getByGroupServer(groupServerIp);
     }
 
     @Override
-    public List<String> listAppServersByApp(String appName) throws Exception {
-        return appQuery.getAppServersByApp(appName);
+    public List<String> listGroupServersByGroup(String groupName) throws Exception {
+        return groupQuery.getGroupServersByGroup(groupName);
     }
 
     @Override
-    public List<AppServer> getAppServersByApp(String appName) throws Exception {
-        return appQuery.listAppServersByApp(appName);
+    public List<GroupServer> getGroupServersByGroup(String groupName) throws Exception {
+        return groupQuery.listGroupServersByGroup(groupName);
     }
 }

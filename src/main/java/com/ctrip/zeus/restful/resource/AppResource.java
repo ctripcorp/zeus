@@ -8,7 +8,7 @@ import com.ctrip.zeus.model.entity.AppList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.model.AppRepository;
+import com.ctrip.zeus.service.model.GroupRepository;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,7 +28,7 @@ import javax.ws.rs.core.Response;
 public class AppResource {
     private static int DEFAULT_MAX_COUNT = 20;
     @Resource
-    private AppRepository appRepository;
+    private GroupRepository groupRepository;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
@@ -44,13 +44,13 @@ public class AppResource {
         AppList appList = new AppList();
 
         if (fromId <= 0 && maxCount <= 0) {
-            for (App app : appRepository.list()) {
+            for (App app : groupRepository.list()) {
                 appList.addApp(app);
             }
         } else {
             fromId = fromId < 0 ? 0 : fromId;
             maxCount = maxCount <= 0 ? DEFAULT_MAX_COUNT : maxCount;
-            for (App app : appRepository.listLimit(fromId, maxCount)) {
+            for (App app : groupRepository.listLimit(fromId, maxCount)) {
                 appList.addApp(app);
             }
         }
@@ -64,7 +64,7 @@ public class AppResource {
     @Authorize(name = "getApp")
     public Response getByAppName(@Context HttpHeaders hh, @Context HttpServletRequest request,
                                  @PathParam("appName") String appName) throws Exception {
-        App app = appRepository.get(appName);
+        App app = groupRepository.get(appName);
         return responseHandler.handle(app, hh.getMediaType());
     }
 
@@ -77,7 +77,7 @@ public class AppResource {
         if (appId == null || appId.isEmpty()) {
             throw new Exception("Missing parameter or value.");
         }
-        App app = appRepository.getByAppId(appId);
+        App app = groupRepository.getByAppId(appId);
         return responseHandler.handle(app, hh.getMediaType());
     }
 
@@ -96,7 +96,7 @@ public class AppResource {
                 throw new Exception("Unacceptable type.");
             }
         }
-        appRepository.add(a);
+        groupRepository.add(a);
         return Response.ok().build();
     }
 
@@ -118,7 +118,7 @@ public class AppResource {
         DistLock lock = dbLockFactory.newLock(a.getName() + "_update");
         try {
             lock.lock();
-            appRepository.update(a);
+            groupRepository.update(a);
         } finally {
             lock.unlock();
         }
@@ -132,7 +132,7 @@ public class AppResource {
     public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("appName") String appName) throws Exception {
         if (appName == null || appName.isEmpty())
             throw new Exception("Missing parameter or value.");
-        appRepository.delete(appName);
+        groupRepository.delete(appName);
         return Response.ok().build();
     }
 }

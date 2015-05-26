@@ -1,6 +1,6 @@
 package com.ctrip.zeus.service.model;
 
-import com.ctrip.zeus.model.entity.AppSlb;
+import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.service.Repository;
 
@@ -31,7 +31,7 @@ public interface SlbRepository extends Repository {
      * @return the list of slbs
      * @throws Exception
      */
-    List<Slb> listByAppServerAndAppName(String appServerIp, String appName) throws Exception;
+    List<Slb> listByGroupServerAndGroupName(String appServerIp, String appName) throws Exception;
 
     /**
      * get the slb list which manage the apps
@@ -39,7 +39,7 @@ public interface SlbRepository extends Repository {
      * @return the list of slbs
      * @throws Exception
      */
-    List<Slb> listByApps(String[] appNames) throws Exception;
+    List<Slb> listByGroups(String[] appNames) throws Exception;
 
     /**
      * get the list of app related slb information by app names
@@ -47,7 +47,7 @@ public interface SlbRepository extends Repository {
      * @return the list of app related slb information
      * @throws Exception
      */
-    List<AppSlb> listAppSlbsByApps(String[] appNames) throws Exception;
+    List<GroupSlb> listGroupSlbsByGroups(String[] appNames) throws Exception;
 
     /**
      * get thr list of app related slb information by slb name
@@ -55,7 +55,7 @@ public interface SlbRepository extends Repository {
      * @return the list of app related slb information
      * @throws Exception
      */
-    List<AppSlb> listAppSlbsBySlb(String slbName) throws Exception;
+    List<GroupSlb> listGroupSlbsBySlb(String slbName) throws Exception;
 
     void add(Slb slb) throws Exception;
 
@@ -75,5 +75,5 @@ public interface SlbRepository extends Repository {
      * @return the list of server ips
      * @throws Exception
      */
-    List<String> listAppServersBySlb(String slbName) throws Exception;
+    List<String> listGroupServersBySlb(String slbName) throws Exception;
 }

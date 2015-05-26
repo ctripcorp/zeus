@@ -20,7 +20,7 @@ public interface GroupRepository extends Repository {
 
     Group get(String appName) throws Exception;
 
-    Group getByGroupId(String appId) throws Exception;
+    Group getByAppId(String appId) throws Exception;
 
     /**
      * add an app

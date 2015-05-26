@@ -11,16 +11,16 @@ import com.ctrip.zeus.model.entity.*;
 public class C {
 
 
-    public static App toApp(AppDo d) {
-        return new App()
+    public static Group toGroup(GroupDo d) {
+        return new Group()
                 .setAppId(d.getAppId())
                 .setName(d.getName())
                 .setSsl(d.isSsl())
                 .setVersion(d.getVersion());
     }
 
-    public static AppServer toAppServer(AppServerDo d) {
-        return new AppServer()
+    public static GroupServer toGroupServer(GroupServerDo d) {
+        return new GroupServer()
                 .setIp(d.getIp())
                 .setHostName(d.getHostName())
                 .setFailTimeout(d.getFailTimeout())
@@ -29,9 +29,9 @@ public class C {
                 .setWeight(d.getWeight());
     }
 
-    public static AppSlb toAppSlb(AppSlbDo d) {
-        return new AppSlb()
-                .setAppName(d.getAppName())
+    public static GroupSlb toGroupSlb(GroupSlbDo d) {
+        return new GroupSlb()
+                .setGroupName(d.getGroupName())
                 .setSlbName(d.getSlbName())
                 .setPath(d.getPath())
                 .setRewrite(d.getRewrite())
@@ -43,7 +43,7 @@ public class C {
                 .setName(d.getName());
     }
 
-    public static HealthCheck toHealthCheck(AppHealthCheckDo d) {
+    public static HealthCheck toHealthCheck(GroupHealthCheckDo d) {
         return new HealthCheck()
                 .setFails(d.getFails())
                 .setIntervals(d.getIntervals())
@@ -51,7 +51,7 @@ public class C {
                 .setUri(d.getUri());
     }
 
-    public static LoadBalancingMethod toLoadBalancingMethod(AppLoadBalancingMethodDo d) {
+    public static LoadBalancingMethod toLoadBalancingMethod(GroupLoadBalancingMethodDo d) {
         return new LoadBalancingMethod()
                 .setType(d.getType())
                 .setValue(d.getValue());
@@ -87,7 +87,7 @@ public class C {
                 .setSsl(d.isIsSsl());
     }
 
-    public static Archive toAppArchive(ArchiveAppDo d) {
+    public static Archive toGroupArchive(ArchiveGroupDo d) {
         return new Archive()
                 .setName(d.getName())
                 .setContent(d.getContent())
@@ -122,15 +122,15 @@ public class C {
 
     /*Entity to Do*/
 
-    public static AppDo toAppDo(App e) {
-        return new AppDo().setAppId(e.getAppId())
+    public static GroupDo toGroupDo(Group e) {
+        return new GroupDo().setAppId(e.setAppId())
                 .setName(e.getName())
                 .setSsl(e.isSsl())
                 .setVersion(e.getVersion());
     }
 
-    public static AppServerDo toAppServerDo(AppServer e) {
-        return new AppServerDo()
+    public static GroupServerDo toGroupServerDo(GroupServer e) {
+        return new GroupServerDo()
                 .setIp(e.getIp())
                 .setHostName(e.getHostName())
                 .setFailTimeout(e.getFailTimeout())
@@ -139,9 +139,9 @@ public class C {
                 .setWeight(e.getWeight());
     }
 
-    public static AppSlbDo toAppSlbDo(AppSlb e) {
-        return new AppSlbDo()
-                .setAppName(e.getAppName())
+    public static GroupSlbDo toGroupSlbDo(GroupSlb e) {
+        return new GroupSlbDo()
+                .setGroupName(e.getGroupName())
                 .setSlbName(e.getSlbName())
                 .setSlbVirtualServerName(e.getVirtualServer().getName())
                 .setPath(e.getPath())
@@ -154,16 +154,16 @@ public class C {
                 .setName(e.getName());
     }
 
-    public static AppHealthCheckDo toAppHealthCheckDo(HealthCheck e) {
-        return new AppHealthCheckDo()
+    public static GroupHealthCheckDo toGroupHealthCheckDo(HealthCheck e) {
+        return new GroupHealthCheckDo()
                 .setUri(e.getUri())
                 .setIntervals(e.getIntervals())
                 .setFails(e.getFails())
                 .setPasses(e.getPasses());
     }
 
-    public static AppLoadBalancingMethodDo toAppLoadBalancingMethodDo(LoadBalancingMethod e) {
-        return new AppLoadBalancingMethodDo()
+    public static GroupLoadBalancingMethodDo toGroupLoadBalancingMethodDo(LoadBalancingMethod e) {
+        return new GroupLoadBalancingMethodDo()
                 .setType(e.getType())
                 .setValue(e.getValue());
     }

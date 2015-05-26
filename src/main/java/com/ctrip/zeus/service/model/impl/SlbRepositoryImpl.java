@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
 import com.ctrip.zeus.dal.core.SlbDo;
-import com.ctrip.zeus.model.entity.AppSlb;
+import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.ArchiveService;
@@ -55,29 +55,29 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public List<Slb> listByAppServerAndAppName(String appServerIp, String appName) throws Exception {
+    public List<Slb> listByGroupServerAndGroupName(String appServerIp, String appName) throws Exception {
         if (appServerIp == null && appName == null)
             return null;
         if (appServerIp == null)
-            return slbQuery.getByAppNames(new String[]{appName});
+            return slbQuery.getByGroupNames(new String[]{appName});
         if (appName == null)
-            return slbQuery.getByAppServer(appServerIp);
-        return slbQuery.getByAppServerAndAppName(appServerIp, appName);
+            return slbQuery.getByGroupServer(appServerIp);
+        return slbQuery.getByGroupServerAndGroupName(appServerIp, appName);
     }
 
     @Override
-    public List<Slb> listByApps(String[] appNames) throws Exception {
-        return slbQuery.getByAppNames(appNames);
+    public List<Slb> listByGroups(String[] appNames) throws Exception {
+        return slbQuery.getByGroupNames(appNames);
     }
 
     @Override
-    public List<AppSlb> listAppSlbsByApps(String[] appNames) throws Exception {
-        return slbQuery.getAppSlbsByApps(appNames);
+    public List<GroupSlb> listGroupSlbsByGroups(String[] appNames) throws Exception {
+        return slbQuery.getGroupSlbsByGroups(appNames);
     }
 
     @Override
-    public List<AppSlb> listAppSlbsBySlb(String slbName) throws Exception {
-        return slbQuery.getAppSlbsBySlb(slbName);
+    public List<GroupSlb> listGroupSlbsBySlb(String slbName) throws Exception {
+        return slbQuery.getGroupSlbsBySlb(slbName);
     }
 
     @Override
@@ -121,7 +121,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public List<String> listAppServersBySlb(String slbName) throws Exception {
-        return slbQuery.getAppServersBySlb(slbName);
+    public List<String> listGroupServersBySlb(String slbName) throws Exception {
+        return slbQuery.getGroupServersBySlb(slbName);
     }
 }

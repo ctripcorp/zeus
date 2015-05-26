@@ -1,8 +1,7 @@
 package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
-import com.ctrip.zeus.service.model.AppRepository;
+import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.util.ModelAssert;
@@ -18,7 +17,6 @@ import support.MysqlDbServer;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +28,7 @@ public class ModelServiceTest extends AbstractSpringTest {
     private static MysqlDbServer mysqlDbServer;
 
     @Resource
-    private AppRepository appRepo;
+    private GroupRepository appRepo;
     @Resource
     private SlbRepository slbRepo;
     @Resource

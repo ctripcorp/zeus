@@ -1,12 +1,11 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.client.LocalClient;
-import com.ctrip.zeus.client.NginxClient;
 import com.ctrip.zeus.client.StatusClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.S;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
-import com.ctrip.zeus.service.model.AppRepository;
+import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.AppStatusService;
 import com.ctrip.zeus.service.status.StatusService;
@@ -33,7 +32,7 @@ public class AppStatusServiceImpl implements AppStatusService {
     SlbRepository slbRepository;
 
     @Resource
-    AppRepository appRepository;
+    GroupRepository groupRepository;
 
     @Resource
     StatusService statusService;
@@ -85,7 +84,7 @@ public class AppStatusServiceImpl implements AppStatusService {
         status.setAppName(appName);
         status.setSlbName(slbName);
 
-        List<AppServer> appServerList = appRepository.getAppServersByApp(appName);
+        List<AppServer> appServerList = groupRepository.getAppServersByApp(appName);
         for (AppServer appServer : appServerList) {
             AppServerStatus serverStatus = getAppServerStatus(appName, slbName, appServer.getIp(), appServer.getPort());
             status.addAppServerStatus(serverStatus);
