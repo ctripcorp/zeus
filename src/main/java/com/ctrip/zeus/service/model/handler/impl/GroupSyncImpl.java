@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.handler.AppSync;
+import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -22,7 +22,7 @@ import java.util.Map;
  * @date: 3/7/2015.
  */
 @Component("appSync")
-public class AppSyncImpl implements AppSync {
+public class GroupSyncImpl implements GroupSync {
     @Resource
     private GroupDao appDao;
     @Resource

@@ -2,7 +2,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.handler.AppQuery;
+import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
@@ -16,7 +16,7 @@ import java.util.List;
  * @date: 3/7/2015.
  */
 @Component("appQuery")
-public class AppQueryImpl implements AppQuery {
+public class GroupQueryImpl implements GroupQuery {
     @Resource
     private GroupDao appDao;
     @Resource

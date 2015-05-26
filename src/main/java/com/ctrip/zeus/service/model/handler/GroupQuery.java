@@ -10,7 +10,7 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/7/2015.
  */
-public interface AppQuery {
+public interface GroupQuery {
 
     Group get(String name) throws DalException;
 

@@ -9,7 +9,7 @@ import org.unidal.dal.jdbc.DalException;
  * @author:xingchaowang
  * @date: 3/7/2015.
  */
-public interface AppSync {
+public interface GroupSync {
     GroupDo add(Group app) throws DalException, ValidationException;
 
     GroupDo update(Group app) throws DalException, ValidationException;

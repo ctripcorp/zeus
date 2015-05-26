@@ -10,7 +10,7 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/4/2015.
  */
-public interface AppRepository extends Repository {
+public interface GroupRepository extends Repository {
 
     List<Group> list() throws Exception;
 
