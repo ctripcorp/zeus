@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
-    <entity name="app" table="app" alias="a" do-class="AppDo">
+    <entity name="group" table="group" alias="a" do-class="GroupDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <var name="ids" value-type="long[]"/>
@@ -98,7 +98,7 @@
             </query>
         </query-defs>
     </entity>
-    <entity name="app-health-check" table="app_health_check" alias="ahc" do-class="AppHealthCheckDo">
+    <entity name="group-health-check" table="group_health_check" alias="ahc" do-class="GroupHealthCheckDo">
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -106,7 +106,6 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_id = values(app_id),
                         uri = values(uri),
                         intervals = values(intervals),
                         fails = values(fails),
@@ -115,29 +114,29 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app" type="DELETE">
-                <param name="app-id"/>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-id'/> = ${app-id}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-app" type="SELECT">
-                <param name="app-id"/>
+            <query name="find-by-group" type="SELECT">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-id'/> = ${app-id}
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
         </query-defs>
     </entity>
-    <entity name="app-load-balancing-method" table="app_load_balancing_method" alias="albm"
-            do-class="AppLoadBalancingMethodDo">
+    <entity name="group-load-balancing-method" table="group_load_balancing_method" alias="albm"
+            do-class="GroupLoadBalancingMethodDo">
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -145,35 +144,35 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_id = values(app_id),
+                        group_id = values(group_id),
                         type = values(type),
                         value = values(value),
                         <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app" type="DELETE">
-                <param name="app-id"/>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-id'/> = ${app-id}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-app" type="SELECT">
-                <param name="app-id"/>
+            <query name="find-by-group" type="SELECT">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-id'/> = ${app-id}
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
         </query-defs>
     </entity>
-    <entity name="app-server" table="app_server" alias="ass" do-class="AppServerDo">
+    <entity name="group-server" table="group_server" alias="ass" do-class="GroupServerDo">
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -181,7 +180,7 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_id = values(app_id),
+                        group_id = values(group_id),
                         ip = values(ip),
                         host_name = values(host_name),
                         port = values(port),
@@ -192,22 +191,22 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app" type="DELETE">
-                <param name="app-id"/>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-id'/> = ${app-id}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-app" type="SELECT" multiple="true">
-                <param name="app-id"/>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-id'/> = ${app-id}
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
@@ -223,10 +222,10 @@
             </query>
         </query-defs>
     </entity>
-    <entity name="app-slb" table="app_slb" alias="as2" do-class="AppSlbDo">
+    <entity name="group-slb" table="group_slb" alias="as2" do-class="GroupSlbDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
-        <var name="app-names" value-type="String[]"/>
+        <var name="group-names" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -234,7 +233,7 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_name = values(app_name),
+                        group_name = values(group_name),
                         slb_name = values(slb_name),
                         slb_virtual_server_name = values(slb_virtual_server_name),
                         path = values(path),
@@ -243,32 +242,32 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app" type="DELETE">
-                <param name="app-name"/>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-name"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-name'/> = ${app-name}
+                    WHERE <FIELD name='group-name'/> = ${group-name}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-app" type="SELECT" multiple="true">
-                <param name="app-name"/>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-name"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-name'/> = ${app-name}
+                        WHERE <FIELD name='group-name'/> = ${group-name}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-apps" type="SELECT" multiple="true">
-                <param name="app-names"/>
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
+                <param name="group-names"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-name'/> in <IN> ${app-names} </IN>
+                        WHERE <FIELD name='group-name'/> in <IN> ${group-names} </IN>
                     ]]>
                 </statement>
             </query>
@@ -583,9 +582,9 @@
             </query>
         </query-defs>
     </entity>
-    <entity name="archive-app" table="archive_app" alias="aa" do-class="ArchiveAppDo">
+    <entity name="archive-group" table="archive_group" alias="aa" do-class="ArchiveGroupDo">
         <query-defs>
-            <query name="delete-by-app" type="DELETE">
+            <query name="delete-by-group" type="DELETE">
                 <param name="name"/>
                 <statement>
                     <![CDATA[

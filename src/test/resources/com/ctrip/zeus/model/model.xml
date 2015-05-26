@@ -40,10 +40,10 @@
 
     <vip ip="192.168.1.1"/>
 
-    <app name="gateway" app-id="app921822" version="1" ssl="false">
-        <app-slbs>
-            <app-slb priority="0">
-                <app-name>gateway</app-name>
+    <group name="gateway" app-id="app921822" version="1" ssl="false">
+        <group-slbs>
+            <group-slb priority="0">
+                <group-name>gateway</group-name>
                 <slb-name>default</slb-name>
                 <slb-vips>
                     <vip/>
@@ -52,9 +52,9 @@
                 <path>/hotel</path>
                 <rewrite>^/regex</rewrite>
                 <virtual-server/>
-            </app-slb>
-            <app-slb priority="0">
-                <app-name>gateway</app-name>
+            </group-slb>
+            <group-slb priority="0">
+                <group-name>gateway</group-name>
                 <slb-name>default</slb-name>
                 <slb-vips>
                     <vip ip="192.168.1.1"/>
@@ -63,42 +63,42 @@
                 <path>/hotel</path>
                 <rewrite>*/regex</rewrite>
                 <virtual-server/>
-            </app-slb>
-        </app-slbs>
+            </group-slb>
+        </group-slbs>
         <health-check intervals="10" fails="2" passes="2">
             <uri>/health-check</uri>
         </health-check>
         <load-balancing-method type="round-robin|least-conn|ip-hash|hash">
             <value>uri</value>
         </load-balancing-method>
-        <app-servers>
-            <app-server port="80" weight="5" max-fails="5" fail-timeout="30">
+        <group-servers>
+            <group-server port="80" weight="5" max-fails="5" fail-timeout="30">
                 <host-name>local</host-name>
                 <ip>192.168.1.10</ip>
-            </app-server>
-            <app-server port="80" weight="5" max-fails="5" fail-timeout="30">
+            </group-server>
+            <group-server port="80" weight="5" max-fails="5" fail-timeout="30">
                 <host-name>local</host-name>
                 <ip>192.168.1.11</ip>
-            </app-server>
-        </app-servers>
-    </app>
+            </group-server>
+        </group-servers>
+    </group>
 
     <archive>
         <name>gateway</name>
-        <content>appXmlString</content>
+        <content>groupXmlString</content>
         <version>1</version>
     </archive>
 
-    <app-list>
+    <group-list>
         <total>11</total>
-        <apps>
-            <app/>
-            <app/>
-        </apps>
-    </app-list>
+        <groups>
+            <group/>
+            <group/>
+        </groups>
+    </group-list>
 
     <member-action>
-        <app-name>app002</app-name>
+        <group-name>group002</group-name>
         <ip>192.68.1</ip>
         <ip>192.68.2</ip>
     </member-action>
@@ -109,40 +109,40 @@
         <ip>192.68.3</ip>
     </server-action>
 
-    <app-status>
-        <app-name>app1</app-name>
+    <group-status>
+        <group-name>group1</group-name>
         <slb-name>default</slb-name>
-        <app-server-status>
+        <group-server-status>
             <ip>192.168.1.1</ip>
             <port>80</port>
             <member>true</member>
             <server>true</server>
             <up>true</up>
-        </app-server-status>
-        <app-server-status>
+        </group-server-status>
+        <group-server-status>
             <ip>192.168.1.1</ip>
             <port>80</port>
             <member>true</member>
             <server>true</server>
             <up>true</up>
-        </app-server-status>
-    </app-status>
+        </group-server-status>
+    </group-status>
 
-    <app-status-list>
+    <group-status-list>
         <total>11</total>
-        <app-statuses>
-            <app-status/>
-            <app-status/>
-        </app-statuses>
-    </app-status-list>
+        <group-statuses>
+            <group-status/>
+            <group-status/>
+        </group-statuses>
+    </group-status-list>
 
     <server-status>
         <ip>192.168.1.1</ip>
         <up>true</up>
-        <app-name>app1</app-name>
-        <app-name>app2</app-name>
-        <app-name>app3</app-name>
-        <app-name>app4</app-name>
+        <group-name>group1</group-name>
+        <group-name>group2</group-name>
+        <group-name>group3</group-name>
+        <group-name>group4</group-name>
     </server-status>
 
     <!--added by fanqq-->
@@ -153,10 +153,10 @@
         <conf-slb-name slbname="slbname">
         </conf-slb-name>
 
-        <conf-app-name appname="appname">
-        </conf-app-name>
-        <conf-app-name appname="appname">
-        </conf-app-name>
+        <conf-group-name groupname="groupname">
+        </conf-group-name>
+        <conf-group-name groupname="groupname">
+        </conf-group-name>
     </conf-req>
 
     <op-server-status-req>
@@ -166,14 +166,14 @@
     </op-server-status-req>
 
     <op-member-status-req>
-        <ip-appname>
+        <ip-groupname>
             <member-ip>str</member-ip>
-            <member-appname>str</member-appname>
-        </ip-appname>
-        <ip-appname>
+            <member-groupname>str</member-groupname>
+        </ip-groupname>
+        <ip-groupname>
             <member-ip>str</member-ip>
-            <member-appname>str</member-appname>
-        </ip-appname>
+            <member-groupname>str</member-groupname>
+        </ip-groupname>
         <operation>upmember</operation>
     </op-member-status-req>
 
