@@ -24,7 +24,7 @@ import java.util.Map;
 @Component("dbSync")
 public class SlbSyncImpl implements SlbSync {
     @Resource
-    private AppSlbDao appSlbDao;
+    private GroupSlbDao appSlbDao;
     @Resource
     private SlbDao slbDao;
     @Resource
@@ -92,7 +92,7 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     private boolean removable(SlbDo d) throws DalException {
-        List<AppSlbDo> list = appSlbDao.findAllBySlb(d.getName(), AppSlbEntity.READSET_FULL);
+        List<GroupSlbDo> list = appSlbDao.findAllBySlb(d.getName(), GroupSlbEntity.READSET_FULL);
         if (list.size() == 0)
             return true;
         return false;

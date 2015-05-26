@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.model.handler;
 
-import com.ctrip.zeus.model.entity.App;
-import com.ctrip.zeus.model.entity.AppServer;
+import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
 import org.unidal.dal.jdbc.DalException;
 
 import java.util.List;
@@ -12,21 +12,21 @@ import java.util.List;
  */
 public interface AppQuery {
 
-    App get(String name) throws DalException;
+    Group get(String name) throws DalException;
 
-    App getById(long id) throws DalException;
+    Group getById(long id) throws DalException;
 
-    App getByAppId(String appId) throws DalException;
+    Group getByAppId(String appId) throws DalException;
 
-    List<App> getAll() throws DalException;
+    List<Group> getAll() throws DalException;
 
-    List<App> getLimit(long fromId, int maxCount) throws DalException;
+    List<Group> getLimit(long fromId, int maxCount) throws DalException;
 
-    List<App> getBySlbAndVirtualServer(String slbName, String virtualServerName) throws DalException;
+    List<Group> getBySlbAndVirtualServer(String slbName, String virtualServerName) throws DalException;
 
-    List<String> getByAppServer(String appServerIp) throws DalException;
+    List<String> getByGroupServer(String appServerIp) throws DalException;
 
-    List<String> getAppServersByApp(String appName) throws DalException;
+    List<String> getGroupServersByGroup(String appName) throws DalException;
 
-    List<AppServer> listAppServersByApp(String appName) throws DalException;
+    List<GroupServer> listGroupServersByGroup(String appName) throws DalException;
 }

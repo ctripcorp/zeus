@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.model;
 
-import com.ctrip.zeus.model.entity.App;
-import com.ctrip.zeus.model.entity.AppServer;
+import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.service.Repository;
 
 import java.util.List;
@@ -12,15 +12,15 @@ import java.util.List;
  */
 public interface AppRepository extends Repository {
 
-    List<App> list() throws Exception;
+    List<Group> list() throws Exception;
 
-    List<App> list(String slbName, String virtualServerName) throws Exception;
+    List<Group> list(String slbName, String virtualServerName) throws Exception;
 
-    List<App> listLimit(long fromId, int maxCount) throws Exception;
+    List<Group> listLimit(long fromId, int maxCount) throws Exception;
 
-    App get(String appName) throws Exception;
+    Group get(String appName) throws Exception;
 
-    App getByAppId(String appId) throws Exception;
+    Group getByGroupId(String appId) throws Exception;
 
     /**
      * add an app
@@ -28,9 +28,9 @@ public interface AppRepository extends Repository {
      * @return the primary key of the app
      * @throws Exception
      */
-    long add(App app) throws Exception;
+    long add(Group app) throws Exception;
 
-    void update(App app) throws Exception;
+    void update(Group app) throws Exception;
 
     /**
      * delete the app by its name
@@ -46,7 +46,7 @@ public interface AppRepository extends Repository {
      * @return the list of app names
      * @throws Exception
      */
-    List<String> listAppsByAppServer(String appServerIp) throws Exception;
+    List<String> listGroupsByGroupServer(String appServerIp) throws Exception;
 
     /**
      * get the list of app server ips where the specified app is deployed
@@ -54,7 +54,7 @@ public interface AppRepository extends Repository {
      * @return the list of app server ips
      * @throws Exception
      */
-    List<String> listAppServersByApp(String appName) throws Exception;
+    List<String> listGroupServersByGroup(String appName) throws Exception;
 
-    List<AppServer> getAppServersByApp(String appName) throws Exception;
+    List<GroupServer> getGroupServersByGroup(String appName) throws Exception;
 }

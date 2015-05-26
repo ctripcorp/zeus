@@ -18,15 +18,15 @@ import java.util.List;
 @Component("appQuery")
 public class AppQueryImpl implements AppQuery {
     @Resource
-    private AppDao appDao;
+    private GroupDao appDao;
     @Resource
-    private AppHealthCheckDao appHealthCheckDao;
+    private GroupHealthCheckDao appHealthCheckDao;
     @Resource
-    private AppLoadBalancingMethodDao appLoadBalancingMethodDao;
+    private GroupLoadBalancingMethodDao appLoadBalancingMethodDao;
     @Resource
-    private AppServerDao appServerDao;
+    private GroupServerDao appServerDao;
     @Resource
-    private AppSlbDao appSlbDao;
+    private GroupSlbDao appSlbDao;
     @Resource
     private SlbDao slbDao;
     @Resource
@@ -38,30 +38,30 @@ public class AppQueryImpl implements AppQuery {
 
 
     @Override
-    public App get(String name) throws DalException {
-        AppDo d = appDao.findByName(name, AppEntity.READSET_FULL);
-        return createApp(d);
+    public Group get(String name) throws DalException {
+        GroupDo d = appDao.findByName(name, GroupEntity.READSET_FULL);
+        return createGroup(d);
     }
 
     @Override
-    public App getById(long id) throws DalException {
-        List<AppDo> list = appDao.findAllByIds(new long[]{id}, AppEntity.READSET_FULL);
+    public Group getById(long id) throws DalException {
+        List<GroupDo> list = appDao.findAllByIds(new long[]{id}, GroupEntity.READSET_FULL);
         if (list.size() == 0)
             return null;
-        return createApp(list.get(0));
+        return createGroup(list.get(0));
     }
 
     @Override
-    public App getByAppId(String appId) throws DalException {
-        AppDo d = appDao.findByAppId(appId, AppEntity.READSET_FULL);
-        return createApp(d);
+    public Group getByGroupId(String appId) throws DalException {
+        GroupDo d = appDao.findByAppId(appId, GroupEntity.READSET_FULL);
+        return createGroup(d);
     }
 
     @Override
-    public List<App> getAll() throws DalException {
-        List<App> list = new ArrayList<>();
-        for (AppDo d : appDao.findAll(AppEntity.READSET_FULL)) {
-            App app = createApp(d);
+    public List<Group> getAll() throws DalException {
+        List<Group> list = new ArrayList<>();
+        for (GroupDo d : appDao.findAll(GroupEntity.READSET_FULL)) {
+            Group app = createGroup(d);
             if (app != null)
                 list.add(app);
         }
@@ -69,10 +69,10 @@ public class AppQueryImpl implements AppQuery {
     }
 
     @Override
-    public List<App> getLimit(long fromId, int maxCount) throws DalException {
-        List<App> list = new ArrayList<>();
-        for (AppDo d : appDao.findLimit(fromId, maxCount, AppEntity.READSET_FULL)) {
-            App app = createApp(d);
+    public List<Group> getLimit(long fromId, int maxCount) throws DalException {
+        List<Group> list = new ArrayList<>();
+        for (GroupDo d : appDao.findLimit(fromId, maxCount, GroupEntity.READSET_FULL)) {
+            Group app = createGroup(d);
             if (app != null)
                 list.add(app);
         }
@@ -80,82 +80,82 @@ public class AppQueryImpl implements AppQuery {
     }
 
     @Override
-    public List<App> getBySlbAndVirtualServer(String slbName, String virtualServerName) throws DalException {
-        List<AppSlbDo> l = appSlbDao.findAllBySlbAndVirtualServer(slbName, virtualServerName, AppSlbEntity.READSET_FULL);
+    public List<Group> getBySlbAndVirtualServer(String slbName, String virtualServerName) throws DalException {
+        List<GroupSlbDo> l = appSlbDao.findAllBySlbAndVirtualServer(slbName, virtualServerName, GroupSlbEntity.READSET_FULL);
         int size = l.size();
         String[] names = new String[size];
         for (int i = 0; i < size; i++) {
-            names[i] = l.get(i).getAppName();
+            names[i] = l.get(i).getGroupName();
         }
 
-        List<App> list = new ArrayList<>();
-        for (AppDo d : appDao.findAllByNames(names, AppEntity.READSET_FULL)) {
-            list.add(createApp(d));
+        List<Group> list = new ArrayList<>();
+        for (GroupDo d : appDao.findAllByNames(names, GroupEntity.READSET_FULL)) {
+            list.add(createGroup(d));
         }
         return list;
     }
 
     @Override
-    public List<String> getByAppServer(String appServerIp) throws DalException {
+    public List<String> getByGroupServer(String appServerIp) throws DalException {
         List<String> appNames = new ArrayList<>();
-        for (AppServerDo asd : appServerDao.findAllByIp(appServerIp, AppServerEntity.READSET_FULL)) {
-            AppDo d = appDao.findByPK(asd.getAppId(), AppEntity.READSET_FULL);
+        for (GroupServerDo asd : appServerDao.findAllByIp(appServerIp, GroupServerEntity.READSET_FULL)) {
+            GroupDo d = appDao.findByPK(asd.getGroupId(), GroupEntity.READSET_FULL);
             appNames.add(d.getName());
         }
         return appNames;
     }
 
     @Override
-    public List<String> getAppServersByApp(String appName) throws DalException {
-        AppDo d = appDao.findByName(appName, AppEntity.READSET_FULL);
+    public List<String> getGroupServersByGroup(String appName) throws DalException {
+        GroupDo d = appDao.findByName(appName, GroupEntity.READSET_FULL);
         if (d == null)
             return null;
         List<String> appServers = new ArrayList<>();
-        for (AppServerDo asd : appServerDao.findAllByApp(d.getId(), AppServerEntity.READSET_FULL)) {
+        for (GroupServerDo asd : appServerDao.findAllByGroup(d.getId(), GroupServerEntity.READSET_FULL)) {
             appServers.add(asd.getIp());
         }
         return appServers;
     }
 
     @Override
-    public List<AppServer> listAppServersByApp(String appName) throws DalException {
-        AppDo d = appDao.findByName(appName, AppEntity.READSET_FULL);
+    public List<GroupServer> listGroupServersByGroup(String appName) throws DalException {
+        GroupDo d = appDao.findByName(appName, GroupEntity.READSET_FULL);
         if (d == null)
             return null;
-        List<AppServer> appServers = new ArrayList<>();
-        for (AppServerDo asd : appServerDao.findAllByApp(d.getId(), AppServerEntity.READSET_FULL)) {
-            appServers.add(C.toAppServer(asd));
+        List<GroupServer> appServers = new ArrayList<>();
+        for (GroupServerDo asd : appServerDao.findAllByGroup(d.getId(), GroupServerEntity.READSET_FULL)) {
+            appServers.add(C.toGroupServer(asd));
         }
         return appServers;
     }
 
 
-    private App createApp(AppDo d) throws DalException {
+    private Group createGroup(GroupDo d) throws DalException {
         if (d == null)
             return null;
-        App app = C.toApp(d);
+        Group app = C.toGroup(d);
         cascadeQuery(d, app);
         return app;
     }
 
-    private void cascadeQuery(AppDo d, App app) throws DalException {
-        queryAppSlbs(d.getName(), app);
-        queryAppHealthCheck(d.getId(), app);
+    private void cascadeQuery(GroupDo d, Group app) throws DalException {
+        queryGroupSlbs(d.getName(), app);
+        queryGroupHealthCheck(d.getId(), app);
         queryLoadBalancingMethod(d.getId(), app);
-        queryAppServers(d.getId(), app);
+        queryGroupServers(d.getId(), app);
     }
 
-    private void queryAppSlbs(String appName, App app) throws DalException {
-        List<AppSlbDo> list = appSlbDao.findAllByApp(appName, AppSlbEntity.READSET_FULL);
-        for (AppSlbDo d : list) {
-            AppSlb e = C.toAppSlb(d);
-            app.addAppSlb(e);
+    private void queryGroupSlbs(String appName, Group app) throws DalException {
+        List<GroupSlbDo> list = appSlbDao.findAllByGroup(appName, GroupSlbEntity.READSET_FULL);
+        for (GroupSlbDo d : list) {
+            GroupSlb e = C.toGroupSlb(d);
+            app.addGroupSlb(e);
             querySlbVips(d.getSlbName(), e);
             queryVirtualServer(d.getSlbName(), d.getSlbVirtualServerName(), e);
         }
     }
 
-    private void querySlbVips(String slbName, AppSlb appSlb) throws DalException {
+    private void querySlbVips(String slbName, GroupSlb appSlb) throws DalException {
         SlbDo sd = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
         List<SlbVipDo> list = slbVipDao.findAllBySlb(sd.getId(), SlbVipEntity.READSET_FULL);
         for (SlbVipDo d : list) {
@@ -164,7 +164,7 @@ public class AppQueryImpl implements AppQuery {
         }
     }
 
-    private void queryVirtualServer(String slbName, String slbVirtualServerName, AppSlb appSlb) throws DalException {
+    private void queryVirtualServer(String slbName, String slbVirtualServerName, GroupSlb appSlb) throws DalException {
         SlbDo slbDo = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
         SlbVirtualServerDo d = slbVirtualServerDao.findAllBySlbAndName(slbDo.getId(), slbVirtualServerName, SlbVirtualServerEntity.READSET_FULL);
         appSlb.setSlbName(slbDo.getName());
@@ -183,27 +183,27 @@ public class AppQueryImpl implements AppQuery {
         }
     }
 
-    private void queryAppHealthCheck(long appKey, App app) throws DalException {
-        AppHealthCheckDo d = appHealthCheckDao.findByApp(appKey, AppHealthCheckEntity.READSET_FULL);
+    private void queryGroupHealthCheck(long appKey, Group app) throws DalException {
+        GroupHealthCheckDo d = appHealthCheckDao.findByGroup(appKey, GroupHealthCheckEntity.READSET_FULL);
         if (d == null)
             return;
         HealthCheck e = C.toHealthCheck(d);
         app.setHealthCheck(e);
     }
 
-    private void queryLoadBalancingMethod(long appKey, App app) throws DalException {
-        AppLoadBalancingMethodDo d = appLoadBalancingMethodDao.findByApp(appKey, AppLoadBalancingMethodEntity.READSET_FULL);
+    private void queryLoadBalancingMethod(long appKey, Group app) throws DalException {
+        GroupLoadBalancingMethodDo d = appLoadBalancingMethodDao.findByGroup(appKey, GroupLoadBalancingMethodEntity.READSET_FULL);
         if (d == null)
             return;
         LoadBalancingMethod e = C.toLoadBalancingMethod(d);
         app.setLoadBalancingMethod(e);
     }
 
-    private void queryAppServers(long appKey, App app) throws DalException {
-        List<AppServerDo> list = appServerDao.findAllByApp(appKey, AppServerEntity.READSET_FULL);
-        for (AppServerDo d : list) {
-            AppServer e = C.toAppServer(d);
-            app.addAppServer(e);
+    private void queryGroupServers(long appKey, Group app) throws DalException {
+        List<GroupServerDo> list = appServerDao.findAllByGroup(appKey, GroupServerEntity.READSET_FULL);
+        for (GroupServerDo d : list) {
+            GroupServer e = C.toGroupServer(d);
+            app.addGroupServer(e);
         }
     }
 }
