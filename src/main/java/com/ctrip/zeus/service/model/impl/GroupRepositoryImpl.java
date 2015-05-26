@@ -18,7 +18,7 @@ import java.util.List;
  * @date: 3/7/2015.
  */
 @Repository("groupRepository")
-public class AppRepositoryImpl implements GroupRepository {
+public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private GroupSync groupSync;
     @Resource
