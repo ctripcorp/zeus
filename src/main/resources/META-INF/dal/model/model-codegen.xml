@@ -20,7 +20,7 @@
     <entity-ref name="dy-upstream-ops-data" />
   </entity>
   <entity name="slb">
-    <attribute name="id" value-type="int" />
+    <attribute name="id" value-type="long" />
     <attribute name="name" value-type="String" />
     <attribute name="version" value-type="int" />
     <element name="nginx-bin" value-type="String" />
@@ -35,12 +35,13 @@
     <attribute name="ip" value-type="String" />
   </entity>
   <entity name="slb-server">
-    <attribute name="slb-id" value-type="int" />
+    <attribute name="slb-id" value-type="long" />
     <attribute name="ip" value-type="String" />
     <attribute name="host-name" value-type="String" />
     <attribute name="enable" value-type="boolean" />
   </entity>
   <entity name="virtual-server">
+    <attribute name="name" value-type="String" />
     <attribute name="id" value-type="long" />
     <attribute name="ssl" value-type="boolean" />
     <element name="port" value-type="String" />
@@ -54,7 +55,7 @@
     <entity-ref name="slb" type="list" names="slbs" xml-indent="true" />
   </entity>
   <entity name="group">
-    <attribute name="id" value-type="int" />
+    <attribute name="id" value-type="long" />
     <attribute name="name" value-type="String" />
     <attribute name="app-id" value-type="String" />
     <attribute name="version" value-type="int" />
@@ -68,6 +69,7 @@
     <attribute name="priority" value-type="int" />
     <element name="group-id" value-type="long" />
     <element name="slb-id" value-type="long" />
+    <element name="slb-name" value-type="String" />
     <element name="path" value-type="String" />
     <element name="rewrite" value-type="String" />
     <entity-ref name="vip" type="list" names="slb-vips" xml-indent="true" />
@@ -92,7 +94,7 @@
     <element name="ip" value-type="String" />
   </entity>
   <entity name="archive">
-    <element name="id" value-type="int" />
+    <element name="id" value-type="long" />
     <element name="content" value-type="String" />
     <element name="version" value-type="int" />
   </entity>

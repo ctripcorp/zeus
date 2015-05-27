@@ -145,7 +145,7 @@ public class GroupQueryImpl implements GroupQuery {
         for (GroupSlbDo d : list) {
             GroupSlb e = C.toGroupSlb(d);
             group.addGroupSlb(e);
-            e.setSlbName(slbDao.findById(d.getSlbId(), SlbEntity.READSET_FULL).getName());
+            e.setSlbName(slbDao.findById(e.getSlbId(), SlbEntity.READSET_FULL).getName());
             querySlbVips(d.getSlbId(), e);
             queryVirtualServer(d.getSlbVirtualServerId(), e);
         }

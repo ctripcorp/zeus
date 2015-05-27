@@ -60,7 +60,7 @@ public class GroupSyncImpl implements GroupSync {
         if (check.getVersion() > group.getVersion())
             throw new ValidationException("Newer Group version is detected.");
 
-        GroupDo d= C.toGroupDo(group).setId(group.getId());
+        GroupDo d= C.toGroupDo(group);
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
 
         GroupDo updated = groupDao.findByName(group.getName(), GroupEntity.READSET_FULL);
