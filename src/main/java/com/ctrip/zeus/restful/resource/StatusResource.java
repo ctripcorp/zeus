@@ -4,7 +4,7 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.model.entity.AppServerStatus;
 import com.ctrip.zeus.model.entity.AppStatus;
 import com.ctrip.zeus.model.entity.AppStatusList;
-import com.ctrip.zeus.service.status.AppStatusService;
+import com.ctrip.zeus.service.status.GroupStatusService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,7 +28,7 @@ import java.util.List;
 public class StatusResource {
 
     @Resource
-    private AppStatusService appStatusService;
+    private GroupStatusService appStatusService;
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

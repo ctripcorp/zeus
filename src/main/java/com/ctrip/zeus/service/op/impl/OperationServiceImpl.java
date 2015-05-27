@@ -5,7 +5,7 @@ import com.ctrip.zeus.model.entity.MemberAction;
 import com.ctrip.zeus.model.entity.ServerAction;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.op.OperationService;
-import com.ctrip.zeus.service.status.handler.StatusAppServerService;
+import com.ctrip.zeus.service.status.handler.StatusGroupServerService;
 import com.ctrip.zeus.service.status.handler.StatusServerService;
 
 import javax.annotation.Resource;
@@ -21,7 +21,7 @@ public class OperationServiceImpl implements OperationService {
     @Resource
     private StatusServerService statusServerService;
     @Resource
-    private StatusAppServerService statusAppServerService;
+    private StatusGroupServerService statusAppServerService;
 
     @Resource
     private AppSlbDao appSlbDao;

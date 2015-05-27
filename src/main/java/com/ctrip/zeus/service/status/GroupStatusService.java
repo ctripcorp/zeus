@@ -10,7 +10,7 @@ import java.util.List;
  * Date: 4/1/2015
  * Time: 10:54 AM
  */
-public interface AppStatusService {
+public interface GroupStatusService {
      /**
       * Find all app status
       * @return

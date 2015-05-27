@@ -9,7 +9,7 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/14/2015.
  */
-public interface StatusAppServerService {
+public interface StatusGroupServerService {
 
     List<StatusGroupServerDo> list() throws Exception;
 

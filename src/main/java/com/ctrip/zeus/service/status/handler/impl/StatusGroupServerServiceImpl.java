@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.status.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.service.status.handler.StatusAppServerService;
+import com.ctrip.zeus.service.status.handler.StatusGroupServerService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -13,7 +13,7 @@ import java.util.List;
  * @date: 3/14/2015.
  */
 @Component("statusGroupServerService")
-public class StatusAppServerServiceImpl implements StatusAppServerService {
+public class StatusGroupServerServiceImpl implements StatusGroupServerService {
     @Resource
     private StatusGroupServerDao statusGroupServerDao;
 

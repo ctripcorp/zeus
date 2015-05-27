@@ -7,7 +7,7 @@ import com.ctrip.zeus.nginx.entity.S;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.status.AppStatusService;
+import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusService;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -24,7 +24,7 @@ import java.util.List;
  * Time: 2:26 PM
  */
 @Service("groupStatusService")
-public class GroupStatusServiceImpl implements AppStatusService {
+public class GroupStatusServiceImpl implements GroupStatusService {
     private static DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
     private static DynamicIntProperty adminServerPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
 

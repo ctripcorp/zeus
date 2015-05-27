@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.status.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.status.handler.StatusAppServerService;
+import com.ctrip.zeus.service.status.handler.StatusGroupServerService;
 import com.ctrip.zeus.service.status.handler.StatusServerService;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.util.AssertUtils;
@@ -26,7 +26,7 @@ public class StatusServiceImpl implements StatusService {
     @Resource
     private StatusServerService statusServerService;
     @Resource
-    private StatusAppServerService statusGroupServerService;
+    private StatusGroupServerService statusGroupServerService;
     @Resource
     private SlbRepository slbClusterRepository;
 

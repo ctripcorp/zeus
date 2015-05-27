@@ -10,7 +10,7 @@ import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
-import com.ctrip.zeus.service.status.AppStatusService;
+import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
@@ -49,7 +49,7 @@ public class ServerResource {
     @Resource
     private NginxService nginxService;
     @Resource
-    private AppStatusService appStatusService;
+    private GroupStatusService appStatusService;
     @Resource
     private GroupRepository groupRepository;
     @Resource
