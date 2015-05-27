@@ -26,7 +26,7 @@ public interface GroupQuery {
 
     List<String> getByGroupServer(String appServerIp) throws DalException;
 
-    List<String> getGroupServersByGroup(String appName) throws DalException;
+    List<String> getGroupServerIpsByGroup(long groupId) throws DalException;
 
-    List<GroupServer> listGroupServersByGroup(String appName) throws DalException;
+    List<GroupServer> getGroupServersByGroup(long groupId) throws DalException;
 }

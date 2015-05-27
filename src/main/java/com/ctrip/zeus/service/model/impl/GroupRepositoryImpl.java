@@ -82,9 +82,9 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public int delete(String groupName) throws Exception {
-        int count = groupSync.delete(groupName);
-        archiveService.deleteGroupArchive(groupName);
+    public int delete(long groupId) throws Exception {
+        int count = groupSync.delete(groupId);
+        archiveService.deleteGroupArchive(groupId);
         return count;
 
     }
@@ -95,12 +95,12 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public List<String> listGroupServersByGroup(String groupName) throws Exception {
-        return groupQuery.getGroupServersByGroup(groupName);
+    public List<String> listGroupServerIpsByGroup(long groupId) throws Exception {
+        return groupQuery.getGroupServerIpsByGroup(groupId);
     }
 
     @Override
-    public List<GroupServer> getGroupServersByGroup(String groupName) throws Exception {
-        return groupQuery.listGroupServersByGroup(groupName);
+    public List<GroupServer> listGroupServersByGroup(long groupId) throws Exception {
+        return groupQuery.getGroupServersByGroup(groupId);
     }
 }

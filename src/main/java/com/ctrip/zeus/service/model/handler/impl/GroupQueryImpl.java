@@ -107,29 +107,22 @@ public class GroupQueryImpl implements GroupQuery {
     }
 
     @Override
-    public List<String> getGroupServersByGroup(String groupName) throws DalException {
-        GroupDo d = groupDao.findByName(groupName, GroupEntity.READSET_FULL);
-        if (d == null)
-            return null;
+    public List<String> getGroupServerIpsByGroup(long groupId) throws DalException {
         List<String> groupServers = new ArrayList<>();
-        for (GroupServerDo asd : groupServerDao.findAllByGroup(d.getId(), GroupServerEntity.READSET_FULL)) {
+        for (GroupServerDo asd : groupServerDao.findAllByGroup(groupId, GroupServerEntity.READSET_FULL)) {
             groupServers.add(asd.getIp());
         }
         return groupServers;
     }
 
     @Override
-    public List<GroupServer> listGroupServersByGroup(String groupName) throws DalException {
-        GroupDo d = groupDao.findByName(groupName, GroupEntity.READSET_FULL);
-        if (d == null)
-            return null;
+    public List<GroupServer> getGroupServersByGroup(long groupId) throws DalException {
         List<GroupServer> groupServers = new ArrayList<>();
-        for (GroupServerDo asd : groupServerDao.findAllByGroup(d.getId(), GroupServerEntity.READSET_FULL)) {
+        for (GroupServerDo asd : groupServerDao.findAllByGroup(groupId, GroupServerEntity.READSET_FULL)) {
             groupServers.add(C.toGroupServer(asd));
         }
         return groupServers;
     }
-
 
     private Group createGroup(GroupDo d) throws DalException {
         if (d == null)

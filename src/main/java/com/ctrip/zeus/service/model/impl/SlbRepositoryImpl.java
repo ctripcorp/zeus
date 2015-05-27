@@ -28,10 +28,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     private SlbSync slbSync;
     @Resource
     private SlbQuery slbQuery;
-
     @Resource
     private ArchiveService archiveService;
-
     @Resource
     private NginxServerDao nginxServerDao;
 
@@ -42,6 +40,11 @@ public class SlbRepositoryImpl implements SlbRepository {
             list.add(slb);
         }
         return list;
+    }
+
+    @Override
+    public Slb getById(long slbId) throws Exception {
+        return slbQuery.getById(slbId);
     }
 
     @Override
@@ -66,18 +69,18 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public List<Slb> listByGroups(String[] appNames) throws Exception {
-        return slbQuery.getByGroupNames(appNames);
+    public List<Slb> listByGroups(long[] groupIds) throws Exception {
+        return slbQuery.getByGroupIds(groupIds);
     }
 
     @Override
-    public List<GroupSlb> listGroupSlbsByGroups(String[] appNames) throws Exception {
-        return slbQuery.getGroupSlbsByGroups(appNames);
+    public List<GroupSlb> listGroupSlbsByGroups(long[] groupIds) throws Exception {
+        return slbQuery.getGroupSlbsByGroups(groupIds);
     }
 
     @Override
-    public List<GroupSlb> listGroupSlbsBySlb(String slbName) throws Exception {
-        return slbQuery.getGroupSlbsBySlb(slbName);
+    public List<GroupSlb> listGroupSlbsBySlb(long slbId) throws Exception {
+        return slbQuery.getGroupSlbsBySlb(slbId);
     }
 
     @Override

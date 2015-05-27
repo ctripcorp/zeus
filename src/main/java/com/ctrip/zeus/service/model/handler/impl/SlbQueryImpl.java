@@ -81,6 +81,11 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
+    public List<Slb> getByGroupIds(long[] groupIds) throws DalException {
+        return null;
+    }
+
+    @Override
     public List<Slb> getByGroupNames(String[] groupNames) throws DalException {
         List<GroupDo> glist = groupDao.findAllByNames(groupNames, GroupEntity.READSET_FULL);
         if (glist.size() == 0)
@@ -138,13 +143,8 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
-    public List<GroupSlb> getGroupSlbsByGroups(String[] groupNames) throws DalException {
+    public List<GroupSlb> getGroupSlbsByGroups(long[] groupIds) throws DalException {
         List<GroupSlb> list = new ArrayList<>();
-        List<GroupDo> glist = groupDao.findAllByNames(groupNames, GroupEntity.READSET_FULL);
-        long[] groupIds = new long[glist.size()];
-        for (int i = 0; i < groupNames.length; i++) {
-            groupIds[i] = glist.get(i).getId();
-        }
         for (GroupSlbDo asd : groupSlbDao.findAllByGroups(groupIds, GroupSlbEntity.READSET_FULL)) {
             GroupSlb as = C.toGroupSlb(asd);
             list.add(as);
@@ -157,9 +157,8 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
-    public List<GroupSlb> getGroupSlbsBySlb(String slbName) throws DalException {
+    public List<GroupSlb> getGroupSlbsBySlb(long slbId) throws DalException {
         List<GroupSlb> list = new ArrayList<>();
-        long slbId = slbDao.findByName(slbName, SlbEntity.READSET_FULL).getId();
         for (GroupSlbDo asd : groupSlbDao.findAllBySlb(slbId, GroupSlbEntity.READSET_FULL)) {
             GroupSlb as = C.toGroupSlb(asd);
             list.add(as);
