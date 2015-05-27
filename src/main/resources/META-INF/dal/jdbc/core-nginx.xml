@@ -14,24 +14,24 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
-                <param name="name"/>
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-slb-name-and-version" type="SELECT">
-                <param name="name"/>
+            <query name="find-by-slb-id-and-version" type="SELECT">
+                <param name="slb-id"/>
                 <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
@@ -54,24 +54,24 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name-and-version" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id-and-version" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
@@ -94,24 +94,24 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name-and-version" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id-and-version" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
@@ -141,13 +141,13 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>

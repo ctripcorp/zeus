@@ -55,17 +55,17 @@ public class NginxConfServiceImpl implements NginxConfService {
     private Logger logger = LoggerFactory.getLogger(NginxConfServiceImpl.class);
 
     @Override
-    public String getNginxConf(String slbName , int _version) throws Exception {
-        int version = getCurrentVersion(slbName);
+    public String getNginxConf(Long slbId, int _version) throws Exception {
+        int version = getCurrentVersion(slbId);
         if (version <= _version)
         {
-            return  nginxConfDao.findBySlbNameAndVersion(slbName,version, NginxConfEntity.READSET_FULL).getContent();
+            return  nginxConfDao.findBySlbIdAndVersion(slbId,version, NginxConfEntity.READSET_FULL).getContent();
         }else
         {
             NginxConfDo confdo = null;
             while (confdo==null && _version>0)
             {
-                confdo = nginxConfDao.findBySlbNameAndVersion(slbName,_version, NginxConfEntity.READSET_FULL);
+                confdo = nginxConfDao.findBySlbIdAndVersion(slbId,_version, NginxConfEntity.READSET_FULL);
                 _version--;
             }
 
@@ -79,19 +79,19 @@ public class NginxConfServiceImpl implements NginxConfService {
 
 
     @Override
-    public  List<NginxConfServerData> getNginxConfServer(String slbName , int _version) throws Exception {
+    public  List<NginxConfServerData> getNginxConfServer(Long slbId, int _version) throws Exception {
 
-        int version = getCurrentVersion(slbName);
+        int version = getCurrentVersion(slbId);
 
         List<NginxConfServerData> r = new ArrayList<>();
 
         if (version <= _version)
         {
-            List<NginxConfServerDo> d = nginxConfServerDao.findAllBySlbNameAndVersion(slbName, version, NginxConfServerEntity.READSET_FULL);
+            List<NginxConfServerDo> d = nginxConfServerDao.findAllBySlbIdAndVersion(slbId, version, NginxConfServerEntity.READSET_FULL);
 
             for (NginxConfServerDo t : d)
             {
-                r.add(new NginxConfServerData().setName(t.getName()).setContent(t.getContent()));
+                r.add(new NginxConfServerData().setVsId(t.getSlbVirtualServerId()).setContent(t.getContent()));
             }
 
             return r;
@@ -102,7 +102,7 @@ public class NginxConfServiceImpl implements NginxConfService {
 
             while (d == null&&_version>0)
             {
-                d = nginxConfServerDao.findAllBySlbNameAndVersion(slbName, _version, NginxConfServerEntity.READSET_FULL);
+                d = nginxConfServerDao.findAllBySlbIdAndVersion(slbId, _version, NginxConfServerEntity.READSET_FULL);
                 _version--;
             }
 
@@ -110,7 +110,7 @@ public class NginxConfServiceImpl implements NginxConfService {
             {
                 for (NginxConfServerDo t : d)
                 {
-                    r.add(new NginxConfServerData().setName(t.getName()).setContent(t.getContent()));
+                    r.add(new NginxConfServerData().setVsId(t.getSlbVirtualServerId()).setContent(t.getContent()));
                 }
 
                 return r;
@@ -123,18 +123,18 @@ public class NginxConfServiceImpl implements NginxConfService {
 
     }
     @Override
-    public List<NginxConfUpstreamData> getNginxConfUpstream(String slbName , int _version) throws Exception {
-        int version = getCurrentVersion(slbName);
+    public List<NginxConfUpstreamData> getNginxConfUpstream(Long slbId , int _version) throws Exception {
+        int version = getCurrentVersion(slbId);
 
         List<NginxConfUpstreamData> r = new ArrayList<>();
 
         if (version <= _version){
 
-            List<NginxConfUpstreamDo> d = nginxConfUpstreamDao.findAllBySlbNameAndVersion(slbName, version, NginxConfUpstreamEntity.READSET_FULL);
+            List<NginxConfUpstreamDo> d = nginxConfUpstreamDao.findAllBySlbIdAndVersion(slbId, version, NginxConfUpstreamEntity.READSET_FULL);
 
             for (NginxConfUpstreamDo t : d)
             {
-                r.add(new NginxConfUpstreamData().setName(t.getName()).setContent(t.getContent()));
+                r.add(new NginxConfUpstreamData().setVsId(t.getSlbVirtualServerId()).setContent(t.getContent()));
             }
 
             return r;
@@ -145,7 +145,7 @@ public class NginxConfServiceImpl implements NginxConfService {
 
             while (d == null && _version>0)
             {
-                d = nginxConfUpstreamDao.findAllBySlbNameAndVersion(slbName, _version, NginxConfUpstreamEntity.READSET_FULL);
+                d = nginxConfUpstreamDao.findAllBySlbIdAndVersion(slbId, _version, NginxConfUpstreamEntity.READSET_FULL);
                 _version--;
             }
 
@@ -153,7 +153,7 @@ public class NginxConfServiceImpl implements NginxConfService {
             {
                 for (NginxConfUpstreamDo t : d)
                 {
-                    r.add(new NginxConfUpstreamData().setName(t.getName()).setContent(t.getContent()));
+                    r.add(new NginxConfUpstreamData().setVsId(t.getSlbVirtualServerId()).setContent(t.getContent()));
                 }
 
                 return r;
@@ -166,33 +166,33 @@ public class NginxConfServiceImpl implements NginxConfService {
     }
 
     @Override
-    public int getCurrentVersion(String slbname) throws Exception {
-        return buildInfoService.getCurrentTicket(slbname);
+    public int getCurrentVersion(Long slbId) throws Exception {
+        return buildInfoService.getCurrentTicket(slbId);
     }
 
 
     @Override
-    public List<DyUpstreamOpsData> buildUpstream(Slb slb, String appName) throws Exception {
+    public List<DyUpstreamOpsData> buildUpstream(Slb slb, Long groupId) throws Exception {
 
         List<DyUpstreamOpsData> result = new ArrayList<>();
 
         Set<String> allDownServers = statusService.findAllDownServers();
-        Set<String> allDownAppServers = statusService.findAllDownAppServersBySlbName(slb.getName());
+        Set<String> allDownGroupServers = statusService.findAllDownGroupServersBySlbId(slb.getId());
 
-        List<String> appactiveconf =activeConfService.getConfAppActiveContentByAppNames(new String[]{appName});
+        List<String> groupActiveconf =activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{groupId});
 
-        if (appactiveconf.size()!=1){ throw new Exception(appName+" is not activated!");}
+        if (groupActiveconf.size()!=1){ throw new Exception(String.valueOf(groupId)+" is not activated!");}
 
-        App app = DefaultSaxParser.parseEntity(App.class, appactiveconf.get(0));
+        Group group = DefaultSaxParser.parseEntity(Group.class, groupActiveconf.get(0));
 
-        List<AppSlb> appslbList = app.getAppSlbs();
+        List<GroupSlb> groupSlbList = group.getGroupSlbs();
         VirtualServer vs = null;
-        for (AppSlb appSlb : appslbList )
+        for (GroupSlb groupSlb : groupSlbList )
         {
-            vs  = appSlb.getVirtualServer();
+            vs  = groupSlb.getVirtualServer();
 
-            String upstreambody = UpstreamsConf.buildUpstreamConfBody(slb,vs,app,allDownServers,allDownAppServers);
-            String upstreamName = UpstreamsConf.buildUpstreamName(slb,vs,app);
+            String upstreambody = UpstreamsConf.buildUpstreamConfBody(slb,vs,group,allDownServers,allDownGroupServers);
+            String upstreamName = UpstreamsConf.buildUpstreamName(slb,vs,group);
             result.add(new DyUpstreamOpsData().setUpstreamCommands(upstreambody).setUpstreamName(upstreamName));
         }
 
@@ -202,7 +202,7 @@ public class NginxConfServiceImpl implements NginxConfService {
     @Override
     public void build( Long slbId, int version) throws Exception {
 
-        Map<Long, Map<Long,Integer>> appNamesMap = new HashMap<>();
+        Map<Long, Map<Long,Integer>> groupNamesMap = new HashMap<>();
 
 
         List<ConfGroupSlbActiveDo> groupSlbActiveList = confGroupSlbActiveDao.findBySlbId(slbId ,ConfGroupSlbActiveEntity.READSET_FULL);
@@ -213,11 +213,11 @@ public class NginxConfServiceImpl implements NginxConfService {
         for (ConfGroupSlbActiveDo groupSlb : groupSlbActiveList)
         {
             long vs = groupSlb.getSlbVirtualServerId();
-            Map<Long,Integer> groups = appNamesMap.get(vs);
+            Map<Long,Integer> groups = groupNamesMap.get(vs);
             if (groups==null)
             {
                 groups = new HashMap<>();
-                appNamesMap.put(vs,groups);
+                groupNamesMap.put(vs,groups);
             }
 
             groups.put(groupSlb.getGroupId(),groupSlb.getPriority());
@@ -225,8 +225,8 @@ public class NginxConfServiceImpl implements NginxConfService {
 
 
         Map<Long, List<Group>> groupsMap = new HashMap<>();
-        for (Long vs : appNamesMap.keySet()) {
-            final Map<Long,Integer> groupPriorityMap = appNamesMap.get(vs);
+        for (Long vs : groupNamesMap.keySet()) {
+            final Map<Long,Integer> groupPriorityMap = groupNamesMap.get(vs);
 
             List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupPriorityMap.keySet().toArray(new Long[]{}));
             List<Group> groupList = new ArrayList<>();
@@ -256,7 +256,7 @@ public class NginxConfServiceImpl implements NginxConfService {
 
 
         Set<String> allDownServers = statusService.findAllDownServers();
-        Set<String> allDownAppServers = statusService.findAllDownAppServersBySlbName(slbName);
+        Set<String> allDownGroupServers = statusService.findAllDownGroupServersBySlbId(slbId);
 
         int length = slb.getVirtualServers().size();
         NginxConfServerDo[] nginxConfServerDos = new NginxConfServerDo[length];
@@ -264,28 +264,28 @@ public class NginxConfServiceImpl implements NginxConfService {
         int index = 0 ;
 
         for (VirtualServer vs : slb.getVirtualServers()) {
-            List<App> apps = appsMap.get(vs.getName());
-            if (apps == null) {
-                apps = new ArrayList<>();
+            List<Group> groups = groupsMap.get(vs.getId());
+            if (groups == null) {
+                groups = new ArrayList<>();
             }
 
-            String serverConf = nginxConfigBuilder.generateServerConf(slb, vs, apps);
-            String upstreamConf = nginxConfigBuilder.generateUpstreamsConf(slb, vs, apps, allDownServers, allDownAppServers);
+            String serverConf = nginxConfigBuilder.generateServerConf(slb, vs, groups);
+            String upstreamConf = nginxConfigBuilder.generateUpstreamsConf(slb, vs, groups, allDownServers, allDownGroupServers);
 
             nginxConfServerDos[index] = new NginxConfServerDo().setCreatedTime(new Date())
-                    .setSlbName(slb.getName())
-                    .setName(vs.getName())
+                    .setSlbId(slb.getId())
+                    .setSlbVirtualServerId(vs.getId())
                     .setContent(serverConf)
                     .setVersion(version);
 
             nginxConfUpstreamDos[index] = new NginxConfUpstreamDo().setCreatedTime(new Date())
-                    .setSlbName(slb.getName())
-                    .setName(vs.getName())
+                    .setSlbId(slb.getId())
+                    .setSlbVirtualServerId(vs.getId())
                     .setContent(upstreamConf)
                     .setVersion(version);
             index++;
-            logger.debug("Nginx Server Conf build sucess! slbName: "+slb+",virtualserver: "+vs.getName()+",version: "+version);
-            logger.debug("Nginx Upstream Conf build sucess! slbName: "+slb+",virtualserver: "+vs.getName()+",version: "+version);
+            logger.debug("Nginx Server Conf build sucess! slbName: "+slb+",virtualserver: "+vs.getId()+",version: "+version);
+            logger.debug("Nginx Upstream Conf build sucess! slbName: "+slb+",virtualserver: "+vs.getId()+",version: "+version);
         }
         nginxConfServerDao.insert(nginxConfServerDos);
         nginxConfUpstreamDao.insert(nginxConfUpstreamDos);

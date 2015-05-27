@@ -118,7 +118,7 @@ public class StatusServiceImpl implements StatusService {
     }
 
     @Override
-    public boolean getAppServerStatus(Long slbId, Long groupId, String vsip) throws Exception {
+    public boolean getGroupServerStatus(Long slbId, Long groupId, String vsip) throws Exception {
 
         List<StatusGroupServerDo> list = statusGroupServerService.listBySlbIdAndGroupIdAndIp(slbId, groupId, vsip);
         if (list!=null&&list.size()>0)

@@ -1,8 +1,8 @@
 package com.ctrip.zeus.service.build.conf;
 
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.App;
 import com.ctrip.zeus.model.entity.Domain;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
@@ -16,14 +16,14 @@ import java.util.List;
  */
 public class ServerConf {
 
-    public static String generate(Slb slb, VirtualServer vs, List<App> apps) throws Exception{
+    public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
         StringBuilder b = new StringBuilder(1024);
 
-        AssertUtils.isNull(vs.getPort(),"virtual server ["+vs.getName()+"] port is null! Please check the configuration!");
+        AssertUtils.isNull(vs.getPort(),"virtual server ["+vs.getId()+"] port is null! Please check the configuration!");
         try{
             Integer.parseInt(vs.getPort());
         }catch (Exception e){
-            throw new ValidationException("virtual server ["+vs.getName()+"] port is illegal!");
+            throw new ValidationException("virtual server ["+vs.getId()+"] port is illegal!");
         }
 
 
@@ -33,13 +33,13 @@ public class ServerConf {
         if (vs.getSsl())
         {
             b.append("ssl on;\n")
-             .append("ssl_certificate /data/nginx/").append(vs.getName()).append("/ssl.crt;\n")
-             .append("ssl_certificate_key /data/nginx/").append(vs.getName()).append("/ssl.key;\n");
+             .append("ssl_certificate /data/nginx/").append(vs.getId()).append("/ssl.crt;\n")
+             .append("ssl_certificate_key /data/nginx/").append(vs.getId()).append("/ssl.key;\n");
         }
         NginxConf.appendServerCommand(b);
         //add locations
-        for (App app : apps) {
-            b.append(LocationConf.generate(slb, vs, app, UpstreamsConf.buildUpstreamName(slb, vs, app)));
+        for (Group group : groups) {
+            b.append(LocationConf.generate(slb, vs, group, UpstreamsConf.buildUpstreamName(slb, vs, group)));
         }
 
         b.append("}").append("\n");
@@ -54,7 +54,7 @@ public class ServerConf {
         }
         String res =  b.toString();
 
-        AssertUtils.arrertNotEquels("",res.trim().isEmpty(),"virtual server ["+vs.getName()+"] domain is null or illegal!");
+        AssertUtils.arrertNotEquels("",res.trim().isEmpty(),"virtual server ["+vs.getId()+"] domain is null or illegal!");
         return res;
     }
 }

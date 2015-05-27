@@ -41,7 +41,7 @@
     <attribute name="enable" value-type="boolean" />
   </entity>
   <entity name="virtual-server">
-    <attribute name="id" value-type="int" />
+    <attribute name="id" value-type="long" />
     <attribute name="ssl" value-type="boolean" />
     <element name="port" value-type="String" />
     <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
@@ -66,8 +66,8 @@
   </entity>
   <entity name="group-slb">
     <attribute name="priority" value-type="int" />
-    <element name="group-id" value-type="String" />
-    <element name="slb-id" value-type="int" />
+    <element name="group-id" value-type="long" />
+    <element name="slb-id" value-type="long" />
     <element name="path" value-type="String" />
     <element name="rewrite" value-type="String" />
     <entity-ref name="vip" type="list" names="slb-vips" xml-indent="true" />
@@ -111,6 +111,8 @@
   <entity name="group-status">
     <element name="group-name" value-type="String" />
     <element name="slb-name" value-type="String" />
+    <element name="group-id" value-type="long" />
+    <element name="slb-id" value-type="long" />
     <entity-ref name="group-server-status" type="list" names="group-server-statuses" />
   </entity>
   <entity name="group-server-status">
@@ -155,11 +157,11 @@
     <element name="member-groupname" value-type="String" />
   </entity>
   <entity name="nginx-conf-upstream-data">
-    <element name="name" value-type="String" />
+    <element name="vs-id" value-type="long" />
     <element name="content" value-type="String" />
   </entity>
   <entity name="nginx-conf-server-data">
-    <element name="name" value-type="String" />
+    <element name="vs-id" value-type="long" />
     <element name="content" value-type="String" />
   </entity>
   <entity name="dy-upstream-ops-data">

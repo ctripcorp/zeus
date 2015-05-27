@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model model-package="com.ctrip.zeus.model" enable-sax-parser="true" enable-json-parser="true"
        enable-json-builder="true">
-    <entity name="app-server-status">
+    <entity name="group-server-status">
         <element name="port" value-type="int"/>
     </entity>
     <entity name="group-slb">

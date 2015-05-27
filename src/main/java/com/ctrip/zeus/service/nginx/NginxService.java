@@ -25,13 +25,13 @@ public interface NginxService {
      * @return is all success
      * @throws Exception
      */
-    boolean writeALLToDisk(String slb) throws Exception;
+    boolean writeALLToDisk(Long slbId) throws Exception;
     /**
      * write all server conf of nginx server conf in the slb
      * @return list the results
      * @throws Exception
      */
-    List<NginxResponse> writeALLToDiskListResult(String slb) throws Exception;
+    List<NginxResponse> writeALLToDiskListResult(Long slbId) throws Exception;
 
     /**
      * load the colocated nginx server conf from disk
@@ -42,18 +42,18 @@ public interface NginxService {
 
     /**
      * load all nginx server conf in the slb from disk
-     * @param slbName slbname
+     * @param slbId slbname
      * @return all response
      * @throws Exception
      */
-    List<NginxResponse> loadAll(String slbName) throws Exception;
+    List<NginxResponse> loadAll(Long slbId) throws Exception;
 
     /**
      *write all and then load all , throw Exception while write failed
-     * @param slbName
+     * @param slbId
      * @return List<NginxResponse>
      */
-    List<NginxResponse> writeAllAndLoadAll(String slbName) throws Exception;
+    List<NginxResponse> writeAllAndLoadAll(Long slbId) throws Exception;
 
     /**
      *dy upstream ops api
@@ -63,10 +63,10 @@ public interface NginxService {
     NginxResponse dyopsLocal(String upsName,String upsCommands)throws Exception;
     /**
      *dy upstream ops api
-     * @param slbName slbname
+     * @param slbId slbname
      * @param dyups dy upstream info
      */
-    List<NginxResponse> dyops(String slbName,List<DyUpstreamOpsData> dyups)throws Exception;
+    List<NginxResponse> dyops(Long slbId,List<DyUpstreamOpsData> dyups)throws Exception;
 
     /**
      * fetch the status of colocated nginx server status
@@ -80,14 +80,14 @@ public interface NginxService {
      * @return
      * @throws Exception
      */
-    List<NginxServerStatus> getStatusAll(String slbName) throws Exception;
+    List<NginxServerStatus> getStatusAll(Long slbId) throws Exception;
 
     /**
      * get traffic status of nginx server cluster.
-     * @param slbName the slb name
+     * @param slbId the slb name
      * @return the traffic statuses
      */
-    List<TrafficStatus> getTrafficStatusBySlb(String slbName) throws Exception;
+    List<TrafficStatus> getTrafficStatusBySlb(Long slbId) throws Exception;
 
 
     /**

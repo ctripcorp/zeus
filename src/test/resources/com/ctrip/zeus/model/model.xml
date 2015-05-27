@@ -12,7 +12,7 @@
             <slb-server slb-id="1" ip="192.168.1.2" host-name="slb002" enable="true"/>
         </slb-servers>
         <virtual-servers>
-            <virtual-server id="1" ssl="true">
+            <virtual-server id="123456789012" ssl="true">
                 <port>80,8099</port>
                 <domains>
                     <domain name="www.ctrip.com"/>
@@ -43,7 +43,7 @@
     <group id="111111" name="gateway" app-id="app921822" version="1" ssl="false">
         <group-slbs>
             <group-slb priority="0">
-                <group-id>1</group-id>
+                <group-id>12345678901</group-id>
                 <slb-id>1</slb-id>
                 <slb-vips>
                     <vip/>
@@ -54,7 +54,7 @@
                 <virtual-server/>
             </group-slb>
             <group-slb priority="0">
-                <group-id>1</group-id>
+                <group-id>12345678901</group-id>
                 <slb-id>1</slb-id>
                 <slb-vips>
                     <vip ip="192.168.1.1"/>
@@ -110,18 +110,20 @@
     </server-action>
 
     <group-status>
-        <group-name>group1</group-name>
-        <slb-name>default</slb-name>
+        <group-name>groupname</group-name>
+        <slb-name>slbname</slb-name>
+        <group-id>12345678901</group-id>
+        <slb-id>12345678901</slb-id>
         <group-server-status>
             <ip>192.168.1.1</ip>
-            <port>80</port>
+            <port>123456789</port>
             <member>true</member>
             <server>true</server>
             <up>true</up>
         </group-server-status>
         <group-server-status>
             <ip>192.168.1.1</ip>
-            <port>80</port>
+            <port>123456789</port>
             <member>true</member>
             <server>true</server>
             <up>true</up>
@@ -178,12 +180,12 @@
     </op-member-status-req>
 
     <nginx-conf-upstream-data>
-        <name>name</name>
+        <vs-id>123456789012</vs-id>
         <content>content</content>
     </nginx-conf-upstream-data>
 
     <nginx-conf-server-data>
-        <name>name</name>
+        <vs-id>123456789012</vs-id>
         <content>content</content>
     </nginx-conf-server-data>
 

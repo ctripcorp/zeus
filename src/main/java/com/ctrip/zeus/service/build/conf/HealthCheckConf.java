@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.build.conf;
 
-import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.App;
+
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.HealthCheck;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
@@ -12,13 +12,13 @@ import com.ctrip.zeus.util.AssertUtils;
  * @date: 3/8/2015.
  */
 public class HealthCheckConf {
-    public static String generate(Slb slb, VirtualServer vs, App app) throws Exception {
-        HealthCheck h = app.getHealthCheck();
+    public static String generate(Slb slb, VirtualServer vs, Group group) throws Exception {
+        HealthCheck h = group.getHealthCheck();
 
-        AssertUtils.isNull(h,"App HealthCheck config is null!");
-        AssertUtils.isNull(h.getIntervals(),"App HealthCheck Intervals config is null!");
-        AssertUtils.isNull(h.getFails(),"App HealthCheck Fails config is null!");
-        AssertUtils.isNull(h.getPasses(),"App HealthCheck Passes config is null!");
+        AssertUtils.isNull(h,"Group HealthCheck config is null!");
+        AssertUtils.isNull(h.getIntervals(),"Group HealthCheck Intervals config is null!");
+        AssertUtils.isNull(h.getFails(),"Group HealthCheck Fails config is null!");
+        AssertUtils.isNull(h.getPasses(),"Group HealthCheck Passes config is null!");
 
         StringBuilder b = new StringBuilder(128);
         b.append("check interval=").append(h.getIntervals())

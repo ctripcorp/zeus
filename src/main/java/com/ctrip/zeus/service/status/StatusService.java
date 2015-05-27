@@ -67,7 +67,7 @@ public interface StatusService extends Repository {
      * @return true : status=up false : status = down
      * @throws Exception
      */
-    boolean getAppServerStatus(Long slbId,Long groupId, String vsip)throws Exception;
+    boolean getGroupServerStatus(Long slbId,Long groupId, String vsip)throws Exception;
 
     /**
      * get server status by virtual server ip

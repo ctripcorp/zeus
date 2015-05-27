@@ -86,11 +86,11 @@ public class ActivateResource {
                     buildLock.unlock();
                 }
                 if (buildFlag) {
-                    DistLock writeLock = dbLockFactory.newLock(buildSlbName + "_writeAndReload");
+                    DistLock writeLock = dbLockFactory.newLock( "writeAndReload_" +  buildSlbId);
                     try {
                         writeLock.lock(lockTimeout.get());
                         //Push Service
-                        nginxAgentService.writeAllAndLoadAll(buildSlbName);
+                        nginxAgentService.writeAllAndLoadAll(buildSlbId);
 
                     } finally {
                         writeLock.unlock();

@@ -64,7 +64,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getGroupStatus(Long groupId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        List<Slb> slbList = slbRepository.listByGroups(new String[]{groupId});
+        List<Slb> slbList = slbRepository.listByGroups(new Long[]{groupId});
         for (Slb slb : slbList) {
             result.add(getGroupStatus(groupId, slb.getId()));
         }
@@ -79,47 +79,49 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
             return client.getAppStatus(appName,slbName);
         }
-        AppStatus status = new AppStatus();
-        status.setAppName(appName);
-        status.setSlbName(slbName);
+        GroupStatus status = new GroupStatus();
+        status.setGroupId(groupId);
+        status.setSlbId(slbId);
+        status.setGroupName("group=name");
+        status.setSlbName("slb=name");
 
-        List<AppServer> appServerList = groupRepository.getAppServersByApp(appName);
-        for (AppServer appServer : appServerList) {
-            AppServerStatus serverStatus = getAppServerStatus(appName, slbName, appServer.getIp(), appServer.getPort());
-            status.addAppServerStatus(serverStatus);
+        List<GroupServer> groupServerList = groupRepository.getGroupServersByGroup(groupId);
+        for (GroupServer groupServer : groupServerList) {
+            GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, groupServer.getIp(), groupServer.getPort());
+            status.addGroupServerStatus(serverStatus);
         }
         return status;
     }
 
     @Override
     public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port) throws Exception {
-        if (!isCurrentSlb(slbName))
+        if (!isCurrentSlb(slbId))
         {
-            Slb slb = slbRepository.get(slbName);
+            Slb slb = slbRepository.get(slbId);
             StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
             return client.getAppServerStatus(appName, slbName, ip + ":" + port);
         }
 
-        AppServerStatus appServerStatus = new AppServerStatus();
-        appServerStatus.setIp(ip);
-        appServerStatus.setPort(port);
+        GroupServerStatus groupServerStatus = new GroupServerStatus();
+        groupServerStatus.setIp(ip);
+        groupServerStatus.setPort(port);
 
-        boolean memberUp = statusService.getAppServerStatus(slbName,appName,ip);
+        boolean memberUp = statusService.getGroupServerStatus(slbId,groupId,ip);
         boolean serverUp = statusService.getServerStatus(ip);
-        boolean backendUp = getUpstreamStatus(appName,ip);
+        boolean backendUp = getUpstreamStatus(groupId,ip);
 
-        appServerStatus.setServer(serverUp);
-        appServerStatus.setMember(memberUp);
-        appServerStatus.setUp(backendUp);
+        groupServerStatus.setServer(serverUp);
+        groupServerStatus.setMember(memberUp);
+        groupServerStatus.setUp(backendUp);
 
-        return appServerStatus;
+        return groupServerStatus;
     }
 
     //TODO: should include port to get accurate upstream
-    private boolean getUpstreamStatus(String appName , String ip) throws IOException {
+    private boolean getUpstreamStatus(Long groupId, String ip) throws IOException {
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
-        String upstreamNameEndWith = "_"+appName;
+        String upstreamNameEndWith = "_"+groupId;
         for (S server : servers) {
             if (!server.getUpstream().endsWith(upstreamNameEndWith))
             {

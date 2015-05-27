@@ -87,28 +87,28 @@ public class ServerResource {
 
     private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
         //get slb by serverip
-        List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(serverip,null);
+        List<Slb> slblist = slbClusterRepository.listByGroupServerAndGroupName(serverip,null);
         AssertUtils.isNull(slblist,"[UpServer/DownServer] Can not find slb by server ip :["+serverip+"],Please check the configuration and server ip!");
 
         for (Slb slb : slblist)
         {
-            String slbname = slb.getName();
-            int ticket = buildInfoService.getTicket(slbname);
+            Long slbId = slb.getId();
+            int ticket = buildInfoService.getTicket(slbId);
 
             boolean buildFlag = false;
-            DistLock buildLock = dbLockFactory.newLock(slbname + "_build");
+            DistLock buildLock = dbLockFactory.newLock(slbId + "_build");
             try{
                 buildLock.lock(lockTimeout.get());
-                buildFlag =buildService.build(slbname,ticket);
+                buildFlag =buildService.build(slbId,ticket);
             }finally {
                 buildLock.unlock();
             }
             if (buildFlag) {
-                DistLock writeLock = dbLockFactory.newLock(slbname + "_writeAndReload");
+                DistLock writeLock = dbLockFactory.newLock(slbId + "_writeAndReload");
                 try {
                     writeLock.lock(lockTimeout.get());
                     //Push Service
-                    nginxAgentService.writeAllAndLoadAll(slbname);
+                    nginxAgentService.writeAllAndLoadAll(slbId);
                 } finally {
                     writeLock.unlock();
                 }
@@ -117,13 +117,13 @@ public class ServerResource {
         }
 
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
-        List<String> applist = groupRepository.listAppsByAppServer(serverip);
+        List<String> applist = groupRepository.listGroupsByGroupServer(serverip);
 
         if (applist!=null)
         {
             for (String name : applist)
             {
-                ss.addAppName(name);
+                ss.addGroupName(name);
             }
         }
 
