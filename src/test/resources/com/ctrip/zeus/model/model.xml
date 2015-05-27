@@ -84,7 +84,7 @@
     </group>
 
     <archive>
-        <name>gateway</name>
+        <id>1</id>
         <content>groupXmlString</content>
         <version>1</version>
     </archive>

@@ -59,59 +59,25 @@ public class ActivateResource {
     @GET
     @Path("/activate")
     @Authorize(name="activate")
-    public Response list(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("appName") List<String> appNames)throws Exception{
-        return activateAll(slbNames,appNames,hh);
+    public Response activateByName(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("GroupName") List<String> groupNames)throws Exception{
+//        return activateAll(slbNames,groupNames,hh);
+        return null;
     }
 
-    @POST
+    @GET
     @Path("/activate")
     @Authorize(name="activate")
-    public Response activate(@Context HttpServletRequest request,@Context HttpHeaders hh, String req) throws Exception {
-        ConfReq confreq = null;
-        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
-            confreq = DefaultSaxParser.parseEntity(ConfReq.class, req);
-        }else //if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE))
-        {
-            confreq = DefaultJsonParser.parse(ConfReq.class, req);
-        }
-
-        AssertUtils.isNull(confreq,"the parameter is illegal!\n request parameter: "+req);
-
-        List<String> appNameList = Lists.transform(confreq.getConfAppNames(),new Function<ConfAppName, String>(){
-            @Nullable
-            @Override
-            public String apply(@Nullable ConfAppName confAppName) {
-                try {
-                    return confAppName.getAppname();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-
-        List<String> slbNameList = Lists.transform(confreq.getConfSlbNames(),new Function<ConfSlbName, String>(){
-            @Nullable
-            @Override
-            public String apply(@Nullable ConfSlbName slbName) {
-                try {
-                    return slbName.getSlbname();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-
-        return activateAll(slbNameList,appNameList,hh);
+    public Response activateById(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("GroupId") List<Long> groupIds)throws Exception{
+        return activateAll(slbIds,groupIds,hh);
     }
 
-    private Response activateAll(List<String> slbNames,List<String> appNames, HttpHeaders hh)throws Exception{
 
-        AssertUtils.arrertNotEquels(0,slbNames.size()+appNames.size(),"slbName list and appName list are empty!");
+    private Response activateAll(List<Long> slbIds,List<Long> groupIds, HttpHeaders hh)throws Exception{
+
+        AssertUtils.arrertNotEquels(0,slbIds.size()+groupIds.size(),"slbIds list and groupIds list are empty!");
 
         //update active action to conf-slb-active and conf-app-active
-        activateConfService.activate(slbNames,appNames);
+        activateConfService.activate(slbIds,groupIds);
 
         //find all slbs which need build config
         Set<String> slbList = buildInfoService.getAllNeededSlb(slbNames, appNames);
