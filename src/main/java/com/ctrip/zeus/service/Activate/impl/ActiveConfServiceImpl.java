@@ -16,27 +16,27 @@ import java.util.List;
 @Component("activeConfService")
 public class ActiveConfServiceImpl implements ActiveConfService {
     @Resource
-    private ConfAppActiveDao confAppActiveDao;
+    private ConfGroupActiveDao confGroupActiveDao;
     @Resource
     private ConfSlbActiveDao confSlbActiveDao;
 
     private Logger logger = LoggerFactory.getLogger(ActiveConfServiceImpl.class);
 
     @Override
-    public List<String> getConfAppActiveContentByAppNames(String[] appnames) throws Exception {
+    public List<String> getConfGroupActiveContentByGroupIds(Long[] groupIds) throws Exception {
 
 
-        List<ConfAppActiveDo> l = confAppActiveDao.findAllByNames(appnames, ConfAppActiveEntity.READSET_FULL);
+        List<ConfGroupActiveDo> l = confGroupActiveDao.findAllByGroupIds(groupIds, ConfGroupActiveEntity.READSET_FULL);
 
         List<String> res = new ArrayList<>();
 
         if (l==null)
         {
-            logger.warn("No ConfAppActive for apps:"+appnames.toString());
+            logger.warn("No ConfAppActive for apps:"+groupIds.toString());
             return res;
         }
 
-        for (ConfAppActiveDo a : l)
+        for (ConfGroupActiveDo a : l)
         {
             res.add(a.getContent());
         }
@@ -44,11 +44,11 @@ public class ActiveConfServiceImpl implements ActiveConfService {
     }
 
     @Override
-    public String getConfSlbActiveContentBySlbNames(String slbname) throws Exception {
-         ConfSlbActiveDo d = confSlbActiveDao.findByName(slbname, ConfSlbActiveEntity.READSET_FULL);
+    public String getConfSlbActiveContentBySlbId(Long slbId) throws Exception {
+         ConfSlbActiveDo d = confSlbActiveDao.findBySlbId(slbId, ConfSlbActiveEntity.READSET_FULL);
         if (d==null)
         {
-            logger.warn("No conf slb active for Slbname: "+slbname);
+            logger.warn("No conf slb active for SlbID: "+slbId);
             return null;
         }
 

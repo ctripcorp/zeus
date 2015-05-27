@@ -12,14 +12,14 @@
             <slb-server slb-id="1" ip="192.168.1.2" host-name="slb002" enable="true"/>
         </slb-servers>
         <virtual-servers>
-            <virtual-server name="vs001" ssl="true">
+            <virtual-server id="1" ssl="true">
                 <port>80,8099</port>
                 <domains>
                     <domain name="www.ctrip.com"/>
                     <domain name="hotel.ctrip.com"/>
                 </domains>
             </virtual-server>
-            <virtual-server name="vs001" ssl="true">
+            <virtual-server id="1" ssl="true">
                 <port>80</port>
                 <domains>
                     <domain name="www.ctrip.com"/>
@@ -43,8 +43,8 @@
     <group id="111111" name="gateway" app-id="app921822" version="1" ssl="false">
         <group-slbs>
             <group-slb priority="0">
-                <group-name>gateway</group-name>
-                <slb-name>default</slb-name>
+                <group-id>1</group-id>
+                <slb-id>1</slb-id>
                 <slb-vips>
                     <vip/>
                     <vip/>
@@ -54,8 +54,8 @@
                 <virtual-server/>
             </group-slb>
             <group-slb priority="0">
-                <group-name>gateway</group-name>
-                <slb-name>default</slb-name>
+                <group-id>1</group-id>
+                <slb-id>1</slb-id>
                 <slb-vips>
                     <vip ip="192.168.1.1"/>
                     <vip ip="192.168.1.2"/>

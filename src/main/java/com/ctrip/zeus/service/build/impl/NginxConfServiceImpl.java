@@ -49,7 +49,7 @@ public class NginxConfServiceImpl implements NginxConfService {
     @Resource
     private ActiveConfService activeConfService;
     @Resource
-    ConfAppSlbActiveDao confAppSlbActiveDao;
+    ConfGroupSlbActiveDao confGroupSlbActiveDao;
 
 
     private Logger logger = LoggerFactory.getLogger(NginxConfServiceImpl.class);
@@ -202,53 +202,54 @@ public class NginxConfServiceImpl implements NginxConfService {
     @Override
     public void build( Long slbId, int version) throws Exception {
 
-        Map<String, Map<String,Integer>> appNamesMap = new HashMap<>();
+        Map<Long, Map<Long,Integer>> appNamesMap = new HashMap<>();
 
 
-        List<ConfAppSlbActiveDo> appSlbActiveList = confAppSlbActiveDao.findBySlbName(slbName,ConfAppSlbActiveEntity.READSET_FULL);
-        if (appSlbActiveList==null){
-            appSlbActiveList=new ArrayList<>();
+        List<ConfGroupSlbActiveDo> groupSlbActiveList = confGroupSlbActiveDao.findBySlbId(slbId ,ConfGroupSlbActiveEntity.READSET_FULL);
+        if (groupSlbActiveList==null){
+            groupSlbActiveList=new ArrayList<>();
         }
 
-        for (ConfAppSlbActiveDo appSlb : appSlbActiveList)
+        for (ConfGroupSlbActiveDo groupSlb : groupSlbActiveList)
         {
-            String vs = appSlb.getSlbVirtualServerName();
-            Map<String,Integer> apps = appNamesMap.get(vs);
-            if (apps==null)
+            long vs = groupSlb.getSlbVirtualServerId();
+            Map<Long,Integer> groups = appNamesMap.get(vs);
+            if (groups==null)
             {
-                apps = new HashMap<>();
-                appNamesMap.put(vs,apps);
+                groups = new HashMap<>();
+                appNamesMap.put(vs,groups);
             }
 
-            apps.put(appSlb.getAppName(),appSlb.getPriority());
+            groups.put(groupSlb.getGroupId(),groupSlb.getPriority());
         }
 
-        Map<String, List<App>> appsMap = new HashMap<>();
-        for (String vs : appNamesMap.keySet()) {
-            final Map<String,Integer> appPriorityMap = appNamesMap.get(vs);
 
-            List<String> l = activeConfService.getConfAppActiveContentByAppNames(appPriorityMap.keySet().toArray(new String[]{}));
-            List<App> appList = new ArrayList<>();
+        Map<Long, List<Group>> groupsMap = new HashMap<>();
+        for (Long vs : appNamesMap.keySet()) {
+            final Map<Long,Integer> groupPriorityMap = appNamesMap.get(vs);
+
+            List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupPriorityMap.keySet().toArray(new Long[]{}));
+            List<Group> groupList = new ArrayList<>();
             for (String content :  l ){
-                appList.add(DefaultSaxParser.parseEntity(App.class, content));
+                groupList.add(DefaultSaxParser.parseEntity(Group.class, content));
             }
 
-            Collections.sort(appList,new Comparator<App>(){
-                public int compare(App app0, App app1) {
-                    return appPriorityMap.get(app1.getName())-appPriorityMap.get(app0.getName());
+            Collections.sort(groupList,new Comparator<Group>(){
+                public int compare(Group group0, Group group1) {
+                    return groupPriorityMap.get(group0.getName())-groupPriorityMap.get(group1.getName());
                 }
             });
-            appsMap.put(vs, appList);
+            groupsMap.put(vs, groupList);
         }
 
-        String slbContent =activeConfService.getConfSlbActiveContentBySlbNames(slbName);
-        AssertUtils.isNull(slbContent,"Slb: ["+slbName+"] has not submit or submit failed!");
+        String slbContent =activeConfService.getConfSlbActiveContentBySlbId(slbId);
+        AssertUtils.isNull(slbContent,"SlbID: ["+slbId+"] has not submit or submit failed!");
 
         Slb slb = DefaultSaxParser.parseEntity(Slb.class, slbContent);
 
         String conf = nginxConfigBuilder.generateNginxConf(slb);
         nginxConfDao.insert(new NginxConfDo().setCreatedTime(new Date())
-                .setName(slb.getName())
+                .setSlbId(slb.getId())
                 .setContent(conf)
                 .setVersion(version));
         logger.debug("Nginx Conf build sucess! slbName: "+slb+",version: "+version);

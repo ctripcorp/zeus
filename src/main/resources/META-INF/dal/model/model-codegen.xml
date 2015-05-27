@@ -41,7 +41,7 @@
     <attribute name="enable" value-type="boolean" />
   </entity>
   <entity name="virtual-server">
-    <attribute name="name" value-type="String" />
+    <attribute name="id" value-type="int" />
     <attribute name="ssl" value-type="boolean" />
     <element name="port" value-type="String" />
     <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
@@ -66,8 +66,8 @@
   </entity>
   <entity name="group-slb">
     <attribute name="priority" value-type="int" />
-    <element name="group-name" value-type="String" />
-    <element name="slb-name" value-type="String" />
+    <element name="group-id" value-type="String" />
+    <element name="slb-id" value-type="int" />
     <element name="path" value-type="String" />
     <element name="rewrite" value-type="String" />
     <entity-ref name="vip" type="list" names="slb-vips" xml-indent="true" />

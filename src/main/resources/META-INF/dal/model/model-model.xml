@@ -4,5 +4,12 @@
     <entity name="app-server-status">
         <element name="port" value-type="int"/>
     </entity>
+    <entity name="group-slb">
+        <element name="group-id" value-type="long" />
+        <element name="slb-id" value-type="long" />
+    </entity>
+    <entity name="slb">
+        <attribute name="id" value-type="long" />
+    </entity>
 </model>
 

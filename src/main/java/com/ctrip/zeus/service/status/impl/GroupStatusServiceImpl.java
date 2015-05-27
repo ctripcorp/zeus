@@ -23,8 +23,8 @@ import java.util.List;
  * Date: 4/1/2015
  * Time: 2:26 PM
  */
-@Service("appStatusService")
-public class AppStatusServiceImpl implements AppStatusService {
+@Service("groupStatusService")
+public class GroupStatusServiceImpl implements AppStatusService {
     private static DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
     private static DynamicIntProperty adminServerPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
 
@@ -37,46 +37,45 @@ public class AppStatusServiceImpl implements AppStatusService {
     @Resource
     StatusService statusService;
 
-    private String currentSlbName = null;
+    private Long currentSlbName = null;
 
     @Override
-    public List<AppStatus> getAllAppStatus() throws Exception {
-        List<AppStatus> result = new ArrayList<>();
+    public List<GroupStatus> getAllGroupStatus() throws Exception {
+        List<GroupStatus> result = new ArrayList<>();
         List<Slb> slbList = slbRepository.list();
         for (Slb slb : slbList) {
-            result.addAll(getAllAppStatus(slb.getName()));
+            result.addAll(getAllGroupStatus(slb.getId()));
         }
         return result;
     }
 
     @Override
-    public List<AppStatus> getAllAppStatus(String slbName) throws Exception {
-        List<AppStatus> result = new ArrayList<>();
+    public List<GroupStatus> getAllGroupStatus(Long slbId) throws Exception {
+        List<GroupStatus> result = new ArrayList<>();
 
-        List<AppSlb> appSlbs = slbRepository.listAppSlbsBySlb(slbName);
-        for (AppSlb appSlb : appSlbs) {
-            AppStatus appStatus = getAppStatus(appSlb.getAppName(), appSlb.getSlbName());
+        List<GroupSlb> groupSlbs = slbRepository.listGroupSlbsBySlb(slbId);
+        for (GroupSlb groupSlb : groupSlbs) {
+            GroupStatus appStatus = getGroupStatus(groupSlb.getGroupId(), groupSlb.getSlbId());
             result.add(appStatus);
         }
         return result;
     }
 
     @Override
-    public List<AppStatus> getAppStatus(String appName) throws Exception {
-        List<AppStatus> result = new ArrayList<>();
-        List<Slb> slbList = slbRepository.listByApps(new String[]{appName});
+    public List<GroupStatus> getGroupStatus(Long groupId) throws Exception {
+        List<GroupStatus> result = new ArrayList<>();
+        List<Slb> slbList = slbRepository.listByGroups(new String[]{groupId});
         for (Slb slb : slbList) {
-            String slbName = slb.getName();
-            result.add(getAppStatus(appName,slbName));
+            result.add(getGroupStatus(groupId, slb.getId()));
         }
         return result;
     }
 
     @Override
-    public AppStatus getAppStatus(String appName, String slbName) throws Exception {
-        if (!isCurrentSlb(slbName))
+    public GroupStatus getGroupStatus(Long groupId, Long slbId) throws Exception {
+        if (!isCurrentSlb(slbId))
         {
-            Slb slb = slbRepository.get(slbName);
+            Slb slb = slbRepository.get(slbId);
             StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
             return client.getAppStatus(appName,slbName);
         }
@@ -93,12 +92,12 @@ public class AppStatusServiceImpl implements AppStatusService {
     }
 
     @Override
-    public AppServerStatus getAppServerStatus(String appName, String slbName, String ip, Integer port) throws Exception {
+    public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port) throws Exception {
         if (!isCurrentSlb(slbName))
         {
             Slb slb = slbRepository.get(slbName);
             StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
-            return client.getAppServerStatus(appName,slbName,ip+":"+port);
+            return client.getAppServerStatus(appName, slbName, ip + ":" + port);
         }
 
         AppServerStatus appServerStatus = new AppServerStatus();
@@ -136,16 +135,16 @@ public class AppStatusServiceImpl implements AppStatusService {
         }
         return false;
     }
-    private boolean isCurrentSlb(String slbName) throws Exception {
-        if (currentSlbName == null)
+    private boolean isCurrentSlb(Long slbId) throws Exception {
+        if (currentSlbName < 0 ||currentSlbName == null)
         {
             String ip = com.ctrip.zeus.util.S.getIp();
             Slb slb = slbRepository.getBySlbServer(ip);
             if (slb != null )
             {
-                currentSlbName = slb.getName();
+                currentSlbName = slb.getId();
             }
         }
-        return slbName.equals(currentSlbName);
+        return slbId.equals(currentSlbName);
     }
 }

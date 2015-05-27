@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.status;
 
-import com.ctrip.zeus.model.entity.AppServerStatus;
-import com.ctrip.zeus.model.entity.AppStatus;
+import com.ctrip.zeus.model.entity.GroupServerStatus;
+import com.ctrip.zeus.model.entity.GroupStatus;
 
 import java.util.List;
 
@@ -16,19 +16,19 @@ public interface AppStatusService {
       * @return
       * @throws Exception
       */
-     List<AppStatus> getAllAppStatus() throws Exception;
+     List<GroupStatus> getAllGroupStatus() throws Exception;
 
      /**
       * Find all app status in the specific slb cluster
-      * @param slbName
+      * @param slbId
       * @return
       * @throws Exception
       */
-     List<AppStatus> getAllAppStatus(String slbName) throws Exception;
+     List<GroupStatus> getAllGroupStatus(Long slbId) throws Exception;
 
-     List<AppStatus> getAppStatus(String appName) throws Exception;
+     List<GroupStatus> getGroupStatus(Long groupId) throws Exception;
 
-     AppStatus getAppStatus(String appName,String slbName) throws Exception;
+     GroupStatus getGroupStatus(Long groupId,Long slbId) throws Exception;
 
-     AppServerStatus getAppServerStatus(String appName, String slbName, String ip, Integer port) throws Exception;
+     GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port) throws Exception;
 }

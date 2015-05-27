@@ -1,8 +1,6 @@
 package com.ctrip.zeus.service.status.handler.impl;
 
-import com.ctrip.zeus.dal.core.StatusAppServerDao;
-import com.ctrip.zeus.dal.core.StatusAppServerDo;
-import com.ctrip.zeus.dal.core.StatusAppServerEntity;
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.status.handler.StatusAppServerService;
 import org.springframework.stereotype.Component;
 
@@ -14,50 +12,50 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/14/2015.
  */
-@Component("statusAppServerService")
+@Component("statusGroupServerService")
 public class StatusAppServerServiceImpl implements StatusAppServerService {
     @Resource
-    private StatusAppServerDao statusAppServerDao;
+    private StatusGroupServerDao statusGroupServerDao;
 
     @Override
-    public List<StatusAppServerDo> list() throws Exception {
-        return statusAppServerDao.findAll(StatusAppServerEntity.READSET_FULL);
+    public List<StatusGroupServerDo> list() throws Exception {
+        return statusGroupServerDao.findAll(StatusGroupServerEntity.READSET_FULL);
     }
 
     @Override
-    public List<StatusAppServerDo> listAllDownBySlbName(String slbName) throws Exception {
-        return statusAppServerDao.findAllBySlbNameAndIsUp(slbName, false, StatusAppServerEntity.READSET_FULL);
+    public List<StatusGroupServerDo> listAllDownBySlbId(Long slbId) throws Exception {
+        return statusGroupServerDao.findAllBySlbIdAndIsUp(slbId, false, StatusGroupServerEntity.READSET_FULL);
     }
 
     @Override
-    public List<StatusAppServerDo> listByAppName(String appName) throws Exception {
-        return statusAppServerDao.findAllByApp(appName, StatusAppServerEntity.READSET_FULL);
+    public List<StatusGroupServerDo> listByGroupId(Long groupId) throws Exception {
+        return statusGroupServerDao.findAllByGroupId(groupId, StatusGroupServerEntity.READSET_FULL);
     }
 
     @Override
-    public List<StatusAppServerDo> listByServer(String ip) throws Exception {
-        return statusAppServerDao.findAllByIp(ip, StatusAppServerEntity.READSET_FULL);
+    public List<StatusGroupServerDo> listByServer(String ip) throws Exception {
+        return statusGroupServerDao.findAllByIp(ip, StatusGroupServerEntity.READSET_FULL);
     }
 
     @Override
-    public List<StatusAppServerDo> listBySlbNameAndAppNameAndIp(String slbname, String appname, String ip) throws Exception {
-        return statusAppServerDao.findAllBySlbNameAndAppNameAndIp(slbname,appname,ip,StatusAppServerEntity.READSET_FULL);
+    public List<StatusGroupServerDo> listBySlbIdAndGroupIdAndIp(Long slbId,Long groupId,String ip) throws Exception {
+        return statusGroupServerDao.findAllBySlbIdAndGroupIdAndIp(slbId, groupId, ip, StatusGroupServerEntity.READSET_FULL);
     }
 
     @Override
-    public List<StatusAppServerDo> listBySlbNameAndAppName(String slbname, String appname) throws Exception {
-        return statusAppServerDao.findAllByAppNameAndSlbName(appname,slbname,StatusAppServerEntity.READSET_FULL);
+    public List<StatusGroupServerDo> listBySlbIdAndGroupId(Long slbId,Long groupId)throws Exception {
+        return statusGroupServerDao.findAllByGroupIdAndSlbId(slbId, groupId, StatusGroupServerEntity.READSET_FULL);
     }
 
     @Override
-    public void deleteBySlbNameAndAppNameAndVsName(String slbname, String appname, String vsname) throws Exception {
-        statusAppServerDao.deleteByAppNameAndSlbNameAndVirtualServerName(new StatusAppServerDo()
-                .setAppName(appname).setSlbName(slbname).setVirtualServerName(vsname));
+    public void deleteBySlbIdAndGroupIdAndVsId(Long slbId,Long groupId,Long vsId) throws Exception {
+        statusGroupServerDao.deleteByGroupIdAndSlbIdAndVirtualServerId(new StatusGroupServerDo()
+                .setGroupId(groupId).setSlbId(slbId).setSlbVirtualServerId(vsId));
     }
 
     @Override
-    public void updateStatusAppServer(StatusAppServerDo d) throws Exception {
+    public void updateStatusGroupServer(StatusGroupServerDo d) throws Exception {
         d.setCreatedTime(new Date());
-        statusAppServerDao.insert(d);
+        statusGroupServerDao.insert(d);
     }
 }

@@ -14,7 +14,7 @@ public interface SlbRepository extends Repository {
 
     List<Slb> list() throws Exception;
 
-    Slb get(String slbName) throws Exception;
+    Slb get(Long slbId) throws Exception;
 
     /**
      * get the slb by its server ip
@@ -35,11 +35,11 @@ public interface SlbRepository extends Repository {
 
     /**
      * get the slb list which manage the apps
-     * @param appNames the app names
+     * @param groupIds the app names
      * @return the list of slbs
      * @throws Exception
      */
-    List<Slb> listByGroups(String[] appNames) throws Exception;
+    List<Slb> listByGroups(Long[] groupIds) throws Exception;
 
     /**
      * get the list of app related slb information by app names
@@ -47,15 +47,15 @@ public interface SlbRepository extends Repository {
      * @return the list of app related slb information
      * @throws Exception
      */
-    List<GroupSlb> listGroupSlbsByGroups(String[] appNames) throws Exception;
+    List<GroupSlb> listGroupSlbsByGroups(Long[] groupIds) throws Exception;
 
     /**
      * get thr list of app related slb information by slb name
-     * @param slbName the slb name
+     * @param slbId the slb name
      * @return the list of app related slb information
      * @throws Exception
      */
-    List<GroupSlb> listGroupSlbsBySlb(String slbName) throws Exception;
+    List<GroupSlb> listGroupSlbsBySlb(Long slbId) throws Exception;
 
     void add(Slb slb) throws Exception;
 

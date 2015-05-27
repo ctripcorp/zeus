@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.status.handler;
 
 import com.ctrip.zeus.dal.core.StatusAppServerDo;
+import com.ctrip.zeus.dal.core.StatusGroupServerDo;
 
 import java.util.List;
 
@@ -10,17 +11,17 @@ import java.util.List;
  */
 public interface StatusAppServerService {
 
-    List<StatusAppServerDo> list() throws Exception;
+    List<StatusGroupServerDo> list() throws Exception;
 
-    List<StatusAppServerDo> listAllDownBySlbName(String slbName) throws Exception;
+    List<StatusGroupServerDo> listAllDownBySlbId(Long slbId) throws Exception;
 
-    List<StatusAppServerDo> listByAppName(String appName) throws Exception;
+    List<StatusGroupServerDo> listByGroupId(Long groupId) throws Exception;
 
-    List<StatusAppServerDo> listByServer(String ip) throws Exception;
+    List<StatusGroupServerDo> listByServer(String ip) throws Exception;
 
-    List<StatusAppServerDo> listBySlbNameAndAppNameAndIp(String slbname,String appname,String ip) throws Exception;
-    List<StatusAppServerDo> listBySlbNameAndAppName(String slbname,String appname) throws Exception;
-    void deleteBySlbNameAndAppNameAndVsName(String slbname,String appname,String vsname) throws Exception;
+    List<StatusGroupServerDo> listBySlbIdAndGroupIdAndIp( Long slbId,Long groupId,String ip) throws Exception;
+    List<StatusGroupServerDo> listBySlbIdAndGroupId(Long slbId,Long groupId) throws Exception;
+    void deleteBySlbIdAndGroupIdAndVsId(Long slbId,Long groupId,Long vsId) throws Exception;
 
-    void updateStatusAppServer(StatusAppServerDo d) throws Exception;
+    void updateStatusGroupServer(StatusGroupServerDo d) throws Exception;
 }

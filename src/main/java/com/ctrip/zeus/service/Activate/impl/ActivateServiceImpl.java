@@ -1,8 +1,6 @@
 package com.ctrip.zeus.service.Activate.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.App;
-import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupSlb;
@@ -13,10 +11,8 @@ import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -84,8 +80,8 @@ public class ActivateServiceImpl implements ActivateService {
         {
             confGroupSlbActiveDao.insert(new ConfGroupSlbActiveDo().setGroupId(groupId)
                                             .setPriority(groupSlb.getPriority())
-                                            .setSlbId(groupSlb.getSlbName()).setDataChangeLastTime(new Date()))
-                                            .setSlbVirtualServerId(groupSlb.getVirtualServer().getName());
+                                            .setSlbId(groupSlb.getSlbId()).setDataChangeLastTime(new Date())
+                                            .setSlbVirtualServerId(groupSlb.getVirtualServer().getId()));
         }
 
     }

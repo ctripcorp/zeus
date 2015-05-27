@@ -1,7 +1,6 @@
 package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.AppSlb;
 import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.service.Activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
@@ -77,7 +76,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
             d.setCurrentTicket(ticket);
             buildInfoDao.updateByPK(d, BuildInfoEntity.UPDATESET_FULL);
 
-            logger.debug("Update ticket success. Ticket Num: "+ticket+"Slb Name: "+ name);
+            logger.debug("Update ticket success. Ticket Num: "+ticket+"Slb ID: "+ slbId);
 
             return true;
         }else
@@ -109,13 +108,13 @@ public class BuildInfoServiceImpl implements BuildInfoService {
 
         if (groupIds.size()>0)
         {
-            AssertUtils.isNull(list,"[BuildInfoService getAllNeededSlb]get appslb by appnames failed! Please check the configuration of appnames: "+appname.toString());
+            AssertUtils.isNull(list,"[BuildInfoService getAllNeededSlb]get appslb by appnames failed! Please check the configuration of groupIds: "+groupIds.toString());
         }
 
         if (list!=null&&list.size()>0)
         {
             for (GroupSlb groupSlb : list) {
-                buildSlbIds.add(groupSlb.getSlbId());
+                buildSlbIds.add(Long.parseLong(groupSlb.getSlbId().toString()));
             }
         }
         return buildSlbIds;

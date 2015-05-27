@@ -20,11 +20,11 @@ public interface StatusService extends Repository {
 
     /**
      * get all down app servers by slbname
-     * @param slbName the slb name
+     * @param slbId the slb id
      * @return app server ip list
      * @throws Exception
      */
-    Set<String> findAllDownAppServersBySlbName(String slbName) throws Exception;
+    Set<String> findAllDownGroupServersBySlbId(Long slbId) throws Exception;
 
     /**
      * up server by app server ip
@@ -45,29 +45,29 @@ public interface StatusService extends Repository {
     /**
      * up member by app server ip and appname
      * @param ip the app server ip
-     * @param appName  app name
+     * @param groupId  app name
      * @return
      * @throws Exception
      */
-    void upMember(String appName, String ip)throws Exception;
+    void upMember(Long groupId, String ip)throws Exception;
     /**
      * down member by app server ip and appname
      * @param ip the app server ip
-     * @param appName  app name
+     * @param groupId  app name
      * @return
      * @throws Exception
      */
-    void downMember(String appName, String ip)throws Exception;
+    void downMember(Long groupId, String ip)throws Exception;
 
     /**
      * get App server status by app name and slbname and virtual server ip
-     * @param slbname the slb name
-     * @param appName  app name
+     * @param slbId the slb name
+     * @param groupId  app name
      * @param vsip  virtual server ip
      * @return true : status=up false : status = down
      * @throws Exception
      */
-    boolean getAppServerStatus(String slbname,String appName, String vsip)throws Exception;
+    boolean getAppServerStatus(Long slbId,Long groupId, String vsip)throws Exception;
 
     /**
      * get server status by virtual server ip
