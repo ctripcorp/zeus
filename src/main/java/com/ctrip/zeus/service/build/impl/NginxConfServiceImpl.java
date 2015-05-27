@@ -200,7 +200,7 @@ public class NginxConfServiceImpl implements NginxConfService {
     }
 
     @Override
-    public void build(String slbName, int version) throws Exception {
+    public void build( Long slbId, int version) throws Exception {
 
         Map<String, Map<String,Integer>> appNamesMap = new HashMap<>();
 

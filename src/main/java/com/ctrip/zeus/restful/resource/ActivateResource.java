@@ -80,18 +80,18 @@ public class ActivateResource {
         activateConfService.activate(slbIds,groupIds);
 
         //find all slbs which need build config
-        Set<String> slbList = buildInfoService.getAllNeededSlb(slbNames, appNames);
+        Set<Long> slbList = buildInfoService.getAllNeededSlb(slbIds, groupIds);
 
         if (slbList.size() > 0)
         {
             //build all slb config
-            for (String buildSlbName : slbList) {
-                int ticket = buildInfoService.getTicket(buildSlbName);
+            for (Long buildSlbId : slbList) {
+                int ticket = buildInfoService.getTicket(buildSlbId);
                 boolean buildFlag = false;
-                DistLock buildLock = dbLockFactory.newLock(buildSlbName + "_build");
+                DistLock buildLock = dbLockFactory.newLock( "build_" + buildSlbId);
                 try{
                     buildLock.lock(lockTimeout.get());
-                    buildFlag =buildService.build(buildSlbName,ticket);
+                    buildFlag =buildService.build(buildSlbId,ticket);
                 }finally {
                     buildLock.unlock();
                 }

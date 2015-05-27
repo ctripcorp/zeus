@@ -14,42 +14,42 @@ public interface BuildInfoService extends Repository {
 
     /**
      * get ticket by slb name
-     * @param slbname the slb name
+     * @param slbId the slb name
      * @return ticket number
      * @throws Exception
      */
-    int getTicket(String slbname) throws Exception;
+    int getTicket(Long slbId) throws Exception;
 
     /**
      * update ticket by slb name
-     * @param slbname the slb name
+     * @param slbId the slb name
      * @param ticket the ticket number
      * @return status
      * @throws Exception
      */
-    boolean updateTicket(String slbname, int ticket) throws Exception;
+    boolean updateTicket(Long slbId, int ticket) throws Exception;
 
     /**
      * get needed slb names  by slb name and app names
-     * @param slbname the slb name list
-     * @param appname the app name list
+     * @param slbIds the slb ids list
+     * @param groupIds the group ids list
      * @return slb name set
      * @throws Exception
      */
-    Set<String> getAllNeededSlb(List<String> slbname, List<String> appname) throws Exception;
+    Set<Long> getAllNeededSlb(List<Long> slbIds, List<Long> groupIds) throws Exception;
 
     /**
      * get current ticket by slb name
-     * @param slbname the slb name
+     * @param slbId the slb name
      * @return current ticket
      * @throws Exception
      */
-    int getCurrentTicket(String slbname) throws Exception;
+    int getCurrentTicket(Long slbId) throws Exception;
     /**
      * get current ticket by slb name
-     * @param slbname the slb name
+     * @param slbId the slb name
      * @return padding ticket
      * @throws Exception
      */
-    int getPaddingTicket(String slbname) throws Exception;
+    int getPaddingTicket(Long slbId) throws Exception;
 }

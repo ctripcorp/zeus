@@ -29,14 +29,14 @@ public class BuildServiceImpl implements BuildService {
     }
 
     @Override
-    public boolean build(String name , int ticket) throws Exception {
-        int paddingTicket = buildInfoService.getPaddingTicket(name);
+    public boolean build(Long slbId , int ticket) throws Exception {
+        int paddingTicket = buildInfoService.getPaddingTicket( slbId );
         ticket = paddingTicket>ticket?paddingTicket:ticket;
-        if (!buildInfoService.updateTicket(name, ticket))
+        if (!buildInfoService.updateTicket(slbId, ticket))
         {
             return false;
         }
-        nginxConfService.build(name, ticket);
+        nginxConfService.build(slbId, ticket);
         return  true;
     }
 }

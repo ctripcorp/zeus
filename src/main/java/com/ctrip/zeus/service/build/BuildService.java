@@ -11,10 +11,10 @@ public interface BuildService extends Repository {
     boolean build(String slbname);
     /**
      * build config by slb name and ticket number
-     * @param slbname the slb name
+     * @param slbId the slb id
      * @param ticket the ticket number
      * @return status
      * @throws Exception
      */
-    boolean build(String slbname, int ticket) throws Exception;
+    boolean build(Long slbId, int ticket) throws Exception;
 }
