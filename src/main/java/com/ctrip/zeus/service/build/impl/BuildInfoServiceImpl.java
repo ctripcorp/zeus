@@ -91,7 +91,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
         Set<Long> buildSlbIds = new HashSet<>();
         for (Long s : slbIds)
         {
-            if (slbClusterRepository.get(s)==null)
+            if (slbClusterRepository.getById(s)==null)
             {
                 logger.warn("slb ["+s+"] is not exist！remove it from activate slb  list!");
             }else if (activeConfService.getConfSlbActiveContentBySlbId(s)==null)

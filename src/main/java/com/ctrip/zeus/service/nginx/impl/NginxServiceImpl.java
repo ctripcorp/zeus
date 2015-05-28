@@ -92,7 +92,7 @@ public class NginxServiceImpl implements NginxService {
         }
 
         String ip = S.getIp();
-        Slb slb = slbRepository.get(slbId);
+        Slb slb = slbRepository.getById(slbId);
 
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
@@ -154,7 +154,7 @@ public class NginxServiceImpl implements NginxService {
     public List<NginxResponse> loadAll(Long slbId) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
         String ip = S.getIp();
-        Slb slb = slbRepository.get(slbId);
+        Slb slb = slbRepository.getById(slbId);
 
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
@@ -196,7 +196,7 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public List<NginxResponse> dyops(Long slbId, List<DyUpstreamOpsData> dyups) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
-        Slb slb = slbRepository.get(slbId);
+        Slb slb = slbRepository.getById(slbId);
         int version = nginxConfService.getCurrentVersion(slbId);
         boolean flag=false;
         String ip = S.getIp();
@@ -245,7 +245,7 @@ public class NginxServiceImpl implements NginxService {
         List<NginxServerStatus> result = new ArrayList<>();
         String ip = S.getIp();
 
-        Slb slb = slbRepository.get(slbId);
+        Slb slb = slbRepository.getById(slbId);
         for (SlbServer slbServer : slb.getSlbServers()) {
             if (ip.equals(slbServer.getIp())) {
                 result.add(getStatus());
@@ -260,7 +260,7 @@ public class NginxServiceImpl implements NginxService {
 
     @Override
     public List<TrafficStatus> getTrafficStatusBySlb(Long slbId) throws Exception {
-        Slb slb = slbRepository.get(slbId);
+        Slb slb = slbRepository.getById(slbId);
         List<TrafficStatus> list = new ArrayList<>();
         for (SlbServer slbServer : slb.getSlbServers()) {
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));

@@ -91,11 +91,11 @@ public class NginxResource {
     }
 
     @GET
-    @Path("/trafficStatus/{slbName:[a-zA-Z0-9_-]+}")
+    @Path("/trafficStatus/{slbId:[0-9]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getTrafficStatusBySlb(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
+    public Response getTrafficStatusBySlb(@Context HttpHeaders hh, @PathParam("slbId") Long slbId) throws Exception {
         TrafficStatusList list = new TrafficStatusList();
-        for(TrafficStatus ts : nginxService.getTrafficStatusBySlb(slbName)) {
+        for(TrafficStatus ts : nginxService.getTrafficStatusBySlb(slbId)) {
             list.addTrafficStatus(ts);
         }
         return responseHandler.handle(list, hh.getMediaType());
@@ -110,10 +110,10 @@ public class NginxResource {
     }
 
     @GET
-    @Path("/loadAll/slb/{slbName:[a-zA-Z0-9_-]+}")
+    @Path("/loadAll/slb/{slbId:[0-9]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response loadAll(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
-        List<NginxResponse> nginxResponseList = nginxService.loadAll(slbName);
+    public Response loadAll(@Context HttpHeaders hh, @PathParam("slbId") Long slbId) throws Exception {
+        List<NginxResponse> nginxResponseList = nginxService.loadAll(slbId);
         NginxResponseList result = new NginxResponseList();
         for (NginxResponse nginxResponse : nginxResponseList) {
             result.addNginxResponse(nginxResponse);
@@ -126,10 +126,10 @@ public class NginxResource {
     }
 
     @GET
-    @Path("/allStatus/slb/{slbName:[a-zA-Z0-9_-]+}")
+    @Path("/allStatus/slb/{slbId:[0-9]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response allStatus(@Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
-        List<NginxServerStatus> nginxServerStatusList = nginxService.getStatusAll(slbName);
+    public Response allStatus(@Context HttpHeaders hh, @PathParam("slbId") Long slbId) throws Exception {
+        List<NginxServerStatus> nginxServerStatusList = nginxService.getStatusAll(slbId);
         NginxServerStatusList result = new NginxServerStatusList();
         for (NginxServerStatus nginxServerStatus : nginxServerStatusList) {
             result.addNginxServerStatus(nginxServerStatus);

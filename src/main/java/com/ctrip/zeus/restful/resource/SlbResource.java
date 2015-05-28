@@ -98,11 +98,11 @@ public class SlbResource {
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "deleteSlb")
-    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("slbName") String slbName) throws Exception {
-        if (slbName == null || slbName.isEmpty()) {
+    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("slbId") Long slbId) throws Exception {
+        if (slbId == null) {
             throw new Exception("Missing parameter or value.");
         }
-        slbRepository.delete(slbName);
+        slbRepository.delete(slbId);
         return Response.ok().build();
     }
 }

@@ -49,7 +49,7 @@ public class ServerResource {
     @Resource
     private NginxService nginxService;
     @Resource
-    private GroupStatusService appStatusService;
+    private GroupStatusService groupStatusService;
     @Resource
     private GroupRepository groupRepository;
     @Resource
@@ -87,7 +87,7 @@ public class ServerResource {
 
     private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
         //get slb by serverip
-        List<Slb> slblist = slbClusterRepository.listByGroupServerAndGroupName(serverip,null);
+        List<Slb> slblist = slbClusterRepository.listByGroupServerAndGroup(serverip,null);
         AssertUtils.isNull(slblist,"[UpServer/DownServer] Can not find slb by server ip :["+serverip+"],Please check the configuration and server ip!");
 
         for (Slb slb : slblist)
@@ -139,8 +139,9 @@ public class ServerResource {
     @Authorize(name="upDownMember")
     public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
     {
-        statusService.upMember(appName,ip);
-        return memberOps(hh, appName, ip);
+//        statusService.upMember(appName,ip);
+//        return memberOps(hh, appName, ip);
+        return null;
     }
 
     @GET
@@ -148,37 +149,57 @@ public class ServerResource {
     @Authorize(name="upDownMember")
     public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
     {
-        statusService.downMember(appName, ip);
-        return memberOps(hh, appName, ip);
+//        statusService.downMember(appName, ip);
+//        return memberOps(hh, appName, ip);
+        return null;
     }
 
-    private Response memberOps(HttpHeaders hh,String appName,String ip)throws Exception{
+    @GET
+    @Path("/upMember")
+    @Authorize(name="upDownMember")
+    public Response upMemberByGroupId(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("ip") String ip)throws Exception
+    {
+        statusService.upMember(groupId,ip);
+        return memberOps(hh, groupId, ip);
+    }
+
+    @GET
+    @Path("/downMember")
+    @Authorize(name="upDownMember")
+    public Response downMemberByGroupId(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("ip") String ip)throws Exception
+    {
+        statusService.downMember(groupId, ip);
+        return memberOps(hh, groupId, ip);
+    }
+
+
+    private Response memberOps(HttpHeaders hh,Long groupId,String ip)throws Exception{
 
         //get slb by appname and ip
-        List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(ip,appName);
-        AssertUtils.isNull(slblist,"Not find slb for appName ["+appName+"] and ip ["+ip+"]");
+        List<Slb> slblist = slbClusterRepository.listByGroupServerAndGroup(ip,groupId);
+        AssertUtils.isNull(slblist,"Not find slb for GroupId ["+groupId+"] and ip ["+ip+"]");
 
         for (Slb slb : slblist) {
-            String slbname = slb.getName();
+            Long slbId = slb.getId();
             //get ticket
-            int ticket = buildInfoService.getTicket(slbname);
+            int ticket = buildInfoService.getTicket(slbId);
 
             boolean buildFlag = false;
             boolean dyopsFlag = false;
             List<DyUpstreamOpsData> dyUpstreamOpsDataList = null;
-            DistLock buildLock = dbLockFactory.newLock(slbname + "_build");
+            DistLock buildLock = dbLockFactory.newLock("build_"+slbId);
             try{
                 buildLock.lock(lockTimeout.get());
-                buildFlag =buildService.build(slbname,ticket);
+                buildFlag =buildService.build(slbId,ticket);
             }finally {
                 buildLock.unlock();
             }
             if (buildFlag) {
-                DistLock writeLock = dbLockFactory.newLock(slbname + "_writeAndReload");
+                DistLock writeLock = dbLockFactory.newLock("writeAndReload_" + slbId);
                 try {
                     writeLock.lock(lockTimeout.get());
                     //push
-                    dyopsFlag=nginxAgentService.writeALLToDisk(slbname);
+                    dyopsFlag=nginxAgentService.writeALLToDisk(slbId);
                     if (!dyopsFlag)
                     {
                         throw new Exception("write all to disk failed!");
@@ -188,32 +209,33 @@ public class ServerResource {
                 }
             }
             if (dyopsFlag){
-                DistLock dyopsLock = dbLockFactory.newLock(slbname + "_" + appName + "_dyops");
+                DistLock dyopsLock = dbLockFactory.newLock(slbId + "_" + groupId + "_dyops");
                 try{
                     dyopsLock.lock(lockTimeout.get());
-                    dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, appName);
-                    nginxAgentService.dyops(slbname, dyUpstreamOpsDataList);
+                    dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, groupId);
+                    nginxAgentService.dyops(slbId, dyUpstreamOpsDataList);
                 }finally {
                     dyopsLock.unlock();
                 }
             }
         }
 
-        List<AppStatus> statuses = appStatusService.getAppStatus(appName);
-        AppStatus appStatusList = new AppStatus().setAppName(appName).setSlbName("");
-        for (AppStatus a : statuses)
+        List<GroupStatus> statuses = groupStatusService.getGroupStatus(groupId);
+        //ToDo set group name and slb name
+        GroupStatus groupStatusList = new GroupStatus().setGroupId(groupId).setSlbName("");
+        for (GroupStatus groupStatus : statuses)
         {
-            appStatusList.setSlbName(appStatusList.getSlbName() + " " + a.getSlbName());
-            for(AppServerStatus b : a.getAppServerStatuses())
+            groupStatusList.setSlbName(groupStatusList.getSlbName() + " " + groupStatus.getSlbName());
+            for(GroupServerStatus b : groupStatus.getGroupServerStatuses())
             {
-                appStatusList.addAppServerStatus(b);
+                groupStatusList.addGroupServerStatus(b);
             }
         }
 
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(AppStatus.XML, appStatusList)).type(MediaType.APPLICATION_XML).build();
+            return Response.status(200).entity(String.format(GroupStatus.XML, groupStatusList)).type(MediaType.APPLICATION_XML).build();
         } else {
-            return Response.status(200).entity(String.format(AppStatus.JSON, appStatusList)).type(MediaType.APPLICATION_JSON).build();
+            return Response.status(200).entity(String.format(GroupStatus.JSON, groupStatusList)).type(MediaType.APPLICATION_JSON).build();
         }
     }
 

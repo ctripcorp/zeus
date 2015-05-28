@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response;
  */
 @Component
 @Path("/group")
-public class AppResource {
+public class GroupResource {
     private static int DEFAULT_MAX_COUNT = 20;
     @Resource
     private GroupRepository groupRepository;

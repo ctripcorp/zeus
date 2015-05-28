@@ -1,6 +1,5 @@
 package com.ctrip.zeus.service.status.handler;
 
-import com.ctrip.zeus.dal.core.StatusAppServerDo;
 import com.ctrip.zeus.dal.core.StatusGroupServerDo;
 
 import java.util.List;
