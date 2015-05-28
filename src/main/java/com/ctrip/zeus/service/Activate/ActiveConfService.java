@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.Activate;
+package com.ctrip.zeus.service.activate;
 
 import com.ctrip.zeus.service.Repository;
 

@@ -1,7 +1,7 @@
-package com.ctrip.zeus.service.Activate.impl;
+package com.ctrip.zeus.service.activate.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.service.Activate.ActiveConfService;
+import com.ctrip.zeus.service.activate.ActiveConfService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

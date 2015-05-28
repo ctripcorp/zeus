@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.build.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
-import com.ctrip.zeus.service.Activate.ActiveConfService;
+import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.NginxConfService;
@@ -11,13 +11,10 @@ import com.ctrip.zeus.service.build.conf.UpstreamsConf;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.util.AssertUtils;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
 import javax.annotation.Resource;
 import java.util.*;
 

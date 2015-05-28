@@ -2,7 +2,7 @@ package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.GroupSlb;
-import com.ctrip.zeus.service.Activate.ActiveConfService;
+import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.util.AssertUtils;

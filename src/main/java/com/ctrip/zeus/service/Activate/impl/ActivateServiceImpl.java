@@ -1,11 +1,11 @@
-package com.ctrip.zeus.service.Activate.impl;
+package com.ctrip.zeus.service.activate.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
-import com.ctrip.zeus.service.Activate.ActivateService;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class ActivateServiceImpl implements ActivateService {
         if (archive==null)
         {
             logger.info("getLatestSlbArchive return Null! SlbID: "+slbId);
-            AssertUtils.isNull(archive,"[Activate]getLatestSlbArchive return Null! SlbID: "+slbId);
+            AssertUtils.isNull(archive,"[activate]getLatestSlbArchive return Null! SlbID: "+slbId);
             return;
         }
 
@@ -59,7 +59,7 @@ public class ActivateServiceImpl implements ActivateService {
         if (archive==null)
         {
             logger.info("getLatestAppArchive return Null! GroupID: "+groupId);
-            AssertUtils.isNull(archive,"[Activate]getLatestAppArchive return Null! GroupID: "+groupId);
+            AssertUtils.isNull(archive,"[activate]getLatestAppArchive return Null! GroupID: "+groupId);
             return;
         }
 
