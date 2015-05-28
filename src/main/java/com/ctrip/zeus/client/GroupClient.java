@@ -14,8 +14,8 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/6/2015.
  */
-public class AppClient extends AbstractRestClient {
-    public AppClient(String url) {
+public class GroupClient extends AbstractRestClient {
+    public GroupClient(String url) {
         super(url);
     }
 
