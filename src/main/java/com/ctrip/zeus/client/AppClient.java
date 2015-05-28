@@ -1,7 +1,7 @@
 package com.ctrip.zeus.client;
 
 
-import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 
 import javax.ws.rs.client.Entity;
@@ -19,24 +19,24 @@ public class AppClient extends AbstractRestClient {
         super(url);
     }
 
-    public List<App> getAll() {
-        String res = getTarget().path("/api/app").request().headers(getDefaultHeaders()).get(String.class);
+    public List<Group> getAll() {
+        String res = getTarget().path("/api/group").request().headers(getDefaultHeaders()).get(String.class);
         return null;
     }
 
-    public Response add(App app) {
-        return getTarget().path("/api/app/add").request().headers(getDefaultHeaders())
+    public Response add(Group group) {
+        return getTarget().path("/api/group/add").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
-                        String.format(App.JSON, app),
+                        String.format(Group.JSON, group),
                         MediaType.APPLICATION_JSON
                 ));
 
     }
 
-    public App get(String appName) {
-        String res = getTarget().path("/api/app/get/" + appName).request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
+    public Group get(String groupName) {
+        String res = getTarget().path("/api/group/get/" + groupName).request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
         try {
-            return DefaultJsonParser.parse(App.class, res);
+            return DefaultJsonParser.parse(Group.class, res);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

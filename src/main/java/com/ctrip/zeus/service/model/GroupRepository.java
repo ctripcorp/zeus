@@ -16,11 +16,11 @@ public interface GroupRepository extends Repository {
 
     List<Group> list(String slbName, String virtualServerName) throws Exception;
 
-    List<Group> listLimit(long fromId, int maxCount) throws Exception;
+    List<Group> listLimit(Long fromId, int maxCount) throws Exception;
 
     Group get(String groupName) throws Exception;
 
-    Group getByAppId(String groupId) throws Exception;
+    Group getByAppId(String appId) throws Exception;
 
     /**
      * add an group
@@ -28,7 +28,7 @@ public interface GroupRepository extends Repository {
      * @return the primary key of the group
      * @throws Exception
      */
-    long add(Group group) throws Exception;
+    Long add(Group group) throws Exception;
 
     void update(Group group) throws Exception;
 
@@ -38,7 +38,7 @@ public interface GroupRepository extends Repository {
      * @return the number of rows deleted
      * @throws Exception
      */
-    int delete(long groupId) throws Exception;
+    int delete(Long groupId) throws Exception;
 
     /**
      * get the name list of groups which are deployed at the specified server
@@ -54,7 +54,7 @@ public interface GroupRepository extends Repository {
      * @return the list of group server ips
      * @throws Exception
      */
-    List<String> listGroupServerIpsByGroup(long groupId) throws Exception;
+    List<String> listGroupServerIpsByGroup(Long groupId) throws Exception;
 
-    List<GroupServer> listGroupServersByGroup(long groupId) throws Exception;
+    List<GroupServer> listGroupServersByGroup(Long groupId) throws Exception;
 }

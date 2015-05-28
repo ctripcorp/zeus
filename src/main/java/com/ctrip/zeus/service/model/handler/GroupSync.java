@@ -15,5 +15,5 @@ public interface GroupSync {
 
     GroupDo update(Group group) throws DalException, ValidationException;
 
-    int delete(long groupId) throws DalException;
+    int delete(Long groupId) throws DalException;
 }

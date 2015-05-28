@@ -70,7 +70,7 @@ public class GroupSyncImpl implements GroupSync {
     }
 
     @Override
-    public int delete(long groupId) throws DalException {
+    public int delete(Long groupId) throws DalException {
         groupSlbDao.deleteByGroup(new GroupSlbDo().setGroupId(groupId));
         groupServerDao.deleteByGroup(new GroupServerDo().setGroupId(groupId));
         groupHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(groupId));
@@ -89,8 +89,8 @@ public class GroupSyncImpl implements GroupSync {
     private boolean validateSlb(Group group) throws DalException {
         if (group.getGroupSlbs().size() == 0)
             return false;
-        for (GroupSlb as : group.getGroupSlbs()) {
-            if (slbDao.findByName(as.getSlbName(), SlbEntity.READSET_FULL) == null)
+        for (GroupSlb gs : group.getGroupSlbs()) {
+            if (slbDao.findById(gs.getSlbId(), SlbEntity.READSET_FULL) == null)
                 return false;
         }
         return true;
@@ -103,7 +103,7 @@ public class GroupSyncImpl implements GroupSync {
         syncGroupServers(d.getId(), group.getGroupServers());
     }
 
-    private void syncGroupSlbs(long groupId, List<GroupSlb> groupSlbs) throws DalException {
+    private void syncGroupSlbs(Long groupId, List<GroupSlb> groupSlbs) throws DalException {
         List<GroupSlbDo> oldList = groupSlbDao.findAllByGroup(groupId, GroupSlbEntity.READSET_FULL);
         Map<String, GroupSlbDo> oldMap = Maps.uniqueIndex(oldList, new Function<GroupSlbDo, String>() {
             @Override
@@ -114,8 +114,7 @@ public class GroupSyncImpl implements GroupSync {
 
         //Update existed if necessary, and insert new ones.
         for (GroupSlb e : groupSlbs) {
-            long slbId = slbDao.findByName(e.getSlbName(), SlbEntity.READSET_FULL).getId();
-            long vsId = slbVirtualServerDao.findBySlbAndName(slbId, e.getVirtualServer().getName(), SlbVirtualServerEntity.READSET_FULL).getId();
+            Long vsId = slbVirtualServerDao.findBySlbAndName(e.getSlbId(), e.getVirtualServer().getName(), SlbVirtualServerEntity.READSET_FULL).getId();
             GroupSlbDo old = oldMap.get(groupId + "" + vsId);
             if (old != null) {
                 oldList.remove(old);
@@ -131,7 +130,7 @@ public class GroupSyncImpl implements GroupSync {
         }
     }
 
-    private void syncGroupHealthCheck(long groupKey, HealthCheck healthCheck) throws DalException {
+    private void syncGroupHealthCheck(Long groupKey, HealthCheck healthCheck) throws DalException {
         if (healthCheck == null) {
             logger.info("No health check method is found when adding/updating group with id " + groupKey);
             return;
@@ -141,7 +140,7 @@ public class GroupSyncImpl implements GroupSync {
                 .setCreatedTime(new Date()));
     }
 
-    private void syncLoadBalancingMethod(long groupKey, LoadBalancingMethod loadBalancingMethod) throws DalException {
+    private void syncLoadBalancingMethod(Long groupKey, LoadBalancingMethod loadBalancingMethod) throws DalException {
         if (loadBalancingMethod == null)
             return;
         groupLoadBalancingMethodDao.insert(C.toGroupLoadBalancingMethodDo(loadBalancingMethod)
@@ -149,7 +148,7 @@ public class GroupSyncImpl implements GroupSync {
                 .setCreatedTime(new Date()));
     }
 
-    private void syncGroupServers(long groupKey, List<GroupServer> groupServers) throws DalException {
+    private void syncGroupServers(Long groupKey, List<GroupServer> groupServers) throws DalException {
         if (groupServers == null || groupServers.size() == 0) {
             logger.warn("No group server is given when adding/update group with id " + groupKey);
             return;

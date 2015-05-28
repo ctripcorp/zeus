@@ -3,8 +3,8 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
-import com.ctrip.zeus.model.entity.App;
-import com.ctrip.zeus.model.entity.AppList;
+import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response;
  * @date: 3/4/2015.
  */
 @Component
-@Path("/app")
+@Path("/group")
 public class AppResource {
     private static int DEFAULT_MAX_COUNT = 20;
     @Resource
@@ -36,62 +36,62 @@ public class AppResource {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "getAllApps")
+    @Authorize(name = "getAllGroups")
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
                          @QueryParam("from") long fromId,
                          @QueryParam("maxCount") int maxCount) throws Exception {
-        AppList appList = new AppList();
+        GroupList groupList = new GroupList();
 
         if (fromId <= 0 && maxCount <= 0) {
-            for (App app : groupRepository.list()) {
-                appList.addApp(app);
+            for (Group group : groupRepository.list()) {
+                groupList.addGroup(group);
             }
         } else {
             fromId = fromId < 0 ? 0 : fromId;
             maxCount = maxCount <= 0 ? DEFAULT_MAX_COUNT : maxCount;
-            for (App app : groupRepository.listLimit(fromId, maxCount)) {
-                appList.addApp(app);
+            for (Group group : groupRepository.listLimit(fromId, maxCount)) {
+                groupList.addGroup(group);
             }
         }
-        appList.setTotal(appList.getApps().size());
-        return responseHandler.handle(appList, hh.getMediaType());
+        groupList.setTotal(groupList.getGroups().size());
+        return responseHandler.handle(groupList, hh.getMediaType());
     }
 
     @GET
-    @Path("/get/{appName:[a-zA-Z0-9_-]+}")
+    @Path("/get/{groupName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "getApp")
-    public Response getByAppName(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                                 @PathParam("appName") String appName) throws Exception {
-        App app = groupRepository.get(appName);
-        return responseHandler.handle(app, hh.getMediaType());
+    @Authorize(name = "getGroup")
+    public Response getByGroupName(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                 @PathParam("groupName") String groupName) throws Exception {
+        Group group = groupRepository.get(groupName);
+        return responseHandler.handle(group, hh.getMediaType());
     }
 
     @GET
     @Path("/get")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "getApp")
+    @Authorize(name = "getGroup")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                        @QueryParam("appId") String appId) throws Exception {
-        if (appId == null || appId.isEmpty()) {
+                        @QueryParam("groupId") String groupId) throws Exception {
+        if (groupId == null || groupId.isEmpty()) {
             throw new Exception("Missing parameter or value.");
         }
-        App app = groupRepository.getByAppId(appId);
-        return responseHandler.handle(app, hh.getMediaType());
+        Group group = groupRepository.getByAppId(groupId);
+        return responseHandler.handle(group, hh.getMediaType());
     }
 
     @POST
     @Path("/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    @Authorize(name = "addApp")
-    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String app) throws Exception {
-        App a;
+    @Authorize(name = "addGroup")
+    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
+        Group a;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
-            a = DefaultSaxParser.parseEntity(App.class, app);
+            a = DefaultSaxParser.parseEntity(Group.class, group);
         } else {
             try {
-                a = DefaultJsonParser.parse(App.class, app);
+                a = DefaultJsonParser.parse(Group.class, group);
             } catch (Exception ex) {
                 throw new Exception("Unacceptable type.");
             }
@@ -103,14 +103,14 @@ public class AppResource {
     @POST
     @Path("/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    @Authorize(name = "updateApp")
-    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String app) throws Exception {
-        App a;
+    @Authorize(name = "updateGroup")
+    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
+        Group a;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
-            a = DefaultSaxParser.parseEntity(App.class, app);
+            a = DefaultSaxParser.parseEntity(Group.class, group);
         } else {
             try {
-                a = DefaultJsonParser.parse(App.class, app);
+                a = DefaultJsonParser.parse(Group.class, group);
             } catch (Exception e) {
                 throw new Exception("Unacceptable type.");
             }
@@ -128,11 +128,12 @@ public class AppResource {
     @GET
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "deleteApp")
-    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("appName") String appName) throws Exception {
-        if (appName == null || appName.isEmpty())
+    @Authorize(name = "deleteGroup")
+    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("groupName") String groupName) throws Exception {
+        if (groupName == null || groupName.isEmpty())
             throw new Exception("Missing parameter or value.");
-        groupRepository.delete(appName);
+        Group g = groupRepository.get(groupName);
+        groupRepository.delete(g.getId());
         return Response.ok().build();
     }
 }
