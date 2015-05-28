@@ -16,45 +16,45 @@ public interface GroupRepository extends Repository {
 
     List<Group> list(String slbName, String virtualServerName) throws Exception;
 
-    List<Group> listLimit(long fromId, int maxCount) throws Exception;
+    List<Group> listLimit(Long fromId, int maxCount) throws Exception;
 
-    Group get(String appName) throws Exception;
+    Group get(String groupName) throws Exception;
 
     Group getByAppId(String appId) throws Exception;
 
     /**
-     * add an app
-     * @param app the app to be added
-     * @return the primary key of the app
+     * add an group
+     * @param group the group to be added
+     * @return the primary key of the group
      * @throws Exception
      */
-    long add(Group app) throws Exception;
+    Long add(Group group) throws Exception;
 
-    void update(Group app) throws Exception;
+    void update(Group group) throws Exception;
 
     /**
-     * delete the app by its name
-     * @param appName the app name
+     * delete the group by its primary key
+     * @param groupId the group primary key
      * @return the number of rows deleted
      * @throws Exception
      */
-    int delete(String appName) throws Exception;
+    int delete(Long groupId) throws Exception;
 
     /**
-     * get the name list of apps which are deployed at the specified server
-     * @param appServerIp the app server ip of the specified server
-     * @return the list of app names
+     * get the name list of groups which are deployed at the specified server
+     * @param groupServerIp the group server ip of the specified server
+     * @return the list of group names
      * @throws Exception
      */
-    List<String> listGroupsByGroupServer(String appServerIp) throws Exception;
+    List<String> listGroupsByGroupServer(String groupServerIp) throws Exception;
 
     /**
-     * get the list of app server ips where the specified app is deployed
-     * @param appName
-     * @return the list of app server ips
+     * get the list of group server ips where the specified group is deployed
+     * @param groupId the group primary key
+     * @return the list of group server ips
      * @throws Exception
      */
-    List<String> listGroupServersByGroup(String appName) throws Exception;
+    List<String> listGroupServerIpsByGroup(Long groupId) throws Exception;
 
-    List<GroupServer> getGroupServersByGroup(String appName) throws Exception;
+    List<GroupServer> listGroupServersByGroup(Long groupId) throws Exception;
 }

@@ -21,7 +21,7 @@ import java.util.Map;
  * @author:xingchaowang
  * @date: 3/7/2015.
  */
-@Component("dbSync")
+@Component("slbSync")
 public class SlbSyncImpl implements SlbSync {
     @Resource
     private GroupSlbDao appSlbDao;
@@ -39,35 +39,33 @@ public class SlbSyncImpl implements SlbSync {
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public SlbDo add(Slb slb) throws DalException, ValidationException {
+    public void add(Slb slb) throws DalException, ValidationException {
         validate(slb);
         SlbDo d = C.toSlbDo(slb);
         d.setCreatedTime(new Date());
         d.setVersion(1);
 
         slbDao.insert(d);
-        cascadeSync(d, slb);
-        return d;
+        cascadeSync(slb);
+        //TODO check
+        slb.setId(d.getId());
     }
 
     @Override
-    public SlbDo update(Slb slb) throws DalException, ValidationException {
+    public void update(Slb slb) throws DalException, ValidationException {
         validate(slb);
-        SlbDo check = slbDao.findByName(slb.getName(), SlbEntity.READSET_FULL);
+        SlbDo check = slbDao.findById(slb.getId(), SlbEntity.READSET_FULL);
+        if (check == null)
+            throw new ValidationException("Slb does not exist.");
         if (check.getVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        SlbDo d = C.toSlbDo(slb).setId(slb.getId());
+        SlbDo d = C.toSlbDo(slb);
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
-
-        SlbDo updated = slbDao.findByName(d.getName(), SlbEntity.READSET_FULL);
-        d.setId(updated.getId());
-        d.setVersion(updated.getVersion());
-        cascadeSync(d, slb);
-        return d;
+        cascadeSync(slb);
     }
 
     @Override
-    public int delete(long slbId) throws DalException, ValidationException {
+    public int delete(Long slbId) throws DalException, ValidationException {
         SlbDo d = slbDao.findById(slbId, SlbEntity.READSET_FULL);
         if (d == null)
             return 0;
@@ -83,7 +81,7 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     private void validate(Slb slb) throws ValidationException {
-        if (slb == null || slb.getName() == null) {
+        if (slb == null || slb.getId().longValue() < 0) {
             throw new ValidationException("Slb with null value cannot be persisted.");
         }
         if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
@@ -98,13 +96,13 @@ public class SlbSyncImpl implements SlbSync {
         return false;
     }
 
-    private void cascadeSync(SlbDo d, Slb slb) throws DalException {
-        syncSlbVips(d.getId(), slb.getVips());
-        syncSlbServers(d.getId(), slb.getSlbServers());
-        syncVirtualServers(d.getId(), slb.getVirtualServers());
+    private void cascadeSync(Slb slb) throws DalException {
+        syncSlbVips(slb.getId(), slb.getVips());
+        syncSlbServers(slb.getId(), slb.getSlbServers());
+        syncVirtualServers(slb.getId(), slb.getVirtualServers());
     }
 
-    private void syncSlbVips(long slbId, List<Vip> vips) throws DalException {
+    private void syncSlbVips(Long slbId, List<Vip> vips) throws DalException {
         if (vips == null || vips.size() == 0)
             return;
         List<SlbVipDo> oldList = slbVipDao.findAllBySlb(slbId, SlbVipEntity.READSET_FULL);
@@ -130,7 +128,7 @@ public class SlbSyncImpl implements SlbSync {
         }
     }
 
-    private void syncSlbServers(long slbId, List<SlbServer> slbServers) throws DalException {
+    private void syncSlbServers(Long slbId, List<SlbServer> slbServers) throws DalException {
         if (slbServers == null || slbServers.size() == 0) {
             logger.warn("No slb server is given when adding/updating slb with id " + slbId);
             return;
@@ -158,7 +156,7 @@ public class SlbSyncImpl implements SlbSync {
         }
     }
 
-    private void syncVirtualServers(long slbId, List<VirtualServer> virtualServers) throws DalException {
+    private void syncVirtualServers(Long slbId, List<VirtualServer> virtualServers) throws DalException {
         if (virtualServers == null || virtualServers.size() == 0)
             return;
         List<SlbVirtualServerDo> oldList = slbVirtualServerDao.findAllBySlb(slbId,SlbVirtualServerEntity.READSET_FULL);
@@ -188,7 +186,7 @@ public class SlbSyncImpl implements SlbSync {
         }
     }
 
-    private void syncSlbDomain(long slbVirtualServerId, List<Domain> domains) throws DalException {
+    private void syncSlbDomain(Long slbVirtualServerId, List<Domain> domains) throws DalException {
         if (domains == null || domains.size() == 0)
             return;
         List<SlbDomainDo> oldList = slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL);
@@ -214,7 +212,7 @@ public class SlbSyncImpl implements SlbSync {
         }
     }
 
-    private void deleteSlbVirtualServer(long id) throws DalException {
+    private void deleteSlbVirtualServer(Long id) throws DalException {
         slbDomainDao.deleteAllBySlbVirtualServer(new SlbDomainDo().setSlbVirtualServerId(id));
         slbVirtualServerDao.deleteByPK(new SlbVirtualServerDo().setId(id));
     }

@@ -1,10 +1,9 @@
 package com.ctrip.zeus.restful;
 
-import com.ctrip.zeus.client.AppClient;
+import com.ctrip.zeus.client.GroupClient;
 import com.ctrip.zeus.client.SlbClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.server.SlbAdminServer;
-import com.ctrip.zeus.service.ModelServiceTest;
 import com.ctrip.zeus.util.ModelAssert;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
@@ -122,7 +121,7 @@ public class ApiTest {
         Slb sc = generateSlb(slbName);
         s.add(sc);
 
-        AppClient c = new AppClient("http://127.0.0.1:8099");
+        GroupClient c = new GroupClient("http://127.0.0.1:8099");
         c.getAll();
 
         String appName = "testApp";

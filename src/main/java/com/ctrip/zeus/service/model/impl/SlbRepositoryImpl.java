@@ -7,6 +7,7 @@ import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.ArchiveService;
+import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.SlbSync;
@@ -23,15 +24,12 @@ import java.util.List;
  */
 @Repository("slbClusterRepository")
 public class SlbRepositoryImpl implements SlbRepository {
-
     @Resource
     private SlbSync slbSync;
     @Resource
     private SlbQuery slbQuery;
-
     @Resource
     private ArchiveService archiveService;
-
     @Resource
     private NginxServerDao nginxServerDao;
 
@@ -45,6 +43,11 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
+    public Slb getById(Long slbId) throws Exception {
+        return slbQuery.getById(slbId);
+    }
+
+    @Override
     public Slb get(String slbName) throws Exception {
         return slbQuery.get(slbName);
     }
@@ -55,38 +58,37 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public List<Slb> listByGroupServerAndGroupName(String appServerIp, String appName) throws Exception {
-        if (appServerIp == null && appName == null)
+    public List<Slb> listByGroupServerAndGroup(String groupServerIp, Long groupId) throws Exception {
+        if (groupServerIp == null && (groupId == null || groupId.longValue() <= 0))
             return null;
-        if (appServerIp == null)
-            return slbQuery.getByGroupNames(new String[]{appName});
-        if (appName == null)
-            return slbQuery.getByGroupServer(appServerIp);
-        return slbQuery.getByGroupServerAndGroupName(appServerIp, appName);
+        if (groupId == null || groupId.longValue() <= 0) {
+            return slbQuery.getByGroupServer(groupServerIp);
+        }
+        if (groupServerIp == null) {
+            return slbQuery.getByGroups(new Long[]{groupId});
+        }
+        return slbQuery.getByGroupServerAndGroup(groupServerIp, groupId);
     }
 
     @Override
-    public List<Slb> listByGroups(String[] appNames) throws Exception {
-        return slbQuery.getByGroupNames(appNames);
+    public List<Slb> listByGroups(Long[] groupIds) throws Exception {
+        return slbQuery.getByGroups(groupIds);
     }
 
     @Override
-    public List<GroupSlb> listGroupSlbsByGroups(String[] appNames) throws Exception {
-        return slbQuery.getGroupSlbsByGroups(appNames);
+    public List<GroupSlb> listGroupSlbsByGroups(Long[] groupIds) throws Exception {
+        return slbQuery.getGroupSlbsByGroups(groupIds);
     }
 
     @Override
-    public List<GroupSlb> listGroupSlbsBySlb(String slbName) throws Exception {
-        return slbQuery.getGroupSlbsBySlb(slbName);
+    public List<GroupSlb> listGroupSlbsBySlb(Long slbId) throws Exception {
+        return slbQuery.getGroupSlbsBySlb(slbId);
     }
 
     @Override
     public void add(Slb slb) throws Exception {
-        if (slb == null)
-            return;
-
-        SlbDo d = slbSync.add(slb);
-        slb = slbQuery.getById(d.getId());
+        slbSync.add(slb);
+        slb = slbQuery.getById(slb.getId());
         archiveService.archiveSlb(slb);
 
         for (SlbServer slbServer : slb.getSlbServers()) {
@@ -100,10 +102,8 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public void update(Slb slb) throws Exception {
-        if (slb == null)
-            return;
-        SlbDo d = slbSync.update(slb);
-        archiveService.archiveSlb(slbQuery.getById(d.getId()));
+        slbSync.update(slb);
+        archiveService.archiveSlb(slbQuery.getById(slb.getId()));
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
                     .setIp(slbServer.getIp())
@@ -114,7 +114,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public int delete(long slbId) throws Exception {
+    public int delete(Long slbId) throws Exception {
         int count = slbSync.delete(slbId);
         archiveService.deleteSlbArchive(slbId);
         return count;

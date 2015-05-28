@@ -13,6 +13,7 @@ public class C {
 
     public static Group toGroup(GroupDo d) {
         return new Group()
+                .setId(d.getId())
                 .setAppId(d.getAppId())
                 .setName(d.getName())
                 .setSsl(d.isSsl())
@@ -31,8 +32,8 @@ public class C {
 
     public static GroupSlb toGroupSlb(GroupSlbDo d) {
         return new GroupSlb()
-                .setGroupName(d.getGroupName())
-                .setSlbName(d.getSlbName())
+                .setSlbId(d.getSlbId())
+                .setGroupId(d.getGroupId())
                 .setPath(d.getPath())
                 .setRewrite(d.getRewrite())
                 .setPriority(d.getPriority());
@@ -60,6 +61,7 @@ public class C {
 
     public static Slb toSlb(SlbDo d) {
         return new Slb()
+                .setId(d.getId())
                 .setName(d.getName())
                 .setNginxBin(d.getNginxBin())
                 .setNginxConf(d.getNginxConf())
@@ -82,6 +84,7 @@ public class C {
 
     public static VirtualServer toVirtualServer(SlbVirtualServerDo d) {
         return new VirtualServer()
+                .setId(d.getId())
                 .setPort(d.getPort())
                 .setName(d.getName())
                 .setSsl(d.isIsSsl());
@@ -89,14 +92,14 @@ public class C {
 
     public static Archive toGroupArchive(ArchiveGroupDo d) {
         return new Archive()
-                .setName(d.getName())
+                .setId(d.getId())
                 .setContent(d.getContent())
                 .setVersion(d.getVersion());
     }
 
     public static Archive toSlbArchive(ArchiveSlbDo d) {
         return new Archive()
-                .setName(d.getName())
+                .setId(d.getId())
                 .setContent(d.getContent())
                 .setVersion(d.getVersion());
     }
@@ -123,7 +126,9 @@ public class C {
     /*Entity to Do*/
 
     public static GroupDo toGroupDo(Group e) {
-        return new GroupDo().setAppId(e.setAppId())
+        return new GroupDo()
+                .setId(e.getId())
+                .setAppId(e.getAppId())
                 .setName(e.getName())
                 .setSsl(e.isSsl())
                 .setVersion(e.getVersion());
@@ -141,9 +146,9 @@ public class C {
 
     public static GroupSlbDo toGroupSlbDo(GroupSlb e) {
         return new GroupSlbDo()
-                .setGroupName(e.getGroupName())
-                .setSlbName(e.getSlbName())
-                .setSlbVirtualServerName(e.getVirtualServer().getName())
+                .setGroupId(e.getGroupId())
+                .setSlbId(e.getSlbId())
+                .setSlbVirtualServerId(e.getVirtualServer().getId())
                 .setPath(e.getPath())
                 .setRewrite(e.getRewrite())
                 .setPriority(e.getPriority() == null ? 0 : e.getPriority().intValue());
@@ -170,6 +175,7 @@ public class C {
 
     public static SlbDo toSlbDo(Slb e) {
         return new SlbDo()
+                .setId(e.getId())
                 .setName(e.getName())
                 .setNginxBin(e.getNginxBin())
                 .setNginxConf(e.getNginxConf())
@@ -192,6 +198,7 @@ public class C {
 
     public static SlbVirtualServerDo toSlbVirtualServerDo(VirtualServer e) {
         return new SlbVirtualServerDo()
+                .setId(e.getId())
                 .setPort(e.getPort())
                 .setIsSsl(e.isSsl())
                 .setName(e.getName());

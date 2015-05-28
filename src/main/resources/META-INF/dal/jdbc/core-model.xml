@@ -3,7 +3,7 @@
     <entity name="group" table="group" alias="a" do-class="GroupDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
-        <var name="ids" value-type="long[]"/>
+        <var name="ids" value-type="Long[]"/>
         <var name="names" value-type="String[]"/>
         <var name="max-count" value-type="int"/>
         <query-defs>
@@ -236,7 +236,7 @@
     <entity name="group-slb" table="group_slb" alias="as2" do-class="GroupSlbDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
-        <var name="group-ids" value-type="long[]"/>
+        <var name="group-ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -288,19 +288,17 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-and-virtual-server" type="SELECT" multiple="true">
-                <param name="slb-id"/>
+            <query name="find-all-by-virtual-server" type="SELECT" multiple="true">
                 <param name="slb-virtual-server-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
-                        AND <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
+                    WHERE <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
                     ]]>
                 </statement>
             </query>
@@ -342,7 +340,7 @@
     </entity>
     <entity name="slb" table="slb" alias="s2" do-class="SlbDo">
         <var name="names" value-type="String[]"/>
-        <var name="ids" value-type="long[]"/>
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -587,7 +585,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>

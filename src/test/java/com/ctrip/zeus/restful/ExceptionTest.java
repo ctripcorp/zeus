@@ -1,6 +1,6 @@
 package com.ctrip.zeus.restful;
 
-import com.ctrip.zeus.client.AppClient;
+import com.ctrip.zeus.client.GroupClient;
 import com.ctrip.zeus.client.SlbClient;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
@@ -35,7 +35,7 @@ public class ExceptionTest extends AbstractSpringTest {
     private static MysqlDbServer mysqlDbServer;
 
     @Resource
-    private AppDao appDao;
+    private GroupDao appDao;
     @Resource
     private SlbDao slbDao;
 
@@ -56,14 +56,14 @@ public class ExceptionTest extends AbstractSpringTest {
 
     @Test
     public void testDalNotFoundException() throws DalException {
-        Assert.assertNull(appDao.findByName("notExistApp", AppEntity.READSET_FULL));
+        Assert.assertNull(appDao.findByName("notExistGroup", GroupEntity.READSET_FULL));
         Assert.assertNull(slbDao.findByName("notExistSlb", SlbEntity.READSET_FULL));
     }
 
     @Test
     public void testExceptionInterceptor() throws Exception {
-        AppClient ac = new AppClient("http://127.0.0.1:8099");
-        Response appResponse = ac.add(new App());
+        GroupClient ac = new GroupClient("http://127.0.0.1:8099");
+        Response appResponse = ac.add(new Group());
         Assert.assertEquals(500, appResponse.getStatus());
 
         String appString = IOUtils.inputStreamStringify((InputStream) appResponse.getEntity());

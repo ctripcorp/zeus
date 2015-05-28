@@ -7,23 +7,23 @@ import org.junit.Assert;
  * Created by zhoumy on 2015/5/26.
  */
 public class ModelAssert {
-    public static void assertAppEquals(App expected, App actual) {
+    public static void assertGroupEquals(Group expected, Group actual) {
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected.getName(), actual.getName());
         Assert.assertEquals(expected.getSsl() == null ? false : expected.getSsl().booleanValue(), actual.getSsl().booleanValue());
-        Assert.assertEquals(expected.getAppServers().size(), actual.getAppServers().size());
-        for (int i = 0; i < expected.getAppServers().size(); i++) {
-            assertAppServerEquals(expected.getAppServers().get(i), actual.getAppServers().get(i));
+        Assert.assertEquals(expected.getGroupServers().size(), actual.getGroupServers().size());
+        for (int i = 0; i < expected.getGroupServers().size(); i++) {
+            assertGroupServerEquals(expected.getGroupServers().get(i), actual.getGroupServers().get(i));
         }
-        Assert.assertEquals(expected.getAppSlbs().size(), actual.getAppSlbs().size());
-        for (int i = 0; i < expected.getAppSlbs().size(); i++) {
-            assertAppSlbEquals(expected.getAppSlbs().get(i), actual.getAppSlbs().get(i));
+        Assert.assertEquals(expected.getGroupSlbs().size(), actual.getGroupSlbs().size());
+        for (int i = 0; i < expected.getGroupSlbs().size(); i++) {
+            assertGroupSlbEquals(expected.getGroupSlbs().get(i), actual.getGroupSlbs().get(i));
         }
         Assert.assertEquals(expected.getHealthCheck().getUri(), actual.getHealthCheck().getUri());
         Assert.assertEquals(expected.getLoadBalancingMethod().getType(), actual.getLoadBalancingMethod().getType());
     }
 
-    public static void assertAppSlbEquals(AppSlb expected, AppSlb actual) {
+    public static void assertGroupSlbEquals(GroupSlb expected, GroupSlb actual) {
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected.getSlbName(), actual.getSlbName());
         Assert.assertEquals(expected.getPath(), actual.getPath());
@@ -44,7 +44,7 @@ public class ModelAssert {
         }
     }
 
-    public static void assertAppServerEquals(AppServer expected, AppServer actual) {
+    public static void assertGroupServerEquals(GroupServer expected, GroupServer actual) {
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected.getHostName(), actual.getHostName());
         Assert.assertEquals(expected.getIp(), actual.getIp());

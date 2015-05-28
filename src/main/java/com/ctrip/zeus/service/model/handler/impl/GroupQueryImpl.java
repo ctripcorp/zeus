@@ -44,17 +44,30 @@ public class GroupQueryImpl implements GroupQuery {
     }
 
     @Override
-    public Group getById(long id) throws DalException {
-        List<GroupDo> list = groupDao.findAllByIds(new long[]{id}, GroupEntity.READSET_FULL);
-        if (list.size() == 0)
+    public Group getById(Long id) throws DalException {
+        List<GroupDo> l = groupDao.findAllByIds(new Long[]{id}, GroupEntity.READSET_FULL);
+        if (l.size() == 0)
             return null;
-        return createGroup(list.get(0));
+        return createGroup(l.get(0));
     }
 
     @Override
     public Group getByAppId(String groupId) throws DalException {
         GroupDo d = groupDao.findByAppId(groupId, GroupEntity.READSET_FULL);
         return createGroup(d);
+    }
+
+    @Override
+    public Long[] batchGetByNames(String[] names) throws DalException {
+        List<GroupDo> l = groupDao.findAllByNames(names, GroupEntity.READSET_FULL);
+        if (l.size() == 0) {
+            return null;
+        }
+        Long[] ids = new Long[l.size()];
+        for (int i = 0; i < l.size(); i++) {
+            ids[i] = l.get(i).getId();
+        }
+        return ids;
     }
 
     @Override
@@ -69,7 +82,7 @@ public class GroupQueryImpl implements GroupQuery {
     }
 
     @Override
-    public List<Group> getLimit(long fromId, int maxCount) throws DalException {
+    public List<Group> getLimit(Long fromId, int maxCount) throws DalException {
         List<Group> list = new ArrayList<>();
         for (GroupDo d : groupDao.findLimit(fromId, maxCount, GroupEntity.READSET_FULL)) {
             Group group = createGroup(d);
@@ -80,17 +93,14 @@ public class GroupQueryImpl implements GroupQuery {
     }
 
     @Override
-    public List<Group> getBySlbAndVirtualServer(String slbName, String virtualServerName) throws DalException {
-        long slbId = slbDao.findByName(slbName, SlbEntity.READSET_FULL).getId();
-        long vsId = slbVirtualServerDao.findBySlbAndName(slbId, virtualServerName, SlbVirtualServerEntity.READSET_FULL).getId();
-        List<GroupSlbDo> l = groupSlbDao.findAllBySlbAndVirtualServer(slbId, vsId, GroupSlbEntity.READSET_FULL);
-        int size = l.size();
-        long[] names = new long[size];
-        for (int i = 0; i < size; i++) {
-            names[i] = l.get(i).getId();
+    public List<Group> getByVirtualServer(Long virtualServerId) throws DalException {
+        List<GroupSlbDo> l = groupSlbDao.findAllByVirtualServer(virtualServerId, GroupSlbEntity.READSET_FULL);
+        Long[] ids = new Long[l.size()];
+        for (int i = 0; i < l.size(); i++) {
+            ids[i] = l.get(i).getId();
         }
         List<Group> list = new ArrayList<>();
-        for (GroupDo d : groupDao.findAllByIds(names, GroupEntity.READSET_FULL)) {
+        for (GroupDo d : groupDao.findAllByIds(ids, GroupEntity.READSET_FULL)) {
             list.add(createGroup(d));
         }
         return list;
@@ -107,66 +117,58 @@ public class GroupQueryImpl implements GroupQuery {
     }
 
     @Override
-    public List<String> getGroupServersByGroup(String groupName) throws DalException {
-        GroupDo d = groupDao.findByName(groupName, GroupEntity.READSET_FULL);
-        if (d == null)
-            return null;
+    public List<String> getGroupServerIpsByGroup(Long groupId) throws DalException {
         List<String> groupServers = new ArrayList<>();
-        for (GroupServerDo asd : groupServerDao.findAllByGroup(d.getId(), GroupServerEntity.READSET_FULL)) {
+        for (GroupServerDo asd : groupServerDao.findAllByGroup(groupId, GroupServerEntity.READSET_FULL)) {
             groupServers.add(asd.getIp());
         }
         return groupServers;
     }
 
     @Override
-    public List<GroupServer> listGroupServersByGroup(String groupName) throws DalException {
-        GroupDo d = groupDao.findByName(groupName, GroupEntity.READSET_FULL);
-        if (d == null)
-            return null;
+    public List<GroupServer> getGroupServersByGroup(Long groupId) throws DalException {
         List<GroupServer> groupServers = new ArrayList<>();
-        for (GroupServerDo asd : groupServerDao.findAllByGroup(d.getId(), GroupServerEntity.READSET_FULL)) {
+        for (GroupServerDo asd : groupServerDao.findAllByGroup(groupId, GroupServerEntity.READSET_FULL)) {
             groupServers.add(C.toGroupServer(asd));
         }
         return groupServers;
     }
 
-
     private Group createGroup(GroupDo d) throws DalException {
         if (d == null)
             return null;
         Group group = C.toGroup(d);
-        cascadeQuery(d, group);
+        cascadeQuery(group);
         return group;
     }
 
-    private void cascadeQuery(GroupDo d, Group group) throws DalException {
-        queryGroupSlbs(d.getName(), group);
-        queryGroupHealthCheck(d.getId(), group);
-        queryLoadBalancingMethod(d.getId(), group);
-        queryGroupServers(d.getId(), group);
+    private void cascadeQuery(Group group) throws DalException {
+        queryGroupSlbs(group);
+        queryGroupHealthCheck(group);
+        queryLoadBalancingMethod(group);
+        queryGroupServers(group);
     }
 
-    private void queryGroupSlbs(String groupName, Group group) throws DalException {
-        long groupId = groupDao.findByName(groupName, GroupEntity.READSET_FULL).getId();
-        List<GroupSlbDo> list = groupSlbDao.findAllByGroup(groupId, GroupSlbEntity.READSET_FULL);
+    private void queryGroupSlbs(Group group) throws DalException {
+        List<GroupSlbDo> list = groupSlbDao.findAllByGroup(group.getId(), GroupSlbEntity.READSET_FULL);
         for (GroupSlbDo d : list) {
             GroupSlb e = C.toGroupSlb(d);
             group.addGroupSlb(e);
-            e.setSlbName(slbDao.findById(d.getSlbId(), SlbEntity.READSET_FULL).getName());
-            querySlbVips(d.getSlbId(), e);
+            e.setSlbName(slbDao.findById(e.getSlbId(), SlbEntity.READSET_FULL).getName());
+            querySlbVips(e);
             queryVirtualServer(d.getSlbVirtualServerId(), e);
         }
     }
 
-    private void querySlbVips(long slbId, GroupSlb groupSlb) throws DalException {
-        List<SlbVipDo> list = slbVipDao.findAllBySlb(slbId, SlbVipEntity.READSET_FULL);
+    private void querySlbVips(GroupSlb groupSlb) throws DalException {
+        List<SlbVipDo> list = slbVipDao.findAllBySlb(groupSlb.getSlbId(), SlbVipEntity.READSET_FULL);
         for (SlbVipDo d : list) {
             Vip e = C.toVip(d);
             groupSlb.addVip(e);
         }
     }
 
-    private void queryVirtualServer(long slbVirtualServerId, GroupSlb groupSlb) throws DalException {
+    private void queryVirtualServer(Long slbVirtualServerId, GroupSlb groupSlb) throws DalException {
         SlbVirtualServerDo d = slbVirtualServerDao.findByPK(slbVirtualServerId, SlbVirtualServerEntity.READSET_FULL);
         if (d == null)
             return;
@@ -175,7 +177,7 @@ public class GroupQueryImpl implements GroupQuery {
         querySlbDomains(d.getId(), e);
     }
 
-    private void querySlbDomains(long slbVirtualServerId, VirtualServer virtualServer) throws DalException {
+    private void querySlbDomains(Long slbVirtualServerId, VirtualServer virtualServer) throws DalException {
         List<SlbDomainDo> list = slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL);
         for (SlbDomainDo d : list) {
             Domain e = C.toDomain(d);
@@ -183,24 +185,24 @@ public class GroupQueryImpl implements GroupQuery {
         }
     }
 
-    private void queryGroupHealthCheck(long groupKey, Group group) throws DalException {
-        GroupHealthCheckDo d = groupHealthCheckDao.findByGroup(groupKey, GroupHealthCheckEntity.READSET_FULL);
+    private void queryGroupHealthCheck(Group group) throws DalException {
+        GroupHealthCheckDo d = groupHealthCheckDao.findByGroup(group.getId(), GroupHealthCheckEntity.READSET_FULL);
         if (d == null)
             return;
         HealthCheck e = C.toHealthCheck(d);
         group.setHealthCheck(e);
     }
 
-    private void queryLoadBalancingMethod(long groupKey, Group group) throws DalException {
-        GroupLoadBalancingMethodDo d = groupLoadBalancingMethodDao.findByGroup(groupKey, GroupLoadBalancingMethodEntity.READSET_FULL);
+    private void queryLoadBalancingMethod(Group group) throws DalException {
+        GroupLoadBalancingMethodDo d = groupLoadBalancingMethodDao.findByGroup(group.getId(), GroupLoadBalancingMethodEntity.READSET_FULL);
         if (d == null)
             return;
         LoadBalancingMethod e = C.toLoadBalancingMethod(d);
         group.setLoadBalancingMethod(e);
     }
 
-    private void queryGroupServers(long groupKey, Group group) throws DalException {
-        List<GroupServerDo> list = groupServerDao.findAllByGroup(groupKey, GroupServerEntity.READSET_FULL);
+    private void queryGroupServers(Group group) throws DalException {
+        List<GroupServerDo> list = groupServerDao.findAllByGroup(group.getId(), GroupServerEntity.READSET_FULL);
         for (GroupServerDo d : list) {
             GroupServer e = C.toGroupServer(d);
             group.addGroupServer(e);

@@ -1,5 +1,5 @@
 <model>
-    <slb id="111111" name="default" version="1">
+    <slb id="123456789012" name="default" version="1">
         <nginx-bin>/usr/local/nginx/bin</nginx-bin>
         <nginx-conf>/usr/local/nginx/conf</nginx-conf>
         <nginx-worker-processes>1</nginx-worker-processes>
@@ -8,18 +8,18 @@
             <vip/>
         </vips>
         <slb-servers>
-            <slb-server slb-id="1" ip="192.168.1.1" host-name="slb001" enable="true"/>
-            <slb-server slb-id="1" ip="192.168.1.2" host-name="slb002" enable="true"/>
+            <slb-server slb-id="123456789012" ip="192.168.1.1" host-name="slb001" enable="true"/>
+            <slb-server slb-id="123456789012" ip="192.168.1.2" host-name="slb002" enable="true"/>
         </slb-servers>
         <virtual-servers>
-            <virtual-server id="123456789012" ssl="true">
+            <virtual-server name="vs001" id="123456789012" ssl="true">
                 <port>80,8099</port>
                 <domains>
                     <domain name="www.ctrip.com"/>
                     <domain name="hotel.ctrip.com"/>
                 </domains>
             </virtual-server>
-            <virtual-server id="1" ssl="true">
+            <virtual-server name="vs001" id="1" ssl="true">
                 <port>80</port>
                 <domains>
                     <domain name="www.ctrip.com"/>
@@ -40,11 +40,12 @@
 
     <vip ip="192.168.1.1"/>
 
-    <group id="111111" name="gateway" app-id="app921822" version="1" ssl="false">
+    <group id="123456789012" name="gateway" app-id="app921822" version="1" ssl="false">
         <group-slbs>
             <group-slb priority="0">
                 <group-id>12345678901</group-id>
                 <slb-id>1</slb-id>
+                <slb-name>default</slb-name>
                 <slb-vips>
                     <vip/>
                     <vip/>
@@ -55,6 +56,7 @@
             </group-slb>
             <group-slb priority="0">
                 <group-id>12345678901</group-id>
+
                 <slb-id>1</slb-id>
                 <slb-vips>
                     <vip ip="192.168.1.1"/>
@@ -84,7 +86,7 @@
     </group>
 
     <archive>
-        <id>1</id>
+        <id>12345678901</id>
         <content>groupXmlString</content>
         <version>1</version>
     </archive>

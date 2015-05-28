@@ -14,19 +14,21 @@ public interface GroupQuery {
 
     Group get(String name) throws DalException;
 
-    Group getById(long id) throws DalException;
+    Group getById(Long id) throws DalException;
 
     Group getByAppId(String appId) throws DalException;
 
+    Long[] batchGetByNames(String[] names) throws DalException;
+
     List<Group> getAll() throws DalException;
 
-    List<Group> getLimit(long fromId, int maxCount) throws DalException;
+    List<Group> getLimit(Long fromId, int maxCount) throws DalException;
 
-    List<Group> getBySlbAndVirtualServer(String slbName, String virtualServerName) throws DalException;
+    List<Group> getByVirtualServer(Long virtualServerId) throws DalException;
 
-    List<String> getByGroupServer(String appServerIp) throws DalException;
+    List<String> getByGroupServer(String groupServerIp) throws DalException;
 
-    List<String> getGroupServersByGroup(String appName) throws DalException;
+    List<String> getGroupServerIpsByGroup(Long groupId) throws DalException;
 
-    List<GroupServer> listGroupServersByGroup(String appName) throws DalException;
+    List<GroupServer> getGroupServersByGroup(Long groupId) throws DalException;
 }
