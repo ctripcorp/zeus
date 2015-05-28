@@ -41,14 +41,13 @@ public class SlbSyncImpl implements SlbSync {
     @Override
     public void add(Slb slb) throws DalException, ValidationException {
         validate(slb);
-        SlbDo d = C.toSlbDo(slb);
+        SlbDo d = C.toSlbDo(0L, slb);
         d.setCreatedTime(new Date());
         d.setVersion(1);
 
         slbDao.insert(d);
-        cascadeSync(slb);
-        //TODO check
         slb.setId(d.getId());
+        cascadeSync(slb);
     }
 
     @Override
@@ -59,7 +58,7 @@ public class SlbSyncImpl implements SlbSync {
             throw new ValidationException("Slb does not exist.");
         if (check.getVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        SlbDo d = C.toSlbDo(slb);
+        SlbDo d = C.toSlbDo(slb.getId(), slb);
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
         cascadeSync(slb);
     }
@@ -81,7 +80,7 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     private void validate(Slb slb) throws ValidationException {
-        if (slb == null || slb.getId().longValue() < 0) {
+        if (slb == null || slb.getName() == null || slb.getName().isEmpty()) {
             throw new ValidationException("Slb with null value cannot be persisted.");
         }
         if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
@@ -173,7 +172,7 @@ public class SlbSyncImpl implements SlbSync {
             if (old != null) {
                 oldList.remove(old);
             }
-            SlbVirtualServerDo d = C.toSlbVirtualServerDo(e).setSlbId(slbId).setCreatedTime(new Date());
+            SlbVirtualServerDo d = C.toSlbVirtualServerDo(0L, e).setSlbId(slbId).setCreatedTime(new Date());
             slbVirtualServerDao.insert(d);
 
             //Domain

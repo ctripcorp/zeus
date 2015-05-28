@@ -217,7 +217,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='group-id'/> = ${group-id}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
