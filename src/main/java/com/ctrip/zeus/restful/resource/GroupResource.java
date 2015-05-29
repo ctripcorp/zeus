@@ -73,11 +73,16 @@ public class GroupResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroup")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                        @QueryParam("groupId") String groupId) throws Exception {
-        if (groupId == null || groupId.isEmpty()) {
+                        @QueryParam("id") Long groupId,
+                        @QueryParam("appId") String appId) throws Exception {
+        Group group;
+        if (groupId != null) {
+            group = groupRepository.getById(groupId);
+        } else if (appId != null) {
+            group = groupRepository.getByAppId(appId);
+        } else {
             throw new Exception("Missing parameter or value.");
         }
-        Group group = groupRepository.getByAppId(groupId);
         return responseHandler.handle(group, hh.getMediaType());
     }
 

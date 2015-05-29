@@ -24,15 +24,18 @@ public class DefaultResponseHandler implements ResponseHandler {
         ZeusResponse zr = new ZeusResponse();
         if (object == null)
             return zr;
-
-        if (type.equals(MediaType.APPLICATION_JSON)) {
-            zr.setResponse(GenericSerializer.writeJson(object));
-        } else if (type.equals(MediaType.APPLICATION_XML)) {
+        if (type.equals(MediaType.APPLICATION_XML)) {
             zr.setResponse(GenericSerializer.writeXml(object));
-        } else if (object instanceof Serializable) {
-            zr.setResponse((Serializable)object);
         } else {
-            throw new ValidationException("Response object cannot be serialized.");
+            try {
+                zr.setResponse(GenericSerializer.writeJson(object));
+            } catch (Exception ex) {
+                if (object instanceof Serializable) {
+                    zr.setResponse((Serializable) object);
+                } else {
+                    throw new ValidationException("Response object cannot be serialized.");
+                }
+            }
         }
         return zr;
     }

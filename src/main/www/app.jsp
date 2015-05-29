@@ -94,7 +94,7 @@
                 <b class="arrow"></b>
             </li>
             <li class="active">
-                <a href="/app" class="">
+                <a href="/group" class="">
                     <i class="menu-icon fa fa-desktop"></i>
 							<span class="menu-text">
 								Application
@@ -166,7 +166,7 @@
                         <!-- page content goes here -->
                         <div ng-app="" ng-controller="mainController">
                             <div>
-                                <div style="float: left;margin-right:6px" ng-repeat="x in apps">
+                                <div style="float: left;margin-right:6px" ng-repeat="x in groups">
                                     <div>
                                         <button ng-click="showa(x)">
                                             {{x.name}}
@@ -216,9 +216,9 @@
 <script>
     function mainController($scope, $http) {
         $scope.lll = function () {
-            $http.get("/api/app").success(
+            $http.get("/api/group").success(
                     function (response) {
-                        $scope.apps = response.apps;
+                        $scope.groups = response.groups;
                     }
             );
         }
@@ -229,7 +229,7 @@
             $scope.current = JSON.stringify(x, null, "    ");
         }
         $scope.save = function (content) {
-            $http.post("/api/app/add", content).success(
+            $http.post("/api/group/add", content).success(
                     function (response) {
                         $scope.lll();
                     }
@@ -237,9 +237,9 @@
         }
 
 
-        $scope.activate = function (appName) {
-            var req = {"conf-app-names": [{"appname": appName}]};
-            var reqtotle = {"conf-slb-names": [{"slbname": "default"}],"conf-app-names": [{"appname": appName}]};
+        $scope.activate = function (groupId) {
+            var req = {"conf-group-names": [{"groupId": groupId}]};
+            var reqtotle = {"conf-slb-names": [{"slbname": "default"}],"conf-group-names": [{"groupId": groupId}]};
 
             $http.post("/api/conf/activate",JSON.stringify(req)).success(
                     function (response) {

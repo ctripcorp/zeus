@@ -60,6 +60,11 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
+    public Group getById(Long id) throws Exception {
+        return groupQuery.getById(id);
+    }
+
+    @Override
     public Group get(String groupName) throws Exception {
         return groupQuery.get(groupName);
     }

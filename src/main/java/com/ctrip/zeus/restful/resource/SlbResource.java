@@ -54,6 +54,19 @@ public class SlbResource {
         return responseHandler.handle(slb, hh.getMediaType());
     }
 
+    @GET
+    @Path("/get")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "getGroup")
+    public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                        @QueryParam("id") Long slbId) throws Exception {
+        if (slbId != null) {
+            Slb slb = slbRepository.getById(slbId);
+            return responseHandler.handle(slb, hh.getMediaType());
+        }
+        throw new Exception("Missing parameter or value.");
+    }
+    
     @POST
     @Path("/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})

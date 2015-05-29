@@ -22,7 +22,7 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/5/2015.
  */
-@Repository("slbClusterRepository")
+@Repository("slbRepository")
 public class SlbRepositoryImpl implements SlbRepository {
     @Resource
     private SlbSync slbSync;
