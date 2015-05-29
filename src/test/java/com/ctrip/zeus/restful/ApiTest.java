@@ -135,7 +135,7 @@ public class ApiTest {
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
                 .addGroupServer(new GroupServer().setIp("192.168.20.2").setHostName("slb001a")
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
-                .addGroupSlb(new GroupSlb().setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002").setPort("80")
+                .addGroupSlb(new GroupSlb().setSlbId(1L).setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002").setPort("80")
                         .setSsl(false).addDomain(new Domain().setName("hotel.ctrip.com"))).setPath("/hotel"))
         ;
         c.add(app);
