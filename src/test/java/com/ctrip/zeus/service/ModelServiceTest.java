@@ -72,7 +72,7 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     @Test
-    public void testListSlbsByGroupServerAndGroupName() throws Exception {
+    public void testListSlbsByGroupServerAndGroup() throws Exception {
         List<Slb> slbsByGroupServer = slbRepo.listByGroupServerAndGroup("10.2.6.201", null);
         Assert.assertEquals(1, slbsByGroupServer.size());
         List<Slb> slbsByGroupName = slbRepo.listByGroupServerAndGroup(null, testGroup.getId());
@@ -214,27 +214,27 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     private void addGroups() throws Exception {
-        testGroup = generateGroup("testGroup", defaultSlb.getName(), defaultSlb.getVirtualServers().get(1));
+        testGroup = generateGroup("testGroup",  defaultSlb, defaultSlb.getVirtualServers().get(1));
         insertedTestGroupId = groupRepo.add(testGroup);
         Assert.assertTrue(insertedTestGroupId > 0);
         for (int i = 0; i < 6; i++) {
-            Group group = generateGroup("testGroup" + i, defaultSlb.getName(), defaultSlb.getVirtualServers().get(0));
+            Group group = generateGroup("testGroup" + i, defaultSlb, defaultSlb.getVirtualServers().get(0));
             groupRepo.add(group);
         }
     }
 
-    private Group generateGroup(String groupName, String slbName, VirtualServer virtualServer) {
+    private Group generateGroup(String groupName, Slb slb, VirtualServer virtualServer) {
         return new Group().setName(groupName).setAppId("000000").setVersion(1).setSsl(false)
                 .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
-                .addGroupSlb(new GroupSlb().setSlbName(slbName).setPath("/").setVirtualServer(virtualServer))
+                .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setSlbName(slb.getName()).setPath("/").setVirtualServer(virtualServer))
                 .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.201"))
                 .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
     }
 
     private void deleteGroups() throws Exception {
         Assert.assertEquals(1, groupRepo.delete(testGroup.getId()));
-        for (int i = 0; i < 6; i++) {
+        for (int i = 1; i <= 6; i++) {
             Assert.assertEquals(1, groupRepo.delete(testGroup.getId() + i));
         }
     }

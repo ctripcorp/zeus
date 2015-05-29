@@ -145,7 +145,7 @@ public class ActivateTest extends AbstractAPITest {
 
     @Test
     public void activeteTest(){
-        AopSpring.addChecker("com.ctrip.zeus.service.Activate.impl.ActivateServiceImpl.activate", new Checker() {
+        AopSpring.addChecker("com.ctrip.zeus.service.activate.impl.ActivateServiceImpl.activate", new Checker() {
             @Override
             public void check() {
                 try {

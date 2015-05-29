@@ -43,12 +43,13 @@ public class GroupSyncImpl implements GroupSync {
     @Override
     public GroupDo add(Group group) throws DalException, ValidationException {
         validate(group);
-        GroupDo d= C.toGroupDo(group);
+        GroupDo d= C.toGroupDo(0L, group);
         d.setCreatedTime(new Date());
         d.setVersion(1);
 
         groupDao.insert(d);
-        cascadeSync(d, group);
+        group.setId(d.getId());
+        cascadeSync(group);
 
         return d;
     }
@@ -60,12 +61,12 @@ public class GroupSyncImpl implements GroupSync {
         if (check.getVersion() > group.getVersion())
             throw new ValidationException("Newer Group version is detected.");
 
-        GroupDo d= C.toGroupDo(group);
+        GroupDo d= C.toGroupDo(group.getId(), group);
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
 
         GroupDo updated = groupDao.findByName(group.getName(), GroupEntity.READSET_FULL);
         d.setVersion(updated.getVersion());
-        cascadeSync(d, group);
+        cascadeSync(group);
         return d;
     }
 
@@ -96,11 +97,11 @@ public class GroupSyncImpl implements GroupSync {
         return true;
     }
 
-    private void cascadeSync(GroupDo d, Group group) throws DalException {
+    private void cascadeSync(Group group) throws DalException {
         syncGroupSlbs(group.getId(), group.getGroupSlbs());
-        syncGroupHealthCheck(d.getId(), group.getHealthCheck());
-        syncLoadBalancingMethod(d.getId(), group.getLoadBalancingMethod());
-        syncGroupServers(d.getId(), group.getGroupServers());
+        syncGroupHealthCheck(group.getId(), group.getHealthCheck());
+        syncLoadBalancingMethod(group.getId(), group.getLoadBalancingMethod());
+        syncGroupServers(group.getId(), group.getGroupServers());
     }
 
     private void syncGroupSlbs(Long groupId, List<GroupSlb> groupSlbs) throws DalException {
@@ -119,8 +120,9 @@ public class GroupSyncImpl implements GroupSync {
             if (old != null) {
                 oldList.remove(old);
             }
+            e.setGroupId(groupId);
+            e.getVirtualServer().setId(vsId);
             groupSlbDao.insert(C.toGroupSlbDo(e)
-                    .setGroupId(groupId)
                     .setCreatedTime(new Date()));
         }
 

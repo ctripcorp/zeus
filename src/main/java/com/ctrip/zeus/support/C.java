@@ -125,9 +125,9 @@ public class C {
 
     /*Entity to Do*/
 
-    public static GroupDo toGroupDo(Group e) {
+    public static GroupDo toGroupDo(Long groupId, Group e) {
         return new GroupDo()
-                .setId(e.getId())
+                .setId(groupId)
                 .setAppId(e.getAppId())
                 .setName(e.getName())
                 .setSsl(e.isSsl())
@@ -173,9 +173,9 @@ public class C {
                 .setValue(e.getValue());
     }
 
-    public static SlbDo toSlbDo(Slb e) {
+    public static SlbDo toSlbDo(Long slbId, Slb e) {
         return new SlbDo()
-                .setId(e.getId())
+                .setId(slbId)
                 .setName(e.getName())
                 .setNginxBin(e.getNginxBin())
                 .setNginxConf(e.getNginxConf())
@@ -196,9 +196,9 @@ public class C {
                 .setIp(e.getIp());
     }
 
-    public static SlbVirtualServerDo toSlbVirtualServerDo(VirtualServer e) {
+    public static SlbVirtualServerDo toSlbVirtualServerDo(Long virtualServerId, VirtualServer e) {
         return new SlbVirtualServerDo()
-                .setId(e.getId())
+                .setId(virtualServerId)
                 .setPort(e.getPort())
                 .setIsSsl(e.isSsl())
                 .setName(e.getName());

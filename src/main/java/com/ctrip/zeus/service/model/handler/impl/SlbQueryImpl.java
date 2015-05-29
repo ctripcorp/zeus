@@ -9,7 +9,9 @@ import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -158,9 +160,13 @@ public class SlbQueryImpl implements SlbQuery {
     private List<Slb> getAllByGroupSlbs(List<GroupSlbDo> list) throws DalException {
         if (list.size() == 0)
             return null;
+        Set<Long> visitedIds = new HashSet<>();
         List<Slb> l = new ArrayList<>();
         for (GroupSlbDo d : list) {
+            if (visitedIds.contains(d.getSlbId()))
+                continue;
             Slb slb = getById(d.getSlbId());
+            visitedIds.add(d.getSlbId());
             if (slb == null)
                 continue;
             l.add(slb);

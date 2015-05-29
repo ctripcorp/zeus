@@ -126,7 +126,7 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        slb_name = values(slb_name),
+                        slb_id = values(slb_id),
                         <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>

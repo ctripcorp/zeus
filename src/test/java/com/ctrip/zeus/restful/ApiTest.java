@@ -113,7 +113,7 @@ public class ApiTest {
     }
 
     @Test
-    public void testApp() {
+    public void testGroup() {
         System.out.println("###########################test2");
 
         SlbClient s = new SlbClient("http://127.0.0.1:8099");
@@ -124,25 +124,25 @@ public class ApiTest {
         GroupClient c = new GroupClient("http://127.0.0.1:8099");
         c.getAll();
 
-        String appName = "testApp";
+        String appName = "testGroup";
 
-        App app = new App();
+        Group app = new Group();
         app.setName(appName)
                 .setAppId("999999").setVersion(0)
                 .setHealthCheck(new HealthCheck().setFails(5).setIntervals(50).setPasses(2).setUri("/hotel"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
-                .addAppServer(new AppServer().setIp("192.168.20.1").setHostName("slb001a")
+                .addGroupServer(new GroupServer().setIp("192.168.20.1").setHostName("slb001a")
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
-                .addAppServer(new AppServer().setIp("192.168.20.2").setHostName("slb001a")
+                .addGroupServer(new GroupServer().setIp("192.168.20.2").setHostName("slb001a")
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
-                .addAppSlb(new AppSlb().setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002").setPort("80")
+                .addGroupSlb(new GroupSlb().setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002").setPort("80")
                         .setSsl(false).addDomain(new Domain().setName("hotel.ctrip.com"))).setPath("/hotel"))
         ;
         c.add(app);
 
-        App app2 = c.get(appName);
+        Group app2 = c.get(appName);
         Assert.assertEquals(1, app2.getVersion().intValue());
-        ModelAssert.assertAppEquals(app, app2);
+        ModelAssert.assertGroupEquals(app, app2);
     }
 
     private Slb generateSlb(String slbName) {
