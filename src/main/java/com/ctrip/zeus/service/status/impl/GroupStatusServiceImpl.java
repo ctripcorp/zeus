@@ -79,11 +79,13 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
             return client.getAppStatus(groupId,slbId);
         }
+        Slb slb = slbRepository.getById(slbId);
+        Group group = groupRepository.getById(groupId);
         GroupStatus status = new GroupStatus();
         status.setGroupId(groupId);
         status.setSlbId(slbId);
-        status.setGroupName("group=name");
-        status.setSlbName("slb=name");
+        status.setGroupName(group.getName());
+        status.setSlbName(slb.getName());
 
         List<GroupServer> groupServerList = groupRepository.listGroupServersByGroup(groupId);
         for (GroupServer groupServer : groupServerList) {
@@ -105,6 +107,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         GroupServerStatus groupServerStatus = new GroupServerStatus();
         groupServerStatus.setIp(ip);
         groupServerStatus.setPort(port);
+
 
         boolean memberUp = statusService.getGroupServerStatus(slbId,groupId,ip);
         boolean serverUp = statusService.getServerStatus(ip);

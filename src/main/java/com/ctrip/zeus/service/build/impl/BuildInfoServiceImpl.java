@@ -27,7 +27,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
     private BuildInfoDao buildInfoDao;
 
     @Resource
-    private SlbRepository slbClusterRepository;
+    private SlbRepository slbRepository;
     @Resource
     private ActiveConfService activeConfService;
 
@@ -91,7 +91,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
         Set<Long> buildSlbIds = new HashSet<>();
         for (Long s : slbIds)
         {
-            if (slbClusterRepository.getById(s)==null)
+            if (slbRepository.getById(s)==null)
             {
                 logger.warn("slb ["+s+"] is not exist！remove it from activate slb  list!");
             }else {
@@ -100,7 +100,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
         }
 
 
-        List<GroupSlb> list = slbClusterRepository.listGroupSlbsByGroups(groupIds.toArray(new Long[]{}));
+        List<GroupSlb> list = slbRepository.listGroupSlbsByGroups(groupIds.toArray(new Long[]{}));
 
 
         if (groupIds.size()>0)

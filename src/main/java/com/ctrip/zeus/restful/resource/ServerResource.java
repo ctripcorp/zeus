@@ -45,8 +45,6 @@ public class ServerResource {
     @Resource
     private NginxService nginxAgentService;
     @Resource
-    private SlbRepository slbClusterRepository;
-    @Resource
     private NginxService nginxService;
     @Resource
     private GroupStatusService groupStatusService;
@@ -56,6 +54,8 @@ public class ServerResource {
     private NginxConfService nginxConfService;
     @Resource
     private DbLockFactory dbLockFactory;
+    @Resource
+    private SlbRepository slbRepository;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -85,7 +85,7 @@ public class ServerResource {
 
     private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
         //get slb by serverip
-        List<Slb> slblist = slbClusterRepository.listByGroupServerAndGroup(serverip,null);
+        List<Slb> slblist = slbRepository.listByGroupServerAndGroup(serverip,null);
         AssertUtils.isNull(slblist,"[UpServer/DownServer] Can not find slb by server ip :["+serverip+"],Please check the configuration and server ip!");
 
         for (Slb slb : slblist)
@@ -174,7 +174,7 @@ public class ServerResource {
     private Response memberOps(HttpHeaders hh,Long groupId,String ip)throws Exception{
 
         //get slb by appname and ip
-        List<Slb> slblist = slbClusterRepository.listByGroupServerAndGroup(ip,groupId);
+        List<Slb> slblist = slbRepository.listByGroupServerAndGroup(ip,groupId);
         AssertUtils.isNull(slblist,"Not find slb for GroupId ["+groupId+"] and ip ["+ip+"]");
 
         for (Slb slb : slblist) {

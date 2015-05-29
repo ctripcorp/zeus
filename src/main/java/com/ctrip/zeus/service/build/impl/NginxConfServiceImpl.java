@@ -8,7 +8,6 @@ import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.build.conf.UpstreamsConf;
-import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
@@ -31,9 +30,6 @@ public class NginxConfServiceImpl implements NginxConfService {
     private NginxConfServerDao nginxConfServerDao;
     @Resource
     private NginxConfUpstreamDao nginxConfUpstreamDao;
-
-    @Resource
-    private SlbRepository slbClusterRepository;
 
     @Resource
     private NginxConfBuilder nginxConfigBuilder;

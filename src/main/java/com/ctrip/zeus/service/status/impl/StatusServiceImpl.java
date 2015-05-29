@@ -28,7 +28,7 @@ public class StatusServiceImpl implements StatusService {
     @Resource
     private StatusGroupServerService statusGroupServerService;
     @Resource
-    private SlbRepository slbClusterRepository;
+    private SlbRepository slbRepository;
 
     private Logger logger = LoggerFactory.getLogger(StatusServiceImpl.class);
 
@@ -77,7 +77,7 @@ public class StatusServiceImpl implements StatusService {
     @Override
     public void upMember(Long groupId, String ip) throws Exception {
 
-        List<GroupSlb> appslblist = slbClusterRepository.listGroupSlbsByGroups(new Long[]{groupId});
+        List<GroupSlb> appslblist = slbRepository.listGroupSlbsByGroups(new Long[]{groupId});
         if (appslblist==null||appslblist.size()==0)
         {
             logger.warn("[up member]: Can not find appslb by GroupId! GroupId: "+groupId);
@@ -98,7 +98,7 @@ public class StatusServiceImpl implements StatusService {
     @Override
     public void downMember(Long groupId, String ip) throws Exception {
 
-        List<GroupSlb> appslblist = slbClusterRepository.listGroupSlbsByGroups(new Long[]{groupId});
+        List<GroupSlb> appslblist = slbRepository.listGroupSlbsByGroups(new Long[]{groupId});
         if (appslblist==null||appslblist.size()==0)
         {
             logger.warn("[down member]: Can not find appslb by GroupId! GroupId: "+groupId);

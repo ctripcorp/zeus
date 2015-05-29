@@ -45,7 +45,7 @@ public class ActivateResource {
     @Resource
     private DbLockFactory dbLockFactory;
     @Resource
-    private SlbRepository slbClusterRepository;
+    private SlbRepository slbRepository;
     @Resource
     private GroupRepository groupRepository;
 
@@ -62,7 +62,7 @@ public class ActivateResource {
         List<Long> groupIds = new ArrayList<>();
         for (String slbName : slbNames)
         {
-            slbIds.add(slbClusterRepository.get(slbName).getId());
+            slbIds.add(slbRepository.get(slbName).getId());
         }
         for (String groupName : groupNames)
         {
