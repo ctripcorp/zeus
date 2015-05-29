@@ -135,7 +135,7 @@ public class ServerResource {
     }
 
     @GET
-    @Path("/upMember")
+    @Path("/upMemberByName")
     @Authorize(name="upDownMember")
     public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
     {
@@ -145,7 +145,7 @@ public class ServerResource {
     }
 
     @GET
-    @Path("/downMember")
+    @Path("/downMemberByName")
     @Authorize(name="upDownMember")
     public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
     {

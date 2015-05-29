@@ -47,7 +47,7 @@ public class ActivateResource {
 
 
     @GET
-    @Path("/activate")
+    @Path("/activateByName")
     @Authorize(name="activate")
     public Response activateByName(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("GroupName") List<String> groupNames)throws Exception{
 //        return activateAll(slbNames,groupNames,hh);
