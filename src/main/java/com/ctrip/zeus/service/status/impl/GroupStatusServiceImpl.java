@@ -14,7 +14,6 @@ import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,7 +108,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         groupServerStatus.setPort(port);
 
 
-        boolean memberUp = statusService.getGroupServerStatus(slbId,groupId,ip);
+        boolean memberUp = statusService.getGroupServerStatus(slbId, groupId, ip);
         boolean serverUp = statusService.getServerStatus(ip);
         boolean backendUp = getUpstreamStatus(groupId,ip);
 
@@ -121,10 +120,10 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     }
 
     //TODO: should include port to get accurate upstream
-    private boolean getUpstreamStatus(Long groupId, String ip) throws IOException {
+    private boolean getUpstreamStatus(Long groupId, String ip) throws Exception {
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
-        String upstreamNameEndWith = "_"+groupId;
+        String upstreamNameEndWith = "_"+groupRepository.getById(groupId).getName();
         for (S server : servers) {
             if (!server.getUpstream().endsWith(upstreamNameEndWith))
             {
