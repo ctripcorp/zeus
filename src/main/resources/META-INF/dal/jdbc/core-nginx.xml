@@ -40,7 +40,7 @@
     </entity>
     <entity name="nginx-conf-server" table="nginx_conf_server" alias="ncs">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
-        <member name="data-change-last-time" field="last_modified" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
+        <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <query-defs>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
@@ -80,7 +80,7 @@
     </entity>
     <entity name="nginx-conf-upstream" table="nginx_conf_upstream" alias="ncs">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
-        <member name="data-change-last-time" field="last_modified" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
+        <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <query-defs>
             <query name="insert" type="INSERT" batch="true">
                 <statement>

@@ -6,6 +6,8 @@ import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
+import com.ctrip.zeus.service.model.GroupRepository;
+import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
@@ -20,6 +22,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -41,6 +44,11 @@ public class ActivateResource {
     private BuildService buildService;
     @Resource
     private DbLockFactory dbLockFactory;
+    @Resource
+    private SlbRepository slbClusterRepository;
+    @Resource
+    private GroupRepository groupRepository;
+
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
 
@@ -49,15 +57,25 @@ public class ActivateResource {
     @GET
     @Path("/activateByName")
     @Authorize(name="activate")
-    public Response activateByName(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("GroupName") List<String> groupNames)throws Exception{
-//        return activateAll(slbNames,groupNames,hh);
-        return null;
+    public Response activateByName(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("groupName") List<String> groupNames)throws Exception{
+        List<Long> slbIds = new ArrayList<>();
+        List<Long> groupIds = new ArrayList<>();
+        for (String slbName : slbNames)
+        {
+            slbIds.add(slbClusterRepository.get(slbName).getId());
+        }
+        for (String groupName : groupNames)
+        {
+            groupIds.add(groupRepository.get(groupName).getId());
+        }
+
+        return activateAll(slbIds,groupIds,hh);
     }
 
     @GET
     @Path("/activate")
     @Authorize(name="activate")
-    public Response activateById(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("GroupId") List<Long> groupIds)throws Exception{
+    public Response activateById(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("groupId") List<Long> groupIds)throws Exception{
         return activateAll(slbIds,groupIds,hh);
     }
 

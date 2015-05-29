@@ -66,12 +66,11 @@ public class ServerResource {
     @Path("/upServer")
     @Authorize(name="upDownServer")
     public Response upServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-        String serverip = ip;
 
         //update status
-        statusService.upServer(serverip);
+        statusService.upServer(ip);
 
-        return serverOps(hh,serverip);
+        return serverOps(hh,ip);
 
     }
 
@@ -79,10 +78,9 @@ public class ServerResource {
     @Path("/downServer")
     @Authorize(name="upDownServer")
     public Response downServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-        String serverip = ip;
         //update status
-        statusService.downServer(serverip);
-        return serverOps(hh, serverip);
+        statusService.downServer(ip);
+        return serverOps(hh, ip);
     }
 
     private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
@@ -137,21 +135,21 @@ public class ServerResource {
     @GET
     @Path("/upMemberByName")
     @Authorize(name="upDownMember")
-    public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
+    public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
     {
-//        statusService.upMember(appName,ip);
-//        return memberOps(hh, appName, ip);
-        return null;
+        Long groupId = groupRepository.get(groupName).getId();
+        statusService.upMember(groupId,ip);
+        return memberOps(hh, groupId, ip);
     }
 
     @GET
     @Path("/downMemberByName")
     @Authorize(name="upDownMember")
-    public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
+    public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
     {
-//        statusService.downMember(appName, ip);
-//        return memberOps(hh, appName, ip);
-        return null;
+        Long groupId = groupRepository.get(groupName).getId();
+        statusService.downMember(groupId, ip);
+        return memberOps(hh, groupId, ip);
     }
 
     @GET
