@@ -69,7 +69,7 @@ public class StatusResource {
     }
 
     @GET
-    @Path("/slb/{slbName:[a-zA-Z0-9_-]+}")
+    @Path("/slbName/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
     public Response allGroupStatusInSlb(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("slbName") String slbName) throws Exception {
@@ -106,7 +106,7 @@ public class StatusResource {
     }
 
     @GET
-    @Path("/app/{groupName:[a-zA-Z0-9_-]+}")
+    @Path("/groupName/{groupName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
     public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("groupName") String groupName) throws Exception {
@@ -137,7 +137,7 @@ public class StatusResource {
         }
     }
     @GET
-    @Path("/group/{groupName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}")
+    @Path("/groupName/{groupName:[a-zA-Z0-9_-]+}/slbName/{slbName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
     public Response groupSlbStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("groupName") String groupName, @PathParam("slbName") String slbName) throws Exception {
@@ -171,7 +171,7 @@ public class StatusResource {
         }
     }
     @GET
-    @Path("/group/{groupName:[a-zA-Z0-9_-]+}/slb/{slbName:[a-zA-Z0-9_-]+}/server/{sip}")
+    @Path("/groupName/{groupName:[a-zA-Z0-9_-]+}/slbName/{slbName:[a-zA-Z0-9_-]+}/server/{sip}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
     public Response groupServerStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("groupName") String groupName, @PathParam("slbName") String slbName, @PathParam("sip") String sip) throws Exception {
