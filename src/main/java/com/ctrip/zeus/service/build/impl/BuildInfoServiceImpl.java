@@ -94,9 +94,6 @@ public class BuildInfoServiceImpl implements BuildInfoService {
             if (slbClusterRepository.getById(s)==null)
             {
                 logger.warn("slb ["+s+"] is not exist！remove it from activate slb  list!");
-            }else if (activeConfService.getConfSlbActiveContentBySlbId(s)==null)
-            {
-                logger.warn("slb ["+s+"] is not activated！remove it from activate slb  list!");
             }else {
                 buildSlbIds.add(s);
             }

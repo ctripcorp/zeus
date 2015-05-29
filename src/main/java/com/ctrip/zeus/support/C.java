@@ -92,14 +92,14 @@ public class C {
 
     public static Archive toGroupArchive(ArchiveGroupDo d) {
         return new Archive()
-                .setId(d.getId())
+                .setId(d.getGroupId())
                 .setContent(d.getContent())
                 .setVersion(d.getVersion());
     }
 
     public static Archive toSlbArchive(ArchiveSlbDo d) {
         return new Archive()
-                .setId(d.getId())
+                .setId(d.getSlbId())
                 .setContent(d.getContent())
                 .setVersion(d.getVersion());
     }

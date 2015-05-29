@@ -37,7 +37,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Resource
     StatusService statusService;
 
-    private Long currentSlbName = null;
+    private long currentSlbId = -1L;
 
     @Override
     public List<GroupStatus> getAllGroupStatus() throws Exception {
@@ -138,15 +138,17 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         return false;
     }
     private boolean isCurrentSlb(Long slbId) throws Exception {
-        if (currentSlbName < 0 ||currentSlbName == null)
+        if (currentSlbId < 0)
         {
             String ip = com.ctrip.zeus.util.S.getIp();
             Slb slb = slbRepository.getBySlbServer(ip);
             if (slb != null )
             {
-                currentSlbName = slb.getId();
+                currentSlbId = slb.getId();
+            }else {
+                currentSlbId = 0 ;
             }
         }
-        return slbId.equals(currentSlbName);
+        return slbId.equals(currentSlbId);
     }
 }
