@@ -12,16 +12,17 @@ import java.util.List;
 * Created by fanqq on 2015/5/8.
 */
 public class EnvFactory {
-    private static final String host = "http://127.0.0.1:8099";
-//    private static final String host = "http://10.2.27.21:8099";
-    private static final String vip="127.0.0.1";
-//    private static final String vip="10.2.27.21";
+//    private static final String host = "http://127.0.0.1:8099";
+    private static final String host = "http://10.2.27.21:8099";
+//    private static final String vip="127.0.0.1";
+    private static final String vip="10.2.27.21";
     private static final int vsNum=1;
     private static final int groupNum=1;
     private static final String slbName="test-env";
     private static final String checkHealthPath="/checkHealth";
+    private static final boolean isActivate=true;
     private static ReqClient reqClient = new ReqClient(host);
-    private static String[] ipList = new String[]{"10.2.25.83","10.2.25.96"};
+    private static String[] ipList = new String[]{"10.2.25.83"};
     private static int[] portList = new int[]{20001,20002,20003,20004};
 
     private static List<VirtualServer> vsList = new ArrayList<>();
@@ -51,6 +52,15 @@ public class EnvFactory {
             reqClient.post("/api/group/add", String.format(Group.JSON, app));
         }
 
+        if (!isActivate)
+        {
+            return;
+        }
+        reqClient.get("/api/conf/activateByName?slbName="+slbName);
+        for (int index = 0 ; index < groupNum ; index++)
+        {
+            reqClient.get("/api/conf/activateByName?groupName=App_"+index);
+        }
         System.out.println();
 
     }
@@ -86,7 +96,7 @@ public class EnvFactory {
             grouptmp = new Group().setName("App_" + i).setAppId(String.valueOf(100000 + i)).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
                     .setIntervals(2000 * groupNum / 100).setPasses(1).setUri(checkHealthPath)).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                     .setValue("test"))
-                    .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setSlbName(slbName).setPath("/App" + i)
+                    .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setSlbName(slbName).setPath("/App" + i).setRewrite("/App(01|02) /App$1?sleep=1&size=1")
                             .setVirtualServer(vsList.get(i % vsNum)));
             int tmp = i % portList.length;
             int portlength = portList.length;

@@ -16,8 +16,10 @@ public class LocationConf {
 
         b.append("location ").append(getPath(slb, vs, group)).append("{\n");
         b.append("proxy_set_header Host $host").append(";\n");
-        addRewriteCommand(b,slb,vs,group);
+
         b.append("set $upstream ").append(upstreamName).append(";\n");
+        //rewrite should after set $upstream
+        addRewriteCommand(b,slb,vs,group);
         if (group.getSsl())
         {
             b.append("proxy_pass https://$upstream ;\n");
