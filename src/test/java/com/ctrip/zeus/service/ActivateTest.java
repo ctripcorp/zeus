@@ -5,10 +5,7 @@ import com.ctrip.zeus.ao.AopSpring;
 import com.ctrip.zeus.ao.Checker;
 import com.ctrip.zeus.ao.ReqClient;
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.App;
-import com.ctrip.zeus.model.entity.NginxConfServerData;
-import com.ctrip.zeus.model.entity.NginxConfUpstreamData;
-import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.build.NginxConfService;
 import org.junit.Assert;
@@ -27,119 +24,44 @@ import java.util.List;
 public class ActivateTest extends AbstractAPITest {
 
     @Resource
-    private ConfAppActiveDao confAppActiveDao;
+    private ConfGroupActiveDao confGroupActiveDao;
     @Resource
     private ConfSlbActiveDao confSlbActiveDao;
     @Resource
     private NginxConfService nginxConfService;
+    static final String slb1_server_0 = "10.2.25.83";
+    static final String slb1_server_1 = "10.2.27.21";
+    static final String slb_name = "__Test_slb1";
 
     @Before
     public void before() throws Exception {
-        new ReqClient("http://127.0.0.1:8099").post("/api/slb/add","{\n" +
-                "    \"name\": \"default\",\n" +
-                "    \"version\": 7,\n" +
-                "    \"nginx-bin\": \"/opt/app/nginx/sbin\",\n" +
-                "    \"nginx-conf\": \"/opt/app/nginx/conf\",\n" +
-                "    \"nginx-worker-processes\": 2,\n" +
-                "    \"status\": \"TEST\",\n" +
-                "    \"vips\": [\n" +
-                "        {\n" +
-                "            \"ip\": \"101.2.25.93\"\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"slb-servers\": [\n" +
-                "        {\n" +
-                "            \"ip\": \"101.2.25.93\",\n" +
-                "            \"host-name\": \"uat0358\",\n" +
-                "            \"enable\": true\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"ip\": \"101.2.25.94\",\n" +
-                "            \"host-name\": \"uat0359\",\n" +
-                "            \"enable\": true\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"ip\": \"101.2.25.95\",\n" +
-                "            \"host-name\": \"uat0360\",\n" +
-                "            \"enable\": true\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"virtual-servers\": [\n" +
-                "        {\n" +
-                "            \"name\": \"site1\",\n" +
-                "            \"ssl\": false,\n" +
-                "            \"port\": \"80\",\n" +
-                "            \"domains\": [\n" +
-                "                {\n" +
-                "                    \"name\": \"s1.ctrip.com\"\n" +
-                "                }\n" +
-                "            ]\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"name\": \"site2\",\n" +
-                "            \"ssl\": false,\n" +
-                "            \"port\": \"80\",\n" +
-                "            \"domains\": [\n" +
-                "                {\n" +
-                "                    \"name\": \"s2a.ctrip.com\"\n" +
-                "                },\n" +
-                "                {\n" +
-                "                    \"name\": \"s2b.ctrip.com\"\n" +
-                "                }\n" +
-                "            ]\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}");
 
-        new ReqClient("http://127.0.0.1:8099").post("/api/app/add","{\n" +
-                "    \"name\": \"Test\",\n" +
-                "    \"app-id\": \"921812\",\n" +
-                "    \"version\": 1,\n" +
-                "    \"app-slbs\": [\n" +
-                "        {\n" +
-                "            \"slb-name\": \"default\",\n" +
-                "            \"path\": \"/\",\n" +
-                "            \"virtual-server\": {\n" +
-                "                \"name\": \"site1\",\n" +
-                "                \"ssl\": false,\n" +
-                "                \"port\": \"80\",\n" +
-                "                \"domains\": [\n" +
-                "                    {\n" +
-                "                        \"name\": \"s1.ctrip.com\"\n" +
-                "                    }\n" +
-                "                ]\n" +
-                "            }\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"health-check\": {\n" +
-                "        \"intervals\": 5000,\n" +
-                "        \"fails\": 1,\n" +
-                "        \"passes\": 2,\n" +
-                "        \"uri\": \"/domaininfo/OnService.html\"\n" +
-                "    },\n" +
-                "    \"load-balancing-method\": {\n" +
-                "        \"type\": \"roundrobin\",\n" +
-                "        \"value\": \"test\"\n" +
-                "    },\n" +
-                "    \"app-servers\": [\n" +
-                "        {\n" +
-                "            \"port\": 8080,\n" +
-                "            \"weight\": 1,\n" +
-                "            \"max-fails\": 2,\n" +
-                "            \"fail-timeout\": 30,\n" +
-                "            \"host-name\": \"0\",\n" +
-                "            \"ip\": \"101.2.6.201\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"port\": 80,\n" +
-                "            \"weight\": 2,\n" +
-                "            \"max-fails\": 2,\n" +
-                "            \"fail-timeout\": 30,\n" +
-                "            \"host-name\": \"0\",\n" +
-                "            \"ip\": \"101.2.6.202\"\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}");
+        VirtualServer v1 = new VirtualServer().setName("__Test_vs1").setPort("80").setSsl(false)
+                .addDomain(new Domain().setName("vs1.ctrip.com"));
+        VirtualServer v2 = new VirtualServer().setName("__Test_vs2").setPort("80").setSsl(false)
+                .addDomain(new Domain().setName("vs2.ctrip.com"));
+
+        Slb slb = new Slb().setName(slb_name).addVip(new Vip().setIp(slb1_server_0)).setNginxBin("/opt/app/nginx/sbin")
+                .setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
+                .addSlbServer(new SlbServer().setHostName("slb1_server_0").setIp(slb1_server_0).setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("slb1_server_1").setIp(slb1_server_1).setEnable(true))
+                .addVirtualServer(v1)
+                .addVirtualServer(v2)
+                .setStatus("Test");
+
+        new ReqClient("http://127.0.0.1:8099").post("/api/slb/add",String.format(Slb.JSON, slb));
+
+        GroupServer groupServer1 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver1").setIp(slb1_server_0);
+        GroupServer groupServer2 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver2").setIp(slb1_server_1);
+
+        Group group = new Group().setName("__Test_app").setAppId("1000").setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
+                .setIntervals(2000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
+                .setValue("test"))
+                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/app").setVirtualServer(v2).setRewrite("")
+                        .setPriority(1)).addGroupServer(groupServer1)
+                .addGroupServer(groupServer2);
+
+        new ReqClient("http://127.0.0.1:8099").post("/api/group/add", String.format(Group.JSON, group));
 
     }
 
@@ -149,39 +71,39 @@ public class ActivateTest extends AbstractAPITest {
             @Override
             public void check() {
                 try {
-                    List<ConfAppActiveDo> d = confAppActiveDao.findAllByNames(new String[]{"Test"}, ConfAppActiveEntity.READSET_FULL);
-                    ConfAppActiveDo tmp = d.get(0);
+                    List<ConfGroupActiveDo> d = confGroupActiveDao.findAllByGroupIds(new Long[]{1L}, ConfGroupActiveEntity.READSET_FULL);
+                    ConfGroupActiveDo tmp = d.get(0);
 
-                    Assert.assertEquals("Test",tmp.getName());
+                    Assert.assertEquals(1,tmp.getGroupId());
                     Assert.assertEquals(1,tmp.getVersion());
 
-                    App app = DefaultSaxParser.parseEntity(App.class, tmp.getContent());
+                    Group group = DefaultSaxParser.parseEntity(Group.class, tmp.getContent());
 
-                    Assert.assertEquals("921812",app.getAppId());
-                    Assert.assertEquals("roundrobin",app.getLoadBalancingMethod().getType());
-                    Assert.assertEquals("test",app.getLoadBalancingMethod().getValue());
-                    Assert.assertEquals(1,app.getVersion().intValue());
-                    Assert.assertEquals("default",app.getAppSlbs().get(0).getSlbName());
-                    Assert.assertEquals("/",app.getAppSlbs().get(0).getPath());
-                    Assert.assertEquals("site1",app.getAppSlbs().get(0).getVirtualServer().getName());
-                    Assert.assertEquals(false,app.getAppSlbs().get(0).getVirtualServer().getSsl());
-                    Assert.assertEquals("80",app.getAppSlbs().get(0).getVirtualServer().getPort());
-                    Assert.assertEquals("s1.ctrip.com",app.getAppSlbs().get(0).getVirtualServer().getDomains().get(0).getName());
-                    Assert.assertEquals(5000,app.getHealthCheck().getIntervals().intValue());
-                    Assert.assertEquals(1,app.getHealthCheck().getFails().intValue());
-                    Assert.assertEquals(2,app.getHealthCheck().getPasses().intValue());
-                    Assert.assertEquals("/domaininfo/OnService.html",app.getHealthCheck().getUri());
-                    Assert.assertEquals("0",app.getAppServers().get(0).getHostName());
-                    Assert.assertEquals("10.2.6.201",app.getAppServers().get(0).getIp());
-                    Assert.assertEquals(30,app.getAppServers().get(0).getFailTimeout().intValue());
-                    Assert.assertEquals(2,app.getAppServers().get(0).getMaxFails().intValue());
-                    Assert.assertEquals(1,app.getAppServers().get(0).getWeight().intValue());
-                    Assert.assertEquals(8080,app.getAppServers().get(0).getPort().intValue());
+                    Assert.assertEquals("921812",group.getAppId());
+                    Assert.assertEquals("roundrobin",group.getLoadBalancingMethod().getType());
+                    Assert.assertEquals("test",group.getLoadBalancingMethod().getValue());
+                    Assert.assertEquals(1,group.getVersion().intValue());
+                    Assert.assertEquals("default",group.getGroupSlbs().get(0).getSlbName());
+                    Assert.assertEquals("/",group.getGroupSlbs().get(0).getPath());
+                    Assert.assertEquals("site1",group.getGroupSlbs().get(0).getVirtualServer().getName());
+                    Assert.assertEquals(false,group.getGroupSlbs().get(0).getVirtualServer().getSsl());
+                    Assert.assertEquals("80",group.getGroupSlbs().get(0).getVirtualServer().getPort());
+                    Assert.assertEquals("s1.ctrip.com",group.getGroupSlbs().get(0).getVirtualServer().getDomains().get(0).getName());
+                    Assert.assertEquals(5000,group.getHealthCheck().getIntervals().intValue());
+                    Assert.assertEquals(1,group.getHealthCheck().getFails().intValue());
+                    Assert.assertEquals(2,group.getHealthCheck().getPasses().intValue());
+                    Assert.assertEquals("/domaininfo/OnService.html",group.getHealthCheck().getUri());
+                    Assert.assertEquals("0",group.getGroupServers().get(0).getHostName());
+                    Assert.assertEquals("10.2.6.201",group.getGroupServers().get(0).getIp());
+                    Assert.assertEquals(30,group.getGroupServers().get(0).getFailTimeout().intValue());
+                    Assert.assertEquals(2,group.getGroupServers().get(0).getMaxFails().intValue());
+                    Assert.assertEquals(1,group.getGroupServers().get(0).getWeight().intValue());
+                    Assert.assertEquals(8080,group.getGroupServers().get(0).getPort().intValue());
 
 
-                    ConfSlbActiveDo slb = confSlbActiveDao.findByName("default", ConfSlbActiveEntity.READSET_FULL);
+                    ConfSlbActiveDo slb = confSlbActiveDao.findBySlbId(1L, ConfSlbActiveEntity.READSET_FULL);
 
-                    Assert.assertEquals("default",slb.getName());
+                    Assert.assertEquals(1L,slb.getId());
                     Assert.assertEquals(1,slb.getVersion());
                     Slb slbentity = DefaultSaxParser.parseEntity(Slb.class,slb.getContent());
 
@@ -226,12 +148,12 @@ public class ActivateTest extends AbstractAPITest {
             @Override
             public void check() {
                 try {
-                    int version = nginxConfService.getCurrentVersion("default");
+                    int version = nginxConfService.getCurrentVersion(1L);
 
-                    String str = nginxConfService.getNginxConf("default",version);
+                    String str = nginxConfService.getNginxConf(1L,version);
 
-                    List<NginxConfServerData> confserverdata = nginxConfService.getNginxConfServer("default", version);
-                    List<NginxConfUpstreamData> confupstreamdata= nginxConfService.getNginxConfUpstream("default",version);
+                    List<NginxConfServerData> confserverdata = nginxConfService.getNginxConfServer(1L, version);
+                    List<NginxConfUpstreamData> confupstreamdata= nginxConfService.getNginxConfUpstream(1L,version);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -239,18 +161,7 @@ public class ActivateTest extends AbstractAPITest {
             }
         });
 
-        new ReqClient("http://127.0.0.1:8099").post("/api/conf/activate","{\n" +
-                "   \"conf-slb-names\": [\n" +
-                "      {\n" +
-                "         \"slbname\": \"default\"\n" +
-                "      }\n" +
-                "   ],\n" +
-                "   \"conf-app-names\": [\n" +
-                "      {\n" +
-                "         \"appname\": \"Test\"\n" +
-                "      }\n" +
-                "   ]\n" +
-                "}\n");
+        new ReqClient("http://127.0.0.1:8099").get("/api/conf/activateByName?slbName="+slb_name+"&groupName=__Test_app");
 
     }
 }

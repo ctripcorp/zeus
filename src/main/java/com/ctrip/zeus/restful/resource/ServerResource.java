@@ -223,7 +223,9 @@ public class ServerResource {
         GroupStatus groupStatusList = new GroupStatus().setGroupId(groupId).setSlbName("");
         for (GroupStatus groupStatus : statuses)
         {
-            groupStatusList.setSlbName(groupStatusList.getSlbName() + " " + groupStatus.getSlbName());
+            groupStatusList.setSlbName(groupStatusList.getSlbName() + " " + groupStatus.getSlbName())
+                            .setGroupName(groupStatus.getGroupName())
+                            .setSlbId(groupStatus.getSlbId());
             for(GroupServerStatus b : groupStatus.getGroupServerStatuses())
             {
                 groupStatusList.addGroupServerStatus(b);

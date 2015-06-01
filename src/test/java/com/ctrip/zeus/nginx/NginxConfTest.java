@@ -1,7 +1,7 @@
 package com.ctrip.zeus.nginx;
 
 import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.nginx.conf.NginxConf;
+import com.ctrip.zeus.service.build.conf.NginxConf;
 import org.junit.Test;
 
 public class NginxConfTest {
