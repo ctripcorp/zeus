@@ -12,7 +12,7 @@ public class ServerConfTest {
     public void testGenerate() throws Exception {
         VirtualServer vs = new VirtualServer().setName("vs002").setPort("80").setSsl(false)
                 .addDomain(new Domain().setName("hotel.ctrip.com"))
-                .addDomain(new Domain().setName("flight.ctrip.com"));
+                .addDomain(new Domain().setName("flight.ctrip.com")).setId(2L);
 
         String groupName = "testApp";
         Group group = new Group();
@@ -24,14 +24,21 @@ public class ServerConfTest {
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
                 .addGroupServer(new GroupServer().setIp("192.168.20.2")
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
-                .addGroupSlb(new GroupSlb().setSlbName("default").setSlbId(1L).setVirtualServer(new VirtualServer().setName("vs002").setPort("80")
-                        .setSsl(false).addDomain(new Domain().setName("hotel.ctrip.com"))).setPath("/hotel"))
-        ;
+                .addGroupSlb(new GroupSlb().setSlbName("default").setSlbId(1L).setVirtualServer(vs).setPath("/hotel")).setSsl(true);
 
+        Slb slb = new Slb().setName("default").setNginxBin("/usr/local/nginx/bin").setNginxConf("d:/nginx/conf").setNginxWorkerProcesses(1)
+                .addVip(new Vip().setIp("192.168.1.3"))
+                .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1").setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("slb003").setIp("192.168.10.3").setEnable(true))
+                .addVirtualServer(vs)
+                .addVirtualServer(new VirtualServer().setName("vs003").setPort("80").setSsl(false)
+                        .addDomain(new Domain().setName("m.ctrip.com"))
+                        .addDomain(new Domain().setName("m2.ctrip.com")))
+                .setStatus("TEST").setId(1L);
 
         ArrayList<Group> groups = new ArrayList<>();
         groups.add(group);
-        System.out.println(ServerConf.generate(new Slb().setName("default"), vs, groups));
+        System.out.println(ServerConf.generate(slb, vs, groups));
 
     }
 }

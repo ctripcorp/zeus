@@ -62,29 +62,18 @@ public class StatusTest extends AbstractAPITest {
             }
         });
 
-        new ReqClient("http://127.0.0.1:8099").post("/api/conf/activate", "{\n" +
-                "   \"conf-slb-names\": [\n" +
-                "      {\n" +
-                "         \"slbId\": \"" + slb.getId() + "\"\n" +
-                "      }\n" +
-                "   ],\n" +
-                "   \"conf-group-names\": [\n" +
-                "      {\n" +
-                "         \"groupId\": \"" + group.getId() + "\"\n" +
-                "      }\n" +
-                "   ]\n" +
-                "}\n");
-
-        String responseup = new ReqClient("http://127.0.0.1:8099/api/op/upServer?ip=101.2.6.201").getstr();
-        String responsedown = new ReqClient("http://127.0.0.1:8099/api/op/downServer?ip=101.2.6.201").getstr();
-        System.out.println(responseup);
-        System.out.println(responsedown);
-
-        String responseupM = new ReqClient("http://127.0.0.1:8099/api/op/upMember?groupName=Test&ip=101.2.6.201").getstr();
-        String responsedownM = new ReqClient("http://127.0.0.1:8099/api/op/downMember?groupName=Test&ip=101.2.6.201").getstr();
-
-        System.out.println(responseupM);
-        System.out.println(responsedownM);
+//        new ReqClient("http://127.0.0.1:8099").get("/api/conf/activateByName?slbName=default&groupName=Test");
+//
+//        String responseup = new ReqClient("http://127.0.0.1:8099/api/op/upServer?ip=101.2.6.201").getstr();
+//        String responsedown = new ReqClient("http://127.0.0.1:8099/api/op/downServer?ip=101.2.6.201").getstr();
+//        System.out.println(responseup);
+//        System.out.println(responsedown);
+//
+//        String responseupM = new ReqClient("http://127.0.0.1:8099/api/op/upMemberByName?groupName=Test&ip=101.2.6.201").getstr();
+//        String responsedownM = new ReqClient("http://127.0.0.1:8099/api/op/downMemberByName?groupName=Test&ip=101.2.6.201").getstr();
+//
+//        System.out.println(responseupM);
+//        System.out.println(responsedownM);
     }
 
     private Group generateGroup(String groupName) {

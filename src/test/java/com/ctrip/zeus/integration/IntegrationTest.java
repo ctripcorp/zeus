@@ -21,10 +21,10 @@ import java.util.List;
  */
 public class IntegrationTest {
 
-//    private static final String host = "http://10.2.25.83:8099";
+    private static final String host = "http://10.2.27.21:8099";
 
-    private static final String host = "http://127.0.0.1:8099";
-    private static final String hostip = "10.2.25.83";
+//    private static final String host = "http://127.0.0.1:8099";
+    private static final String hostip = "10.2.27.21";
     private static final String slb1_server_0 = "10.2.25.83";
     private static final String slb1_server_1 = "10.2.27.21";
     private static final String slb1_server_2 = "10.2.25.96";
@@ -35,30 +35,69 @@ public class IntegrationTest {
 
 
     @Before
-    public void before() {
+    public void before() throws IOException {
+        Group groupres = null;
+        String groupstr = null;
 
         for (int i = 1; i < 11; i++) {
-            reqClient.getstr("/api/app/delete?appName=__Test_app" + i);
+            groupstr = reqClient.getstr("/api/group/get/__Test_app"+i);
+            groupres = DefaultJsonParser.parse(Group.class, groupstr);
+            if (groupres!=null)
+            {
+                reqClient.getstr("/api/group/delete?groupId=" + groupres.getId());
+            }
         }
 
-        reqClient.getstr("/api/slb/delete?slbName=" + slb1_name);
-        reqClient.getstr("/api/slb/delete?slbName=" + slb2_name);
+
+        String slb_res = reqClient.getstr("/api/slb/get/" + slb1_name);
+        Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+        if (slb_res_obj!=null)
+        {
+            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+        }
+
+        slb_res = reqClient.getstr("/api/slb/get/" + slb2_name);
+        slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+        if (slb_res_obj!=null)
+        {
+            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+        }
     }
 
     @After
-    public void after() {
+    public void after() throws IOException {
+
+        Group groupres = null;
+        String groupstr = null;
 
         for (int i = 1; i < 11; i++) {
-            reqClient.getstr("/api/app/delete?appName=__Test_app" + i);
+            groupstr = reqClient.getstr("/api/group/get/__Test_app"+i);
+            groupres = DefaultJsonParser.parse(Group.class, groupstr);
+            if (groupres!=null)
+            {
+                reqClient.getstr("/api/group/delete?groupId=" + groupres.getId());
+            }
         }
 
-        reqClient.getstr("/api/slb/delete?slbName=" + slb1_name);
-        reqClient.getstr("/api/slb/delete?slbName=" + slb2_name);
+
+        String slb_res = reqClient.getstr("/api/slb/get/" + slb1_name);
+        if (slb_res!=null)
+        {
+            Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+        }
+
+        slb_res = reqClient.getstr("/api/slb/get/" + slb2_name);
+        if (slb_res!=null)
+        {
+            Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+        }
 
 
-        String res = reqClient.getstr("/api/app/get/__Test_app2");
+        String res = reqClient.getstr("/api/group/get/__Test_app2");
         Assert.assertEquals(true,res.isEmpty());
-        reqClient.markPass("/api/app/delete");
+        reqClient.markPass("/api/group/delete");
 
         res = reqClient.getstr("/api/slb/get/" + slb2_name);
         Assert.assertEquals(true,res.isEmpty());
@@ -139,7 +178,7 @@ public class IntegrationTest {
         reqClient.markPass("/api/slb/get/"+ slb1_name);
         reqClient.markPass("/api/slb/get/"+ slb2_name);
         //activate test slbs
-        reqClient.getstr("/api/conf/activate?slbName=__Test_slb1&slbName=__Test_slb2");
+        reqClient.getstr("/api/conf/activateByName?slbName=__Test_slb1&slbName=__Test_slb2");
 
         List<Group> groups = new ArrayList<>();
         for (int i = 0 ; i < 10 ; i++ )

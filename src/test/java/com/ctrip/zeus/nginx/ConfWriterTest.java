@@ -6,7 +6,6 @@ import com.ctrip.zeus.service.build.conf.ServerConf;
 import com.ctrip.zeus.service.build.conf.UpstreamsConf;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +17,7 @@ public class ConfWriterTest {
         String slbName = "default";
         Slb slb = new Slb();
         VirtualServer vs002 = new VirtualServer().setName("vs002").setPort("80").setSsl(false)
-                .addDomain(new Domain().setName("hotel.ctrip.com"));
+                .addDomain(new Domain().setName("hotel.ctrip.com")).setId(2L);
         slb.setName(slbName).setNginxBin("/usr/local/nginx/bin").setNginxConf("d:/nginx/conf").setNginxWorkerProcesses(1)
                 .addVip(new Vip().setIp("192.168.1.3"))
                 .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1").setEnable(true))
@@ -27,7 +26,7 @@ public class ConfWriterTest {
                 .addVirtualServer(new VirtualServer().setName("vs003").setPort("80").setSsl(false)
                         .addDomain(new Domain().setName("m.ctrip.com"))
                         .addDomain(new Domain().setName("m2.ctrip.com")))
-                .setStatus("TEST");
+                .setStatus("TEST").setId(1L);
 
         String groupName = "testApp";
         Group group = new Group();
