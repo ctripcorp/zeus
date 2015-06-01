@@ -4,14 +4,12 @@ import com.ctrip.zeus.client.GroupClient;
 import com.ctrip.zeus.client.SlbClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.server.SlbAdminServer;
+import com.ctrip.zeus.util.IOUtils;
 import com.ctrip.zeus.util.ModelAssert;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.unidal.dal.jdbc.datasource.DataSourceManager;
 import org.unidal.dal.jdbc.transaction.TransactionManager;
 import org.unidal.lookup.ContainerLoader;
@@ -19,6 +17,8 @@ import support.MysqlDbServer;
 
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -34,6 +34,10 @@ public class ApiTest {
 
     static SlbAdminServer server;
     static MysqlDbServer mysqlDbServer;
+
+    private final String host = "http://127.0.0.1:8099";
+    private final SlbClient sc = new SlbClient(host);
+    private final GroupClient gc = new GroupClient(host);
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -63,11 +67,10 @@ public class ApiTest {
 
     @Test
     public void testConcurrentUpdate() throws ExecutionException, InterruptedException {
-        final SlbClient c = new SlbClient("http://127.0.0.1:8099");
         final String slbName = "default";
         final int total = 6;
         Slb orig = generateSlb(slbName);
-        c.add(orig);
+        sc.add(orig);
 
         ExecutorService es = Executors.newFixedThreadPool(total);
         List<Future<?>> futures = new ArrayList<>();
@@ -77,9 +80,9 @@ public class ApiTest {
                 @Override
                 public void run() {
                     while (true) {
-                        Slb slb = c.get(slbName);
+                        Slb slb = sc.get(slbName);
                         slb.addSlbServer(new SlbServer().setHostName("slbupd" + num).setIp("192.168.11." + num).setEnable(false));
-                        Response updResponse = c.update(slb);
+                        Response updResponse = sc.update(slb);
                         if (updResponse.getStatus() == 200)
                             break;
                     }
@@ -90,42 +93,27 @@ public class ApiTest {
             f.get();
         es.shutdown();
         int base = orig.getSlbServers().size();
-        Slb upd = c.get(slbName);
+        Slb upd = sc.get(slbName);
         Assert.assertEquals(base + total, upd.getSlbServers().size());
     }
 
     @Test
     public void testSlb() {
-        System.out.println("###########################test1");
-
-        SlbClient c = new SlbClient("http://127.0.0.1:8099");
-        c.getAll();
-
         String slbName = "default";
-
-        Slb sc = generateSlb(slbName);
-        c.add(sc);
-
-        Slb sc2 = c.get(slbName);
-
-        Assert.assertEquals(sc.getVersion().intValue() + 1, sc2.getVersion().intValue());
-        ModelAssert.assertSlbEquals(sc, sc2);
+        Slb s = generateSlb(slbName);
+        sc.add(s);
+        Slb sc2 = sc.get(slbName);
+        Assert.assertEquals(s.getVersion().intValue() + 1, sc2.getVersion().intValue());
+        ModelAssert.assertSlbEquals(s, sc2);
     }
 
     @Test
     public void testGroup() {
-        System.out.println("###########################test2");
-
-        SlbClient s = new SlbClient("http://127.0.0.1:8099");
         String slbName = "default";
-        Slb sc = generateSlb(slbName);
-        s.add(sc);
-
-        GroupClient c = new GroupClient("http://127.0.0.1:8099");
-        c.getAll();
-
+        Slb s = generateSlb(slbName);
+        sc.add(s);
+        s = sc.get(slbName);
         String appName = "testGroup";
-
         Group app = new Group();
         app.setName(appName)
                 .setAppId("999999").setVersion(0)
@@ -135,14 +123,40 @@ public class ApiTest {
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
                 .addGroupServer(new GroupServer().setIp("192.168.20.2").setHostName("slb001a")
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
-                .addGroupSlb(new GroupSlb().setSlbId(1L).setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002").setPort("80")
+                .addGroupSlb(new GroupSlb().setSlbId(s.getId()).setSlbName("default").setVirtualServer(new VirtualServer().setName("vs002").setPort("80")
                         .setSsl(false).addDomain(new Domain().setName("hotel.ctrip.com"))).setPath("/hotel"))
         ;
-        c.add(app);
-
-        Group app2 = c.get(appName);
+        gc.add(app);
+        Group app2 = gc.get(appName);
         Assert.assertEquals(1, app2.getVersion().intValue());
         ModelAssert.assertGroupEquals(app, app2);
+    }
+
+    @After
+    public void clearDb() throws Exception {
+        deleteGroups();
+        deleteSlb();
+    }
+
+    private void deleteGroups() {
+        List<Group> l = gc.getAll();
+        for (Group group : l) {
+            gc.delete(group.getId());
+        }
+        Assert.assertEquals(0, gc.getAll().size());
+    }
+
+    private void deleteSlb() {
+        List<Slb> l = sc.getAll();
+        for (Slb slb : l) {
+            Response r = sc.delete(slb.getId());
+            try {
+                System.out.println(IOUtils.inputStreamStringify((InputStream)r.getEntity()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        Assert.assertEquals(0, sc.getAll().size());
     }
 
     private Slb generateSlb(String slbName) {

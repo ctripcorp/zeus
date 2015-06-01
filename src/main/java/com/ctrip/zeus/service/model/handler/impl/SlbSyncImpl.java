@@ -24,7 +24,7 @@ import java.util.Map;
 @Component("slbSync")
 public class SlbSyncImpl implements SlbSync {
     @Resource
-    private GroupSlbDao appSlbDao;
+    private GroupSlbDao groupSlbDao;
     @Resource
     private SlbDao slbDao;
     @Resource
@@ -69,9 +69,9 @@ public class SlbSyncImpl implements SlbSync {
         if (d == null)
             return 0;
         if(removable(d)) {
-            slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(d.getId()));
-            slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(d.getId()));
-            for (SlbVirtualServerDo svsd : slbVirtualServerDao.findAllBySlb(d.getId(), SlbVirtualServerEntity.READSET_FULL)) {
+            slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(slbId));
+            slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(slbId));
+            for (SlbVirtualServerDo svsd : slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL)) {
                 deleteSlbVirtualServer(svsd.getId());
             }
             return slbDao.deleteByPK(d);
@@ -89,7 +89,7 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     private boolean removable(SlbDo d) throws DalException {
-        List<GroupSlbDo> list = appSlbDao.findAllBySlb(d.getId(), GroupSlbEntity.READSET_FULL);
+        List<GroupSlbDo> list = groupSlbDao.findAllBySlb(d.getId(), GroupSlbEntity.READSET_FULL);
         if (list.size() == 0)
             return true;
         return false;

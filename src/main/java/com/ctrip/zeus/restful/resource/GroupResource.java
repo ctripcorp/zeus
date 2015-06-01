@@ -81,7 +81,7 @@ public class GroupResource {
         } else if (appId != null) {
             group = groupRepository.getByAppId(appId);
         } else {
-            throw new Exception("Missing parameter or value.");
+            throw new Exception("Missing parameter.");
         }
         return responseHandler.handle(group, hh.getMediaType());
     }
@@ -120,7 +120,7 @@ public class GroupResource {
                 throw new Exception("Unacceptable type.");
             }
         }
-        DistLock lock = dbLockFactory.newLock(a.getName() + "_update");
+        DistLock lock = dbLockFactory.newLock(a.getName() + "_updateGroup");
         try {
             lock.lock();
             groupRepository.update(a);
@@ -134,11 +134,10 @@ public class GroupResource {
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "deleteGroup")
-    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("groupName") String groupName) throws Exception {
-        if (groupName == null || groupName.isEmpty())
-            throw new Exception("Missing parameter or value.");
-        Group g = groupRepository.get(groupName);
-        groupRepository.delete(g.getId());
+    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("groupId") Long groupId) throws Exception {
+        if (groupId == null)
+            throw new Exception("Missing parameter.");
+        groupRepository.delete(groupId);
         return Response.ok().build();
     }
 }

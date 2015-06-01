@@ -2,6 +2,7 @@ package com.ctrip.zeus.client;
 
 
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 
 import javax.ws.rs.client.Entity;
@@ -21,7 +22,11 @@ public class GroupClient extends AbstractRestClient {
 
     public List<Group> getAll() {
         String res = getTarget().path("/api/group").request().headers(getDefaultHeaders()).get(String.class);
-        return null;
+        try {
+            return DefaultJsonParser.parse(GroupList.class, res).getGroups();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Response add(Group group) {
@@ -33,12 +38,27 @@ public class GroupClient extends AbstractRestClient {
 
     }
 
+    public Response update(Group group) {
+        return getTarget().path("/api/group/update").request().headers(getDefaultHeaders())
+                .post(Entity.entity(
+                        String.format(Group.JSON, group),
+                        MediaType.APPLICATION_JSON
+                ));
+
+    }
+
     public Group get(String groupName) {
-        String res = getTarget().path("/api/group/get/" + groupName).request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
+        String res = getTarget().path("/api/group/get/" + groupName).request(MediaType.APPLICATION_JSON)
+                .headers(getDefaultHeaders()).get(String.class);
         try {
             return DefaultJsonParser.parse(Group.class, res);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Response delete(Long groupId) {
+        return getTarget().path("/api/group/delete").queryParam("groupId", groupId).request(MediaType.APPLICATION_JSON)
+                .headers(getDefaultHeaders()).get();
     }
 }

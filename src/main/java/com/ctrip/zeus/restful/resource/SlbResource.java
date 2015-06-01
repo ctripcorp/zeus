@@ -64,7 +64,7 @@ public class SlbResource {
             Slb slb = slbRepository.getById(slbId);
             return responseHandler.handle(slb, hh.getMediaType());
         }
-        throw new Exception("Missing parameter or value.");
+        throw new Exception("Missing parameter.");
     }
     
     @POST
@@ -97,7 +97,7 @@ public class SlbResource {
         } else {
             throw new Exception("Unacceptable type.");
         }
-        DistLock lock = dbLockFactory.newLock(s.getName() + "_update");
+        DistLock lock = dbLockFactory.newLock(s.getName() + "_updateSlb");
         try {
             lock.lock();
             slbRepository.update(s);
@@ -113,7 +113,7 @@ public class SlbResource {
     @Authorize(name = "deleteSlb")
     public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("slbId") Long slbId) throws Exception {
         if (slbId == null) {
-            throw new Exception("Missing parameter or value.");
+            throw new Exception("Missing parameter.");
         }
         slbRepository.delete(slbId);
         return Response.ok().build();

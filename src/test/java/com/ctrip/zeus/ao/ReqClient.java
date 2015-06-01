@@ -1,10 +1,7 @@
 package com.ctrip.zeus.ao;
 
-import com.ctrip.zeus.client.AbstractRestClient;
 import org.glassfish.jersey.client.ClientConfig;
-import test.StringDemo;
 
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;

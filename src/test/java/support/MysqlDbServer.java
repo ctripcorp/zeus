@@ -117,7 +117,6 @@ public class MysqlDbServer implements SmartLifecycle {
             conn = DriverManager.getConnection(url, userName, password);
 
             runScript(conn, new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(tablesSqlFile))));
-            runScript(conn, new StringReader("insert into auth_private_key(private_key) values('testSlbServer');"));
 
         } finally {
             try {
