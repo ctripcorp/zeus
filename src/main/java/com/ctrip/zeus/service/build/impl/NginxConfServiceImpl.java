@@ -229,7 +229,7 @@ public class NginxConfServiceImpl implements NginxConfService {
 
             Collections.sort(groupList,new Comparator<Group>(){
                 public int compare(Group group0, Group group1) {
-                    return groupPriorityMap.get(group0.getName())-groupPriorityMap.get(group1.getName());
+                    return groupPriorityMap.get(group0.getId())-groupPriorityMap.get(group1.getId());
                 }
             });
             groupsMap.put(vs, groupList);

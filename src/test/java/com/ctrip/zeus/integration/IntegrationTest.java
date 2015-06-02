@@ -39,7 +39,7 @@ public class IntegrationTest {
         Group groupres = null;
         String groupstr = null;
 
-        for (int i = 1; i < 11; i++) {
+        for (int i = 0; i < 10; i++) {
             groupstr = reqClient.getstr("/api/group/get/__Test_app"+i);
             groupres = DefaultJsonParser.parse(Group.class, groupstr);
             if (groupres!=null)
@@ -70,7 +70,7 @@ public class IntegrationTest {
         Group groupres = null;
         String groupstr = null;
 
-        for (int i = 1; i < 11; i++) {
+        for (int i = 0; i < 10; i++) {
             groupstr = reqClient.getstr("/api/group/get/__Test_app"+i);
             groupres = DefaultJsonParser.parse(Group.class, groupstr);
             if (groupres!=null)
@@ -183,13 +183,12 @@ public class IntegrationTest {
         List<Group> groups = new ArrayList<>();
         for (int i = 0 ; i < 10 ; i++ )
         {
-            Group group = new Group().setName("__Test_app"+i).setAppId("1000"+i).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addGroupSlb(new GroupSlb().setSlbId(i%3==0?slb2_res_obj.getId():slb1_res_obj.getId()).setPath("/app"+i).setVirtualServer(i%2==0?v1:v2).setRewrite(i%2==0?null:"/app /app0?sleep=1&size=1"+i)
-                .setPriority(i)).addGroupServer(groupServer1)
-                    .addGroupServer(groupServer2)
-                    .addGroupServer(groupServer3);
+            Group group = new Group().setName("__Test_app" + i).setAppId("1000" + i).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
+                    .setIntervals(2000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
+                    .setValue("test"))
+                .addGroupSlb(new GroupSlb().addVip(new Vip().setIp(hostip)).setSlbId(i % 3 == 0 ? slb2_res_obj.getId() : slb1_res_obj.getId())
+                        .setSlbName(i % 3 == 0 ? slb2_res_obj.getName() : slb1_res_obj.getName()).setPath("/app" + i).setVirtualServer(i % 2 == 0 ? v1 : v2).setRewrite(i % 2 == 0 ? null : "/app /app0?sleep=1&size=1" + i)
+                        .setPriority(i)).addGroupServer(groupServer1);
             reqClient.post("/api/group/add", String.format(Group.JSON, group));
             groups.add(group);
         }
@@ -197,7 +196,7 @@ public class IntegrationTest {
         boolean appsuc = apps.contains("\"__Test_app1\"") && apps.contains("\"__Test_app2\"") && apps.contains("\"__Test_app3\"")
                 && apps.contains("\"__Test_app4\"") && apps.contains("\"__Test_app5\"") && apps.contains("\"__Test_app6\"")
                 && apps.contains("\"__Test_app7\"") && apps.contains("\"__Test_app8\"") && apps.contains("\"__Test_app9\"")
-                && apps.contains("\"__Test_app10\"");
+                && apps.contains("\"__Test_app0\"");
 
         Assert.assertEquals(true,appsuc);
         reqClient.markPass("/api/group/add");
@@ -234,10 +233,10 @@ public class IntegrationTest {
         reqClient.getstr("/api/conf/activateByName?groupName=__Test_app7");
         reqClient.getstr("/api/conf/activateByName?groupName=__Test_app8");
         reqClient.getstr("/api/conf/activateByName?groupName=__Test_app9");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app10");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app0");
 
 
-        for (int i = 1; i < 11; i++) {
+        for (int i = 0; i < 10; i++) {
             String groupstatus = reqClient.getstr("/api/status/groupName/__Test_app" + i);
             GroupStatusList groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, groupstatus);
 
@@ -377,7 +376,7 @@ public class IntegrationTest {
         // test update app1(__Test_app1)
         orig = c.getstr("/api/group/get/" + app1_name);
         Group origApp = DefaultJsonParser.parse(Group.class, orig);
-        Group changedApp = new Group().setName(origApp.getName()).setAppId(origApp.getAppId())
+        Group changedApp = new Group().setId(origApp.getId()).setName(origApp.getName()).setAppId(origApp.getAppId())
                 .setHealthCheck(origApp.getHealthCheck())
                 .setLoadBalancingMethod(origApp.getLoadBalancingMethod())
                 .setVersion(origApp.getVersion())
