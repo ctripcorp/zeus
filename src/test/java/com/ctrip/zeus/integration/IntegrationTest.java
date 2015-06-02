@@ -188,7 +188,7 @@ public class IntegrationTest {
                     .setValue("test"))
                 .addGroupSlb(new GroupSlb().addVip(new Vip().setIp(hostip)).setSlbId(i % 3 == 0 ? slb2_res_obj.getId() : slb1_res_obj.getId())
                         .setSlbName(i % 3 == 0 ? slb2_res_obj.getName() : slb1_res_obj.getName()).setPath("/app" + i).setVirtualServer(i % 2 == 0 ? v1 : v2).setRewrite(i % 2 == 0 ? null : "/app /app0?sleep=1&size=1" + i)
-                        .setPriority(i)).addGroupServer(groupServer1);
+                        .setPriority(i)).addGroupServer(i % 2 == 0 ?groupServer1:groupServer2);
             reqClient.post("/api/group/add", String.format(Group.JSON, group));
             groups.add(group);
         }
@@ -317,7 +317,7 @@ public class IntegrationTest {
         reqClient.markPass("/api/op/upServer");
 
 
-        reqClient.getstr("/api/op/downMemberByName?ip=" + slb1_server_2 + "&groupName=__Test_app3");
+        reqClient.getstr("/api/op/downMemberByName?ip=" + slb1_server_1 + "&groupName=__Test_app3");
 
         String groupstatus = reqClient.getstr("/api/status/groupName/__Test_app3");
 
@@ -325,8 +325,8 @@ public class IntegrationTest {
 
         for (GroupStatus as : groupStatusList.getGroupStatuses()) {
             for (GroupServerStatus ass : as.getGroupServerStatuses()) {
-                if (ass.getIp().equals(slb1_server_2)) {
-                    Assert.assertEquals(false, ass.getServer());
+                if (ass.getIp().equals(slb1_server_1)) {
+                    Assert.assertEquals(false, ass.getMember());
                 }
             }
         }
@@ -336,7 +336,7 @@ public class IntegrationTest {
         reqClient.markPass("/api/status/groupName/__Test_app3");
 
 
-        reqClient.getstr("/api/op/upMember?ip=" + slb1_server_2 + "&appName=__Test_app3");
+        reqClient.getstr("/api/op/downMemberByName?ip=" + slb1_server_1 + "&groupName=__Test_app3");
 
 
         groupstatus = reqClient.getstr("/api/status/groupName/__Test_app3");
@@ -345,8 +345,8 @@ public class IntegrationTest {
 
         for (GroupStatus as : groupStatusList.getGroupStatuses()) {
             for (GroupServerStatus ass : as.getGroupServerStatuses()) {
-                if (ass.getIp().equals(slb1_server_2)) {
-                    Assert.assertEquals(true, ass.getServer());
+                if (ass.getIp().equals(slb1_server_1)) {
+                    Assert.assertEquals(true, ass.getMember());
                 }
             }
         }
