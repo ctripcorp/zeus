@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service;
 
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.ArchiveService;
@@ -84,13 +85,13 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testListSlbsByGroups() throws Exception {
-        List<Slb> slbs = slbRepo.listByGroups(new Long[] {testGroup.getId(), testGroup.getId() + 1});
+        List<Slb> slbs = slbRepo.listByGroups(new Long[]{testGroup.getId(), testGroup.getId() + 1});
         Assert.assertEquals(1, slbs.size());
     }
 
     @Test
     public void testListGroupSlbsByGroups() throws Exception {
-        List<GroupSlb> groupSlbs = slbRepo.listGroupSlbsByGroups(new Long[] {testGroup.getId(), testGroup.getId() + 1});
+        List<GroupSlb> groupSlbs = slbRepo.listGroupSlbsByGroups(new Long[]{testGroup.getId(), testGroup.getId() + 1});
         Assert.assertEquals(2, groupSlbs.size());
         for (GroupSlb as : groupSlbs) {
             Assert.assertNotNull(as.getVirtualServer());
@@ -111,7 +112,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         Slb originSlb = slbRepo.get(defaultSlb.getName());
         originSlb.setStatus("HANG");
         slbRepo.update(originSlb);
-        Slb updatedSlb = slbRepo.get(defaultSlb.getName());
+        Slb updatedSlb = slbRepo.getById(originSlb.getId());
         ModelAssert.assertSlbEquals(originSlb, updatedSlb);
         Assert.assertEquals(originSlb.getVersion().intValue() + 1, updatedSlb.getVersion().intValue());
     }
@@ -126,6 +127,25 @@ public class ModelServiceTest extends AbstractSpringTest {
             groupServersRef.add(as.getIp());
         }
         Assert.assertFalse(groupServersRef.retainAll(groupServers));
+    }
+
+    @Test(expected = ValidationException.class)
+    public void testSlbRemovable() throws Exception {
+        slbRepo.delete(defaultSlb.getId());
+    }
+
+    @Test(expected = ValidationException.class)
+    public void testSlbModifiable() throws Exception {
+        Slb targetSlb = slbRepo.get(defaultSlb.getName());
+        VirtualServer vs = new VirtualServer().setName("testnew").setSsl(false).setPort("80").addDomain(new Domain().setName("s1new.ctrip.com"));
+        targetSlb.addVirtualServer(vs);
+        try {
+            slbRepo.update(targetSlb);
+        } catch (Exception e) {
+            Assert.assertTrue("valid update action throws exception.", false);
+        }
+        targetSlb.getVirtualServers().remove(0);
+        slbRepo.update(targetSlb);
     }
 
     private void addSlb() throws Exception {
@@ -185,8 +205,9 @@ public class ModelServiceTest extends AbstractSpringTest {
     public void testUpdateGroup() throws Exception {
         Group originGroup = groupRepo.get(testGroup.getName());
         originGroup.setAppId("921812");
+        originGroup.getGroupSlbs().get(0).setPriority(9);
         groupRepo.update(originGroup);
-        Group updatedGroup = groupRepo.get(originGroup.getName());
+        Group updatedGroup = groupRepo.getById(originGroup.getId());
         ModelAssert.assertGroupEquals(originGroup, updatedGroup);
         Assert.assertEquals(originGroup.getVersion().intValue() + 1, updatedGroup.getVersion().intValue());
     }

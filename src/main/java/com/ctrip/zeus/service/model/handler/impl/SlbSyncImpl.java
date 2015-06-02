@@ -13,9 +13,7 @@ import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -58,9 +56,13 @@ public class SlbSyncImpl implements SlbSync {
             throw new ValidationException("Slb does not exist.");
         if (check.getVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        SlbDo d = C.toSlbDo(slb.getId(), slb);
-        slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
-        cascadeSync(slb);
+        if (modifiable(slb)) {
+            SlbDo d = C.toSlbDo(slb.getId(), slb);
+            slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
+            cascadeSync(slb);
+            return;
+        }
+        throw new ValidationException(check.getName() + " cannot be updated. Dependency exists.");
     }
 
     @Override
@@ -76,7 +78,7 @@ public class SlbSyncImpl implements SlbSync {
             }
             return slbDao.deleteByPK(d);
         }
-        throw new ValidationException(d.getName() + " cannot be deleted. Dependency exists");
+        throw new ValidationException(d.getName() + " cannot be deleted. Dependency exists.");
     }
 
     private void validate(Slb slb) throws ValidationException {
@@ -93,6 +95,22 @@ public class SlbSyncImpl implements SlbSync {
         if (list.size() == 0)
             return true;
         return false;
+    }
+
+    private boolean modifiable(Slb slb) throws DalException {
+        List<SlbVirtualServerDo> l = slbVirtualServerDao.findAllBySlb(slb.getId(), SlbVirtualServerEntity.READSET_FULL);
+        Set<Long> deleted = new HashSet<>();
+        for (SlbVirtualServerDo d : l) {
+            deleted.add(d.getId());
+        }
+        for (VirtualServer vs : slb.getVirtualServers()) {
+            deleted.remove(vs.getId());
+        }
+        for (Long d : deleted) {
+            if (groupSlbDao.findAllByVirtualServer(d, GroupSlbEntity.READSET_FULL).size() > 0)
+                return false;
+        }
+        return true;
     }
 
     private void cascadeSync(Slb slb) throws DalException {
