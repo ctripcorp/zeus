@@ -60,11 +60,14 @@
     <element name="reading" value-type="int" />
     <element name="writing" value-type="int" />
     <element name="waiting" value-type="int" />
+    <element name="time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
     <entity-ref name="req-status" type="list" names="req-statuses" xml-indent="true" />
   </entity>
   <entity name="req-status">
     <element name="host-name" value-type="String" />
     <element name="up-name" value-type="String" />
+    <element name="bytes-in-total" value-type="int" />
+    <element name="bytes-out-total" value-type="int" />
     <element name="up-requests" value-type="int" />
     <element name="up-response-time" value-type="double" />
     <element name="up-tries" value-type="int" />

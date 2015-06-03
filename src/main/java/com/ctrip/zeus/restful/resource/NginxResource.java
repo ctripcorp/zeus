@@ -1,11 +1,8 @@
 package com.ctrip.zeus.restful.resource;
 
-import com.ctrip.zeus.nginx.NginxOperator;
 import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.nginx.NginxService;
-import com.ctrip.zeus.support.GenericSerializer;
-import org.jboss.logging.Param;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -105,8 +102,11 @@ public class NginxResource {
     @Path("/trafficStatus")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getLocalTrafficStatus(@Context HttpHeaders hh) throws Exception {
-        TrafficStatus trafficStatus = nginxService.getLocalTrafficStatus();
-        return responseHandler.handle(trafficStatus, hh.getMediaType());
+        TrafficStatusList l = new TrafficStatusList();
+        for (TrafficStatus status : nginxService.getLocalTrafficStatus()) {
+            l.addTrafficStatus(status);
+        }
+        return responseHandler.handle(l, hh.getMediaType());
     }
 
     @GET

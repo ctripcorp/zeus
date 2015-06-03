@@ -1,6 +1,5 @@
 package com.ctrip.zeus.service.nginx.impl;
 
-import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.client.NginxClient;
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
@@ -265,7 +264,7 @@ public class NginxServiceImpl implements NginxService {
         for (SlbServer slbServer : slb.getSlbServers()) {
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             try {
-                list.add(nginxClient.getTrafficStatus());
+                list.addAll(nginxClient.getTrafficStatus().getStatuses());
             } catch (Exception e) {
                 LOGGER.error(e.getLocalizedMessage());
             }
@@ -274,7 +273,7 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public TrafficStatus getLocalTrafficStatus() {
+    public List<TrafficStatus> getLocalTrafficStatus() {
         return TrafficStatusCollector.getInstance().getResult();
     }
 

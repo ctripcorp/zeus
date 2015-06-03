@@ -73,10 +73,13 @@
             <req-status/>
             <req-status/>
         </req-statuses>
+        <time>2013-05-20 13:34:00</time>
     </traffic-status>
     <req-status>
         <host-name>ctrip.com</host-name>
         <up-name>cluster</up-name>
+        <bytes-in-total>1287483</bytes-in-total>
+        <bytes-out-total>1287483</bytes-out-total>
         <up-requests>2</up-requests>
         <up-response-time>5.685</up-response-time>
         <up-tries>6</up-tries>

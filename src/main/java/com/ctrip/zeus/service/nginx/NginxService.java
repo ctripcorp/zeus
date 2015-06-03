@@ -94,5 +94,5 @@ public interface NginxService {
      * get traffic status of local nginx server.
      * @return the traffic status
      */
-    TrafficStatus getLocalTrafficStatus();
+    List<TrafficStatus> getLocalTrafficStatus();
 }
