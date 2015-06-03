@@ -100,7 +100,7 @@ public class RollingTrafficStatus {
 
         private Integer[] compareAndSetStubStatusDelta(String rawStubStatus, TrafficStatus trafficStatus) {
             Integer[] stubStatus = parseStubStatusNumber(rawStubStatus.split("\n"));
-            extractStubStatus(getDelta(stubStatus, lastStubStatus), trafficStatus);
+            extractStubStatus(getDelta(stubStatus, lastStubStatus), trafficStatus, stubStatus);
             return stubStatus;
         }
 
@@ -142,17 +142,17 @@ public class RollingTrafficStatus {
         }
     }
 
-    protected static void extractStubStatus(Integer[] data, TrafficStatus trafficStatus) {
+    protected static void extractStubStatus(Integer[] data, TrafficStatus trafficStatus, Integer[] current) {
         Integer requests = data[StubStatusOffset.Requests.ordinal()];
         double responseTime = (requests == null || requests == 0) ? 0.0 : (double)data[StubStatusOffset.RequestTime.ordinal()] / requests;
-        trafficStatus.setActiveConnections(data[StubStatusOffset.ActiveConn.ordinal()])
+        trafficStatus.setActiveConnections(current[StubStatusOffset.ActiveConn.ordinal()])
                 .setAccepts(data[StubStatusOffset.Accepts.ordinal()])
                 .setHandled(data[StubStatusOffset.Handled.ordinal()])
                 .setRequests(requests)
                 .setResponseTime(responseTime)
-                .setReading(data[StubStatusOffset.Reading.ordinal()])
-                .setWriting(data[StubStatusOffset.Writing.ordinal()])
-                .setWaiting(data[StubStatusOffset.Waiting.ordinal()]);
+                .setReading(current[StubStatusOffset.Reading.ordinal()])
+                .setWriting(current[StubStatusOffset.Writing.ordinal()])
+                .setWaiting(current[StubStatusOffset.Waiting.ordinal()]);
     }
 
     private enum StubStatusOffset {
