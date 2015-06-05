@@ -61,14 +61,14 @@
     </traffic-status-list>
     <traffic-status>
         <server-ip>127.0.0.1</server-ip>
-        <active-connections>2</active-connections>
-        <accepts>6</accepts>
-        <handled>6</handled>
-        <requests>14</requests>
+        <active-connections>17915825952</active-connections>
+        <accepts>17915825952</accepts>
+        <handled>17915825952</handled>
+        <requests>17915825952</requests>
         <response-time>2.88</response-time>
-        <reading>0</reading>
-        <writing>1</writing>
-        <waiting>1</waiting>
+        <reading>17915825952</reading>
+        <writing>17915825952</writing>
+        <waiting>17915825952</waiting>
         <req-statuses>
             <req-status/>
             <req-status/>
@@ -78,16 +78,16 @@
     <req-status>
         <host-name>ctrip.com</host-name>
         <up-name>cluster</up-name>
-        <bytes-in-total>1287483</bytes-in-total>
-        <bytes-out-total>1287483</bytes-out-total>
-        <up-requests>2</up-requests>
+        <bytes-in-total>17915825952</bytes-in-total>
+        <bytes-out-total>17915825952</bytes-out-total>
+        <up-requests>17915825952</up-requests>
         <up-response-time>5.685</up-response-time>
-        <up-tries>6</up-tries>
+        <up-tries>17915825952</up-tries>
         <response-time>0.12</response-time>
-        <total-requests>14</total-requests>
-        <success-count>1</success-count>
-        <redirection-count>1</redirection-count>
-        <client-err-count>1</client-err-count>
-        <server-err-count>1</server-err-count>
+        <total-requests>17915825952</total-requests>
+        <success-count>17915825952</success-count>
+        <redirection-count>17915825952</redirection-count>
+        <client-err-count>17915825952</client-err-count>
+        <server-err-count>17915825952</server-err-count>
     </req-status>
 </nginx>

@@ -2,8 +2,6 @@ package com.ctrip.zeus.util;
 
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
-import com.ctrip.zeus.nginx.entity.TrafficStatusList;
-import com.ctrip.zeus.status.entity.Status;
 import com.google.common.base.Preconditions;
 
 import java.util.*;
@@ -52,8 +50,8 @@ public class RollingTrafficStatus {
     private class CircularArray implements Iterable<TrafficStatus> {
         private final LinkedList<TrafficStatus> buckets;
         private final int length;
-        private Integer[] lastStubStatus;
-        private Map<String, Integer[]> lastReqStatus;
+        private Long[] lastStubStatus;
+        private Map<String, Long[]> lastReqStatus;
 
         public CircularArray(int length) {
             buckets = new LinkedList<>();
@@ -98,22 +96,22 @@ public class RollingTrafficStatus {
             return Collections.unmodifiableList(buckets).iterator();
         }
 
-        private Integer[] compareAndSetStubStatusDelta(String rawStubStatus, TrafficStatus trafficStatus) {
-            Integer[] stubStatus = parseStubStatusNumber(rawStubStatus.split("\n"));
+        private Long[] compareAndSetStubStatusDelta(String rawStubStatus, TrafficStatus trafficStatus) {
+            Long[] stubStatus = parseStubStatusNumber(rawStubStatus.split("\n"));
             extractStubStatus(getDelta(stubStatus, lastStubStatus), trafficStatus, stubStatus);
             return stubStatus;
         }
 
-        private Map<String, Integer[]> compareAndSetReqStatusDelta(String rawReqStatus, TrafficStatus trafficStatus) {
-            Map<String, Integer[]> reqStatus =parseReqStautsEntries(rawReqStatus.split("\n"));
+        private Map<String, Long[]> compareAndSetReqStatusDelta(String rawReqStatus, TrafficStatus trafficStatus) {
+            Map<String, Long[]> reqStatus = parseReqStatusEntries(rawReqStatus.split("\n"));
             extractReqStatus(getDelta(reqStatus, lastReqStatus), trafficStatus);
             return reqStatus;
         }
     }
 
-    protected static void extractReqStatus(Map<String, Integer[]> upstreamMap, TrafficStatus trafficStatus) {
+    protected static void extractReqStatus(Map<String, Long[]> upstreamMap, TrafficStatus trafficStatus) {
         for (String key : upstreamMap.keySet()) {
-            Integer[] data = upstreamMap.get(key);
+            Long[] data = upstreamMap.get(key);
             String[] hostUpstream = key.split("/");
             String hostName, upstreamName;
             hostName = upstreamName = "";
@@ -122,9 +120,9 @@ public class RollingTrafficStatus {
                 if (hostUpstream.length > 1)
                     upstreamName = hostUpstream[1];
             }
-            Integer upRequests = data[ReqStatusOffset.UpstreamReq.ordinal()];
+            Long upRequests = data[ReqStatusOffset.UpstreamReq.ordinal()];
             double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double)data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
-            Integer requests = data[ReqStatusOffset.ReqTotal.ordinal()];
+            Long requests = data[ReqStatusOffset.ReqTotal.ordinal()];
             double responseTime = (requests == null || requests == 0) ? 0 :  (double)data[ReqStatusOffset.RtTotal.ordinal()] / requests;
             trafficStatus.addReqStatus(new ReqStatus().setHostName(hostName)
                     .setBytesInTotal(data[ReqStatusOffset.BytInTotal.ordinal()])
@@ -142,8 +140,8 @@ public class RollingTrafficStatus {
         }
     }
 
-    protected static void extractStubStatus(Integer[] data, TrafficStatus trafficStatus, Integer[] current) {
-        Integer requests = data[StubStatusOffset.Requests.ordinal()];
+    protected static void extractStubStatus(Long[] data, TrafficStatus trafficStatus, Long[] current) {
+        Long requests = data[StubStatusOffset.Requests.ordinal()];
         double responseTime = (requests == null || requests == 0) ? 0.0 : (double)data[StubStatusOffset.RequestTime.ordinal()] / requests;
         trafficStatus.setActiveConnections(current[StubStatusOffset.ActiveConn.ordinal()])
                 .setAccepts(data[StubStatusOffset.Accepts.ordinal()])
@@ -164,24 +162,24 @@ public class RollingTrafficStatus {
         ClientErrCount, ServerErrorCount, Other, RtTotal, UpstreamReq, UpstreamRt, UpstreamTries
     }
 
-    protected static Integer[] getDelta(Integer[] current, Integer[] previous) {
+    protected static Long[] getDelta(Long[] current, Long[] previous) {
         if (previous == null)
             return current;
         Preconditions.checkState(current.length == previous.length);
-        Integer[] ans = new Integer[current.length];
+        Long[] ans = new Long[current.length];
         for (int i = 0; i < ans.length; i++) {
             ans[i] = current[i] - previous[i];
         }
         return ans;
     }
 
-    private Map<String, Integer[]> getDelta(Map<String, Integer[]> currentMap, Map<String, Integer[]> previousMap) {
+    private Map<String, Long[]> getDelta(Map<String, Long[]> currentMap, Map<String, Long[]> previousMap) {
         if (previousMap == null)
             return currentMap;
-        Map<String, Integer[]> ans = new HashMap<>();
+        Map<String, Long[]> ans = new HashMap<>();
         for (String key : currentMap.keySet()) {
-            Integer[] current = currentMap.get(key);
-            Integer[] previous = previousMap.get(key);
+            Long[] current = currentMap.get(key);
+            Long[] previous = previousMap.get(key);
             if (previous == null) {
                 ans.put(key, current);
             } else {
@@ -191,34 +189,34 @@ public class RollingTrafficStatus {
         return ans;
     }
 
-    protected static Integer[] parseStubStatusNumber(String[] values) {
+    protected static Long[] parseStubStatusNumber(String[] values) {
         Preconditions.checkState(values.length == 4);
         final String activeConnectionKey = "Active connections: ";
         final String readingKey = "Reading: ";
         final String writingKey = "Writing: ";
         final String waitingKey = "Waiting: ";
 
-        Integer[] result = new Integer[StubStatusOffset.values().length];
-        result[0] = Integer.parseInt(values[0].trim().substring(activeConnectionKey.length()));
+        Long[] result = new Long[StubStatusOffset.values().length];
+        result[0] = Long.parseLong(values[0].trim().substring(activeConnectionKey.length()));
         String[] reqSrc = values[2].trim().split(" ");
         for (int i = 0; i < reqSrc.length; i++) {
-            result[i + 1] = Integer.parseInt(reqSrc[i]);
+            result[i + 1] = Long.parseLong(reqSrc[i]);
         }
         String stateSrc = values[3].trim();
-        result[5] = Integer.parseInt(stateSrc.substring(readingKey.length(), stateSrc.indexOf(writingKey) - 1));
-        result[6] = Integer.parseInt(stateSrc.substring(stateSrc.indexOf(writingKey) + writingKey.length(), stateSrc.indexOf(waitingKey) - 1));
-        result[7] = Integer.parseInt(stateSrc.substring(stateSrc.indexOf(waitingKey) + waitingKey.length()));
+        result[5] = Long.parseLong(stateSrc.substring(readingKey.length(), stateSrc.indexOf(writingKey) - 1));
+        result[6] = Long.parseLong(stateSrc.substring(stateSrc.indexOf(writingKey) + writingKey.length(), stateSrc.indexOf(waitingKey) - 1));
+        result[7] = Long.parseLong(stateSrc.substring(stateSrc.indexOf(waitingKey) + waitingKey.length()));
         return result;
     }
 
-    protected Map<String, Integer[]> parseReqStautsEntries(String[] upstreamValues) {
-        Map<String, Integer[]> result = new HashMap<>();
+    protected Map<String, Long[]> parseReqStatusEntries(String[] upstreamValues) {
+        Map<String, Long[]> result = new HashMap<>();
         for (int i = 0; i < upstreamValues.length; i++) {
             String[] values = upstreamValues[i].split(",");
             Preconditions.checkState(values != null && values.length == ReqStatusOffset.values().length + 1);
-            Integer[] data = new Integer[ReqStatusOffset.values().length];
+            Long[] data = new Long[ReqStatusOffset.values().length];
             for (int j = 0; j < data.length; j++) {
-                data[j] = Integer.parseInt(values[j + 1]);
+                data[j] = Long.parseLong(values[j + 1]);
             }
             result.put(values[0], data);
         }
