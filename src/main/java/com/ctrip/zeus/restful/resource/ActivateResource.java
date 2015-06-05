@@ -10,6 +10,7 @@ import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.util.AssertUtils;
+import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
@@ -51,6 +52,7 @@ public class ActivateResource {
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
+    private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
 
 
 
@@ -103,7 +105,7 @@ public class ActivateResource {
                 }finally {
                     buildLock.unlock();
                 }
-                if (buildFlag) {
+                if (buildFlag && writable.get()) {
                     DistLock writeLock = dbLockFactory.newLock( "writeAndReload_" +  buildSlbId);
                     try {
                         writeLock.lock(lockTimeout.get());
