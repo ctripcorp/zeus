@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
@@ -23,68 +23,66 @@ import java.util.List;
  */
 @Component("archiveService")
 public class ArchiveServiceImpl implements ArchiveService {
-
     @Resource
     private ArchiveSlbDao archiveSlbDao;
-
     @Resource
-    private ArchiveAppDao archiveAppDao;
+    private ArchiveGroupDao archiveGroupDao;
 
     @Override
     public int archiveSlb(Slb slb) throws Exception {
         String content = String.format(Slb.XML, slb);
-        ArchiveSlbDo d = new ArchiveSlbDo().setName(slb.getName()).setContent(content).setVersion(slb.getVersion()).setCreatedTime(new Date()).setLastModified(new Date());
+        ArchiveSlbDo d = new ArchiveSlbDo().setSlbId(slb.getId()).setContent(content).setVersion(slb.getVersion()).setCreatedTime(new Date()).setDataChangeLastTime(new Date());
         archiveSlbDao.insert(d);
         return d.getVersion();
     }
 
     @Override
-    public int archiveApp(App app) throws Exception {
-        String content = String.format(App.XML, app);
-        ArchiveAppDo d = new ArchiveAppDo().setName(app.getName()).setContent(content).setVersion(app.getVersion()).setCreatedTime(new Date()).setLastModified(new Date());
-        archiveAppDao.insert(d);
+    public int archiveGroup(Group group) throws Exception {
+        String content = String.format(Group.XML, group);
+        ArchiveGroupDo d = new ArchiveGroupDo().setGroupId(group.getId()).setContent(content).setVersion(group.getVersion()).setCreatedTime(new Date()).setDataChangeLastTime(new Date());
+        archiveGroupDao.insert(d);
         return d.getVersion();
     }
 
     @Override
-    public int deleteSlbArchive(String slbName) throws Exception {
-        ArchiveSlbDo d = new ArchiveSlbDo().setName(slbName);
+    public int deleteSlbArchive(Long slbId) throws Exception {
+        ArchiveSlbDo d = new ArchiveSlbDo().setSlbId(slbId);
         return archiveSlbDao.deleteBySlb(d);
     }
 
     @Override
-    public int deleteAppArchive(String appName) throws Exception {
-        ArchiveAppDo d = new ArchiveAppDo().setName(appName);
-        return archiveAppDao.deleteByApp(d);
+    public int deleteGroupArchive(Long groupId) throws Exception {
+        ArchiveGroupDo d = new ArchiveGroupDo().setGroupId(groupId);
+        return archiveGroupDao.deleteByGroup(d);
     }
 
     @Override
-    public Slb getSlb(String name, int version) throws Exception {
-        String content = archiveSlbDao.findByNameAndVersion(name, version, ArchiveSlbEntity.READSET_FULL).getContent();
+    public Slb getSlb(Long slbId, int version) throws Exception {
+        String content = archiveSlbDao.findBySlbAndVersion(slbId, version, ArchiveSlbEntity.READSET_FULL).getContent();
         return DefaultSaxParser.parseEntity(Slb.class, content);
     }
 
     @Override
-    public App getApp(String name, int version) throws Exception {
-        String content =  archiveAppDao.findByNameAndVersion(name, version, ArchiveAppEntity.READSET_FULL).getContent();
-        return DefaultSaxParser.parseEntity(App.class, content);
+    public Group getGroup(Long groupId, int version) throws Exception {
+        String content =  archiveGroupDao.findByGroupAndVersion(groupId, version, ArchiveGroupEntity.READSET_FULL).getContent();
+        return DefaultSaxParser.parseEntity(Group.class, content);
     }
 
     @Override
-    public Slb getMaxVersionSlb(String name) throws Exception {
-        String content =  archiveSlbDao.findMaxVersionByName(name, ArchiveSlbEntity.READSET_FULL).getContent();
+    public Slb getMaxVersionSlb(Long slbId) throws Exception {
+        String content =  archiveSlbDao.findMaxVersionBySlb(slbId, ArchiveSlbEntity.READSET_FULL).getContent();
         return DefaultSaxParser.parseEntity(Slb.class, content);
     }
 
     @Override
-    public App getMaxVersionApp(String name) throws Exception {
-        String content = archiveAppDao.findMaxVersionByName(name, ArchiveAppEntity.READSET_FULL).getContent();
-        return DefaultSaxParser.parseEntity(App.class, content);
+    public Group getMaxVersionGroup(Long groupId) throws Exception {
+        String content = archiveGroupDao.findMaxVersionByGroup(groupId, ArchiveGroupEntity.READSET_FULL).getContent();
+        return DefaultSaxParser.parseEntity(Group.class, content);
     }
 
     @Override
-    public List<Slb> getAllSlb(String name) throws Exception {
-        List<ArchiveSlbDo> l =  archiveSlbDao.findAllByName(name, ArchiveSlbEntity.READSET_FULL);
+    public List<Slb> getAllSlb(Long slbId) throws Exception {
+        List<ArchiveSlbDo> l =  archiveSlbDao.findAllBySlb(slbId, ArchiveSlbEntity.READSET_FULL);
         List<Slb> list = new ArrayList<>();
         for (ArchiveSlbDo d : l) {
             list.add(DefaultSaxParser.parseEntity(Slb.class, d.getContent()));
@@ -93,25 +91,24 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     @Override
-    public List<App> getAllApp(String name) throws Exception {
-        List<ArchiveAppDo> l = archiveAppDao.findAllByName(name, ArchiveAppEntity.READSET_FULL);
-        List<App> list = new ArrayList<>();
-        for (ArchiveAppDo d : l) {
-            list.add(DefaultSaxParser.parseEntity(App.class, d.getContent()));
+    public List<Group> getAllGroup(Long groupId) throws Exception {
+        List<ArchiveGroupDo> l = archiveGroupDao.findAllByGroup(groupId, ArchiveGroupEntity.READSET_FULL);
+        List<Group> list = new ArrayList<>();
+        for (ArchiveGroupDo d : l) {
+            list.add(DefaultSaxParser.parseEntity(Group.class, d.getContent()));
         }
         return list;
     }
 
     @Override
-    public Archive getLatestAppArchive(String appName) throws Exception {
-        ArchiveAppDo aad = archiveAppDao.findMaxVersionByName(appName, ArchiveAppEntity.READSET_FULL);
-        return C.toAppArchive(aad);
-    }
-
-    @Override
-    public Archive getLatestSlbArchive(String slbName) throws Exception {
-        ArchiveSlbDo asd = archiveSlbDao.findMaxVersionByName(slbName, ArchiveSlbEntity.READSET_FULL);
+    public Archive getLatestSlbArchive(Long slbId) throws Exception {
+        ArchiveSlbDo asd = archiveSlbDao.findMaxVersionBySlb(slbId, ArchiveSlbEntity.READSET_FULL);
         return C.toSlbArchive(asd);
     }
 
+    @Override
+    public Archive getLatestGroupArchive(Long groupId) throws Exception {
+        ArchiveGroupDo aad = archiveGroupDao.findMaxVersionByGroup(groupId, ArchiveGroupEntity.READSET_FULL);
+        return C.toGroupArchive(aad);
+    }
 }

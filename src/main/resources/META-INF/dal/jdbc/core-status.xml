@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
-    <entity name="status-app-server" table="status_app_server" alias="sas" do-class="StatusAppServerDo">
+    <entity name="status-group-server" table="status_group_server" alias="sas" do-class="StatusGroupServerDo">
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -9,7 +9,7 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         up = values(up),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -21,13 +21,13 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-app" type="SELECT" multiple="true">
-                <param name="app-name"/>
+            <query name="find-all-by-group-id" type="SELECT" multiple="true">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-name'/> = ${app-name}
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
@@ -41,54 +41,54 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name-and-is-up" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id-and-is-up" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <param name="up"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='up'/> = ${up}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name-and-app-name-and-ip" type="SELECT" multiple="true">
-                <param name="slb-name"/>
-                <param name="app-name"/>
+            <query name="find-all-by-slb-id-and-group-id-and-ip" type="SELECT" multiple="true">
+                <param name="slb-id"/>
+                <param name="group-id"/>
                 <param name="ip"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='ip'/> = ${ip}
-                        AND <FIELD name='app-name'/> = ${app-name}
+                        AND <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-app-name-and-slb-name" type="SELECT" multiple="true">
-                <param name="app-name"/>
-                <param name="slb-name"/>
+            <query name="find-all-by-group-id-and-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-name'/> = ${app-name}
-                        AND <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        AND <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app-name-and-slb-name-and-virtual-server-name" type="DELETE">
-                <param name="app-name"/>
-                <param name="slb-name"/>
-                <param name="virtual-server-name"/>
+            <query name="delete-by-group-id-and-slb-id-and-virtual-server-id" type="DELETE">
+                <param name="group-id"/>
+                <param name="slb-id"/>
+                <param name="virtual-server-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-name'/> = ${app-name}
-                    AND <FIELD name='slb-name'/> = ${slb-name}
-                    AND <FIELD name='virtual-server-name'/> = ${virtual-server-name}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    AND <FIELD name='slb-id'/> = ${slb-id}
+                    AND <FIELD name='virtual-server-id'/> = ${virtual-server-id}
                     ]]>
                 </statement>
             </query>
@@ -103,7 +103,7 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         up = values(up),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>

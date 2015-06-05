@@ -36,14 +36,14 @@ public class NginxOperator {
         doWriteConf(nginxConfDir, DEF_NGINX_CONF,conf);
     }
 
-    public void writeServerConf(String serverName, String conf) throws IOException {
-        String fileName =  serverName + CONF_SUFFIX;
+    public void writeServerConf(Long vsId, String conf) throws IOException {
+        String fileName =  String.valueOf(vsId) + CONF_SUFFIX;
         doWriteConf(nginxConfDir + "/vhosts", fileName,conf);
     }
 
 
-    public void writeUpstreamsConf(String upstreamName, String conf) throws IOException {
-        String fileName = upstreamName + CONF_SUFFIX;
+    public void writeUpstreamsConf(Long vsId, String conf) throws IOException {
+        String fileName = vsId + CONF_SUFFIX;
         doWriteConf(nginxConfDir + "/upstreams", fileName, conf);
     }
 

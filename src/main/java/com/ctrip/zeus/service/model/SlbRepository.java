@@ -1,6 +1,6 @@
 package com.ctrip.zeus.service.model;
 
-import com.ctrip.zeus.model.entity.AppSlb;
+import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.service.Repository;
 
@@ -14,6 +14,8 @@ public interface SlbRepository extends Repository {
 
     List<Slb> list() throws Exception;
 
+    Slb getById(Long slbId) throws Exception;
+
     Slb get(String slbName) throws Exception;
 
     /**
@@ -25,49 +27,49 @@ public interface SlbRepository extends Repository {
     Slb getBySlbServer(String slbServerIp) throws Exception;
 
     /**
-     * get the slb list which manage the app server ip or/and app name
-     * @param appServerIp the app server ip
-     * @param appName the app name
+     * get the slb list which manage the group server ip or/and group id
+     * @param groupServerIp the group server ip
+     * @param groupId the group name
      * @return the list of slbs
      * @throws Exception
      */
-    List<Slb> listByAppServerAndAppName(String appServerIp, String appName) throws Exception;
+    List<Slb> listByGroupServerAndGroup(String groupServerIp, Long groupId) throws Exception;
 
     /**
-     * get the slb list which manage the apps
-     * @param appNames the app names
+     * get the slb list which manage the groups
+     * @param groupIds the group names
      * @return the list of slbs
      * @throws Exception
      */
-    List<Slb> listByApps(String[] appNames) throws Exception;
+    List<Slb> listByGroups(Long[] groupIds) throws Exception;
 
     /**
-     * get the list of app related slb information by app names
-     * @param appNames the app names
-     * @return the list of app related slb information
+     * get the list of group related slb information by group primary keys
+     * @param groupIds the group primary keys
+     * @return the list of group related slb information
      * @throws Exception
      */
-    List<AppSlb> listAppSlbsByApps(String[] appNames) throws Exception;
+    List<GroupSlb> listGroupSlbsByGroups(Long[] groupIds) throws Exception;
 
     /**
-     * get thr list of app related slb information by slb name
-     * @param slbName the slb name
-     * @return the list of app related slb information
+     * get thr list of group related slb information by slb name
+     * @param slbId the slb name
+     * @return the list of group related slb information
      * @throws Exception
      */
-    List<AppSlb> listAppSlbsBySlb(String slbName) throws Exception;
+    List<GroupSlb> listGroupSlbsBySlb(Long slbId) throws Exception;
 
     void add(Slb slb) throws Exception;
 
     void update(Slb slb) throws Exception;
 
     /**
-     * delete the slb by its name
-     * @param slbName the slb name
+     * delete the slb by its primary id
+     * @param slbId the slb primary id
      * @return the number of rows deleted
      * @throws Exception
      */
-    int delete(String slbName) throws Exception;
+    int delete(Long slbId) throws Exception;
 
     /**
      * get the server list managed by the given slb
@@ -75,5 +77,5 @@ public interface SlbRepository extends Repository {
      * @return the list of server ips
      * @throws Exception
      */
-    List<String> listAppServersBySlb(String slbName) throws Exception;
+    List<String> listGroupServersBySlb(String slbName) throws Exception;
 }

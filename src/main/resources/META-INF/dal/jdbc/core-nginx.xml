@@ -10,28 +10,28 @@
                     ON DUPLICATE KEY UPDATE
                         content = values(content),
                         version = values(version),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
-                <param name="name"/>
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-slb-name-and-version" type="SELECT">
-                <param name="name"/>
+            <query name="find-by-slb-id-and-version" type="SELECT">
+                <param name="slb-id"/>
                 <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
@@ -40,7 +40,7 @@
     </entity>
     <entity name="nginx-conf-server" table="nginx_conf_server" alias="ncs">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
-        <member name="last-modified" field="last_modified" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
+        <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <query-defs>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
@@ -50,28 +50,28 @@
                     ON DUPLICATE KEY UPDATE
                         content = values(content),
                         version = values(version),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name-and-version" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id-and-version" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
@@ -80,7 +80,7 @@
     </entity>
     <entity name="nginx-conf-upstream" table="nginx_conf_upstream" alias="ncs">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
-        <member name="last-modified" field="last_modified" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
+        <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <query-defs>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
@@ -90,28 +90,28 @@
                     ON DUPLICATE KEY UPDATE
                         content = values(content),
                         version = values(version),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name-and-version" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id-and-version" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
@@ -126,8 +126,8 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        slb_name = values(slb_name),
-                        <FIELD name="last-modified"/> = NOW()
+                        slb_id = values(slb_id),
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -141,13 +141,13 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-name" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>

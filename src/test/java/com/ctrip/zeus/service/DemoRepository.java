@@ -1,8 +1,8 @@
 package com.ctrip.zeus.service;
 
-import com.ctrip.zeus.dal.core.AppDao;
-import com.ctrip.zeus.dal.core.AppDo;
-import com.ctrip.zeus.dal.core.AppEntity;
+import com.ctrip.zeus.dal.core.GroupDao;
+import com.ctrip.zeus.dal.core.GroupDo;
+import com.ctrip.zeus.dal.core.GroupEntity;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
@@ -16,19 +16,19 @@ import javax.annotation.Resource;
 public class DemoRepository {
 
     @Resource
-    private AppDao appDao;
+    private GroupDao groupDao;
 
-    public void addApp(String name) {
+    public void addGroup(String name) {
         try {
-            appDao.insert(new AppDo().setAppId("test").setName(name));
+            groupDao.insert(new GroupDo().setAppId("test").setName(name));
         } catch (DalException e) {
             e.printStackTrace();
         }
     }
 
-    public void addAppError(String name) throws Exception {
+    public void addGroupError(String name) throws Exception {
         try {
-            appDao.insert(new AppDo().setAppId("test").setName(name));
+            groupDao.insert(new GroupDo().setAppId("test").setName(name));
         } catch (DalException e) {
             e.printStackTrace();
         }
@@ -36,18 +36,18 @@ public class DemoRepository {
         throw new Exception("rollback");
     }
 
-    public AppDo getApp(String name) {
+    public GroupDo getGroup(String name) {
         try {
-            return appDao.findByName(name, AppEntity.READSET_FULL);
+            return groupDao.findByName(name, GroupEntity.READSET_FULL);
         } catch (DalException e) {
             e.printStackTrace();
         }
-        return new AppDo();
+        return new GroupDo();
     }
 
-    public void deleteApp(AppDo appDo) {
+    public void deleteGroup(GroupDo groupDo) {
         try {
-            appDao.deleteByPK(appDo);
+            groupDao.deleteByPK(groupDo);
         } catch (DalException e) {
             e.printStackTrace();
         }

@@ -9,29 +9,29 @@
          <properties>useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</properties>
       </datasource>
       <group name="core" package="com.ctrip.zeus.dal.core">
-         <table name="app"/>
-         <table name="app_health_check"/>
-         <table name="app_server"/>
-         <table name="app_load_balancing_method"/>
-         <table name="app_slb"/>
+         <table name="group"/>
+         <table name="group_health_check"/>
+         <table name="group_server"/>
+         <table name="group_load_balancing_method"/>
+         <table name="group_slb"/>
          <table name="server"/>
          <table name="slb"/>
          <table name="slb_domain"/>
          <table name="slb_server"/>
          <table name="slb_vip"/>
          <table name="slb_virtual_server"/>
-         <table name="status_app_server"/>
+         <table name="status_group_server"/>
          <table name="status_server"/>
-         <table name="archive_app"/>
+         <table name="archive_group"/>
          <table name="archive_slb"/>
-         <table name="conf_app_active"/>
+         <table name="conf_group_active"/>
          <table name="conf_slb_active"/>
          <table name="build_info"/>
          <table name="nginx_conf"/>
          <table name="nginx_conf_server"/>
          <table name="nginx_conf_upstream"/>
          <table name="nginx_server"/>
-         <table name="conf_app_slb_active"/>
+         <table name="conf_group_slb_active"/>
          <table name="dist_lock"/>
          <table name="auth_resource"/>
          <table name="auth_role"/>

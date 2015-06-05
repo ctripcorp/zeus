@@ -13,9 +13,9 @@ import java.util.List;
  */
 public interface SlbSync {
 
-    SlbDo add(Slb slb) throws DalException, ValidationException;
+    void add(Slb slb) throws DalException, ValidationException;
 
-    SlbDo update(Slb slb) throws DalException, ValidationException;
+    void update(Slb slb) throws DalException, ValidationException;
 
-    int delete(String slbName) throws DalException, ValidationException;
+    int delete(Long slbId) throws DalException, ValidationException;
 }

@@ -54,6 +54,19 @@ public class SlbResource {
         return responseHandler.handle(slb, hh.getMediaType());
     }
 
+    @GET
+    @Path("/get")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "getGroup")
+    public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                        @QueryParam("id") Long slbId) throws Exception {
+        if (slbId != null) {
+            Slb slb = slbRepository.getById(slbId);
+            return responseHandler.handle(slb, hh.getMediaType());
+        }
+        throw new Exception("Missing parameter.");
+    }
+    
     @POST
     @Path("/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
@@ -84,7 +97,7 @@ public class SlbResource {
         } else {
             throw new Exception("Unacceptable type.");
         }
-        DistLock lock = dbLockFactory.newLock(s.getName() + "_update");
+        DistLock lock = dbLockFactory.newLock(s.getName() + "_updateSlb");
         try {
             lock.lock();
             slbRepository.update(s);
@@ -98,11 +111,11 @@ public class SlbResource {
     @Path("/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "deleteSlb")
-    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("slbName") String slbName) throws Exception {
-        if (slbName == null || slbName.isEmpty()) {
-            throw new Exception("Missing parameter or value.");
+    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("slbId") Long slbId) throws Exception {
+        if (slbId == null) {
+            throw new Exception("Missing parameter.");
         }
-        slbRepository.delete(slbName);
+        slbRepository.delete(slbId);
         return Response.ok().build();
     }
 }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
-    <entity name="app" table="app" alias="a" do-class="AppDo">
+    <entity name="group" table="group" alias="a" do-class="GroupDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
-        <var name="ids" value-type="long[]"/>
+        <var name="ids" value-type="Long[]"/>
         <var name="names" value-type="String[]"/>
         <var name="max-count" value-type="int"/>
         <query-defs>
@@ -15,24 +15,25 @@
                     ]]>
                 </statement>
             </query>
-            <query name="update-by-name" type="UPDATE">
-                <param name="name"/>
+            <query name="update-by-id" type="UPDATE">
+                <param name="id"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='app-id'/> = ${app-id},
+                    SET <FIELD name='name'/> = ${name},
+                        <FIELD name='app-id'/> = ${app-id},
                         <FIELD name='ssl'/> = ${ssl},
                         version = version + 1
-                    WHERE <FIELD name='name'/> = ${name}
+                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-name" type="DELETE">
+            <query name="delete-by-id" type="DELETE">
                 <param name="name"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='name'/> = ${name}
+                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>
@@ -56,6 +57,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-id" type="SELECT">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-name" type="SELECT">
                 <param name="name"/>
                 <statement>
@@ -66,7 +77,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-appId" type="SELECT">
+            <query name="find-by-app-id" type="SELECT">
                 <param name="app-id"/>
                 <statement>
                     <![CDATA[
@@ -98,7 +109,7 @@
             </query>
         </query-defs>
     </entity>
-    <entity name="app-health-check" table="app_health_check" alias="ahc" do-class="AppHealthCheckDo">
+    <entity name="group-health-check" table="group_health_check" alias="ahc" do-class="GroupHealthCheckDo">
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -106,38 +117,37 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_id = values(app_id),
                         uri = values(uri),
                         intervals = values(intervals),
                         fails = values(fails),
                         passes = values(passes),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app" type="DELETE">
-                <param name="app-id"/>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-id'/> = ${app-id}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-app" type="SELECT">
-                <param name="app-id"/>
+            <query name="find-by-group" type="SELECT">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-id'/> = ${app-id}
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
         </query-defs>
     </entity>
-    <entity name="app-load-balancing-method" table="app_load_balancing_method" alias="albm"
-            do-class="AppLoadBalancingMethodDo">
+    <entity name="group-load-balancing-method" table="group_load_balancing_method" alias="albm"
+            do-class="GroupLoadBalancingMethodDo">
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -145,35 +155,35 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_id = values(app_id),
+                        group_id = values(group_id),
                         type = values(type),
                         value = values(value),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app" type="DELETE">
-                <param name="app-id"/>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-id'/> = ${app-id}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-app" type="SELECT">
-                <param name="app-id"/>
+            <query name="find-by-group" type="SELECT">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-id'/> = ${app-id}
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
         </query-defs>
     </entity>
-    <entity name="app-server" table="app_server" alias="ass" do-class="AppServerDo">
+    <entity name="group-server" table="group_server" alias="ass" do-class="GroupServerDo">
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -181,33 +191,33 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_id = values(app_id),
+                        group_id = values(group_id),
                         ip = values(ip),
                         host_name = values(host_name),
                         port = values(port),
                         weight = values(weight),
                         max_fails = values(max_fails),
                         fail_timeout = values(fail_timeout),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app" type="DELETE">
-                <param name="app-id"/>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-id'/> = ${app-id}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-app" type="SELECT" multiple="true">
-                <param name="app-id"/>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-id'/> = ${app-id}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
@@ -223,10 +233,10 @@
             </query>
         </query-defs>
     </entity>
-    <entity name="app-slb" table="app_slb" alias="as2" do-class="AppSlbDo">
+    <entity name="group-slb" table="group_slb" alias="as2" do-class="GroupSlbDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
-        <var name="app-names" value-type="String[]"/>
+        <var name="group-ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -234,63 +244,61 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_name = values(app_name),
-                        slb_name = values(slb_name),
-                        slb_virtual_server_name = values(slb_virtual_server_name),
+                        group_id = values(group_id),
+                        slb_id = values(slb_id),
+                        slb_virtual_server_id = values(slb_virtual_server_id),
                         path = values(path),
                         rewrite = values(rewrite),
                         priority = values(priority)
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app" type="DELETE">
-                <param name="app-name"/>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-name'/> = ${app-name}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-app" type="SELECT" multiple="true">
-                <param name="app-name"/>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-name'/> = ${app-name}
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-apps" type="SELECT" multiple="true">
-                <param name="app-names"/>
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
+                <param name="group-ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='app-name'/> in <IN> ${app-names} </IN>
+                        WHERE <FIELD name='group-id'/> in <IN> ${group-ids} </IN>
                     ]]>
                 </statement>
             </query>
             <query name="find-all-by-slb" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-and-virtual-server" type="SELECT" multiple="true">
-                <param name="slb-name"/>
-                <param name="slb-virtual-server-name"/>
+            <query name="find-all-by-virtual-server" type="SELECT" multiple="true">
+                <param name="slb-virtual-server-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
-                        AND <FIELD name='slb-virtual-server-name'/> = ${slb-virtual-server-name}
+                    WHERE <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
                     ]]>
                 </statement>
             </query>
@@ -306,7 +314,7 @@
                     ON DUPLICATE KEY UPDATE
                         ip = values(ip),
                         host_name = values(host_name),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -332,7 +340,7 @@
     </entity>
     <entity name="slb" table="slb" alias="s2" do-class="SlbDo">
         <var name="names" value-type="String[]"/>
-        <var name="ids" value-type="long[]"/>
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -346,21 +354,22 @@
                         nginx_worker_processes = values(nginx_worker_processes),
                         status = values(status),
                         version = version + 1,
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="update-by-name" type="UPDATE">
-                <param name="name"/>
+            <query name="update-by-id" type="UPDATE">
+                <param name="id"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='nginx-bin'/> = ${nginx-bin},
+                    SET <FIELD name='name'/> = ${name},
+                        <FIELD name='nginx-bin'/> = ${nginx-bin},
                         <FIELD name='nginx-conf'/> = ${nginx-conf},
                         <FIELD name='nginx-worker-processes'/> = ${nginx-worker-processes},
                         <FIELD name='status'/> = ${status},
                         version = version + 1,
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     WHERE <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
@@ -425,7 +434,7 @@
                     ON DUPLICATE KEY UPDATE
                         slb_virtual_server_id = values(slb_virtual_server_id),
                         name = values(name),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -462,7 +471,7 @@
                         ip = values(ip),
                         host_name = values(host_name),
                         enable = values(enable),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -507,7 +516,7 @@
                     ON DUPLICATE KEY UPDATE
                         slb_id = values(slb_id),
                         ip = values(ip),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -569,62 +578,62 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-and-name" type="SELECT">
+            <query name="find-by-slb-and-name" type="SELECT">
                 <param name="slb-id"/>
                 <param name="name"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>
         </query-defs>
     </entity>
-    <entity name="archive-app" table="archive_app" alias="aa" do-class="ArchiveAppDo">
+    <entity name="archive-group" table="archive_group" alias="aa" do-class="ArchiveGroupDo">
         <query-defs>
-            <query name="delete-by-app" type="DELETE">
-                <param name="name"/>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='name'/> = ${name}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-max-version-by-name" type="SELECT">
-                <param name="name"/>
+            <query name="find-max-version-by-group" type="SELECT">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE  <FIELD name='name'/> = ${name}
+                        WHERE  <FIELD name='group-id'/> = ${group-id}
                         ORDER BY <FIELD name='version'/> DESC
                         LIMIT 1
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-name-and-version" type="SELECT">
-                <param name="name"/>
+            <query name="find-by-group-and-version" type="SELECT">
+                <param name="group-id"/>
                 <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${version}
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                         AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-name" type="SELECT" multiple="true">
-                <param name="name"/>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${name}
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
@@ -633,45 +642,45 @@
     <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
         <query-defs>
             <query name="delete-by-slb" type="DELETE">
-                <param name="name"/>
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='name'/> = ${name}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-max-version-by-name" type="SELECT">
-                <param name="name"/>
+            <query name="find-max-version-by-slb" type="SELECT">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE  <FIELD name='name'/> = ${name}
+                        WHERE  <FIELD name='slb-id'/> = ${slb-id}
                         ORDER BY <FIELD name='version'/> DESC
                         LIMIT 1
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-name-and-version" type="SELECT">
-                <param name="name"/>
+            <query name="find-by-slb-and-version" type="SELECT">
+                <param name="slb-id"/>
                 <param name="version"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${version}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                         AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-name" type="SELECT" multiple="true">
-                <param name="name"/>
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>

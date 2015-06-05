@@ -1,6 +1,6 @@
 package com.ctrip.zeus.transaction;
 
-import com.ctrip.zeus.dal.core.AppDo;
+import com.ctrip.zeus.dal.core.GroupDo;
 import com.ctrip.zeus.service.DemoRepository;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
@@ -48,21 +48,19 @@ public class TransactionTest extends AbstractSpringTest {
 
     @Test
     public void  test(){
-        String name = "app" + UUID.randomUUID();
-        demoRepository.addApp(name);
-        AppDo appDo = demoRepository.getApp(name);
-        Assert.assertEquals(name, appDo.getName());
-        demoRepository.deleteApp(appDo);
+        String name = "group" + UUID.randomUUID();
+        demoRepository.addGroup(name);
+        GroupDo groupDo = demoRepository.getGroup(name);
+        Assert.assertEquals(name, groupDo.getName());
+        demoRepository.deleteGroup(groupDo);
 
-        name = "app" + UUID.randomUUID();
+        name = "group" + UUID.randomUUID();
         try {
-            demoRepository.addAppError(name);
+            demoRepository.addGroupError(name);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        appDo = demoRepository.getApp(name);
-        Assert.assertNull(appDo.getName());
-
-
+        groupDo = demoRepository.getGroup(name);
+        Assert.assertNull(groupDo);
     }
 }

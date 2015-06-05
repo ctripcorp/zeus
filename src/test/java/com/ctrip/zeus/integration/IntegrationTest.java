@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.ModelServiceTest;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.util.ModelAssert;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -12,16 +13,18 @@ import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by fanqq on 2015/4/10.
  */
 public class IntegrationTest {
 
-//    private static final String host = "http://10.2.25.83:8099";
+    private static final String host = "http://10.2.27.21:8099";
 
-    private static final String host = "http://127.0.0.1:8099";
-    private static final String hostip = "10.2.25.83";
+//    private static final String host = "http://127.0.0.1:8099";
+    private static final String hostip = "10.2.27.21";
     private static final String slb1_server_0 = "10.2.25.83";
     private static final String slb1_server_1 = "10.2.27.21";
     private static final String slb1_server_2 = "10.2.25.96";
@@ -32,30 +35,69 @@ public class IntegrationTest {
 
 
     @Before
-    public void before() {
+    public void before() throws IOException {
+        Group groupres = null;
+        String groupstr = null;
 
-        for (int i = 1; i < 11; i++) {
-            reqClient.getstr("/api/app/delete?appName=__Test_app" + i);
+        for (int i = 0; i < 10; i++) {
+            groupstr = reqClient.getstr("/api/group/get/__Test_app"+i);
+            groupres = DefaultJsonParser.parse(Group.class, groupstr);
+            if (groupres!=null)
+            {
+                reqClient.getstr("/api/group/delete?groupId=" + groupres.getId());
+            }
         }
 
-        reqClient.getstr("/api/slb/delete?slbName=" + slb1_name);
-        reqClient.getstr("/api/slb/delete?slbName=" + slb2_name);
+
+        String slb_res = reqClient.getstr("/api/slb/get/" + slb1_name);
+        Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+        if (slb_res_obj!=null)
+        {
+            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+        }
+
+        slb_res = reqClient.getstr("/api/slb/get/" + slb2_name);
+        slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+        if (slb_res_obj!=null)
+        {
+            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+        }
     }
 
     @After
-    public void after() {
+    public void after() throws IOException {
 
-        for (int i = 1; i < 11; i++) {
-            reqClient.getstr("/api/app/delete?appName=__Test_app" + i);
+        Group groupres = null;
+        String groupstr = null;
+
+        for (int i = 0; i < 10; i++) {
+            groupstr = reqClient.getstr("/api/group/get/__Test_app"+i);
+            groupres = DefaultJsonParser.parse(Group.class, groupstr);
+            if (groupres!=null)
+            {
+                reqClient.getstr("/api/group/delete?groupId=" + groupres.getId());
+            }
         }
 
-        reqClient.getstr("/api/slb/delete?slbName=" + slb1_name);
-        reqClient.getstr("/api/slb/delete?slbName=" + slb2_name);
+
+        String slb_res = reqClient.getstr("/api/slb/get/" + slb1_name);
+        if (slb_res!=null)
+        {
+            Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+        }
+
+        slb_res = reqClient.getstr("/api/slb/get/" + slb2_name);
+        if (slb_res!=null)
+        {
+            Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+        }
 
 
-        String res = reqClient.getstr("/api/app/get/__Test_app2");
+        String res = reqClient.getstr("/api/group/get/__Test_app2");
         Assert.assertEquals(true,res.isEmpty());
-        reqClient.markPass("/api/app/delete");
+        reqClient.markPass("/api/group/delete");
 
         res = reqClient.getstr("/api/slb/get/" + slb2_name);
         Assert.assertEquals(true,res.isEmpty());
@@ -81,9 +123,9 @@ public class IntegrationTest {
                 .addDomain(new Domain().setName("vs5.ctrip.com"));
 
 
-        AppServer appServer1 = new AppServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver1").setIp(slb1_server_0);
-        AppServer appServer2 = new AppServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver2").setIp(slb1_server_1);
-        AppServer appServer3 = new AppServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver3").setIp(slb1_server_2);
+        GroupServer groupServer1 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver1").setIp(slb1_server_0);
+        GroupServer groupServer2 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver2").setIp(slb1_server_1);
+        GroupServer groupServer3 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver3").setIp(slb1_server_2);
 
 
         //add slb and vs
@@ -126,260 +168,90 @@ public class IntegrationTest {
         String slb1_res = reqClient.getstr("/api/slb/get/" + slb1_name);
         Slb slb1_res_obj = DefaultJsonParser.parse(Slb.class, slb1_res);
 
-        ModelServiceTest.assertSlbEquals(slb1, slb1_res_obj);
+        ModelAssert.assertSlbEquals(slb1, slb1_res_obj);
 
         String slb2_res = reqClient.getstr("/api/slb/get/" + slb2_name);
         Slb slb2_res_obj = DefaultJsonParser.parse(Slb.class, slb2_res);
 
-        ModelServiceTest.assertSlbEquals(slb2, slb2_res_obj);
+        ModelAssert.assertSlbEquals(slb2, slb2_res_obj);
 
         reqClient.markPass("/api/slb/get/"+ slb1_name);
         reqClient.markPass("/api/slb/get/"+ slb2_name);
-
-
         //activate test slbs
-//        reqClient.getstr("/api/conf/activate?slbName=__Test_slb1&slbName=__Test_slb2");
+        reqClient.getstr("/api/conf/activateByName?slbName=__Test_slb1&slbName=__Test_slb2");
 
-        //add apps
-
-        //app1 v1 appserver1 appserver2
-        String appname = "__Test_app1";
-        String slbname = "__Test_slb1";
-        String appid = "000001";
-        String appslbpath = "/app1";
-
-        App app1 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v1).setRewrite(null).setPriority(0))
-                .addAppServer(appServer1)
-                .addAppServer(appServer2);
-
-
-        //app2 v2 appserver1
-        appname = "__Test_app2";
-        slbname = "__Test_slb1";
-        appid = "000002";
-        appslbpath = "/app2";
-
-
-        App app2 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v2).setRewrite(null).setPriority(0))
-                .addAppServer(appServer1);
-
-
-        //app3 v3 appserver3
-        appname = "__Test_app3";
-        slbname = "__Test_slb1";
-        appid = "000003";
-        appslbpath = "/app3";
-
-
-        App app3 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v3).setRewrite(null).setPriority(0))
-                .addAppServer(appServer3);
-
-
-        //app4 v4 appserver2
-        appname = "__Test_app4";
-        slbname = "__Test_slb1";
-        appid = "000004";
-        appslbpath = "/app4";
-
-
-        App app4 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v4).setRewrite(null).setPriority(0))
-                .addAppServer(appServer2);
-
-
-        //app5 v5 appserver1
-        appname = "__Test_app5";
-        slbname = "__Test_slb1";
-        appid = "000005";
-        appslbpath = "/app5";
-
-
-        App app5 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v5).setRewrite(null).setPriority(0))
-                .addAppServer(appServer1);
-
-
-        //app6 v3 appserver2
-        appname = "__Test_app6";
-        slbname = "__Test_slb2";
-        appid = "000006";
-        appslbpath = "/app6";
-
-
-        App app6 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v3).setRewrite(null).setPriority(0))
-                .addAppServer(appServer2);
-
-        //app7 v2 appserver1
-        appname = "__Test_app7";
-        slbname = "__Test_slb2";
-        appid = "000007";
-        appslbpath = "/app7";
-
-
-        App app7 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v2).setRewrite(null).setPriority(0))
-                .addAppServer(appServer1).setSsl(true);
-
-
-        //app8 v2 v5 appserver3
-        appname = "__Test_app8";
-        slbname = "__Test_slb2";
-        String slbname1 = "__Test_slb1";
-        appid = "000008";
-        appslbpath = "/app8";
-
-
-        App app8 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v2).setRewrite(null).setPriority(0))
-                .addAppSlb(new AppSlb().setSlbName(slbname1).setPath(appslbpath)
-                        .setVirtualServer(v5).setRewrite(null).setPriority(2))
-                .addAppServer(appServer3).setSsl(true);
-
-
-        //app9 v1 v3 appserver1 appserver2
-        appname = "__Test_app9";
-        slbname = "__Test_slb2";
-        slbname1 = "__Test_slb1";
-        appid = "000008";
-        appslbpath = "/app8";
-
-
-        App app9 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v1).setRewrite(null).setPriority(2))
-                .addAppSlb(new AppSlb().setSlbName(slbname1).setPath(appslbpath)
-                        .setVirtualServer(v3).setRewrite(null).setPriority(0))
-                .addAppServer(appServer1)
-                .addAppServer(appServer2);
-
-        appname = "__Test_app10";
-        slbname = "__Test_slb2";
-        slbname1 = "__Test_slb1";
-        appid = "000010";
-        appslbpath = "/app10";
-
-
-        //app10 v2 v5 appserver3
-        App app10 = new App().setName(appname).setAppId(appid).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                .setIntervals(2000).setPasses(1).setUri("/")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
-                .setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbname).setPath(appslbpath)
-                        .setVirtualServer(v2).setRewrite("/a1 /aa1").setPriority(2))
-                .addAppSlb(new AppSlb().setSlbName(slbname1).setPath(appslbpath)
-                        .setVirtualServer(v5).setRewrite("/app10 /abb10").setPriority(1))
-                .addAppServer(appServer3).setSsl(true);
-
-
-        reqClient.post("/api/app/add", String.format(App.JSON, app1));
-        reqClient.post("/api/app/add", String.format(App.JSON, app2));
-        reqClient.post("/api/app/add", String.format(App.JSON, app3));
-        reqClient.post("/api/app/add", String.format(App.JSON, app4));
-        reqClient.post("/api/app/add", String.format(App.JSON, app5));
-        reqClient.post("/api/app/add", String.format(App.JSON, app6));
-        reqClient.post("/api/app/add", String.format(App.JSON, app7));
-        reqClient.post("/api/app/add", String.format(App.JSON, app8));
-        reqClient.post("/api/app/add", String.format(App.JSON, app9));
-        reqClient.post("/api/app/add", String.format(App.JSON, app10));
-
-        String apps = reqClient.getstr("/api/app");
-
+        List<Group> groups = new ArrayList<>();
+        for (int i = 0 ; i < 10 ; i++ )
+        {
+            Group group = new Group().setName("__Test_app" + i).setAppId("1000" + i).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
+                    .setIntervals(2000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
+                    .setValue("test"))
+                .addGroupSlb(new GroupSlb().addVip(new Vip().setIp(hostip)).setSlbId(i % 3 == 0 ? slb2_res_obj.getId() : slb1_res_obj.getId())
+                        .setSlbName(i % 3 == 0 ? slb2_res_obj.getName() : slb1_res_obj.getName()).setPath("/app" + i).setVirtualServer(i % 2 == 0 ? v1 : v2).setRewrite(i % 2 == 0 ? null : "/app /app0?sleep=1&size=1" + i)
+                        .setPriority(i)).addGroupServer(i % 2 == 0 ?groupServer1:groupServer2);
+            reqClient.post("/api/group/add", String.format(Group.JSON, group));
+            groups.add(group);
+        }
+        String apps = reqClient.getstr("/api/group");
         boolean appsuc = apps.contains("\"__Test_app1\"") && apps.contains("\"__Test_app2\"") && apps.contains("\"__Test_app3\"")
                 && apps.contains("\"__Test_app4\"") && apps.contains("\"__Test_app5\"") && apps.contains("\"__Test_app6\"")
                 && apps.contains("\"__Test_app7\"") && apps.contains("\"__Test_app8\"") && apps.contains("\"__Test_app9\"")
-                && apps.contains("\"__Test_app10\"");
+                && apps.contains("\"__Test_app0\"");
 
         Assert.assertEquals(true,appsuc);
-        reqClient.markPass("/api/app/add");
-        reqClient.markPass("/api/app");
+        reqClient.markPass("/api/group/add");
+        reqClient.markPass("/api/group");
 
 
-        App appres = null;
-        String appstr = null;
+        Group groupres = null;
+        String groupstr = null;
 
-        appstr = reqClient.getstr("/api/app/get/__Test_app1");
-        appres = DefaultJsonParser.parse(App.class, appstr);
-        ModelServiceTest.assertAppEquals(app1, appres);
+        groupstr = reqClient.getstr("/api/group/get/__Test_app1");
+        groupres = DefaultJsonParser.parse(Group.class, groupstr);
+        ModelAssert.assertGroupEquals(groups.get(1), groupres);
 
-        appstr = reqClient.getstr("/api/app/get/__Test_app2");
-        appres = DefaultJsonParser.parse(App.class, appstr);
-        ModelServiceTest.assertAppEquals(app2, appres);
+        groupstr = reqClient.getstr("/api/group/get/__Test_app2");
+        groupres = DefaultJsonParser.parse(Group.class, groupstr);
+        ModelAssert.assertGroupEquals(groups.get(2), groupres);
 
-        appstr = reqClient.getstr("/api/app/get/__Test_app9");
-        appres = DefaultJsonParser.parse(App.class, appstr);
-        ModelServiceTest.assertAppEquals(app9, appres);
-
-        appstr = reqClient.getstr("/api/app/get/__Test_app10");
-        appres = DefaultJsonParser.parse(App.class, appstr);
-        ModelServiceTest.assertAppEquals(app10, appres);
-
+        groupstr = reqClient.getstr("/api/group/get/__Test_app3");
+        groupres = DefaultJsonParser.parse(Group.class, groupstr);
+        ModelAssert.assertGroupEquals(groups.get(3), groupres);
         reqClient.markPass("/api/app/get/__Test_app1");
         reqClient.markPass("/api/app/get/__Test_app2");
-        reqClient.markPass("/api/app/get/__Test_app9");
-        reqClient.markPass("/api/app/get/__Test_app10");
+        reqClient.markPass("/api/app/get/__Test_app3");
 
 
         integrationTest_update();
 
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app1");
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app2");
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app3");
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app4");
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app5");
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app6");
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app7");
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app8");
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app9");
-//        reqClient.getstr("/api/conf/activate?appName=__Test_app10");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app1");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app2");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app3");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app4");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app5");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app6");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app7");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app8");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app9");
+        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app0");
 
 
+        for (int i = 0; i < 10; i++) {
+            String groupstatus = reqClient.getstr("/api/status/groupName/__Test_app" + i);
+            GroupStatusList groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, groupstatus);
 
-
-        for (int i = 1; i < 11; i++) {
-            String appstatus = reqClient.getstr("/api/status/app/__Test_app" + i);
-            AppStatusList appStatusList = DefaultJsonParser.parse(AppStatusList.class, appstatus);
-
-            for (AppStatus as : appStatusList.getAppStatuses()) {
-                Assert.assertEquals("__Test_app" + i, as.getAppName());
+            for (GroupStatus as : groupStatusList.getGroupStatuses()) {
+                Assert.assertEquals("__Test_app" + i, as.getGroupName());
                 Assert.assertEquals(true, as.getSlbName().equals(slb1_name) || as.getSlbName().equals(slb2_name));
 
-                for (AppServerStatus ass : as.getAppServerStatuses()) {
+                for (GroupServerStatus ass : as.getGroupServerStatuses()) {
                     Assert.assertEquals(true, ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1) || ass.getIp().equals(slb1_server_2));
                     Assert.assertEquals(true, ass.getServer());
                     Assert.assertEquals(true, ass.getMember());
                 }
             }
 
-            reqClient.markPass("/api/status/app/__Test_app"+i);
+            reqClient.markPass("/api/status/groupName/__Test_app"+i);
         }
 
         reqClient.markPass("/api/conf/activate");
@@ -387,56 +259,55 @@ public class IntegrationTest {
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_1);
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_0);
 
-        String slbstatus = reqClient.getstr("/api/status/slb/" + slb1_name);
+        String slbstatus = reqClient.getstr("/api/status/slbName/" + slb1_name);
 
-        AppStatusList appStatusList = DefaultJsonParser.parse(AppStatusList.class, slbstatus);
+        GroupStatusList groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, slbstatus);
 
-        for (AppStatus as : appStatusList.getAppStatuses()) {
-            for (AppServerStatus ass : as.getAppServerStatuses()) {
+        for (GroupStatus as : groupStatusList.getGroupStatuses()) {
+            for (GroupServerStatus ass : as.getGroupServerStatuses()) {
                 if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(false, ass.getServer());
                 }
             }
         }
 
-        slbstatus = reqClient.getstr("/api/status/slb/" + slb2_name);
+        slbstatus = reqClient.getstr("/api/status/slbName/" + slb2_name);
 
-        appStatusList = DefaultJsonParser.parse(AppStatusList.class, slbstatus);
+        groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, slbstatus);
 
-        for (AppStatus as : appStatusList.getAppStatuses()) {
-            for (AppServerStatus ass : as.getAppServerStatuses()) {
+        for (GroupStatus as : groupStatusList.getGroupStatuses()) {
+            for (GroupServerStatus ass : as.getGroupServerStatuses()) {
                 if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(false, ass.getServer());
                 }
             }
         }
 
-        reqClient.markPass("/api/status/slb/"+slb1_name);
-        reqClient.markPass("/api/status/slb/"+slb2_name);
+        reqClient.markPass("/api/status/slbName/"+slb1_name);
+        reqClient.markPass("/api/status/slbName/"+slb2_name);
         reqClient.markPass("/api/op/downServer");
-
         reqClient.getstr("/api/op/upServer?ip=" + slb1_server_0);
         reqClient.getstr("/api/op/upServer?ip=" + slb1_server_1);
 
 
-        slbstatus = reqClient.getstr("/api/status/slb/" + slb2_name);
+        slbstatus = reqClient.getstr("/api/status/slbName/" + slb2_name);
 
-        appStatusList = DefaultJsonParser.parse(AppStatusList.class, slbstatus);
+        groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, slbstatus);
 
-        for (AppStatus as : appStatusList.getAppStatuses()) {
-            for (AppServerStatus ass : as.getAppServerStatuses()) {
+        for (GroupStatus as : groupStatusList.getGroupStatuses()) {
+            for (GroupServerStatus ass : as.getGroupServerStatuses()) {
                 if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(true, ass.getServer());
                 }
             }
         }
 
-        slbstatus = reqClient.getstr("/api/status/slb/" + slb1_name);
+        slbstatus = reqClient.getstr("/api/status/slbName/" + slb1_name);
 
-        appStatusList = DefaultJsonParser.parse(AppStatusList.class, slbstatus);
+        groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, slbstatus);
 
-        for (AppStatus as : appStatusList.getAppStatuses()) {
-            for (AppServerStatus ass : as.getAppServerStatuses()) {
+        for (GroupStatus as : groupStatusList.getGroupStatuses()) {
+            for (GroupServerStatus ass : as.getGroupServerStatuses()) {
                 if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(true, ass.getServer());
                 }
@@ -446,38 +317,40 @@ public class IntegrationTest {
         reqClient.markPass("/api/op/upServer");
 
 
-        reqClient.getstr("/api/op/downMember?ip=" + slb1_server_2 + "&appName=__Test_app3");
+        reqClient.getstr("/api/op/downMemberByName?ip=" + slb1_server_1 + "&groupName=__Test_app3");
 
-        String appstatus = reqClient.getstr("/api/status/app/__Test_app3");
+        String groupstatus = reqClient.getstr("/api/status/groupName/__Test_app3");
 
-        appStatusList = DefaultJsonParser.parse(AppStatusList.class, appstatus);
+        groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, groupstatus);
 
-        for (AppStatus as : appStatusList.getAppStatuses()) {
-            for (AppServerStatus ass : as.getAppServerStatuses()) {
-                if (ass.getIp().equals(slb1_server_2)) {
+        for (GroupStatus as : groupStatusList.getGroupStatuses()) {
+            for (GroupServerStatus ass : as.getGroupServerStatuses()) {
+                if (ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(false, ass.getMember());
                 }
             }
         }
 
-        reqClient.markPass("/api/op/downMember");
-        reqClient.markPass("/api/status/app/__Test_app3");
+
+        reqClient.markPass("/api/op/downMemberByName");
+        reqClient.markPass("/api/status/groupName/__Test_app3");
 
 
-        reqClient.getstr("/api/op/upMember?ip=" + slb1_server_2 + "&appName=__Test_app3");
+        reqClient.getstr("/api/op/downMemberByName?ip=" + slb1_server_1 + "&groupName=__Test_app3");
 
 
-        appstatus = reqClient.getstr("/api/status/app/__Test_app3");
+        groupstatus = reqClient.getstr("/api/status/groupName/__Test_app3");
 
-        appStatusList = DefaultJsonParser.parse(AppStatusList.class, appstatus);
+        groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, groupstatus);
 
-        for (AppStatus as : appStatusList.getAppStatuses()) {
-            for (AppServerStatus ass : as.getAppServerStatuses()) {
-                if (ass.getIp().equals(slb1_server_2)) {
+        for (GroupStatus as : groupStatusList.getGroupStatuses()) {
+            for (GroupServerStatus ass : as.getGroupServerStatuses()) {
+                if (ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(true, ass.getMember());
                 }
             }
         }
+
         reqClient.markPass("/api/op/upMember");
     }
 
@@ -495,27 +368,27 @@ public class IntegrationTest {
         Assert.assertEquals(STATUS_OK, res.getStatus());
         upd = c.getstr("/api/slb/get/" + slb1_name);
         Slb updSlb = DefaultJsonParser.parse(Slb.class, upd);
-        ModelServiceTest.assertSlbEquals(origSlb, updSlb);
+        ModelAssert.assertSlbEquals(origSlb, updSlb);
 
         c.markPass("/api/slb/get/" + slb1_name);
         c.markPass("/api/slb/update");
 
         // test update app1(__Test_app1)
-        orig = c.getstr("/api/app/get/" + app1_name);
-        App origApp = DefaultJsonParser.parse(App.class, orig);
-        App changedApp = new App().setName(origApp.getName()).setAppId(origApp.getAppId())
+        orig = c.getstr("/api/group/get/" + app1_name);
+        Group origApp = DefaultJsonParser.parse(Group.class, orig);
+        Group changedApp = new Group().setId(origApp.getId()).setName(origApp.getName()).setAppId(origApp.getAppId())
                 .setHealthCheck(origApp.getHealthCheck())
                 .setLoadBalancingMethod(origApp.getLoadBalancingMethod())
                 .setVersion(origApp.getVersion())
-                .addAppServer(origApp.getAppServers().get(0))
-                .addAppSlb(origApp.getAppSlbs().get(0));
-        res = c.post("/api/app/update", GenericSerializer.writeJson(changedApp));
+                .addGroupServer(origApp.getGroupServers().get(0))
+                .addGroupSlb(origApp.getGroupSlbs().get(0));
+        res = c.post("/api/group/update", GenericSerializer.writeJson(changedApp));
         Assert.assertEquals(STATUS_OK, res.getStatus());
-        upd = c.getstr("/api/app/get/" + app1_name);
-        App updApp = DefaultJsonParser.parse(App.class, upd);
-        ModelServiceTest.assertAppEquals(changedApp, updApp);
+        upd = c.getstr("/api/group/get/" + app1_name);
+        Group updApp = DefaultJsonParser.parse(Group.class, upd);
+        ModelAssert.assertGroupEquals(changedApp, updApp);
 
-        c.markPass("/api/app/get/" + app1_name);
-        c.markPass("/api/app/update");
+        c.markPass("/api/group/get/" + app1_name);
+        c.markPass("/api/group/update");
     }
 }

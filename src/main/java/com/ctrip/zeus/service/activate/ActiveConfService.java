@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.Activate;
+package com.ctrip.zeus.service.activate;
 
 import com.ctrip.zeus.service.Repository;
 
@@ -11,16 +11,16 @@ public interface ActiveConfService extends Repository {
 
     /**
      * get config content of App Active by app name
-     * @param appnames the app names
+     * @param groupIds the groupIds
      * @return content list
      * @throws Exception
      */
-    public List<String> getConfAppActiveContentByAppNames(String []appnames)throws Exception;
+    public List<String> getConfGroupActiveContentByGroupIds(Long []groupIds)throws Exception;
     /**
      * get config content of Slb Active by slb name
-     * @param slbname the slb name
+     * @param slbId the slb name
      * @return content string
      * @throws Exception
      */
-    public String getConfSlbActiveContentBySlbNames(String slbname)throws Exception;
+    public String getConfSlbActiveContentBySlbId(Long slbId)throws Exception;
 }

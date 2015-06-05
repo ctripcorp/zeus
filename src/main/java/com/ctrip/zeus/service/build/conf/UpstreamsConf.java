@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.build.conf;
 
-import com.ctrip.zeus.model.entity.App;
-import com.ctrip.zeus.model.entity.AppServer;
+import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
@@ -16,61 +16,61 @@ import java.util.Set;
  * @date: 3/10/2015.
  */
 public class UpstreamsConf {
-    public static String generate(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers)throws Exception {
+    public static String generate(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allDownAppServers)throws Exception {
         StringBuilder b = new StringBuilder(10240);
 
         //add upstreams
-        for (App app : apps) {
-            b.append(buildUpstreamConf(slb, vs, app, buildUpstreamName(slb, vs, app), allDownServers, allDownAppServers));
+        for (Group group : groups) {
+            b.append(buildUpstreamConf(slb, vs, group, buildUpstreamName(slb, vs, group), allDownServers, allDownAppServers));
         }
 
         return b.toString();
     }
 
-    public static String buildUpstreamName(Slb slb, VirtualServer vs, App app) throws Exception{
-        AssertUtils.isNull(vs.getName(),"virtual server name is null!");
-        AssertUtils.isNull(app.getName(),"app name is null!");
-        return "backend_" + vs.getName() + "_" + app.getName();
+    public static String buildUpstreamName(Slb slb, VirtualServer vs, Group group) throws Exception{
+        AssertUtils.isNull(vs.getId(),"virtual server name is null!");
+        AssertUtils.isNull(group.getName(),"app name is null!");
+        return "backend_" + vs.getId() + "_" + group.getName();
     }
 
-    public static String buildUpstreamConf(Slb slb, VirtualServer vs, App app, String upstreamName, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception {
+    public static String buildUpstreamConf(Slb slb, VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("upstream ").append(upstreamName).append(" {").append("\n");
 
-        b.append(buildUpstreamConfBody(slb,vs,app,allDownServers,allDownAppServers));
+        b.append(buildUpstreamConfBody(slb,vs,group,allDownServers,allDownAppServers));
 
         b.append("}").append("\n");
 
         return StringFormat.format(b.toString());
     }
 
-    public static String buildUpstreamConfBody(Slb slb, VirtualServer vs, App app, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception {
+    public static String buildUpstreamConfBody(Slb slb, VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception {
         StringBuilder b = new StringBuilder(1024);
         //LBMethod
-        b.append(LBConf.generate(slb, vs, app));
+        b.append(LBConf.generate(slb, vs, group));
 
         //ToDo:
         //b.append("    ").append("zone " + upstreamName + " 64K").append(";\n");
 
-        List<AppServer> appServers = app.getAppServers();
+        List<GroupServer> groupServers= group.getGroupServers();
 
-        if (appServers==null)
+        if (groupServers==null)
         {
-            appServers = new ArrayList<>();
+            groupServers = new ArrayList<>();
         }
 
-        for (AppServer as : appServers) {
+        for (GroupServer as : groupServers) {
             String ip = as.getIp();
             boolean isDown = allDownServers.contains(ip);
             if (!isDown) {
-                isDown = allDownAppServers.contains(slb.getName() + "_" + vs.getName() + "_" + app.getName() + "_" + ip);
+                isDown = allDownAppServers.contains(slb.getId() + "_" + vs.getId() + "_" + group.getId() + "_" + ip);
             }
 
-            AssertUtils.isNull(as.getPort(),"AppServer Port config is null! virtual server "+vs.getName());
-            AssertUtils.isNull(as.getWeight(),"AppServer Weight config is null! virtual server "+vs.getName());
-            AssertUtils.isNull(as.getMaxFails(),"AppServer MaxFails config is null! virtual server "+vs.getName());
-            AssertUtils.isNull(as.getFailTimeout(),"AppServer FailTimeout config is null! virtual server "+vs.getName());
+            AssertUtils.isNull(as.getPort(),"GroupServer Port config is null! virtual server "+vs.getId());
+            AssertUtils.isNull(as.getWeight(),"GroupServer Weight config is null! virtual server "+vs.getId());
+            AssertUtils.isNull(as.getMaxFails(),"GroupServer MaxFails config is null! virtual server "+vs.getId());
+            AssertUtils.isNull(as.getFailTimeout(),"GroupServer FailTimeout config is null! virtual server "+vs.getId());
 
             b.append("server ").append(ip + ":" + as.getPort())
                     .append(" weight=").append(as.getWeight())
@@ -81,7 +81,7 @@ public class UpstreamsConf {
         }
 
         //HealthCheck
-        b.append(HealthCheckConf.generate(slb, vs, app));
+        b.append(HealthCheckConf.generate(slb, vs, group));
 
         return b.toString();
     }

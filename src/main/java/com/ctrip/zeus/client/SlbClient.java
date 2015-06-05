@@ -2,6 +2,7 @@ package com.ctrip.zeus.client;
 
 
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 
 import javax.ws.rs.client.Entity;
@@ -21,7 +22,11 @@ public class SlbClient extends AbstractRestClient {
 
     public List<Slb> getAll() {
         String res = getTarget().path("/api/slb").request().headers(getDefaultHeaders()).get(String.class);
-        return null;
+        try {
+            return DefaultJsonParser.parse(SlbList.class, res).getSlbs();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Response add(Slb slb) {
@@ -41,11 +46,17 @@ public class SlbClient extends AbstractRestClient {
     }
 
     public Slb get(String slbName) {
-        String res = getTarget().path("/api/slb/get/" + slbName).request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
+        String res = getTarget().path("/api/slb/get/" + slbName).request(MediaType.APPLICATION_JSON)
+                .headers(getDefaultHeaders()).get(String.class);
         try {
             return DefaultJsonParser.parse(Slb.class, res);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Response delete(Long slbId) {
+        return getTarget().path("/api/slb/delete").queryParam("slbId", slbId).request(MediaType.APPLICATION_JSON)
+                .headers(getDefaultHeaders()).get();
     }
 }

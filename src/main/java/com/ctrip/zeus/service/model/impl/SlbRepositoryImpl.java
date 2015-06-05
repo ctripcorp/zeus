@@ -3,10 +3,11 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
 import com.ctrip.zeus.dal.core.SlbDo;
-import com.ctrip.zeus.model.entity.AppSlb;
+import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.ArchiveService;
+import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.SlbSync;
@@ -21,17 +22,14 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/5/2015.
  */
-@Repository("slbClusterRepository")
+@Repository("slbRepository")
 public class SlbRepositoryImpl implements SlbRepository {
-
     @Resource
     private SlbSync slbSync;
     @Resource
     private SlbQuery slbQuery;
-
     @Resource
     private ArchiveService archiveService;
-
     @Resource
     private NginxServerDao nginxServerDao;
 
@@ -45,6 +43,11 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
+    public Slb getById(Long slbId) throws Exception {
+        return slbQuery.getById(slbId);
+    }
+
+    @Override
     public Slb get(String slbName) throws Exception {
         return slbQuery.get(slbName);
     }
@@ -55,44 +58,43 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public List<Slb> listByAppServerAndAppName(String appServerIp, String appName) throws Exception {
-        if (appServerIp == null && appName == null)
+    public List<Slb> listByGroupServerAndGroup(String groupServerIp, Long groupId) throws Exception {
+        if (groupServerIp == null && (groupId == null || groupId.longValue() <= 0))
             return null;
-        if (appServerIp == null)
-            return slbQuery.getByAppNames(new String[]{appName});
-        if (appName == null)
-            return slbQuery.getByAppServer(appServerIp);
-        return slbQuery.getByAppServerAndAppName(appServerIp, appName);
+        if (groupId == null || groupId.longValue() <= 0) {
+            return slbQuery.getByGroupServer(groupServerIp);
+        }
+        if (groupServerIp == null) {
+            return slbQuery.getByGroups(new Long[]{groupId});
+        }
+        return slbQuery.getByGroupServerAndGroup(groupServerIp, groupId);
     }
 
     @Override
-    public List<Slb> listByApps(String[] appNames) throws Exception {
-        return slbQuery.getByAppNames(appNames);
+    public List<Slb> listByGroups(Long[] groupIds) throws Exception {
+        return slbQuery.getByGroups(groupIds);
     }
 
     @Override
-    public List<AppSlb> listAppSlbsByApps(String[] appNames) throws Exception {
-        return slbQuery.getAppSlbsByApps(appNames);
+    public List<GroupSlb> listGroupSlbsByGroups(Long[] groupIds) throws Exception {
+        return slbQuery.getGroupSlbsByGroups(groupIds);
     }
 
     @Override
-    public List<AppSlb> listAppSlbsBySlb(String slbName) throws Exception {
-        return slbQuery.getAppSlbsBySlb(slbName);
+    public List<GroupSlb> listGroupSlbsBySlb(Long slbId) throws Exception {
+        return slbQuery.getGroupSlbsBySlb(slbId);
     }
 
     @Override
     public void add(Slb slb) throws Exception {
-        if (slb == null)
-            return;
-
-        SlbDo d = slbSync.add(slb);
-        slb = slbQuery.getById(d.getId());
+        slbSync.add(slb);
+        slb = slbQuery.getById(slb.getId());
         archiveService.archiveSlb(slb);
 
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
                     .setIp(slbServer.getIp())
-                    .setSlbName(slb.getName())
+                    .setSlbId(slb.getId())
                     .setVersion(0)
                     .setCreatedTime(new Date()));
         }
@@ -100,28 +102,26 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public void update(Slb slb) throws Exception {
-        if (slb == null)
-            return;
-        SlbDo d = slbSync.update(slb);
-        archiveService.archiveSlb(slbQuery.getById(d.getId()));
+        slbSync.update(slb);
+        archiveService.archiveSlb(slbQuery.getById(slb.getId()));
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
                     .setIp(slbServer.getIp())
-                    .setSlbName(slb.getName())
+                    .setSlbId(slb.getId())
                     .setVersion(0)
                     .setCreatedTime(new Date()));
         }
     }
 
     @Override
-    public int delete(String slbName) throws Exception {
-        int count = slbSync.delete(slbName);
-        archiveService.deleteSlbArchive(slbName);
+    public int delete(Long slbId) throws Exception {
+        int count = slbSync.delete(slbId);
+        archiveService.deleteSlbArchive(slbId);
         return count;
     }
 
     @Override
-    public List<String> listAppServersBySlb(String slbName) throws Exception {
-        return slbQuery.getAppServersBySlb(slbName);
+    public List<String> listGroupServersBySlb(String slbName) throws Exception {
+        return slbQuery.getGroupServersBySlb(slbName);
     }
 }

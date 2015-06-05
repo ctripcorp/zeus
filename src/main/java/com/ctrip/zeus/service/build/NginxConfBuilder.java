@@ -1,6 +1,6 @@
 package com.ctrip.zeus.service.build;
 
-import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.Repository;
@@ -25,22 +25,22 @@ public interface NginxConfBuilder extends Repository {
      * get nginx server config
      * @param slb the slb entity
      * @param vs  virtualServer
-     * @param apps apps entity
+     * @param groups groups entity
      * @return nginx upstream config data
      * @throws Exception
      */
-    String generateServerConf(Slb slb, VirtualServer vs, List<App> apps)throws Exception;
+    String generateServerConf(Slb slb, VirtualServer vs, List<Group> groups)throws Exception;
 
     /**
      * get nginx upstream config
      * @param slb the slb entity
      * @param vs the virtualServer
-     * @param vs  app entities
-     * @param allDownAppServers  allDownAppServers
-     * @param allDownAppServers  allDownAppServers
+     * @param groups  app entities
+     * @param allDownServers  allDownAppServers
+     * @param allDownGroupServers  allDownAppServers
      * @return nginx upstream config data
      * @throws Exception
      */
-    String generateUpstreamsConf(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers)throws Exception;
+    String generateUpstreamsConf(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allDownGroupServers)throws Exception;
 
 }

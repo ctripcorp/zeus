@@ -1,6 +1,6 @@
 package com.ctrip.zeus.service.build.impl;
 
-import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
@@ -23,12 +23,12 @@ public class NginxConfBuilderImpl implements NginxConfBuilder {
     }
 
     @Override
-    public String generateServerConf(Slb slb, VirtualServer vs, List<App> apps) throws Exception{
-        return ServerConf.generate(slb,vs,apps);
+    public String generateServerConf(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
+        return ServerConf.generate(slb,vs,groups);
     }
 
     @Override
-    public String generateUpstreamsConf(Slb slb, VirtualServer vs, List<App> apps, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception{
-        return UpstreamsConf.generate(slb,vs,apps,allDownServers,allDownAppServers);
+    public String generateUpstreamsConf(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allDownGroupServers) throws Exception{
+        return UpstreamsConf.generate(slb,vs,groups,allDownServers,allDownGroupServers);
     }
 }

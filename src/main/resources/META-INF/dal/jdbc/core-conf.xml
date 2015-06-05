@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
-    <entity name="conf-app-active" table="conf_app_active" alias="caa">
-        <var name="names" value-type="String[]"/>
+    <entity name="conf-group-active" table="conf_group_active" alias="cga">
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -11,24 +11,24 @@
                     ON DUPLICATE KEY UPDATE
                         content = values(content),
                         version = values(version),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-names" type="SELECT" multiple="true">
-                <param name="names"/>
+            <query name="find-all-by-group-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> in <IN>${names}</IN>
+                        WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>
         </query-defs>
     </entity>
     <entity name="conf-slb-active" table="conf_slb_active" alias="csa">
-        <var name="names" value-type="String[]"/>
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -38,34 +38,34 @@
                     ON DUPLICATE KEY UPDATE
                         content = values(content),
                         version = values(version),
-                        <FIELD name="last-modified"/> = NOW()
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-name" type="SELECT">
-                <param name="name"/>
+            <query name="find-by-slb-id" type="SELECT">
+                <param name="id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> = ${name}
+                        WHERE <FIELD name='slb-id'/> = ${id}
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-names" type="SELECT" multiple="true">
-                <param name="names"/>
+            <query name="find-all-by-slb-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='name'/> in <IN>${names}</IN>
+                        WHERE <FIELD name='slb-id'/> in <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>
         </query-defs>
     </entity>
-    <entity name="conf-app-slb-active" table="conf_app_slb_active" alias="casa">
-        <var name="names" value-type="String[]"/>
+    <entity name="conf-group-slb-active" table="conf_group_slb_active" alias="cgsa">
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -73,29 +73,29 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        app_name = values(app_name),
-                        slb_name = values(slb_name),
-                        slb_virtual_server_name = values(slb_virtual_server_name),
-                        <FIELD name="last-modified"/> = NOW()
+                        group_id = values(group_id),
+                        slb_id = values(slb_id),
+                        slb_virtual_server_id = values(slb_virtual_server_id),
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-slb-name" type="SELECT" multiple="true">
-                <param name="slb-name"/>
+            <query name="find-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-name'/> = ${slb-name}
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-app-name" type="DELETE">
-                <param name="app-name"/>
+            <query name="delete-by-group-id" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='app-name'/> = ${app-name}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>

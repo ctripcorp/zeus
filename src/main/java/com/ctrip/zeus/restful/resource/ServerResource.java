@@ -4,34 +4,28 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfService;
-import com.ctrip.zeus.service.build.impl.NginxConfServiceImpl;
-import com.ctrip.zeus.service.model.AppRepository;
+import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
-import com.ctrip.zeus.service.status.AppStatusService;
+import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
-import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -51,17 +45,17 @@ public class ServerResource {
     @Resource
     private NginxService nginxAgentService;
     @Resource
-    private SlbRepository slbClusterRepository;
-    @Resource
     private NginxService nginxService;
     @Resource
-    private AppStatusService appStatusService;
+    private GroupStatusService groupStatusService;
     @Resource
-    private AppRepository appRepository;
+    private GroupRepository groupRepository;
     @Resource
     private NginxConfService nginxConfService;
     @Resource
     private DbLockFactory dbLockFactory;
+    @Resource
+    private SlbRepository slbRepository;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -72,12 +66,11 @@ public class ServerResource {
     @Path("/upServer")
     @Authorize(name="upDownServer")
     public Response upServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-        String serverip = ip;
 
         //update status
-        statusService.upServer(serverip);
+        statusService.upServer(ip);
 
-        return serverOps(hh,serverip);
+        return serverOps(hh,ip);
 
     }
 
@@ -85,36 +78,35 @@ public class ServerResource {
     @Path("/downServer")
     @Authorize(name="upDownServer")
     public Response downServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-        String serverip = ip;
         //update status
-        statusService.downServer(serverip);
-        return serverOps(hh, serverip);
+        statusService.downServer(ip);
+        return serverOps(hh, ip);
     }
 
     private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
         //get slb by serverip
-        List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(serverip,null);
+        List<Slb> slblist = slbRepository.listByGroupServerAndGroup(serverip,null);
         AssertUtils.isNull(slblist,"[UpServer/DownServer] Can not find slb by server ip :["+serverip+"],Please check the configuration and server ip!");
 
         for (Slb slb : slblist)
         {
-            String slbname = slb.getName();
-            int ticket = buildInfoService.getTicket(slbname);
+            Long slbId = slb.getId();
+            int ticket = buildInfoService.getTicket(slbId);
 
             boolean buildFlag = false;
-            DistLock buildLock = dbLockFactory.newLock(slbname + "_build");
+            DistLock buildLock = dbLockFactory.newLock(slbId + "_build");
             try{
                 buildLock.lock(lockTimeout.get());
-                buildFlag =buildService.build(slbname,ticket);
+                buildFlag =buildService.build(slbId,ticket);
             }finally {
                 buildLock.unlock();
             }
             if (buildFlag) {
-                DistLock writeLock = dbLockFactory.newLock(slbname + "_writeAndReload");
+                DistLock writeLock = dbLockFactory.newLock(slbId + "_writeAndReload");
                 try {
                     writeLock.lock(lockTimeout.get());
                     //Push Service
-                    nginxAgentService.writeAllAndLoadAll(slbname);
+                    nginxAgentService.writeAllAndLoadAll(slbId);
                 } finally {
                     writeLock.unlock();
                 }
@@ -123,13 +115,13 @@ public class ServerResource {
         }
 
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
-        List<String> applist = appRepository.listAppsByAppServer(serverip);
+        List<String> applist = groupRepository.listGroupsByGroupServer(serverip);
 
         if (applist!=null)
         {
             for (String name : applist)
             {
-                ss.addAppName(name);
+                ss.addGroupName(name);
             }
         }
 
@@ -141,50 +133,71 @@ public class ServerResource {
     }
 
     @GET
+    @Path("/upMemberByName")
+    @Authorize(name="upDownMember")
+    public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
+    {
+        Long groupId = groupRepository.get(groupName).getId();
+        statusService.upMember(groupId,ip);
+        return memberOps(hh, groupId, ip);
+    }
+
+    @GET
+    @Path("/downMemberByName")
+    @Authorize(name="upDownMember")
+    public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
+    {
+        Long groupId = groupRepository.get(groupName).getId();
+        statusService.downMember(groupId, ip);
+        return memberOps(hh, groupId, ip);
+    }
+
+    @GET
     @Path("/upMember")
     @Authorize(name="upDownMember")
-    public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
+    public Response upMemberByGroupId(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("ip") String ip)throws Exception
     {
-        statusService.upMember(appName,ip);
-        return memberOps(hh, appName, ip);
+        statusService.upMember(groupId,ip);
+        return memberOps(hh, groupId, ip);
     }
 
     @GET
     @Path("/downMember")
     @Authorize(name="upDownMember")
-    public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("appName") String appName, @QueryParam("ip") String ip)throws Exception
+    public Response downMemberByGroupId(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("ip") String ip)throws Exception
     {
-        statusService.downMember(appName, ip);
-        return memberOps(hh, appName, ip);
+        statusService.downMember(groupId, ip);
+        return memberOps(hh, groupId, ip);
     }
 
-    private Response memberOps(HttpHeaders hh,String appName,String ip)throws Exception{
+
+    private Response memberOps(HttpHeaders hh,Long groupId,String ip)throws Exception{
 
         //get slb by appname and ip
-        List<Slb> slblist = slbClusterRepository.listByAppServerAndAppName(ip,appName);
-        AssertUtils.isNull(slblist,"Not find slb for appName ["+appName+"] and ip ["+ip+"]");
+        List<Slb> slblist = slbRepository.listByGroupServerAndGroup(ip,groupId);
+        AssertUtils.isNull(slblist,"Not find slb for GroupId ["+groupId+"] and ip ["+ip+"]");
 
         for (Slb slb : slblist) {
-            String slbname = slb.getName();
+            Long slbId = slb.getId();
             //get ticket
-            int ticket = buildInfoService.getTicket(slbname);
+            int ticket = buildInfoService.getTicket(slbId);
 
             boolean buildFlag = false;
             boolean dyopsFlag = false;
             List<DyUpstreamOpsData> dyUpstreamOpsDataList = null;
-            DistLock buildLock = dbLockFactory.newLock(slbname + "_build");
+            DistLock buildLock = dbLockFactory.newLock("build_"+slbId);
             try{
                 buildLock.lock(lockTimeout.get());
-                buildFlag =buildService.build(slbname,ticket);
+                buildFlag =buildService.build(slbId,ticket);
             }finally {
                 buildLock.unlock();
             }
             if (buildFlag) {
-                DistLock writeLock = dbLockFactory.newLock(slbname + "_writeAndReload");
+                DistLock writeLock = dbLockFactory.newLock("writeAndReload_" + slbId);
                 try {
                     writeLock.lock(lockTimeout.get());
                     //push
-                    dyopsFlag=nginxAgentService.writeALLToDisk(slbname);
+                    dyopsFlag=nginxAgentService.writeALLToDisk(slbId);
                     if (!dyopsFlag)
                     {
                         throw new Exception("write all to disk failed!");
@@ -194,32 +207,35 @@ public class ServerResource {
                 }
             }
             if (dyopsFlag){
-                DistLock dyopsLock = dbLockFactory.newLock(slbname + "_" + appName + "_dyops");
+                DistLock dyopsLock = dbLockFactory.newLock(slbId + "_" + groupId + "_dyops");
                 try{
                     dyopsLock.lock(lockTimeout.get());
-                    dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, appName);
-                    nginxAgentService.dyops(slbname, dyUpstreamOpsDataList);
+                    dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, groupId);
+                    nginxAgentService.dyops(slbId, dyUpstreamOpsDataList);
                 }finally {
                     dyopsLock.unlock();
                 }
             }
         }
 
-        List<AppStatus> statuses = appStatusService.getAppStatus(appName);
-        AppStatus appStatusList = new AppStatus().setAppName(appName).setSlbName("");
-        for (AppStatus a : statuses)
+        List<GroupStatus> statuses = groupStatusService.getGroupStatus(groupId);
+        //ToDo set group name and slb name
+        GroupStatus groupStatusList = new GroupStatus().setGroupId(groupId).setSlbName("");
+        for (GroupStatus groupStatus : statuses)
         {
-            appStatusList.setSlbName(appStatusList.getSlbName() + " " + a.getSlbName());
-            for(AppServerStatus b : a.getAppServerStatuses())
+            groupStatusList.setSlbName(groupStatusList.getSlbName() + " " + groupStatus.getSlbName())
+                            .setGroupName(groupStatus.getGroupName())
+                            .setSlbId(groupStatus.getSlbId());
+            for(GroupServerStatus b : groupStatus.getGroupServerStatuses())
             {
-                appStatusList.addAppServerStatus(b);
+                groupStatusList.addGroupServerStatus(b);
             }
         }
 
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(AppStatus.XML, appStatusList)).type(MediaType.APPLICATION_XML).build();
+            return Response.status(200).entity(String.format(GroupStatus.XML, groupStatusList)).type(MediaType.APPLICATION_XML).build();
         } else {
-            return Response.status(200).entity(String.format(AppStatus.JSON, appStatusList)).type(MediaType.APPLICATION_JSON).build();
+            return Response.status(200).entity(String.format(GroupStatus.JSON, groupStatusList)).type(MediaType.APPLICATION_JSON).build();
         }
     }
 

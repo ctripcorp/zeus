@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service;
 
-import com.ctrip.zeus.ao.AopSpring;
-import com.ctrip.zeus.dal.core.AppDao;
+
+import com.ctrip.zeus.dal.core.GroupDao;
 import com.ctrip.zeus.dal.core.NginxConfUpstreamDao;
 import com.ctrip.zeus.dal.core.NginxConfUpstreamDo;
 import com.ctrip.zeus.server.SlbAdminServer;
@@ -9,7 +9,6 @@ import com.ctrip.zeus.util.S;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import support.AbstractSpringTest;
-import support.MysqlDbServer;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -22,7 +21,7 @@ public class DalPerfTest extends AbstractSpringTest {
 
     static SlbAdminServer server;
     @Resource
-    private AppDao appDao;
+    private GroupDao groupDao;
     @Resource
     private NginxConfUpstreamDao nginxConfUpstreamDao;
 
@@ -54,7 +53,7 @@ public class DalPerfTest extends AbstractSpringTest {
                         "    check_http_expect_alive http_2xx http_3xx;\n" +
                         "    }\n");
 
-        tmpdata.setSlbName("slbname2_").setVersion(0).setName("vs_"+5);
+        tmpdata.setSlbId(52).setVersion(0).setSlbVirtualServerId(3);
         nginxConfUpstreamDao.insert(tmpdata);
 
         long start = new Date().getTime();
@@ -75,7 +74,7 @@ public class DalPerfTest extends AbstractSpringTest {
                             "    check_http_expect_alive http_2xx http_3xx;\n" +
                             "    }\n");
 
-            tmpdata.setSlbName("slbname5_"+i).setVersion(i).setName("vs_"+i);
+            tmpdata.setSlbId(50+i).setVersion(0).setSlbVirtualServerId(i);
             dos[i]=tmpdata;
         }
         nginxConfUpstreamDao.insert(dos);

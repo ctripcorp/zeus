@@ -1,10 +1,11 @@
 package com.ctrip.zeus.service;
 
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
-import com.ctrip.zeus.service.model.AppRepository;
+import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.util.ModelAssert;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -17,7 +18,6 @@ import support.MysqlDbServer;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,15 +29,15 @@ public class ModelServiceTest extends AbstractSpringTest {
     private static MysqlDbServer mysqlDbServer;
 
     @Resource
-    private AppRepository appRepo;
+    private GroupRepository groupRepo;
     @Resource
     private SlbRepository slbRepo;
     @Resource
     private ArchiveService archiveService;
 
     private Slb defaultSlb;
-    private App testApp;
-    private long insertedTestAppId;
+    private Group testGroup;
+    private long insertedTestGroupId;
 
     @BeforeClass
     public static void setUpDb() throws ComponentLookupException, ComponentLifecycleException {
@@ -49,7 +49,7 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Before
     public void fillDb() throws Exception {
         addSlb();
-        addApps();
+        addGroups();
     }
 
     /********************* test SlbRepository *********************/
@@ -63,46 +63,46 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Test
     public void testGetSlb() throws Exception {
         Slb slb = slbRepo.get(defaultSlb.getName());
-        assertSlbEquals(defaultSlb, slb);
+        ModelAssert.assertSlbEquals(defaultSlb, slb);
     }
 
     @Test
     public void testGetSlbBySlbServer() throws Exception {
         Slb slb = slbRepo.getBySlbServer(defaultSlb.getVips().get(0).getIp());
-        assertSlbEquals(defaultSlb, slb);
+        ModelAssert.assertSlbEquals(defaultSlb, slb);
     }
 
     @Test
-    public void testListSlbsByAppServerAndAppName() throws Exception {
-        List<Slb> slbsByAppServer = slbRepo.listByAppServerAndAppName("10.2.6.201", null);
-        Assert.assertEquals(1, slbsByAppServer.size());
-        List<Slb> slbsByAppName = slbRepo.listByAppServerAndAppName(null, "testApp");
-        Assert.assertEquals(1, slbsByAppName.size());
-        List<Slb> slbs = slbRepo.listByAppServerAndAppName("10.2.6.201", "testApp");
+    public void testListSlbsByGroupServerAndGroup() throws Exception {
+        List<Slb> slbsByGroupServer = slbRepo.listByGroupServerAndGroup("10.2.6.201", null);
+        Assert.assertEquals(1, slbsByGroupServer.size());
+        List<Slb> slbsByGroupName = slbRepo.listByGroupServerAndGroup(null, testGroup.getId());
+        Assert.assertEquals(1, slbsByGroupName.size());
+        List<Slb> slbs = slbRepo.listByGroupServerAndGroup("10.2.6.201", testGroup.getId());
         Assert.assertEquals(1, slbs.size());
-        assertSlbEquals(defaultSlb, slbs.get(0));
+        ModelAssert.assertSlbEquals(defaultSlb, slbs.get(0));
     }
 
     @Test
-    public void testListSlbsByApps() throws Exception {
-        List<Slb> slbs = slbRepo.listByApps(new String[]{"testApp", "testApp1"});
+    public void testListSlbsByGroups() throws Exception {
+        List<Slb> slbs = slbRepo.listByGroups(new Long[]{testGroup.getId(), testGroup.getId() + 1});
         Assert.assertEquals(1, slbs.size());
     }
 
     @Test
-    public void testListAppSlbsByApps() throws Exception {
-        List<AppSlb> appSlbs = slbRepo.listAppSlbsByApps(new String[]{"testApp", "testApp1"});
-        Assert.assertEquals(2, appSlbs.size());
-        for (AppSlb as : appSlbs) {
+    public void testListGroupSlbsByGroups() throws Exception {
+        List<GroupSlb> groupSlbs = slbRepo.listGroupSlbsByGroups(new Long[]{testGroup.getId(), testGroup.getId() + 1});
+        Assert.assertEquals(2, groupSlbs.size());
+        for (GroupSlb as : groupSlbs) {
             Assert.assertNotNull(as.getVirtualServer());
         }
     }
 
     @Test
-    public void testListAppSlbsBySlb() throws Exception {
-        List<AppSlb> appSlbs = slbRepo.listAppSlbsBySlb(defaultSlb.getName());
-        Assert.assertEquals(7, appSlbs.size());
-        for (AppSlb as : appSlbs) {
+    public void testListGroupSlbsBySlb() throws Exception {
+        List<GroupSlb> groupSlbs = slbRepo.listGroupSlbsBySlb(defaultSlb.getId());
+        Assert.assertEquals(7, groupSlbs.size());
+        for (GroupSlb as : groupSlbs) {
             Assert.assertNotNull(as.getVirtualServer());
         }
     }
@@ -112,26 +112,45 @@ public class ModelServiceTest extends AbstractSpringTest {
         Slb originSlb = slbRepo.get(defaultSlb.getName());
         originSlb.setStatus("HANG");
         slbRepo.update(originSlb);
-        Slb updatedSlb = slbRepo.get(defaultSlb.getName());
-        assertSlbEquals(originSlb, updatedSlb);
+        Slb updatedSlb = slbRepo.getById(originSlb.getId());
+        ModelAssert.assertSlbEquals(originSlb, updatedSlb);
         Assert.assertEquals(originSlb.getVersion().intValue() + 1, updatedSlb.getVersion().intValue());
     }
 
     @Test
-    public void testListAppServersBySlb() throws Exception {
-        List<String> appServers = slbRepo.listAppServersBySlb(defaultSlb.getName());
-        Assert.assertEquals(testApp.getAppServers().size(), appServers.size());
+    public void testListGroupServersBySlb() throws Exception {
+        List<String> groupServers = slbRepo.listGroupServersBySlb(defaultSlb.getName());
+        Assert.assertEquals(testGroup.getGroupServers().size(), groupServers.size());
 
-        List<String> appServersRef = new ArrayList<>();
-        for (AppServer as : testApp.getAppServers()) {
-            appServersRef.add(as.getIp());
+        List<String> groupServersRef = new ArrayList<>();
+        for (GroupServer as : testGroup.getGroupServers()) {
+            groupServersRef.add(as.getIp());
         }
-        Assert.assertFalse(appServersRef.retainAll(appServers));
+        Assert.assertFalse(groupServersRef.retainAll(groupServers));
+    }
+
+    @Test(expected = ValidationException.class)
+    public void testSlbRemovable() throws Exception {
+        slbRepo.delete(defaultSlb.getId());
+    }
+
+    @Test(expected = ValidationException.class)
+    public void testSlbModifiable() throws Exception {
+        Slb targetSlb = slbRepo.get(defaultSlb.getName());
+        VirtualServer vs = new VirtualServer().setName("testnew").setSsl(false).setPort("80").addDomain(new Domain().setName("s1new.ctrip.com"));
+        targetSlb.addVirtualServer(vs);
+        try {
+            slbRepo.update(targetSlb);
+        } catch (Exception e) {
+            Assert.assertTrue("valid update action throws exception.", false);
+        }
+        targetSlb.getVirtualServers().remove(0);
+        slbRepo.update(targetSlb);
     }
 
     private void addSlb() throws Exception {
         defaultSlb = new Slb().setName("default").setVersion(1)
-                .setNginxBin("/opt/app/nginx/sbin").setNginxConf("/opt/app/nginx/conf")
+                .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf")
                 .setNginxWorkerProcesses(2).setStatus("TEST")
                 .addVip(new Vip().setIp("10.2.25.93"))
                 .addSlbServer(new SlbServer().setIp("10.2.25.93").setHostName("uat0358").setEnable(true))
@@ -145,114 +164,113 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     private void deleteSlb() throws Exception {
-        String slbName = "default";
-        Assert.assertEquals(1, slbRepo.delete(slbName));
+        Assert.assertEquals(1, slbRepo.delete(defaultSlb.getId()));
     }
 
-    /********************* test AppRepository *********************/
+    /********************* test GroupRepository *********************/
 
     @Test
-    public void testGetApp() throws Exception {
-        App app = appRepo.get(testApp.getName());
-        assertAppEquals(app, testApp);
-    }
-
-    @Test
-    public void testGetAppByAppId() throws Exception {
-        App app = appRepo.getByAppId(testApp.getAppId());
-        assertAppEquals(app, testApp);
+    public void testGetGroup() throws Exception {
+        Group group = groupRepo.get(testGroup.getName());
+        ModelAssert.assertGroupEquals(testGroup, group);
     }
 
     @Test
-    public void testListApps() throws Exception {
-        List<App> list = appRepo.list();
+    public void testGetGroupByAppId() throws Exception {
+        Group group = groupRepo.getByAppId(testGroup.getAppId());
+        ModelAssert.assertGroupEquals(testGroup, group);
+    }
+
+    @Test
+    public void testListGroups() throws Exception {
+        List<Group> list = groupRepo.list();
         Assert.assertTrue(list.size() >= 7);
     }
 
     @Test
-    public void testListLimitApps() throws Exception {
-        List<App> list = appRepo.listLimit(insertedTestAppId, 3);
+    public void testListLimitGroups() throws Exception {
+        List<Group> list = groupRepo.listLimit(insertedTestGroupId, 3);
         Assert.assertTrue(list.size() == 3);
     }
 
     @Test
-    public void testListAppsBy() throws Exception {
+    public void testListGroupsBy() throws Exception {
         String slbName = "default";
         String virtualServerName = "testsite1";
-        List<App> list = appRepo.list(slbName, virtualServerName);
+        List<Group> list = groupRepo.list(slbName, virtualServerName);
         Assert.assertTrue(list.size() >= 6);
     }
 
     @Test
-    public void testUpdateApp() throws Exception {
-        App originApp = appRepo.get(testApp.getName());
-        originApp.setAppId("921812");
-        appRepo.update(originApp);
-        App updatedApp = appRepo.get(originApp.getName());
-        assertAppEquals(originApp, updatedApp);
-        Assert.assertEquals(originApp.getVersion().intValue() + 1, updatedApp.getVersion().intValue());
+    public void testUpdateGroup() throws Exception {
+        Group originGroup = groupRepo.get(testGroup.getName());
+        originGroup.setAppId("921812");
+        originGroup.getGroupSlbs().get(0).setPriority(9);
+        groupRepo.update(originGroup);
+        Group updatedGroup = groupRepo.getById(originGroup.getId());
+        ModelAssert.assertGroupEquals(originGroup, updatedGroup);
+        Assert.assertEquals(originGroup.getVersion().intValue() + 1, updatedGroup.getVersion().intValue());
     }
 
     @Test
-    public void testListAppsByAppServer() throws Exception {
-        List<String> appNames = appRepo.listAppsByAppServer(testApp.getAppServers().get(0).getIp());
-        boolean containsTestApp = false;
-        for (String appName : appNames) {
-            if (appName.equals(testApp.getName()))
-                containsTestApp = true;
+    public void testListGroupsByGroupServer() throws Exception {
+        List<String> groupNames = groupRepo.listGroupsByGroupServer(testGroup.getGroupServers().get(0).getIp());
+        boolean containsTestGroup = false;
+        for (String groupName : groupNames) {
+            if (groupName.equals(testGroup.getName()))
+                containsTestGroup = true;
         }
-        Assert.assertTrue(containsTestApp);
+        Assert.assertTrue(containsTestGroup);
     }
 
     @Test
-    public void testListAppServersByApp() throws Exception {
-        List<String> appServers = appRepo.listAppServersByApp(testApp.getName());
-        List<String> appServersRef = new ArrayList<>();
-        for (AppServer as : testApp.getAppServers()) {
-            appServersRef.add(as.getIp());
+    public void testListGroupServersByGroup() throws Exception {
+        List<String> groupServers = groupRepo.listGroupServerIpsByGroup(testGroup.getId());
+        List<String> groupServersRef = new ArrayList<>();
+        for (GroupServer as : testGroup.getGroupServers()) {
+            groupServersRef.add(as.getIp());
         }
-        Assert.assertFalse(appServersRef.retainAll(appServers));
+        Assert.assertFalse(groupServersRef.retainAll(groupServers));
 
     }
 
-    private void addApps() throws Exception {
-        testApp = generateApp("testApp", defaultSlb.getName(), defaultSlb.getVirtualServers().get(1));
-        insertedTestAppId = appRepo.add(testApp);
-        Assert.assertTrue(insertedTestAppId > 0);
+    private void addGroups() throws Exception {
+        testGroup = generateGroup("testGroup",  defaultSlb, defaultSlb.getVirtualServers().get(1));
+        insertedTestGroupId = groupRepo.add(testGroup);
+        Assert.assertTrue(insertedTestGroupId > 0);
         for (int i = 0; i < 6; i++) {
-            App app = generateApp("testApp" + i, defaultSlb.getName(), defaultSlb.getVirtualServers().get(0));
-            appRepo.add(app);
+            Group group = generateGroup("testGroup" + i, defaultSlb, defaultSlb.getVirtualServers().get(0));
+            groupRepo.add(group);
         }
     }
 
-    private App generateApp(String appName, String slbName, VirtualServer virtualServer) {
-        return new App().setName(appName).setAppId("000000").setVersion(1).setSsl(false)
+    private Group generateGroup(String groupName, Slb slb, VirtualServer virtualServer) {
+        return new Group().setName(groupName).setAppId("000000").setVersion(1).setSsl(false)
                 .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
-                .addAppSlb(new AppSlb().setSlbName(slbName).setPath("/").setVirtualServer(virtualServer))
-                .addAppServer(new AppServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.201"))
-                .addAppServer(new AppServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
+                .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setSlbName(slb.getName()).setPath("/").setVirtualServer(virtualServer))
+                .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.201"))
+                .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
     }
 
-    private void deleteApps() throws Exception {
-        String appName = "testApp";
-        Assert.assertEquals(1, appRepo.delete(appName));
-        for (int i = 0; i < 6; i++) {
-            Assert.assertEquals(1, appRepo.delete(appName + i));
+    private void deleteGroups() throws Exception {
+        Assert.assertEquals(1, groupRepo.delete(testGroup.getId()));
+        for (int i = 1; i <= 6; i++) {
+            Assert.assertEquals(1, groupRepo.delete(testGroup.getId() + i));
         }
     }
 
     /********************* test ArchiveService *********************/
 
     @Test
-    public void testGetLatestAppArchive() throws Exception {
-        Archive archive = archiveService.getLatestAppArchive(testApp.getName());
+    public void testGetLatestGroupArchive() throws Exception {
+        Archive archive = archiveService.getLatestGroupArchive(testGroup.getId());
         Assert.assertTrue(archive.getVersion() > 0);
     }
 
     @Test
     public void testGetLatestSlbArchive() throws Exception {
-        Archive archive = archiveService.getLatestSlbArchive(defaultSlb.getName());
+        Archive archive = archiveService.getLatestSlbArchive(defaultSlb.getId());
         Assert.assertTrue(archive.getVersion() > 0);
     }
 
@@ -260,7 +278,7 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @After
     public void clearDb() throws Exception {
-        deleteApps();
+        deleteGroups();
         deleteSlb();
     }
 
@@ -272,27 +290,5 @@ public class ModelServiceTest extends AbstractSpringTest {
         ContainerLoader.getDefaultContainer().release(ds);
         TransactionManager ts = ContainerLoader.getDefaultContainer().lookup(TransactionManager.class);
         ContainerLoader.getDefaultContainer().release(ts);
-    }
-
-    public static void assertAppEquals(App origin, App another) {
-        Assert.assertNotNull(another);
-        Assert.assertEquals(origin.getName(), another.getName());
-        Assert.assertEquals(origin.getSsl(), another.getSsl());
-        Assert.assertEquals(origin.getAppServers().size(), another.getAppServers().size());
-        Assert.assertEquals(origin.getAppSlbs().size(), another.getAppSlbs().size());
-        Assert.assertEquals(origin.getHealthCheck().getUri(), another.getHealthCheck().getUri());
-        Assert.assertEquals(origin.getLoadBalancingMethod().getType(), another.getLoadBalancingMethod().getType());
-    }
-
-    public static void assertSlbEquals(Slb origin, Slb another) {
-        Assert.assertNotNull(another);
-        Assert.assertEquals(origin.getName(), another.getName());
-        Assert.assertEquals(origin.getNginxBin(), another.getNginxBin());
-        Assert.assertEquals(origin.getNginxConf(), another.getNginxConf());
-        Assert.assertEquals(origin.getNginxWorkerProcesses(), another.getNginxWorkerProcesses());
-        Assert.assertEquals(origin.getStatus(), another.getStatus());
-        Assert.assertEquals(origin.getSlbServers().size(), another.getSlbServers().size());
-        Assert.assertEquals(origin.getVips().size(), another.getVips().size());
-        Assert.assertEquals(origin.getVirtualServers().size(), another.getVirtualServers().size());
     }
 }

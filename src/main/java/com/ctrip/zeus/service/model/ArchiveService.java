@@ -1,6 +1,6 @@
 package com.ctrip.zeus.service.model;
 
-import com.ctrip.zeus.model.entity.App;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Slb;
 import java.util.List;
@@ -11,20 +11,20 @@ import java.util.List;
  */
 public interface ArchiveService {
     int archiveSlb(Slb slb) throws Exception;
-    int archiveApp(App app) throws Exception;
+    int archiveGroup(Group app) throws Exception;
 
-    int deleteSlbArchive(String slbName) throws Exception;
-    int deleteAppArchive(String appName) throws Exception;
+    int deleteSlbArchive(Long slbId) throws Exception;
+    int deleteGroupArchive(Long groupId) throws Exception;
 
-    Slb getSlb(String name, int version) throws Exception;
-    App getApp(String name, int version) throws Exception;
+    Slb getSlb(Long slbId, int version) throws Exception;
+    Group getGroup(Long groupId, int version) throws Exception;
 
-    Slb getMaxVersionSlb(String name) throws Exception;
-    App getMaxVersionApp(String name) throws Exception;
+    Slb getMaxVersionSlb(Long slbId) throws Exception;
+    Group getMaxVersionGroup(Long groupId) throws Exception;
 
-    List<Slb> getAllSlb(String name) throws Exception;
-    List<App> getAllApp(String name) throws Exception;
+    List<Slb> getAllSlb(Long slbId) throws Exception;
+    List<Group> getAllGroup(Long groupId) throws Exception;
 
-    Archive getLatestAppArchive(String appName) throws Exception;
-    Archive getLatestSlbArchive(String slbName) throws Exception;
+    Archive getLatestSlbArchive(Long slbId) throws Exception;
+    Archive getLatestGroupArchive(Long groupId) throws Exception;
 }

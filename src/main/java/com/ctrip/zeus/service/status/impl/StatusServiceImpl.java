@@ -1,9 +1,9 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.AppSlb;
+import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.status.handler.StatusAppServerService;
+import com.ctrip.zeus.service.status.handler.StatusGroupServerService;
 import com.ctrip.zeus.service.status.handler.StatusServerService;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.util.AssertUtils;
@@ -26,9 +26,9 @@ public class StatusServiceImpl implements StatusService {
     @Resource
     private StatusServerService statusServerService;
     @Resource
-    private StatusAppServerService statusAppServerService;
+    private StatusGroupServerService statusGroupServerService;
     @Resource
-    private SlbRepository slbClusterRepository;
+    private SlbRepository slbRepository;
 
     private Logger logger = LoggerFactory.getLogger(StatusServiceImpl.class);
 
@@ -45,11 +45,11 @@ public class StatusServiceImpl implements StatusService {
     }
 
     @Override
-    public Set<String> findAllDownAppServersBySlbName(String slbName) throws Exception {
+    public Set<String> findAllDownGroupServersBySlbId(Long slbId) throws Exception {
             Set<String> allDownAppServers = new HashSet<>();
-            List<StatusAppServerDo> allDownAppServerList = statusAppServerService.listAllDownBySlbName(slbName);
-            for (StatusAppServerDo d : allDownAppServerList) {
-                allDownAppServers.add(d.getSlbName() + "_" + d.getVirtualServerName() + "_" + d.getAppName() + "_" + d.getIp());
+            List<StatusGroupServerDo> allDownAppServerList = statusGroupServerService.listAllDownBySlbId(slbId);
+            for (StatusGroupServerDo d : allDownAppServerList) {
+                allDownAppServers.add(d.getSlbId() + "_" + d.getSlbVirtualServerId() + "_" + d.getGroupId() + "_" + d.getIp());
             }
             return allDownAppServers;
     }
@@ -75,52 +75,52 @@ public class StatusServiceImpl implements StatusService {
 
 
     @Override
-    public void upMember(String appName, String ip) throws Exception {
+    public void upMember(Long groupId, String ip) throws Exception {
 
-        List<AppSlb> appslblist = slbClusterRepository.listAppSlbsByApps(new String[]{appName});
+        List<GroupSlb> appslblist = slbRepository.listGroupSlbsByGroups(new Long[]{groupId});
         if (appslblist==null||appslblist.size()==0)
         {
-            logger.warn("[down member]: Can not find appslb by appName! AppName: "+appName);
-            AssertUtils.isNull(appslblist,"[up member]: Can not find appslb by appName! Please Check the Configuration or param again!");
+            logger.warn("[up member]: Can not find appslb by GroupId! GroupId: "+groupId);
+            AssertUtils.isNull(appslblist,"[up member]: Can not find GroupSlb by GroupID! Please Check the Configuration or param again!");
             return;
         }
 
-        dataAdjust(appslblist,appName);
+        dataAdjust(appslblist,groupId);
 
-        for (AppSlb d : appslblist)
+        for (GroupSlb d : appslblist)
         {
-            statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
-                    .setVirtualServerName(d.getVirtualServer().getName()).setAppName(appName).setIp(ip).setUp(true));
+            statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(d.getSlbId())
+                    .setSlbVirtualServerId(d.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(true));
             logger.info("[up Member]: AppSlb:"+d.toString());
         }
     }
 
     @Override
-    public void downMember(String appName, String ip) throws Exception {
+    public void downMember(Long groupId, String ip) throws Exception {
 
-        List<AppSlb> appslblist = slbClusterRepository.listAppSlbsByApps(new String[]{appName});
+        List<GroupSlb> appslblist = slbRepository.listGroupSlbsByGroups(new Long[]{groupId});
         if (appslblist==null||appslblist.size()==0)
         {
-            logger.warn("[down member]: Can not find appslb by appName! AppName: "+appName);
-            AssertUtils.isNull(appslblist,"[down member]: Can not find appslb by appName! Please Check the Configuration or param again!");
+            logger.warn("[down member]: Can not find appslb by GroupId! GroupId: "+groupId);
+            AssertUtils.isNull(appslblist,"[up member]: Can not find GroupSlb by GroupID! Please Check the Configuration or param again!");
             return;
         }
 
-        dataAdjust(appslblist,appName);
+        dataAdjust(appslblist,groupId);
 
-        for (AppSlb d : appslblist)
+        for (GroupSlb d : appslblist)
         {
-            statusAppServerService.updateStatusAppServer(new StatusAppServerDo().setSlbName(d.getSlbName())
-                    .setVirtualServerName(d.getVirtualServer().getName()).setAppName(appName).setIp(ip).setUp(false));
+            statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(d.getSlbId())
+                    .setSlbVirtualServerId(d.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(false));
             logger.info("[down Member]: AppSlb:"+d.toString());
         }
 
     }
 
     @Override
-    public boolean getAppServerStatus(String slbname, String appName, String vsip) throws Exception {
+    public boolean getGroupServerStatus(Long slbId, Long groupId, String vsip) throws Exception {
 
-        List<StatusAppServerDo> list = statusAppServerService.listBySlbNameAndAppNameAndIp(slbname,appName,vsip);
+        List<StatusGroupServerDo> list = statusGroupServerService.listBySlbIdAndGroupIdAndIp(slbId, groupId, vsip);
         if (list!=null&&list.size()>0)
         {
             return list.get(0).isUp();
@@ -138,29 +138,29 @@ public class StatusServiceImpl implements StatusService {
         return true;
     }
 
-    private boolean dataAdjust(List<AppSlb> list ,String appName)throws Exception{
-        Set<String> appvs =new HashSet<>();
-        Set<String> slbnames = new HashSet<>();
-        for (AppSlb p : list)
+    private boolean dataAdjust(List<GroupSlb> list ,Long groupId)throws Exception{
+        Set<String> groupvs =new HashSet<>();
+        Set<Long> slbIds = new HashSet<>();
+        for (GroupSlb p : list)
         {
-            appvs.add(p.getAppName()+p.getSlbName()+p.getVirtualServer().getName());
-            slbnames.add(p.getSlbName());
+            groupvs.add(p.getGroupId().toString()+p.getSlbId()+p.getVirtualServer().getId());
+            slbIds.add(p.getSlbId());
         }
 
-        List<StatusAppServerDo> statuslist = new ArrayList<>();
-        for (String slbname:slbnames){
-            List<StatusAppServerDo> tmplist = statusAppServerService.listBySlbNameAndAppName(slbname,appName);
+        List<StatusGroupServerDo> statuslist = new ArrayList<>();
+        for (Long slbId:slbIds){
+            List<StatusGroupServerDo> tmplist = statusGroupServerService.listBySlbIdAndGroupId(slbId, groupId);
             if (tmplist!=null)
             {
                 statuslist.addAll(tmplist);
             }
         }
 
-        for (StatusAppServerDo d:statuslist)
+        for (StatusGroupServerDo d:statuslist)
         {
-            if(!appvs.contains(d.getAppName()+d.getSlbName()+d.getVirtualServerName()))
+            if(!groupvs.contains(String.valueOf(d.getGroupId())+d.getSlbId()+d.getSlbVirtualServerId()))
             {
-                statusAppServerService.deleteBySlbNameAndAppNameAndVsName(d.getSlbName(),d.getAppName(),d.getVirtualServerName());
+                statusGroupServerService.deleteBySlbIdAndGroupIdAndVsId(d.getSlbId(), d.getGroupId(), d.getSlbVirtualServerId());
                 logger.info("[status adjust]remove StatusAppServer :"+d.toString());
             }
         }

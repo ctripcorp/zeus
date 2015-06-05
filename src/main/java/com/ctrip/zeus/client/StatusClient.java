@@ -1,7 +1,7 @@
 package com.ctrip.zeus.client;
 
-import com.ctrip.zeus.model.entity.AppServerStatus;
-import com.ctrip.zeus.model.entity.AppStatus;
+import com.ctrip.zeus.model.entity.GroupServerStatus;
+import com.ctrip.zeus.model.entity.GroupStatus;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import jersey.repackaged.com.google.common.cache.CacheBuilder;
 import jersey.repackaged.com.google.common.cache.CacheLoader;
@@ -32,17 +32,17 @@ public class StatusClient extends AbstractRestClient {
         return cache.get(url);
     }
 
-    public AppServerStatus getAppServerStatus(String appName , String slbName , String sip)throws Exception
+    public GroupServerStatus getAppServerStatus(Long groupId , Long slbId , String sip)throws Exception
     {
-        String responseStr = getTarget().path("/api/status/app/"+appName+"/slb/"+slbName+"/server/"+sip)
+        String responseStr = getTarget().path("/api/status/group/"+groupId+"/slb/"+slbId+"/server/"+sip)
                 .request().headers(getDefaultHeaders()).get(String.class);
-        return DefaultJsonParser.parse(AppServerStatus.class, responseStr);
+        return DefaultJsonParser.parse(GroupServerStatus.class, responseStr);
     }
 
-    public AppStatus getAppStatus(String appName , String slbName)throws Exception
+    public GroupStatus getAppStatus(Long groupId , Long slbId)throws Exception
     {
-        String responseStr = getTarget().path("/api/status/app/"+appName+"/slb/"+slbName)
+        String responseStr = getTarget().path("/api/status/group/"+groupId+"/slb/"+slbId)
                 .request().headers(getDefaultHeaders()).get(String.class);
-        return DefaultJsonParser.parse(AppStatus.class, responseStr);
+        return DefaultJsonParser.parse(GroupStatus.class, responseStr);
     }
 }

@@ -4,7 +4,11 @@ import com.ctrip.zeus.ao.AbstractAPITest;
 import com.ctrip.zeus.ao.AopSpring;
 import com.ctrip.zeus.ao.Checker;
 import com.ctrip.zeus.ao.ReqClient;
+import com.ctrip.zeus.client.GroupClient;
+import com.ctrip.zeus.client.SlbClient;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.support.GenericSerializer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,128 +21,28 @@ import javax.annotation.Resource;
  */
 public class StatusTest extends AbstractAPITest {
 
+    private SlbClient sc = new SlbClient("http://127.0.0.1:8099");
+    private GroupClient gc = new GroupClient("http://127.0.0.1:8099");
+
     @Resource
     StatusService statusService;
 
     @Before
     public void before() throws Exception {
-        new ReqClient("http://127.0.0.1:8099").post("/api/slb/add","{\n" +
-                "    \"name\": \"default\",\n" +
-                "    \"version\": 7,\n" +
-                "    \"nginx-bin\": \"/opt/app/nginx/sbin\",\n" +
-                "    \"nginx-conf\": \"/opt/app/nginx/conf\",\n" +
-                "    \"nginx-worker-processes\": 2,\n" +
-                "    \"status\": \"TEST\",\n" +
-                "    \"vips\": [\n" +
-                "        {\n" +
-                "            \"ip\": \"101.2.25.93\"\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"slb-servers\": [\n" +
-                "        {\n" +
-                "            \"ip\": \"101.2.25.93\",\n" +
-                "            \"host-name\": \"uat0358\",\n" +
-                "            \"enable\": true\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"ip\": \"101.2.25.94\",\n" +
-                "            \"host-name\": \"uat0359\",\n" +
-                "            \"enable\": true\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"ip\": \"101.2.25.95\",\n" +
-                "            \"host-name\": \"uat0360\",\n" +
-                "            \"enable\": true\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"virtual-servers\": [\n" +
-                "        {\n" +
-                "            \"name\": \"site1\",\n" +
-                "            \"ssl\": false,\n" +
-                "            \"port\": \"80\",\n" +
-                "            \"domains\": [\n" +
-                "                {\n" +
-                "                    \"name\": \"s1.ctrip.com\"\n" +
-                "                }\n" +
-                "            ]\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"name\": \"site2\",\n" +
-                "            \"ssl\": false,\n" +
-                "            \"port\": \"80\",\n" +
-                "            \"domains\": [\n" +
-                "                {\n" +
-                "                    \"name\": \"s2a.ctrip.com\"\n" +
-                "                },\n" +
-                "                {\n" +
-                "                    \"name\": \"s2b.ctrip.com\"\n" +
-                "                }\n" +
-                "            ]\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}");
-
-        new ReqClient("http://127.0.0.1:8099").post("/api/app/add","{\n" +
-                "    \"name\": \"Test\",\n" +
-                "    \"app-id\": \"921812\",\n" +
-                "    \"version\": 1,\n" +
-                "    \"app-slbs\": [\n" +
-                "        {\n" +
-                "            \"slb-name\": \"default\",\n" +
-                "            \"path\": \"/\",\n" +
-                "            \"virtual-server\": {\n" +
-                "                \"name\": \"site1\",\n" +
-                "                \"ssl\": false,\n" +
-                "                \"port\": \"80\",\n" +
-                "                \"domains\": [\n" +
-                "                    {\n" +
-                "                        \"name\": \"s1.ctrip.com\"\n" +
-                "                    }\n" +
-                "                ]\n" +
-                "            }\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"health-check\": {\n" +
-                "        \"intervals\": 5000,\n" +
-                "        \"fails\": 1,\n" +
-                "        \"passes\": 2,\n" +
-                "        \"uri\": \"/domaininfo/OnService.html\"\n" +
-                "    },\n" +
-                "    \"load-balancing-method\": {\n" +
-                "        \"type\": \"roundrobin\",\n" +
-                "        \"value\": \"test\"\n" +
-                "    },\n" +
-                "    \"app-servers\": [\n" +
-                "        {\n" +
-                "            \"port\": 8080,\n" +
-                "            \"weight\": 1,\n" +
-                "            \"max-fails\": 2,\n" +
-                "            \"fail-timeout\": 30,\n" +
-                "            \"host-name\": \"0\",\n" +
-                "            \"ip\": \"101.2.6.201\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"port\": 80,\n" +
-                "            \"weight\": 2,\n" +
-                "            \"max-fails\": 2,\n" +
-                "            \"fail-timeout\": 30,\n" +
-                "            \"host-name\": \"0\",\n" +
-                "            \"ip\": \"101.2.6.202\"\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}");
-
+        new ReqClient("http://127.0.0.1:8099").post("/api/slb/add", GenericSerializer.writeJson(generateSlb("default")));
+        new ReqClient("http://127.0.0.1:8099").post("/api/group/add", GenericSerializer.writeJson(generateGroup("Test")));
     }
 
     @Test
-    public void statusTest()
-    {
+    public void statusTest() {
+        Slb slb = sc.get("default");
+        Group group = gc.get("Test");
         AopSpring.addChecker("StatusServiceImpl.upServer", new Checker() {
 
             @Override
             public void check() {
                 try {
-                    Assert.assertEquals(true,statusService.getServerStatus("101.2.6.201"));
+                    Assert.assertEquals(true, statusService.getServerStatus("101.2.6.201"));
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -150,7 +54,7 @@ public class StatusTest extends AbstractAPITest {
             @Override
             public void check() {
                 try {
-                    Assert.assertEquals(false,statusService.getServerStatus("101.2.6.201"));
+                    Assert.assertEquals(false, statusService.getServerStatus("101.2.6.201"));
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -158,28 +62,42 @@ public class StatusTest extends AbstractAPITest {
             }
         });
 
-        new ReqClient("http://127.0.0.1:8099").post("/api/conf/activate","{\n" +
-                "   \"conf-slb-names\": [\n" +
-                "      {\n" +
-                "         \"slbname\": \"default\"\n" +
-                "      }\n" +
-                "   ],\n" +
-                "   \"conf-app-names\": [\n" +
-                "      {\n" +
-                "         \"appname\": \"Test\"\n" +
-                "      }\n" +
-                "   ]\n" +
-                "}\n");
+//        new ReqClient("http://127.0.0.1:8099").get("/api/conf/activateByName?slbName=default&groupName=Test");
+//
+//        String responseup = new ReqClient("http://127.0.0.1:8099/api/op/upServer?ip=101.2.6.201").getstr();
+//        String responsedown = new ReqClient("http://127.0.0.1:8099/api/op/downServer?ip=101.2.6.201").getstr();
+//        System.out.println(responseup);
+//        System.out.println(responsedown);
+//
+//        String responseupM = new ReqClient("http://127.0.0.1:8099/api/op/upMemberByName?groupName=Test&ip=101.2.6.201").getstr();
+//        String responsedownM = new ReqClient("http://127.0.0.1:8099/api/op/downMemberByName?groupName=Test&ip=101.2.6.201").getstr();
+//
+//        System.out.println(responseupM);
+//        System.out.println(responsedownM);
+    }
 
-        String responseup = new ReqClient("http://127.0.0.1:8099/api/op/upServer?ip=101.2.6.201").getstr();
-        String responsedown = new ReqClient("http://127.0.0.1:8099/api/op/downServer?ip=101.2.6.201").getstr();
-        System.out.println(responseup);
-        System.out.println(responsedown);
+    private Group generateGroup(String groupName) {
+        Slb slb = sc.get("default");
+        return new Group().setName(groupName).setAppId("921812").setVersion(1)
+                .setHealthCheck(new HealthCheck().setIntervals(5000).setFails(1).setPasses(2).setUri("/domaininfo/OnService.html"))
+                .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
+                .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setSlbName(slb.getName()).setPath("/").setVirtualServer(slb.getVirtualServers().get(0)))
+                .addGroupServer(new GroupServer().setPort(8080).setWeight(1).setMaxFails(2).setFailTimeout(30).setHostName("0").setIp("10.2.6.201"))
+                .addGroupServer(new GroupServer().setPort(80).setWeight(2).setMaxFails(2).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
+    }
 
-        String responseupM = new ReqClient("http://127.0.0.1:8099/api/op/upMember?appName=Test&ip=101.2.6.201").getstr();
-        String responsedownM = new ReqClient("http://127.0.0.1:8099/api/op/downMember?appName=Test&ip=101.2.6.201").getstr();
-
-        System.out.println(responseupM);
-        System.out.println(responsedownM);
+    private Slb generateSlb(String slbName) {
+        return new Slb().setName(slbName).setVersion(7)
+                .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf").setNginxWorkerProcesses(2).setVersion(0)
+                .addVip(new Vip().setIp("101.2.25.93"))
+                .addSlbServer(new SlbServer().setHostName("uat0358").setIp("101.2.25.93").setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("uat0359").setIp("101.2.25.94").setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("uat0360").setIp("101.2.25.95").setEnable(true))
+                .addVirtualServer(new VirtualServer().setName("site1").setPort("80").setSsl(false)
+                        .addDomain(new Domain().setName("s1.ctrip.com")))
+                .addVirtualServer(new VirtualServer().setName("site2").setPort("80").setSsl(false)
+                        .addDomain(new Domain().setName("s2a.ctrip.com"))
+                        .addDomain(new Domain().setName("s2b.ctrip.com")))
+                .setStatus("TEST");
     }
 }

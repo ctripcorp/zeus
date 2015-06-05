@@ -1,7 +1,7 @@
 package test;
 
-import com.ctrip.zeus.model.entity.AppServerStatus;
-import com.ctrip.zeus.model.entity.AppStatus;
+import com.ctrip.zeus.model.entity.GroupServerStatus;
+import com.ctrip.zeus.model.entity.GroupStatus;
 import com.ctrip.zeus.model.entity.ServerStatus;
 
 /**
@@ -11,22 +11,22 @@ import com.ctrip.zeus.model.entity.ServerStatus;
 public class Demo2 {
 
     public static void main(String[] args) {
-        AppStatus s = new AppStatus().setAppName("html5Home")
-                .addAppServerStatus(new AppServerStatus()
+        GroupStatus s = new GroupStatus().setGroupName("html5Home")
+                .addGroupServerStatus(new GroupServerStatus()
                         .setIp("192.168.1.1")
                         .setServer(true).setMember(true).setUp(true))
-                .addAppServerStatus(new AppServerStatus()
+                .addGroupServerStatus(new GroupServerStatus()
                         .setIp("192.168.1.2")
                         .setServer(true).setMember(true).setUp(true));
 
 
         ServerStatus s1 = new ServerStatus()
                 .setIp("192.168.1.1").setUp(true)
-                .addAppName("html5Home")
-                .addAppName("html5Hotel")
-                .addAppName("html5Flight");
+                .addGroupName("html5Home")
+                .addGroupName("html5Hotel")
+                .addGroupName("html5Flight");
 
-        System.out.println(String.format(AppStatus.JSON, s));
-        System.out.println(String.format(AppStatus.JSON, s1));
+        System.out.println(String.format(GroupStatus.JSON, s));
+        System.out.println(String.format(GroupStatus.JSON, s1));
     }
 }

@@ -37,7 +37,7 @@ public class StatusServerServiceImpl implements StatusServerService {
 
     @Override
     public void updateStatusServer(StatusServerDo d) throws Exception {
-        d.setLastModified(new Date());
+        d.setDataChangeLastTime(new Date());
         statusServerDao.insert(d);
     }
 }

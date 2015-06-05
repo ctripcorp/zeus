@@ -18,8 +18,8 @@ public class NginxStatusTest extends AbstractSpringTest {
     @Test
     public void testTrafficStatusApi() throws Exception {
         NginxClient client = new NginxClient("http://127.0.0.1:8099");
-        TrafficStatus status = client.getTrafficStatus();
+        TrafficStatusList status = client.getTrafficStatus();
         Assert.assertNotNull(status);
-        Assert.assertTrue(status.getReqStatuses().size() > 0);
+        Assert.assertTrue(status.getStatuses().get(0).getReqStatuses().size() > 0);
     }
 }

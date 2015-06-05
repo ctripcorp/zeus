@@ -1,9 +1,9 @@
 package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.ao.AbstractAPITest;
-import com.ctrip.zeus.dal.core.ConfAppSlbActiveDao;
-import com.ctrip.zeus.dal.core.ConfAppSlbActiveDo;
-import com.ctrip.zeus.dal.core.ConfAppSlbActiveEntity;
+import com.ctrip.zeus.dal.core.ConfGroupSlbActiveDao;
+import com.ctrip.zeus.dal.core.ConfGroupSlbActiveDo;
+import com.ctrip.zeus.dal.core.ConfGroupSlbActiveEntity;
 import org.junit.Test;
 
 import javax.annotation.Resource;
@@ -15,22 +15,22 @@ import java.util.List;
 public class AppSlbActiveTest extends AbstractAPITest {
 
     @Resource
-    ConfAppSlbActiveDao confAppSlbActiveDao;
+    ConfGroupSlbActiveDao confGroupSlbActiveDao;
 
 
     @Test
     public void test()
     {
         try{
-            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb").setAppName("app1").setSlbVirtualServerName("vs1"));
-            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb").setAppName("app2").setSlbVirtualServerName("vs2"));
-            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb").setAppName("app1").setSlbVirtualServerName("vs1"));
-            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb2").setAppName("app2").setSlbVirtualServerName("vs1"));
-            confAppSlbActiveDao.insert(new ConfAppSlbActiveDo().setSlbName("slb2").setAppName("app4").setSlbVirtualServerName("vs3"));
+            confGroupSlbActiveDao.insert(new ConfGroupSlbActiveDo().setSlbId(51).setGroupId(1).setSlbVirtualServerId(2));
+            confGroupSlbActiveDao.insert(new ConfGroupSlbActiveDo().setSlbId(52).setGroupId(2).setSlbVirtualServerId(3));
+            confGroupSlbActiveDao.insert(new ConfGroupSlbActiveDo().setSlbId(53).setGroupId(3).setSlbVirtualServerId(1));
+            confGroupSlbActiveDao.insert(new ConfGroupSlbActiveDo().setSlbId(51).setGroupId(4).setSlbVirtualServerId(2));
+            confGroupSlbActiveDao.insert(new ConfGroupSlbActiveDo().setSlbId(52).setGroupId(5).setSlbVirtualServerId(3));
 
-            List<ConfAppSlbActiveDo> res = confAppSlbActiveDao.findBySlbName("slb", ConfAppSlbActiveEntity.READSET_FULL);
+            List<ConfGroupSlbActiveDo> res = confGroupSlbActiveDao.findBySlbId(52, ConfGroupSlbActiveEntity.READSET_FULL);
 
-            confAppSlbActiveDao.deleteByAppName(new ConfAppSlbActiveDo().setAppName("app2"));
+            confGroupSlbActiveDao.deleteByGroupId(new ConfGroupSlbActiveDo().setGroupId(2));
 
         }catch (Exception e)
         {

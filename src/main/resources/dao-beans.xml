@@ -8,28 +8,8 @@
         <constructor-arg type="java.lang.Class" value="org.unidal.dal.jdbc.transaction.TransactionManager"/>
     </bean>
 
-    <bean id="appDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppDao"/>
-    </bean>
-
-    <bean id="appHealthCheckDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppHealthCheckDao"/>
-    </bean>
-
-    <bean id="appLoadBalancingMethodDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppLoadBalancingMethodDao"/>
-    </bean>
-
-    <bean id="appServerDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppServerDao"/>
-    </bean>
-
-    <bean id="appSlbDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppSlbDao"/>
-    </bean>
-
-    <bean id="archiveAppDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ArchiveAppDao"/>
+    <bean id="archiveGroupDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ArchiveGroupDao"/>
     </bean>
 
     <bean id="archiveSlbDao" factory-bean="daoFactory" factory-method="getDao">
@@ -64,12 +44,12 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.BuildInfoDao"/>
     </bean>
 
-    <bean id="confAppActiveDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfAppActiveDao"/>
+    <bean id="confGroupActiveDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfGroupActiveDao"/>
     </bean>
 
-    <bean id="confAppSlbActiveDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfAppSlbActiveDao"/>
+    <bean id="confGroupSlbActiveDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfGroupSlbActiveDao"/>
     </bean>
 
     <bean id="confSlbActiveDao" factory-bean="daoFactory" factory-method="getDao">
@@ -78,6 +58,26 @@
 
     <bean id="distLockDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.DistLockDao"/>
+    </bean>
+
+    <bean id="groupDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupDao"/>
+    </bean>
+
+    <bean id="groupHealthCheckDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupHealthCheckDao"/>
+    </bean>
+
+    <bean id="groupLoadBalancingMethodDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupLoadBalancingMethodDao"/>
+    </bean>
+
+    <bean id="groupServerDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupServerDao"/>
+    </bean>
+
+    <bean id="groupSlbDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupSlbDao"/>
     </bean>
 
     <bean id="nginxConfDao" factory-bean="daoFactory" factory-method="getDao">
@@ -120,8 +120,8 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.SlbVirtualServerDao"/>
     </bean>
 
-    <bean id="statusAppServerDao" factory-bean="daoFactory" factory-method="getDao">
-        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.StatusAppServerDao"/>
+    <bean id="statusGroupServerDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.StatusGroupServerDao"/>
     </bean>
 
     <bean id="statusServerDao" factory-bean="daoFactory" factory-method="getDao">

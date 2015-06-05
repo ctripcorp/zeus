@@ -2,7 +2,7 @@ package com.ctrip.zeus.client;
 
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
-import com.ctrip.zeus.nginx.entity.TrafficStatus;
+import com.ctrip.zeus.nginx.entity.TrafficStatusList;
 import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.util.IOUtils;
 import jersey.repackaged.com.google.common.cache.CacheBuilder;
@@ -58,11 +58,11 @@ public class NginxClient extends AbstractRestClient {
         return DefaultJsonParser.parse(NginxResponse.class,responseStr);
     }
 
-    public TrafficStatus getTrafficStatus() throws Exception {
+    public TrafficStatusList getTrafficStatus() throws Exception {
         Response response = getTarget().path("").path("/api/nginx/trafficStatus").request().headers(getDefaultHeaders()).get();
         InputStream is = (InputStream)response.getEntity();
         try {
-            return DefaultJsonParser.parse(TrafficStatus.class, IOUtils.inputStreamStringify(is));
+            return DefaultJsonParser.parse(TrafficStatusList.class, IOUtils.inputStreamStringify(is));
         } catch (Exception ex) {
             throw new Exception("Fail to parse traffic status object.");
         }

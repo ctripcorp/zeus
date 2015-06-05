@@ -3,6 +3,7 @@ package com.ctrip.zeus.util;
 import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -51,8 +52,8 @@ public class TrafficStatusCollector {
         th.start();
     }
 
-    public TrafficStatus getResult() {
-        return rollingTrafficStatus.getAccumulatedResult();
+    public List<TrafficStatus> getResult() {
+        return rollingTrafficStatus.getResult();
     }
 
     private void fetchTrafficStatus() {
