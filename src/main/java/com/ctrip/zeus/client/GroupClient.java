@@ -21,7 +21,7 @@ public class GroupClient extends AbstractRestClient {
     }
 
     public List<Group> getAll() {
-        String res = getTarget().path("/api/group").request().headers(getDefaultHeaders()).get(String.class);
+        String res = getTarget().path("/api/groups").request().headers(getDefaultHeaders()).get(String.class);
         try {
             return DefaultJsonParser.parse(GroupList.class, res).getGroups();
         } catch (IOException e) {
@@ -29,8 +29,18 @@ public class GroupClient extends AbstractRestClient {
         }
     }
 
+    public Group get(String groupName) {
+        String res = getTarget().path("/api/group").queryParam("groupName", groupName).request(MediaType.APPLICATION_JSON)
+                .headers(getDefaultHeaders()).get(String.class);
+        try {
+            return DefaultJsonParser.parse(Group.class, res);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public Response add(Group group) {
-        return getTarget().path("/api/group/add").request().headers(getDefaultHeaders())
+        return getTarget().path("/api/group/new").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
                         String.format(Group.JSON, group),
                         MediaType.APPLICATION_JSON
@@ -45,16 +55,6 @@ public class GroupClient extends AbstractRestClient {
                         MediaType.APPLICATION_JSON
                 ));
 
-    }
-
-    public Group get(String groupName) {
-        String res = getTarget().path("/api/group/get/" + groupName).request(MediaType.APPLICATION_JSON)
-                .headers(getDefaultHeaders()).get(String.class);
-        try {
-            return DefaultJsonParser.parse(Group.class, res);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public Response delete(Long groupId) {

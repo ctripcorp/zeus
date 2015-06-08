@@ -21,7 +21,7 @@ public class SlbClient extends AbstractRestClient {
     }
 
     public List<Slb> getAll() {
-        String res = getTarget().path("/api/slb").request().headers(getDefaultHeaders()).get(String.class);
+        String res = getTarget().path("/api/slbs").request().headers(getDefaultHeaders()).get(String.class);
         try {
             return DefaultJsonParser.parse(SlbList.class, res).getSlbs();
         } catch (IOException e) {
@@ -29,8 +29,18 @@ public class SlbClient extends AbstractRestClient {
         }
     }
 
+    public Slb get(String slbName) {
+        String res = getTarget().path("/api/slb").queryParam("slbName", slbName).request(MediaType.APPLICATION_JSON)
+                .headers(getDefaultHeaders()).get(String.class);
+        try {
+            return DefaultJsonParser.parse(Slb.class, res);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public Response add(Slb slb) {
-        return getTarget().path("/api/slb/add").request().headers(getDefaultHeaders())
+        return getTarget().path("/api/slb/new").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
                         String.format(Slb.JSON, slb),
                         MediaType.APPLICATION_JSON
@@ -43,16 +53,6 @@ public class SlbClient extends AbstractRestClient {
                         String.format(Slb.JSON, slb),
                         MediaType.APPLICATION_JSON
                 ));
-    }
-
-    public Slb get(String slbName) {
-        String res = getTarget().path("/api/slb/get/" + slbName).request(MediaType.APPLICATION_JSON)
-                .headers(getDefaultHeaders()).get(String.class);
-        try {
-            return DefaultJsonParser.parse(Slb.class, res);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public Response delete(Long slbId) {

@@ -29,8 +29,8 @@ public class StatusTest extends AbstractAPITest {
 
     @Before
     public void before() throws Exception {
-        new ReqClient("http://127.0.0.1:8099").post("/api/slb/add", GenericSerializer.writeJson(generateSlb("default")));
-        new ReqClient("http://127.0.0.1:8099").post("/api/group/add", GenericSerializer.writeJson(generateGroup("Test")));
+        new ReqClient("http://127.0.0.1:8099").post("/api/slb/new", GenericSerializer.writeJson(generateSlb("default")));
+        new ReqClient("http://127.0.0.1:8099").post("/api/group/new", GenericSerializer.writeJson(generateGroup("Test")));
     }
 
     @Test

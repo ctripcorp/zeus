@@ -216,7 +216,7 @@
 <script>
     function mainController($scope, $http) {
         $scope.lll = function () {
-            $http.get("/api/group").success(
+            $http.get("/api/groups").success(
                     function (response) {
                         $scope.groups = response.groups;
                     }
@@ -229,7 +229,7 @@
             $scope.current = JSON.stringify(x, null, "    ");
         }
         $scope.save = function (content) {
-            $http.post("/api/group/add", content).success(
+            $http.post("/api/group/update", content).success(
                     function (response) {
                         $scope.lll();
                     }

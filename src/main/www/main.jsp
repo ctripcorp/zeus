@@ -200,7 +200,7 @@
 <script>
     function slbController($scope, $http) {
         $scope.lll=function(){
-            $http.get("/api/slb/get/default").success(
+            $http.get("/api/slb?slbName=default").success(
                     function (response) {
                         $scope.slb=JSON.stringify(response,null,"    ");
                     }
@@ -208,7 +208,7 @@
         }
         $scope.lll();
         $scope.save=function(){
-            $http.post("/api/slb/add", $scope.slb).success(
+            $http.post("/api/slb/update", $scope.slb).success(
                     function(response){
                         $scope.lll();
                     }
