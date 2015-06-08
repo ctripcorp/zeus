@@ -274,7 +274,11 @@ public class NginxServiceImpl implements NginxService {
 
     @Override
     public List<TrafficStatus> getLocalTrafficStatus() {
-        return TrafficStatusCollector.getInstance().getResult();
+        List<TrafficStatus> l = TrafficStatusCollector.getInstance().getResult();
+        for (TrafficStatus trafficStatus : l) {
+            trafficStatus.setServerIp(S.getIp());
+        }
+        return l;
     }
 
     private void writeConfToDisk(Long slbId, int version, NginxOperator nginxOperator) throws Exception {
