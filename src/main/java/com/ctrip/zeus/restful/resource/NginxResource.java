@@ -88,17 +88,6 @@ public class NginxResource {
     }
 
     @GET
-    @Path("/trafficStatus/{slbId:[0-9]+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getTrafficStatusBySlb(@Context HttpHeaders hh, @PathParam("slbId") Long slbId) throws Exception {
-        TrafficStatusList list = new TrafficStatusList();
-        for(TrafficStatus ts : nginxService.getTrafficStatusBySlb(slbId)) {
-            list.addTrafficStatus(ts);
-        }
-        return responseHandler.handle(list, hh.getMediaType());
-    }
-
-    @GET
     @Path("/trafficStatus")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getLocalTrafficStatus(@Context HttpHeaders hh) throws Exception {

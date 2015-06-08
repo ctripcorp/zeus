@@ -1,9 +1,14 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.nginx.entity.TrafficStatus;
+import com.ctrip.zeus.nginx.entity.TrafficStatusList;
+import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import org.springframework.stereotype.Component;
 
@@ -31,26 +36,27 @@ public class StatusResource {
     private SlbRepository slbRepository;
     @Resource
     private GroupRepository groupRepository;
+    @Resource
+    private NginxService nginxService;
+    @Resource
+    private ResponseHandler responseHandler;
 
 
     @GET
     @Path("/groups")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response allGroupStatusInSlb(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("slbId") Long slbId, @QueryParam("slbName") String slbName ) throws Exception {
-        Long _slbId = null ; //slbRepository.get(slbName).getId();
+    public Response allGroupStatusInSlb(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("slbId") Long slbId, @QueryParam("slbName") String slbName) throws Exception {
+        Long _slbId = null; //slbRepository.get(slbName).getId();
         List<GroupStatus> statusList = null;
-        if (slbId != null)
-        {
+        if (slbId != null) {
             _slbId = slbId;
-        }else if (slbName != null){
+        } else if (slbName != null) {
             _slbId = slbRepository.get(slbName).getId();
         }
-        if (null == _slbId)
-        {
+        if (null == _slbId) {
             statusList = groupStatusService.getAllGroupStatus();
-        }else
-        {
+        } else {
             statusList = groupStatusService.getAllGroupStatus(_slbId);
         }
 
@@ -58,62 +64,51 @@ public class StatusResource {
         for (GroupStatus groupStatus : statusList) {
             result.addGroupStatus(groupStatus);
         }
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(GroupStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(GroupStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-        }
+        return responseHandler.handle(result, hh.getMediaType());
     }
 
     @GET
     @Path("/group")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("groupName") String groupName , @QueryParam("slbId") Long slbId, @QueryParam("slbName") String slbName ) throws Exception {
+    public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("groupName") String groupName, @QueryParam("slbId") Long slbId, @QueryParam("slbName") String slbName) throws Exception {
         Long _groupId = null;
-        Long _slbId = null ;
+        Long _slbId = null;
         List<GroupStatus> statusList = new ArrayList<>();
 
-        if (groupId != null)
-        {
+        if (groupId != null) {
             _groupId = groupId;
-        }else if (groupName != null){
+        } else if (groupName != null) {
             _groupId = groupRepository.get(groupName).getId();
         }
-        if (null == _groupId)
-        {
+        if (null == _groupId) {
             throw new Exception("Group Id or Name not found!");
         }
-        if (slbId != null)
-        {
+        if (slbId != null) {
             _slbId = slbId;
-        }else if (slbName != null){
+        } else if (slbName != null) {
             _slbId = slbRepository.get(slbName).getId();
         }
-        if (null == _slbId)
-        {
+        if (null == _slbId) {
             statusList = groupStatusService.getGroupStatus(_groupId);
-        }else {
-            GroupStatus status = groupStatusService.getGroupStatus(_groupId , _slbId);
+        } else {
+            GroupStatus status = groupStatusService.getGroupStatus(_groupId, _slbId);
             statusList.add(status);
         }
         GroupStatusList result = new GroupStatusList();
         for (GroupStatus groupStatus : statusList) {
             result.addGroupStatus(groupStatus);
         }
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(GroupStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(GroupStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-        }
+        return responseHandler.handle(result, hh.getMediaType());
     }
+
     @GET
     @Path("/group/{groupId:[0-9]+}/slb/{slbId:[0-9]+}/server/{sip}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
     public Response groupServerStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("groupId") Long groupId, @PathParam("slbId") Long slbId, @PathParam("sip") String sip) throws Exception {
         String[] ipPort = sip.split(":");
-        if (ipPort.length != 2){
+        if (ipPort.length != 2) {
             throw new IllegalArgumentException("server should be ip:port format");
         }
         GroupServerStatus groupServerStatus = groupStatusService.getGroupServerStatus(groupId, slbId, ipPort[0], Integer.valueOf(ipPort[1]));
@@ -124,6 +119,7 @@ public class StatusResource {
             return Response.status(200).entity(String.format(GroupServerStatus.JSON, groupServerStatus)).type(MediaType.APPLICATION_JSON).build();
         }
     }
+
     @GET
     @Path("/groupName/{groupName:[a-zA-Z0-9_-]+}/slbName/{slbName:[a-zA-Z0-9_-]+}/server/{sip}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -132,7 +128,7 @@ public class StatusResource {
         Long groupId = groupRepository.get(groupName).getId();
         Long slbId = slbRepository.get(slbName).getId();
         String[] ipPort = sip.split(":");
-        if (ipPort.length != 2){
+        if (ipPort.length != 2) {
             throw new IllegalArgumentException("server should be ip:port format");
         }
         GroupServerStatus groupServerStatus = groupStatusService.getGroupServerStatus(groupId, slbId, ipPort[0], Integer.valueOf(ipPort[1]));
@@ -144,4 +140,18 @@ public class StatusResource {
         }
     }
 
+    @GET
+    @Path("/traffic")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getTrafficStatusBySlb(@Context HttpHeaders hh,
+                                          @QueryParam("slbId") Long slbId) throws Exception {
+        if (slbId == null) {
+            throw new ValidationException("Missing parameters.");
+        }
+        TrafficStatusList list = new TrafficStatusList();
+        for (TrafficStatus ts : nginxService.getTrafficStatusBySlb(slbId)) {
+            list.addTrafficStatus(ts);
+        }
+        return responseHandler.handle(list, hh.getMediaType());
+    }
 }
