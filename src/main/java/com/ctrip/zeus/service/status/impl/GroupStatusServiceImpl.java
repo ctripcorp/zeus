@@ -76,7 +76,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         {
             Slb slb = slbRepository.getById(slbId);
             StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
-            return client.getAppStatus(groupId,slbId);
+            return client.getGroupStatus(groupId,slbId);
         }
         Slb slb = slbRepository.getById(slbId);
         Group group = groupRepository.getById(groupId);
@@ -100,7 +100,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         {
             Slb slb = slbRepository.getById(slbId);
             StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
-            return client.getAppServerStatus(groupId, slbId, ip + ":" + port);
+            return client.getGroupServerStatus(groupId, slbId, ip + ":" + port);
         }
 
         GroupServerStatus groupServerStatus = new GroupServerStatus();
