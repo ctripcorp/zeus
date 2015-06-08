@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response;
  * @date: 3/4/2015.
  */
 @Component
-@Path("/slb")
+@Path("/")
 public class SlbResource {
     @Resource
     private SlbRepository slbRepository;
@@ -34,6 +34,7 @@ public class SlbResource {
     private DbLockFactory dbLockFactory;
 
     @GET
+    @Path("/slbs")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getAllSlbs")
     public Response list(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
@@ -46,57 +47,43 @@ public class SlbResource {
     }
 
     @GET
-    @Path("/get/{slbName:[a-zA-Z0-9_-]+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "getSlb")
-    public Response getBySlbName(@Context HttpHeaders hh, @Context HttpServletRequest request, @PathParam("slbName") String slbName) throws Exception {
-        Slb slb = slbRepository.get(slbName);
-        return responseHandler.handle(slb, hh.getMediaType());
-    }
-
-    @GET
-    @Path("/get")
+    @Path("/slb")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroup")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                        @QueryParam("id") Long slbId) throws Exception {
-        if (slbId != null) {
-            Slb slb = slbRepository.getById(slbId);
-            return responseHandler.handle(slb, hh.getMediaType());
+                        @QueryParam("slbId") Long slbId,
+                        @QueryParam("slbName") String slbName) throws Exception {
+        if (slbId == null && slbName == null) {
+            throw new Exception("Missing parameter.");
         }
-        throw new Exception("Missing parameter.");
+        Slb slb = null;
+        if (slbId != null) {
+            slb = slbRepository.getById(slbId);
+        }
+        if (slb == null && slbName != null) {
+            slb = slbRepository.get(slbName);
+        }
+        if (slb == null) {
+            throw new Exception("Slb cannot be found.");
+        }
+        return responseHandler.handle(slb, hh.getMediaType());
     }
     
     @POST
-    @Path("/add")
+    @Path("/slb/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addSlb")
     public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
-        Slb s;
-        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
-            s = DefaultSaxParser.parseEntity(Slb.class, slb);
-        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-            s = DefaultJsonParser.parse(Slb.class, slb);
-        } else {
-            throw new Exception("Unacceptable type.");
-        }
-        slbRepository.add(s);
+        slbRepository.add(parseSlb(hh.getMediaType(), slb));
         return Response.ok().build();
     }
 
     @POST
-    @Path("/update")
+    @Path("/slb/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "updateSlb")
     public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
-        Slb s;
-        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
-            s = DefaultSaxParser.parseEntity(Slb.class, slb);
-        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-            s = DefaultJsonParser.parse(Slb.class, slb);
-        } else {
-            throw new Exception("Unacceptable type.");
-        }
+        Slb s = parseSlb(hh.getMediaType(), slb);
         DistLock lock = dbLockFactory.newLock(s.getName() + "_updateSlb");
         try {
             lock.lock();
@@ -108,7 +95,7 @@ public class SlbResource {
     }
 
     @GET
-    @Path("/delete")
+    @Path("/slb/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "deleteSlb")
     public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("slbId") Long slbId) throws Exception {
@@ -117,5 +104,19 @@ public class SlbResource {
         }
         slbRepository.delete(slbId);
         return Response.ok().build();
+    }
+
+    private Slb parseSlb(MediaType mediaType, String slb) throws Exception {
+        Slb s;
+        if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {
+            s = DefaultSaxParser.parseEntity(Slb.class, slb);
+        } else {
+            try {
+                s = DefaultJsonParser.parse(Slb.class, slb);
+            } catch (Exception e) {
+                throw new Exception("Slb cannot be parsed.");
+            }
+        }
+        return s;
     }
 }
