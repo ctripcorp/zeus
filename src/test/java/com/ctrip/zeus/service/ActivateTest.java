@@ -49,7 +49,7 @@ public class ActivateTest extends AbstractAPITest {
                 .addVirtualServer(v2)
                 .setStatus("Test");
 
-        new ReqClient("http://127.0.0.1:8099").post("/api/slb/add",String.format(Slb.JSON, slb));
+        new ReqClient("http://127.0.0.1:8099").post("/api/slb/new",String.format(Slb.JSON, slb));
 
         GroupServer groupServer1 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver1").setIp(slb1_server_0);
         GroupServer groupServer2 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver2").setIp(slb1_server_1);
@@ -61,7 +61,9 @@ public class ActivateTest extends AbstractAPITest {
                         .setPriority(1)).addGroupServer(groupServer1)
                 .addGroupServer(groupServer2);
 
-        new ReqClient("http://127.0.0.1:8099").post("/api/group/add", String.format(Group.JSON, group));
+        new ReqClient("http://127.0.0.1:8099").post("/api/group/new", String.format(Group.JSON, group));
+
+        new ReqClient("http://127.0.0.1:8099").get("/api/activate/slb?slbName="+slb_name);
 
     }
 
@@ -79,26 +81,26 @@ public class ActivateTest extends AbstractAPITest {
 
                     Group group = DefaultSaxParser.parseEntity(Group.class, tmp.getContent());
 
-                    Assert.assertEquals("921812",group.getAppId());
+                    Assert.assertEquals("1000",group.getAppId());
                     Assert.assertEquals("roundrobin",group.getLoadBalancingMethod().getType());
                     Assert.assertEquals("test",group.getLoadBalancingMethod().getValue());
                     Assert.assertEquals(1,group.getVersion().intValue());
-                    Assert.assertEquals("default",group.getGroupSlbs().get(0).getSlbName());
-                    Assert.assertEquals("/",group.getGroupSlbs().get(0).getPath());
-                    Assert.assertEquals("site1",group.getGroupSlbs().get(0).getVirtualServer().getName());
+                    Assert.assertEquals("__Test_slb1",group.getGroupSlbs().get(0).getSlbName());
+                    Assert.assertEquals("/app",group.getGroupSlbs().get(0).getPath());
+                    Assert.assertEquals("__Test_vs2",group.getGroupSlbs().get(0).getVirtualServer().getName());
                     Assert.assertEquals(false,group.getGroupSlbs().get(0).getVirtualServer().getSsl());
                     Assert.assertEquals("80",group.getGroupSlbs().get(0).getVirtualServer().getPort());
-                    Assert.assertEquals("s1.ctrip.com",group.getGroupSlbs().get(0).getVirtualServer().getDomains().get(0).getName());
-                    Assert.assertEquals(5000,group.getHealthCheck().getIntervals().intValue());
+                    Assert.assertEquals("vs2.ctrip.com",group.getGroupSlbs().get(0).getVirtualServer().getDomains().get(0).getName());
+                    Assert.assertEquals(2000,group.getHealthCheck().getIntervals().intValue());
                     Assert.assertEquals(1,group.getHealthCheck().getFails().intValue());
-                    Assert.assertEquals(2,group.getHealthCheck().getPasses().intValue());
-                    Assert.assertEquals("/domaininfo/OnService.html",group.getHealthCheck().getUri());
-                    Assert.assertEquals("0",group.getGroupServers().get(0).getHostName());
-                    Assert.assertEquals("10.2.6.201",group.getGroupServers().get(0).getIp());
+                    Assert.assertEquals(1,group.getHealthCheck().getPasses().intValue());
+                    Assert.assertEquals("/status.json",group.getHealthCheck().getUri());
+                    Assert.assertEquals("appserver1",group.getGroupServers().get(0).getHostName());
+                    Assert.assertEquals("10.2.25.83",group.getGroupServers().get(0).getIp());
                     Assert.assertEquals(30,group.getGroupServers().get(0).getFailTimeout().intValue());
-                    Assert.assertEquals(2,group.getGroupServers().get(0).getMaxFails().intValue());
+                    Assert.assertEquals(10,group.getGroupServers().get(0).getMaxFails().intValue());
                     Assert.assertEquals(1,group.getGroupServers().get(0).getWeight().intValue());
-                    Assert.assertEquals(8080,group.getGroupServers().get(0).getPort().intValue());
+                    Assert.assertEquals(10001,group.getGroupServers().get(0).getPort().intValue());
 
 
                     ConfSlbActiveDo slb = confSlbActiveDao.findBySlbId(1L, ConfSlbActiveEntity.READSET_FULL);
@@ -108,30 +110,29 @@ public class ActivateTest extends AbstractAPITest {
                     Slb slbentity = DefaultSaxParser.parseEntity(Slb.class,slb.getContent());
 
                     Assert.assertEquals("/opt/app/nginx/sbin",slbentity.getNginxBin());
-                    Assert.assertEquals(2,slbentity.getNginxWorkerProcesses().intValue());
+                    Assert.assertEquals(1,slbentity.getNginxWorkerProcesses().intValue());
                     Assert.assertEquals("/opt/app/nginx/conf",slbentity.getNginxConf());
                     Assert.assertEquals(1,slbentity.getVersion().intValue());
-                    Assert.assertEquals(2,slbentity.getNginxWorkerProcesses().intValue());
-                    Assert.assertEquals("TEST",slbentity.getStatus());
+                    Assert.assertEquals(1,slbentity.getNginxWorkerProcesses().intValue());
+                    Assert.assertEquals("Test",slbentity.getStatus());
 
 
-                    Assert.assertEquals("101.2.25.93",slbentity.getVips().get(0).getIp());
-                    Assert.assertEquals("101.2.25.93",slbentity.getSlbServers().get(0).getIp());
-                    Assert.assertEquals("uat0358",slbentity.getSlbServers().get(0).getHostName());
+                    Assert.assertEquals("10.2.25.83",slbentity.getVips().get(0).getIp());
+                    Assert.assertEquals("10.2.25.83",slbentity.getSlbServers().get(0).getIp());
+                    Assert.assertEquals("slb1_server_0",slbentity.getSlbServers().get(0).getHostName());
                     Assert.assertEquals(true,slbentity.getSlbServers().get(0).getEnable());
 
 
-                    Assert.assertEquals("site1",slbentity.getVirtualServers().get(0).getName());
+                    Assert.assertEquals("__Test_vs1",slbentity.getVirtualServers().get(0).getName());
                     Assert.assertEquals(false,slbentity.getVirtualServers().get(0).getSsl());
                     Assert.assertEquals("80",slbentity.getVirtualServers().get(0).getPort());
-                    Assert.assertEquals("s1.ctrip.com",slbentity.getVirtualServers().get(0).getDomains().get(0).getName());
+                    Assert.assertEquals("vs1.ctrip.com",slbentity.getVirtualServers().get(0).getDomains().get(0).getName());
 
 
-                    Assert.assertEquals("site2",slbentity.getVirtualServers().get(1).getName());
+                    Assert.assertEquals("__Test_vs2",slbentity.getVirtualServers().get(1).getName());
                     Assert.assertEquals(false,slbentity.getVirtualServers().get(1).getSsl());
                     Assert.assertEquals("80",slbentity.getVirtualServers().get(1).getPort());
-                    Assert.assertEquals("s2a.ctrip.com",slbentity.getVirtualServers().get(1).getDomains().get(0).getName());
-                    Assert.assertEquals("s2b.ctrip.com",slbentity.getVirtualServers().get(1).getDomains().get(1).getName());
+                    Assert.assertEquals("vs2.ctrip.com",slbentity.getVirtualServers().get(1).getDomains().get(0).getName());
 
                 } catch (DalException e) {
                     e.printStackTrace();
@@ -161,7 +162,7 @@ public class ActivateTest extends AbstractAPITest {
             }
         });
 
-        new ReqClient("http://127.0.0.1:8099").get("/api/conf/activateByName?slbName="+slb_name+"&groupName=__Test_app");
+        new ReqClient("http://127.0.0.1:8099").get("/api/activate/group?groupName=__Test_app");
 
     }
 }

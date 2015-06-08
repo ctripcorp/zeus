@@ -40,7 +40,7 @@ public class IntegrationTest {
         String groupstr = null;
 
         for (int i = 0; i < 10; i++) {
-            groupstr = reqClient.getstr("/api/group/get/__Test_app"+i);
+            groupstr = reqClient.getstr("/api/group?groupName=__Test_app"+i);
             groupres = DefaultJsonParser.parse(Group.class, groupstr);
             if (groupres!=null)
             {
@@ -49,14 +49,14 @@ public class IntegrationTest {
         }
 
 
-        String slb_res = reqClient.getstr("/api/slb/get/" + slb1_name);
+        String slb_res = reqClient.getstr("/api/slb?slbName=" + slb1_name);
         Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
         if (slb_res_obj!=null)
         {
             reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
         }
 
-        slb_res = reqClient.getstr("/api/slb/get/" + slb2_name);
+        slb_res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
         slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
         if (slb_res_obj!=null)
         {
@@ -71,7 +71,7 @@ public class IntegrationTest {
         String groupstr = null;
 
         for (int i = 0; i < 10; i++) {
-            groupstr = reqClient.getstr("/api/group/get/__Test_app"+i);
+            groupstr = reqClient.getstr("/api/group?groupName=__Test_app"+i);
             groupres = DefaultJsonParser.parse(Group.class, groupstr);
             if (groupres!=null)
             {
@@ -80,14 +80,14 @@ public class IntegrationTest {
         }
 
 
-        String slb_res = reqClient.getstr("/api/slb/get/" + slb1_name);
+        String slb_res = reqClient.getstr("/api/slb?slbName=" + slb1_name);
         if (slb_res!=null)
         {
             Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
             reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
         }
 
-        slb_res = reqClient.getstr("/api/slb/get/" + slb2_name);
+        slb_res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
         if (slb_res!=null)
         {
             Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
@@ -95,11 +95,11 @@ public class IntegrationTest {
         }
 
 
-        String res = reqClient.getstr("/api/group/get/__Test_app2");
+        String res = reqClient.getstr("/api/group?groupName=__Test_app2");
         Assert.assertEquals(true,res.isEmpty());
         reqClient.markPass("/api/group/delete");
 
-        res = reqClient.getstr("/api/slb/get/" + slb2_name);
+        res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
         Assert.assertEquals(true,res.isEmpty());
         reqClient.markPass("/api/slb/delete");
 
@@ -151,8 +151,8 @@ public class IntegrationTest {
                 .setStatus("Test");
 
 
-        reqClient.post("/api/slb/add", String.format(Slb.JSON, slb1));
-        reqClient.post("/api/slb/add", String.format(Slb.JSON, slb2));
+        reqClient.post("/api/slb/new", String.format(Slb.JSON, slb1));
+        reqClient.post("/api/slb/new", String.format(Slb.JSON, slb2));
 
 
         //assert slb1 slb2
@@ -161,24 +161,24 @@ public class IntegrationTest {
 
         Assert.assertEquals(true, suc1 && suc2);
 
-        reqClient.markPass("/api/slb/add");
+        reqClient.markPass("/api/slb/new");
         reqClient.markPass("/api/slb");
 
 
-        String slb1_res = reqClient.getstr("/api/slb/get/" + slb1_name);
+        String slb1_res = reqClient.getstr("/api/slb?slbName=" + slb1_name);
         Slb slb1_res_obj = DefaultJsonParser.parse(Slb.class, slb1_res);
 
         ModelAssert.assertSlbEquals(slb1, slb1_res_obj);
 
-        String slb2_res = reqClient.getstr("/api/slb/get/" + slb2_name);
+        String slb2_res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
         Slb slb2_res_obj = DefaultJsonParser.parse(Slb.class, slb2_res);
 
         ModelAssert.assertSlbEquals(slb2, slb2_res_obj);
 
-        reqClient.markPass("/api/slb/get/"+ slb1_name);
-        reqClient.markPass("/api/slb/get/"+ slb2_name);
+        reqClient.markPass("/api/slb");
+        reqClient.markPass("/api/slb");
         //activate test slbs
-        reqClient.getstr("/api/conf/activateByName?slbName=__Test_slb1&slbName=__Test_slb2");
+        reqClient.getstr("/api/activate/slb?slbName=__Test_slb1&slbName=__Test_slb2");
 
         List<Group> groups = new ArrayList<>();
         for (int i = 0 ; i < 10 ; i++ )
@@ -189,55 +189,53 @@ public class IntegrationTest {
                 .addGroupSlb(new GroupSlb().addVip(new Vip().setIp(hostip)).setSlbId(i % 3 == 0 ? slb2_res_obj.getId() : slb1_res_obj.getId())
                         .setSlbName(i % 3 == 0 ? slb2_res_obj.getName() : slb1_res_obj.getName()).setPath("/app" + i).setVirtualServer(i % 2 == 0 ? v1 : v2).setRewrite(i % 2 == 0 ? null : "/app /app0?sleep=1&size=1" + i)
                         .setPriority(i)).addGroupServer(i % 2 == 0 ?groupServer1:groupServer2);
-            reqClient.post("/api/group/add", String.format(Group.JSON, group));
+            reqClient.post("/api/group/new", String.format(Group.JSON, group));
             groups.add(group);
         }
-        String apps = reqClient.getstr("/api/group");
+        String apps = reqClient.getstr("/api/groups");
         boolean appsuc = apps.contains("\"__Test_app1\"") && apps.contains("\"__Test_app2\"") && apps.contains("\"__Test_app3\"")
                 && apps.contains("\"__Test_app4\"") && apps.contains("\"__Test_app5\"") && apps.contains("\"__Test_app6\"")
                 && apps.contains("\"__Test_app7\"") && apps.contains("\"__Test_app8\"") && apps.contains("\"__Test_app9\"")
                 && apps.contains("\"__Test_app0\"");
 
         Assert.assertEquals(true,appsuc);
-        reqClient.markPass("/api/group/add");
+        reqClient.markPass("/api/group/new");
         reqClient.markPass("/api/group");
 
 
         Group groupres = null;
         String groupstr = null;
 
-        groupstr = reqClient.getstr("/api/group/get/__Test_app1");
+        groupstr = reqClient.getstr("/api/group?groupName=__Test_app1");
         groupres = DefaultJsonParser.parse(Group.class, groupstr);
         ModelAssert.assertGroupEquals(groups.get(1), groupres);
 
-        groupstr = reqClient.getstr("/api/group/get/__Test_app2");
+        groupstr = reqClient.getstr("/api/group?groupName=__Test_app2");
         groupres = DefaultJsonParser.parse(Group.class, groupstr);
         ModelAssert.assertGroupEquals(groups.get(2), groupres);
 
-        groupstr = reqClient.getstr("/api/group/get/__Test_app3");
+        groupstr = reqClient.getstr("/api/group?groupName=__Test_app3");
         groupres = DefaultJsonParser.parse(Group.class, groupstr);
         ModelAssert.assertGroupEquals(groups.get(3), groupres);
-        reqClient.markPass("/api/app/get/__Test_app1");
-        reqClient.markPass("/api/app/get/__Test_app2");
-        reqClient.markPass("/api/app/get/__Test_app3");
+        reqClient.markPass("/api/group");
 
 
         integrationTest_update();
 
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app1");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app2");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app3");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app4");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app5");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app6");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app7");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app8");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app9");
-        reqClient.getstr("/api/conf/activateByName?groupName=__Test_app0");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app1");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app2");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app3");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app4");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app5");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app6");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app7");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app8");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app9");
+        reqClient.getstr("/api/activate/group?groupName=__Test_app0");
 
 
         for (int i = 0; i < 10; i++) {
-            String groupstatus = reqClient.getstr("/api/status/groupName/__Test_app" + i);
+            String groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app" + i);
             GroupStatusList groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, groupstatus);
 
             for (GroupStatus as : groupStatusList.getGroupStatuses()) {
@@ -251,15 +249,15 @@ public class IntegrationTest {
                 }
             }
 
-            reqClient.markPass("/api/status/groupName/__Test_app"+i);
+            reqClient.markPass("/api/status/group");
         }
 
-        reqClient.markPass("/api/conf/activate");
+        reqClient.markPass("/api/activate");
 
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_1);
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_0);
 
-        String slbstatus = reqClient.getstr("/api/status/slbName/" + slb1_name);
+        String slbstatus = reqClient.getstr("/api/status/slb?slbName=" + slb1_name);
 
         GroupStatusList groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, slbstatus);
 
@@ -271,7 +269,7 @@ public class IntegrationTest {
             }
         }
 
-        slbstatus = reqClient.getstr("/api/status/slbName/" + slb2_name);
+        slbstatus = reqClient.getstr("/api/status/slb?slbName=" + slb2_name);
 
         groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, slbstatus);
 
@@ -283,14 +281,13 @@ public class IntegrationTest {
             }
         }
 
-        reqClient.markPass("/api/status/slbName/"+slb1_name);
-        reqClient.markPass("/api/status/slbName/"+slb2_name);
+        reqClient.markPass("/api/status/slb");
         reqClient.markPass("/api/op/downServer");
         reqClient.getstr("/api/op/upServer?ip=" + slb1_server_0);
         reqClient.getstr("/api/op/upServer?ip=" + slb1_server_1);
 
 
-        slbstatus = reqClient.getstr("/api/status/slbName/" + slb2_name);
+        slbstatus = reqClient.getstr("/api/status/slb?slbName=" + slb2_name);
 
         groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, slbstatus);
 
@@ -302,7 +299,7 @@ public class IntegrationTest {
             }
         }
 
-        slbstatus = reqClient.getstr("/api/status/slbName/" + slb1_name);
+        slbstatus = reqClient.getstr("/api/status/slb?slbName=" + slb1_name);
 
         groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, slbstatus);
 
@@ -317,9 +314,9 @@ public class IntegrationTest {
         reqClient.markPass("/api/op/upServer");
 
 
-        reqClient.getstr("/api/op/downMemberByName?ip=" + slb1_server_1 + "&groupName=__Test_app3");
+        reqClient.getstr("/api/op/downMember?ip=" + slb1_server_1 + "&groupName=__Test_app3");
 
-        String groupstatus = reqClient.getstr("/api/status/groupName/__Test_app3");
+        String groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app3");
 
         groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, groupstatus);
 
@@ -332,14 +329,14 @@ public class IntegrationTest {
         }
 
 
-        reqClient.markPass("/api/op/downMemberByName");
-        reqClient.markPass("/api/status/groupName/__Test_app3");
+        reqClient.markPass("/api/op/downMember");
+        reqClient.markPass("/api/status/group");
 
 
-        reqClient.getstr("/api/op/downMemberByName?ip=" + slb1_server_1 + "&groupName=__Test_app3");
+        reqClient.getstr("/api/op/upMember?ip=" + slb1_server_1 + "&groupName=__Test_app3");
 
 
-        groupstatus = reqClient.getstr("/api/status/groupName/__Test_app3");
+        groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app3");
 
         groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, groupstatus);
 

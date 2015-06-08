@@ -32,7 +32,7 @@ public abstract class AbstractAPITest extends AbstractSpringTest {
         S.setPropertyDefaultValue("server.www.base-dir", new File("").getAbsolutePath() + "/src/main/www");
         S.setPropertyDefaultValue("server.temp-dir", new File("").getAbsolutePath() + "/target/temp");
         S.setPropertyDefaultValue("CONF_DIR", new File("").getAbsolutePath() + "/conf/test");
-
+        System.setProperty("activate.writable", "false");
         server = new SlbAdminServer();
         server.start();
 
