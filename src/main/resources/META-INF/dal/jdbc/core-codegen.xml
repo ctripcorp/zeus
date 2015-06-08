@@ -484,7 +484,6 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-lock-key" value-type="String" key-member="lock-key" />
     <primary-key name="PRIMARY" members="lock_key" />
-    <index name="dcl_key" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

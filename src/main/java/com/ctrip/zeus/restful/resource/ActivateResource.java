@@ -56,29 +56,71 @@ public class ActivateResource {
 
 
 
-    @GET
-    @Path("/activateByName")
-    @Authorize(name="activate")
-    public Response activateByName(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("groupName") List<String> groupNames)throws Exception{
-        List<Long> slbIds = new ArrayList<>();
-        List<Long> groupIds = new ArrayList<>();
-        for (String slbName : slbNames)
-        {
-            slbIds.add(slbRepository.get(slbName).getId());
-        }
-        for (String groupName : groupNames)
-        {
-            groupIds.add(groupRepository.get(groupName).getId());
-        }
+//    @GET
+//    @Path("/activateByName")
+//    @Authorize(name="activate")
+//    public Response activateByName(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("groupName") List<String> groupNames)throws Exception{
+//        List<Long> slbIds = new ArrayList<>();
+//        List<Long> groupIds = new ArrayList<>();
+//        for (String slbName : slbNames)
+//        {
+//            slbIds.add(slbRepository.get(slbName).getId());
+//        }
+//        for (String groupName : groupNames)
+//        {
+//            groupIds.add(groupRepository.get(groupName).getId());
+//        }
+//
+//        return activateAll(slbIds,groupIds,hh);
+//    }
+//
+//    @GET
+//    @Path("/activate")
+//    @Authorize(name="activate")
+//    public Response activateById(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("groupId") List<Long> groupIds)throws Exception{
+//        return activateAll(slbIds,groupIds,hh);
+//    }
 
-        return activateAll(slbIds,groupIds,hh);
+    @GET
+    @Path("/activate/slb")
+    @Authorize(name="activate")
+    public Response activateSlb(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("slbName") List<String> slbNames)throws Exception{
+        List<Long> _groupIds = new ArrayList<>();
+        List<Long> _slbIds = new ArrayList<>();
+
+        if ( slbIds!=null && !slbIds.isEmpty() )
+        {
+            _slbIds.addAll(slbIds);
+        }
+        if ( slbNames!=null && !slbNames.isEmpty() )
+        {
+            for (String slbName : slbNames)
+            {
+                _slbIds.add(slbRepository.get(slbName).getId());
+            }
+        }
+        return activateAll(_slbIds,_groupIds,hh);
     }
 
     @GET
-    @Path("/activate")
+    @Path("/activate/group")
     @Authorize(name="activate")
-    public Response activateById(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("groupId") List<Long> groupIds)throws Exception{
-        return activateAll(slbIds,groupIds,hh);
+    public Response activateGroup(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("groupId") List<Long> groupIds,  @QueryParam("groupName") List<String> groupNames)throws Exception{
+        List<Long> _groupIds = new ArrayList<>();
+        List<Long> _slbIds = new ArrayList<>();
+
+        if ( groupIds!=null && !groupIds.isEmpty() )
+        {
+            _groupIds.addAll(groupIds);
+        }
+        if ( groupNames!=null && !groupNames.isEmpty() )
+        {
+            for (String groupName : groupNames)
+            {
+                _groupIds.add(groupRepository.get(groupName).getId());
+            }
+        }
+        return activateAll(_slbIds,_groupIds,hh);
     }
 
 

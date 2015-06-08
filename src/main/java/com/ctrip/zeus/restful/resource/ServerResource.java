@@ -61,17 +61,13 @@ public class ServerResource {
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
 
 
-
     @GET
     @Path("/upServer")
     @Authorize(name="upDownServer")
     public Response upServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-
         //update status
         statusService.upServer(ip);
-
         return serverOps(hh,ip);
-
     }
 
     @GET
@@ -133,41 +129,43 @@ public class ServerResource {
     }
 
     @GET
-    @Path("/upMemberByName")
-    @Authorize(name="upDownMember")
-    public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
-    {
-        Long groupId = groupRepository.get(groupName).getId();
-        statusService.upMember(groupId,ip);
-        return memberOps(hh, groupId, ip);
-    }
-
-    @GET
-    @Path("/downMemberByName")
-    @Authorize(name="upDownMember")
-    public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
-    {
-        Long groupId = groupRepository.get(groupName).getId();
-        statusService.downMember(groupId, ip);
-        return memberOps(hh, groupId, ip);
-    }
-
-    @GET
     @Path("/upMember")
     @Authorize(name="upDownMember")
-    public Response upMemberByGroupId(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("ip") String ip)throws Exception
+    public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
     {
-        statusService.upMember(groupId,ip);
-        return memberOps(hh, groupId, ip);
+        Long _groupId = null;
+        if (groupId != null)
+        {
+            _groupId = groupId;
+        }else if (groupName != null){
+            _groupId = groupRepository.get(groupName).getId();
+        }
+        if (null == _groupId)
+        {
+            throw new Exception("Group Id or Name not found!");
+        }
+        statusService.upMember(_groupId,ip);
+        return memberOps(hh, _groupId, ip);
     }
 
     @GET
     @Path("/downMember")
     @Authorize(name="upDownMember")
-    public Response downMemberByGroupId(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("ip") String ip)throws Exception
+    public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
     {
-        statusService.downMember(groupId, ip);
-        return memberOps(hh, groupId, ip);
+        Long _groupId = null;
+        if (groupId != null)
+        {
+            _groupId = groupId;
+        }else if (groupName != null){
+            _groupId = groupRepository.get(groupName).getId();
+        }
+        if (null == _groupId)
+        {
+            throw new Exception("Group Id or Name not found!");
+        }
+        statusService.downMember(_groupId, ip);
+        return memberOps(hh, _groupId, ip);
     }
 
 
