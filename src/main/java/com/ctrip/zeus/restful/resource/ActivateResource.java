@@ -32,7 +32,7 @@ import java.util.Set;
  */
 
 @Component
-@Path("/conf")
+@Path("/activate")
 public class ActivateResource {
 
     @Resource
@@ -54,35 +54,8 @@ public class ActivateResource {
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
 
-
-
-//    @GET
-//    @Path("/activateByName")
-//    @Authorize(name="activate")
-//    public Response activateByName(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbName") List<String> slbNames,  @QueryParam("groupName") List<String> groupNames)throws Exception{
-//        List<Long> slbIds = new ArrayList<>();
-//        List<Long> groupIds = new ArrayList<>();
-//        for (String slbName : slbNames)
-//        {
-//            slbIds.add(slbRepository.get(slbName).getId());
-//        }
-//        for (String groupName : groupNames)
-//        {
-//            groupIds.add(groupRepository.get(groupName).getId());
-//        }
-//
-//        return activateAll(slbIds,groupIds,hh);
-//    }
-//
-//    @GET
-//    @Path("/activate")
-//    @Authorize(name="activate")
-//    public Response activateById(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("groupId") List<Long> groupIds)throws Exception{
-//        return activateAll(slbIds,groupIds,hh);
-//    }
-
     @GET
-    @Path("/activate/slb")
+    @Path("/slb")
     @Authorize(name="activate")
     public Response activateSlb(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("slbName") List<String> slbNames)throws Exception{
         List<Long> _groupIds = new ArrayList<>();
@@ -103,7 +76,7 @@ public class ActivateResource {
     }
 
     @GET
-    @Path("/activate/group")
+    @Path("/group")
     @Authorize(name="activate")
     public Response activateGroup(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("groupId") List<Long> groupIds,  @QueryParam("groupName") List<String> groupNames)throws Exception{
         List<Long> _groupIds = new ArrayList<>();
