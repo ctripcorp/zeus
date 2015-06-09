@@ -147,8 +147,6 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             if (slb != null )
             {
                 currentSlbId = slb.getId();
-            }else {
-                currentSlbId = 0 ;
             }
         }
         return slbId.equals(currentSlbId);
