@@ -2,7 +2,11 @@ package com.ctrip.zeus.client;
 
 import com.ctrip.zeus.auth.impl.IPAuthenticationFilter;
 import com.ctrip.zeus.auth.impl.TokenManager;
+import com.netflix.config.DynamicBooleanProperty;
+import com.netflix.config.DynamicIntProperty;
+import com.netflix.config.DynamicPropertyFactory;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.uri.UriComponent;
 
 import javax.ws.rs.client.Client;
@@ -20,9 +24,14 @@ public abstract class AbstractRestClient {
 
     private WebTarget webTarget;
 
+    private static DynamicIntProperty connectTimeout = DynamicPropertyFactory.getInstance().getIntProperty("client.connect.timeout", 1000);
+    private static DynamicIntProperty readTimeout = DynamicPropertyFactory.getInstance().getIntProperty("client.read.timeout", 30000);
+
     protected AbstractRestClient(String url) {
         ClientConfig config = new ClientConfig();
         Client client = ClientBuilder.newClient(config);
+        client.property(ClientProperties.CONNECT_TIMEOUT, connectTimeout.get());
+        client.property(ClientProperties.READ_TIMEOUT,readTimeout.get());
         webTarget = client.target(url);
     }
 

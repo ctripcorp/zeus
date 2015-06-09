@@ -41,6 +41,9 @@ public class NginxServiceImpl implements NginxService {
     @Resource
     private NginxServerDao nginxServerDao;
 
+
+    private Logger logger = LoggerFactory.getLogger(NginxServiceImpl.class);
+
     @Override
     public NginxResponse writeToDisk() throws Exception {
         String ip = S.getIp();
@@ -95,6 +98,7 @@ public class NginxServiceImpl implements NginxService {
 
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
+            logger.info("[ writeAllToDisk ]: start write to server : " + slbServer.getIp() );
             if (ip.equals(slbServer.getIp())) {
                 result.add(writeToDisk());
                 continue;
@@ -102,6 +106,8 @@ public class NginxServiceImpl implements NginxService {
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             NginxResponse response = nginxClient.write();
             result.add(response);
+
+            logger.info("[ writeAllToDisk ]: write to server finished : " + slbServer.getIp() );
         }
 
         if (result.size()==0){
