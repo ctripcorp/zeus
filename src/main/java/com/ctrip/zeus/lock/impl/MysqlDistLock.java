@@ -19,7 +19,7 @@ public class MysqlDistLock implements DistLock {
     private static final long SLEEP_INTERVAL = 500L;
 
     private final String key;
-    private AtomicBoolean state;
+    private AtomicBoolean state = new AtomicBoolean(false);
 
     private DistLockDao distLockDao;// = DbLockFactory.getDao();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
