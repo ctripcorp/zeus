@@ -74,7 +74,7 @@ public class StatusResource {
     public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("groupName") String groupName, @QueryParam("slbId") Long slbId, @QueryParam("slbName") String slbName) throws Exception {
         Long _groupId = null;
         Long _slbId = null;
-        List<GroupStatus> statusList = new ArrayList<>();
+        GroupStatus statusResult = null;
 
         if (groupId != null) {
             _groupId = groupId;
@@ -90,16 +90,18 @@ public class StatusResource {
             _slbId = slbRepository.get(slbName).getId();
         }
         if (null == _slbId) {
-            statusList = groupStatusService.getGroupStatus(_groupId);
+            List<GroupStatus> statusList = groupStatusService.getGroupStatus(_groupId);
+            if (statusList != null && statusList.size() > 0)
+            {
+                statusResult = statusList.get(0);
+            }else{
+                throw new Exception("SlbId param is needed!");
+            }
         } else {
-            GroupStatus status = groupStatusService.getGroupStatus(_groupId, _slbId);
-            statusList.add(status);
+            statusResult = groupStatusService.getGroupStatus(_groupId, _slbId);
         }
-        GroupStatusList result = new GroupStatusList();
-        for (GroupStatus groupStatus : statusList) {
-            result.addGroupStatus(groupStatus);
-        }
-        return responseHandler.handle(result, hh.getMediaType());
+        
+        return responseHandler.handle(statusResult, hh.getMediaType());
     }
 
     @GET
