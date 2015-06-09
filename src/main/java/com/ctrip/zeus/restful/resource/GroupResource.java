@@ -81,9 +81,6 @@ public class GroupResource {
         if (group == null && appId != null) {
             group = groupRepository.getByAppId(appId);
         }
-        if (group == null) {
-            throw  new Exception("Group cannot be found.");
-        }
         return responseHandler.handle(group, hh.getMediaType());
     }
 

@@ -63,9 +63,6 @@ public class SlbResource {
         if (slb == null && slbName != null) {
             slb = slbRepository.get(slbName);
         }
-        if (slb == null) {
-            throw new Exception("Slb cannot be found.");
-        }
         return responseHandler.handle(slb, hh.getMediaType());
     }
     
