@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Created by zhoumy on 2015/4/9.
  */
@@ -17,14 +19,14 @@ public class MysqlDistLock implements DistLock {
     private static final long SLEEP_INTERVAL = 500L;
 
     private final String key;
-    private volatile boolean state;
+    private AtomicBoolean state;
 
     private DistLockDao distLockDao;// = DbLockFactory.getDao();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public MysqlDistLock(String key, DistLockDao distLockDao) {
         this.key = key;
-        this.state = false;
+        this.state.set(false);
         this.distLockDao = distLockDao;
     }
 
@@ -139,10 +141,6 @@ public class MysqlDistLock implements DistLock {
     }
 
     private final boolean compareAndSetState(boolean expected, boolean updated) {
-        if (state == expected) {
-            state = updated;
-            return true;
-        }
-        return false;
+        return state.compareAndSet(expected, updated);
     }
 }
