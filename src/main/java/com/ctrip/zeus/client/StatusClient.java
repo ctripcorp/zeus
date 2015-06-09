@@ -7,6 +7,7 @@ import jersey.repackaged.com.google.common.cache.CacheBuilder;
 import jersey.repackaged.com.google.common.cache.CacheLoader;
 import jersey.repackaged.com.google.common.cache.LoadingCache;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -42,10 +43,8 @@ public class StatusClient extends AbstractRestClient {
 
     public GroupStatus getGroupStatus(Long groupId , Long slbId)throws Exception
     {
-//        String res = getTarget().path("/api/status/group").queryParam("groupId",groupId).queryParam("slbId", slbId)
-//                .request().get(String.class);
-        String responseStr = getTarget().path("/api/status/group").queryParam("groupId",groupId).queryParam("slbId", slbId)
-                .request().headers(getDefaultHeaders()).get(String.class);
+        String responseStr = getTarget().path("/api/status/group").queryParam("groupId", groupId).queryParam("slbId", slbId)
+                .request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
         return DefaultJsonParser.parse(GroupStatus.class, responseStr);
     }
 }

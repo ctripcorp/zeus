@@ -36,32 +36,32 @@ public class IntegrationTest {
 
     @Before
     public void before() throws IOException {
-        Group groupres = null;
-        String groupstr = null;
-
-        for (int i = 0; i < 10; i++) {
-            groupstr = reqClient.getstr("/api/group?groupName=__Test_app"+i);
-            groupres = DefaultJsonParser.parse(Group.class, groupstr);
-            if (groupres!=null)
-            {
-                reqClient.getstr("/api/group/delete?groupId=" + groupres.getId());
-            }
-        }
-
-
-        String slb_res = reqClient.getstr("/api/slb?slbName=" + slb1_name);
-        Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
-        if (slb_res_obj!=null)
-        {
-            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
-        }
-
-        slb_res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
-        slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
-        if (slb_res_obj!=null)
-        {
-            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
-        }
+//        Group groupres = null;
+//        String groupstr = null;
+//
+//        for (int i = 0; i < 10; i++) {
+//            groupstr = reqClient.getstr("/api/group?groupName=__Test_app"+i);
+//            groupres = DefaultJsonParser.parse(Group.class, groupstr);
+//            if (groupres!=null)
+//            {
+//                reqClient.getstr("/api/group/delete?groupId=" + groupres.getId());
+//            }
+//        }
+//
+//
+//        String slb_res = reqClient.getstr("/api/slb?slbName=" + slb1_name);
+//        Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+//        if (slb_res_obj!=null)
+//        {
+//            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+//        }
+//
+//        slb_res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
+//        slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+//        if (slb_res_obj!=null)
+//        {
+//            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+//        }
     }
 
     @After
@@ -156,8 +156,8 @@ public class IntegrationTest {
 
 
         //assert slb1 slb2
-        boolean suc1 = reqClient.getstr("/api/slb").contains(slb1_name);
-        boolean suc2 = reqClient.getstr("/api/slb").contains(slb2_name);
+        boolean suc1 = reqClient.getstr("/api/slbs").contains(slb1_name);
+        boolean suc2 = reqClient.getstr("/api/slbs").contains(slb2_name);
 
         Assert.assertEquals(true, suc1 && suc2);
 
@@ -358,20 +358,20 @@ public class IntegrationTest {
         Response res;
 
         // test update slb1(__Test_slb1)
-        orig = c.getstr("/api/slb/get/" + slb1_name);
+        orig = c.getstr("/api/slb?slbName=" + slb1_name);
         Slb origSlb = DefaultJsonParser.parse(Slb.class, orig);
         origSlb.setNginxWorkerProcesses(origSlb.getNginxWorkerProcesses() + 127);
         res = c.post("/api/slb/update", GenericSerializer.writeJson(origSlb));
         Assert.assertEquals(STATUS_OK, res.getStatus());
-        upd = c.getstr("/api/slb/get/" + slb1_name);
+        upd = c.getstr("/api/slb?slbName=" + slb1_name);
         Slb updSlb = DefaultJsonParser.parse(Slb.class, upd);
         ModelAssert.assertSlbEquals(origSlb, updSlb);
 
-        c.markPass("/api/slb/get/" + slb1_name);
+        c.markPass("/api/slb");
         c.markPass("/api/slb/update");
 
         // test update app1(__Test_app1)
-        orig = c.getstr("/api/group/get/" + app1_name);
+        orig = c.getstr("/api/group?groupName=" + app1_name);
         Group origApp = DefaultJsonParser.parse(Group.class, orig);
         Group changedApp = new Group().setId(origApp.getId()).setName(origApp.getName()).setAppId(origApp.getAppId())
                 .setHealthCheck(origApp.getHealthCheck())
@@ -381,11 +381,11 @@ public class IntegrationTest {
                 .addGroupSlb(origApp.getGroupSlbs().get(0));
         res = c.post("/api/group/update", GenericSerializer.writeJson(changedApp));
         Assert.assertEquals(STATUS_OK, res.getStatus());
-        upd = c.getstr("/api/group/get/" + app1_name);
+        upd = c.getstr("/api/group?groupName=" + app1_name);
         Group updApp = DefaultJsonParser.parse(Group.class, upd);
         ModelAssert.assertGroupEquals(changedApp, updApp);
 
-        c.markPass("/api/group/get/" + app1_name);
+        c.markPass("/api/group");
         c.markPass("/api/group/update");
     }
 }
