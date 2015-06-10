@@ -9,6 +9,7 @@ import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Service;
@@ -69,17 +70,14 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         }
         return result;
     }
-
     @Override
-    public GroupStatus getGroupStatus(Long groupId, Long slbId) throws Exception {
-        if (!isCurrentSlb(slbId))
-        {
-            Slb slb = slbRepository.getById(slbId);
-            StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
-            return client.getGroupStatus(groupId,slbId);
-        }
+    public GroupStatus getLocalGroupStatus(Long groupId , Long slbId) throws Exception
+    {
         Slb slb = slbRepository.getById(slbId);
         Group group = groupRepository.getById(groupId);
+        AssertUtils.isNull(group,"group Id not found!");
+        AssertUtils.isNull(slb,"slb Id not found!");
+
         GroupStatus status = new GroupStatus();
         status.setGroupId(groupId);
         status.setSlbId(slbId);
@@ -93,15 +91,16 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         }
         return status;
     }
+    @Override
+    public GroupStatus getGroupStatus(Long groupId, Long slbId) throws Exception {
+        Slb slb = slbRepository.getById(slbId);
+        AssertUtils.isNull(slb,"slbId not found!");
+        StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
+        return client.getGroupStatus(groupId,slbId);
+    }
 
     @Override
     public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port) throws Exception {
-        if (!isCurrentSlb(slbId))
-        {
-            Slb slb = slbRepository.getById(slbId);
-            StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
-            return client.getGroupServerStatus(groupId, slbId, ip + ":" + port);
-        }
 
         GroupServerStatus groupServerStatus = new GroupServerStatus();
         groupServerStatus.setIp(ip);

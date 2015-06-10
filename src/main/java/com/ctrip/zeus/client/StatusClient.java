@@ -43,7 +43,7 @@ public class StatusClient extends AbstractRestClient {
 
     public GroupStatus getGroupStatus(Long groupId , Long slbId)throws Exception
     {
-        String responseStr = getTarget().path("/api/status/group").queryParam("groupId", groupId).queryParam("slbId", slbId)
+        String responseStr = getTarget().path("/api/status/group/"+groupId+"/slb/"+slbId)
                 .request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
         return DefaultJsonParser.parse(GroupStatus.class, responseStr);
     }

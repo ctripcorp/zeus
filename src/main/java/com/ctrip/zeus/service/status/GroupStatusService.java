@@ -30,5 +30,7 @@ public interface GroupStatusService {
 
      GroupStatus getGroupStatus(Long groupId,Long slbId) throws Exception;
 
+     GroupStatus getLocalGroupStatus(Long groupId , Long slbId) throws Exception;
+
      GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port) throws Exception;
 }

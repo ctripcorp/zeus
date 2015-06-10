@@ -142,6 +142,23 @@ public class StatusResource {
         }
     }
 
+
+    @GET
+    @Path("/group/{groupId:[0-9]+}/slb/{slbId:[0-9]+}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "getGroupStatus", uriGroupHint = -1)
+    public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("groupId") Long groupId, @PathParam("slbId") Long slbId) throws Exception {
+
+        GroupStatus groupStatus = groupStatusService.getLocalGroupStatus(groupId, slbId);
+
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(GroupServerStatus.XML, groupStatus)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(GroupServerStatus.JSON, groupStatus)).type(MediaType.APPLICATION_JSON).build();
+        }
+    }
+
+
     @GET
     @Path("/traffic")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
