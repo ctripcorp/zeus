@@ -43,7 +43,7 @@ public class GroupSyncImpl implements GroupSync {
     @Override
     public GroupDo add(Group group) throws DalException, ValidationException {
         validate(group);
-        GroupDo d= C.toGroupDo(0L, group);
+        GroupDo d = C.toGroupDo(0L, group);
         d.setCreatedTime(new Date());
         d.setVersion(1);
 
@@ -61,7 +61,7 @@ public class GroupSyncImpl implements GroupSync {
         if (check.getVersion() > group.getVersion())
             throw new ValidationException("Newer Group version is detected.");
 
-        GroupDo d= C.toGroupDo(group.getId(), group);
+        GroupDo d = C.toGroupDo(group.getId(), group);
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
 
         GroupDo updated = groupDao.findByName(group.getName(), GroupEntity.READSET_FULL);
@@ -83,15 +83,24 @@ public class GroupSyncImpl implements GroupSync {
         if (group == null) {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
-        if (!validateSlb(group))
-            throw new ValidationException("Group with invalid slb data cannot be persisted.");
+        if (!validateVirtualServer(group))
+            throw new ValidationException("Virtual server id must exist.");
     }
 
-    private boolean validateSlb(Group group) throws DalException {
+    private SlbVirtualServerDo findVirtualServer(GroupSlb gs) throws DalException {
+        SlbVirtualServerDo d = null;
+        if (gs.getVirtualServer().getId() != null)
+            d = slbVirtualServerDao.findByPK(gs.getVirtualServer().getId(), SlbVirtualServerEntity.READSET_FULL);
+        if (d == null)
+            d = slbVirtualServerDao.findBySlbAndName(gs.getSlbId(), gs.getVirtualServer().getName(), SlbVirtualServerEntity.READSET_FULL);
+        return d;
+    }
+
+    private boolean validateVirtualServer(Group group) throws DalException {
         if (group.getGroupSlbs().size() == 0)
             return false;
         for (GroupSlb gs : group.getGroupSlbs()) {
-            if (slbDao.findById(gs.getSlbId(), SlbEntity.READSET_FULL) == null)
+            if (findVirtualServer(gs) == null)
                 return false;
         }
         return true;
@@ -115,7 +124,7 @@ public class GroupSyncImpl implements GroupSync {
 
         //Update existed if necessary, and insert new ones.
         for (GroupSlb e : groupSlbs) {
-            Long vsId = slbVirtualServerDao.findBySlbAndName(e.getSlbId(), e.getVirtualServer().getName(), SlbVirtualServerEntity.READSET_FULL).getId();
+            Long vsId = findVirtualServer(e).getId();
             GroupSlbDo old = oldMap.get(groupId + "" + vsId);
             if (old != null) {
                 oldList.remove(old);

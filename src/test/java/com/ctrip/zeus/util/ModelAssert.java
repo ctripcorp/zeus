@@ -26,6 +26,8 @@ public class ModelAssert {
     public static void assertGroupSlbEquals(GroupSlb expected, GroupSlb actual) {
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected.getSlbName(), actual.getSlbName());
+        Assert.assertEquals(expected.getSlbId(), actual.getSlbId());
+        Assert.assertEquals(expected.getVirtualServer().getId(), actual.getVirtualServer().getId());
         Assert.assertEquals(expected.getPath(), actual.getPath());
         if (expected.getRewrite() != null) {
             Assert.assertEquals(expected.getRewrite(), actual.getRewrite());
@@ -36,6 +38,7 @@ public class ModelAssert {
 
     public static void assertVirtualServerEquals(VirtualServer expected, VirtualServer actual) {
         Assert.assertNotNull(actual);
+        Assert.assertEquals(expected.getId(), actual.getId());
         Assert.assertEquals(expected.getName(), actual.getName());
         Assert.assertEquals(expected.getSsl(), actual.getSsl());
         Assert.assertEquals(expected.getDomains().size(), actual.getDomains().size());

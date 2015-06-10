@@ -70,7 +70,7 @@ public class SlbSyncImpl implements SlbSync {
         SlbDo d = slbDao.findById(slbId, SlbEntity.READSET_FULL);
         if (d == null)
             return 0;
-        if(removable(d)) {
+        if (removable(d)) {
             slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(slbId));
             slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(slbId));
             for (SlbVirtualServerDo svsd : slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL)) {
@@ -176,7 +176,7 @@ public class SlbSyncImpl implements SlbSync {
     private void syncVirtualServers(Long slbId, List<VirtualServer> virtualServers) throws DalException {
         if (virtualServers == null || virtualServers.size() == 0)
             return;
-        List<SlbVirtualServerDo> oldList = slbVirtualServerDao.findAllBySlb(slbId,SlbVirtualServerEntity.READSET_FULL);
+        List<SlbVirtualServerDo> oldList = slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL);
         Map<String, SlbVirtualServerDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbVirtualServerDo, String>() {
             @Override
             public String apply(SlbVirtualServerDo input) {
@@ -190,7 +190,7 @@ public class SlbSyncImpl implements SlbSync {
             if (old != null) {
                 oldList.remove(old);
             }
-            SlbVirtualServerDo d = C.toSlbVirtualServerDo(0L, e).setSlbId(slbId).setCreatedTime(new Date());
+            SlbVirtualServerDo d = C.toSlbVirtualServerDo(e.getId() == null ? 0L : e.getId(), e).setSlbId(slbId).setCreatedTime(new Date());
             slbVirtualServerDao.insert(d);
 
             //Domain
