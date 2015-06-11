@@ -60,7 +60,7 @@ public class LocationConf {
     private static void addRewriteCommand(StringBuilder sb, Slb slb , VirtualServer vs , Group group) throws Exception {
         if (sb != null){
             String rewrite = getRewrite(slb,vs,group);
-            if (rewrite==null){
+            if (rewrite==null || rewrite.isEmpty()){
                 return;
             }
             String[] rewrites = rewrite.split(";");
