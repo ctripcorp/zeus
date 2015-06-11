@@ -3,13 +3,13 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
-import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -28,13 +28,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by fanqq on 2015/3/20.
+ * Created by fanqq on 2015/6/11.
  */
 
 @Component
-@Path("/activate")
-public class ActivateResource {
-
+@Path("/deactivate")
+public class DeactivateResource {
     @Resource
     private ActivateService activateService;
     @Resource
@@ -50,35 +49,13 @@ public class ActivateResource {
     @Resource
     private GroupRepository groupRepository;
 
-
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
 
     @GET
-    @Path("/slb")
-    @Authorize(name="activate")
-    public Response activateSlb(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("slbName") List<String> slbNames)throws Exception{
-        List<Long> _groupIds = new ArrayList<>();
-        List<Long> _slbIds = new ArrayList<>();
-
-        if ( slbIds!=null && !slbIds.isEmpty() )
-        {
-            _slbIds.addAll(slbIds);
-        }
-        if ( slbNames!=null && !slbNames.isEmpty() )
-        {
-            for (String slbName : slbNames)
-            {
-                _slbIds.add(slbRepository.get(slbName).getId());
-            }
-        }
-        return activateAll(_slbIds,_groupIds,hh);
-    }
-
-    @GET
     @Path("/group")
-    @Authorize(name="activate")
-    public Response activateGroup(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("groupId") List<Long> groupIds,  @QueryParam("groupName") List<String> groupNames)throws Exception{
+    @Authorize(name="deactivate")
+    public Response deactivateGroup(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("groupId") List<Long> groupIds,  @QueryParam("groupName") List<String> groupNames)throws Exception{
         List<Long> _groupIds = new ArrayList<>();
         List<Long> _slbIds = new ArrayList<>();
 
@@ -90,22 +67,22 @@ public class ActivateResource {
         {
             for (String groupName : groupNames)
             {
-                _groupIds.add(groupRepository.get(groupName).getId());
+                Group group = groupRepository.get(groupName);
+                if (group == null)
+                {
+                    continue;
+                }
+                _groupIds.add(group.getId());
             }
         }
-        return activateAll(_slbIds,_groupIds,hh);
-    }
 
-
-    private Response activateAll(List<Long> slbIds,List<Long> groupIds, HttpHeaders hh)throws Exception{
-
-        AssertUtils.arrertNotEquels(0,slbIds.size()+groupIds.size(),"slbIds list and groupIds list are empty!");
-
-        //update active action to conf-slb-active and conf-app-active
-        activateService.activate(slbIds,groupIds);
+        for (Long gid : _groupIds)
+        {
+            activateService.deactiveGroup(gid);
+        }
 
         //find all slbs which need build config
-        Set<Long> slbList = buildInfoService.getAllNeededSlb(slbIds, groupIds);
+        Set<Long> slbList = buildInfoService.getAllNeededSlb(_slbIds, groupIds);
 
         if (slbList.size() > 0)
         {
@@ -138,4 +115,7 @@ public class ActivateResource {
             return Response.status(200).type(hh.getMediaType()).entity("No slb need activate!please check your config").build();
         }
     }
+
+
+
 }

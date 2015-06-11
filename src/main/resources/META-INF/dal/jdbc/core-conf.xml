@@ -25,6 +25,15 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-group-id" type="DELETE">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="conf-slb-active" table="conf_slb_active" alias="csa">

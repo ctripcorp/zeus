@@ -20,7 +20,7 @@ import java.util.List;
  * @author:xingchaowang
  * @date: 3/15/2015.
  */
-@Component("activateConfService")
+@Component("activateService")
 public class ActivateServiceImpl implements ActivateService {
 
     @Resource
@@ -94,5 +94,12 @@ public class ActivateServiceImpl implements ActivateService {
         for (Long groupId : groupIds) {
             activeGroup(groupId);
         }
+    }
+
+    @Override
+    public void deactiveGroup(long groupId) throws Exception
+    {
+        confGroupActiveDao.deleteByGroupId(new ConfGroupActiveDo().setGroupId(groupId));
+        confGroupSlbActiveDao.deleteByGroupId(new ConfGroupSlbActiveDo().setGroupId(groupId));
     }
 }

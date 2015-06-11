@@ -34,4 +34,12 @@ public interface ActivateService extends Repository {
      */
     public void activate(List<Long> slbIds, List<Long> groupIds)throws Exception;
 
+    /**
+     * deactivate data by groupid
+     * @param groupId the Group id
+     * @return
+     * @throws Exception
+     */
+    public void deactiveGroup(long groupId) throws Exception;
+
 }
