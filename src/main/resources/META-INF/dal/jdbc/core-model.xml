@@ -370,7 +370,7 @@
                         <FIELD name='status'/> = ${status},
                         version = version + 1,
                         <FIELD name="data-change-last-time"/> = NOW()
-                    WHERE <FIELD name='name'/> = ${name}
+                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>
