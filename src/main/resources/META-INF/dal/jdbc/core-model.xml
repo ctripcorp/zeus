@@ -29,7 +29,7 @@
                 </statement>
             </query>
             <query name="delete-by-id" type="DELETE">
-                <param name="name"/>
+                <param name="id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
