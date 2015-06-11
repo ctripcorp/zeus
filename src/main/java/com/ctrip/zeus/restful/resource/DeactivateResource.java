@@ -33,7 +33,7 @@ import java.util.Set;
 
 @Component
 @Path("/deactivate")
-public class DeActivateResource {
+public class DeactivateResource {
     @Resource
     private ActivateService activateService;
     @Resource
