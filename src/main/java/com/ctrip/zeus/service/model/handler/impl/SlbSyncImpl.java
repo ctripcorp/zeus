@@ -177,16 +177,16 @@ public class SlbSyncImpl implements SlbSync {
         if (virtualServers == null || virtualServers.size() == 0)
             return;
         List<SlbVirtualServerDo> oldList = slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL);
-        Map<String, SlbVirtualServerDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbVirtualServerDo, String>() {
+        Map<Long, SlbVirtualServerDo> oldMap = Maps.uniqueIndex(oldList, new Function<SlbVirtualServerDo, Long>() {
             @Override
-            public String apply(SlbVirtualServerDo input) {
-                return input.getName();
+            public Long apply(SlbVirtualServerDo input) {
+                return input.getId();
             }
         });
 
         //Update existed if necessary, and insert new ones.
         for (VirtualServer e : virtualServers) {
-            SlbVirtualServerDo old = oldMap.get(e.getName());
+            SlbVirtualServerDo old = oldMap.get(e.getId());
             if (old != null) {
                 oldList.remove(old);
             }
