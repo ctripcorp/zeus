@@ -14,7 +14,7 @@ public class LocationConf {
     public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
 
-        b.append("location ").append(getPath(slb, vs, group)).append("{\n");
+        b.append("location ").append(getPath(slb, vs, group)).append(" {\n");
         b.append("proxy_set_header Host $host").append(";\n");
 
         b.append("set $upstream ").append(upstreamName).append(";\n");
