@@ -6,17 +6,27 @@ import com.ctrip.zeus.model.entity.HealthCheck;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
+import com.netflix.config.DynamicBooleanProperty;
+import com.netflix.config.DynamicPropertyFactory;
 
 /**
  * @author:xingchaowang
  * @date: 3/8/2015.
  */
 public class HealthCheckConf {
+
+    private static DynamicBooleanProperty disableHealthCheck = DynamicPropertyFactory.getInstance().getBooleanProperty("build.disable.healthCheck", false);
+
+
     public static String generate(Slb slb, VirtualServer vs, Group group) throws Exception {
+        if (disableHealthCheck.get())
+        {
+            return "";
+        }
         HealthCheck h = group.getHealthCheck();
         if (h == null)
         {
-            return null;
+            return "";
         }
         AssertUtils.isNull(h.getIntervals(),"Group HealthCheck Intervals config is null!");
         AssertUtils.isNull(h.getFails(),"Group HealthCheck Fails config is null!");
