@@ -51,9 +51,9 @@ public class HealthCheckConf {
                     .append("check_keepalive_requests 100").append(";\n")
                     .append("check_http_send \"")
                     .append("GET ").append(h.getUri()).append(" HTTP/1.0\\r\\n")
-                    .append(" Connection: keep-alive\\r\\n")
-                    .append(" Host: ").append(vs.getDomains().get(0).getName()).append("\\r\\n")
-                    .append(" UserAgent: SLB HealthCheck ").append("\\r\\n\\r\\n\"").append(";\n")
+                    .append("Connection:keep-alive\\r\\n")
+                    .append("Host:").append(vs.getDomains().get(0).getName().trim()).append("\\r\\n")
+                    .append("UserAgent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
                     .append("check_http_expect_alive http_2xx http_3xx").append(";\n");
         }
 
