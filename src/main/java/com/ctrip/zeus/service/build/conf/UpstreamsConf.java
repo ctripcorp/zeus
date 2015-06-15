@@ -30,7 +30,7 @@ public class UpstreamsConf {
     public static String buildUpstreamName(Slb slb, VirtualServer vs, Group group) throws Exception{
         AssertUtils.isNull(vs.getId(),"virtual server name is null!");
         AssertUtils.isNull(group.getName(),"app name is null!");
-        return "backend_" + vs.getId() + "_" + group.getName();
+        return "backend_" + group.getName();
     }
 
     public static String buildUpstreamConf(Slb slb, VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception {
