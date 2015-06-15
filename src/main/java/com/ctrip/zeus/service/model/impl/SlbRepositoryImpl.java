@@ -86,7 +86,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public void add(Slb slb) throws Exception {
+    public Slb add(Slb slb) throws Exception {
         slbSync.add(slb);
         slb = slbQuery.getById(slb.getId());
         archiveService.archiveSlb(slb);
@@ -98,12 +98,14 @@ public class SlbRepositoryImpl implements SlbRepository {
                     .setVersion(0)
                     .setCreatedTime(new Date()));
         }
+        return slb;
     }
 
     @Override
-    public void update(Slb slb) throws Exception {
+    public Slb update(Slb slb) throws Exception {
         slbSync.update(slb);
-        archiveService.archiveSlb(slbQuery.getById(slb.getId()));
+        Slb d = slbQuery.getById(slb.getId());
+        archiveService.archiveSlb(d);
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
                     .setIp(slbServer.getIp())
@@ -111,12 +113,12 @@ public class SlbRepositoryImpl implements SlbRepository {
                     .setVersion(0)
                     .setCreatedTime(new Date()));
         }
+        return d;
     }
 
     @Override
     public int delete(Long slbId) throws Exception {
         int count = slbSync.delete(slbId);
-        archiveService.deleteSlbArchive(slbId);
         return count;
     }
 

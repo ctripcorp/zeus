@@ -89,8 +89,8 @@ public class GroupResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addGroup")
     public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
-        groupRepository.add(parseGroup(hh.getMediaType(), group));
-        return Response.ok().build();
+        Group g = groupRepository.add(parseGroup(hh.getMediaType(), group));
+        return responseHandler.handle(g, hh.getMediaType());
     }
 
     @POST
@@ -102,11 +102,11 @@ public class GroupResource {
         DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
         try {
             lock.lock();
-            groupRepository.update(g);
+            g = groupRepository.update(g);
         } finally {
             lock.unlock();
         }
-        return Response.ok().build();
+        return responseHandler.handle(g, hh.getMediaType());
     }
 
     @GET

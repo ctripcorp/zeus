@@ -30,9 +30,9 @@ public interface GroupRepository extends Repository {
      * @return the primary key of the group
      * @throws Exception
      */
-    Long add(Group group) throws Exception;
+    Group add(Group group) throws Exception;
 
-    void update(Group group) throws Exception;
+    Group update(Group group) throws Exception;
 
     /**
      * delete the group by its primary key

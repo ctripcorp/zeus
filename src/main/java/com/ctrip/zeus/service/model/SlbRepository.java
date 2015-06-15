@@ -59,9 +59,9 @@ public interface SlbRepository extends Repository {
      */
     List<GroupSlb> listGroupSlbsBySlb(Long slbId) throws Exception;
 
-    void add(Slb slb) throws Exception;
+    Slb add(Slb slb) throws Exception;
 
-    void update(Slb slb) throws Exception;
+    Slb update(Slb slb) throws Exception;
 
     /**
      * delete the slb by its primary id

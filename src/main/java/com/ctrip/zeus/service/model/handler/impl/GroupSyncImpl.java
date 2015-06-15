@@ -34,7 +34,7 @@ public class GroupSyncImpl implements GroupSync {
     @Resource
     private GroupSlbDao groupSlbDao;
     @Resource
-    private SlbDao slbDao;
+    private ConfGroupActiveDao confGroupActiveDao;
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
 
@@ -57,14 +57,14 @@ public class GroupSyncImpl implements GroupSync {
     @Override
     public GroupDo update(Group group) throws DalException, ValidationException {
         validate(group);
-        GroupDo check = groupDao.findByName(group.getName(), GroupEntity.READSET_FULL);
+        GroupDo check = groupDao.findById(group.getId(), GroupEntity.READSET_FULL);
         if (check.getVersion() > group.getVersion())
             throw new ValidationException("Newer Group version is detected.");
 
         GroupDo d = C.toGroupDo(group.getId(), group);
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
 
-        GroupDo updated = groupDao.findByName(group.getName(), GroupEntity.READSET_FULL);
+        GroupDo updated = groupDao.findById(group.getId(), GroupEntity.READSET_FULL);
         d.setVersion(updated.getVersion());
         cascadeSync(group);
         return d;
@@ -72,6 +72,8 @@ public class GroupSyncImpl implements GroupSync {
 
     @Override
     public int delete(Long groupId) throws DalException {
+        if (!removable(groupId))
+            return 0;
         groupSlbDao.deleteByGroup(new GroupSlbDo().setGroupId(groupId));
         groupServerDao.deleteByGroup(new GroupServerDo().setGroupId(groupId));
         groupHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(groupId));
@@ -85,6 +87,13 @@ public class GroupSyncImpl implements GroupSync {
         }
         if (!validateVirtualServer(group))
             throw new ValidationException("Virtual server id must exist.");
+    }
+
+    private boolean removable(Long groupId) throws DalException {
+        List<ConfGroupActiveDo> l = confGroupActiveDao.findAllByGroupIds(new Long[]{groupId}, ConfGroupActiveEntity.READSET_FULL);
+        if (l.size() == 0)
+            return true;
+        return false;
     }
 
     private SlbVirtualServerDo findVirtualServer(GroupSlb gs) throws DalException {
@@ -144,6 +153,7 @@ public class GroupSyncImpl implements GroupSync {
     private void syncGroupHealthCheck(Long groupKey, HealthCheck healthCheck) throws DalException {
         if (healthCheck == null) {
             logger.info("No health check method is found when adding/updating group with id " + groupKey);
+            groupHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(groupKey));
             return;
         }
         groupHealthCheckDao.insert(C.toGroupHealthCheckDo(healthCheck)

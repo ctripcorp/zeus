@@ -9,6 +9,7 @@ import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
+import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -75,26 +76,26 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public Long add(Group group) throws Exception {
+    public Group add(Group group) throws Exception {
         GroupDo d = groupSync.add(group);
         archiveService.archiveGroup(groupQuery.getById(d.getId()));
-        return d.getKeyId();
+        return C.toGroup(d);
 
     }
 
     @Override
-    public void update(Group group) throws Exception {
+    public Group update(Group group) throws Exception {
         if (group == null)
-            return;
+            return null;
         GroupDo d = groupSync.update(group);
         group = groupQuery.getById(d.getId());
         archiveService.archiveGroup(group);
+        return group;
     }
 
     @Override
     public int delete(Long groupId) throws Exception {
         int count = groupSync.delete(groupId);
-        archiveService.deleteGroupArchive(groupId);
         return count;
 
     }
