@@ -50,7 +50,7 @@ public class RollingTrafficStatus {
     }
 
     public List<TrafficStatus> getResult() {
-        return buckets.getResult();
+        return new LinkedList<>(buckets.getResult());
     }
 
     private class CircularArray implements Iterable<TrafficStatus> {

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.1.xsd">
+
+    <bean id="rollingTrafficStatus" class="com.ctrip.zeus.nginx.RollingTrafficStatus" />
+    <bean id="nginxStatusFetcherDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.ctrip.zeus.nginx.NginxStatusFetcher"/>
+        <property name="jobDataMap">
+            <map>
+                <entry key="rollingTrafficStatus" value-ref="rollingTrafficStatus" />
+            </map>
+        </property>
+        <property name="durability" value="true"/>
+    </bean>
+
+    <!-- Run the job every 2 seconds with initial delay of 1 second -->
+    <bean id="nginxStatusFetcherTrigger"  class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="nginxStatusFetcherDetail"/>
+        <property name="startDelay" value="1000"/>
+        <property name="repeatInterval" value="1000"/>
+    </bean>
+    <!-- Scheduler factory bean to glue together jobDetails and triggers to Configure Quartz Scheduler -->
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="jobDetails">
+            <list>
+                <ref bean="nginxStatusFetcherDetail"/>
+            </list>
+        </property>
+        <property name="triggers">
+            <list>
+                <ref bean="nginxStatusFetcherTrigger"/>
+            </list>
+        </property>
+    </bean>
+</beans>

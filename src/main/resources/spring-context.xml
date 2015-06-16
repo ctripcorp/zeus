@@ -18,30 +18,6 @@
     <aop:aspectj-autoproxy proxy-target-class="true"/>
 
     <bean id="dbLockFactory" class="com.ctrip.zeus.lock.DbLockFactory"/>
-
     <import resource="dao-beans.xml"/>
-    <bean id="rollingTrafficStatus" class="com.ctrip.zeus.nginx.RollingTrafficStatus" />
-    <bean id="nginxStatusFetcherDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
-        <property name="jobClass" value="com.ctrip.zeus.nginx.NginxStatusFetcher"/>
-        <property name="durability" value="true" />
-    </bean>
-    <!-- Run the job every 2 seconds with initial delay of 1 second -->
-    <bean id="nginxStatusFetcherTrigger"  class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
-        <property name="jobDetail" ref="nginxStatusFetcherDetail"/>
-        <property name="startDelay" value="1000"/>
-        <property name="repeatInterval" value="1000"/>
-    </bean>
-    <!-- Scheduler factory bean to glue together jobDetails and triggers to Configure Quartz Scheduler -->
-    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
-        <property name="jobDetails">
-            <list>
-                <ref bean="nginxStatusFetcherDetail"/>
-            </list>
-        </property>
-        <property name="triggers">
-            <list>
-                <ref bean="nginxStatusFetcherTrigger"/>
-            </list>
-        </property>
-    </bean>
+    <import resource="spring-context-quartz.xml"/>
 </beans>

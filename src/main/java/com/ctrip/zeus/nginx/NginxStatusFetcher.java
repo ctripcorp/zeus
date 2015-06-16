@@ -35,7 +35,7 @@ public class NginxStatusFetcher extends QuartzJobBean {
         rollingTrafficStatus.clearDirty(stamp);
     }
 
-    private void setRollingTrafficStatus(RollingTrafficStatus rollingTrafficStatus) {
+    public void setRollingTrafficStatus(RollingTrafficStatus rollingTrafficStatus) {
         this.rollingTrafficStatus = rollingTrafficStatus;
     }
 }
