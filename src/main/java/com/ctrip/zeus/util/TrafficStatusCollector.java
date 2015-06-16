@@ -13,14 +13,9 @@ public class TrafficStatusCollector {
     private final int syncInterval;
     private final int size;
     private final RollingTrafficStatus rollingTrafficStatus;
-    private final static TrafficStatusCollector instance = new TrafficStatusCollector();
 
     public TrafficStatusCollector() {
         this(60, 10);
-    }
-
-    public static TrafficStatusCollector getInstance() {
-        return instance;
     }
 
     public TrafficStatusCollector(int syncInterval, int size) {

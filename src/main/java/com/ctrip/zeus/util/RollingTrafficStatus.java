@@ -3,16 +3,22 @@ package com.ctrip.zeus.util;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.google.common.base.Preconditions;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 /**
  * Created by zhoumy on 2015/5/6.
  */
+@Component("rollingTrafficStatus")
 public class RollingTrafficStatus {
     private final CircularArray buckets;
     private final int numberOfBuckets;
     private final int interval;
+
+    public RollingTrafficStatus() {
+        this(10, 60);
+    }
 
     /**
      * Collecting data and offering statistics of a given time over defined interval.

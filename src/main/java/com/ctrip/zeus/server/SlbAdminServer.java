@@ -123,9 +123,6 @@ public class SlbAdminServer extends AbstractServer {
     @Override
     protected void doStart() throws Exception {
         server.start();
-
-        //Set traffic status collector daemon thread
-        TrafficStatusCollector.getInstance().start();
     }
 
     @Override

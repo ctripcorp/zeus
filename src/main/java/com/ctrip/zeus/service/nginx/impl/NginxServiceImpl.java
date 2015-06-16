@@ -12,6 +12,7 @@ import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
+import com.ctrip.zeus.util.RollingTrafficStatus;
 import com.ctrip.zeus.util.S;
 import com.ctrip.zeus.util.TrafficStatusCollector;
 import com.netflix.config.DynamicIntProperty;
@@ -40,6 +41,8 @@ public class NginxServiceImpl implements NginxService {
     private NginxConfService nginxConfService;
     @Resource
     private NginxServerDao nginxServerDao;
+    @Resource
+    private RollingTrafficStatus rollingTrafficStatus;
 
 
     private Logger logger = LoggerFactory.getLogger(NginxServiceImpl.class);
@@ -280,7 +283,7 @@ public class NginxServiceImpl implements NginxService {
 
     @Override
     public List<TrafficStatus> getLocalTrafficStatus() {
-        List<TrafficStatus> l = TrafficStatusCollector.getInstance().getResult();
+        List<TrafficStatus> l = rollingTrafficStatus.getResult();
         for (TrafficStatus trafficStatus : l) {
             trafficStatus.setServerIp(S.getIp());
         }
