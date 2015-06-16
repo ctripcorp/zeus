@@ -82,7 +82,7 @@ public class DeactivateResource {
         }
 
         //find all slbs which need build config
-        Set<Long> slbList = buildInfoService.getAllNeededSlb(_slbIds, groupIds);
+        Set<Long> slbList = buildInfoService.getAllNeededSlb(_slbIds, _groupIds);
 
         if (slbList.size() > 0)
         {
