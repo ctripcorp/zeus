@@ -20,7 +20,7 @@
     <bean id="dbLockFactory" class="com.ctrip.zeus.lock.DbLockFactory"/>
 
     <import resource="dao-beans.xml"/>
-    <bean id="rollingTrafficStatus" class="com.ctrip.zeus.util.RollingTrafficStatus" />
+    <bean id="rollingTrafficStatus" class="com.ctrip.zeus.nginx.RollingTrafficStatus" />
     <bean id="nginxStatusFetcherDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
         <property name="jobClass" value="com.ctrip.zeus.nginx.NginxStatusFetcher"/>
         <property name="durability" value="true" />

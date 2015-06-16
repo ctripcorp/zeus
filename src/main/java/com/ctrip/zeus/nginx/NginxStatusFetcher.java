@@ -2,10 +2,8 @@ package com.ctrip.zeus.nginx;
 
 import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
-import com.ctrip.zeus.util.RollingTrafficStatus;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
-import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,10 +15,6 @@ public class NginxStatusFetcher extends QuartzJobBean {
 
     private RollingTrafficStatus rollingTrafficStatus;
     private AtomicInteger tick = new AtomicInteger();
-
-    public List<TrafficStatus> getResult() {
-        return rollingTrafficStatus.getResult();
-    }
 
     @Override
     protected void executeInternal(org.quartz.JobExecutionContext jobExecutionContext) throws JobExecutionException {

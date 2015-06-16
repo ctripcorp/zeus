@@ -2,7 +2,6 @@ package com.ctrip.zeus.server;
 
 import com.ctrip.zeus.auth.impl.IPAuthenticationFilter;
 import com.ctrip.zeus.restful.resource.SlbResourcePackage;
-import com.ctrip.zeus.util.TrafficStatusCollector;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;

@@ -1,5 +1,6 @@
-package com.ctrip.zeus.util;
+package com.ctrip.zeus.nginx;
 
+import com.ctrip.zeus.nginx.RollingTrafficStatus;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import org.junit.Assert;

@@ -1,4 +1,4 @@
-package com.ctrip.zeus.util;
+package com.ctrip.zeus.nginx;
 
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
