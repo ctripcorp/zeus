@@ -20,6 +20,6 @@ public class NginxStatusTest extends AbstractSpringTest {
         NginxClient client = new NginxClient("http://127.0.0.1:8099");
         TrafficStatusList status = client.getTrafficStatus();
         Assert.assertNotNull(status);
-        Assert.assertTrue(status.getStatuses().get(0).getReqStatuses().size() > 0);
+        Assert.assertTrue(status.getStatuses().size() > 0);
     }
 }

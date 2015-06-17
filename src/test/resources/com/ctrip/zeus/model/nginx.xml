@@ -54,9 +54,10 @@
     </nginx-server-status-list>
 
     <traffic-status-list>
+        <total>10</total>
         <statuses>
-            <traffic-status/>
-            <traffic-status/>
+            <req-status/>
+            <req-status/>
         </statuses>
     </traffic-status-list>
     <traffic-status>
@@ -77,7 +78,7 @@
     </traffic-status>
     <req-status>
         <host-name>ctrip.com</host-name>
-        <up-name>cluster</up-name>
+        <group-name>cluster</group-name>
         <bytes-in-total>17915825952</bytes-in-total>
         <bytes-out-total>17915825952</bytes-out-total>
         <up-requests>17915825952</up-requests>
@@ -89,5 +90,6 @@
         <redirection-count>17915825952</redirection-count>
         <client-err-count>17915825952</client-err-count>
         <server-err-count>17915825952</server-err-count>
+        <time>2013-05-20 13:34:00</time>
     </req-status>
 </nginx>

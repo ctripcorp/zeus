@@ -119,30 +119,31 @@ public class RollingTrafficStatus {
         for (String key : upstreamMap.keySet()) {
             Long[] data = upstreamMap.get(key);
             String[] hostUpstream = key.split("/");
-            String hostName, upstreamName;
-            hostName = upstreamName = "";
+            String hostName, groupName;
+            hostName = groupName = "";
             if (hostUpstream.length > 0) {
                 hostName = hostUpstream[0];
                 if (hostUpstream.length > 1)
-                    upstreamName = hostUpstream[1];
+                    groupName = hostUpstream[1].replaceFirst("backend_", "");
             }
             Long upRequests = data[ReqStatusOffset.UpstreamReq.ordinal()];
-            double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double)data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
+            double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double) data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
             Long requests = data[ReqStatusOffset.ReqTotal.ordinal()];
-            double responseTime = (requests == null || requests == 0) ? 0 :  (double)data[ReqStatusOffset.RtTotal.ordinal()] / requests;
+            double responseTime = (requests == null || requests == 0) ? 0 : (double) data[ReqStatusOffset.RtTotal.ordinal()] / requests;
             trafficStatus.addReqStatus(new ReqStatus().setHostName(hostName)
                     .setBytesInTotal(data[ReqStatusOffset.BytInTotal.ordinal()])
                     .setBytesOutTotal(data[ReqStatusOffset.BytOutTotal.ordinal()])
                     .setResponseTime(responseTime)
                     .setTotalRequests(requests)
-                    .setUpName(upstreamName)
+                    .setGroupName(groupName)
                     .setUpRequests(upRequests)
                     .setUpResponseTime(upResponseTime)
                     .setUpTries(data[ReqStatusOffset.UpstreamTries.ordinal()])
                     .setSuccessCount(data[ReqStatusOffset.SuccessCount.ordinal()])
                     .setRedirectionCount(data[ReqStatusOffset.RedirectionCount.ordinal()])
                     .setClientErrCount(data[ReqStatusOffset.ClientErrCount.ordinal()])
-                    .setServerErrCount(data[ReqStatusOffset.ServerErrorCount.ordinal()]));
+                    .setServerErrCount(data[ReqStatusOffset.ServerErrorCount.ordinal()])
+                    .setTime(trafficStatus.getTime()));
         }
     }
 

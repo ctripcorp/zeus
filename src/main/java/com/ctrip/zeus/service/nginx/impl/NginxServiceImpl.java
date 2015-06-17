@@ -8,6 +8,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.NginxOperator;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
+import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.SlbRepository;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -266,9 +268,9 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public List<TrafficStatus> getTrafficStatusBySlb(Long slbId) throws Exception {
+    public List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count) throws Exception {
         Slb slb = slbRepository.getById(slbId);
-        List<TrafficStatus> list = new ArrayList<>();
+        List<ReqStatus> list = new ArrayList<>();
         for (SlbServer slbServer : slb.getSlbServers()) {
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             try {
@@ -281,12 +283,13 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public List<TrafficStatus> getLocalTrafficStatus() {
-        List<TrafficStatus> l = rollingTrafficStatus.getResult();
-        for (TrafficStatus trafficStatus : l) {
-            trafficStatus.setServerIp(S.getIp());
+    public List<ReqStatus> getLocalTrafficStatus(int count) {
+        LinkedList<TrafficStatus> l = (LinkedList<TrafficStatus>) rollingTrafficStatus.getResult();
+        List<ReqStatus> result = new LinkedList<>();
+        for (int i = 0; i < count && i < l.size(); i++) {
+            result.addAll(l.pollLast().getReqStatuses());
         }
-        return l;
+        return result;
     }
 
     private void writeConfToDisk(Long slbId, int version, NginxOperator nginxOperator) throws Exception {
@@ -298,8 +301,6 @@ public class NginxServiceImpl implements NginxService {
         // write upstream conf
         writeUpstreamConf(slbId, version, nginxOperator);
     }
-
-
 
     private static String buildRemoteUrl(String ip) {
         return "http://" + ip + ":" + adminServerPort.get();
