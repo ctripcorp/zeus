@@ -1,18 +1,24 @@
-package com.ctrip.zeus.util;
+package com.ctrip.zeus.nginx;
 
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.google.common.base.Preconditions;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 /**
  * Created by zhoumy on 2015/5/6.
  */
+@Component("rollingTrafficStatus")
 public class RollingTrafficStatus {
     private final CircularArray buckets;
     private final int numberOfBuckets;
     private final int interval;
+
+    public RollingTrafficStatus() {
+        this(10, 60);
+    }
 
     /**
      * Collecting data and offering statistics of a given time over defined interval.
@@ -44,7 +50,7 @@ public class RollingTrafficStatus {
     }
 
     public List<TrafficStatus> getResult() {
-        return buckets.getResult();
+        return new LinkedList<>(buckets.getResult());
     }
 
     private class CircularArray implements Iterable<TrafficStatus> {
@@ -113,30 +119,31 @@ public class RollingTrafficStatus {
         for (String key : upstreamMap.keySet()) {
             Long[] data = upstreamMap.get(key);
             String[] hostUpstream = key.split("/");
-            String hostName, upstreamName;
-            hostName = upstreamName = "";
+            String hostName, groupName;
+            hostName = groupName = "";
             if (hostUpstream.length > 0) {
                 hostName = hostUpstream[0];
                 if (hostUpstream.length > 1)
-                    upstreamName = hostUpstream[1];
+                    groupName = hostUpstream[1].replaceFirst("backend_", "");
             }
             Long upRequests = data[ReqStatusOffset.UpstreamReq.ordinal()];
-            double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double)data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
+            double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double) data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
             Long requests = data[ReqStatusOffset.ReqTotal.ordinal()];
-            double responseTime = (requests == null || requests == 0) ? 0 :  (double)data[ReqStatusOffset.RtTotal.ordinal()] / requests;
+            double responseTime = (requests == null || requests == 0) ? 0 : (double) data[ReqStatusOffset.RtTotal.ordinal()] / requests;
             trafficStatus.addReqStatus(new ReqStatus().setHostName(hostName)
                     .setBytesInTotal(data[ReqStatusOffset.BytInTotal.ordinal()])
                     .setBytesOutTotal(data[ReqStatusOffset.BytOutTotal.ordinal()])
                     .setResponseTime(responseTime)
                     .setTotalRequests(requests)
-                    .setUpName(upstreamName)
+                    .setGroupName(groupName)
                     .setUpRequests(upRequests)
                     .setUpResponseTime(upResponseTime)
                     .setUpTries(data[ReqStatusOffset.UpstreamTries.ordinal()])
                     .setSuccessCount(data[ReqStatusOffset.SuccessCount.ordinal()])
                     .setRedirectionCount(data[ReqStatusOffset.RedirectionCount.ordinal()])
                     .setClientErrCount(data[ReqStatusOffset.ClientErrCount.ordinal()])
-                    .setServerErrCount(data[ReqStatusOffset.ServerErrorCount.ordinal()]));
+                    .setServerErrCount(data[ReqStatusOffset.ServerErrorCount.ordinal()])
+                    .setTime(trafficStatus.getTime()));
         }
     }
 

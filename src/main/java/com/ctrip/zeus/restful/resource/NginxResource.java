@@ -91,10 +91,12 @@ public class NginxResource {
     @GET
     @Path("/trafficStatus")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getLocalTrafficStatus(@Context HttpServletRequest request,@Context HttpHeaders hh) throws Exception {
-        TrafficStatusList l = new TrafficStatusList();
-        for (TrafficStatus status : nginxService.getLocalTrafficStatus()) {
-            l.addTrafficStatus(status);
+    public Response getLocalTrafficStatus(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("count") int count) throws Exception {
+        count = count == 0 ? 1 : count;
+        List<ReqStatus> statuses = nginxService.getLocalTrafficStatus(count);
+        TrafficStatusList l = new TrafficStatusList().setTotal(statuses.size());
+        for (ReqStatus status : statuses) {
+            l.addReqStatus(status);
         }
         return responseHandler.handle(l, hh.getMediaType());
     }

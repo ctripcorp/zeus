@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.nginx;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
-import com.ctrip.zeus.nginx.entity.TrafficStatus;
+import com.ctrip.zeus.nginx.entity.ReqStatus;
 
 import java.util.List;
 
@@ -87,12 +87,12 @@ public interface NginxService {
      * @param slbId the slb name
      * @return the traffic statuses
      */
-    List<TrafficStatus> getTrafficStatusBySlb(Long slbId) throws Exception;
+    List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count) throws Exception;
 
 
     /**
      * get traffic status of local nginx server.
      * @return the traffic status
      */
-    List<TrafficStatus> getLocalTrafficStatus();
+    List<ReqStatus> getLocalTrafficStatus(int count);
 }

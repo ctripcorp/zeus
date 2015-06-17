@@ -3,6 +3,7 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatusList;
 import com.ctrip.zeus.restful.message.ResponseHandler;
@@ -163,13 +164,16 @@ public class StatusResource {
     @Path("/traffic")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getTrafficStatusBySlb(@Context HttpServletRequest request,@Context HttpHeaders hh,
-                                          @QueryParam("slbId") Long slbId) throws Exception {
+                                          @QueryParam("slbId") Long slbId,
+                                          @QueryParam("count") int count) throws Exception {
         if (slbId == null) {
             throw new ValidationException("Missing parameters.");
         }
-        TrafficStatusList list = new TrafficStatusList();
-        for (TrafficStatus ts : nginxService.getTrafficStatusBySlb(slbId)) {
-            list.addTrafficStatus(ts);
+        count = count == 0 ? 1 : count;
+        List<ReqStatus> statuses = nginxService.getTrafficStatusBySlb(slbId, count);
+        TrafficStatusList list = new TrafficStatusList().setTotal(statuses.size());
+        for (ReqStatus rs : statuses) {
+            list.addReqStatus(rs);
         }
         return responseHandler.handle(list, hh.getMediaType());
     }
