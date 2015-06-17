@@ -95,7 +95,7 @@ public class StatusResource {
             {
                 statusResult = statusList.get(0);
             }else{
-                throw new Exception("SlbId param is needed!");
+                throw new ValidationException("SlbId param is needed!");
             }
         } else {
             statusResult = groupStatusService.getGroupStatus(_groupId, _slbId);

@@ -54,7 +54,7 @@ public class ServerConf {
         }
         String res =  b.toString();
 
-        AssertUtils.arrertNotEquels("",res.trim().isEmpty(),"virtual server ["+vs.getId()+"] domain is null or illegal!");
+        AssertUtils.assertNotEquels("",res.trim(),"virtual server ["+vs.getId()+"] domain is null or illegal!");
         return res;
     }
 }

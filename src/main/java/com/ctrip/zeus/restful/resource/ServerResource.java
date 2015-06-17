@@ -1,6 +1,7 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
@@ -142,7 +143,7 @@ public class ServerResource {
         }
         if (null == _groupId)
         {
-            throw new Exception("Group Id or Name not found!");
+            throw new ValidationException("Group Id or Name not found!");
         }
         statusService.upMember(_groupId,ip);
         return memberOps(hh, _groupId, ip);
@@ -162,7 +163,7 @@ public class ServerResource {
         }
         if (null == _groupId)
         {
-            throw new Exception("Group Id or Name not found!");
+            throw new ValidationException("Group Id or Name not found!");
         }
         statusService.downMember(_groupId, ip);
         return memberOps(hh, _groupId, ip);

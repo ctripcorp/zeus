@@ -1,6 +1,7 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
+import com.ctrip.zeus.exceptions.NotFoundException;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.service.activate.ActivateService;
@@ -99,7 +100,7 @@ public class ActivateResource {
 
     private Response activateAll(List<Long> slbIds,List<Long> groupIds, HttpHeaders hh)throws Exception{
 
-        AssertUtils.arrertNotEquels(0,slbIds.size()+groupIds.size(),"slbIds list and groupIds list are empty!");
+        AssertUtils.assertNotEquels(0,slbIds.size()+groupIds.size(),"slbIds list and groupIds list are empty!");
 
         //update active action to conf-slb-active and conf-app-active
         activateService.activate(slbIds,groupIds);
@@ -132,10 +133,11 @@ public class ActivateResource {
                     }
                 }
             }
-            return Response.ok().status(200).build();
+            return Response.ok().status(200).type(hh.getMediaType()).entity("Activate success! Activated slbIds:"+
+                    slbList.toString()+" groupIds: " + groupIds.toString()).build();
         }else
         {
-            return Response.status(200).type(hh.getMediaType()).entity("No slb need activate!please check your config").build();
+              throw new NotFoundException("slb not found!please check your config");
         }
     }
 }

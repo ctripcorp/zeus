@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.NotFoundException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.activate.ActiveConfService;
@@ -174,8 +175,7 @@ public class NginxConfServiceImpl implements NginxConfService {
 
         List<String> groupActiveconf =activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{groupId});
 
-        if (groupActiveconf.size()!=1){ throw new Exception(String.valueOf(groupId)+" is not activated!");}
-
+        if (groupActiveconf.size()!=1){ throw new NotFoundException("Activate Conf is Null! GroupId "+ groupId);}
         Group group = DefaultSaxParser.parseEntity(Group.class, groupActiveconf.get(0));
 
         List<GroupSlb> groupSlbList = group.getGroupSlbs();
@@ -236,7 +236,7 @@ public class NginxConfServiceImpl implements NginxConfService {
         }
 
         String slbContent =activeConfService.getConfSlbActiveContentBySlbId(slbId);
-        AssertUtils.isNull(slbContent,"SlbID: ["+slbId+"] has not submit or submit failed!");
+        AssertUtils.isNull(slbContent,"Not found slb content by slbId!");
 
         Slb slb = DefaultSaxParser.parseEntity(Slb.class, slbContent);
 

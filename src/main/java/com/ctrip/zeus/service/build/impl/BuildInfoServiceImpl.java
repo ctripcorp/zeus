@@ -38,15 +38,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
     public int getTicket(Long slbId) throws Exception
     {
         BuildInfoDo d = null;
-        try {
-            d = buildInfoDao.findBySlbId(slbId, BuildInfoEntity.READSET_FULL);
-        } catch (DalNotFoundException e) {
-            d = new BuildInfoDo();
-            d.setSlbId(slbId).setCreatedTime(new Date()).setDataChangeLastTime(new Date()).setPendingTicket(1).setCurrentTicket(0);
-            buildInfoDao.insert(d);
-            return 1;
-        }
-
+        d = buildInfoDao.findBySlbId(slbId, BuildInfoEntity.READSET_FULL);
         if (d==null)
         {
             d = new BuildInfoDo();
@@ -105,13 +97,13 @@ public class BuildInfoServiceImpl implements BuildInfoService {
 
         if (groupIds.size()>0)
         {
-            AssertUtils.isNull(list,"[BuildInfoService getAllNeededSlb]get appslb by appnames failed! Please check the configuration of groupIds: "+groupIds.toString());
+            AssertUtils.isNull(list,"[BuildInfoService getAllNeededSlb]Not found GroupSlbs by groupIds! Please check the configuration of groupIds: "+groupIds.toString());
         }
 
         if (list!=null&&list.size()>0)
         {
             for (GroupSlb groupSlb : list) {
-                buildSlbIds.add(Long.parseLong(groupSlb.getSlbId().toString()));
+                buildSlbIds.add(groupSlb.getSlbId());
             }
         }
         return buildSlbIds;

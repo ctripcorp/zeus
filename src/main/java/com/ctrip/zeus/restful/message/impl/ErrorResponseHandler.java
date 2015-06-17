@@ -1,5 +1,8 @@
 package com.ctrip.zeus.restful.message.impl;
 
+import com.ctrip.zeus.exceptions.BadRequestException;
+import com.ctrip.zeus.exceptions.ForbiddenException;
+import com.ctrip.zeus.exceptions.NotFoundException;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.restful.message.Message;
 import com.ctrip.zeus.restful.message.ResponseHandler;
@@ -27,7 +30,15 @@ public class ErrorResponseHandler implements ResponseHandler {
         } else {
             err.setResponse(GenericSerializer.writeJson(em));
         }
-        if (object instanceof Exception) {
+        if (object instanceof NotFoundException) {
+            err.setStatus(Response.Status.NOT_FOUND.getStatusCode());
+        }else if (object instanceof BadRequestException) {
+            err.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
+        }else if (object instanceof ValidationException) {
+            err.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
+        }else if (object instanceof ForbiddenException) {
+            err.setStatus(Response.Status.FORBIDDEN.getStatusCode());
+        }else if (object instanceof Exception) {
             err.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
         return err;

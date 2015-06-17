@@ -1,5 +1,6 @@
 package com.ctrip.zeus.util;
 
+import com.ctrip.zeus.exceptions.NotFoundException;
 import com.ctrip.zeus.exceptions.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,14 +15,14 @@ public class AssertUtils {
     public static boolean isNull(Object obj,String exceptionMsg)throws Exception
     {
         if (obj==null){
-            Exception e = new ValidationException(exceptionMsg);
+            Exception e = new NotFoundException(exceptionMsg);
             logger.warn("Assert Utils isNull: ",e);
             throw e;
         }
         return true;
     }
 
-    public static <T> T arrertEquels(T except,T target,String exceptionMsg)throws Exception{
+    public static <T> T assertEquels(T except,T target,String exceptionMsg)throws Exception{
         if (target!=except)
         {
             Exception e = new ValidationException(exceptionMsg);
@@ -30,11 +31,11 @@ public class AssertUtils {
         }
         return target;
     }
-    public static <T> T arrertNotEquels(T except,T target,String exceptionMsg)throws Exception{
+    public static <T> T assertNotEquels(T except,T target,String exceptionMsg)throws Exception{
         if (target==except)
         {
             Exception e = new ValidationException(exceptionMsg);
-            logger.warn("Assert Utils arrertNotEquels: ",e);
+            logger.warn("Assert Utils assertNotEquels: ",e);
             throw e;
         }
         return target;
