@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -31,7 +32,7 @@ public class LockResource {
     @GET
     @Path("/status")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getStatus(@Context HttpHeaders hh) throws Exception {
+    public Response getStatus(@Context HttpServletRequest request,@Context HttpHeaders hh) throws Exception {
         LockList ll = new LockList();
         for (LockStatus ls : lockService.getLockStatus()) {
             ll.addLockStatus(ls);
@@ -41,7 +42,7 @@ public class LockResource {
 
     @GET
     @Path("/unlock/{key}")
-    public Response forceUnlock(@Context HttpHeaders hh, @PathParam("key") String key) throws DalException {
+    public Response forceUnlock(@Context HttpServletRequest request,@Context HttpHeaders hh, @PathParam("key") String key) throws DalException {
         lockService.forceUnlock(key);
         return Response.status(200).build();
     }

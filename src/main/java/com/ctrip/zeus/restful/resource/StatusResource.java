@@ -162,7 +162,7 @@ public class StatusResource {
     @GET
     @Path("/traffic")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getTrafficStatusBySlb(@Context HttpHeaders hh,
+    public Response getTrafficStatusBySlb(@Context HttpServletRequest request,@Context HttpHeaders hh,
                                           @QueryParam("slbId") Long slbId) throws Exception {
         if (slbId == null) {
             throw new ValidationException("Missing parameters.");
