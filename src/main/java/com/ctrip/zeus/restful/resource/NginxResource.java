@@ -102,6 +102,21 @@ public class NginxResource {
     }
 
     @GET
+    @Path("/trafficStatus/group")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getLocalTrafficStatus(@Context HttpServletRequest request,@Context HttpHeaders hh,
+                                          @QueryParam("groupName") String groupName,
+                                          @QueryParam("count") int count) throws Exception {
+        count = count == 0 ? 1 : count;
+        List<ReqStatus> statuses = nginxService.getLocalTrafficStatus(groupName, count);
+        TrafficStatusList l = new TrafficStatusList().setTotal(statuses.size());
+        for (ReqStatus status : statuses) {
+            l.addReqStatus(status);
+        }
+        return responseHandler.handle(l, hh.getMediaType());
+    }
+
+    @GET
     @Path("/loadAll/slb/{slbId:[0-9]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response loadAll(@Context HttpServletRequest request,@Context HttpHeaders hh, @PathParam("slbId") Long slbId) throws Exception {

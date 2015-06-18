@@ -89,10 +89,14 @@ public interface NginxService {
      */
     List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count) throws Exception;
 
+    List<ReqStatus> getTrafficStatusBySlb(String groupName, Long slbId, int count) throws Exception;
+
 
     /**
      * get traffic status of local nginx server.
      * @return the traffic status
      */
     List<ReqStatus> getLocalTrafficStatus(int count);
+
+    List<ReqStatus> getLocalTrafficStatus(String groupName, int count);
 }

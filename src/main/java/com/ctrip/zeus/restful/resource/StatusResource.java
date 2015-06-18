@@ -163,7 +163,7 @@ public class StatusResource {
     @GET
     @Path("/traffic")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getTrafficStatusBySlb(@Context HttpServletRequest request,@Context HttpHeaders hh,
+    public Response getTrafficStatusBySlb(@Context HttpServletRequest request, @Context HttpHeaders hh,
                                           @QueryParam("slbId") Long slbId,
                                           @QueryParam("count") int count) throws Exception {
         if (slbId == null) {
@@ -171,6 +171,26 @@ public class StatusResource {
         }
         count = count == 0 ? 1 : count;
         List<ReqStatus> statuses = nginxService.getTrafficStatusBySlb(slbId, count);
+        TrafficStatusList list = new TrafficStatusList().setTotal(statuses.size());
+        for (ReqStatus rs : statuses) {
+            list.addReqStatus(rs);
+        }
+        return responseHandler.handle(list, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/traffic/group")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getTrafficStatusByGroupAndSlb(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                                  @QueryParam("groupName") String groupName,
+                                                  @QueryParam("slbId") Long slbId,
+                                                  @QueryParam("count") int count) throws Exception {
+
+        if (slbId == null || groupName == null) {
+            throw new ValidationException("Missing parameters.");
+        }
+        count = count == 0 ? 1 : count;
+        List<ReqStatus> statuses = nginxService.getTrafficStatusBySlb(groupName, slbId, count);
         TrafficStatusList list = new TrafficStatusList().setTotal(statuses.size());
         for (ReqStatus rs : statuses) {
             list.addReqStatus(rs);

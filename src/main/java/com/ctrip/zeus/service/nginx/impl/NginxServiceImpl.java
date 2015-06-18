@@ -274,7 +274,22 @@ public class NginxServiceImpl implements NginxService {
         for (SlbServer slbServer : slb.getSlbServers()) {
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             try {
-                list.addAll(nginxClient.getTrafficStatus().getStatuses());
+                list.addAll(nginxClient.getTrafficStatus(count).getStatuses());
+            } catch (Exception e) {
+                LOGGER.error(e.getLocalizedMessage());
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<ReqStatus> getTrafficStatusBySlb(String groupName, Long slbId, int count) throws Exception {
+        Slb slb = slbRepository.getById(slbId);
+        List<ReqStatus> list = new ArrayList<>();
+        for (SlbServer slbServer : slb.getSlbServers()) {
+            NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
+            try {
+                list.addAll(nginxClient.getTrafficStatusByGroup(groupName, count).getStatuses());
             } catch (Exception e) {
                 LOGGER.error(e.getLocalizedMessage());
             }
@@ -286,8 +301,24 @@ public class NginxServiceImpl implements NginxService {
     public List<ReqStatus> getLocalTrafficStatus(int count) {
         LinkedList<TrafficStatus> l = (LinkedList<TrafficStatus>) rollingTrafficStatus.getResult();
         List<ReqStatus> result = new LinkedList<>();
-        for (int i = 0; i < count && i < l.size(); i++) {
+        int size = l.size();
+        for (int i = 0; i < count && i < size; i++) {
             result.addAll(l.pollLast().getReqStatuses());
+        }
+        return result;
+    }
+
+    @Override
+    public List<ReqStatus> getLocalTrafficStatus(String groupName, int count) {
+        LinkedList<TrafficStatus> l = (LinkedList<TrafficStatus>) rollingTrafficStatus.getResult();
+        List<ReqStatus> result = new LinkedList<>();
+        int size = l.size();
+        for (int i = 0; i < count && i < size; i++) {
+            for (ReqStatus reqStatus : l.pollLast().getReqStatuses()) {
+                if (reqStatus.getGroupName().equalsIgnoreCase(groupName)) {
+                    result.add(reqStatus);
+                }
+            }
         }
         return result;
     }

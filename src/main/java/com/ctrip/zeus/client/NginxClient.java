@@ -58,8 +58,20 @@ public class NginxClient extends AbstractRestClient {
         return DefaultJsonParser.parse(NginxResponse.class,responseStr);
     }
 
-    public TrafficStatusList getTrafficStatus() throws Exception {
-        Response response = getTarget().path("").path("/api/nginx/trafficStatus").request().headers(getDefaultHeaders()).get();
+    public TrafficStatusList getTrafficStatus(int count) throws Exception {
+        Response response = getTarget().path("").path("/api/nginx/trafficStatus")
+                .queryParam("count", count).request().headers(getDefaultHeaders()).get();
+        InputStream is = (InputStream)response.getEntity();
+        try {
+            return DefaultJsonParser.parse(TrafficStatusList.class, IOUtils.inputStreamStringify(is));
+        } catch (Exception ex) {
+            throw new Exception("Fail to parse traffic status object.");
+        }
+    }
+
+    public TrafficStatusList getTrafficStatusByGroup(String groupName, int count) throws Exception {
+        Response response = getTarget().path("/api/nginx/trafficStatus/group")
+                .queryParam("groupName", groupName).queryParam("count", count).request().headers(getDefaultHeaders()).get();
         InputStream is = (InputStream)response.getEntity();
         try {
             return DefaultJsonParser.parse(TrafficStatusList.class, IOUtils.inputStreamStringify(is));
