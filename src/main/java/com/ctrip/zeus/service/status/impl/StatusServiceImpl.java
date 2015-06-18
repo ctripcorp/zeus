@@ -90,7 +90,7 @@ public class StatusServiceImpl implements StatusService {
         if (appslblist==null||appslblist.size()==0)
         {
             logger.warn("[up member]: Can not find appslb by GroupId! GroupId: "+groupId);
-            AssertUtils.isNull(appslblist,"[up member]: Can not find GroupSlb by GroupID! Please Check the Configuration or param again!");
+            AssertUtils.assertNotNull(appslblist, "[up member]: Can not find GroupSlb by GroupID! Please Check the Configuration or param again!");
             return;
         }
 
@@ -114,7 +114,7 @@ public class StatusServiceImpl implements StatusService {
         if (appslblist==null||appslblist.size()==0)
         {
             logger.warn("[down member]: Can not find appslb by GroupId! GroupId: "+groupId);
-            AssertUtils.isNull(appslblist,"[up member]: Can not find GroupSlb by GroupID! Please Check the Configuration or param again!");
+            AssertUtils.assertNotNull(appslblist, "[up member]: Can not find GroupSlb by GroupID! Please Check the Configuration or param again!");
             return;
         }
 

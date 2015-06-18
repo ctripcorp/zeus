@@ -19,7 +19,7 @@ public class ServerConf {
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
         StringBuilder b = new StringBuilder(1024);
 
-        AssertUtils.isNull(vs.getPort(),"virtual server ["+vs.getId()+"] port is null! Please check the configuration!");
+        AssertUtils.assertNotNull(vs.getPort(), "virtual server [" + vs.getId() + "] port is null! Please check the configuration!");
         try{
             Integer.parseInt(vs.getPort());
         }catch (Exception e){
@@ -54,7 +54,7 @@ public class ServerConf {
         }
         String res =  b.toString();
 
-        AssertUtils.assertNotEquels("",res.trim(),"virtual server ["+vs.getId()+"] domain is null or illegal!");
+        AssertUtils.assertNotEquals("", res.trim(), "virtual server [" + vs.getId() + "] domain is null or illegal!");
         return res;
     }
 }

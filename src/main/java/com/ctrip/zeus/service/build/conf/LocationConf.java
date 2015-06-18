@@ -42,7 +42,7 @@ public class LocationConf {
             }
         }
 
-        AssertUtils.isNull(res,"Location path is null,Please check your configuration of SlbName:["+slb.getName()+"] VirtualServer :["+vs.getId()+"]");
+        AssertUtils.assertNotNull(res, "Location path is null,Please check your configuration of SlbName:[" + slb.getName() + "] VirtualServer :[" + vs.getId() + "]");
         return res;
     }
 

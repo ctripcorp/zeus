@@ -6,10 +6,13 @@ import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupList;
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.GroupRepository;
+import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -27,9 +30,10 @@ import javax.ws.rs.core.Response;
 @Component
 @Path("/")
 public class GroupResource {
-    private static int DEFAULT_MAX_COUNT = 20;
     @Resource
     private GroupRepository groupRepository;
+    @Resource
+    private SlbRepository slbRepository;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
@@ -41,18 +45,20 @@ public class GroupResource {
     @Authorize(name = "getAllGroups")
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
-                         @QueryParam("from") long fromId,
-                         @QueryParam("maxCount") int maxCount) throws Exception {
+                         @QueryParam("slbId") Long slbId,
+                         @QueryParam("slbName") String slbName) throws Exception {
         GroupList groupList = new GroupList();
-
-        if (fromId <= 0 && maxCount <= 0) {
+        if (slbId == null && slbName == null) {
             for (Group group : groupRepository.list()) {
                 groupList.addGroup(group);
             }
         } else {
-            fromId = fromId < 0 ? 0 : fromId;
-            maxCount = maxCount <= 0 ? DEFAULT_MAX_COUNT : maxCount;
-            for (Group group : groupRepository.listLimit(fromId, maxCount)) {
+            if (slbId == null) {
+                Slb slb = slbRepository.get(slbName);
+                AssertUtils.assertNotNull(slb, "Slb does not exist.");
+                slbId = slbRepository.get(slbName).getId();
+            }
+            for (Group group : groupRepository.list(slbId)) {
                 groupList.addGroup(group);
             }
         }
@@ -81,6 +87,7 @@ public class GroupResource {
         if (group == null && appId != null) {
             group = groupRepository.getByAppId(appId);
         }
+        AssertUtils.assertNotNull(group, "Group cannot be found.");
         return responseHandler.handle(group, hh.getMediaType());
     }
 

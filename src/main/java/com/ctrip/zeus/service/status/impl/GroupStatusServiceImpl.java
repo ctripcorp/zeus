@@ -75,8 +75,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     {
         Slb slb = slbRepository.getById(slbId);
         Group group = groupRepository.getById(groupId);
-        AssertUtils.isNull(group,"group Id not found!");
-        AssertUtils.isNull(slb,"slb Id not found!");
+        AssertUtils.assertNotNull(group, "group Id not found!");
+        AssertUtils.assertNotNull(slb, "slb Id not found!");
 
         GroupStatus status = new GroupStatus();
         status.setGroupId(groupId);
@@ -94,8 +94,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public GroupStatus getGroupStatus(Long groupId, Long slbId) throws Exception {
         Slb slb = slbRepository.getById(slbId);
-        AssertUtils.isNull(slb,"slbId not found!");
-        AssertUtils.assertNotEquels(0,slb.getSlbServers().size(),"Slb doesn't have any slb server!");
+        AssertUtils.assertNotNull(slb, "slbId not found!");
+        AssertUtils.assertNotEquals(0,slb.getSlbServers().size(),"Slb doesn't have any slb server!");
         StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
         return client.getGroupStatus(groupId,slbId);
     }

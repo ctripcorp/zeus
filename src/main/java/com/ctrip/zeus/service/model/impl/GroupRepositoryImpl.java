@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.GroupDo;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
+import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.GroupRepository;
@@ -49,6 +50,15 @@ public class GroupRepositoryImpl implements GroupRepository {
             list.add(group);
         }
         return list;
+    }
+
+    @Override
+    public List<Group> list(Long slbId) throws Exception {
+        List<Group> result = new ArrayList<>();
+        for (GroupSlb groupSlb : slbQuery.getGroupSlbsBySlb(slbId)) {
+            result.add(getById(groupSlb.getGroupId()));
+        }
+        return result;
     }
 
     @Override

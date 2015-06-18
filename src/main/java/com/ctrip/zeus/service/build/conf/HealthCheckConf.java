@@ -28,9 +28,9 @@ public class HealthCheckConf {
         {
             return "";
         }
-        AssertUtils.isNull(h.getIntervals(),"Group HealthCheck Intervals config is null!");
-        AssertUtils.isNull(h.getFails(),"Group HealthCheck Fails config is null!");
-        AssertUtils.isNull(h.getPasses(),"Group HealthCheck Passes config is null!");
+        AssertUtils.assertNotNull(h.getIntervals(), "Group HealthCheck Intervals config is null!");
+        AssertUtils.assertNotNull(h.getFails(), "Group HealthCheck Fails config is null!");
+        AssertUtils.assertNotNull(h.getPasses(), "Group HealthCheck Passes config is null!");
 
 
         StringBuilder b = new StringBuilder(128);

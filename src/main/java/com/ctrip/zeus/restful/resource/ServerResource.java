@@ -86,7 +86,7 @@ public class ServerResource {
     private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
         //get slb by serverip
         List<Slb> slblist = slbRepository.listByGroupServerAndGroup(serverip,null);
-        AssertUtils.isNull(slblist,"[UpServer/DownServer] Can not find slb by server ip :["+serverip+"],Please check the configuration and server ip!");
+        AssertUtils.assertNotNull(slblist, "[UpServer/DownServer] Can not find slb by server ip :[" + serverip + "],Please check the configuration and server ip!");
 
         for (Slb slb : slblist)
         {
@@ -218,10 +218,10 @@ public class ServerResource {
         for (String ip : ips)
         {
             tmp = slbRepository.listByGroupServerAndGroup(ip,groupId);
-            AssertUtils.isNull(tmp,"Not find slb for GroupId ["+groupId+"] and ip ["+ip+"]");
+            AssertUtils.assertNotNull(tmp,"Not find slb for GroupId ["+groupId+"] and ip ["+ip+"]");
             slbList.addAll(tmp);
         }
-        AssertUtils.assertNotEquels(0,slbList.size(),"Group or ips is not correct!");
+        AssertUtils.assertNotEquals(0,slbList.size(),"Group or ips is not correct!");
 
         for (Slb slb : slbList) {
             Long slbId = slb.getId();

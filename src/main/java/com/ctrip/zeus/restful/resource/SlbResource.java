@@ -9,6 +9,7 @@ import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -49,7 +50,7 @@ public class SlbResource {
     @GET
     @Path("/slb")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "getGroup")
+    @Authorize(name = "getSlb")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
                         @QueryParam("slbId") Long slbId,
                         @QueryParam("slbName") String slbName) throws Exception {
@@ -63,6 +64,7 @@ public class SlbResource {
         if (slb == null && slbName != null) {
             slb = slbRepository.get(slbName);
         }
+        AssertUtils.assertNotNull(slb, "Slb cannot be found.");
         return responseHandler.handle(slb, hh.getMediaType());
     }
     
