@@ -53,6 +53,15 @@ public class StatusServiceImpl implements StatusService {
             }
             return allDownAppServers;
     }
+    @Override
+    public Set<String> findAllUpGroupServersBySlbId(Long slbId) throws Exception {
+        Set<String> allUpAppServers = new HashSet<>();
+        List<StatusGroupServerDo> allUpAppServerList = statusGroupServerService.listAllUpBySlbId(slbId);
+        for (StatusGroupServerDo d : allUpAppServerList) {
+            allUpAppServers.add(d.getSlbId() + "_" + d.getSlbVirtualServerId() + "_" + d.getGroupId() + "_" + d.getIp());
+        }
+        return allUpAppServers;
+    }
 
     @Override
     public void upServer(String ip) throws Exception {
@@ -75,7 +84,7 @@ public class StatusServiceImpl implements StatusService {
 
 
     @Override
-    public void upMember(Long groupId, String ip) throws Exception {
+    public void upMember(Long groupId, List<String> ips) throws Exception {
 
         List<GroupSlb> appslblist = slbRepository.listGroupSlbsByGroups(new Long[]{groupId});
         if (appslblist==null||appslblist.size()==0)
@@ -89,14 +98,17 @@ public class StatusServiceImpl implements StatusService {
 
         for (GroupSlb d : appslblist)
         {
-            statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(d.getSlbId())
-                    .setSlbVirtualServerId(d.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(true));
+            for (String ip : ips)
+            {
+                statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(d.getSlbId())
+                        .setSlbVirtualServerId(d.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(true));
+            }
             logger.info("[up Member]: AppSlb:"+d.toString());
         }
     }
 
     @Override
-    public void downMember(Long groupId, String ip) throws Exception {
+    public void downMember(Long groupId, List<String> ips) throws Exception {
 
         List<GroupSlb> appslblist = slbRepository.listGroupSlbsByGroups(new Long[]{groupId});
         if (appslblist==null||appslblist.size()==0)
@@ -110,8 +122,11 @@ public class StatusServiceImpl implements StatusService {
 
         for (GroupSlb d : appslblist)
         {
-            statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(d.getSlbId())
-                    .setSlbVirtualServerId(d.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(false));
+            for (String ip : ips)
+            {
+                statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(d.getSlbId())
+                        .setSlbVirtualServerId(d.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(false));
+            }
             logger.info("[down Member]: AppSlb:"+d.toString());
         }
 

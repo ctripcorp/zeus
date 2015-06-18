@@ -28,7 +28,7 @@ public class NginxConfBuilderImpl implements NginxConfBuilder {
     }
 
     @Override
-    public String generateUpstreamsConf(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allDownGroupServers) throws Exception{
-        return UpstreamsConf.generate(slb,vs,groups,allDownServers,allDownGroupServers);
+    public String generateUpstreamsConf(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception{
+        return UpstreamsConf.generate(slb,vs,groups,allDownServers,allUpGroupServers);
     }
 }

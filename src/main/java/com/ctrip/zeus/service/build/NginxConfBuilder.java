@@ -36,11 +36,11 @@ public interface NginxConfBuilder extends Repository {
      * @param slb the slb entity
      * @param vs the virtualServer
      * @param groups  app entities
-     * @param allDownServers  allDownAppServers
-     * @param allDownGroupServers  allDownAppServers
+     * @param allDownServers  allDownGroupServers
+     * @param allUpGroupServers  allUpGroupServers
      * @return nginx upstream config data
      * @throws Exception
      */
-    String generateUpstreamsConf(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allDownGroupServers)throws Exception;
+    String generateUpstreamsConf(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allUpGroupServers)throws Exception;
 
 }

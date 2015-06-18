@@ -27,7 +27,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -132,9 +135,15 @@ public class ServerResource {
     @GET
     @Path("/upMember")
     @Authorize(name="upDownMember")
-    public Response upMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
+    public Response upMember(@Context HttpServletRequest request,
+                             @Context HttpHeaders hh,
+                             @QueryParam("groupId") Long groupId,
+                             @QueryParam("groupName") String groupName,
+                             @QueryParam("ip") List<String> ips,
+                             @QueryParam("batch") Boolean batch)throws Exception
     {
         Long _groupId = null;
+        List<String> _ips = new ArrayList<>();
         if (groupId != null)
         {
             _groupId = groupId;
@@ -145,16 +154,35 @@ public class ServerResource {
         {
             throw new ValidationException("Group Id or Name not found!");
         }
-        statusService.upMember(_groupId,ip);
-        return memberOps(hh, _groupId, ip);
+        if (null != batch && batch.equals(true))
+        {
+            Group gp = groupRepository.getById(_groupId);
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers)
+            {
+                _ips.add(gs.getIp());
+            }
+        }else if (ips != null)
+        {
+            _ips.addAll(ips);
+        }
+        statusService.upMember(_groupId,_ips);
+        return memberOps(hh, _groupId, _ips);
     }
 
     @GET
     @Path("/downMember")
     @Authorize(name="upDownMember")
-    public Response downMember(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("groupName") String groupName, @QueryParam("ip") String ip)throws Exception
+    public Response downMember(@Context HttpServletRequest request,
+                               @Context HttpHeaders hh,
+                               @QueryParam("groupId") Long groupId,
+                               @QueryParam("groupName") String groupName,
+                               @QueryParam("ip") List<String> ips,
+                               @QueryParam("batch") Boolean batch)throws Exception
     {
         Long _groupId = null;
+        List<String> _ips = new ArrayList<>();
+
         if (groupId != null)
         {
             _groupId = groupId;
@@ -165,18 +193,37 @@ public class ServerResource {
         {
             throw new ValidationException("Group Id or Name not found!");
         }
-        statusService.downMember(_groupId, ip);
-        return memberOps(hh, _groupId, ip);
+        if (null != batch && batch.equals(true))
+        {
+            Group gp = groupRepository.getById(_groupId);
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers)
+            {
+                _ips.add(gs.getIp());
+            }
+        }else if (ips != null)
+        {
+            _ips.addAll(ips);
+        }
+        statusService.downMember(_groupId, _ips);
+        return memberOps(hh, _groupId, _ips);
     }
 
 
-    private Response memberOps(HttpHeaders hh,Long groupId,String ip)throws Exception{
+    private Response memberOps(HttpHeaders hh,Long groupId,List<String> ips)throws Exception{
 
-        //get slb by appname and ip
-        List<Slb> slblist = slbRepository.listByGroupServerAndGroup(ip,groupId);
-        AssertUtils.isNull(slblist,"Not find slb for GroupId ["+groupId+"] and ip ["+ip+"]");
+        //get slb by groupId and ip
+        Set<Slb> slbList = new HashSet<>();
+        List<Slb> tmp ;
+        for (String ip : ips)
+        {
+            tmp = slbRepository.listByGroupServerAndGroup(ip,groupId);
+            AssertUtils.isNull(tmp,"Not find slb for GroupId ["+groupId+"] and ip ["+ip+"]");
+            slbList.addAll(tmp);
+        }
+        AssertUtils.assertNotEquels(0,slbList.size(),"Group or ips is not correct!");
 
-        for (Slb slb : slblist) {
+        for (Slb slb : slbList) {
             Long slbId = slb.getId();
             //get ticket
             int ticket = buildInfoService.getTicket(slbId);

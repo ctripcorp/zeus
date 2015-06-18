@@ -249,7 +249,7 @@ public class NginxConfServiceImpl implements NginxConfService {
 
 
         Set<String> allDownServers = statusService.findAllDownServers();
-        Set<String> allDownGroupServers = statusService.findAllDownGroupServersBySlbId(slbId);
+        Set<String> allUpGroupServers = statusService.findAllUpGroupServersBySlbId(slbId);
 
         int length = slb.getVirtualServers().size();
         NginxConfServerDo[] nginxConfServerDos = new NginxConfServerDo[length];
@@ -263,7 +263,7 @@ public class NginxConfServiceImpl implements NginxConfService {
             }
 
             String serverConf = nginxConfigBuilder.generateServerConf(slb, vs, groups);
-            String upstreamConf = nginxConfigBuilder.generateUpstreamsConf(slb, vs, groups, allDownServers, allDownGroupServers);
+            String upstreamConf = nginxConfigBuilder.generateUpstreamsConf(slb, vs, groups, allDownServers, allUpGroupServers);
 
             nginxConfServerDos[index] = new NginxConfServerDo().setCreatedTime(new Date())
                     .setSlbId(slb.getId())

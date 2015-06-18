@@ -16,12 +16,12 @@ import java.util.Set;
  * @date: 3/10/2015.
  */
 public class UpstreamsConf {
-    public static String generate(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allDownAppServers)throws Exception {
+    public static String generate(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allUpGroupServers)throws Exception {
         StringBuilder b = new StringBuilder(10240);
 
         //add upstreams
         for (Group group : groups) {
-            b.append(buildUpstreamConf(slb, vs, group, buildUpstreamName(slb, vs, group), allDownServers, allDownAppServers));
+            b.append(buildUpstreamConf(slb, vs, group, buildUpstreamName(slb, vs, group), allDownServers, allUpGroupServers));
         }
 
         return b.toString();
@@ -33,19 +33,19 @@ public class UpstreamsConf {
         return "backend_" + group.getName();
     }
 
-    public static String buildUpstreamConf(Slb slb, VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception {
+    public static String buildUpstreamConf(Slb slb, VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("upstream ").append(upstreamName).append(" {").append("\n");
 
-        b.append(buildUpstreamConfBody(slb,vs,group,allDownServers,allDownAppServers));
+        b.append(buildUpstreamConfBody(slb,vs,group,allDownServers,allUpGroupServers));
 
         b.append("}").append("\n");
 
         return StringFormat.format(b.toString());
     }
 
-    public static String buildUpstreamConfBody(Slb slb, VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allDownAppServers) throws Exception {
+    public static String buildUpstreamConfBody(Slb slb, VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
         StringBuilder b = new StringBuilder(1024);
         //LBMethod
         b.append(LBConf.generate(slb, vs, group));
@@ -64,7 +64,7 @@ public class UpstreamsConf {
             String ip = as.getIp();
             boolean isDown = allDownServers.contains(ip);
             if (!isDown) {
-                isDown = allDownAppServers.contains(slb.getId() + "_" + vs.getId() + "_" + group.getId() + "_" + ip);
+                isDown = !allUpGroupServers.contains(slb.getId() + "_" + vs.getId() + "_" + group.getId() + "_" + ip);
             }
 
             AssertUtils.isNull(as.getPort(),"GroupServer Port config is null! virtual server "+vs.getId());

@@ -23,7 +23,7 @@ public class AssertUtils {
     }
 
     public static <T> T assertEquels(T except,T target,String exceptionMsg)throws Exception{
-        if (target!=except)
+        if (target != except || ( target!=null && !target.equals(except)))
         {
             Exception e = new ValidationException(exceptionMsg);
             logger.warn("Assert Utils arrertEquels: ",e);
@@ -32,7 +32,7 @@ public class AssertUtils {
         return target;
     }
     public static <T> T assertNotEquels(T except,T target,String exceptionMsg)throws Exception{
-        if (target==except)
+        if (target==except || (target!=null && target.equals(except)))
         {
             Exception e = new ValidationException(exceptionMsg);
             logger.warn("Assert Utils assertNotEquels: ",e);

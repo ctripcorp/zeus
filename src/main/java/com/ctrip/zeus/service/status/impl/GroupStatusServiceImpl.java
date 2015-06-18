@@ -95,6 +95,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     public GroupStatus getGroupStatus(Long groupId, Long slbId) throws Exception {
         Slb slb = slbRepository.getById(slbId);
         AssertUtils.isNull(slb,"slbId not found!");
+        AssertUtils.assertNotEquels(0,slb.getSlbServers().size(),"Slb doesn't have any slb server!");
         StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
         return client.getGroupStatus(groupId,slbId);
     }

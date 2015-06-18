@@ -17,6 +17,7 @@ public interface StatusGroupServerService {
     List<StatusGroupServerDo> listByGroupId(Long groupId) throws Exception;
 
     List<StatusGroupServerDo> listByServer(String ip) throws Exception;
+    List<StatusGroupServerDo> listAllUpBySlbId(Long slbId) throws Exception;
 
     List<StatusGroupServerDo> listBySlbIdAndGroupIdAndIp( Long slbId,Long groupId,String ip) throws Exception;
     List<StatusGroupServerDo> listBySlbIdAndGroupId(Long slbId,Long groupId) throws Exception;

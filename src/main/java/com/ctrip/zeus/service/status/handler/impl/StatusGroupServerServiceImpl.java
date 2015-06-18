@@ -28,6 +28,11 @@ public class StatusGroupServerServiceImpl implements StatusGroupServerService {
     }
 
     @Override
+    public List<StatusGroupServerDo> listAllUpBySlbId(Long slbId) throws Exception {
+        return statusGroupServerDao.findAllBySlbIdAndIsUp(slbId, true, StatusGroupServerEntity.READSET_FULL);
+    }
+
+    @Override
     public List<StatusGroupServerDo> listByGroupId(Long groupId) throws Exception {
         return statusGroupServerDao.findAllByGroupId(groupId, StatusGroupServerEntity.READSET_FULL);
     }

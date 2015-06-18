@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.status;
 
 import com.ctrip.zeus.service.Repository;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,6 +28,14 @@ public interface StatusService extends Repository {
     Set<String> findAllDownGroupServersBySlbId(Long slbId) throws Exception;
 
     /**
+     * get all up app servers by slbId
+     * @param slbId the slb id
+     * @return app server ip list
+     * @throws Exception
+     */
+    Set<String> findAllUpGroupServersBySlbId(Long slbId) throws Exception;
+
+    /**
      * up server by app server ip
      * @param ip the app server ip
      * @return
@@ -44,20 +53,20 @@ public interface StatusService extends Repository {
 
     /**
      * up member by app server ip and appname
-     * @param ip the app server ip
+     * @param ips the app server ips
      * @param groupId  app name
      * @return
      * @throws Exception
      */
-    void upMember(Long groupId, String ip)throws Exception;
+    void upMember(Long groupId, List<String> ips)throws Exception;
     /**
      * down member by app server ip and appname
-     * @param ip the app server ip
+     * @param ips the app server ips
      * @param groupId  app name
      * @return
      * @throws Exception
      */
-    void downMember(Long groupId, String ip)throws Exception;
+    void downMember(Long groupId, List<String> ips)throws Exception;
 
     /**
      * get App server status by app name and slbname and virtual server ip
