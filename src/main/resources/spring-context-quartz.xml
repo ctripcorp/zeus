@@ -22,7 +22,7 @@
     <bean id="nginxStatusFetcherTrigger"  class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
         <property name="jobDetail" ref="nginxStatusFetcherDetail"/>
         <property name="startDelay" value="1000"/>
-        <property name="repeatInterval" value="1000"/>
+        <property name="repeatInterval" value="60000"/>
     </bean>
     <!-- Scheduler factory bean to glue together jobDetails and triggers to Configure Quartz Scheduler -->
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">

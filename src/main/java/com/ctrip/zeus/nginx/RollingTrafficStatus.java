@@ -65,10 +65,10 @@ public class RollingTrafficStatus {
         }
 
         public void addPair(String rawStubStatus, String rawReqStatus) {
-            TrafficStatus ts = new TrafficStatus();
+            TrafficStatus ts = new TrafficStatus().setTime(new Date());
             lastStubStatus = compareAndSetStubStatusDelta(rawStubStatus, ts);
             lastReqStatus = compareAndSetReqStatusDelta(rawReqStatus, ts);
-            buckets.add(ts.setTime(new Date()));
+            buckets.add(ts);
             if (buckets.size() == length) {
                 buckets.removeFirst();
             }
