@@ -55,6 +55,14 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
+    public Slb getByVirtualServer(Long virtualServerId) throws DalException {
+        SlbVirtualServerDo d = slbVirtualServerDao.findByPK(virtualServerId, SlbVirtualServerEntity.READSET_FULL);
+        if (d == null)
+            return null;
+        return getById(d.getSlbId());
+    }
+
+    @Override
     public VirtualServer getBySlbAndName(String slbName, String virtualServerName) throws DalException {
         SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
         if (d ==  null || d.getId() == 0)

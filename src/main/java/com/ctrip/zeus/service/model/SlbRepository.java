@@ -26,6 +26,8 @@ public interface SlbRepository extends Repository {
      */
     Slb getBySlbServer(String slbServerIp) throws Exception;
 
+    Slb getByVirtualServer(Long virtualServerId) throws Exception;
+
     /**
      * get the slb list which manage the group server ip or/and group id
      * @param groupServerIp the group server ip

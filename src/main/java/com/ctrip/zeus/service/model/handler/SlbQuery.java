@@ -19,6 +19,8 @@ public interface SlbQuery {
 
     Slb getBySlbServer(String slbServerIp) throws DalException;
 
+    Slb getByVirtualServer(Long virtualServerId) throws DalException;
+
     VirtualServer getBySlbAndName(String slbName, String virtualServerName) throws DalException;
 
     List<Slb> getAll() throws DalException;

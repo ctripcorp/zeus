@@ -73,6 +73,12 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     @Test
+    public void testGetSlbByVirtualServer() throws Exception {
+        Slb slb = slbRepo.getByVirtualServer(defaultSlb.getVirtualServers().get(0).getId());
+        ModelAssert.assertSlbEquals(defaultSlb, slb);
+    }
+
+    @Test
     public void testListSlbsByGroupServerAndGroup() throws Exception {
         List<Slb> slbsByGroupServer = slbRepo.listByGroupServerAndGroup("10.2.6.201", null);
         Assert.assertEquals(1, slbsByGroupServer.size());
