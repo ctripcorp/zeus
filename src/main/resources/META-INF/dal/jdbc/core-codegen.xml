@@ -703,8 +703,8 @@
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
     <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" />
-    <member name="path" field="path" value-type="String" length="200" nullable="false" />
-    <member name="rewrite" field="rewrite" value-type="String" length="255" />
+    <member name="path" field="path" value-type="String" length="1024" nullable="false" />
+    <member name="rewrite" field="rewrite" value-type="String" length="16777215" />
     <member name="priority" field="priority" value-type="int" length="10" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />

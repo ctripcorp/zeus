@@ -76,6 +76,18 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-slb-virtual-server-id-and-version" type="SELECT">
+                <param name="slb-virtual-server-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
+                        AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="nginx-conf-upstream" table="nginx_conf_upstream" alias="ncs">
@@ -112,6 +124,18 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-virtual-server-id-and-version" type="SELECT">
+                <param name="slb-virtual-server-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
                         AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>

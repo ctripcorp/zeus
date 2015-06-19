@@ -1,7 +1,11 @@
 package com.ctrip.zeus.restful.resource;
 
+import com.ctrip.zeus.dal.core.NginxConfServerDao;
+import com.ctrip.zeus.dal.core.NginxConfServerEntity;
+import com.ctrip.zeus.dal.core.NginxConfUpstreamDao;
 import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.nginx.NginxService;
 import org.springframework.stereotype.Component;
 
@@ -26,52 +30,57 @@ public class NginxResource {
     private NginxService nginxService;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private NginxConfService nginxConfService;
+    @Resource
+    private NginxConfServerDao nginxConfServerDao;
+    @Resource
+    private NginxConfUpstreamDao nginxConfUpstreamDao;
 
     @GET
     @Path("/load")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response load(@Context HttpServletRequest request,@Context HttpHeaders hh) {
-        try {
-            NginxResponse result = nginxService.load();
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-            }
-        } catch (Exception e) {
-            return Response.serverError().build();
+    public Response load(@Context HttpServletRequest request,@Context HttpHeaders hh) throws Exception{
+        NginxResponse result = nginxService.load();
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
         }
+    }
+
+    @GET
+    @Path("/conf")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getVsConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("vs") Long vsid) throws Exception{
+        int version = nginxConfService.getCurrentVersion(slbId);
+        nginxConfServerDao.findBySlbVirtualServerIdAndVersion(vsid,1, NginxConfServerEntity.READSET_FULL);
     }
 
     @GET
     @Path("/write")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response write(@Context HttpServletRequest request,@Context HttpHeaders hh )
+    public Response write(@Context HttpServletRequest request,@Context HttpHeaders hh )throws Exception
     {
-        try {
-            NginxResponse result = nginxService.writeToDisk();
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-            }
-        } catch (Exception e) {
-            return Response.serverError().build();
+        NginxResponse result = nginxService.writeToDisk();
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
         }
+
     }
     @POST
     @Path("/dyups/{upStreamName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response localDyups(@Context HttpServletRequest request,@Context HttpHeaders hh,@PathParam("upStreamName") String upsName, String upsCommands ){
-        try {
-            NginxResponse result = nginxService.dyopsLocal(upsName,upsCommands);
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-            }
-        } catch (Exception e) {
-            return Response.serverError().build();
+    public Response localDyups(@Context HttpServletRequest request,
+                               @Context HttpHeaders hh,
+                               @PathParam("upStreamName") String upsName, String upsCommands )throws Exception{
+        NginxResponse result = nginxService.dyopsLocal(upsName,upsCommands);
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
         }
     }
 
