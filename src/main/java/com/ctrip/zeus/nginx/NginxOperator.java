@@ -65,14 +65,13 @@ public class NginxOperator {
             exec.setStreamHandler(streamHandler);
 
             int exitVal = exec.execute(commandline);
-            boolean failed = exec.isFailure(exitVal);
             String out = outputStream.toString("UTF-8");
             String error = errorStream.toString("UTF-8");
 
             NginxResponse response = new NginxResponse();
             response.setOutMsg(out);
             response.setErrMsg(error);
-            response.setSucceed(!failed);
+            response.setSucceed(0==exitVal);
 
             return response;
         } catch (IOException e) {
@@ -94,14 +93,12 @@ public class NginxOperator {
             exec.setStreamHandler(streamHandler);
 
             int exitVal = exec.execute(commandline);
-            boolean failed = exec.isFailure(exitVal);
             String out = outputStream.toString("UTF-8");
             String error = errorStream.toString("UTF-8");
-
             NginxResponse response = new NginxResponse();
             response.setOutMsg(out);
             response.setErrMsg(error);
-            response.setSucceed(!failed);
+            response.setSucceed(0==exitVal);
 
             return response;
         } catch (IOException e) {
