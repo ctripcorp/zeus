@@ -58,6 +58,11 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
+    public Slb getByVirtualServer(Long virtualServerId) throws Exception {
+        return slbQuery.getByVirtualServer(virtualServerId);
+    }
+
+    @Override
     public List<Slb> listByGroupServerAndGroup(String groupServerIp, Long groupId) throws Exception {
         if (groupServerIp == null && (groupId == null || groupId.longValue() <= 0))
             return null;
