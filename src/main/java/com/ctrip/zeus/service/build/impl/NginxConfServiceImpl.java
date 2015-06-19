@@ -236,7 +236,7 @@ public class NginxConfServiceImpl implements NginxConfService {
         }
 
         String slbContent =activeConfService.getConfSlbActiveContentBySlbId(slbId);
-        AssertUtils.isNull(slbContent,"Not found slb content by slbId!");
+        AssertUtils.assertNotNull(slbContent, "Not found slb content by slbId!");
 
         Slb slb = DefaultSaxParser.parseEntity(Slb.class, slbContent);
 

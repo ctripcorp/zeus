@@ -9,7 +9,6 @@ import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.unidal.dal.jdbc.DalNotFoundException;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -97,7 +96,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
 
         if (groupIds.size()>0)
         {
-            AssertUtils.isNull(list,"[BuildInfoService getAllNeededSlb]Not found GroupSlbs by groupIds! Please check the configuration of groupIds: "+groupIds.toString());
+            AssertUtils.assertNotNull(list, "[BuildInfoService getAllNeededSlb]Not found GroupSlbs by groupIds! Please check the configuration of groupIds: " + groupIds.toString());
         }
 
         if (list!=null&&list.size()>0)

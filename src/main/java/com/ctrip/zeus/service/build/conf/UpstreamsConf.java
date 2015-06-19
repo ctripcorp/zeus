@@ -28,8 +28,8 @@ public class UpstreamsConf {
     }
 
     public static String buildUpstreamName(Slb slb, VirtualServer vs, Group group) throws Exception{
-        AssertUtils.isNull(vs.getId(),"virtual server name is null!");
-        AssertUtils.isNull(group.getName(),"app name is null!");
+        AssertUtils.assertNotNull(vs.getId(), "virtual server name is null!");
+        AssertUtils.assertNotNull(group.getName(), "app name is null!");
         return "backend_" + group.getName();
     }
 
@@ -67,10 +67,10 @@ public class UpstreamsConf {
                 isDown = !allUpGroupServers.contains(slb.getId() + "_" + vs.getId() + "_" + group.getId() + "_" + ip);
             }
 
-            AssertUtils.isNull(as.getPort(),"GroupServer Port config is null! virtual server "+vs.getId());
-            AssertUtils.isNull(as.getWeight(),"GroupServer Weight config is null! virtual server "+vs.getId());
-            AssertUtils.isNull(as.getMaxFails(),"GroupServer MaxFails config is null! virtual server "+vs.getId());
-            AssertUtils.isNull(as.getFailTimeout(),"GroupServer FailTimeout config is null! virtual server "+vs.getId());
+            AssertUtils.assertNotNull(as.getPort(), "GroupServer Port config is null! virtual server " + vs.getId());
+            AssertUtils.assertNotNull(as.getWeight(), "GroupServer Weight config is null! virtual server " + vs.getId());
+            AssertUtils.assertNotNull(as.getMaxFails(), "GroupServer MaxFails config is null! virtual server " + vs.getId());
+            AssertUtils.assertNotNull(as.getFailTimeout(), "GroupServer FailTimeout config is null! virtual server " + vs.getId());
 
             b.append("server ").append(ip + ":" + as.getPort())
                     .append(" weight=").append(as.getWeight())

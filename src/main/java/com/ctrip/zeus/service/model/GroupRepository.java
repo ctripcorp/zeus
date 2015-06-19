@@ -16,6 +16,8 @@ public interface GroupRepository extends Repository {
 
     List<Group> list(String slbName, String virtualServerName) throws Exception;
 
+    List<Group> list(Long slbId) throws Exception;
+
     List<Group> listLimit(Long fromId, int maxCount) throws Exception;
 
     Group getById(Long id) throws Exception;

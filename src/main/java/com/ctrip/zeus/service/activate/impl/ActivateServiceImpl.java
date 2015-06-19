@@ -41,7 +41,7 @@ public class ActivateServiceImpl implements ActivateService {
         if (archive==null)
         {
             logger.info("getLatestSlbArchive return Null! SlbID: "+slbId);
-            AssertUtils.isNull(archive,"[activate]getLatestSlbArchive return Null! SlbID: "+slbId);
+            AssertUtils.assertNotNull(archive, "[activate]getLatestSlbArchive return Null! SlbID: " + slbId);
             return;
         }
 
@@ -59,7 +59,7 @@ public class ActivateServiceImpl implements ActivateService {
         if (archive==null)
         {
             logger.info("getLatestAppArchive return Null! GroupID: "+groupId);
-            AssertUtils.isNull(archive,"[activate]getLatestAppArchive return Null! GroupID: "+groupId);
+            AssertUtils.assertNotNull(archive, "[activate]getLatestAppArchive return Null! GroupID: " + groupId);
             return;
         }
 
@@ -72,7 +72,7 @@ public class ActivateServiceImpl implements ActivateService {
 
         Group group =  DefaultSaxParser.parseEntity(Group.class, c.getContent());
 
-        AssertUtils.isNull(group,"App_ctive.content XML is illegal!");
+        AssertUtils.assertNotNull(group, "App_ctive.content XML is illegal!");
 
         confGroupSlbActiveDao.deleteByGroupId(new ConfGroupSlbActiveDo().setGroupId(groupId));
 

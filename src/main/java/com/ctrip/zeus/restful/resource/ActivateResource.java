@@ -100,7 +100,7 @@ public class ActivateResource {
 
     private Response activateAll(List<Long> slbIds,List<Long> groupIds, HttpHeaders hh)throws Exception{
 
-        AssertUtils.assertNotEquels(0,slbIds.size()+groupIds.size(),"slbIds list and groupIds list are empty!");
+        AssertUtils.assertNotEquals(0, slbIds.size() + groupIds.size(), "slbIds list and groupIds list are empty!");
 
         //update active action to conf-slb-active and conf-app-active
         activateService.activate(slbIds,groupIds);
