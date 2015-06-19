@@ -7,6 +7,10 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.StringFormat;
+import com.netflix.config.DynamicPropertyFactory;
+import com.netflix.config.DynamicStringProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -15,6 +19,8 @@ import java.util.List;
  * @date: 3/8/2015.
  */
 public class ServerConf {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerConf.class);
+    private static DynamicStringProperty allowSSL = DynamicPropertyFactory.getInstance().getStringProperty("virtual-server-id.ssl", "");
 
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
         StringBuilder b = new StringBuilder(1024);
@@ -25,17 +31,26 @@ public class ServerConf {
         }catch (Exception e){
             throw new ValidationException("virtual server ["+vs.getId()+"] port is illegal!");
         }
-
-
         b.append("server {").append("\n");
         b.append("listen    ").append(vs.getPort()).append(";\n");
         b.append("server_name    ").append(getServerNames(vs)).append(";\n");
         if (vs.getSsl())
         {
-            b.append("ssl on;\n")
-             .append("ssl_certificate /data/nginx/").append(vs.getId()).append("/ssl.crt;\n")
-             .append("ssl_certificate_key /data/nginx/").append(vs.getId()).append("/ssl.key;\n");
+            String []sslList = allowSSL.get().split(";");
+            for (String vsid : sslList)
+            {
+                try {
+                    if(vs.getId().equals(Long.parseLong(vsid))){
+                        b.append("ssl on;\n")
+                         .append("ssl_certificate /data/nginx/").append(vs.getId()).append("/ssl.crt;\n")
+                         .append("ssl_certificate_key /data/nginx/").append(vs.getId()).append("/ssl.key;\n");
+                    }
+                }catch (Exception e){
+                    LOGGER.warn("build ssl config Exception:",e);
+                }
+            }
         }
+
         NginxConf.appendServerCommand(b);
         //add locations
         for (Group group : groups) {
