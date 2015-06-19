@@ -1,11 +1,11 @@
 package com.ctrip.zeus.restful.resource;
 
-import com.ctrip.zeus.dal.core.NginxConfServerDao;
-import com.ctrip.zeus.dal.core.NginxConfServerEntity;
-import com.ctrip.zeus.dal.core.NginxConfUpstreamDao;
+import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import org.springframework.stereotype.Component;
 
@@ -36,6 +36,8 @@ public class NginxResource {
     private NginxConfServerDao nginxConfServerDao;
     @Resource
     private NginxConfUpstreamDao nginxConfUpstreamDao;
+    @Resource
+    private SlbRepository slbRepository;
 
     @GET
     @Path("/load")
@@ -52,9 +54,25 @@ public class NginxResource {
     @GET
     @Path("/conf")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getVsConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("vs") Long vsid) throws Exception{
-        int version = nginxConfService.getCurrentVersion(slbId);
-        nginxConfServerDao.findBySlbVirtualServerIdAndVersion(vsid,1, NginxConfServerEntity.READSET_FULL);
+    public Response getVsConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("vs") Long vsid ,@QueryParam("version") Integer versionNum) throws Exception{
+        VirtualServerConfResponse response = new VirtualServerConfResponse();
+
+        Slb slb = slbRepository.getByVirtualServer(vsid);
+        int version;
+        if (null == versionNum || versionNum <= 0)
+        {
+            version= nginxConfService.getCurrentVersion(slb.getId());
+        }else
+        {
+            version = versionNum;
+        }
+        NginxConfServerDo nginxConfServerDo = nginxConfServerDao.findBySlbVirtualServerIdAndVersion(vsid, version, NginxConfServerEntity.READSET_FULL);
+        NginxConfUpstreamDo nginxConfUpstreamDo = nginxConfUpstreamDao.findBySlbVirtualServerIdAndVersion(vsid,version,NginxConfUpstreamEntity.READSET_FULL);
+        response.setVersion(version)
+                .setServerConf(nginxConfServerDo.getContent())
+                .setUpstreamConf(nginxConfUpstreamDo.getContent())
+                .setVirtualServerId(vsid);
+        return responseHandler.handle(response, hh.getMediaType());
     }
 
     @GET

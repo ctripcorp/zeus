@@ -92,4 +92,10 @@
         <server-err-count>17915825952</server-err-count>
         <time>2013-05-20 13:34:00</time>
     </req-status>
+    <virtual-server-conf-response>
+        <virtual-server-id>12345678901</virtual-server-id>
+        <version>1</version>
+        <server-conf>server-conf</server-conf>
+        <upstream-conf>upstream-conf</upstream-conf>
+    </virtual-server-conf-response>
 </nginx>

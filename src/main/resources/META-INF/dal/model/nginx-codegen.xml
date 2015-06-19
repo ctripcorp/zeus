@@ -9,6 +9,7 @@
     <entity-ref name="traffic-status-list" />
     <entity-ref name="traffic-status" />
     <entity-ref name="req-status" />
+    <entity-ref name="virtual-server-conf-response" />
   </entity>
   <entity name="upstream-status">
     <entity-ref name="servers" />
@@ -79,6 +80,12 @@
     <element name="waiting" value-type="long" />
     <element name="time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
     <entity-ref name="req-status" type="list" names="req-statuses" xml-indent="true" />
+  </entity>
+  <entity name="virtual-server-conf-response">
+    <element name="virtual-server-id" value-type="long" />
+    <element name="version" value-type="int" />
+    <element name="server-conf" value-type="String" />
+    <element name="upstream-conf" value-type="String" />
   </entity>
 </model>
 
