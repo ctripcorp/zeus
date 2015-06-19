@@ -12,6 +12,8 @@ import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -38,6 +40,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     StatusService statusService;
 
     private long currentSlbId = -1L;
+    private Logger LOGGER = LoggerFactory.getLogger(GroupStatusServiceImpl.class);
 
     @Override
     public List<GroupStatus> getAllGroupStatus() throws Exception {
@@ -95,7 +98,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     public GroupStatus getGroupStatus(Long groupId, Long slbId) throws Exception {
         Slb slb = slbRepository.getById(slbId);
         AssertUtils.assertNotNull(slb, "slbId not found!");
-        AssertUtils.assertNotEquals(0,slb.getSlbServers().size(),"Slb doesn't have any slb server!");
+        AssertUtils.assertNotEquals(0, slb.getSlbServers().size(), "Slb doesn't have any slb server!");
         StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
         return client.getGroupStatus(groupId,slbId);
     }
@@ -121,10 +124,6 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
     //TODO: should include port to get accurate upstream
     private boolean getUpstreamStatus(Long groupId, String ip , boolean memberUp , boolean serverUp) throws Exception {
-        if (!(memberUp&&serverUp))
-        {
-            return false;
-        }
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
         String upstreamNameEndWith = "_"+groupRepository.getById(groupId).getName();
@@ -137,13 +136,18 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             String[] ipPorts = ipPort.split(":");
             if (ipPorts.length == 2){
                 if (ipPorts[0].equals(ip)){
-                    return "up".equalsIgnoreCase(server.getStatus());
+                    boolean flag = "up".equalsIgnoreCase(server.getStatus());
+                    if (!(memberUp&&serverUp))
+                    {
+                        LOGGER.error("nginx status api return status while memberUp and serverUp are down! ip:"+ip+" groupId:"+groupId);
+                    }
+                    return flag;
                 }
             }
         }
         //Not found status from nginx , ip is mark down or health check is disable
-        // return memberUp&&serverUp ,always be true
-        return true;
+        // return memberUp&&serverUp
+        return memberUp&&serverUp;
     }
     private boolean isCurrentSlb(Long slbId) throws Exception {
         if (currentSlbId < 0)
