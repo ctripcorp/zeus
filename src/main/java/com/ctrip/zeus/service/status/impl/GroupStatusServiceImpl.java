@@ -137,7 +137,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             if (ipPorts.length == 2){
                 if (ipPorts[0].equals(ip)){
                     boolean flag = "up".equalsIgnoreCase(server.getStatus());
-                    if (!(memberUp&&serverUp))
+                    if (!(memberUp&&serverUp)&&flag)
                     {
                         LOGGER.error("nginx status api return status while memberUp and serverUp are down! ip:"+ip+" groupId:"+groupId);
                     }
