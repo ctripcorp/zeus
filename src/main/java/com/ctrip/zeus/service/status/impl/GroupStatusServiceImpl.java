@@ -110,7 +110,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
         boolean memberUp = statusService.getGroupServerStatus(slbId, groupId, ip);
         boolean serverUp = statusService.getServerStatus(ip);
-        boolean backendUp = getUpstreamStatus(groupId,ip);
+        boolean backendUp = getUpstreamStatus(groupId,ip,memberUp,serverUp);
 
         groupServerStatus.setServer(serverUp);
         groupServerStatus.setMember(memberUp);
@@ -120,7 +120,11 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     }
 
     //TODO: should include port to get accurate upstream
-    private boolean getUpstreamStatus(Long groupId, String ip) throws Exception {
+    private boolean getUpstreamStatus(Long groupId, String ip , boolean memberUp , boolean serverUp) throws Exception {
+        if (!(memberUp&&serverUp))
+        {
+            return false;
+        }
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
         String upstreamNameEndWith = "_"+groupRepository.getById(groupId).getName();
@@ -137,7 +141,9 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 }
             }
         }
-        return false;
+        //Not found status from nginx , ip is mark down or health check is disable
+        // return memberUp&&serverUp ,always be true
+        return true;
     }
     private boolean isCurrentSlb(Long slbId) throws Exception {
         if (currentSlbId < 0)
