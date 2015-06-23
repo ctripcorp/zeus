@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class NginxOperator {
@@ -82,27 +83,22 @@ public class NginxOperator {
     }
     public NginxResponse cleanConf(List<Long> vsid) throws IOException{
         try {
-            StringBuilder sb = new StringBuilder(128);
-            sb.append("'");
+            List<String> confFileList = new ArrayList<>();
             for (Long vs : vsid)
             {
-                 sb.append(vs).append(".conf\\|");
+                confFileList.add(vs+CONF_SUFFIX);
             }
-            sb.append("'");
-
-            String cleanVhostCommand = "sudo ls "+nginxConfDir+"/vhosts | grep -vw "+sb.toString()+"|sed \"s:^:"+nginxConfDir+"/vhosts/: \" | xargs sudo rm ";
-            String cleanUpstreamCommand = "sudo ls "+nginxConfDir+"/upstreams | grep -vw "+sb.toString()+"|sed \"s:^:"+nginxConfDir+"/upstreams/: \" | xargs sudo rm ";
-
+            String cleanVhostCommand = " ls "+nginxConfDir+"/vhosts";
+            String cleanUpstreamCommand = " ls "+nginxConfDir+"/upstreams";
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
-            CommandLine commandline = CommandLine.parse(cleanVhostCommand+";"+cleanUpstreamCommand);
-
+            CommandLine commandline = CommandLine.parse(cleanVhostCommand);
             DefaultExecutor exec = new DefaultExecutor();
             exec.setExitValues(null);
-
             PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream,errorStream);
             exec.setStreamHandler(streamHandler);
 
+            //vhost ls command
             int exitVal = exec.execute(commandline);
             String out = outputStream.toString("UTF-8");
             String error = errorStream.toString("UTF-8");
@@ -110,6 +106,65 @@ public class NginxOperator {
             response.setOutMsg(out);
             response.setErrMsg(error);
             response.setSucceed(0==exitVal);
+
+            //vhost rm command
+            if (response.getSucceed())
+            {
+                String[] lsObj = out.split("\n");
+                StringBuilder sb = new StringBuilder(128);
+                sb.append("rm ");
+                for (String rm : lsObj)
+                {
+                    if (!confFileList.contains(rm.trim()))
+                    {
+                        sb.append(nginxConfDir).append("/vhosts/").append(rm).append(" ");
+                    }
+                }
+                if (!sb.toString().trim().equals("rm")){
+                    commandline = CommandLine.parse(sb.toString());
+                    exitVal = exec.execute(commandline);
+                    out = outputStream.toString("UTF-8");
+                    error = errorStream.toString("UTF-8");
+                    response.setOutMsg(out);
+                    response.setErrMsg(error);
+                    response.setSucceed(0==exitVal);
+                }
+            }
+
+            //upstream ls command
+            commandline = CommandLine.parse(cleanUpstreamCommand);
+            exitVal = exec.execute(commandline);
+            out = outputStream.toString("UTF-8");
+            error = errorStream.toString("UTF-8");
+            NginxResponse upstreamResponse = new NginxResponse();
+            upstreamResponse.setOutMsg(out);
+            upstreamResponse.setErrMsg(error);
+            upstreamResponse.setSucceed(0==exitVal);
+            //upstream rm command
+            if (upstreamResponse.getSucceed())
+            {
+                String[] lsObj = out.split("\n");
+                StringBuilder sb = new StringBuilder(128);
+                sb.append("rm ");
+                for (String rm : lsObj)
+                {
+                    if (!confFileList.contains(rm.trim()))
+                    {
+                        sb.append(nginxConfDir).append("/upstreams/").append(rm).append(" ");
+                    }
+                }
+                if (!sb.toString().trim().equals("rm")){
+                    commandline = CommandLine.parse(sb.toString());
+                    exitVal = exec.execute(commandline);
+                    out = outputStream.toString("UTF-8");
+                    error = errorStream.toString("UTF-8");
+                    upstreamResponse.setOutMsg(out);
+                    upstreamResponse.setErrMsg(error);
+                    upstreamResponse.setSucceed(0==exitVal);
+                }
+            }
+            LOGGER.info(response.toString());
+            LOGGER.info(upstreamResponse.toString());
             return response;
         } catch (IOException e) {
             LOGGER.error("Fail to clean conf",e);
