@@ -66,6 +66,7 @@ public class NginxServiceImpl implements NginxService {
 
         NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
 
+        cleanConfOnDisk(slbId, version, nginxOperator);
         writeConfToDisk(slbId, version, nginxOperator);
 
         NginxResponse response = nginxOperator.reloadConfTest();
@@ -357,5 +358,13 @@ public class NginxServiceImpl implements NginxService {
         for (NginxConfUpstreamData d : nginxConfUpstreamList) {
             nginxOperator.writeUpstreamsConf(d.getVsId(), d.getContent());
         }
+    }
+    private void cleanConfOnDisk (Long slbId, int version, NginxOperator nginxOperator) throws Exception {
+        List<NginxConfServerData> nginxConfServerDataList = nginxConfService.getNginxConfServer(slbId, version);
+        List<Long> vslist = new ArrayList<>();
+        for (NginxConfServerData d : nginxConfServerDataList) {
+            vslist.add(d.getVsId());
+        }
+        nginxOperator.cleanConf(vslist);
     }
 }

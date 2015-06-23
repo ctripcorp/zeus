@@ -35,10 +35,12 @@ public class UpstreamsConf {
 
     public static String buildUpstreamConf(Slb slb, VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
         StringBuilder b = new StringBuilder(1024);
-
+        String body = buildUpstreamConfBody(slb,vs,group,allDownServers,allUpGroupServers);
+        if (null == body){
+            return "";
+        }
         b.append("upstream ").append(upstreamName).append(" {").append("\n");
-
-        b.append(buildUpstreamConfBody(slb,vs,group,allDownServers,allUpGroupServers));
+        b.append(body);
 
         b.append("}").append("\n");
 
@@ -50,14 +52,12 @@ public class UpstreamsConf {
         //LBMethod
         b.append(LBConf.generate(slb, vs, group));
 
-        //ToDo:
-        //b.append("    ").append("zone " + upstreamName + " 64K").append(";\n");
-
         List<GroupServer> groupServers= group.getGroupServers();
 
-        if (groupServers==null)
+        if (groupServers==null||groupServers.size()==0)
         {
-            groupServers = new ArrayList<>();
+//            groupServers = new ArrayList<>();
+            return null;
         }
 
         for (GroupServer as : groupServers) {

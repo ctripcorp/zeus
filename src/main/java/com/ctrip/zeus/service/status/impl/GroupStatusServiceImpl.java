@@ -139,7 +139,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                     boolean flag = "up".equalsIgnoreCase(server.getStatus());
                     if (!(memberUp&&serverUp)&&flag)
                     {
-                        LOGGER.error("nginx status api return status while memberUp and serverUp are down! ip:"+ip+" groupId:"+groupId);
+                        LOGGER.error("nginx status api return status while memberUp or serverUp is down! ip:"+ip+" groupId:"+groupId);
                     }
                     return flag;
                 }
