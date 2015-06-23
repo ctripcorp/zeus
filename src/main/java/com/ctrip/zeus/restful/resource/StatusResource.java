@@ -47,7 +47,9 @@ public class StatusResource {
     @Path("/groups")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response allGroupStatusInSlb(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("slbId") Long slbId, @QueryParam("slbName") String slbName) throws Exception {
+    public Response allGroupStatusInSlb(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                        @QueryParam("slbId") Long slbId,
+                                        @QueryParam("slbName") String slbName) throws Exception {
         Long _slbId = null; //slbRepository.get(slbName).getId();
         List<GroupStatus> statusList = null;
         if (slbId != null) {
@@ -72,7 +74,11 @@ public class StatusResource {
     @Path("/group")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") Long groupId, @QueryParam("groupName") String groupName, @QueryParam("slbId") Long slbId, @QueryParam("slbName") String slbName) throws Exception {
+    public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                @QueryParam("groupId") Long groupId,
+                                @QueryParam("groupName") String groupName,
+                                @QueryParam("slbId") Long slbId,
+                                @QueryParam("slbName") String slbName) throws Exception {
         Long _groupId = null;
         Long _slbId = null;
         GroupStatus statusResult = null;
@@ -92,16 +98,15 @@ public class StatusResource {
         }
         if (null == _slbId) {
             List<GroupStatus> statusList = groupStatusService.getGroupStatus(_groupId);
-            if (statusList != null && statusList.size() > 0)
-            {
+            if (statusList != null && statusList.size() > 0) {
                 statusResult = statusList.get(0);
-            }else{
+            } else {
                 throw new ValidationException("SlbId param is needed!");
             }
         } else {
             statusResult = groupStatusService.getGroupStatus(_groupId, _slbId);
         }
-        
+
         return responseHandler.handle(statusResult, hh.getMediaType());
     }
 
@@ -109,25 +114,26 @@ public class StatusResource {
     @Path("/group/{groupId:[0-9]+}/slb/{slbId:[0-9]+}/server/{sip}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response groupServerStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("groupId") Long groupId, @PathParam("slbId") Long slbId, @PathParam("sip") String sip) throws Exception {
+    public Response groupServerStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                      @PathParam("groupId") Long groupId,
+                                      @PathParam("slbId") Long slbId,
+                                      @PathParam("sip") String sip) throws Exception {
         String[] ipPort = sip.split(":");
         if (ipPort.length != 2) {
             throw new IllegalArgumentException("server should be ip:port format");
         }
         GroupServerStatus groupServerStatus = groupStatusService.getGroupServerStatus(groupId, slbId, ipPort[0], Integer.valueOf(ipPort[1]));
-
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(GroupServerStatus.XML, groupServerStatus)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(GroupServerStatus.JSON, groupServerStatus)).type(MediaType.APPLICATION_JSON).build();
-        }
+        return responseHandler.handle(groupServerStatus, hh.getMediaType());
     }
 
     @GET
     @Path("/groupName/{groupName:[a-zA-Z0-9_-]+}/slbName/{slbName:[a-zA-Z0-9_-]+}/server/{sip}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response groupServerStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("groupName") String groupName, @PathParam("slbName") String slbName, @PathParam("sip") String sip) throws Exception {
+    public Response groupServerStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                      @PathParam("groupName") String groupName,
+                                      @PathParam("slbName") String slbName,
+                                      @PathParam("sip") String sip) throws Exception {
         Long groupId = groupRepository.get(groupName).getId();
         Long slbId = slbRepository.get(slbName).getId();
         String[] ipPort = sip.split(":");
@@ -135,12 +141,7 @@ public class StatusResource {
             throw new IllegalArgumentException("server should be ip:port format");
         }
         GroupServerStatus groupServerStatus = groupStatusService.getGroupServerStatus(groupId, slbId, ipPort[0], Integer.valueOf(ipPort[1]));
-
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(GroupServerStatus.XML, groupServerStatus)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(GroupServerStatus.JSON, groupServerStatus)).type(MediaType.APPLICATION_JSON).build();
-        }
+        return responseHandler.handle(groupServerStatus, hh.getMediaType());
     }
 
 
@@ -148,15 +149,11 @@ public class StatusResource {
     @Path("/group/{groupId:[0-9]+}/slb/{slbId:[0-9]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("groupId") Long groupId, @PathParam("slbId") Long slbId) throws Exception {
-
+    public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                @PathParam("groupId") Long groupId,
+                                @PathParam("slbId") Long slbId) throws Exception {
         GroupStatus groupStatus = groupStatusService.getLocalGroupStatus(groupId, slbId);
-
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(GroupServerStatus.XML, groupStatus)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(GroupServerStatus.JSON, groupStatus)).type(MediaType.APPLICATION_JSON).build();
-        }
+        return responseHandler.handle(groupStatus, hh.getMediaType());
     }
 
 

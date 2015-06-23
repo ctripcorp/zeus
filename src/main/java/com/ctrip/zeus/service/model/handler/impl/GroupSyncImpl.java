@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
@@ -34,9 +35,9 @@ public class GroupSyncImpl implements GroupSync {
     @Resource
     private GroupSlbDao groupSlbDao;
     @Resource
-    private ConfGroupActiveDao confGroupActiveDao;
-    @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
+    @Resource
+    private ActiveConfService activeConfService;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -71,9 +72,8 @@ public class GroupSyncImpl implements GroupSync {
     }
 
     @Override
-    public int delete(Long groupId) throws DalException {
-        if (!removable(groupId))
-            return 0;
+    public int delete(Long groupId) throws Exception {
+        removable(groupId);
         groupSlbDao.deleteByGroup(new GroupSlbDo().setGroupId(groupId));
         groupServerDao.deleteByGroup(new GroupServerDo().setGroupId(groupId));
         groupHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(groupId));
@@ -89,11 +89,10 @@ public class GroupSyncImpl implements GroupSync {
             throw new ValidationException("Virtual server id must exist.");
     }
 
-    private boolean removable(Long groupId) throws DalException {
-        List<ConfGroupActiveDo> l = confGroupActiveDao.findAllByGroupIds(new Long[]{groupId}, ConfGroupActiveEntity.READSET_FULL);
-        if (l.size() == 0)
-            return true;
-        return false;
+    private void removable(Long groupId) throws Exception {
+        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{groupId});
+        if (l.size() > 0)
+            throw new ValidationException("Group must be deactivated before deletion.");
     }
 
     private SlbVirtualServerDo findVirtualServer(GroupSlb gs) throws DalException {
