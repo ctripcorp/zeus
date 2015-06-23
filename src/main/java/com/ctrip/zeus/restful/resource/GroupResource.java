@@ -46,11 +46,12 @@ public class GroupResource {
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
                          @QueryParam("slbId") Long slbId,
-                         @QueryParam("slbName") String slbName) throws Exception {
+                         @QueryParam("slbName") String slbName,
+                         @QueryParam("type") String type) throws Exception {
         GroupList groupList = new GroupList();
         if (slbId == null && slbName == null) {
             for (Group group : groupRepository.list()) {
-                groupList.addGroup(group);
+                groupList.addGroup(getGroupByType(group, type));
             }
         } else {
             if (slbId == null) {
@@ -59,7 +60,7 @@ public class GroupResource {
                 slbId = slbRepository.get(slbName).getId();
             }
             for (Group group : groupRepository.list(slbId)) {
-                groupList.addGroup(group);
+                groupList.addGroup(getGroupByType(group, type));
             }
         }
         groupList.setTotal(groupList.getGroups().size());
@@ -73,7 +74,8 @@ public class GroupResource {
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
                         @QueryParam("groupId") Long groupId,
                         @QueryParam("groupName") String groupName,
-                        @QueryParam("appId") String appId) throws Exception {
+                        @QueryParam("appId") String appId,
+                        @QueryParam("type") String type) throws Exception {
         Group group = null;
         if (groupId == null && groupName == null && appId == null) {
             throw new ValidationException("Missing parameters.");
@@ -88,7 +90,7 @@ public class GroupResource {
             group = groupRepository.getByAppId(appId);
         }
         AssertUtils.assertNotNull(group, "Group cannot be found.");
-        return responseHandler.handle(group, hh.getMediaType());
+        return responseHandler.handle(getGroupByType(group, type), hh.getMediaType());
     }
 
     @POST
@@ -139,5 +141,22 @@ public class GroupResource {
             }
         }
         return g;
+    }
+
+    private Group getGroupByType(Group group, String type) {
+        if ("INFO".equalsIgnoreCase(type)) {
+            return new Group().setId(group.getId())
+                    .setName(group.getName());
+        }
+        if ("DETAIL".equalsIgnoreCase(type)) {
+            return group;
+        }
+        return new Group().setId(group.getId())
+                .setName(group.getName())
+                .setAppId(group.getAppId())
+                .setHealthCheck(group.getHealthCheck())
+                .setLoadBalancingMethod(group.getLoadBalancingMethod())
+                .setSsl(group.getSsl())
+                .setVersion(group.getVersion());
     }
 }

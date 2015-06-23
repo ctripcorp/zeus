@@ -21,7 +21,7 @@ public class GroupClient extends AbstractRestClient {
     }
 
     public List<Group> getAll() {
-        String res = getTarget().path("/api/groups").request().headers(getDefaultHeaders()).get(String.class);
+        String res = getTarget().path("/api/groups").queryParam("type", "detail").request().headers(getDefaultHeaders()).get(String.class);
         try {
             return DefaultJsonParser.parse(GroupList.class, res).getGroups();
         } catch (IOException e) {
@@ -30,7 +30,7 @@ public class GroupClient extends AbstractRestClient {
     }
 
     public Group get(String groupName) {
-        String res = getTarget().path("/api/group").queryParam("groupName", groupName).request(MediaType.APPLICATION_JSON)
+        String res = getTarget().path("/api/group").queryParam("groupName", groupName).queryParam("type", "detail").request(MediaType.APPLICATION_JSON)
                 .headers(getDefaultHeaders()).get(String.class);
         try {
             return DefaultJsonParser.parse(Group.class, res);

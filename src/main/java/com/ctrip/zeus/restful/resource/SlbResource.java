@@ -38,10 +38,11 @@ public class SlbResource {
     @Path("/slbs")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getAllSlbs")
-    public Response list(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
+    public Response list(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                         @QueryParam("type") String type) throws Exception {
         SlbList slbList = new SlbList();
         for (Slb slb : slbRepository.list()) {
-            slbList.addSlb(slb);
+            slbList.addSlb(getSlbByType(slb, type));
         }
         slbList.setTotal(slbList.getSlbs().size());
         return responseHandler.handle(slbList, hh.getMediaType());
@@ -53,7 +54,8 @@ public class SlbResource {
     @Authorize(name = "getSlb")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
                         @QueryParam("slbId") Long slbId,
-                        @QueryParam("slbName") String slbName) throws Exception {
+                        @QueryParam("slbName") String slbName,
+                        @QueryParam("type") String type) throws Exception {
         if (slbId == null && slbName == null) {
             throw new Exception("Missing parameter.");
         }
@@ -65,7 +67,7 @@ public class SlbResource {
             slb = slbRepository.get(slbName);
         }
         AssertUtils.assertNotNull(slb, "Slb cannot be found.");
-        return responseHandler.handle(slb, hh.getMediaType());
+        return responseHandler.handle(getSlbByType(slb, type), hh.getMediaType());
     }
     
     @POST
@@ -117,5 +119,22 @@ public class SlbResource {
             }
         }
         return s;
+    }
+
+    private Slb getSlbByType(Slb slb, String type) {
+        if ("INFO".equalsIgnoreCase(type)) {
+            return new Slb().setId(slb.getId())
+                    .setName(slb.getName());
+        }
+        if ("DETAIL".equalsIgnoreCase(type)) {
+            return slb;
+        }
+        return new Slb().setId(slb.getId())
+                .setName(slb.getName())
+                .setNginxBin(slb.getNginxBin())
+                .setNginxConf(slb.getNginxConf())
+                .setNginxWorkerProcesses(slb.getNginxWorkerProcesses())
+                .setStatus(slb.getStatus())
+                .setVersion(slb.getVersion());
     }
 }
