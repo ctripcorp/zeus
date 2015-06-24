@@ -8,6 +8,8 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
+import com.netflix.config.DynamicStringListProperty;
+import com.netflix.config.DynamicStringProperty;
 
 /**
  * @author:xingchaowang
@@ -16,12 +18,21 @@ import com.netflix.config.DynamicPropertyFactory;
 public class HealthCheckConf {
 
     private static DynamicBooleanProperty disableHealthCheck = DynamicPropertyFactory.getInstance().getBooleanProperty("build.disable.healthCheck", false);
+    private static DynamicStringProperty disableHealthCheckList = DynamicPropertyFactory.getInstance().getStringProperty("build.disable.healthCheck.groupId", "");
 
 
     public static String generate(Slb slb, VirtualServer vs, Group group) throws Exception {
         if (disableHealthCheck.get())
         {
             return "";
+        }
+        String []disableList = disableHealthCheckList.get().split(";");
+        for (String groupId : disableList)
+        {
+            if (String.valueOf(group.getId()).equals(groupId.trim()))
+            {
+                return "";
+            }
         }
         HealthCheck h = group.getHealthCheck();
         if (h == null)

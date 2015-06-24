@@ -39,14 +39,10 @@ public class ServerConf {
             String []sslList = allowSSL.get().split(";");
             for (String vsid : sslList)
             {
-                try {
-                    if(vs.getId().equals(Long.parseLong(vsid))){
-                        b.append("ssl on;\n")
-                         .append("ssl_certificate /data/nginx/").append(vs.getId()).append("/ssl.crt;\n")
-                         .append("ssl_certificate_key /data/nginx/").append(vs.getId()).append("/ssl.key;\n");
-                    }
-                }catch (Exception e){
-                    LOGGER.warn("build ssl config Exception:",e);
+                if(String.valueOf(vs.getId()).equals(vsid.trim())){
+                    b.append("ssl on;\n")
+                     .append("ssl_certificate /data/nginx/").append(vs.getId()).append("/ssl.crt;\n")
+                     .append("ssl_certificate_key /data/nginx/").append(vs.getId()).append("/ssl.key;\n");
                 }
             }
         }
