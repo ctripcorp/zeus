@@ -148,15 +148,15 @@ public class GroupResource {
             return new Group().setId(group.getId())
                     .setName(group.getName());
         }
-        if ("DETAIL".equalsIgnoreCase(type)) {
-            return group;
+        if ("NORMAL".equalsIgnoreCase(type)) {
+            return new Group().setId(group.getId())
+                    .setName(group.getName())
+                    .setAppId(group.getAppId())
+                    .setHealthCheck(group.getHealthCheck())
+                    .setLoadBalancingMethod(group.getLoadBalancingMethod())
+                    .setSsl(group.getSsl())
+                    .setVersion(group.getVersion());
         }
-        return new Group().setId(group.getId())
-                .setName(group.getName())
-                .setAppId(group.getAppId())
-                .setHealthCheck(group.getHealthCheck())
-                .setLoadBalancingMethod(group.getLoadBalancingMethod())
-                .setSsl(group.getSsl())
-                .setVersion(group.getVersion());
+        return group;
     }
 }

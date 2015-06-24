@@ -126,15 +126,15 @@ public class SlbResource {
             return new Slb().setId(slb.getId())
                     .setName(slb.getName());
         }
-        if ("DETAIL".equalsIgnoreCase(type)) {
-            return slb;
+        if ("NORMAL".equalsIgnoreCase(type)) {
+            return new Slb().setId(slb.getId())
+                    .setName(slb.getName())
+                    .setNginxBin(slb.getNginxBin())
+                    .setNginxConf(slb.getNginxConf())
+                    .setNginxWorkerProcesses(slb.getNginxWorkerProcesses())
+                    .setStatus(slb.getStatus())
+                    .setVersion(slb.getVersion());
         }
-        return new Slb().setId(slb.getId())
-                .setName(slb.getName())
-                .setNginxBin(slb.getNginxBin())
-                .setNginxConf(slb.getNginxConf())
-                .setNginxWorkerProcesses(slb.getNginxWorkerProcesses())
-                .setStatus(slb.getStatus())
-                .setVersion(slb.getVersion());
+        return slb;
     }
 }
