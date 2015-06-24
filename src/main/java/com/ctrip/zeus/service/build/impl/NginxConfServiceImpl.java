@@ -171,7 +171,7 @@ public class NginxConfServiceImpl implements NginxConfService {
         List<DyUpstreamOpsData> result = new ArrayList<>();
 
         Set<String> allDownServers = statusService.findAllDownServers();
-        Set<String> allDownGroupServers = statusService.findAllDownGroupServersBySlbId(slb.getId());
+        Set<String> allUpGroupServers = statusService.findAllUpGroupServersBySlbId(slb.getId());
 
         List<String> groupActiveconf =activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{groupId});
 
@@ -184,7 +184,7 @@ public class NginxConfServiceImpl implements NginxConfService {
         {
             vs  = groupSlb.getVirtualServer();
 
-            String upstreambody = UpstreamsConf.buildUpstreamConfBody(slb,vs,group,allDownServers,allDownGroupServers);
+            String upstreambody = UpstreamsConf.buildUpstreamConfBody(slb,vs,group,allDownServers,allUpGroupServers);
             String upstreamName = UpstreamsConf.buildUpstreamName(slb,vs,group);
             result.add(new DyUpstreamOpsData().setUpstreamCommands(upstreambody).setUpstreamName(upstreamName));
         }
