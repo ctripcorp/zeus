@@ -65,7 +65,7 @@ public class NginxConf {
 
         b.append(statusConf());
         b.append(dyupstreamConf());
-
+        appendDefaultServer(b);
         b.append("include    upstreams/*.conf;\n");
         b.append("include    vhosts/*.conf;\n");
         b.append("}\n");
@@ -131,5 +131,18 @@ public class NginxConf {
         builder.append("    location /stub_status {").append(LINEBREAK)
                 .append("        stub_status on;").append(LINEBREAK)
                 .append("    }").append(LINEBREAK);
+    }
+    public static void appendDefaultServer(StringBuilder builder)
+    {
+        builder.append("server {").append("\n")
+                .append("listen  80 default_server  ;\n")
+                .append("listen  443 default_server  ;\n")
+                .append("location = /domaininfo/OnService.html {\n")
+                .append("add_header Content-Type text/html;\n")
+                .append("return 200 \"4008206666\";\n")
+                .append("}\n")
+                .append("}\n")
+                ;
+
     }
 }
