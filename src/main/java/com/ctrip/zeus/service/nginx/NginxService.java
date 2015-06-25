@@ -87,7 +87,7 @@ public interface NginxService {
      * @param slbId the slb name
      * @return the traffic statuses
      */
-    List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count) throws Exception;
+    List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count, boolean aggregatedByGroup, boolean aggregatedByMember) throws Exception;
 
     List<ReqStatus> getTrafficStatusBySlb(String groupName, Long slbId, int count) throws Exception;
 

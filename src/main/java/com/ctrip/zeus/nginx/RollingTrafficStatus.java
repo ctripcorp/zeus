@@ -126,6 +126,8 @@ public class RollingTrafficStatus {
                 if (hostUpstream.length > 1)
                     groupName = hostUpstream[1].replaceFirst("backend_", "");
             }
+            if (groupName.equals(""))
+                return;
             Long upRequests = data[ReqStatusOffset.UpstreamReq.ordinal()];
             double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double) data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
             Long requests = data[ReqStatusOffset.ReqTotal.ordinal()];

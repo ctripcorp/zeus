@@ -1,11 +1,11 @@
 package com.ctrip.zeus.nginx;
 
-import com.ctrip.zeus.nginx.RollingTrafficStatus;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -131,6 +131,27 @@ public class TrafficStatusTest {
         assertReqStatusEquals(reqref1, result.get(1).getReqStatuses().get(0));
         assertStubStatusEquals(ref2, result.get(2));
         assertReqStatusEquals(reqref2, result.get(2).getReqStatuses().get(0));
+    }
+
+    @Test
+    public void testAggregateByGroup() {
+        Date now = new Date();
+        ReqStatus origin = new ReqStatus().setHostName("123").setGroupName("group")
+                .setBytesInTotal(8348L).setBytesOutTotal(3738L)
+                .setTotalRequests(21L).setResponseTime((double)14/21).setSuccessCount(21L)
+                .setRedirectionCount(1L).setClientErrCount(2L).setServerErrCount(3L).setUpRequests(21L)
+                .setUpResponseTime((double)14/21).setUpTries(21L).setTime(now);
+        ReqStatus delta = new ReqStatus().setHostName("456").setGroupName("group")
+                .setBytesInTotal(2501999L).setBytesOutTotal(3760318L)
+                .setTotalRequests(13106L).setResponseTime((double) 13104/13106).setSuccessCount(13104L)
+                .setRedirectionCount(0L).setClientErrCount(2L).setServerErrCount(0L).setUpRequests(0L)
+                .setUpResponseTime(0.0).setUpTries(0L).setTime(now);
+        ReqStatus answer = new ReqStatus().setHostName(null).setGroupName("group")
+                .setBytesInTotal(8348L + 2501999L).setBytesOutTotal(3738L + 3760318L)
+                .setTotalRequests(21L + 13106L).setResponseTime((double) 14 / 21 + (double) 13104 / 13106).setSuccessCount(21L + 13104L)
+                .setRedirectionCount(1L).setClientErrCount(4L).setServerErrCount(3L).setUpRequests(21L)
+                .setUpResponseTime((double) 14 / 21 + 0.0).setUpTries(21L).setTime(now);
+        assertReqStatusEquals(answer, TrafficStatusHelper.add(origin, delta, "group", null));
     }
 
     private void testGetDelta(int length, int round) {
