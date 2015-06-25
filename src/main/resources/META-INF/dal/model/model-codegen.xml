@@ -38,7 +38,6 @@
     <attribute name="slb-id" value-type="long" />
     <attribute name="ip" value-type="String" />
     <attribute name="host-name" value-type="String" />
-    <attribute name="enable" value-type="boolean" />
   </entity>
   <entity name="virtual-server">
     <attribute name="name" value-type="String" />

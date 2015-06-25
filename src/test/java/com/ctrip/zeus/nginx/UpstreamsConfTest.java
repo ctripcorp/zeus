@@ -30,8 +30,8 @@ public class UpstreamsConfTest {
 
         Slb slb = new Slb().setName("default").setNginxBin("/usr/local/nginx/bin").setNginxConf("d:/nginx/conf").setNginxWorkerProcesses(1)
                 .addVip(new Vip().setIp("192.168.1.3"))
-                .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1").setEnable(true))
-                .addSlbServer(new SlbServer().setHostName("slb003").setIp("192.168.10.3").setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("slb001a").setIp("192.168.10.1"))
+                .addSlbServer(new SlbServer().setHostName("slb003").setIp("192.168.10.3"))
                 .addVirtualServer(vs)
                 .addVirtualServer(new VirtualServer().setName("vs003").setPort("80").setSsl(false)
                         .addDomain(new Domain().setName("m.ctrip.com"))

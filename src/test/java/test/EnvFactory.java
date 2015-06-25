@@ -37,7 +37,7 @@ public class EnvFactory {
 
         Slb slb = new Slb().setName(slbName).addVip(new Vip().setIp(vip)).setNginxBin("/opt/app/nginx/sbin")
                 .setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
-                .addSlbServer(new SlbServer().setHostName("slbServer").setIp(vip).setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("slbServer").setIp(vip))
                 .setStatus("Test");
         for ( VirtualServer vs : vsList )
         {

@@ -8,8 +8,8 @@
             <vip/>
         </vips>
         <slb-servers>
-            <slb-server slb-id="123456789012" ip="192.168.1.1" host-name="slb001" enable="true"/>
-            <slb-server slb-id="123456789012" ip="192.168.1.2" host-name="slb002" enable="true"/>
+            <slb-server slb-id="123456789012" ip="192.168.1.1" host-name="slb001"/>
+            <slb-server slb-id="123456789012" ip="192.168.1.2" host-name="slb002"/>
         </slb-servers>
         <virtual-servers>
             <virtual-server name="vs001" id="123456789012" ssl="true">

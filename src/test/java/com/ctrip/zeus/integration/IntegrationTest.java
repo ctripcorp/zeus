@@ -131,8 +131,8 @@ public class IntegrationTest {
         //add slb and vs
         Slb slb1 = new Slb().setName(slb1_name).addVip(new Vip().setIp(slb1_server_0)).setNginxBin("/opt/app/nginx/sbin")
                 .setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
-                .addSlbServer(new SlbServer().setHostName("slb1_server_0").setIp(slb1_server_0).setEnable(true))
-                .addSlbServer(new SlbServer().setHostName("slb1_server_1").setIp(slb1_server_1).setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("slb1_server_0").setIp(slb1_server_0))
+                .addSlbServer(new SlbServer().setHostName("slb1_server_1").setIp(slb1_server_1))
                 .addVirtualServer(v1)
                 .addVirtualServer(v2)
                 .addVirtualServer(v3)
@@ -142,7 +142,7 @@ public class IntegrationTest {
 
         Slb slb2 = new Slb().setName(slb2_name).addVip(new Vip().setIp(slb1_server_2)).setNginxBin("/opt/app/nginx/sbin")
                 .setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
-                .addSlbServer(new SlbServer().setHostName("slb1_server_2").setIp(slb1_server_2).setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("slb1_server_2").setIp(slb1_server_2))
                 .addVirtualServer(v1)
                 .addVirtualServer(v2)
                 .addVirtualServer(v3)

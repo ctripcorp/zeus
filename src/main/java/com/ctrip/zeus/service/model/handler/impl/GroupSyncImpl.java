@@ -84,7 +84,7 @@ public class GroupSyncImpl implements GroupSync {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
         if (!validateVirtualServer(group))
-            throw new ValidationException("Virtual server id must exist.");
+            throw new ValidationException("Virtual server cannot be found.");
     }
 
     private void removable(Long groupId) throws Exception {
