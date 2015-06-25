@@ -17,6 +17,7 @@ public class NginxConf {
     private static DynamicIntProperty serverNamesHashMaxSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.serverNames-maxSize", 10000);
     private static DynamicIntProperty serverNamesHashBucketSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.serverNames-bucketSize", 128);
     private static DynamicIntProperty checkShmSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.checkShmSize", 32);
+    private static DynamicStringProperty logLevel = DynamicPropertyFactory.getInstance().getStringProperty("slb.nginx.logLevel", "");
 
     private static DynamicStringProperty logFormat = DynamicPropertyFactory.getInstance().getStringProperty("slb.nginx.log-format",
             "log_format main '[$time_local] $host $hostname $server_addr $request_method $uri '\n" +
@@ -37,7 +38,7 @@ public class NginxConf {
 //        b.append("worker_processes ").append((worker==null||worker==0)?DEFAULT_WORKERS:worker).append(";\n");
         b.append("worker_processes auto;\n")
          .append("user nobody;\n")
-         .append("error_log /opt/logs/nginx/error.log;\n")
+         .append("error_log /opt/logs/nginx/error.log").append(logLevel.get()).append(";\n")
          .append("worker_rlimit_nofile 65535;\n")
          .append("pid logs/nginx.pid;\n");
 
