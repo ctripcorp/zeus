@@ -127,7 +127,7 @@ public class RollingTrafficStatus {
                     groupId = hostUpstream[1].replaceFirst("backend_", "");
             }
             if (groupId.equals(""))
-                return;
+                continue;
             Long upRequests = data[ReqStatusOffset.UpstreamReq.ordinal()];
             double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double) data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
             Long requests = data[ReqStatusOffset.ReqTotal.ordinal()];
@@ -136,6 +136,7 @@ public class RollingTrafficStatus {
             try {
                 parsedGroupId = Long.parseLong(groupId);
             } catch (Exception ex) {
+                continue;
             }
             trafficStatus.addReqStatus(new ReqStatus().setHostName(hostName)
                     .setBytesInTotal(data[ReqStatusOffset.BytInTotal.ordinal()])
