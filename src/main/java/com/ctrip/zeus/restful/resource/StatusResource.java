@@ -163,17 +163,17 @@ public class StatusResource {
     public Response getTrafficStatusBySlb(@Context HttpServletRequest request, @Context HttpHeaders hh,
                                           @QueryParam("slbId") Long slbId,
                                           @QueryParam("group") Boolean group,
-                                          @QueryParam("member") Boolean memeber,
+                                          @QueryParam("slbServer") Boolean slbServer,
                                           @QueryParam("count") int count) throws Exception {
         if (slbId == null) {
             throw new ValidationException("Missing parameters.");
         }
         boolean aggregatedByGroup = group == null ? false : group.booleanValue();
-        boolean aggregatedByMember = memeber == null ? false : memeber.booleanValue();
-        if (group == null && memeber == null)
-            aggregatedByGroup = aggregatedByMember = true;
+        boolean aggregateBySlbServer = slbServer == null ? false : slbServer.booleanValue();
+        if (group == null && slbServer == null)
+            aggregatedByGroup = aggregateBySlbServer = true;
         count = count == 0 ? 1 : count;
-        List<ReqStatus> statuses = nginxService.getTrafficStatusBySlb(slbId, count, aggregatedByGroup, aggregatedByMember);
+        List<ReqStatus> statuses = nginxService.getTrafficStatusBySlb(slbId, count, aggregatedByGroup, aggregateBySlbServer);
         TrafficStatusList list = new TrafficStatusList().setTotal(statuses.size());
         for (ReqStatus rs : statuses) {
             list.addReqStatus(rs);

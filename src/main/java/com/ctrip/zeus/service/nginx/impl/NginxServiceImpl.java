@@ -266,14 +266,15 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count, boolean aggregatedByGroup, boolean aggregatedByMember) throws Exception {
+    public List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count, boolean aggregatedByGroup, boolean aggregatedBySlbServer) throws Exception {
         List<ReqStatus> result = getTrafficStatusBySlb(slbId, count);
-        if (!(aggregatedByGroup && aggregatedByMember)) {
-            result = aggregateByKey(result, aggregatedByGroup, aggregatedByMember, slbId);
+        if (!(aggregatedByGroup && aggregatedBySlbServer)) {
+            result = aggregateByKey(result, aggregatedByGroup, aggregatedBySlbServer, slbId);
         }
         if (aggregatedByGroup) {
             for (ReqStatus reqStatus : result) {
-                if (reqStatus.getGroupId() == -1L) {
+                if (reqStatus.getGroupId()!= null && reqStatus.getGroupId() == -1L) {
+                    reqStatus.setSlbId(slbId);
                     reqStatus.setGroupName("Not exist");
                     continue;
                 }
@@ -282,6 +283,11 @@ public class NginxServiceImpl implements NginxService {
                     reqStatus.setGroupName("Not Found");
                 else
                     reqStatus.setGroupName(g.getName());
+                reqStatus.setSlbId(slbId);
+            }
+        } else {
+            for (ReqStatus reqStatus : result) {
+                reqStatus.setSlbId(slbId);
             }
         }
         return result;
@@ -301,16 +307,16 @@ public class NginxServiceImpl implements NginxService {
         return list;
     }
 
-    private List<ReqStatus> aggregateByKey(List<ReqStatus> raw, boolean group, boolean member, Long slbId) {
+    private List<ReqStatus> aggregateByKey(List<ReqStatus> raw, boolean group, boolean slbServer, Long slbId) {
         Map<String, ReqStatus> result = new ConcurrentHashMap<>();
         for (ReqStatus reqStatus : raw) {
-            String key = genKey(reqStatus, group, member);
+            String key = genKey(reqStatus, group, slbServer);
             ReqStatus value = result.get(key);
             if (group) {
-                result.put(key, TrafficStatusHelper.add(value, reqStatus, "", slbId, null, reqStatus.getGroupName()));
+                result.put(key, TrafficStatusHelper.add(value, reqStatus, "", slbId, reqStatus.getGroupId(), null));
                 continue;
             }
-            if (member) {
+            if (slbServer) {
                 result.put(key, TrafficStatusHelper.add(value, reqStatus, reqStatus.getHostName(), slbId, -1L, ""));
                 continue;
             }
@@ -319,12 +325,12 @@ public class NginxServiceImpl implements NginxService {
         return new LinkedList<>(result.values());
     }
 
-    private String genKey(ReqStatus reqStatus, boolean group, boolean member) {
+    private String genKey(ReqStatus reqStatus, boolean group, boolean slbServer) {
         final DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmm");
         String time = formatter.format(reqStatus.getTime());
         if (group)
             return time + "-" + reqStatus.getGroupName();
-        if (member)
+        if (slbServer)
             return time + "-" + reqStatus.getHostName();
         return time + "";
     }
