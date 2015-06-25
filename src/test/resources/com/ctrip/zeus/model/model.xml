@@ -195,6 +195,11 @@
         <upstream-name>name</upstream-name>
         <upstream-commands>commands</upstream-commands>
     </dy-upstream-ops-data>
+    <slb-validate-response>
+        <status>200</status>
+        <msg>msg</msg>
+        <slb-id>12345678901</slb-id>
+    </slb-validate-response>
 
 
 </model>

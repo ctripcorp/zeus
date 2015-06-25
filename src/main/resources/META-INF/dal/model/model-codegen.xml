@@ -18,6 +18,7 @@
     <entity-ref name="nginx-conf-upstream-data" />
     <entity-ref name="nginx-conf-server-data" />
     <entity-ref name="dy-upstream-ops-data" />
+    <entity-ref name="slb-validate-response" />
   </entity>
   <entity name="slb">
     <attribute name="id" value-type="long" />
@@ -169,6 +170,11 @@
   <entity name="dy-upstream-ops-data">
     <element name="upstream-name" value-type="String" />
     <element name="upstream-commands" value-type="String" />
+  </entity>
+  <entity name="slb-validate-response">
+    <element name="status" value-type="String" />
+    <element name="msg" value-type="String" />
+    <element name="slb-id" value-type="long" />
   </entity>
 </model>
 
