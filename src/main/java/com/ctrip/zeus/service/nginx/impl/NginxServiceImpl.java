@@ -329,7 +329,7 @@ public class NginxServiceImpl implements NginxService {
         final DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmm");
         String time = formatter.format(reqStatus.getTime());
         if (group)
-            return time + "-" + reqStatus.getGroupName();
+            return time + "-" + reqStatus.getGroupId();
         if (slbServer)
             return time + "-" + reqStatus.getHostName();
         return time + "";
