@@ -27,33 +27,33 @@ public class TrafficStatusTest {
     @Test
     public void testParseReqStatus() {
         String[] reqStatues = new String[3];
-        reqStatues[0] = "localhost/backend_cluster,8348,3738,1,21,21,1,2,3,4,14,21,14,21";
+        reqStatues[0] = "localhost/103288465,8348,3738,1,21,21,1,2,3,4,14,21,14,21";
         reqStatues[1] = "localhost/,2501999,3760318,141,13106,13104,0,2,0,0,13104,0,0,0";
-        reqStatues[2] = "localhost/backend_upstream,408,128,1,7,7,7,0,0,0,14,6,18,8";
+        reqStatues[2] = "localhost/923,408,128,1,7,7,7,0,0,0,14,6,18,8";
         TrafficStatus trafficStatus = new TrafficStatus();
         RollingTrafficStatus obj = new RollingTrafficStatus(0, 0);
         Map<String, Long[]> map = obj.parseReqStatusEntries(reqStatues);
         RollingTrafficStatus.extractReqStatus(map, trafficStatus);
 
-        ReqStatus ref1 = new ReqStatus().setHostName("localhost").setGroupName("cluster")
+        ReqStatus ref1 = new ReqStatus().setHostName("localhost").setGroupId(103288465L)
                 .setBytesInTotal(8348L).setBytesOutTotal(3738L)
                 .setTotalRequests(21L).setResponseTime((double)14/21).setSuccessCount(21L)
                 .setRedirectionCount(1L).setClientErrCount(2L).setServerErrCount(3L).setUpRequests(21L)
                 .setUpResponseTime((double)14/21).setUpTries(21L);
-        ReqStatus ref2 = new ReqStatus().setHostName("localhost").setGroupName("")
+        ReqStatus ref2 = new ReqStatus().setHostName("localhost").setGroupId(0L)
                 .setBytesInTotal(2501999L).setBytesOutTotal(3760318L)
                 .setTotalRequests(13106L).setResponseTime((double) 13104/13106).setSuccessCount(13104L)
                 .setRedirectionCount(0L).setClientErrCount(2L).setServerErrCount(0L).setUpRequests(0L)
                 .setUpResponseTime(0.0).setUpTries(0L);
-        ReqStatus ref3 = new ReqStatus().setHostName("localhost").setGroupName("upstream")
+        ReqStatus ref3 = new ReqStatus().setHostName("localhost").setGroupId(923L)
                 .setBytesInTotal(408L).setBytesOutTotal(128L)
                 .setTotalRequests(7L).setResponseTime((double) 14/7).setSuccessCount(7L)
                 .setRedirectionCount(7L).setClientErrCount(0L).setServerErrCount(0L).setUpRequests(6L)
                 .setUpResponseTime((double) 18/6).setUpTries(8L);
         // map reorder
-        assertReqStatusEquals(ref1, trafficStatus.getReqStatuses().get(2));
-        assertReqStatusEquals(ref2, trafficStatus.getReqStatuses().get(1));
-        assertReqStatusEquals(ref3, trafficStatus.getReqStatuses().get(0));
+        Assert.assertEquals(trafficStatus.getReqStatuses().size(), 2);
+        assertReqStatusEquals(ref1, trafficStatus.getReqStatuses().get(0));
+        assertReqStatusEquals(ref3, trafficStatus.getReqStatuses().get(1));
     }
 
     @Test
@@ -100,15 +100,15 @@ public class TrafficStatusTest {
                 "    server accepts handled requests request_time\n" +
                 "     11 13 15 17\n" +
                 "    Reading: 0 Writing: 1 Waiting: 2";
-        String rs1 = "localhost/backend_cluster,1200,1358,0,1,2,3,4,5,0,6,7,8,9";
-        String rs2 = "localhost/backend_cluster,1962,3592,0,21,20,19,18,17,0,16,15,14,13";
-        String rs3 = "localhost/backend_cluster,4783,7688,0,30,32,34,36,38,0,40,42,44,46";
+        String rs1 = "localhost/103288465,1200,1358,0,1,2,3,4,5,0,6,7,8,9";
+        String rs2 = "localhost/103288465,1962,3592,0,21,20,19,18,17,0,16,15,14,13";
+        String rs3 = "localhost/103288465,4783,7688,0,30,32,34,36,38,0,40,42,44,46";
         obj.add(ss1, rs1);
         obj.add(ss2, rs2);
         obj.add(ss3, rs3);
 
         TrafficStatus ref1 = new TrafficStatus();
-        ReqStatus reqref1 = new ReqStatus().setHostName("localhost").setGroupName("cluster")
+        ReqStatus reqref1 = new ReqStatus().setHostName("localhost").setGroupId(103288465L)
                 .setBytesInTotal(762L).setBytesOutTotal(2234L)
                 .setTotalRequests(20L).setSuccessCount(18L)
                 .setRedirectionCount(16L).setClientErrCount(14L).setServerErrCount(12L)
@@ -117,11 +117,11 @@ public class TrafficStatusTest {
                 .setReading(0L).setWriting(1L).setWaiting(1L);
 
         TrafficStatus ref2 = new TrafficStatus();
-        ReqStatus reqref2 = new ReqStatus().setHostName("localhost").setGroupName("cluster")
+        ReqStatus reqref2 = new ReqStatus().setHostName("localhost").setGroupId(103288465L)
                 .setBytesInTotal(2821L).setBytesOutTotal(4096L)
                 .setTotalRequests(9L).setSuccessCount(12L)
                 .setRedirectionCount(15L).setClientErrCount(18L).setServerErrCount(21L)
-                .setResponseTime((double) 24/9).setUpRequests(27L).setUpResponseTime((double) 30/27).setUpTries(33L);
+                .setResponseTime((double) 24 / 9).setUpRequests(27L).setUpResponseTime((double) 30 / 27).setUpTries(33L);
         ref2.setActiveConnections(1L).setAccepts(9L).setHandled(10L).setRequests(11L).setResponseTime((double)12/11)
                 .setReading(0L).setWriting(1L).setWaiting(2L);
 
@@ -136,22 +136,25 @@ public class TrafficStatusTest {
     @Test
     public void testAggregateByGroup() {
         Date now = new Date();
-        ReqStatus origin = new ReqStatus().setHostName("123").setGroupName("group")
+        ReqStatus origin = new ReqStatus().setHostName("123").setSlbId(25L)
+                .setGroupId(1L).setGroupName("group")
                 .setBytesInTotal(8348L).setBytesOutTotal(3738L)
                 .setTotalRequests(21L).setResponseTime((double)14/21).setSuccessCount(21L)
                 .setRedirectionCount(1L).setClientErrCount(2L).setServerErrCount(3L).setUpRequests(21L)
                 .setUpResponseTime((double)14/21).setUpTries(21L).setTime(now);
-        ReqStatus delta = new ReqStatus().setHostName("456").setGroupName("group")
+        ReqStatus delta = new ReqStatus().setHostName("456").setSlbId(25L)
+                .setGroupId(1L).setGroupName("group")
                 .setBytesInTotal(2501999L).setBytesOutTotal(3760318L)
                 .setTotalRequests(13106L).setResponseTime((double) 13104/13106).setSuccessCount(13104L)
                 .setRedirectionCount(0L).setClientErrCount(2L).setServerErrCount(0L).setUpRequests(0L)
                 .setUpResponseTime(0.0).setUpTries(0L).setTime(now);
-        ReqStatus answer = new ReqStatus().setHostName(null).setGroupName("group")
+        ReqStatus answer = new ReqStatus().setHostName("").setSlbId(25L)
+                .setGroupId(1L).setGroupName("group")
                 .setBytesInTotal(8348L + 2501999L).setBytesOutTotal(3738L + 3760318L)
                 .setTotalRequests(21L + 13106L).setResponseTime((double) 14 / 21 + (double) 13104 / 13106).setSuccessCount(21L + 13104L)
                 .setRedirectionCount(1L).setClientErrCount(4L).setServerErrCount(3L).setUpRequests(21L)
                 .setUpResponseTime((double) 14 / 21 + 0.0).setUpTries(21L).setTime(now);
-        assertReqStatusEquals(answer, TrafficStatusHelper.add(origin, delta, "group", null));
+        assertReqStatusEquals(answer, TrafficStatusHelper.add(origin, delta, "", 25L, 1L, "group"));
     }
 
     private void testGetDelta(int length, int round) {
@@ -167,7 +170,7 @@ public class TrafficStatusTest {
     }
 
     private static void assertReqStatusEquals(ReqStatus expected, ReqStatus actual) {
-        Assert.assertEquals(expected.getHostName() + "/" + expected.getGroupName(), actual.getHostName() + "/" + actual.getGroupName());
+        Assert.assertEquals(expected.getHostName() + "/" + expected.getGroupId(), actual.getHostName() + "/" + actual.getGroupId());
         Assert.assertTrue(expected.getBytesInTotal().longValue() == actual.getBytesInTotal().longValue() &&
                 expected.getBytesOutTotal().longValue() == actual.getBytesOutTotal().longValue() &&
                 expected.getClientErrCount().longValue() == actual.getClientErrCount().longValue() &&

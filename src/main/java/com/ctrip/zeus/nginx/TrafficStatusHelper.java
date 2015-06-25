@@ -6,10 +6,12 @@ import com.ctrip.zeus.nginx.entity.ReqStatus;
  * Created by zhoumy on 2015/6/25.
  */
 public class TrafficStatusHelper {
-    public static ReqStatus add(ReqStatus origin, ReqStatus delta, String groupName, String hostname) {
+    public static ReqStatus add(ReqStatus origin, ReqStatus delta, String hostname, Long slbId, Long groupId, String groupName) {
         if (origin == null)
-            return delta.setGroupName(groupName).setHostName(hostname);
-        return new ReqStatus().setHostName(hostname).setGroupName(groupName)
+            return delta.setHostName(hostname).setSlbId(slbId)
+                    .setGroupName(groupName).setGroupId(groupId);
+        return new ReqStatus().setHostName(hostname).setSlbId(slbId)
+                .setGroupName(groupName).setGroupId(groupId)
                 .setBytesInTotal(origin.getBytesInTotal() + delta.getBytesInTotal())
                 .setBytesOutTotal(origin.getBytesOutTotal() + delta.getBytesOutTotal())
                 .setSuccessCount(origin.getSuccessCount() + delta.getSuccessCount())

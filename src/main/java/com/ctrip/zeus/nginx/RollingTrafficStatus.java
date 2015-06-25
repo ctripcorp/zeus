@@ -119,14 +119,14 @@ public class RollingTrafficStatus {
         for (String key : upstreamMap.keySet()) {
             Long[] data = upstreamMap.get(key);
             String[] hostUpstream = key.split("/");
-            String hostName, groupName;
-            hostName = groupName = "";
+            String hostName, groupId;
+            hostName = groupId = "";
             if (hostUpstream.length > 0) {
                 hostName = hostUpstream[0];
                 if (hostUpstream.length > 1)
-                    groupName = hostUpstream[1].replaceFirst("backend_", "");
+                    groupId = hostUpstream[1].replaceFirst("backend_", "");
             }
-            if (groupName.equals(""))
+            if (groupId.equals(""))
                 return;
             Long upRequests = data[ReqStatusOffset.UpstreamReq.ordinal()];
             double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double) data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
@@ -137,7 +137,7 @@ public class RollingTrafficStatus {
                     .setBytesOutTotal(data[ReqStatusOffset.BytOutTotal.ordinal()])
                     .setResponseTime(responseTime)
                     .setTotalRequests(requests)
-                    .setGroupName(groupName)
+                    .setGroupId(Long.parseLong(groupId))
                     .setUpRequests(upRequests)
                     .setUpResponseTime(upResponseTime)
                     .setUpTries(data[ReqStatusOffset.UpstreamTries.ordinal()])

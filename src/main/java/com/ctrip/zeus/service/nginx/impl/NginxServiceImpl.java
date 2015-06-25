@@ -12,6 +12,7 @@ import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.nginx.RollingTrafficStatus;
@@ -40,6 +41,8 @@ public class NginxServiceImpl implements NginxService {
 
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private GroupRepository groupRepository;
     @Resource
     private NginxConfService nginxConfService;
     @Resource
@@ -265,10 +268,19 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count, boolean aggregatedByGroup, boolean aggregatedByMember) throws Exception {
         List<ReqStatus> result = getTrafficStatusBySlb(slbId, count);
-        if (aggregatedByGroup && aggregatedByMember) {
-            return result;
+        if (!(aggregatedByGroup && aggregatedByMember)) {
+            result = aggregateByKey(result, aggregatedByGroup, aggregatedByMember, slbId);
         }
-        return aggregateByKey(result, aggregatedByGroup, aggregatedByMember);
+        if (aggregatedByGroup) {
+            for (ReqStatus reqStatus : result) {
+                Group g = groupRepository.getById(reqStatus.getGroupId());
+                if (g == null)
+                    reqStatus.setGroupName("Not Found");
+                else
+                    reqStatus.setGroupName(g.getName());
+            }
+        }
+        return result;
     }
 
     private List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count) throws Exception {
@@ -285,20 +297,20 @@ public class NginxServiceImpl implements NginxService {
         return list;
     }
 
-    private List<ReqStatus> aggregateByKey(List<ReqStatus> raw, boolean group, boolean member) {
+    private List<ReqStatus> aggregateByKey(List<ReqStatus> raw, boolean group, boolean member, Long slbId) {
         Map<String, ReqStatus> result = new ConcurrentHashMap<>();
         for (ReqStatus reqStatus : raw) {
             String key = genKey(reqStatus, group, member);
             ReqStatus value = result.get(key);
             if (group) {
-                result.put(key, TrafficStatusHelper.add(value, reqStatus, reqStatus.getGroupName(), null));
+                result.put(key, TrafficStatusHelper.add(value, reqStatus, "", slbId, null, reqStatus.getGroupName()));
                 continue;
             }
             if (member) {
-                result.put(key, TrafficStatusHelper.add(value, reqStatus, null, reqStatus.getHostName()));
+                result.put(key, TrafficStatusHelper.add(value, reqStatus, reqStatus.getHostName(), slbId, -1L, ""));
                 continue;
             }
-            result.put(key, TrafficStatusHelper.add(value, reqStatus, null, null));
+            result.put(key, TrafficStatusHelper.add(value, reqStatus, "", slbId, -1L, ""));
         }
         return new LinkedList<>(result.values());
     }
