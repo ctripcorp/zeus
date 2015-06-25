@@ -132,12 +132,17 @@ public class RollingTrafficStatus {
             double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double) data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
             Long requests = data[ReqStatusOffset.ReqTotal.ordinal()];
             double responseTime = (requests == null || requests == 0) ? 0 : (double) data[ReqStatusOffset.RtTotal.ordinal()] / requests;
+            long parsedGroupId = -1L;
+            try {
+                parsedGroupId = Long.parseLong(groupId);
+            } catch (Exception ex) {
+            }
             trafficStatus.addReqStatus(new ReqStatus().setHostName(hostName)
                     .setBytesInTotal(data[ReqStatusOffset.BytInTotal.ordinal()])
                     .setBytesOutTotal(data[ReqStatusOffset.BytOutTotal.ordinal()])
                     .setResponseTime(responseTime)
                     .setTotalRequests(requests)
-                    .setGroupId(Long.parseLong(groupId))
+                    .setGroupId(parsedGroupId)
                     .setUpRequests(upRequests)
                     .setUpResponseTime(upResponseTime)
                     .setUpTries(data[ReqStatusOffset.UpstreamTries.ordinal()])

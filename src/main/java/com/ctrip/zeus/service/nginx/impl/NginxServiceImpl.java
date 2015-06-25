@@ -273,6 +273,10 @@ public class NginxServiceImpl implements NginxService {
         }
         if (aggregatedByGroup) {
             for (ReqStatus reqStatus : result) {
+                if (reqStatus.getGroupId() == -1L) {
+                    reqStatus.setGroupName("Not exist");
+                    continue;
+                }
                 Group g = groupRepository.getById(reqStatus.getGroupId());
                 if (g == null)
                     reqStatus.setGroupName("Not Found");
