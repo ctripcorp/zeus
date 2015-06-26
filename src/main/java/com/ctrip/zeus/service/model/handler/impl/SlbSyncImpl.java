@@ -88,6 +88,16 @@ public class SlbSyncImpl implements SlbSync {
         if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
             throw new ValidationException("Slb with invalid server data cannot be persisted.");
         }
+        Set<String> existingHost = new HashSet<>();
+        for (VirtualServer virtualServer : slb.getVirtualServers()) {
+            for (Domain domain : virtualServer.getDomains()) {
+                String key = domain.getName() + ":" + virtualServer.getPort();
+                if (existingHost.contains(key))
+                    throw new ValidationException("Duplicate domain and port is found: " + key);
+                else
+                    existingHost.add(key);
+            }
+        }
     }
 
     private boolean removable(SlbDo d) throws DalException {
