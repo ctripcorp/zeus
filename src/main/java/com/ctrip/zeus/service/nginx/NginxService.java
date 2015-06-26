@@ -5,6 +5,7 @@ import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -96,7 +97,7 @@ public interface NginxService {
      * get traffic status of local nginx server.
      * @return the traffic status
      */
-    List<ReqStatus> getLocalTrafficStatus(int count);
+    List<ReqStatus> getLocalTrafficStatus(Date time, int count);
 
-    List<ReqStatus> getLocalTrafficStatus(String groupName, int count);
+    List<ReqStatus> getLocalTrafficStatus(Date time, String groupName, int count);
 }
