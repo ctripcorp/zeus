@@ -245,7 +245,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         testGroup = generateGroup("testGroup",  defaultSlb, defaultSlb.getVirtualServers().get(1));
         insertedTestGroupId = groupRepo.add(testGroup).getId();
         // set virtual server full information
-        testGroup.getGroupSlbs().get(0).setVirtualServer(defaultSlb.getVirtualServers().get(0));
+        testGroup.getGroupSlbs().get(0).setVirtualServer(defaultSlb.getVirtualServers().get(1));
         testGroup.getGroupSlbs().get(0).setSlbName(defaultSlb.getName());
         Assert.assertTrue(insertedTestGroupId > 0);
         for (int i = 0; i < 6; i++) {
