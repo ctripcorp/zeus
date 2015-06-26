@@ -21,7 +21,8 @@ import java.util.List;
 public class ServerConf {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerConf.class);
     private static DynamicStringProperty allowSSL = DynamicPropertyFactory.getInstance().getStringProperty("virtual-server-id.ssl", "");
-    private static final String SSL_PATH = "/data/nginx/ssl/";
+    public static final String SSL_PATH = "/data/nginx/ssl/";
+
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
         StringBuilder b = new StringBuilder(1024);
 

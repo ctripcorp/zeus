@@ -5,6 +5,8 @@ import com.ctrip.zeus.model.entity.SlbValidateResponse;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.LocalValidate;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
+import com.ctrip.zeus.service.build.conf.LocationConf;
+import com.ctrip.zeus.service.build.conf.ServerConf;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.validate.SlbValidateLocal;
 
@@ -42,19 +44,19 @@ public class SlbValidateLocalImpl implements SlbValidateLocal {
         {
             if (vs.getSsl())
             {
-
+                if(localValidate.pathExistValidate(ServerConf.SSL_PATH+vs.getId()+"/ssl.crt",false)
+                &&localValidate.pathExistValidate(ServerConf.SSL_PATH+vs.getId()+"/ssl.key",false)){
+                    response.setSucceed(false).setMsg("Not found ssl.crt and ssl.key for ssl virtual server! vsId="
+                            +vs.getId()+";vsName="+vs.getName());
+                    return response;
+                }
             }
         }
-
-
-        return null;
+        return response.setSucceed(true);
     }
 
     private boolean validateNginxBinAndConf(Slb slb) throws Exception {
         return localValidate.pathExistValidate(slb.getNginxBin(),true)&&
                 localValidate.pathExistValidate(slb.getNginxConf(),true);
-    }
-    private boolean validateNginxIsUp(Slb slb)throws Exception{
-
     }
 }
