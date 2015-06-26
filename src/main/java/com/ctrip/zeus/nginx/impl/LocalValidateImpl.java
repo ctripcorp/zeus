@@ -5,11 +5,11 @@ import com.ctrip.zeus.nginx.entity.NginxResponse;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 
 /**
  * Created by fanqq on 2015/6/25.
@@ -17,6 +17,7 @@ import java.io.FileReader;
 @Component("localValidate")
 public class LocalValidateImpl implements LocalValidate{
 
+    private Logger LOGGER = LoggerFactory.getLogger(LocalValidateImpl.class);
     @Override
     public boolean pathExistValidate(String path , boolean isDirs) throws Exception {
         File pathFile = new File(path);
@@ -30,36 +31,42 @@ public class LocalValidateImpl implements LocalValidate{
     }
 
     @Override
-    public boolean nginxIsUp(String nginxBinPath) throws Exception {
+    public NginxResponse nginxIsUp(String nginxBinPath) throws Exception {
         File pidFile = new File(nginxBinPath+"/../logs/nginx.pid");
+        String nginxPid = null;
+        NginxResponse response = new NginxResponse();
         if (pidFile.exists()&&pidFile.isFile())
         {
-            FileReader fr = new FileReader(pidFile);
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(pidFile));
+                nginxPid = br.readLine();
+            }catch (IOException e)
+            {
+                LOGGER.error("Read nginx.pid file error!Validate Fail!");
+            }
+            if (nginxPid==null){
+                response.setSucceed(false).setOutMsg("nginx.pid file is empty!");
+                return response;
+            }
+            String command = "ps "+nginxPid;
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+            CommandLine commandline = CommandLine.parse(command);
+            DefaultExecutor exec = new DefaultExecutor();
+            exec.setExitValues(null);
+            PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream,errorStream);
+            exec.setStreamHandler(streamHandler);
+            int exitVal = exec.execute(commandline);
+            String out = outputStream.toString("UTF-8");
+            String error = errorStream.toString("UTF-8");
 
+            response.setOutMsg(out);
+            response.setErrMsg(error);
+            response.setSucceed(0==exitVal);
+            return response;
         }else {
-            return false;
+            response.setSucceed(false).setOutMsg("Not found nginx.pid file!");
+            return response;
         }
-        String command = nginxBinDir + "/nginx -t";
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
-        CommandLine commandline = CommandLine.parse(command);
-
-        DefaultExecutor exec = new DefaultExecutor();
-        exec.setExitValues(null);
-
-        PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream,errorStream);
-        exec.setStreamHandler(streamHandler);
-
-        int exitVal = exec.execute(commandline);
-        String out = outputStream.toString("UTF-8");
-        String error = errorStream.toString("UTF-8");
-
-        NginxResponse response = new NginxResponse();
-        response.setOutMsg(out);
-        response.setErrMsg(error);
-        response.setSucceed(0==exitVal);
-
-        return response;
-        return false;
     }
 }

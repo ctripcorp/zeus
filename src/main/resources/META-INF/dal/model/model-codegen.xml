@@ -171,7 +171,7 @@
     <element name="upstream-commands" value-type="String" />
   </entity>
   <entity name="slb-validate-response">
-    <element name="status" value-type="String" />
+    <element name="succeed" value-type="boolean" />
     <element name="msg" value-type="String" />
     <element name="slb-id" value-type="long" />
   </entity>
