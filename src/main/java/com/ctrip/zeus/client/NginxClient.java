@@ -58,9 +58,9 @@ public class NginxClient extends AbstractRestClient {
         return DefaultJsonParser.parse(NginxResponse.class,responseStr);
     }
 
-    public TrafficStatusList getTrafficStatus(int count) throws Exception {
+    public TrafficStatusList getTrafficStatus(Long since, int count) throws Exception {
         Response response = getTarget().path("").path("/api/nginx/trafficStatus")
-                .queryParam("count", count).request().headers(getDefaultHeaders()).get();
+                .queryParam("since", since).queryParam("count", count).request().headers(getDefaultHeaders()).get();
         InputStream is = (InputStream)response.getEntity();
         try {
             return DefaultJsonParser.parse(TrafficStatusList.class, IOUtils.inputStreamStringify(is));
@@ -69,9 +69,9 @@ public class NginxClient extends AbstractRestClient {
         }
     }
 
-    public TrafficStatusList getTrafficStatusByGroup(String groupName, int count) throws Exception {
+    public TrafficStatusList getTrafficStatusByGroup(Long since, String groupName, int count) throws Exception {
         Response response = getTarget().path("/api/nginx/trafficStatus/group")
-                .queryParam("groupName", groupName).queryParam("count", count).request().headers(getDefaultHeaders()).get();
+                .queryParam("since", since).queryParam("groupName", groupName).queryParam("count", count).request().headers(getDefaultHeaders()).get();
         InputStream is = (InputStream)response.getEntity();
         try {
             return DefaultJsonParser.parse(TrafficStatusList.class, IOUtils.inputStreamStringify(is));

@@ -16,6 +16,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -118,9 +119,12 @@ public class NginxResource {
     @GET
     @Path("/trafficStatus")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getLocalTrafficStatus(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("count") int count) throws Exception {
+    public Response getLocalTrafficStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                          @QueryParam("since") Long since,
+                                          @QueryParam("count") int count) throws Exception {
         count = count == 0 ? 1 : count;
-        List<ReqStatus> statuses = nginxService.getLocalTrafficStatus(count);
+        since = since == null ? System.currentTimeMillis() - 60 * 1000L : since;
+        List<ReqStatus> statuses = nginxService.getLocalTrafficStatus(new Date(since), count);
         TrafficStatusList l = new TrafficStatusList().setTotal(statuses.size());
         for (ReqStatus status : statuses) {
             l.addReqStatus(status);
@@ -131,11 +135,13 @@ public class NginxResource {
     @GET
     @Path("/trafficStatus/group")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getLocalTrafficStatus(@Context HttpServletRequest request,@Context HttpHeaders hh,
+    public Response getLocalTrafficStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                          @QueryParam("since") Long since,
                                           @QueryParam("groupName") String groupName,
                                           @QueryParam("count") int count) throws Exception {
         count = count == 0 ? 1 : count;
-        List<ReqStatus> statuses = nginxService.getLocalTrafficStatus(groupName, count);
+        since = since == null ? System.currentTimeMillis() - 60 * 1000L : since;
+        List<ReqStatus> statuses = nginxService.getLocalTrafficStatus(new Date(since), groupName, count);
         TrafficStatusList l = new TrafficStatusList().setTotal(statuses.size());
         for (ReqStatus status : statuses) {
             l.addReqStatus(status);

@@ -39,6 +39,7 @@ public class NginxServiceImpl implements NginxService {
     private static DynamicIntProperty adminServerPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
     private static DynamicIntProperty dyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
 
+    private final DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmm");
     @Resource
     private SlbRepository slbRepository;
     @Resource
@@ -299,7 +300,7 @@ public class NginxServiceImpl implements NginxService {
         for (SlbServer slbServer : slb.getSlbServers()) {
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             try {
-                list.addAll(nginxClient.getTrafficStatus(count).getStatuses());
+                list.addAll(nginxClient.getTrafficStatus(rollingTrafficStatus.peekTime(), count).getStatuses());
             } catch (Exception e) {
                 LOGGER.error(e.getLocalizedMessage());
             }
@@ -326,7 +327,6 @@ public class NginxServiceImpl implements NginxService {
     }
 
     private String genKey(ReqStatus reqStatus, boolean group, boolean slbServer) {
-        final DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmm");
         String time = formatter.format(reqStatus.getTime());
         if (group)
             return time + "-" + reqStatus.getGroupId();
@@ -342,7 +342,7 @@ public class NginxServiceImpl implements NginxService {
         for (SlbServer slbServer : slb.getSlbServers()) {
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             try {
-                list.addAll(nginxClient.getTrafficStatusByGroup(groupName, count).getStatuses());
+                list.addAll(nginxClient.getTrafficStatusByGroup(rollingTrafficStatus.peekTime(), groupName, count).getStatuses());
             } catch (Exception e) {
                 LOGGER.error(e.getLocalizedMessage());
             }
@@ -351,18 +351,22 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public List<ReqStatus> getLocalTrafficStatus(int count) {
+    public List<ReqStatus> getLocalTrafficStatus(Date time, int count) {
         LinkedList<TrafficStatus> l = (LinkedList<TrafficStatus>) rollingTrafficStatus.getResult();
         List<ReqStatus> result = new LinkedList<>();
         int size = l.size();
-        for (int i = 0; i < count && i < size; i++) {
-            result.addAll(l.pollLast().getReqStatuses());
+        // In case of time diff from server fetchers
+        for (int i = 0; i < count + 1 && i < size; i++) {
+            TrafficStatus ts = l.pollLast();
+            if (formatter.format(time).equals(formatter.format(ts.getTime()))) {
+                result.addAll(ts.getReqStatuses());
+            }
         }
         return result;
     }
 
     @Override
-    public List<ReqStatus> getLocalTrafficStatus(String groupName, int count) {
+    public List<ReqStatus> getLocalTrafficStatus(Date time, String groupName, int count) {
         LinkedList<TrafficStatus> l = (LinkedList<TrafficStatus>) rollingTrafficStatus.getResult();
         List<ReqStatus> result = new LinkedList<>();
         int size = l.size();
