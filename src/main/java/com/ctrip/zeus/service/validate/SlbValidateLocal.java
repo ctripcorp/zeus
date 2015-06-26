@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.validate;
 
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbValidateResponse;
 
 /**

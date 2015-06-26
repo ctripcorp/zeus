@@ -199,6 +199,7 @@
         <succeed>true</succeed>
         <msg>msg</msg>
         <slb-id>12345678901</slb-id>
+        <ip>127.0.0.1</ip>
     </slb-validate-response>
 
 

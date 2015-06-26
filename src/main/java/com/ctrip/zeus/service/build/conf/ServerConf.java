@@ -21,7 +21,7 @@ import java.util.List;
 public class ServerConf {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerConf.class);
     private static DynamicStringProperty allowSSL = DynamicPropertyFactory.getInstance().getStringProperty("virtual-server-id.ssl", "");
-
+    private static final String SSL_PATH = "/data/nginx/ssl/";
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
         StringBuilder b = new StringBuilder(1024);
 
@@ -41,8 +41,8 @@ public class ServerConf {
             {
                 if(String.valueOf(vs.getId()).equals(vsid.trim())){
                     b.append("ssl on;\n")
-                     .append("ssl_certificate /data/nginx/").append(vs.getId()).append("/ssl.crt;\n")
-                     .append("ssl_certificate_key /data/nginx/").append(vs.getId()).append("/ssl.key;\n");
+                     .append("ssl_certificate ").append(SSL_PATH).append(vs.getId()).append("/ssl.crt;\n")
+                     .append("ssl_certificate_key ").append(SSL_PATH).append(vs.getId()).append("/ssl.key;\n");
                 }
             }
         }
