@@ -72,7 +72,6 @@ public class C {
 
     public static SlbServer toSlbServer(SlbServerDo d) {
         return new SlbServer()
-                .setEnable(d.isEnable())
                 .setHostName(d.getHostName())
                 .setIp(d.getIp());
     }
@@ -187,8 +186,7 @@ public class C {
     public static SlbServerDo toSlbServerDo(SlbServer e) {
         return new SlbServerDo()
                 .setHostName(e.getHostName())
-                .setIp(e.getIp())
-                .setEnable(e.getEnable());
+                .setIp(e.getIp());
     }
 
     public static SlbVipDo toSlbVipDo(Vip e) {

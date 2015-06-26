@@ -54,6 +54,8 @@
   </entity>
   <entity name="req-status">
     <element name="host-name" value-type="String" />
+    <element name="slb-id" value-type="long" />
+    <element name="group-id" value-type="long" />
     <element name="group-name" value-type="String" />
     <element name="bytes-in-total" value-type="long" />
     <element name="bytes-out-total" value-type="long" />

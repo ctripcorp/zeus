@@ -81,7 +81,7 @@ public class ApiTest {
                 public void run() {
                     while (true) {
                         Slb slb = sc.get(slbName);
-                        slb.addSlbServer(new SlbServer().setHostName("slbupd" + num).setIp("192.168.11." + num).setEnable(false));
+                        slb.addSlbServer(new SlbServer().setHostName("slbupd" + num).setIp("192.168.11." + num));
                         Response updResponse = sc.update(slb);
                         if (updResponse.getStatus() == 200)
                             break;
@@ -164,8 +164,8 @@ public class ApiTest {
         return new Slb().setName(slbName).setNginxBin("/usr/local/nginx/bin").setNginxConf("/usr/local/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
                 .addVip(new Vip().setIp("192.168.1.3"))
                 .addVip(new Vip().setIp("192.168.1.6"))
-                .addSlbServer(new SlbServer().setHostName("slb001a").setIp("1110.1").setEnable(true))
-                .addSlbServer(new SlbServer().setHostName("slb003").setIp("192.168.10.3").setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("slb001a").setIp("1110.1"))
+                .addSlbServer(new SlbServer().setHostName("slb003").setIp("192.168.10.3"))
                 .addVirtualServer(new VirtualServer().setName("vs002").setPort("80").setSsl(false)
                         .addDomain(new Domain().setName("hotel.ctrip.com")))
                 .addVirtualServer(new VirtualServer().setName("vs003").setPort("80").setSsl(false)

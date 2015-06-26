@@ -119,23 +119,31 @@ public class RollingTrafficStatus {
         for (String key : upstreamMap.keySet()) {
             Long[] data = upstreamMap.get(key);
             String[] hostUpstream = key.split("/");
-            String hostName, groupName;
-            hostName = groupName = "";
+            String hostName, groupId;
+            hostName = groupId = "";
             if (hostUpstream.length > 0) {
                 hostName = hostUpstream[0];
                 if (hostUpstream.length > 1)
-                    groupName = hostUpstream[1].replaceFirst("backend_", "");
+                    groupId = hostUpstream[1].replaceFirst("backend_", "");
             }
+            if (groupId.equals(""))
+                continue;
             Long upRequests = data[ReqStatusOffset.UpstreamReq.ordinal()];
             double upResponseTime = (upRequests == null || upRequests == 0) ? 0 : (double) data[ReqStatusOffset.UpstreamRt.ordinal()] / upRequests;
             Long requests = data[ReqStatusOffset.ReqTotal.ordinal()];
             double responseTime = (requests == null || requests == 0) ? 0 : (double) data[ReqStatusOffset.RtTotal.ordinal()] / requests;
+            long parsedGroupId = -1L;
+            try {
+                parsedGroupId = Long.parseLong(groupId);
+            } catch (Exception ex) {
+                continue;
+            }
             trafficStatus.addReqStatus(new ReqStatus().setHostName(hostName)
                     .setBytesInTotal(data[ReqStatusOffset.BytInTotal.ordinal()])
                     .setBytesOutTotal(data[ReqStatusOffset.BytOutTotal.ordinal()])
                     .setResponseTime(responseTime)
                     .setTotalRequests(requests)
-                    .setGroupName(groupName)
+                    .setGroupId(parsedGroupId)
                     .setUpRequests(upRequests)
                     .setUpResponseTime(upResponseTime)
                     .setUpTries(data[ReqStatusOffset.UpstreamTries.ordinal()])

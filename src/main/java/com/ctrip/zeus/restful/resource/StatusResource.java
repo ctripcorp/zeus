@@ -1,7 +1,7 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
-import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.exceptions.*;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
@@ -162,12 +162,18 @@ public class StatusResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getTrafficStatusBySlb(@Context HttpServletRequest request, @Context HttpHeaders hh,
                                           @QueryParam("slbId") Long slbId,
+                                          @QueryParam("group") Boolean group,
+                                          @QueryParam("slbServer") Boolean slbServer,
                                           @QueryParam("count") int count) throws Exception {
         if (slbId == null) {
             throw new ValidationException("Missing parameters.");
         }
+        boolean aggregatedByGroup = group == null ? false : group.booleanValue();
+        boolean aggregateBySlbServer = slbServer == null ? false : slbServer.booleanValue();
+        if (group == null && slbServer == null)
+            aggregatedByGroup = aggregateBySlbServer = true;
         count = count == 0 ? 1 : count;
-        List<ReqStatus> statuses = nginxService.getTrafficStatusBySlb(slbId, count);
+        List<ReqStatus> statuses = nginxService.getTrafficStatusBySlb(slbId, count, aggregatedByGroup, aggregateBySlbServer);
         TrafficStatusList list = new TrafficStatusList().setTotal(statuses.size());
         for (ReqStatus rs : statuses) {
             list.addReqStatus(rs);
@@ -179,14 +185,21 @@ public class StatusResource {
     @Path("/traffic/group")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getTrafficStatusByGroupAndSlb(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                                  @QueryParam("groupId") Long groupId,
                                                   @QueryParam("groupName") String groupName,
                                                   @QueryParam("slbId") Long slbId,
                                                   @QueryParam("count") int count) throws Exception {
 
-        if (slbId == null || groupName == null) {
+        if (slbId == null || (groupName == null && groupId == null)) {
             throw new ValidationException("Missing parameters.");
         }
         count = count == 0 ? 1 : count;
+        if (groupId != null) {
+            Group g = groupRepository.getById(groupId);
+            if (g == null)
+                throw new com.ctrip.zeus.exceptions.NotFoundException("Group cannot be found by Id.");
+            groupName = g.getName();
+        }
         List<ReqStatus> statuses = nginxService.getTrafficStatusBySlb(groupName, slbId, count);
         TrafficStatusList list = new TrafficStatusList().setTotal(statuses.size());
         for (ReqStatus rs : statuses) {

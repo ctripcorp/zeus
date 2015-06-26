@@ -14,9 +14,7 @@ import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -86,7 +84,7 @@ public class GroupSyncImpl implements GroupSync {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
         if (!validateVirtualServer(group))
-            throw new ValidationException("Virtual server id must exist.");
+            throw new ValidationException("Virtual server cannot be found.");
     }
 
     private void removable(Long groupId) throws Exception {
@@ -108,8 +106,16 @@ public class GroupSyncImpl implements GroupSync {
         if (group.getGroupSlbs().size() == 0)
             return false;
         for (GroupSlb gs : group.getGroupSlbs()) {
-            if (findVirtualServer(gs) == null)
+            SlbVirtualServerDo d = findVirtualServer(gs);
+            if (d == null)
                 return false;
+            Set<String> paths = new HashSet<>();
+            for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByVirtualServer(d.getId(), GroupSlbEntity.READSET_FULL)) {
+                if (paths.contains(groupSlbDo.getPath()))
+                    return false;
+                else
+                    paths.add(groupSlbDo.getPath());
+            }
         }
         return true;
     }

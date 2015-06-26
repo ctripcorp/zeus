@@ -78,6 +78,8 @@
     </traffic-status>
     <req-status>
         <host-name>ctrip.com</host-name>
+        <slb-id>123456789012</slb-id>
+        <group-id>123456789012</group-id>
         <group-name>cluster</group-name>
         <bytes-in-total>17915825952</bytes-in-total>
         <bytes-out-total>17915825952</bytes-out-total>

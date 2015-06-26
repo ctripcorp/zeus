@@ -43,8 +43,8 @@ public class ActivateTest extends AbstractAPITest {
 
         Slb slb = new Slb().setName(slb_name).addVip(new Vip().setIp(slb1_server_0)).setNginxBin("/opt/app/nginx/sbin")
                 .setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
-                .addSlbServer(new SlbServer().setHostName("slb1_server_0").setIp(slb1_server_0).setEnable(true))
-                .addSlbServer(new SlbServer().setHostName("slb1_server_1").setIp(slb1_server_1).setEnable(true))
+                .addSlbServer(new SlbServer().setHostName("slb1_server_0").setIp(slb1_server_0))
+                .addSlbServer(new SlbServer().setHostName("slb1_server_1").setIp(slb1_server_1))
                 .addVirtualServer(v1)
                 .addVirtualServer(v2)
                 .setStatus("Test");
@@ -120,7 +120,7 @@ public class ActivateTest extends AbstractAPITest {
                     Assert.assertEquals("10.2.25.83",slbentity.getVips().get(0).getIp());
                     Assert.assertEquals("10.2.25.83",slbentity.getSlbServers().get(0).getIp());
                     Assert.assertEquals("slb1_server_0",slbentity.getSlbServers().get(0).getHostName());
-                    Assert.assertEquals(true,slbentity.getSlbServers().get(0).getEnable());
+                    Assert.assertEquals(true,slbentity.getSlbServers().get(0));
 
 
                     Assert.assertEquals("__Test_vs1",slbentity.getVirtualServers().get(0).getName());

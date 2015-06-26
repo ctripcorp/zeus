@@ -159,9 +159,9 @@ public class ModelServiceTest extends AbstractSpringTest {
                 .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf")
                 .setNginxWorkerProcesses(2).setStatus("TEST")
                 .addVip(new Vip().setIp("10.2.25.93"))
-                .addSlbServer(new SlbServer().setIp("10.2.25.93").setHostName("uat0358").setEnable(true))
-                .addSlbServer(new SlbServer().setIp("10.2.25.94").setHostName("uat0359").setEnable(true))
-                .addSlbServer(new SlbServer().setIp("10.2.25.95").setHostName("uat0360").setEnable(true))
+                .addSlbServer(new SlbServer().setIp("10.2.25.93").setHostName("uat0358"))
+                .addSlbServer(new SlbServer().setIp("10.2.25.94").setHostName("uat0359"))
+                .addSlbServer(new SlbServer().setIp("10.2.25.95").setHostName("uat0360"))
                 .addVirtualServer(new VirtualServer().setName("testsite1").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("s1.ctrip.com")))
                 .addVirtualServer(new VirtualServer().setName("testsite2").setSsl(false).setPort("80")
@@ -246,6 +246,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         insertedTestGroupId = groupRepo.add(testGroup).getId();
         // set virtual server full information
         testGroup.getGroupSlbs().get(0).setVirtualServer(defaultSlb.getVirtualServers().get(0));
+        testGroup.getGroupSlbs().get(0).setSlbName(defaultSlb.getName());
         Assert.assertTrue(insertedTestGroupId > 0);
         for (int i = 0; i < 6; i++) {
             Group group = generateGroup("testGroup" + i, defaultSlb, defaultSlb.getVirtualServers().get(0));
@@ -257,7 +258,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         return new Group().setName(groupName).setAppId("000000").setVersion(1).setSsl(false)
                 .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
-                .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setPath("/").setVirtualServer(new VirtualServer().setId(virtualServer.getId())))
+                .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setPath("/" +  groupName).setVirtualServer(new VirtualServer().setId(virtualServer.getId())))
                 .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.201"))
                 .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
     }
