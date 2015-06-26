@@ -300,7 +300,7 @@ public class NginxServiceImpl implements NginxService {
         for (SlbServer slbServer : slb.getSlbServers()) {
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             try {
-                list.addAll(nginxClient.getTrafficStatus(rollingTrafficStatus.peekTime(), count).getStatuses());
+                list.addAll(nginxClient.getTrafficStatus(System.currentTimeMillis() - 60 * 1000L, count).getStatuses());
             } catch (Exception e) {
                 LOGGER.error(e.getLocalizedMessage());
             }
@@ -342,7 +342,7 @@ public class NginxServiceImpl implements NginxService {
         for (SlbServer slbServer : slb.getSlbServers()) {
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             try {
-                list.addAll(nginxClient.getTrafficStatusByGroup(rollingTrafficStatus.peekTime(), groupName, count).getStatuses());
+                list.addAll(nginxClient.getTrafficStatusByGroup(System.currentTimeMillis() - 60 * 1000L, groupName, count).getStatuses());
             } catch (Exception e) {
                 LOGGER.error(e.getLocalizedMessage());
             }
@@ -355,11 +355,19 @@ public class NginxServiceImpl implements NginxService {
         LinkedList<TrafficStatus> l = (LinkedList<TrafficStatus>) rollingTrafficStatus.getResult();
         List<ReqStatus> result = new LinkedList<>();
         int size = l.size();
+        TrafficStatus head = l.peekLast();
         // In case of time diff from server fetchers
         for (int i = 0; i < count + 1 && i < size; i++) {
             TrafficStatus ts = l.pollLast();
             if (formatter.format(time).equals(formatter.format(ts.getTime()))) {
                 result.addAll(ts.getReqStatuses());
+            }
+        }
+        if (result.size() == 0) {
+            for (ReqStatus reqStatus : head.getReqStatuses()) {
+                result.add(new ReqStatus().setGroupId(reqStatus.getGroupId())
+                        .setGroupName(reqStatus.getGroupName())
+                        .setSlbId(reqStatus.getSlbId()).setTime(time));
             }
         }
         return result;

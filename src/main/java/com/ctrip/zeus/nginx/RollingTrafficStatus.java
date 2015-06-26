@@ -49,10 +49,6 @@ public class RollingTrafficStatus {
         buckets.clear();
     }
 
-    public Long peekTime() {
-        return buckets.peekTime().getTime();
-    }
-
     public List<TrafficStatus> getResult() {
         return new LinkedList<>(buckets.getResult());
     }
@@ -99,10 +95,6 @@ public class RollingTrafficStatus {
 
         public void clear() {
             buckets.clear();
-        }
-
-        public Date peekTime() {
-            return buckets.getLast().getTime();
         }
 
         @Override
