@@ -38,26 +38,60 @@ public class IntegrationTest {
     public void before() throws IOException {
         Group groupres = null;
         String groupstr = null;
+        StringBuilder sb = new StringBuilder(128);
+        for (int i = 0 ; i < 10 ; i ++){
+            sb.append("groupName=__Test_app").append(i).append("&");
+        }
+        try{
+            reqClient.getstr("/api/deactivate/group?"+sb.toString());
+        }catch (Exception e)
+        {
+            System.out.println(e);
+        }
 
         for (int i = 0; i < 10; i++) {
-            groupstr = reqClient.getstr("/api/group?groupName=__Test_app"+i);
+            try {
+                groupstr = reqClient.getstr("/api/group?groupName=__Test_app"+i);
+            }catch (Exception e)
+            {
+                System.out.println(e);
+                continue;
+            }
+
             groupres = DefaultJsonParser.parse(Group.class, groupstr);
             if (groupres!=null)
             {
                 reqClient.getstr("/api/group/delete?groupId=" + groupres.getId());
             }
         }
+        String slb_res = null;
+        try{
+            slb_res = reqClient.getstr("/api/slb?slbName=" + slb1_name);
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        Slb slb_res_obj = null;
+        try {
+            slb_res_obj  = DefaultJsonParser.parse(Slb.class, slb_res);
+        }catch (Exception e){
+            System.out.println(e);
+        }
 
-
-        String slb_res = reqClient.getstr("/api/slb?slbName=" + slb1_name);
-        Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
         if (slb_res_obj!=null)
         {
             reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
         }
 
-        slb_res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
-        slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
+        try{
+            slb_res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        try {
+            slb_res_obj  = DefaultJsonParser.parse(Slb.class, slb_res);
+        }catch (Exception e){
+            System.out.println(e);
+        }
         if (slb_res_obj!=null)
         {
             reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
