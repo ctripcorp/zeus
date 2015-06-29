@@ -1,10 +1,12 @@
-package com.ctrip.zeus.service.model.handler.impl;
+package com.ctrip.zeus.service.model.handler;
 
+
+import com.ctrip.zeus.service.model.handler.impl.Tokenizer;
 
 /**
  * Created by zhoumy on 2015/6/23.
  */
-public class RewriteParser {
+public class RewriteParseHandler {
     ParserState currentState;
 
     public boolean validate(byte[] data) {
