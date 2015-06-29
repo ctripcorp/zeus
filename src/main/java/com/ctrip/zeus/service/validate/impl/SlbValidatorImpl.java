@@ -4,6 +4,7 @@ import com.ctrip.zeus.client.ValidateClient;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.model.entity.SlbValidateResponse;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.validate.SlbValidator;
 import com.netflix.config.DynamicIntProperty;
@@ -15,7 +16,7 @@ import javax.annotation.Resource;
 /**
  * Created by fanqq on 2015/6/25.
  */
-@Service("slbValidate")
+@Service("slbValidator")
 public class SlbValidatorImpl implements SlbValidator {
     @Resource
     SlbRepository slbRepository;
@@ -40,5 +41,15 @@ public class SlbValidatorImpl implements SlbValidator {
             }
         }
         return response.setSucceed(true);
+    }
+
+    @Override
+    public void validate(Slb slb) {
+
+    }
+
+    @Override
+    public boolean validateVirtualServer(VirtualServer virtualServer) {
+
     }
 }

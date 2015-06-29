@@ -63,12 +63,13 @@ public class SlbQueryImpl implements SlbQuery {
     }
 
     @Override
-    public VirtualServer getBySlbAndName(String slbName, String virtualServerName) throws DalException {
-        SlbDo d = slbDao.findByName(slbName, SlbEntity.READSET_FULL);
-        if (d ==  null || d.getId() == 0)
-            return null;
-        SlbVirtualServerDo vsd = slbVirtualServerDao.findBySlbAndName(d.getId(), virtualServerName, SlbVirtualServerEntity.READSET_FULL);
-        return C.toVirtualServer(vsd);
+    public VirtualServer getVirtualServer(Long virtualServerId, Long slbId, String virtualServerName) throws DalException {
+        SlbVirtualServerDo d = null;
+        if (virtualServerId != null)
+            d = slbVirtualServerDao.findByPK(virtualServerId, SlbVirtualServerEntity.READSET_FULL);
+        if (d == null)
+            d = slbVirtualServerDao.findBySlbAndName(slbId, virtualServerName, SlbVirtualServerEntity.READSET_FULL);
+        return C.toVirtualServer(d);
     }
 
     @Override
@@ -161,6 +162,20 @@ public class SlbQueryImpl implements SlbQuery {
             if (svsd != null)
                 as.setVirtualServer(C.toVirtualServer(svsd));
             querySlbVips(svsd.getSlbId(), as);
+        }
+        return list;
+    }
+
+    @Override
+    public List<GroupSlb> getGroupSlbsByVirtualServer(Long virtualServerId) throws DalException {
+        List<GroupSlb> list = new ArrayList<>();
+        for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByVirtualServer(virtualServerId, GroupSlbEntity.READSET_FULL)) {
+            GroupSlb groupSlb = C.toGroupSlb(groupSlbDo);
+            list.add(groupSlb);
+            SlbVirtualServerDo svsd = slbVirtualServerDao.findByPK(groupSlbDo.getSlbVirtualServerId(), SlbVirtualServerEntity.READSET_FULL);
+            if (svsd != null)
+                groupSlb.setVirtualServer(C.toVirtualServer(svsd));
+            querySlbVips(svsd.getSlbId(), groupSlb);
         }
         return list;
     }

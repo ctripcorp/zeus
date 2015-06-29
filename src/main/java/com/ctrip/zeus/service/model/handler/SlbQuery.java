@@ -21,7 +21,7 @@ public interface SlbQuery {
 
     Slb getByVirtualServer(Long virtualServerId) throws DalException;
 
-    VirtualServer getBySlbAndName(String slbName, String virtualServerName) throws DalException;
+    VirtualServer getVirtualServer(Long virtualServerId, Long slbId, String virtualServerName) throws DalException;
 
     List<Slb> getAll() throws DalException;
 
@@ -36,4 +36,6 @@ public interface SlbQuery {
     List<GroupSlb> getGroupSlbsByGroups(Long[] groupIds) throws DalException;
 
     List<GroupSlb> getGroupSlbsBySlb(Long slbId) throws DalException;
+
+    List<GroupSlb> getGroupSlbsByVirtualServer(Long virtualServer) throws DalException;
 }
