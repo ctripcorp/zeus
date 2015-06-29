@@ -1,5 +1,7 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
+import com.ctrip.framework.clogging.agent.util.Bytes;
+
 /**
  * Created by zhoumy on 2015/6/23.
  */
@@ -12,8 +14,8 @@ public class Tokenizer {
         index = 0;
     }
 
-    public Token getStringToken(Token startToken) {
-        byte[] debug = new byte[1024];
+    public String getStringToken(ParserState currentState) {
+        Token startToken = currentState.state;
         int offset = index;
         int depth = startToken.compareTo(Token.MatchStart) == 0 ? 1 : 0;
         while (!endOfBytes(index)) {
@@ -25,13 +27,12 @@ public class Tokenizer {
                     break;
                 }
                 case '\"': {
-                    if (endOfBytes(index + 1))
-                        return Token.Error;
-                    for (int i = offset; i < index; i++) {
-                        debug[i - offset] = data[i];
+                    if (endOfBytes(index + 1)) {
+                        currentState.setState(Token.Error);
+                        return "";
                     }
-                    System.out.println(new String(debug));
-                    return Token.StringContent;
+                    currentState.moveToNext();
+                    return Bytes.toString(data, offset, index - offset);
                 }
                 case ';': {
                     if (depth > 0) {
@@ -39,35 +40,26 @@ public class Tokenizer {
                         break;
                     }
                     if (endOfBytes(index + 1)) {
-                        for (int i = offset; i < index; i++) {
-                            debug[i - offset] = data[i];
-                        }
-                        System.out.println(new String(debug));
-                        return Token.StringContent;
+                        currentState.moveToNext();
+                        return Bytes.toString(data, offset, index - offset);
                     }
                     if (data[index + 1] == '\"') {
-                        for (int i = offset; i < index; i++) {
-                            debug[i - offset] = data[i];
-                        }
-                        System.out.println(new String(debug));
-                        return Token.StringContent;
+                        currentState.moveToNext();
+                        return Bytes.toString(data, offset, index - offset);
                     }
                     index++;
                     break;
                 }
                 case ' ':
-                    return Token.Error;
+                    currentState.setState(Token.Error);
+                    return "";
                 default:
                     index++;
                     break;
             }
         }
-        for (int i = offset; i < index; i++) {
-            debug[i - offset] = data[i];
-        }
-        System.out.println(new String(debug));
-        return Token.StringContent;
-
+        currentState.moveToNext();
+        return Bytes.toString(data, offset, index - offset);
     }
 
     public Token getToken() {
@@ -98,12 +90,23 @@ public class Tokenizer {
     }
 
     public enum Token {
-        MatchStart,
-        MatchEnd,
-        Delimiter,
-        RuleEnd,
-        StringContent,
-        Eof,
-        Error
+        MatchStart("Start \""),
+        MatchEnd("End \""),
+        Delimiter(" "),
+        RuleEnd(";"),
+        StringContent("String"),
+        Eof("EOF"),
+        Error("Error");
+
+        private final String name;
+
+        private Token(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 }

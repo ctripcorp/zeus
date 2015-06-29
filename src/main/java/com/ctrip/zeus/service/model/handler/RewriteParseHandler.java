@@ -1,11 +1,17 @@
 package com.ctrip.zeus.service.model.handler;
 
 
+import com.ctrip.zeus.service.model.handler.impl.ParseException;
+import com.ctrip.zeus.service.model.handler.impl.ParserState;
 import com.ctrip.zeus.service.model.handler.impl.Tokenizer;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * Created by zhoumy on 2015/6/23.
  */
+@Component("rewriteParseHandler")
 public class RewriteParseHandler {
     ParserState currentState;
 
@@ -21,11 +27,13 @@ public class RewriteParseHandler {
                 return false;
             switch (t) {
                 case MatchStart:
-                    if (!handleContent(tokenizer))
+                    handleContent(tokenizer);
+                    if (!currentState.matchState(Tokenizer.Token.StringContent))
                         return false;
                     break;
                 case Delimiter:
-                    if (!handleContent(tokenizer))
+                    handleContent(tokenizer);
+                    if (!currentState.matchState(Tokenizer.Token.StringContent))
                         return false;
                     break;
                 case Error:
@@ -34,53 +42,40 @@ public class RewriteParseHandler {
         }
     }
 
-    private boolean handleContent(Tokenizer tokenizer) {
-        Tokenizer.Token result = tokenizer.getStringToken(currentState.state);
-        return currentState.moveToNext().matchState(result);
-    }
-
-    public class ParserState {
-        Tokenizer.Token state;
-        int depth;
-
-        public ParserState() {
-            state = Tokenizer.Token.Eof;
-            depth = 0;
-        }
-
-        public ParserState moveToNext() {
-            switch (state) {
-                case Eof:
-                    state = Tokenizer.Token.MatchStart;
-                    break;
+    public void handleContent(byte[] data, List<String> output) throws ParseException {
+        Tokenizer tokenizer = new Tokenizer(data);
+        currentState = new ParserState();
+        while (true) {
+            Tokenizer.Token t = tokenizer.getToken();
+            if (t.compareTo(Tokenizer.Token.Eof) == 0)
+                return;
+            currentState.moveToNext();
+            if (!currentState.matchState(t))
+                throw new ParseException("Expect " + currentState.toString() + ", but was " + t.toString() + ".");
+            switch (t) {
                 case MatchStart:
-                    depth++;
-                    state = Tokenizer.Token.StringContent;
-                    break;
-                case MatchEnd:
-                    depth--;
-                    state = Tokenizer.Token.Delimiter;
+                    String content = handleContent(tokenizer);
+                    if (currentState.matchState(Tokenizer.Token.StringContent))
+                        output.add(content);
+                    else
+                        throw new ParseException("Cannot handle origin string pattern.");
                     break;
                 case Delimiter:
-                    state = Tokenizer.Token.StringContent;
-                    break;
-                case RuleEnd:
-                    state = Tokenizer.Token.MatchStart;
-                    break;
-                case StringContent:
-                    if (depth >= 1)
-                        state = Tokenizer.Token.MatchEnd;
+                    String result = handleContent(tokenizer);
+                    if (currentState.matchState(Tokenizer.Token.StringContent))
+                        output.add(result);
                     else
-                        state = Tokenizer.Token.RuleEnd;
+                        throw new ParseException("Cannot handle rewrite string pattern.");
                     break;
                 case Error:
-                    break;
+                    throw new ParseException("Invalid value.");
             }
-            return this;
-        }
-
-        public boolean matchState(Tokenizer.Token token) {
-            return currentState.state.compareTo(token) == 0;
         }
     }
+
+    private String handleContent(Tokenizer tokenizer) {
+        return tokenizer.getStringToken(currentState);
+    }
+
+
 }
