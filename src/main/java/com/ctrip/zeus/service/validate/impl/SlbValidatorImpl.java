@@ -5,7 +5,7 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.model.entity.SlbValidateResponse;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.validate.SlbValidate;
+import com.ctrip.zeus.service.validate.SlbValidator;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import javax.annotation.Resource;
  * Created by fanqq on 2015/6/25.
  */
 @Service("slbValidate")
-public class SlbValidateImpl implements SlbValidate {
+public class SlbValidatorImpl implements SlbValidator {
     @Resource
     SlbRepository slbRepository;
     private static DynamicIntProperty adminServerPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
