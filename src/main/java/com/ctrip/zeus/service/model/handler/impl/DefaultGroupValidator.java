@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.activate.ActiveConfService;
+import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,8 @@ public class DefaultGroupValidator implements GroupValidator {
     private ActiveConfService activeConfService;
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private PathRewriteParser pathRewriteParser;
 
     @Override
     public void validate(Group group) throws Exception {
@@ -46,6 +49,9 @@ public class DefaultGroupValidator implements GroupValidator {
            return false;
         Set<Long> virtualServerIds = new HashSet<>();
         for (GroupSlb gs : group.getGroupSlbs()) {
+            if (gs.getRewrite() != null && !gs.getRewrite().isEmpty() && !pathRewriteParser.validate(gs.getRewrite())) {
+                throw new ValidationException("Invalid rewrite value.");
+            }
             VirtualServer vs = slbRepository.getVirtualServer(gs.getVirtualServer().getId(),
                     gs.getSlbId(), gs.getVirtualServer().getName());
             if (vs == null)
