@@ -126,7 +126,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     private boolean getUpstreamStatus(Long groupId, String ip , boolean memberUp , boolean serverUp) throws Exception {
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
-        String upstreamNameEndWith = "_"+groupRepository.getById(groupId).getName();
+        String upstreamNameEndWith = "_"+groupRepository.getById(groupId).getId();
         for (S server : servers) {
             if (!server.getUpstream().endsWith(upstreamNameEndWith))
             {
