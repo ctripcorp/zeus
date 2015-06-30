@@ -42,12 +42,12 @@ public class HealthCheckConf {
         AssertUtils.assertNotNull(h.getIntervals(), "Group HealthCheck Intervals config is null!");
         AssertUtils.assertNotNull(h.getFails(), "Group HealthCheck Fails config is null!");
         AssertUtils.assertNotNull(h.getPasses(), "Group HealthCheck Passes config is null!");
+        AssertUtils.assertNotNull(h.getUri(), "Group HealthCheck Uri config is null!");
 
 
         StringBuilder b = new StringBuilder(128);
 
-        if (group.getSsl())
-        {
+        if (group.getSsl()) {
             b.append("check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
@@ -62,12 +62,13 @@ public class HealthCheckConf {
                     .append("check_keepalive_requests 100").append(";\n")
                     .append("check_http_send \"")
                     .append("GET ").append(h.getUri()).append(" HTTP/1.0\\r\\n")
-                    .append("Connection:keep-alive\\r\\n")
-                    .append("Host:").append(vs.getDomains().get(0).getName().trim()).append("\\r\\n")
-                    .append("UserAgent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
+                    .append("Connection:keep-alive\\r\\n");
+            if (!h.getUri().equalsIgnoreCase("/SlbHealthCheck.aspx")) {
+                b.append("Host:").append(vs.getDomains().get(0).getName().trim()).append("\\r\\n");
+            }
+            b.append("UserAgent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
                     .append("check_http_expect_alive http_2xx http_3xx").append(";\n");
         }
-
         return b.toString();
     }
 }

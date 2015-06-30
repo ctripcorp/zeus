@@ -36,6 +36,9 @@ public class IntegrationTest {
 
     @Before
     public void before() throws IOException {
+        clean();
+    }
+    private void clean()throws IOException{
         Group groupres = null;
         String groupstr = null;
         StringBuilder sb = new StringBuilder(128);
@@ -97,48 +100,9 @@ public class IntegrationTest {
             reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
         }
     }
-
     @After
     public void after() throws IOException {
-
-        Group groupres = null;
-        String groupstr = null;
-
-        for (int i = 0; i < 10; i++) {
-            groupstr = reqClient.getstr("/api/group?groupName=__Test_app"+i);
-            groupres = DefaultJsonParser.parse(Group.class, groupstr);
-            if (groupres!=null)
-            {
-                reqClient.getstr("/api/group/delete?groupId=" + groupres.getId());
-            }
-        }
-
-
-        String slb_res = reqClient.getstr("/api/slb?slbName=" + slb1_name);
-        if (slb_res!=null)
-        {
-            Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
-            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
-        }
-
-        slb_res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
-        if (slb_res!=null)
-        {
-            Slb slb_res_obj = DefaultJsonParser.parse(Slb.class, slb_res);
-            reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
-        }
-
-
-        String res = reqClient.getstr("/api/group?groupName=__Test_app2");
-        Assert.assertEquals(true,res.isEmpty());
-        reqClient.markPass("/api/group/delete");
-
-        res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
-        Assert.assertEquals(true,res.isEmpty());
-        reqClient.markPass("/api/slb/delete");
-
-        ReqClient.buildReport();
-
+        clean();
     }
 
     @Test
@@ -183,33 +147,31 @@ public class IntegrationTest {
                 .addVirtualServer(v4)
                 .addVirtualServer(v5)
                 .setStatus("Test");
-
-
         reqClient.post("/api/slb/new", String.format(Slb.JSON, slb1));
         reqClient.post("/api/slb/new", String.format(Slb.JSON, slb2));
 
 
         //assert slb1 slb2
-        boolean suc1 = reqClient.getstr("/api/slbs").contains(slb1_name);
-        boolean suc2 = reqClient.getstr("/api/slbs").contains(slb2_name);
-
-        Assert.assertEquals(true, suc1 && suc2);
-
-        reqClient.markPass("/api/slb/new");
-        reqClient.markPass("/api/slb");
-
+//        String slb1Res = reqClient.getstr("/api/slb?slbName="+slb1_name);
+//        Slb _slb1 = DefaultJsonParser.parse(Slb.class,slb1Res);
+//        Assert.assertEquals(slb1_name,_slb1.getName());
+//        Assert.assertEquals("/opt/app/nginx/conf",_slb1.getNginxConf());
+//        Assert.assertEquals("/opt/app/nginx/sbin",_slb1.getNginxBin());
+//        Assert.assertEquals(slb1_server_0,_slb1.getVips().get(0).getIp());
+//
+//        String slb2Res = reqClient.getstr("/api/slb?slbName="+slb2_name);
+//        Slb _slb2 = DefaultJsonParser.parse(Slb.class,slb2Res);
+//        Assert.assertEquals(slb2_name,_slb2.getName());
+//        Assert.assertEquals("/opt/app/nginx/conf",_slb2.getNginxConf());
+//        Assert.assertEquals("/opt/app/nginx/sbin",_slb2.getNginxBin());
 
         String slb1_res = reqClient.getstr("/api/slb?slbName=" + slb1_name);
         Slb slb1_res_obj = DefaultJsonParser.parse(Slb.class, slb1_res);
-
         ModelAssert.assertSlbEquals(slb1, slb1_res_obj);
-
         String slb2_res = reqClient.getstr("/api/slb?slbName=" + slb2_name);
         Slb slb2_res_obj = DefaultJsonParser.parse(Slb.class, slb2_res);
-
         ModelAssert.assertSlbEquals(slb2, slb2_res_obj);
-
-        reqClient.markPass("/api/slb");
+        reqClient.markPass("/api/slb/new");
         reqClient.markPass("/api/slb");
         //activate test slbs
         reqClient.getstr("/api/activate/slb?slbName=__Test_slb1&slbName=__Test_slb2");
@@ -221,7 +183,7 @@ public class IntegrationTest {
                     .setIntervals(2000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                     .setValue("test"))
                 .addGroupSlb(new GroupSlb().addVip(new Vip().setIp(hostip)).setSlbId(i % 3 == 0 ? slb2_res_obj.getId() : slb1_res_obj.getId())
-                        .setSlbName(i % 3 == 0 ? slb2_res_obj.getName() : slb1_res_obj.getName()).setPath("/app" + i).setVirtualServer(i % 2 == 0 ? v1 : v2).setRewrite(i % 2 == 0 ? null : "/app /app0?sleep=1&size=1" + i)
+                        .setPath("~* ^/app" + i).setVirtualServer(i % 2 == 0 ? v1 : v2).setRewrite(i % 2 == 0 ? null : "/app /app0?sleep=1&size=1" + i)
                         .setPriority(i)).addGroupServer(i % 2 == 0 ?groupServer1:groupServer2);
             reqClient.post("/api/group/new", String.format(Group.JSON, group));
             groups.add(group);
@@ -234,7 +196,7 @@ public class IntegrationTest {
 
         Assert.assertEquals(true,appsuc);
         reqClient.markPass("/api/group/new");
-        reqClient.markPass("/api/group");
+        reqClient.markPass("/api/groups");
 
 
         Group groupres = null;
@@ -252,7 +214,6 @@ public class IntegrationTest {
         groupres = DefaultJsonParser.parse(Group.class, groupstr);
         ModelAssert.assertGroupEquals(groups.get(3), groupres);
         reqClient.markPass("/api/group");
-
 
         integrationTest_update();
 
@@ -272,17 +233,14 @@ public class IntegrationTest {
             String groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app" + i);
             GroupStatus gs = DefaultJsonParser.parse(GroupStatus.class, groupstatus);
 
-//            for (GroupStatus as : groupStatusList.getGroupStatuses()) {
-                Assert.assertEquals("__Test_app" + i, gs.getGroupName());
-                Assert.assertEquals(true, gs.getSlbName().equals(slb1_name) || gs.getSlbName().equals(slb2_name));
+            Assert.assertEquals("__Test_app" + i, gs.getGroupName());
+            Assert.assertEquals(true, gs.getSlbName().equals(slb1_name) || gs.getSlbName().equals(slb2_name));
 
-                for (GroupServerStatus ass : gs.getGroupServerStatuses()) {
-                    Assert.assertEquals(true, ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1) || ass.getIp().equals(slb1_server_2));
-                    Assert.assertEquals(true, ass.getServer());
-                    Assert.assertEquals(true, ass.getMember());
-                }
-//            }
-
+            for (GroupServerStatus ass : gs.getGroupServerStatuses()) {
+                Assert.assertEquals(true, ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1) || ass.getIp().equals(slb1_server_2));
+                Assert.assertEquals(true, ass.getServer());
+                Assert.assertEquals(false, ass.getMember());
+            }
             reqClient.markPass("/api/status/group");
         }
 
