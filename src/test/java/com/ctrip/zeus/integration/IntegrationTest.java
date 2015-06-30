@@ -47,6 +47,7 @@ public class IntegrationTest {
         }
         try{
             reqClient.getstr("/api/deactivate/group?"+sb.toString());
+            reqClient.markPass("/api/deactivate/group");
         }catch (Exception e)
         {
             System.out.println(e);
@@ -65,6 +66,7 @@ public class IntegrationTest {
             if (groupres!=null)
             {
                 reqClient.getstr("/api/group/delete?groupId=" + groupres.getId());
+                reqClient.markPass("/api/group/delete");
             }
         }
         String slb_res = null;
@@ -83,6 +85,7 @@ public class IntegrationTest {
         if (slb_res_obj!=null)
         {
             reqClient.getstr("/api/slb/delete?slbId=" + slb_res_obj.getId());
+            reqClient.markPass("/api/slb/delete");
         }
 
         try{
@@ -103,6 +106,7 @@ public class IntegrationTest {
     @After
     public void after() throws IOException {
         clean();
+        reqClient.buildReport();
     }
 
     @Test
@@ -229,8 +233,8 @@ public class IntegrationTest {
             reqClient.markPass("/api/status/group");
         }
 
-        reqClient.markPass("/api/activate");
-
+        reqClient.markPass("/api/activate/group");
+        reqClient.markPass("/api/activate/slb");
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_1);
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_0);
 
