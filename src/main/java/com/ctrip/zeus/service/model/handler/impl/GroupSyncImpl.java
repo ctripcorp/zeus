@@ -5,7 +5,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.GroupSync;
-import com.ctrip.zeus.service.validate.GroupValidator;
+import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -37,13 +37,13 @@ public class GroupSyncImpl implements GroupSync {
     private SlbRepository slbRepository;
 
     @Resource
-    private GroupValidator groupValidator;
+    private GroupValidator groupModelValidator;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     public GroupDo add(Group group) throws Exception {
-        groupValidator.validate(group);
+        groupModelValidator.validate(group);
         GroupDo d = C.toGroupDo(0L, group);
         d.setCreatedTime(new Date());
         d.setVersion(1);
@@ -57,7 +57,7 @@ public class GroupSyncImpl implements GroupSync {
 
     @Override
     public GroupDo update(Group group) throws Exception {
-        groupValidator.validate(group);
+        groupModelValidator.validate(group);
         GroupDo check = groupDao.findById(group.getId(), GroupEntity.READSET_FULL);
         if (check.getVersion() > group.getVersion())
             throw new ValidationException("Newer Group version is detected.");
@@ -73,7 +73,7 @@ public class GroupSyncImpl implements GroupSync {
 
     @Override
     public int delete(Long groupId) throws Exception {
-        groupValidator.removable(groupId);
+        groupModelValidator.removable(groupId);
         groupSlbDao.deleteByGroup(new GroupSlbDo().setGroupId(groupId));
         groupServerDao.deleteByGroup(new GroupServerDo().setGroupId(groupId));
         groupHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(groupId));

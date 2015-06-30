@@ -15,7 +15,7 @@ public interface SlbSync {
 
     void add(Slb slb) throws DalException, ValidationException;
 
-    void update(Slb slb) throws DalException, ValidationException;
+    void update(Slb slb) throws Exception;
 
-    int delete(Long slbId) throws DalException, ValidationException;
+    int delete(Long slbId) throws Exception;
 }

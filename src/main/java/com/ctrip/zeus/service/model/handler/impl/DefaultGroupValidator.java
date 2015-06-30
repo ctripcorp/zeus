@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.validate.impl;
+package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
@@ -6,7 +6,7 @@ import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.validate.GroupValidator;
+import com.ctrip.zeus.service.model.handler.GroupValidator;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -17,7 +17,7 @@ import java.util.Set;
 /**
  * Created by zhoumy on 2015/6/29.
  */
-@Component("groupValidator")
+@Component("groupModelValidator")
 public class DefaultGroupValidator implements GroupValidator {
     @Resource
     private ActiveConfService activeConfService;

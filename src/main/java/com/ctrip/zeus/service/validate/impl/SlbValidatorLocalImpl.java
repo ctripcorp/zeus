@@ -5,17 +5,16 @@ import com.ctrip.zeus.model.entity.SlbValidateResponse;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.LocalValidate;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
-import com.ctrip.zeus.service.build.conf.LocationConf;
 import com.ctrip.zeus.service.build.conf.ServerConf;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.validate.SlbValidateLocal;
+import com.ctrip.zeus.service.validate.SlbValidatorLocal;
 
 import javax.annotation.Resource;
 
 /**
  * Created by fanqq on 2015/6/25.
  */
-public class SlbValidateLocalImpl implements SlbValidateLocal {
+public class SlbValidatorLocalImpl implements SlbValidatorLocal {
     @Resource
     SlbRepository slbRepository;
     @Resource

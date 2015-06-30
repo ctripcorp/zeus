@@ -1,8 +1,6 @@
-package com.ctrip.zeus.service.validate;
+package com.ctrip.zeus.service.model.handler;
 
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
-import org.unidal.dal.jdbc.DalException;
 
 /**
  * Created by zhoumy on 2015/6/29.

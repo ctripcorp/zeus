@@ -69,6 +69,8 @@ public class SlbQueryImpl implements SlbQuery {
             d = slbVirtualServerDao.findByPK(virtualServerId, SlbVirtualServerEntity.READSET_FULL);
         if (d == null)
             d = slbVirtualServerDao.findBySlbAndName(slbId, virtualServerName, SlbVirtualServerEntity.READSET_FULL);
+        VirtualServer vs = C.toVirtualServer(d);
+        querySlbDomains(d.getId(), vs);
         return C.toVirtualServer(d);
     }
 

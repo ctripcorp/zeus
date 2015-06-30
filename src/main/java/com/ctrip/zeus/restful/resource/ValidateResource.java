@@ -4,7 +4,7 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.SlbValidateResponse;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.validate.SlbValidateLocal;
+import com.ctrip.zeus.service.validate.SlbValidatorLocal;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response;
 @Path("/validate")
 public class ValidateResource {
     @Resource
-    private SlbValidateLocal slbValidateLocal;
+    private SlbValidatorLocal slbValidateLocal;
     @Resource
     private ResponseHandler responseHandler;
 
