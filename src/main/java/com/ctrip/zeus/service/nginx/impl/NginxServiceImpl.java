@@ -208,17 +208,6 @@ public class NginxServiceImpl implements NginxService {
         Slb slb = slbRepository.getById(slbId);
         int version = nginxConfService.getCurrentVersion(slbId);
         boolean flag = false;
-        String ip = S.getIp();
-
-        NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
-        if (nginxServer != null && nginxServer.getVersion() >= version) {
-            NginxResponse res = new NginxResponse();
-            res.setServerIp(ip).setSucceed(true).setOutMsg("current version is lower then or equal the version used!current version ["
-                    + version + "],used version [" + nginxServer.getVersion() + "]");
-            List<NginxResponse> responses = new ArrayList<>();
-            responses.add(res);
-            return responses;
-        }
 
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
@@ -234,6 +223,8 @@ public class NginxServiceImpl implements NginxService {
                 // update the used version in the db
                 NginxServerDo nginxServerDo = nginxServerDao.findByIp(slbServer.getIp(), NginxServerEntity.READSET_FULL);
                 nginxServerDao.updateByPK(nginxServerDo.setVersion(version), NginxServerEntity.UPDATESET_FULL);
+            }else {
+                throw new Exception("Dyups all failed !");
             }
         }
         return result;
