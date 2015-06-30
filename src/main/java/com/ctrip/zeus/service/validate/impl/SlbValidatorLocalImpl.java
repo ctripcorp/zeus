@@ -8,12 +8,14 @@ import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.service.build.conf.ServerConf;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.validate.SlbValidatorLocal;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
 /**
  * Created by fanqq on 2015/6/25.
  */
+@Component("slbValidatorLocal")
 public class SlbValidatorLocalImpl implements SlbValidatorLocal {
     @Resource
     SlbRepository slbRepository;

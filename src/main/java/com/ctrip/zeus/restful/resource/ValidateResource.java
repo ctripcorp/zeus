@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response;
 @Path("/validate")
 public class ValidateResource {
     @Resource
-    private SlbValidatorLocal slbValidateLocal;
+    private SlbValidatorLocal slbValidatorLocal;
     @Resource
     private ResponseHandler responseHandler;
 
@@ -40,7 +40,7 @@ public class ValidateResource {
         {
             throw new ValidationException("Error Param!slbId Can not be Null!");
         }
-        SlbValidateResponse response = slbValidateLocal.validate(slbId);
+        SlbValidateResponse response = slbValidatorLocal.validate(slbId);
         return responseHandler.handle(response, hh.getMediaType());
     }
 }

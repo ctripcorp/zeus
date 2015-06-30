@@ -29,7 +29,7 @@ public class DefaultGroupValidator implements GroupValidator {
         if (group == null) {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
-        if (validateGroupSlbs(group))
+        if (!validateGroupSlbs(group))
             throw new ValidationException("Virtual server cannot be found.");
     }
 
