@@ -126,7 +126,7 @@ public class IntegrationTest {
 
 
         GroupServer groupServer1 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver1").setIp(slb1_server_0);
-        GroupServer groupServer2 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver2").setIp(slb1_server_1);
+        GroupServer groupServer2 = new GroupServer().setPort(1000).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver2").setIp(slb1_server_1);
         GroupServer groupServer3 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver3").setIp(slb1_server_2);
 
 
@@ -229,6 +229,7 @@ public class IntegrationTest {
                 Assert.assertEquals(true, ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1) || ass.getIp().equals(slb1_server_2));
                 Assert.assertEquals(true, ass.getServer());
                 Assert.assertEquals(true, ass.getMember());
+                Assert.assertEquals(i%2==0, ass.getUp());
             }
             reqClient.markPass("/api/status/group");
         }
@@ -246,6 +247,8 @@ public class IntegrationTest {
             for (GroupServerStatus ass : as.getGroupServerStatuses()) {
                 if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(false, ass.getServer());
+                    Assert.assertEquals(true, ass.getMember());
+                    Assert.assertEquals(false, ass.getUp());
                 }
             }
         }
@@ -258,6 +261,8 @@ public class IntegrationTest {
             for (GroupServerStatus ass : as.getGroupServerStatuses()) {
                 if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(false, ass.getServer());
+                    Assert.assertEquals(true, ass.getMember());
+                    Assert.assertEquals(false, ass.getUp());
                 }
             }
         }
@@ -276,6 +281,8 @@ public class IntegrationTest {
             for (GroupServerStatus ass : as.getGroupServerStatuses()) {
                 if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(true, ass.getServer());
+                    Assert.assertEquals(true, ass.getMember());
+                    Assert.assertEquals(ass.getIp().equals(slb1_server_0), ass.getUp());
                 }
             }
         }
@@ -286,6 +293,8 @@ public class IntegrationTest {
             for (GroupServerStatus ass : as.getGroupServerStatuses()) {
                 if (ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1)) {
                     Assert.assertEquals(true, ass.getServer());
+                    Assert.assertEquals(true, ass.getMember());
+                    Assert.assertEquals(ass.getIp().equals(slb1_server_0), ass.getUp());
                 }
             }
         }
@@ -300,6 +309,9 @@ public class IntegrationTest {
         for (GroupServerStatus ass : groupStatus.getGroupServerStatuses()) {
             if (ass.getIp().equals(slb1_server_1)) {
                 Assert.assertEquals(false, ass.getMember());
+                Assert.assertEquals(true, ass.getServer());
+                Assert.assertEquals(false, ass.getUp());
+
             }
         }
 
@@ -314,6 +326,33 @@ public class IntegrationTest {
         for (GroupServerStatus ass : groupStatus.getGroupServerStatuses()) {
             if (ass.getIp().equals(slb1_server_1)) {
                 Assert.assertEquals(true, ass.getMember());
+                Assert.assertEquals(true, ass.getServer());
+                Assert.assertEquals(false, ass.getUp());
+            }
+        }
+
+        reqClient.getstr("/api/op/downMember?ip=" + slb1_server_0 + "&groupName=__Test_app2");
+        groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app2");
+        groupStatus = DefaultJsonParser.parse(GroupStatus.class, groupstatus);
+
+        for (GroupServerStatus ass : groupStatus.getGroupServerStatuses()) {
+            if (ass.getIp().equals(slb1_server_0)) {
+                Assert.assertEquals(false, ass.getMember());
+                Assert.assertEquals(true, ass.getServer());
+                Assert.assertEquals(false, ass.getUp());
+
+            }
+        }
+        reqClient.getstr("/api/op/upMember?ip=" + slb1_server_0 + "&groupName=__Test_app2");
+
+        groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app2");
+        groupStatus = DefaultJsonParser.parse(GroupStatus.class, groupstatus);
+
+        for (GroupServerStatus ass : groupStatus.getGroupServerStatuses()) {
+            if (ass.getIp().equals(slb1_server_0)) {
+                Assert.assertEquals(true, ass.getMember());
+                Assert.assertEquals(true, ass.getServer());
+                Assert.assertEquals(true, ass.getUp());
             }
         }
         reqClient.markPass("/api/op/upMember");
