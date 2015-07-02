@@ -2,14 +2,17 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.NotFoundException;
+import com.ctrip.zeus.exceptions.SlbValidatorException;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
+import com.ctrip.zeus.model.entity.SlbValidateResponse;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
+import com.ctrip.zeus.service.validate.SlbValidator;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
@@ -51,6 +54,9 @@ public class ActivateResource {
     @Resource
     private GroupRepository groupRepository;
 
+    @Resource
+    private SlbValidator slbValidator;
+
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
@@ -61,7 +67,7 @@ public class ActivateResource {
     public Response activateSlb(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("slbName") List<String> slbNames)throws Exception{
         List<Long> _groupIds = new ArrayList<>();
         List<Long> _slbIds = new ArrayList<>();
-
+        SlbValidateResponse validateResponse = null;
         if ( slbIds!=null && !slbIds.isEmpty() )
         {
             _slbIds.addAll(slbIds);
@@ -71,6 +77,13 @@ public class ActivateResource {
             for (String slbName : slbNames)
             {
                 _slbIds.add(slbRepository.get(slbName).getId());
+            }
+        }
+        for (Long id : _slbIds){
+            validateResponse=slbValidator.validate(id);
+            if (!validateResponse.getSucceed()){
+                throw new SlbValidatorException("msg:"+validateResponse.getMsg()+"\nslbId:"+validateResponse.getSlbId()
+                +"\nip:"+validateResponse.getIp());
             }
         }
         return activateAll(_slbIds,_groupIds,hh);

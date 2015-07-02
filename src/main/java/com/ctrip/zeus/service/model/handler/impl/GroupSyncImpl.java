@@ -3,8 +3,9 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.activate.ActiveConfService;
+import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.GroupSync;
+import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -33,15 +34,16 @@ public class GroupSyncImpl implements GroupSync {
     @Resource
     private GroupSlbDao groupSlbDao;
     @Resource
-    private SlbVirtualServerDao slbVirtualServerDao;
+    private SlbRepository slbRepository;
+
     @Resource
-    private ActiveConfService activeConfService;
+    private GroupValidator groupModelValidator;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public GroupDo add(Group group) throws DalException, ValidationException {
-        validate(group);
+    public GroupDo add(Group group) throws Exception {
+        groupModelValidator.validate(group);
         GroupDo d = C.toGroupDo(0L, group);
         d.setCreatedTime(new Date());
         d.setVersion(1);
@@ -54,8 +56,8 @@ public class GroupSyncImpl implements GroupSync {
     }
 
     @Override
-    public GroupDo update(Group group) throws DalException, ValidationException {
-        validate(group);
+    public GroupDo update(Group group) throws Exception {
+        groupModelValidator.validate(group);
         GroupDo check = groupDao.findById(group.getId(), GroupEntity.READSET_FULL);
         if (check.getVersion() > group.getVersion())
             throw new ValidationException("Newer Group version is detected.");
@@ -71,7 +73,7 @@ public class GroupSyncImpl implements GroupSync {
 
     @Override
     public int delete(Long groupId) throws Exception {
-        removable(groupId);
+        groupModelValidator.removable(groupId);
         groupSlbDao.deleteByGroup(new GroupSlbDo().setGroupId(groupId));
         groupServerDao.deleteByGroup(new GroupServerDo().setGroupId(groupId));
         groupHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(groupId));
@@ -79,55 +81,14 @@ public class GroupSyncImpl implements GroupSync {
         return groupDao.deleteById(new GroupDo().setId(groupId));
     }
 
-    private void validate(Group group) throws DalException, ValidationException {
-        if (group == null) {
-            throw new ValidationException("Group with null value cannot be persisted.");
-        }
-        if (!validateVirtualServer(group))
-            throw new ValidationException("Virtual server cannot be found.");
-    }
-
-    private void removable(Long groupId) throws Exception {
-        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{groupId});
-        if (l.size() > 0)
-            throw new ValidationException("Group must be deactivated before deletion.");
-    }
-
-    private SlbVirtualServerDo findVirtualServer(GroupSlb gs) throws DalException {
-        SlbVirtualServerDo d = null;
-        if (gs.getVirtualServer().getId() != null)
-            d = slbVirtualServerDao.findByPK(gs.getVirtualServer().getId(), SlbVirtualServerEntity.READSET_FULL);
-        if (d == null)
-            d = slbVirtualServerDao.findBySlbAndName(gs.getSlbId(), gs.getVirtualServer().getName(), SlbVirtualServerEntity.READSET_FULL);
-        return d;
-    }
-
-    private boolean validateVirtualServer(Group group) throws DalException {
-        if (group.getGroupSlbs().size() == 0)
-            return false;
-        for (GroupSlb gs : group.getGroupSlbs()) {
-            SlbVirtualServerDo d = findVirtualServer(gs);
-            if (d == null)
-                return false;
-            Set<String> paths = new HashSet<>();
-            for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByVirtualServer(d.getId(), GroupSlbEntity.READSET_FULL)) {
-                if (paths.contains(groupSlbDo.getPath()))
-                    return false;
-                else
-                    paths.add(groupSlbDo.getPath());
-            }
-        }
-        return true;
-    }
-
-    private void cascadeSync(Group group) throws DalException {
+    private void cascadeSync(Group group) throws Exception {
         syncGroupSlbs(group.getId(), group.getGroupSlbs());
         syncGroupHealthCheck(group.getId(), group.getHealthCheck());
         syncLoadBalancingMethod(group.getId(), group.getLoadBalancingMethod());
         syncGroupServers(group.getId(), group.getGroupServers());
     }
 
-    private void syncGroupSlbs(Long groupId, List<GroupSlb> groupSlbs) throws DalException {
+    private void syncGroupSlbs(Long groupId, List<GroupSlb> groupSlbs) throws Exception {
         List<GroupSlbDo> oldList = groupSlbDao.findAllByGroup(groupId, GroupSlbEntity.READSET_FULL);
         Map<String, GroupSlbDo> oldMap = Maps.uniqueIndex(oldList, new Function<GroupSlbDo, String>() {
             @Override
@@ -138,7 +99,8 @@ public class GroupSyncImpl implements GroupSync {
 
         //Update existed if necessary, and insert new ones.
         for (GroupSlb e : groupSlbs) {
-            Long vsId = findVirtualServer(e).getId();
+            Long vsId = slbRepository.getVirtualServer(e.getVirtualServer().getId(),
+                    e.getSlbId(), e.getVirtualServer().getName()).getId();
             GroupSlbDo old = oldMap.get(groupId + "" + vsId);
             if (old != null) {
                 oldList.remove(old);

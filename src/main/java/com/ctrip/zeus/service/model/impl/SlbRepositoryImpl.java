@@ -2,16 +2,17 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
-import com.ctrip.zeus.dal.core.SlbDo;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.ArchiveService;
-import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import org.springframework.stereotype.Repository;
+import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -86,6 +87,11 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
+    public List<GroupSlb> listGroupSlbsByVirtualServer(Long virtualServerId) throws Exception {
+        return slbQuery.getGroupSlbsByVirtualServer(virtualServerId);
+    }
+
+    @Override
     public List<GroupSlb> listGroupSlbsBySlb(Long slbId) throws Exception {
         return slbQuery.getGroupSlbsBySlb(slbId);
     }
@@ -130,5 +136,14 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Override
     public List<String> listGroupServersBySlb(String slbName) throws Exception {
         return slbQuery.getGroupServersBySlb(slbName);
+    }
+
+    @Override
+    public VirtualServer getVirtualServer(Long virtualServerId, Long slbId, String virtualServerName) throws Exception {
+        if (virtualServerId == null
+                && (slbId == null || virtualServerName == null)) {
+            throw new ValidationException("Query cannot be performed due to lack of information.");
+        }
+        return slbQuery.getVirtualServer(virtualServerId, slbId, virtualServerName);
     }
 }

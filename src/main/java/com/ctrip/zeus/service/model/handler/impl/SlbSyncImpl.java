@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.handler.SlbSync;
+import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -22,8 +23,6 @@ import java.util.*;
 @Component("slbSync")
 public class SlbSyncImpl implements SlbSync {
     @Resource
-    private GroupSlbDao groupSlbDao;
-    @Resource
     private SlbDao slbDao;
     @Resource
     private SlbDomainDao slbDomainDao;
@@ -34,11 +33,13 @@ public class SlbSyncImpl implements SlbSync {
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
 
+    @Resource
+    private SlbValidator slbModelValidator;
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     public void add(Slb slb) throws DalException, ValidationException {
-        validate(slb);
+        slbModelValidator.validate(slb);
         SlbDo d = C.toSlbDo(0L, slb);
         d.setCreatedTime(new Date());
         d.setVersion(1);
@@ -49,14 +50,14 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     @Override
-    public void update(Slb slb) throws DalException, ValidationException {
-        validate(slb);
+    public void update(Slb slb) throws Exception {
+        slbModelValidator.validate(slb);
         SlbDo check = slbDao.findById(slb.getId(), SlbEntity.READSET_FULL);
         if (check == null)
             throw new ValidationException("Slb does not exist.");
         if (check.getVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        if (modifiable(slb)) {
+        if (slbModelValidator.modifiable(slb)) {
             SlbDo d = C.toSlbDo(slb.getId(), slb);
             slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
             cascadeSync(slb);
@@ -66,11 +67,11 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     @Override
-    public int delete(Long slbId) throws DalException, ValidationException {
+    public int delete(Long slbId) throws Exception {
         SlbDo d = slbDao.findById(slbId, SlbEntity.READSET_FULL);
         if (d == null)
             return 0;
-        if (removable(d)) {
+        if (slbModelValidator.removable(C.toSlb(d))) {
             slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(slbId));
             slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(slbId));
             for (SlbVirtualServerDo svsd : slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL)) {
@@ -79,48 +80,6 @@ public class SlbSyncImpl implements SlbSync {
             return slbDao.deleteByPK(d);
         }
         throw new ValidationException(d.getName() + " cannot be deleted. Dependency exists.");
-    }
-
-    private void validate(Slb slb) throws ValidationException {
-        if (slb == null || slb.getName() == null || slb.getName().isEmpty()) {
-            throw new ValidationException("Slb with null value cannot be persisted.");
-        }
-        if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
-            throw new ValidationException("Slb with invalid server data cannot be persisted.");
-        }
-        Set<String> existingHost = new HashSet<>();
-        for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            for (Domain domain : virtualServer.getDomains()) {
-                String key = domain.getName() + ":" + virtualServer.getPort();
-                if (existingHost.contains(key))
-                    throw new ValidationException("Duplicate domain and port is found: " + key);
-                else
-                    existingHost.add(key);
-            }
-        }
-    }
-
-    private boolean removable(SlbDo d) throws DalException {
-        List<GroupSlbDo> list = groupSlbDao.findAllBySlb(d.getId(), GroupSlbEntity.READSET_FULL);
-        if (list.size() == 0)
-            return true;
-        return false;
-    }
-
-    private boolean modifiable(Slb slb) throws DalException {
-        List<SlbVirtualServerDo> l = slbVirtualServerDao.findAllBySlb(slb.getId(), SlbVirtualServerEntity.READSET_FULL);
-        Set<Long> deleted = new HashSet<>();
-        for (SlbVirtualServerDo d : l) {
-            deleted.add(d.getId());
-        }
-        for (VirtualServer vs : slb.getVirtualServers()) {
-            deleted.remove(vs.getId());
-        }
-        for (Long d : deleted) {
-            if (groupSlbDao.findAllByVirtualServer(d, GroupSlbEntity.READSET_FULL).size() > 0)
-                return false;
-        }
-        return true;
     }
 
     private void cascadeSync(Slb slb) throws DalException {

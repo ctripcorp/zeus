@@ -11,9 +11,9 @@ import org.unidal.dal.jdbc.DalException;
  */
 public interface GroupSync {
 
-    GroupDo add(Group group) throws DalException, ValidationException;
+    GroupDo add(Group group) throws Exception;
 
-    GroupDo update(Group group) throws DalException, ValidationException;
+    GroupDo update(Group group) throws Exception;
 
     int delete(Long groupId) throws Exception;
 }

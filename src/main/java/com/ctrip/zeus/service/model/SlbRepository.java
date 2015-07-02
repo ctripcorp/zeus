@@ -1,8 +1,11 @@
 package com.ctrip.zeus.service.model;
 
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.Repository;
+import org.unidal.dal.jdbc.DalException;
 
 import java.util.List;
 
@@ -53,6 +56,8 @@ public interface SlbRepository extends Repository {
      */
     List<GroupSlb> listGroupSlbsByGroups(Long[] groupIds) throws Exception;
 
+    List<GroupSlb> listGroupSlbsByVirtualServer(Long virtualServerId) throws Exception;
+
     /**
      * get thr list of group related slb information by slb name
      * @param slbId the slb name
@@ -80,4 +85,6 @@ public interface SlbRepository extends Repository {
      * @throws Exception
      */
     List<String> listGroupServersBySlb(String slbName) throws Exception;
+
+    VirtualServer getVirtualServer(Long virtualServerId, Long slbId, String virtualServerName) throws Exception;
 }

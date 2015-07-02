@@ -195,6 +195,12 @@
         <upstream-name>name</upstream-name>
         <upstream-commands>commands</upstream-commands>
     </dy-upstream-ops-data>
+    <slb-validate-response>
+        <succeed>true</succeed>
+        <msg>msg</msg>
+        <slb-id>12345678901</slb-id>
+        <ip>127.0.0.1</ip>
+    </slb-validate-response>
 
 
 </model>

@@ -1,9 +1,6 @@
 package com.ctrip.zeus.restful.message.impl;
 
-import com.ctrip.zeus.exceptions.BadRequestException;
-import com.ctrip.zeus.exceptions.ForbiddenException;
-import com.ctrip.zeus.exceptions.NotFoundException;
-import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.exceptions.*;
 import com.ctrip.zeus.restful.message.Message;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.response.entity.ErrorMessage;
@@ -38,6 +35,8 @@ public class ErrorResponseHandler implements ResponseHandler {
             err.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
         }else if (object instanceof ForbiddenException) {
             err.setStatus(Response.Status.FORBIDDEN.getStatusCode());
+        }else if (object instanceof SlbValidatorException) {
+            err.setStatus(506);
         }else if (object instanceof Exception) {
             err.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }

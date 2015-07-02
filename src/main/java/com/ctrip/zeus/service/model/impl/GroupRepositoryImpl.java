@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.handler.GroupSync;
@@ -28,7 +29,7 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private GroupQuery groupQuery;
     @Resource
-    private SlbQuery slbQuery;
+    private SlbRepository slbRepository;
     @Resource
     private ArchiveService archiveService;
 
@@ -45,7 +46,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public List<Group> list(String slbName, String virtualServerName) throws Exception {
         List<Group> list = new ArrayList<>();
-        VirtualServer vs = slbQuery.getBySlbAndName(slbName, virtualServerName);
+        Long slbId = slbRepository.get(slbName).getId();
+        VirtualServer vs = slbRepository.getVirtualServer(null, slbId, virtualServerName);
         for (Group group : groupQuery.getByVirtualServer(vs.getId())) {
             list.add(group);
         }
@@ -55,7 +57,7 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public List<Group> list(Long slbId) throws Exception {
         List<Group> result = new ArrayList<>();
-        for (GroupSlb groupSlb : slbQuery.getGroupSlbsBySlb(slbId)) {
+        for (GroupSlb groupSlb : slbRepository.listGroupSlbsBySlb(slbId)) {
             result.add(getById(groupSlb.getGroupId()));
         }
         return result;
