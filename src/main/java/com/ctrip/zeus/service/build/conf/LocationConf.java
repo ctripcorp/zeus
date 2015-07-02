@@ -4,7 +4,11 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.model.PathRewriteParser;
+import com.ctrip.zeus.service.model.impl.DefaultRewriteParser;
 import com.ctrip.zeus.util.AssertUtils;
+
+import java.util.List;
 
 /**
  * @author:xingchaowang
@@ -62,11 +66,17 @@ public class LocationConf {
             if (rewrite==null || rewrite.isEmpty() || !rewrite.contains(" ")){
                 return;
             }
-            String[] rewrites = rewrite.split(";");
-            for (int i = 0 ; i < rewrites.length ; i ++)
+            PathRewriteParser pathRewriteParser = new DefaultRewriteParser();
+            List<String> rewriteList = pathRewriteParser.getValues(rewrite);
+            for (String tmp : rewriteList)
             {
-                sb.append("rewrite ").append(rewrites[i]).append(" break;\n");
+                sb.append("rewrite ").append(tmp).append(" break;\n");
             }
+//            String[] rewrites = rewrite.split(";");
+//            for (int i = 0 ; i < rewrites.length ; i ++)
+//            {
+//                sb.append("rewrite ").append(rewrites[i]).append(" break;\n");
+//            }
         }
     }
 }

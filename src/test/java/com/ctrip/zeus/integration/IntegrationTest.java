@@ -173,7 +173,7 @@ public class IntegrationTest {
                     .setValue("test"))
                 .addGroupSlb(new GroupSlb().addVip(new Vip().setIp(hostip)).setSlbId(i % 3 == 0 ? slb2_res_obj.getId() : slb1_res_obj.getId())
                         .setSlbName(i % 3 == 0 ? slb2_res_obj.getName() : slb1_res_obj.getName())
-                        .setPath("~* ^/app" + i).setVirtualServer(i % 3 == 0 ? slb2_res_obj.getVirtualServers().get(i%4) : slb1_res_obj.getVirtualServers().get(i%4)).setRewrite(i % 2 == 0 ? null : "/app /app0?sleep=1&size=1" + i)
+                        .setPath("~* ^/app" + i).setVirtualServer(i % 3 == 0 ? slb2_res_obj.getVirtualServers().get(i%4) : slb1_res_obj.getVirtualServers().get(i%4)).setRewrite(i % 2 == 0 ? null : "\"/app\" /app0?sleep=1&size=1" + i)
                         .setPriority(i)).addGroupServer(i % 2 == 0 ?groupServer1:groupServer2);
             reqClient.post("/api/group/new", String.format(Group.JSON, group));
             groups.add(group);
