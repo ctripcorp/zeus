@@ -17,15 +17,19 @@ import java.io.*;
 @Component("localValidate")
 public class LocalValidateImpl implements LocalValidate{
 
+
+
     private Logger LOGGER = LoggerFactory.getLogger(LocalValidateImpl.class);
     @Override
     public boolean pathExistValidate(String path , boolean isDirs) throws Exception {
         File pathFile = new File(path);
         if (pathFile.isDirectory()==isDirs)
         {
+            LOGGER.info("path:"+path+" is exists :"+pathFile.exists());
             return pathFile.exists();
         }else
         {
+            LOGGER.warn("path:"+path+"is directory :"+pathFile.isDirectory()+";isDirs="+isDirs);
             return false;
         }
     }
@@ -49,6 +53,7 @@ public class LocalValidateImpl implements LocalValidate{
                 return response;
             }
             String command = "ps "+nginxPid;
+            LOGGER.info("command:"+command);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
             CommandLine commandline = CommandLine.parse(command);
@@ -63,8 +68,10 @@ public class LocalValidateImpl implements LocalValidate{
             response.setOutMsg(out);
             response.setErrMsg(error);
             response.setSucceed(0==exitVal);
+            LOGGER.info(response.toString());
             return response;
         }else {
+            LOGGER.error("Not found nginx.pid file");
             response.setSucceed(false).setOutMsg("Not found nginx.pid file!");
             return response;
         }

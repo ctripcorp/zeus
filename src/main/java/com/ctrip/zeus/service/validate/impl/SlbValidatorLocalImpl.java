@@ -45,8 +45,8 @@ public class SlbValidatorLocalImpl implements SlbValidatorLocal {
         {
             if (vs.getSsl())
             {
-                if(localValidate.pathExistValidate(ServerConf.SSL_PATH+vs.getId()+"/ssl.crt",false)
-                &&localValidate.pathExistValidate(ServerConf.SSL_PATH+vs.getId()+"/ssl.key",false)){
+                if(!(localValidate.pathExistValidate(ServerConf.SSL_PATH+vs.getId()+"/ssl.crt",false)
+                &&localValidate.pathExistValidate(ServerConf.SSL_PATH+vs.getId()+"/ssl.key",false))){
                     response.setSucceed(false).setMsg("Not found ssl.crt and ssl.key for ssl virtual server! vsId="
                             +vs.getId()+";vsName="+vs.getName());
                     return response;
