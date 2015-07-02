@@ -33,7 +33,7 @@ public class ValidateClient extends AbstractRestClient {
     }
 
     public SlbValidateResponse slbValidate(Long slbId)throws Exception{
-        String responseStr = getTarget().path("/api/validate/slb?slbId="+slbId)
+        String responseStr = getTarget().path("/api/validate/slb").queryParam("slbId", slbId)
                 .request().headers(getDefaultHeaders()).get(String.class);
         try{
             return DefaultJsonParser.parse(SlbValidateResponse.class,responseStr);
