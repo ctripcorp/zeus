@@ -24,8 +24,6 @@ public class DefaultGroupValidator implements GroupValidator {
     private ActiveConfService activeConfService;
     @Resource
     private SlbRepository slbRepository;
-    @Resource
-    private PathRewriteParser pathRewriteParser;
 
     @Override
     public void validate(Group group) throws Exception {
@@ -49,7 +47,7 @@ public class DefaultGroupValidator implements GroupValidator {
            return false;
         Set<Long> virtualServerIds = new HashSet<>();
         for (GroupSlb gs : group.getGroupSlbs()) {
-            if (gs.getRewrite() != null && !gs.getRewrite().isEmpty() && !pathRewriteParser.validate(gs.getRewrite())) {
+            if (gs.getRewrite() != null && !gs.getRewrite().isEmpty() && !PathRewriteParser.validate(gs.getRewrite())) {
                 throw new ValidationException("Invalid rewrite value.");
             }
             VirtualServer vs = slbRepository.getVirtualServer(gs.getVirtualServer().getId(),

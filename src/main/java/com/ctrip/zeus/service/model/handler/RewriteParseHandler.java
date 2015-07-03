@@ -4,14 +4,12 @@ package com.ctrip.zeus.service.model.handler;
 import com.ctrip.zeus.service.model.handler.impl.ParseException;
 import com.ctrip.zeus.service.model.handler.impl.ParserState;
 import com.ctrip.zeus.service.model.handler.impl.Tokenizer;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
  * Created by zhoumy on 2015/6/23.
  */
-@Component("rewriteParseHandler")
 public class RewriteParseHandler {
     ParserState currentState;
 
