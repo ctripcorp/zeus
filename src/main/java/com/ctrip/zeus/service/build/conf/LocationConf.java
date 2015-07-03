@@ -5,7 +5,6 @@ import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.PathRewriteParser;
-import com.ctrip.zeus.service.model.impl.DefaultRewriteParser;
 import com.ctrip.zeus.util.AssertUtils;
 
 import java.util.List;
@@ -66,8 +65,7 @@ public class LocationConf {
             if (rewrite==null || rewrite.isEmpty() || !rewrite.contains(" ")){
                 return;
             }
-            PathRewriteParser pathRewriteParser = new DefaultRewriteParser();
-            List<String> rewriteList = pathRewriteParser.getValues(rewrite);
+            List<String> rewriteList = PathRewriteParser.getValues(rewrite);
             for (String tmp : rewriteList)
             {
                 sb.append("rewrite ").append(tmp).append(" break;\n");

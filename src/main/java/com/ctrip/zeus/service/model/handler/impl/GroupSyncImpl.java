@@ -105,6 +105,7 @@ public class GroupSyncImpl implements GroupSync {
             if (old != null) {
                 oldList.remove(old);
             }
+            e.setSlbId(slbRepository.getByVirtualServer(vsId).getId());
             e.setGroupId(groupId);
             e.getVirtualServer().setId(vsId);
             groupSlbDao.insert(C.toGroupSlbDo(e)
