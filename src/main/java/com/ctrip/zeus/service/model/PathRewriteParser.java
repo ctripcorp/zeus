@@ -21,7 +21,7 @@ public class PathRewriteParser {
         try {
             new RewriteParseHandler().handleContent(value.getBytes(), output);
         } catch (ParseException e) {
-            return null;
+            return result;
         }
         String oneRecord = "";
         for (int i = 0; i < output.size(); i++) {
