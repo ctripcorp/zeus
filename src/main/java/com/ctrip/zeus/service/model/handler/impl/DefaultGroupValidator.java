@@ -27,7 +27,8 @@ public class DefaultGroupValidator implements GroupValidator {
 
     @Override
     public void validate(Group group) throws Exception {
-        if (group == null) {
+        if (group == null || group.getName() == null || group.getName().isEmpty()
+                || group.getAppId() == null || group.getAppId().isEmpty()) {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
         if (!validateGroupSlbs(group))
@@ -45,7 +46,10 @@ public class DefaultGroupValidator implements GroupValidator {
     public boolean validateGroupSlbs(Group group) throws Exception {
         if (group.getGroupSlbs().size() == 0)
            return false;
+        if (group.getId() == null)
+            group.setId(0L);
         Set<Long> virtualServerIds = new HashSet<>();
+        Set<String> groupPaths = new HashSet<>();
         for (GroupSlb gs : group.getGroupSlbs()) {
             if (gs.getRewrite() != null && !gs.getRewrite().isEmpty() && !PathRewriteParser.validate(gs.getRewrite())) {
                 throw new ValidationException("Invalid rewrite value.");
@@ -55,10 +59,16 @@ public class DefaultGroupValidator implements GroupValidator {
             if (vs == null)
                 throw new ValidationException("Virtual Server does not exist.");
             virtualServerIds.add(vs.getId());
+            if (groupPaths.contains(vs.getId() + gs.getPath()))
+                return false;
+            else
+                groupPaths.add(vs.getId() + gs.getPath());
         }
         for (Long virtualServerId : virtualServerIds) {
             Set<String> paths = new HashSet<>();
             for (GroupSlb groupSlb : slbRepository.listGroupSlbsByVirtualServer(virtualServerId)) {
+                if (groupSlb.getGroupId().equals(group.getId()))
+                    continue;
                 if (paths.contains(groupSlb.getPath()))
                     return false;
                 else

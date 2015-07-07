@@ -130,7 +130,7 @@ public class C {
                 .setAppId(e.getAppId())
                 .setName(e.getName())
                 .setSsl(e.isSsl())
-                .setVersion(e.getVersion());
+                .setVersion(e.getVersion() == null ? 0 : e.getVersion());
     }
 
     public static GroupServerDo toGroupServerDo(GroupServer e) {
@@ -180,7 +180,7 @@ public class C {
                 .setNginxConf(e.getNginxConf())
                 .setNginxWorkerProcesses(e.getNginxWorkerProcesses())
                 .setStatus(e.getStatus())
-                .setVersion(e.getVersion());
+                .setVersion(e.getVersion() == null ? 0 : e.getVersion());
     }
 
     public static SlbServerDo toSlbServerDo(SlbServer e) {
