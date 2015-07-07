@@ -42,4 +42,12 @@ public interface ActivateService extends Repository {
      */
     public void deactiveGroup(long groupId) throws Exception;
 
+    /**
+     * group is activated
+     * @param groupId the Group id
+     * @return
+     * @throws Exception
+     */
+    public boolean isGroupActivated(Long groupId) throws  Exception;
+
 }

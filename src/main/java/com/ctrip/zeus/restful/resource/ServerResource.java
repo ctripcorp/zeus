@@ -5,6 +5,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfService;
@@ -60,6 +61,8 @@ public class ServerResource {
     private DbLockFactory dbLockFactory;
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private ActivateService activateService;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -212,6 +215,25 @@ public class ServerResource {
 
     private Response memberOps(HttpHeaders hh,Long groupId,List<String> ips)throws Exception{
 
+        if(!activateService.isGroupActivated(groupId)){
+            Group gp = groupRepository.getById(groupId);
+            AssertUtils.assertNotNull(gp,"groupId not found!");
+            Long slbId = gp.getGroupSlbs().get(0).getSlbId();
+
+            GroupStatus groupStatusList = new GroupStatus().setGroupId(groupId).setSlbName("").setSlbId(slbId);
+            for (GroupServer groupServer : gp.getGroupServers()){
+                groupStatusList.getGroupServerStatuses().add(new GroupServerStatus().setIp(groupServer.getIp())
+                .setMember(statusService.getGroupServerStatus(slbId,gp.getId(),groupServer.getIp()))
+                .setServer(statusService.getServerStatus(groupServer.getIp()))
+                .setPort(groupServer.getPort())
+                .setUp(false));
+            }
+            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+                return Response.status(200).entity(String.format(GroupStatus.XML, groupStatusList)).type(MediaType.APPLICATION_XML).build();
+            } else {
+                return Response.status(200).entity(String.format(GroupStatus.JSON, groupStatusList)).type(MediaType.APPLICATION_JSON).build();
+            }
+        }
         //get slb by groupId and ip
         Set<Slb> slbList = new HashSet<>();
         List<Slb> tmp ;

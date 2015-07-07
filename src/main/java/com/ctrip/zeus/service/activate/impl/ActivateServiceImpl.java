@@ -102,4 +102,15 @@ public class ActivateServiceImpl implements ActivateService {
         confGroupActiveDao.deleteByGroupId(new ConfGroupActiveDo().setGroupId(groupId));
         confGroupSlbActiveDao.deleteByGroupId(new ConfGroupSlbActiveDo().setGroupId(groupId));
     }
+
+    @Override
+    public boolean isGroupActivated(Long groupId) throws Exception {
+        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIds(new Long[]{groupId},ConfGroupActiveEntity.READSET_FULL);
+        if (null == groupActiveDos || groupActiveDos.size() == 0)
+        {
+            return false;
+        }else {
+            return true;
+        }
+    }
 }

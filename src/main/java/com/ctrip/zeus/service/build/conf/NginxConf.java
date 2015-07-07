@@ -136,7 +136,7 @@ public class NginxConf {
     {
         builder.append("server {").append("\n")
                 .append("listen  80 default_server  ;\n")
-                .append("listen  443 default_server  ;\n")
+//                .append("listen  443 default_server  ;\n")
                 .append("location = /domaininfo/OnService.html {\n")
                 .append("add_header Content-Type text/html;\n")
                 .append("return 200 \"4008206666\";\n")
