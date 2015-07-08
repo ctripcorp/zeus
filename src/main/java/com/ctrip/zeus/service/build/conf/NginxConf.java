@@ -142,7 +142,7 @@ public class NginxConf {
                 .append("return 200 \"4008206666\";\n")
                 .append("}\n")
                 .append("location / {\n")
-                .append("html 404.html;\n")
+                .append("return 404;\n")
                 .append("}\n")
                 .append("}\n")
                 ;
