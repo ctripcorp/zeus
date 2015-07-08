@@ -18,10 +18,14 @@ public class LocalClient {
     private static final String LOCALHOST = "http://127.0.0.1";
     private static final DynamicIntProperty nginxDyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
     private static final DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
+    private static final DynamicIntProperty upstreamStatusInterval = DynamicPropertyFactory.getInstance().getIntProperty("slb.upstream.status.interval", 1000);
+
     private static final LocalClient localClient = new LocalClient();
 
     private final NginxDyupsClient dyupsClient;
     private final NginxStatusClient statusClient;
+    private UpstreamStatus upstreamStatus = null;
+    private Long upstreamStatusDate = 0L;
 
     public LocalClient() {
         dyupsClient = new NginxDyupsClient();
@@ -49,9 +53,14 @@ public class LocalClient {
     }
 
     public UpstreamStatus getUpstreamStatus() throws IOException {
-        String result = statusClient.getTarget().path("/status.json").request().get(String.class);
-        System.out.println(result);
-        return DefaultJsonParser.parse(UpstreamStatus.class, result);
+        Long now = System.currentTimeMillis();
+        if (now - upstreamStatusDate > upstreamStatusInterval.get() || upstreamStatus == null)
+        {
+            String result = statusClient.getTarget().path("/status.json").request().get(String.class);
+            upstreamStatus = DefaultJsonParser.parse(UpstreamStatus.class, result);
+            upstreamStatusDate = now;
+        }
+        return upstreamStatus;
     }
 
     public String getStubStatus() {

@@ -215,25 +215,6 @@ public class ServerResource {
 
     private Response memberOps(HttpHeaders hh,Long groupId,List<String> ips)throws Exception{
 
-        if(!activateService.isGroupActivated(groupId)){
-            Group gp = groupRepository.getById(groupId);
-            AssertUtils.assertNotNull(gp,"groupId not found!");
-            Long slbId = gp.getGroupSlbs().get(0).getSlbId();
-
-            GroupStatus groupStatusList = new GroupStatus().setGroupId(groupId).setSlbName("").setSlbId(slbId);
-            for (GroupServer groupServer : gp.getGroupServers()){
-                groupStatusList.getGroupServerStatuses().add(new GroupServerStatus().setIp(groupServer.getIp())
-                .setMember(statusService.getGroupServerStatus(slbId,gp.getId(),groupServer.getIp()))
-                .setServer(statusService.getServerStatus(groupServer.getIp()))
-                .setPort(groupServer.getPort())
-                .setUp(false));
-            }
-            if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-                return Response.status(200).entity(String.format(GroupStatus.XML, groupStatusList)).type(MediaType.APPLICATION_XML).build();
-            } else {
-                return Response.status(200).entity(String.format(GroupStatus.JSON, groupStatusList)).type(MediaType.APPLICATION_JSON).build();
-            }
-        }
         //get slb by groupId and ip
         Set<Slb> slbList = new HashSet<>();
         List<Slb> tmp ;
@@ -245,43 +226,46 @@ public class ServerResource {
         }
         AssertUtils.assertNotEquals(0,slbList.size(),"Group or ips is not correct!");
 
-        for (Slb slb : slbList) {
-            Long slbId = slb.getId();
-            //get ticket
-            int ticket = buildInfoService.getTicket(slbId);
+        if (activateService.isGroupActivated(groupId))
+        {
+            for (Slb slb : slbList) {
+                Long slbId = slb.getId();
+                //get ticket
+                int ticket = buildInfoService.getTicket(slbId);
 
-            boolean buildFlag = false;
-            boolean dyopsFlag = false;
-            List<DyUpstreamOpsData> dyUpstreamOpsDataList = null;
-            DistLock buildLock = dbLockFactory.newLock("build_"+slbId);
-            try{
-                buildLock.lock(lockTimeout.get());
-                buildFlag =buildService.build(slbId,ticket);
-            }finally {
-                buildLock.unlock();
-            }
-            if (buildFlag) {
-                DistLock writeLock = dbLockFactory.newLock("writeAndReload_" + slbId);
-                try {
-                    writeLock.lock(lockTimeout.get());
-                    //push
-                    dyopsFlag=nginxAgentService.writeALLToDisk(slbId);
-                    if (!dyopsFlag)
-                    {
-                        throw new Exception("write all to disk failed!");
-                    }
-                } finally {
-                    writeLock.unlock();
-                }
-            }
-            if (dyopsFlag){
-                DistLock dyopsLock = dbLockFactory.newLock(slbId + "_" + groupId + "_dyops");
+                boolean buildFlag = false;
+                boolean dyopsFlag = false;
+                List<DyUpstreamOpsData> dyUpstreamOpsDataList = null;
+                DistLock buildLock = dbLockFactory.newLock("build_"+slbId);
                 try{
-                    dyopsLock.lock(lockTimeout.get());
-                    dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, groupId);
-                    nginxAgentService.dyops(slbId, dyUpstreamOpsDataList);
+                    buildLock.lock(lockTimeout.get());
+                    buildFlag =buildService.build(slbId,ticket);
                 }finally {
-                    dyopsLock.unlock();
+                    buildLock.unlock();
+                }
+                if (buildFlag) {
+                    DistLock writeLock = dbLockFactory.newLock("writeAndReload_" + slbId);
+                    try {
+                        writeLock.lock(lockTimeout.get());
+                        //push
+                        dyopsFlag=nginxAgentService.writeALLToDisk(slbId);
+                        if (!dyopsFlag)
+                        {
+                            throw new Exception("write all to disk failed!");
+                        }
+                    } finally {
+                        writeLock.unlock();
+                    }
+                }
+                if (dyopsFlag){
+                    DistLock dyopsLock = dbLockFactory.newLock(slbId + "_" + groupId + "_dyops");
+                    try{
+                        dyopsLock.lock(lockTimeout.get());
+                        dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, groupId);
+                        nginxAgentService.dyops(slbId, dyUpstreamOpsDataList);
+                    }finally {
+                        dyopsLock.unlock();
+                    }
                 }
             }
         }
