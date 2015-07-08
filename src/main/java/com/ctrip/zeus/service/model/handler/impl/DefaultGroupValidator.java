@@ -32,7 +32,7 @@ public class DefaultGroupValidator implements GroupValidator {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
         if (!validateGroupSlbs(group))
-            throw new ValidationException("Virtual server cannot be found.");
+            throw new ValidationException("Virtual server has invalid data.");
     }
 
     @Override
@@ -65,14 +65,13 @@ public class DefaultGroupValidator implements GroupValidator {
                 groupPaths.add(vs.getId() + gs.getPath());
         }
         for (Long virtualServerId : virtualServerIds) {
-            Set<String> paths = new HashSet<>();
             for (GroupSlb groupSlb : slbRepository.listGroupSlbsByVirtualServer(virtualServerId)) {
                 if (groupSlb.getGroupId().equals(group.getId()))
                     continue;
-                if (paths.contains(groupSlb.getPath()))
+                if (groupPaths.contains(virtualServerId + groupSlb.getPath()))
                     return false;
                 else
-                    paths.add(groupSlb.getPath());
+                    groupPaths.add(virtualServerId + groupSlb.getPath());
             }
         }
         return true;

@@ -200,9 +200,21 @@ public class ValidationTest extends AbstractSpringTest {
         }
 
         group = new Group().setName("testDuplicatePath").setAppId("000000")
-                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)))
-                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/test1").setVirtualServer(slb.getVirtualServers().get(0)));
+                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
         groupRepository.add(group);
+
+        group = new Group().setName("testDuplicatePath1").setAppId("000000")
+                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
+        try {
+            groupRepository.add(group);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
+            System.out.println("Expected cause: duplicate path was found; real cause: " + e.getMessage());
+        }
+
+        group = groupRepository.get("testDuplicatePath");
+        groupRepository.update(group);
     }
 
     private Slb prepareSlb() throws Exception {
