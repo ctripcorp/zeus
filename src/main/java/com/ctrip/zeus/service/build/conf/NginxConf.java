@@ -141,8 +141,12 @@ public class NginxConf {
                 .append("add_header Content-Type text/html;\n")
                 .append("return 200 \"4008206666\";\n")
                 .append("}\n")
+                .append("location / {\n")
+                .append("html 404.html;\n")
+                .append("}\n")
                 .append("}\n")
                 ;
+
 
     }
 }
