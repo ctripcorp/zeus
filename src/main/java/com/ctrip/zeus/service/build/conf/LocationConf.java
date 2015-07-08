@@ -83,15 +83,15 @@ public class LocationConf {
         }
     }
     private static void addBastionCommand(StringBuilder sb,String upstreamName){
-        sb.append("if ( $cookie_bastion != \"\" )\n")
-                .append("{\nset $upstream $cookie_bastion;\n}")
-                .append("if ( $upstream = \"\"){")
-                .append("{\nset $upstream ").append(upstreamName).append(";\n}");
+        sb.append("if ( $cookie_bastion != \"\" )")
+                .append("{\nset $upstream $cookie_bastion;\n}\n")
+                .append("if ( $upstream = \"\")")
+                .append("{\nset $upstream ").append(upstreamName).append(";\n}\n");
         String wl = whiteList.get();
         if (null != wl && !wl.trim().equals("")&&!wl.contains("\""))
         {
-             sb.append("if ( $remote_addr !~* \"").append(wl).append("\"){\n")
-                     .append("{\nset $upstream ").append(upstreamName).append(";\n}");
+             sb.append("if ( $remote_addr !~* \"").append(wl).append("\")")
+                     .append("{\nset $upstream ").append(upstreamName).append(";\n}\n");
         }
     }
 }
