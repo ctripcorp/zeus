@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model>
+  <entity name="report" root="true">
+    <entity-ref name="cms-report" />
+    <entity-ref name="group-server" />
+  </entity>
+  <entity name="cms-report">
+    <element name="id" value-type="String" />
+    <element name="name" value-type="String" />
+    <element name="path" value-type="String" />
+    <element name="app_pool_name" value-type="String" />
+    <element name="physic_path" value-type="String" />
+    <element name="useTars" value-type="boolean" />
+    <element name="appId" value-type="String" />
+    <entity-ref name="group-server" type="list" names="group-servers" xml-indent="true" />
+    <entity-ref name="vServer" />
+    <entity-ref name="slb" />
+  </entity>
+  <entity name="group-server">
+    <element name="host-name" value-type="String" />
+    <element name="ip" value-type="String" />
+    <element name="port" value-type="String" />
+  </entity>
+  <entity name="vServer">
+    <element name="vServerId" value-type="String" />
+    <element name="port" value-type="String" />
+    <element name="domains" value-type="String" type="list" names="domainses" />
+  </entity>
+  <entity name="slb">
+    <element name="slbId" value-type="String" />
+    <element name="name" value-type="String" />
+  </entity>
+</model>
+

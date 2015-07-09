@@ -908,6 +908,35 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="report" table="report" alias="r">
+    <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
+    <member name="reported-version" field="reported_version" value-type="int" length="10" nullable="false" />
+    <member name="current-version" field="current_version" value-type="int" length="10" nullable="false" />
+    <primary-key />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <statement><![CDATA[DELETE FROM <TABLE/>]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="server" table="server" alias="s">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="ip" field="ip" value-type="String" length="100" nullable="false" />

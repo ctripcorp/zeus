@@ -1,0 +1,30 @@
+<report>
+    <cms-report>
+        <id>s999999</id>
+        <name>lg-group</name>
+        <path>lg-relativeUri</path>
+        <app_pool_name>app_pool_name</app_pool_name>
+        <physic_path>physic_path</physic_path>
+        <useTars>true</useTars>
+        <appId>a11111111</appId>
+        <group-servers>
+            <group-server/>
+            <group-server/>
+        </group-servers>
+        <vServer>
+            <vServerId>vserver000002</vServerId>
+            <port>80,81</port>
+            <domains>www.a.com</domains>
+            <domains>www.b.com</domains>
+        </vServer>
+        <slb>
+            <slbId>slb000001</slbId>
+            <name>ctrp</name>
+        </slb>
+    </cms-report>
+    <group-server>
+        <host-name>VMS08773232342</host-name>
+        <ip>192.168.12.1</ip>
+        <port>80,81</port>
+    </group-server>
+</report>
