@@ -88,10 +88,15 @@ public class LocationConf {
                 .append("if ( $upstream = \"\")")
                 .append("{\nset $upstream ").append(upstreamName).append(";\n}\n");
         String wl = whiteList.get();
-        if (null != wl && !wl.trim().equals("")&&!wl.contains("\""))
+        if (null == wl || wl.isEmpty() || wl.trim().equals("") || wl.contains("\""))
         {
-             sb.append("if ( $remote_addr !~* \"").append(wl).append("\")")
-                     .append("{\nset $upstream ").append(upstreamName).append(";\n}\n");
+            wl="denyAll";
+        }else if (wl.equals("allowAll")){
+            wl="";
         }
+        sb.append("if ( $remote_addr !~* \"").append(wl).append("\")")
+                .append("{\nset $upstream ").append(upstreamName).append(";\n}\n");
+        sb.append("if ( $upstream != ").append(upstreamName).append(" ){\n")
+                .append("add_header Bastion $cookie_bastion;\n}\n");
     }
 }
