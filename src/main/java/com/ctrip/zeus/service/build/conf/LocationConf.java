@@ -17,11 +17,25 @@ import java.util.List;
  */
 public class LocationConf {
     private static DynamicStringProperty whiteList = DynamicPropertyFactory.getInstance().getStringProperty("bastion.white.list", null);
+    private static DynamicStringProperty clientMaxSizeList = DynamicPropertyFactory.getInstance().getStringProperty("client.max.body.size.list", null);
 
     public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("location ").append(getPath(slb, vs, group)).append(" {\n");
+        if (clientMaxSizeList !=null)
+        {
+            String []sizeList = clientMaxSizeList.get().split(";");
+            String []groupSize = null;
+            for (String tmp : sizeList)
+            {
+                groupSize = tmp.split("=");
+                if (groupSize.length==2&&groupSize[0].equals(String.valueOf(group.getId())))
+                {
+                    b.append("client_max_body_size ").append(groupSize[1]).append("m;\n");
+                }
+            }
+        }
         b.append("proxy_set_header Host $host").append(";\n");
         b.append("proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n");
         b.append("proxy_set_header X-Real-IP $remote_addr;\n");
