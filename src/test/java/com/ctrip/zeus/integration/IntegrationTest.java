@@ -21,13 +21,12 @@ import java.util.List;
  */
 public class IntegrationTest {
 
-    private static final String host = "http://10.2.27.21:8099";
+    private static final String host = "http://10.2.25.83:8099";
 
 //    private static final String host = "http://127.0.0.1:8099";
-    private static final String hostip = "10.2.27.21";
+    private static final String hostip = "10.2.25.83";
     private static final String slb1_server_0 = "10.2.25.83";
-    private static final String slb1_server_1 = "10.2.27.21";
-    private static final String slb1_server_2 = "10.2.25.96";
+    private static final String slb1_server_1 = "10.2.25.95";
     private static final String slb1_name = "__Test_slb1";
     private static final String slb2_name = "__Test_slb2";
     private static final int STATUS_OK = 200;
@@ -110,7 +109,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void integrationTest() throws IOException {
+    public void integrationTest() throws IOException, InterruptedException {
 
         VirtualServer v1 = new VirtualServer().setName("__Test_vs1").setPort("80").setSsl(false)
                 .addDomain(new Domain().setName("vs1.ctrip.com"));
@@ -127,14 +126,12 @@ public class IntegrationTest {
 
         GroupServer groupServer1 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver1").setIp(slb1_server_0);
         GroupServer groupServer2 = new GroupServer().setPort(1000).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver2").setIp(slb1_server_1);
-        GroupServer groupServer3 = new GroupServer().setPort(10001).setFailTimeout(30).setWeight(1).setMaxFails(10).setHostName("appserver3").setIp(slb1_server_2);
 
 
         //add slb and vs
         Slb slb1 = new Slb().setName(slb1_name).addVip(new Vip().setIp(slb1_server_0)).setNginxBin("/opt/app/nginx/sbin")
                 .setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
                 .addSlbServer(new SlbServer().setHostName("slb1_server_0").setIp(slb1_server_0))
-                .addSlbServer(new SlbServer().setHostName("slb1_server_1").setIp(slb1_server_1))
                 .addVirtualServer(v1)
                 .addVirtualServer(v2)
                 .addVirtualServer(v3)
@@ -142,9 +139,9 @@ public class IntegrationTest {
                 .addVirtualServer(v5)
                 .setStatus("Test");
 
-        Slb slb2 = new Slb().setName(slb2_name).addVip(new Vip().setIp(slb1_server_2)).setNginxBin("/opt/app/nginx/sbin")
+        Slb slb2 = new Slb().setName(slb2_name).addVip(new Vip().setIp(slb1_server_1)).setNginxBin("/opt/app/nginx/sbin")
                 .setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(1).setVersion(0)
-                .addSlbServer(new SlbServer().setHostName("slb1_server_2").setIp(slb1_server_2))
+                .addSlbServer(new SlbServer().setHostName("slb1_server_1").setIp(slb1_server_1))
                 .addVirtualServer(v1)
                 .addVirtualServer(v2)
                 .addVirtualServer(v3)
@@ -217,6 +214,8 @@ public class IntegrationTest {
         {
             reqClient.get("/api/op/upMember?batch=true&groupName=__Test_app"+i);
         }
+        reqClient.getstr("/api/op/upServer?ip=" + slb1_server_0);
+        reqClient.getstr("/api/op/upServer?ip=" + slb1_server_1);
 
         for (int i = 0; i < 10; i++) {
             String groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app" + i);
@@ -226,7 +225,7 @@ public class IntegrationTest {
             Assert.assertEquals(true, gs.getSlbName().equals(slb1_name) || gs.getSlbName().equals(slb2_name));
 
             for (GroupServerStatus ass : gs.getGroupServerStatuses()) {
-                Assert.assertEquals(true, ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1) || ass.getIp().equals(slb1_server_2));
+                Assert.assertEquals(true, ass.getIp().equals(slb1_server_0) || ass.getIp().equals(slb1_server_1));
                 Assert.assertEquals(true, ass.getServer());
                 Assert.assertEquals(true, ass.getMember());
                 Assert.assertEquals(i%2==0, ass.getUp());
@@ -238,7 +237,7 @@ public class IntegrationTest {
         reqClient.markPass("/api/activate/slb");
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_1);
         reqClient.getstr("/api/op/downServer?ip=" + slb1_server_0);
-
+        Thread.sleep(1000);
         String slbstatus = reqClient.getstr("/api/status/groups?slbName=" + slb1_name);
 
         GroupStatusList groupStatusList = DefaultJsonParser.parse(GroupStatusList.class, slbstatus);
@@ -271,7 +270,7 @@ public class IntegrationTest {
         reqClient.markPass("/api/op/downServer");
         reqClient.getstr("/api/op/upServer?ip=" + slb1_server_0);
         reqClient.getstr("/api/op/upServer?ip=" + slb1_server_1);
-
+        Thread.sleep(1000);
 
         slbstatus = reqClient.getstr("/api/status/groups?slbName=" + slb2_name);
 
@@ -301,7 +300,7 @@ public class IntegrationTest {
 
         reqClient.markPass("/api/op/upServer");
         reqClient.getstr("/api/op/downMember?ip=" + slb1_server_1 + "&groupName=__Test_app3");
-
+        Thread.sleep(1000);
         String groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app3");
         GroupStatus groupStatus = null;
         groupStatus = DefaultJsonParser.parse(GroupStatus.class, groupstatus);
@@ -319,7 +318,7 @@ public class IntegrationTest {
         reqClient.markPass("/api/status/group");
 
         reqClient.getstr("/api/op/upMember?ip=" + slb1_server_1 + "&groupName=__Test_app3");
-
+        Thread.sleep(1000);
         groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app3");
         groupStatus = DefaultJsonParser.parse(GroupStatus.class, groupstatus);
 
@@ -344,7 +343,7 @@ public class IntegrationTest {
             }
         }
         reqClient.getstr("/api/op/upMember?ip=" + slb1_server_0 + "&groupName=__Test_app2");
-
+        Thread.sleep(1000);
         groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app2");
         groupStatus = DefaultJsonParser.parse(GroupStatus.class, groupstatus);
 
