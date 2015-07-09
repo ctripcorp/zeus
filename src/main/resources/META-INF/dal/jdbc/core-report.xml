@@ -2,6 +2,15 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="report" table="report" alias="l" do-class="ReportDo">
         <query-defs>
+            <query name="find-by-group" type="SELECT">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = <FIELD name='group-id'/>
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all" type="SELECT" multiple="true">
                 <statement>
                     <![CDATA[
@@ -19,6 +28,7 @@
                     UPDATE <TABLE/>
                     SET <FIELD name='current-version'/> = ${current-version}
                     WHERE <FIELD name='group-id'/> = ${group-id}
+                        AND <FIELD name='current-version'/> < ${current-version}
                     ]]>
                 </statement>
             </query>
@@ -30,6 +40,7 @@
                     UPDATE <TABLE/>
                     SET <FIELD name='reported-version'/> = ${reported-version}
                     WHERE <FIELD name='group-id'/> = ${group-id}
+                        AND <FIELD name='reported-version'/> < ${reported-version}
                     ]]>
                 </statement>
             </query>

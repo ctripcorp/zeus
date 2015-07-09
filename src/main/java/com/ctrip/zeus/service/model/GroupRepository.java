@@ -20,6 +20,8 @@ public interface GroupRepository extends Repository {
 
     List<Group> listLimit(Long fromId, int maxCount) throws Exception;
 
+    List<Group> list(Long[] ids) throws Exception;
+
     Group getById(Long id) throws Exception;
 
     Group get(String groupName) throws Exception;
