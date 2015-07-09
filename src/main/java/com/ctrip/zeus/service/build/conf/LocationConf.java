@@ -24,7 +24,7 @@ public class LocationConf {
         b.append("location ").append(getPath(slb, vs, group)).append(" {\n");
         b.append("proxy_set_header Host $host").append(";\n");
         b.append("proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n");
-        b.append("proxy_set_header X-Real-IP $remote_addr;");
+        b.append("proxy_set_header X-Real-IP $remote_addr;\n");
 
         b.append("set $upstream ").append(upstreamName).append(";\n");
         addBastionCommand(b,upstreamName);
