@@ -146,13 +146,14 @@ public class StatusResource {
 
 
     @GET
-    @Path("/group/{groupId:[0-9]+}/slb/{slbId:[0-9]+}")
+    @Path("/groupStatus")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
     public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
-                                @PathParam("groupId") Long groupId,
-                                @PathParam("slbId") Long slbId) throws Exception {
-        GroupStatus groupStatus = groupStatusService.getLocalGroupStatus(groupId, slbId);
+                                @QueryParam("groupId") List<Long> groupId,
+                                @QueryParam("slbId") Long slbId) throws Exception {
+        GroupStatusList groupStatus = groupStatusService.getLocalGroupStatus(groupId, slbId);
+
         return responseHandler.handle(groupStatus, hh.getMediaType());
     }
 

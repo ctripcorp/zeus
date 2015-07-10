@@ -2,13 +2,16 @@ package com.ctrip.zeus.client;
 
 import com.ctrip.zeus.model.entity.GroupServerStatus;
 import com.ctrip.zeus.model.entity.GroupStatus;
+import com.ctrip.zeus.model.entity.GroupStatusList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import jersey.repackaged.com.google.common.cache.CacheBuilder;
 import jersey.repackaged.com.google.common.cache.CacheLoader;
 import jersey.repackaged.com.google.common.cache.LoadingCache;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -41,10 +44,14 @@ public class StatusClient extends AbstractRestClient {
         return DefaultJsonParser.parse(GroupServerStatus.class, responseStr);
     }
 
-    public GroupStatus getGroupStatus(Long groupId , Long slbId)throws Exception
+    public GroupStatusList getGroupStatus(List<Long> groupIds , Long slbId)throws Exception
     {
-        String responseStr = getTarget().path("/api/status/group/"+groupId+"/slb/"+slbId)
-                .request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
-        return DefaultJsonParser.parse(GroupStatus.class, responseStr);
+        WebTarget target = getTarget().path("/api/status/groupStatus").queryParam("slbId",slbId);
+        for (Long groupId : groupIds)
+        {
+            target.queryParam("groupId",groupId);
+        }
+        String responseStr = target.request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
+        return DefaultJsonParser.parse(GroupStatusList.class, responseStr);
     }
 }

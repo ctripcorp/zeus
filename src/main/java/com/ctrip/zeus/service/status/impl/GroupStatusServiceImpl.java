@@ -55,12 +55,13 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getAllGroupStatus(Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-
         List<GroupSlb> groupSlbs = slbRepository.listGroupSlbsBySlb(slbId);
+        List<Long> list = new ArrayList<>();
         for (GroupSlb groupSlb : groupSlbs) {
-            GroupStatus appStatus = getGroupStatus(groupSlb.getGroupId(), groupSlb.getSlbId());
-            result.add(appStatus);
+            list.add(groupSlb.getGroupId());
         }
+        GroupStatusList appStatus = getGroupStatus(list, slbId);
+        result.addAll(appStatus.getGroupStatuses());
         return result;
     }
 
@@ -68,40 +69,62 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     public List<GroupStatus> getGroupStatus(Long groupId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
         List<Slb> slbList = slbRepository.listByGroups(new Long[]{groupId});
+        List<Long> list = new ArrayList<>();
+        list.add(groupId);
         for (Slb slb : slbList) {
-            result.add(getGroupStatus(groupId, slb.getId()));
+            result.addAll(getGroupStatus(list, slb.getId()).getGroupStatuses());
         }
         return result;
     }
     @Override
-    public GroupStatus getLocalGroupStatus(Long groupId , Long slbId) throws Exception
+    public GroupStatusList getLocalGroupStatus(List<Long> groupIds , Long slbId) throws Exception
     {
+        GroupStatusList res = new GroupStatusList();
+        GroupStatus status = null;
         Slb slb = slbRepository.getById(slbId);
-        Group group = groupRepository.getById(groupId);
-        AssertUtils.assertNotNull(group, "group Id not found!");
         AssertUtils.assertNotNull(slb, "slb Id not found!");
+        for (Long groupId : groupIds)
+        {
+            Group group = groupRepository.getById(groupId);
+            AssertUtils.assertNotNull(group, "group Id not found!");
 
-        GroupStatus status = new GroupStatus();
-        status.setGroupId(groupId);
-        status.setSlbId(slbId);
-        status.setGroupName(group.getName());
-        status.setSlbName(slb.getName());
-
-        List<GroupServer> groupServerList = groupRepository.listGroupServersByGroup(groupId);
-        for (GroupServer groupServer : groupServerList) {
-            GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, groupServer.getIp(), groupServer.getPort());
-            status.addGroupServerStatus(serverStatus);
+            status = new GroupStatus();
+            status.setGroupId(groupId);
+            status.setSlbId(slbId);
+            status.setGroupName(group.getName());
+            status.setSlbName(slb.getName());
+            List<GroupServer> groupServerList = groupRepository.listGroupServersByGroup(groupId);
+            for (GroupServer groupServer : groupServerList) {
+                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, groupServer.getIp(), groupServer.getPort());
+                status.addGroupServerStatus(serverStatus);
+            }
+            res.addGroupStatus(status);
         }
-        return status;
+        res.setTotal(res.getGroupStatuses().size());
+        return res;
     }
     @Override
-    public GroupStatus getGroupStatus(Long groupId, Long slbId) throws Exception {
+    public GroupStatusList getGroupStatus(List<Long> groupIds, Long slbId) throws Exception {
         Slb slb = slbRepository.getById(slbId);
         AssertUtils.assertNotNull(slb, "slbId not found!");
         AssertUtils.assertNotEquals(0, slb.getSlbServers().size(), "Slb doesn't have any slb server!");
         StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
-        return client.getGroupStatus(groupId,slbId);
+        return client.getGroupStatus(groupIds,slbId);
     }
+
+    @Override
+    public GroupStatus getGroupStatus(Long groupId, Long slbId) throws Exception {
+        List<Long> list = new ArrayList<>();
+        list.add(groupId);
+        GroupStatusList res = getGroupStatus(list,slbId);
+        if (res!=null&&!res.getGroupStatuses().isEmpty())
+        {
+            return res.getGroupStatuses().get(0);
+        }else{
+            return new GroupStatus();
+        }
+    }
+
 
     @Override
     public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port) throws Exception {
@@ -148,17 +171,5 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         //Not found status from nginx , ip is mark down or health check is disable
         // return memberUp&&serverUp
         return memberUp&&serverUp;
-    }
-    private boolean isCurrentSlb(Long slbId) throws Exception {
-        if (currentSlbId < 0)
-        {
-            String ip = com.ctrip.zeus.util.S.getIp();
-            Slb slb = slbRepository.getBySlbServer(ip);
-            if (slb != null )
-            {
-                currentSlbId = slb.getId();
-            }
-        }
-        return slbId.equals(currentSlbId);
     }
 }
