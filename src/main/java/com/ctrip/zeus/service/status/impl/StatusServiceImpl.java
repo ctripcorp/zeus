@@ -140,7 +140,7 @@ public class StatusServiceImpl implements StatusService {
         {
             return list.get(0).isUp();
         }
-        return true;
+        return false;
     }
 
     @Override
