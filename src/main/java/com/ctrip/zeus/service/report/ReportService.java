@@ -7,9 +7,5 @@ import com.ctrip.zeus.model.entity.Group;
  */
 public interface ReportService {
 
-    void reportGroup(Group group) throws Exception;
-
-    void sync() throws Exception;
-
-    boolean needSync() throws Exception;
+    void reportGroup(Group group, boolean isNew) throws Exception;
 }

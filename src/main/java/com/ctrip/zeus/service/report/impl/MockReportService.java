@@ -10,17 +10,7 @@ import org.springframework.stereotype.Component;
 @Component("mockReportService")
 public class MockReportService implements ReportService {
     @Override
-    public void reportGroup(Group group) throws Exception {
+    public void reportGroup(Group group, boolean isNew) throws Exception {
 
-    }
-
-    @Override
-    public void sync() throws Exception {
-
-    }
-
-    @Override
-    public boolean needSync() throws Exception {
-        return false;
     }
 }

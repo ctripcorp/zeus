@@ -3,11 +3,12 @@
     <entity name="report" table="report" alias="l" do-class="ReportDo">
         <query-defs>
             <query name="find-by-group" type="SELECT">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='group-id'/> = <FIELD name='group-id'/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
@@ -16,7 +17,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='current-version'/> > <FIELD name='reported-version'/>
+                    WHERE current_version > reported_version
                     ]]>
                 </statement>
             </query>
