@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * User: mag
@@ -108,7 +109,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         Slb slb = slbRepository.getById(slbId);
         AssertUtils.assertNotNull(slb, "slbId not found!");
         AssertUtils.assertNotEquals(0, slb.getSlbServers().size(), "Slb doesn't have any slb server!");
-        StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(0).getIp()+":"+adminServerPort.get());
+        int index = ThreadLocalRandom.current().nextInt(slb.getSlbServers().size());
+        StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(index).getIp()+":"+adminServerPort.get());
         return client.getGroupStatus(groupIds,slbId);
     }
 
