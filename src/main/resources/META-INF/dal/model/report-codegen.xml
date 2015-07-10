@@ -8,8 +8,9 @@
     <element name="id" value-type="String" />
     <element name="name" value-type="String" />
     <element name="path" value-type="String" />
-    <element name="app_pool_name" value-type="String" />
-    <element name="physic_path" value-type="String" />
+    <element name="appPoolName" value-type="String" />
+    <element name="physicalPath" value-type="String" />
+    <element name="healthCheckUri" value-type="String" />
     <element name="useTars" value-type="boolean" />
     <element name="appId" value-type="String" />
     <entity-ref name="group-server" type="list" names="group-servers" xml-indent="true" />

@@ -36,10 +36,12 @@
             <query name="update-reported-version" type="UPDATE">
                 <param name="group-id"/>
                 <param name="reported-version"/>
+                <param name="status"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='reported-version'/> = ${reported-version}
+                    SET <FIELD name='reported-version'/> = ${reported-version},
+                        <FIELD name='status'/> = ${status}
                     WHERE <FIELD name='group-id'/> = ${group-id}
                         AND <FIELD name='reported-version'/> < ${reported-version}
                     ]]>
