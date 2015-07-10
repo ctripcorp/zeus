@@ -274,6 +274,7 @@
                         ${basedir}/src/main/resources/META-INF/dal/model/lock-manifest.xml,
                         ${basedir}/src/main/resources/META-INF/dal/model/message-manifest.xml,
                         ${basedir}/src/main/resources/META-INF/dal/model/auth-manifest.xml,
+                        ${basedir}/src/main/resources/META-INF/dal/model/report-manifest.xml,
                      ]]></manifest>
                         </configuration>
                     </execution>

@@ -97,16 +97,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-names" type="SELECT" multiple="true">
-                <param name="names"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='name'/> in <IN>${names}</IN>
-                    ]]>
-                </statement>
-            </query>
         </query-defs>
     </entity>
     <entity name="group-health-check" table="group_health_check" alias="ahc" do-class="GroupHealthCheckDo">

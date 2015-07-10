@@ -65,11 +65,12 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> listLimit(Long fromId, int maxCount) throws Exception {
-        List<Group> list = new ArrayList<>();
-        for (Group group : groupQuery.getLimit(fromId, maxCount)) {
-            list.add(group);
-        }
-        return list;
+        return groupQuery.getLimit(fromId, maxCount);
+    }
+
+    @Override
+    public List<Group> list(Long[] ids) throws Exception {
+        return groupQuery.batchGetByIds(ids);
     }
 
     @Override

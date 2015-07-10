@@ -58,16 +58,15 @@ public class GroupQueryImpl implements GroupQuery {
     }
 
     @Override
-    public Long[] batchGetByNames(String[] names) throws DalException {
-        List<GroupDo> l = groupDao.findAllByNames(names, GroupEntity.READSET_FULL);
-        if (l.size() == 0) {
-            return null;
+    public List<Group> batchGetByIds(Long[] ids) throws DalException {
+        List<GroupDo> l = groupDao.findAllByIds(ids, GroupEntity.READSET_FULL);
+        List<Group> result = new ArrayList<>();
+        for (GroupDo groupDo : l) {
+            Group g = createGroup(groupDo);
+            if (g != null)
+                result.add(g);
         }
-        Long[] ids = new Long[l.size()];
-        for (int i = 0; i < l.size(); i++) {
-            ids[i] = l.get(i).getId();
-        }
-        return ids;
+        return result;
     }
 
     @Override

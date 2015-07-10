@@ -18,7 +18,7 @@ public interface GroupQuery {
 
     Group getByAppId(String appId) throws DalException;
 
-    Long[] batchGetByNames(String[] names) throws DalException;
+    List<Group> batchGetByIds(Long[] ids) throws DalException;
 
     List<Group> getAll() throws DalException;
 

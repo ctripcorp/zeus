@@ -21,4 +21,7 @@
    <model package="com.ctrip.zeus.auth" name="auth">
       <sample-model>src/test/resources/com/ctrip/zeus/model/auth.xml</sample-model>
    </model>
+   <model package="com.ctrip.zeus.report" name="report">
+      <sample-model>src/test/resources/com/ctrip/zeus/model/report.xml</sample-model>
+   </model>
 </wizard>

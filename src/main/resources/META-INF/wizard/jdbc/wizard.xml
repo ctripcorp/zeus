@@ -39,6 +39,7 @@
          <table name="auth_user_role"/>
          <table name="auth_user"/>
          <table name="auth_private_key"/>
+         <table name="report"/>
       </group>
    </jdbc>
 </wizard>

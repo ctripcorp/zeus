@@ -8,5 +8,6 @@
     <file path="core-nginx.xml"/>
     <file path="core-lock.xml"/>
     <file path="core-auth.xml"/>
+    <file path="core-report.xml"/>
 </manifest>
 
