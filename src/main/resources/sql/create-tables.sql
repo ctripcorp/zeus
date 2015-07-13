@@ -571,15 +571,18 @@ CREATE TABLE IF NOT EXISTS `status_server` (
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 
 -- Dumping structure for table report
-DROP TABLE IF EXISTS `report`;
 CREATE TABLE `report` (
 	`group_id` BIGINT(20) NOT NULL DEFAULT '0' COMMENT 'group primary key',
 	`status` INT(11) NOT NULL DEFAULT '0' COMMENT 'status',
 	`description` VARCHAR(255) NOT NULL DEFAULT '0' COMMENT 'status description',
 	`reported_version` INT(11) NOT NULL DEFAULT '0' COMMENT 'the version reported',
 	`current_version` INT(11) NOT NULL DEFAULT '0' COMMENT 'the version to report',
-	UNIQUE INDEX `group_id` (`group_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'data changed timestamp',
+	PRIMARY KEY (`group_id`),
+	INDEX `DataChange_LastTime` (`DataChange_LastTime`)
+)
+COMMENT='store report data'
+ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

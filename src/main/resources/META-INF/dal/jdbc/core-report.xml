@@ -31,16 +31,16 @@
                     ]]>
                 </statement>
             </query>
-            <query name="update-current-version-by-group" type="UPDATE">
-                <param name="group-id"/>
+            <query name="insert-or-update-current-version" type="INSERT">
                 <statement>
                     <![CDATA[
-                    UPDATE <TABLE/>
-                    SET <FIELD name='current-version'/> = ${current-version},
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        <FIELD name='current-version'/> = ${current-version},
                         <FIELD name='status'/> = ${status},
-                        <FIELD name='description'/> = ${description}
-                    WHERE <FIELD name='group-id'/> = ${group-id}
-                        AND <FIELD name='current-version'/> < ${current-version}
+                        <FIELD name='description'/> = ${description},
+                        <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
             </query>
@@ -51,7 +51,8 @@
                     UPDATE <TABLE/>
                     SET <FIELD name='reported-version'/> = ${reported-version},
                         <FIELD name='status'/> = ${status},
-                        <FIELD name='description'/> = ${description}
+                        <FIELD name='description'/> = ${description},
+                        <FIELD name="data-change-last-time"/> = NOW()
                     WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
@@ -62,7 +63,8 @@
                     <![CDATA[
                     UPDATE <TABLE/>
                     SET <FIELD name='status'/> = ${status},
-                        <FIELD name='description'/> = ${description}
+                        <FIELD name='description'/> = ${description},
+                        <FIELD name="data-change-last-time"/> = NOW()
                     WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>

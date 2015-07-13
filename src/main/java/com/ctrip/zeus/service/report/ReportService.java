@@ -10,7 +10,7 @@ import java.util.List;
  */
 public interface ReportService {
 
-    void reportGroup(Group group, boolean isNew) throws Exception;
+    void reportGroup(Group group) throws Exception;
 
     List<ReportGroup> listErrors() throws Exception;
 

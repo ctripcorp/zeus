@@ -37,7 +37,7 @@ public class ReportAspect implements Ordered {
         Object obj = point.proceed();
         try {
             // No lock is necessary here, it is covered by add_/update_groupName lock
-            reportService.reportGroup((Group) obj, methodName.equals("add"));
+            reportService.reportGroup((Group) obj);
         } catch (Exception ex) {
             logger.error("Fail to report group to queue.", ex);
         }

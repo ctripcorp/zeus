@@ -13,7 +13,7 @@ import java.util.List;
 @Component("mockReportService")
 public class MockReportService implements ReportService {
     @Override
-    public void reportGroup(Group group, boolean isNew) throws Exception {
+    public void reportGroup(Group group) throws Exception {
 
     }
 

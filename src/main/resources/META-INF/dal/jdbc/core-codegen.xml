@@ -909,13 +909,15 @@
     </query-defs>
   </entity>
   <entity name="report" table="report" alias="r">
-    <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
+    <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" key="true" />
     <member name="status" field="status" value-type="int" length="10" nullable="false" />
     <member name="description" field="description" value-type="String" length="255" nullable="false" />
     <member name="reported-version" field="reported_version" value-type="int" length="10" nullable="false" />
     <member name="current-version" field="current_version" value-type="int" length="10" nullable="false" />
-    <primary-key />
-    <index name="group_id" unique="true" members="group_id ASC" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-group-id" value-type="long" key-member="group-id" />
+    <primary-key name="PRIMARY" members="group_id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -924,19 +926,25 @@
     </updatesets>
     <query-defs>
       <query name="find-by-PK" type="SELECT">
+        <param name="key-group-id" />
         <statement><![CDATA[SELECT <FIELDS/>
-        FROM <TABLE/>]]></statement>
+        FROM <TABLE/>
+        WHERE <FIELD name='group-id'/> = ${key-group-id}]]></statement>
       </query>
       <query name="insert" type="INSERT">
         <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
         VALUES(<VALUES/>)]]></statement>
       </query>
       <query name="update-by-PK" type="UPDATE">
+        <param name="key-group-id" />
         <statement><![CDATA[UPDATE <TABLE/>
-        SET <FIELDS/>]]></statement>
+        SET <FIELDS/>
+        WHERE <FIELD name='group-id'/> = ${key-group-id}]]></statement>
       </query>
       <query name="delete-by-PK" type="DELETE">
-        <statement><![CDATA[DELETE FROM <TABLE/>]]></statement>
+        <param name="key-group-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='group-id'/> = ${key-group-id}]]></statement>
       </query>
     </query-defs>
   </entity>
