@@ -163,8 +163,8 @@
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='resource-type'/> = ${resource-type}
-                    SET <FIELD name='description'/> = ${description}
+                    SET <FIELD name='resource-type'/> = ${resource-type},
+                        <FIELD name='description'/> = ${description}
                     WHERE <FIELD name='resource-name'/> = ${resource-name}
                     ]]>
                 </statement>
