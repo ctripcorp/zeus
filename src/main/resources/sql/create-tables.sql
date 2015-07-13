@@ -572,10 +572,13 @@ CREATE TABLE IF NOT EXISTS `status_server` (
 
 -- Dumping structure for table report
 DROP TABLE IF EXISTS `report`;
-CREATE TABLE IF NOT EXISTS `report` (
-  `group_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'group primary key',
-  `reported_version` int(11) NOT NULL DEFAULT '0' COMMENT 'the version reported',
-  `current_version` int(11) NOT NULL DEFAULT '0' COMMENT 'the version to report'
+CREATE TABLE `report` (
+	`group_id` BIGINT(20) NOT NULL DEFAULT '0' COMMENT 'group primary key',
+	`status` INT(11) NOT NULL DEFAULT '0' COMMENT 'status',
+	`description` VARCHAR(255) NOT NULL DEFAULT '0' COMMENT 'status description',
+	`reported_version` INT(11) NOT NULL DEFAULT '0' COMMENT 'the version reported',
+	`current_version` INT(11) NOT NULL DEFAULT '0' COMMENT 'the version to report',
+	UNIQUE INDEX `group_id` (`group_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.

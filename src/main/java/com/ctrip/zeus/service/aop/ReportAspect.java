@@ -5,6 +5,8 @@ import com.ctrip.zeus.service.report.ReportService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +18,8 @@ import javax.annotation.Resource;
 @Aspect
 @Component
 public class ReportAspect implements Ordered {
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Resource
     private ReportService reportService;
@@ -31,7 +35,12 @@ public class ReportAspect implements Ordered {
                 return point.proceed();
         }
         Object obj = point.proceed();
-        reportService.reportGroup((Group)obj);
+        try {
+            // No lock is necessary here, it is covered by add_/update_groupName lock
+            reportService.reportGroup((Group) obj, methodName.equals("add"));
+        } catch (Exception ex) {
+            logger.error("Fail to report group to queue.", ex);
+        }
         return obj;
     }
 

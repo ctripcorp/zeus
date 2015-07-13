@@ -1,15 +1,18 @@
 package com.ctrip.zeus.service.report;
 
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.report.entity.ReportGroup;
+
+import java.util.List;
 
 /**
  * Created by zhoumy on 2015/7/9.
  */
 public interface ReportService {
 
-    void reportGroup(Group group) throws Exception;
+    void reportGroup(Group group, boolean isNew) throws Exception;
 
-    void sync() throws Exception;
+    List<ReportGroup> listErrors() throws Exception;
 
-    boolean needSync() throws Exception;
+    ReportGroup getReportGroupById(Long groupId) throws Exception;
 }

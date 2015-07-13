@@ -3,11 +3,12 @@
     <entity name="report" table="report" alias="l" do-class="ReportDo">
         <query-defs>
             <query name="find-by-group" type="SELECT">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='group-id'/> = <FIELD name='group-id'/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
@@ -16,31 +17,53 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='current-version'/> > <FIELD name='reported-version'/>
+                    WHERE current_version > reported_version
+                        AND status = 0
                     ]]>
                 </statement>
             </query>
-            <query name="update-current-version" type="UPDATE">
+            <query name="find-all-by-error" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE status = -1
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-current-version-by-group" type="UPDATE">
                 <param name="group-id"/>
-                <param name="current-version"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='current-version'/> = ${current-version}
+                    SET <FIELD name='current-version'/> = ${current-version},
+                        <FIELD name='status'/> = ${status},
+                        <FIELD name='description'/> = ${description}
                     WHERE <FIELD name='group-id'/> = ${group-id}
                         AND <FIELD name='current-version'/> < ${current-version}
                     ]]>
                 </statement>
             </query>
-            <query name="update-reported-version" type="UPDATE">
+            <query name="update-reported-version-by-group" type="UPDATE">
                 <param name="group-id"/>
-                <param name="reported-version"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='reported-version'/> = ${reported-version}
+                    SET <FIELD name='reported-version'/> = ${reported-version},
+                        <FIELD name='status'/> = ${status},
+                        <FIELD name='description'/> = ${description}
                     WHERE <FIELD name='group-id'/> = ${group-id}
-                        AND <FIELD name='reported-version'/> < ${reported-version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-error-status-by-group" type="UPDATE">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='status'/> = ${status},
+                        <FIELD name='description'/> = ${description}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
