@@ -28,4 +28,20 @@
         <ip>192.168.12.1</ip>
         <port>80,81</port>
     </group-server>
+
+    <report-group-list>
+        <total>123</total>
+        <groups>
+            <report-group/>
+            <report-group/>
+        </groups>
+    </report-group-list>
+    <report-group>
+        <group-id>12345678901</group-id>
+        <group-name>aaa</group-name>
+        <current-version>1</current-version>
+        <reported-version>0</reported-version>
+        <status>error</status>
+        <description>appid invalid</description>
+    </report-group>
 </report>

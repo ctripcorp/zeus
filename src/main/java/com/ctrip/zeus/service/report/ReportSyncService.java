@@ -7,5 +7,7 @@ public interface ReportSyncService {
 
     void sync() throws Exception;
 
+    String syncGroup(Long groupId) throws Exception;
+
     boolean needSync() throws Exception;
 }

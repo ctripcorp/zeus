@@ -27,20 +27,17 @@ public class ReportAspect implements Ordered {
     @Around("execution(* com.ctrip.zeus.service.model.GroupRepository.*(..))")
     public Object injectReportAction(ProceedingJoinPoint point) throws Throwable {
         String methodName = point.getSignature().getName();
-        boolean isNew;
         switch (methodName) {
             case "add":
-                isNew = true;
-                break;
             case "update":
-                isNew = false;
                 break;
             default:
                 return point.proceed();
         }
         Object obj = point.proceed();
         try {
-            reportService.reportGroup((Group) obj, isNew);
+            // No lock is necessary here, it is covered by add_/update_groupName lock
+            reportService.reportGroup((Group) obj, methodName.equals("add"));
         } catch (Exception ex) {
             logger.error("Fail to report group to queue.", ex);
         }

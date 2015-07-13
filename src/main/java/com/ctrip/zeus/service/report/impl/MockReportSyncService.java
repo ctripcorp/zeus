@@ -12,6 +12,11 @@ public class MockReportSyncService implements ReportSyncService {
     }
 
     @Override
+    public String syncGroup(Long groupId) throws Exception {
+        return "";
+    }
+
+    @Override
     public boolean needSync() throws Exception {
         return false;
     }
