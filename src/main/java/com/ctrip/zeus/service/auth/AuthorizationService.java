@@ -33,7 +33,8 @@ public interface AuthorizationService {
     void updateUser(User user) throws Exception;
 
     void addRole(Role role) throws Exception;
-
+    void updateRole(Role role) throws Exception;
+    void deleteRole(String role) throws Exception;
     /**
      * get all resources in system
      * @return

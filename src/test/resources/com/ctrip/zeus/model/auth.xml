@@ -19,12 +19,14 @@
     </user>
 
     <role>
+        <id>1</id>
         <role-name>SlbAdmin</role-name>
         <description>slb admin</description>
     </role>
 
     <resource>
         <resource-name>createSLB</resource-name>
+        <role-name>superAdmin</role-name>
         <resource-type>action</resource-type>
         <description>create slb cluster</description>
     </resource>

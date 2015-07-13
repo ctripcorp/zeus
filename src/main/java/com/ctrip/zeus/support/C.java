@@ -105,6 +105,7 @@ public class C {
 
     public static Role toRole(AuthRoleDo roleDo){
         return new Role()
+                .setId(roleDo.getId())
                 .setRoleName(roleDo.getRoleName())
                 .setDescription(roleDo.getDescription());
     }

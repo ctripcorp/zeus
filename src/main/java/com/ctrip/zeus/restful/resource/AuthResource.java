@@ -7,7 +7,9 @@ import com.ctrip.zeus.auth.entity.User;
 import com.ctrip.zeus.auth.entity.UserList;
 import com.ctrip.zeus.auth.transform.DefaultJsonParser;
 import com.ctrip.zeus.auth.transform.DefaultSaxParser;
+import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.auth.AuthorizationService;
+import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -29,9 +31,11 @@ public class AuthResource {
 
     @Resource
     private AuthorizationService authService;
+    @Resource
+    private ResponseHandler responseHandler;
 
     @GET
-    @Path("/role")
+    @Path("/roles")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name="getAuth")
     public Response allRoles(@Context HttpServletRequest request, @Context HttpHeaders hh) throws Exception {
@@ -49,7 +53,7 @@ public class AuthResource {
     }
 
     @GET
-    @Path("/user")
+    @Path("/users")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name="getAuth")
     public Response allUsers(@Context HttpServletRequest request, @Context HttpHeaders hh) throws Exception {
@@ -67,10 +71,10 @@ public class AuthResource {
 
 
     @GET
-    @Path("/user/{userName}")
+    @Path("/user")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name="getAuth")
-    public Response userInfo(@Context HttpServletRequest request, @Context HttpHeaders hh, @PathParam("userName") String userName) throws Exception {
+    public Response userInfo(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("userName") String userName) throws Exception {
         User user = authService.getUser(userName);
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
             return Response.status(200).entity(String.format(User.XML, user)).type(MediaType.APPLICATION_XML).build();
@@ -81,17 +85,15 @@ public class AuthResource {
     }
 
     @POST
-    @Path("/user")
+    @Path("/user/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name="modifyAuth")
     public Response addUser(@Context HttpServletRequest request, @Context HttpHeaders hh, String user) throws Exception {
         User newUser;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             newUser = DefaultSaxParser.parseEntity(User.class, user);
-        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-            newUser = DefaultJsonParser.parse(User.class, user);
         } else {
-            throw new Exception("Unacceptable type.");
+            newUser = DefaultJsonParser.parse(User.class, user);
         }
         authService.addUser(newUser);
         return Response.ok().build();
@@ -105,46 +107,95 @@ public class AuthResource {
         User user;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             user = DefaultSaxParser.parseEntity(User.class, userStr);
-        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-            user = DefaultJsonParser.parse(User.class, userStr);
         } else {
-            throw new Exception("Unacceptable type.");
+            user = DefaultJsonParser.parse(User.class, userStr);
         }
         authService.updateUser(user);
         return Response.ok().build();
     }
+    @GET
+    @Path("/user/delete")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name="modifyAuth")
+    public Response deleteUser(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("userName")String userName) throws Exception {
+        authService.deleteUser(userName);
+        return Response.ok().build();
+    }
+
+
 
     @POST
-    @Path("/resource")
+    @Path("/resource/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name="modifyAuth")
     public Response addResource(@Context HttpServletRequest request, @Context HttpHeaders hh, String resourceStr) throws Exception {
         com.ctrip.zeus.auth.entity.Resource resource;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             resource = DefaultSaxParser.parseEntity(com.ctrip.zeus.auth.entity.Resource.class, resourceStr);
-        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-            resource = DefaultJsonParser.parse(com.ctrip.zeus.auth.entity.Resource.class, resourceStr);
         } else {
-            throw new Exception("Unacceptable type.");
+            resource = DefaultJsonParser.parse(com.ctrip.zeus.auth.entity.Resource.class, resourceStr);
         }
         authService.addResource(resource);
         return Response.ok().build();
     }
+    @POST
+    @Path("/resource/update")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name="modifyAuth")
+    public Response updateResource(@Context HttpServletRequest request, @Context HttpHeaders hh, String resourceStr) throws Exception {
+        com.ctrip.zeus.auth.entity.Resource resource;
+        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
+            resource = DefaultSaxParser.parseEntity(com.ctrip.zeus.auth.entity.Resource.class, resourceStr);
+        } else {
+            resource = DefaultJsonParser.parse(com.ctrip.zeus.auth.entity.Resource.class, resourceStr);
+        }
+        authService.updateResource(resource);
+        return Response.ok().build();
+    }
+    @GET
+    @Path("/resource/delete")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name="modifyAuth")
+    public Response deleteResource(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("resourceName")String resourceName) throws Exception {
+        authService.deleteResource(resourceName);
+        return Response.ok().build();
+    }
 
     @POST
-    @Path("/role")
+    @Path("/role/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name="modifyAuth")
     public Response addRole(@Context HttpServletRequest request, @Context HttpHeaders hh, String roleStr) throws Exception {
         Role role;
         if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
             role = DefaultSaxParser.parseEntity(Role.class, roleStr);
-        } else if (hh.getMediaType().equals(MediaType.APPLICATION_JSON_TYPE)) {
-            role = DefaultJsonParser.parse(Role.class, roleStr);
         } else {
-            throw new Exception("Unacceptable type.");
+            role = DefaultJsonParser.parse(Role.class, roleStr);
         }
         authService.addRole(role);
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/role/update")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name="modifyAuth")
+    public Response updateRole(@Context HttpServletRequest request, @Context HttpHeaders hh, String roleStr) throws Exception {
+        Role role;
+        if (hh.getMediaType().equals(MediaType.APPLICATION_XML_TYPE)) {
+            role = DefaultSaxParser.parseEntity(Role.class, roleStr);
+        } else {
+            role = DefaultJsonParser.parse(Role.class, roleStr);
+        }
+        authService.updateRole(role);
+        return Response.ok().build();
+    }
+    @GET
+    @Path("/role/delete")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name="modifyAuth")
+    public Response deleteRole(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("roleName")String roleName) throws Exception {
+        authService.deleteRole(roleName);
         return Response.ok().build();
     }
 

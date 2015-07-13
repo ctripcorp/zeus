@@ -19,11 +19,13 @@
     <entity-ref name="role" />
   </entity>
   <entity name="role">
+    <element name="id" value-type="int" />
     <element name="role-name" value-type="String" />
     <element name="description" value-type="String" />
   </entity>
   <entity name="resource">
     <element name="resource-name" value-type="String" />
+    <element name="role-name" value-type="String" />
     <element name="resource-type" value-type="String" />
     <element name="description" value-type="String" />
   </entity>

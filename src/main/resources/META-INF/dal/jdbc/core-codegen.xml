@@ -910,9 +910,12 @@
   </entity>
   <entity name="report" table="report" alias="r">
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
+    <member name="status" field="status" value-type="int" length="10" nullable="false" />
+    <member name="description" field="description" value-type="String" length="255" nullable="false" />
     <member name="reported-version" field="reported_version" value-type="int" length="10" nullable="false" />
     <member name="current-version" field="current_version" value-type="int" length="10" nullable="false" />
     <primary-key />
+    <index name="group_id" unique="true" members="group_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

@@ -5,6 +5,7 @@ import com.ctrip.zeus.auth.entity.Role;
 import com.ctrip.zeus.auth.entity.RoleGroup;
 import com.ctrip.zeus.auth.entity.User;
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.auth.AuthorizationService;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
@@ -116,7 +117,21 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     @Override
     public void addRole(Role role) throws Exception {
+        AuthRoleDo tmp = roleDao.findByRoleName(role.getRoleName(),AuthRoleEntity.READSET_FULL);
+        if (tmp!=null)
+        {
+            throw new ValidationException("Role Name is already exist!");
+        }
         roleDao.insert(C.toRoleDo(role));
+    }
+    @Override
+    public void updateRole(Role role) throws Exception {
+        roleDao.updateByName(C.toRoleDo(role),AuthRoleEntity.UPDATESET_FULL);
+    }
+
+    @Override
+    public void deleteRole(String role) throws Exception {
+        roleDao.deleteByName(new AuthRoleDo().setRoleName(role));
     }
 
     @Override
@@ -152,7 +167,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     @Override
     public void addResource(Resource resource) throws Exception {
+        AuthResourceDo tmp = resourceDao.findByResourceName(resource.getResourceName(),AuthResourceEntity.READSET_FULL);
+        if (null != tmp)
+        {
+            throw new ValidationException("Resource is already exist!");
+        }
         resourceDao.insert(C.toResourceDo(resource));
+        resourceRoleDao.insert(new AuthResourceRoleDo()
+                .setResourceName(resource.getResourceName()).setRoleName(resource.getRoleName()));
     }
 
     @Override
@@ -164,6 +186,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     @Override
     public void updateResource(Resource resource) throws Exception {
         resourceDao.updateByName(C.toResourceDo(resource), AuthResourceEntity.UPDATESET_FULL);
+        resourceRoleDao.updateByResourceName(new AuthResourceRoleDo().setRoleName(resource.getRoleName())
+                        .setResourceName(resource.getResourceName()),AuthResourceRoleEntity.UPDATESET_FULL);
     }
 
     @Override
