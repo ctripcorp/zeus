@@ -35,10 +35,12 @@ public class IPAuthenticationFilter implements Filter{
     public void init(FilterConfig filterConfig) {
         ipUserMap = parseIpUserStr(ipUserStr.get());
         ipUserStr.addCallback(new Runnable() {
-            @Override
-            public void run() {
-                ipUserMap = parseIpUserStr(ipUserStr.get());
-            }
+                @Override
+                public void run() {
+                    logger.info(ipUserStr.get());
+                    ipUserMap = parseIpUserStr(ipUserStr.get());
+                    logger.info(ipUserMap.toString());
+                }
         });
     }
 
