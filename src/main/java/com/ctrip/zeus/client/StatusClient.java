@@ -49,7 +49,7 @@ public class StatusClient extends AbstractRestClient {
         WebTarget target = getTarget().path("/api/status/groupStatus").queryParam("slbId",slbId);
         for (Long groupId : groupIds)
         {
-            target.queryParam("groupId",groupId);
+            target = target.queryParam("groupId",groupId);
         }
         String responseStr = target.request(MediaType.APPLICATION_JSON).headers(getDefaultHeaders()).get(String.class);
         return DefaultJsonParser.parse(GroupStatusList.class, responseStr);
