@@ -550,6 +550,14 @@
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert-or-update" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         slb_id = values(slb_id),
                         name = values(name),
