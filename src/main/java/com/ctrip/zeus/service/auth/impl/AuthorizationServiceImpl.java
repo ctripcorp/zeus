@@ -35,6 +35,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     @javax.annotation.Resource
     private AuthResourceRoleDao resourceRoleDao;
 
+    @javax.annotation.Resource
+    private AuthPrivateKeyDao authPrivateKeyDao;
+
     @Override
     public List<Role> getAllRoles() throws Exception {
         List<AuthRoleDo> authRoleDoList = roleDao.findAll(AuthRoleEntity.READSET_FULL);
@@ -132,6 +135,12 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     @Override
     public void deleteRole(String role) throws Exception {
         roleDao.deleteByName(new AuthRoleDo().setRoleName(role));
+    }
+
+    @Override
+    public AuthPrivateKeyDo addPrivateKey(String key) throws Exception {
+        authPrivateKeyDao.insert(new AuthPrivateKeyDo().setPrivateKey(key));
+        return authPrivateKeyDao.findFirst(AuthPrivateKeyEntity.READSET_FULL);
     }
 
     @Override

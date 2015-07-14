@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.auth;
 
 import com.ctrip.zeus.auth.entity.*;
+import com.ctrip.zeus.dal.core.AuthPrivateKeyDo;
 
 import java.util.List;
 
@@ -35,6 +36,7 @@ public interface AuthorizationService {
     void addRole(Role role) throws Exception;
     void updateRole(Role role) throws Exception;
     void deleteRole(String role) throws Exception;
+    AuthPrivateKeyDo addPrivateKey(String key) throws Exception;
     /**
      * get all resources in system
      * @return

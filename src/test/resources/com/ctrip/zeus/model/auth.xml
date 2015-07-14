@@ -62,4 +62,8 @@
             <role/>
         </roles>
     </role-list>
+    <auth-server-key>
+        <key>key</key>
+        <last-change>key</last-change>
+    </auth-server-key>
 </auth>

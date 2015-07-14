@@ -4,6 +4,8 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.auth.entity.*;
 import com.ctrip.zeus.auth.transform.DefaultJsonParser;
 import com.ctrip.zeus.auth.transform.DefaultSaxParser;
+import com.ctrip.zeus.dal.core.AuthPrivateKeyDo;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.auth.AuthorizationService;
 import com.ctrip.zeus.util.AssertUtils;
@@ -63,7 +65,21 @@ public class AuthResource {
         } else {
             return Response.status(200).entity(String.format(ResourceList.JSON, roleList)).type(MediaType.APPLICATION_JSON).build();
         }
+    }
 
+    @GET
+    @Path("/key")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name="getAuth")
+    public Response key(@Context HttpServletRequest request, @Context HttpHeaders hh , @QueryParam("privateKey") String privateKey) throws Exception {
+        AuthPrivateKeyDo authPrivateKeyDo = authService.addPrivateKey(privateKey);
+        if (authPrivateKeyDo != null)
+        {
+            AuthServerKey authServerKey = new AuthServerKey().setKey(authPrivateKeyDo.getPrivateKey());
+            return responseHandler.handle(authServerKey,hh.getMediaType());
+        }else{
+            throw new ValidationException("add key failed!");
+        }
     }
 
     @GET
