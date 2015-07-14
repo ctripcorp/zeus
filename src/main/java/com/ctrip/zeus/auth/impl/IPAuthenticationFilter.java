@@ -1,5 +1,6 @@
 package com.ctrip.zeus.auth.impl;
 
+import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.jasig.cas.client.util.AbstractCasFilter;
@@ -28,6 +29,7 @@ public class IPAuthenticationFilter implements Filter{
     DynamicStringProperty ipUserStr = DynamicPropertyFactory.getInstance().getStringProperty("ip.authentication", "127.0.0.1,172.16.144.61=releaseSys");
     private static final String SLB_SERVER_USER = "slbServer";
     public static final String SERVER_TOKEN_HEADER = "SlbServerToken";
+    private DynamicBooleanProperty enableAuthorize = DynamicPropertyFactory.getInstance().getBooleanProperty("server.authorization.enable", false);
 
     private volatile Map<String, String> ipUserMap = new HashMap<>();
 
@@ -49,14 +51,20 @@ public class IPAuthenticationFilter implements Filter{
         final HttpServletRequest request = (HttpServletRequest) servletRequest;
         final HttpServletResponse response = (HttpServletResponse) servletResponse;
         final HttpSession session = request.getSession(false);
+        //1. turn off auth
+        if (!enableAuthorize.get()){
+            setAssertion(request, SLB_SERVER_USER);
+            filterChain.doFilter(request,response);
+            return;
+        }
+        //2.already assert
         Assertion assertion = session != null ? (Assertion) session.getAttribute(AbstractCasFilter.CONST_CAS_ASSERTION) : null;
-
         if (assertion != null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // check whether it is called from other slb servers.
+        //3. check whether it is called from other slb servers.
         String slbServerToken = request.getHeader(SERVER_TOKEN_HEADER);
         if (slbServerToken != null){
             if (TokenManager.validateToken(slbServerToken)){
@@ -66,7 +74,7 @@ public class IPAuthenticationFilter implements Filter{
             }
         }
 
-        // if the request is from in ip white list, then authenticate it using the ip white list.
+        //4. if the request is from in ip white list, then authenticate it using the ip white list.
         String clientIP = getClientIP(request);
         String ipUser = getIpUser(clientIP);
         if (ipUser != null){
