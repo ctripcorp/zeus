@@ -139,7 +139,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     @Override
     public AuthPrivateKeyDo addPrivateKey(String key) throws Exception {
-        authPrivateKeyDao.insert(new AuthPrivateKeyDo().setPrivateKey(key));
+        if (key!=null){
+            authPrivateKeyDao.insert(new AuthPrivateKeyDo().setPrivateKey(key));
+        }
         return authPrivateKeyDao.findFirst(AuthPrivateKeyEntity.READSET_FULL);
     }
 
