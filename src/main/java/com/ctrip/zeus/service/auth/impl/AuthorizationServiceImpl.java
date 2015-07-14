@@ -148,7 +148,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         List<Resource> result = new ArrayList<>();
         List<AuthResourceDo> resourceDoList = resourceDao.findAll(AuthResourceEntity.READSET_FULL);
         for (AuthResourceDo resourceDo : resourceDoList) {
-            result.add(C.toResource(resourceDo));
+            List<AuthResourceRoleDo> authResourceRoleDos = resourceRoleDao.findByResourceName(resourceDo.getResourceName(),AuthResourceRoleEntity.READSET_FULL);
+            Resource r = C.toResource(resourceDo);
+            if (authResourceRoleDos!=null && authResourceRoleDos.size()>0)
+            {
+                r.setRoleName(authResourceRoleDos.get(0).getRoleName());
+            }
+            result.add(r);
         }
         return result;
     }

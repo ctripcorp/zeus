@@ -331,6 +331,7 @@ public class IntegrationTest {
         }
 
         reqClient.getstr("/api/op/downMember?ip=" + slb1_server_0 + "&groupName=__Test_app2");
+        Thread.sleep(1000);
         groupstatus = reqClient.getstr("/api/status/group?groupName=__Test_app2");
         groupStatus = DefaultJsonParser.parse(GroupStatus.class, groupstatus);
 
