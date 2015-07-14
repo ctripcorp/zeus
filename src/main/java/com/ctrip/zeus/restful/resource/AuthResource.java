@@ -1,10 +1,7 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
-import com.ctrip.zeus.auth.entity.Role;
-import com.ctrip.zeus.auth.entity.RoleList;
-import com.ctrip.zeus.auth.entity.User;
-import com.ctrip.zeus.auth.entity.UserList;
+import com.ctrip.zeus.auth.entity.*;
 import com.ctrip.zeus.auth.transform.DefaultJsonParser;
 import com.ctrip.zeus.auth.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
@@ -48,6 +45,23 @@ public class AuthResource {
             return Response.status(200).entity(String.format(RoleList.XML, roleList)).type(MediaType.APPLICATION_XML).build();
         } else {
             return Response.status(200).entity(String.format(RoleList.JSON, roleList)).type(MediaType.APPLICATION_JSON).build();
+        }
+
+    }
+    @GET
+    @Path("/resources")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name="getAuth")
+    public Response allResources(@Context HttpServletRequest request, @Context HttpHeaders hh) throws Exception {
+        List<com.ctrip.zeus.auth.entity.Resource> resources = authService.getAllResources();
+        ResourceList roleList = new ResourceList();
+        for (com.ctrip.zeus.auth.entity.Resource resource : resources) {
+            roleList.addResource(resource);
+        }
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(ResourceList.XML, roleList)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(ResourceList.JSON, roleList)).type(MediaType.APPLICATION_JSON).build();
         }
 
     }
