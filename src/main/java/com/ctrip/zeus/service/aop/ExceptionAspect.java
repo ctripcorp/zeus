@@ -63,6 +63,6 @@ public class ExceptionAspect implements Ordered{
 
     @Override
     public int getOrder() {
-        return 0;
+        return AspectOrder.InterceptException;
     }
 }

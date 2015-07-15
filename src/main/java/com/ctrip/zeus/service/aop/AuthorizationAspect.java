@@ -76,6 +76,6 @@ public class AuthorizationAspect implements Ordered{
 
     @Override
     public int getOrder() {
-        return 100;
+        return AspectOrder.Authorization;
     }
 }
