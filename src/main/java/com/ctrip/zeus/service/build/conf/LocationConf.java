@@ -23,7 +23,7 @@ public class LocationConf {
         StringBuilder b = new StringBuilder(1024);
 
         b.append("location ").append(getPath(slb, vs, group)).append(" {\n");
-        if (clientMaxSizeList !=null)
+        if (clientMaxSizeList.get() !=null)
         {
             String []sizeList = clientMaxSizeList.get().split(";");
             String []groupSize = null;
