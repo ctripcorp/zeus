@@ -18,6 +18,7 @@ import com.netflix.config.DynamicStringProperty;
 public class HealthCheckConf {
 
     private static DynamicBooleanProperty disableHealthCheck = DynamicPropertyFactory.getInstance().getBooleanProperty("build.disable.healthCheck", false);
+    private static DynamicStringProperty sslHelloEnableList = DynamicPropertyFactory.getInstance().getStringProperty("build.sslHello.enable", "");
     private static DynamicStringProperty disableHealthCheckList = DynamicPropertyFactory.getInstance().getStringProperty("build.disable.healthCheck.groupId", "");
 
 
@@ -47,7 +48,7 @@ public class HealthCheckConf {
 
         StringBuilder b = new StringBuilder(128);
 
-        if (group.getSsl()) {
+        if (group.getSsl()&&sslHelloEnable(group.getId())) {
             b.append("check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
@@ -70,5 +71,16 @@ public class HealthCheckConf {
                     .append("check_http_expect_alive http_2xx http_3xx").append(";\n");
         }
         return b.toString();
+    }
+    private static boolean sslHelloEnable(Long groupId){
+        String []list = sslHelloEnableList.get().split(",");
+        for (String id : list)
+        {
+            if (id!=null && String.valueOf(groupId).equals(id.trim()))
+            {
+                return true;
+            }
+        }
+        return  false;
     }
 }
