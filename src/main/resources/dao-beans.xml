@@ -136,4 +136,12 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.StatusServerDao"/>
     </bean>
 
+    <bean id="tagDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.TagDao"/>
+    </bean>
+
+    <bean id="tagItemDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.TagItemDao"/>
+    </bean>
+
 </beans>

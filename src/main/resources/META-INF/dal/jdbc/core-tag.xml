@@ -67,6 +67,7 @@
                 </statement>
             </query>
             <query name="find-by-tags" type="SELECT" multiple="true">
+                <param name="tag-ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>

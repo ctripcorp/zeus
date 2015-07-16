@@ -10,23 +10,23 @@ import java.util.Map;
  */
 public interface TagBox {
 
-    List<Tag> getAllTags();
+    List<Tag> getAllTags() throws Exception;
 
-    Tag getTag(Long tagId);
+    Tag getTag(Long tagId) throws Exception;
 
-    Tag getTag(String name, String type);
+    Tag getTag(String name, String type) throws Exception;
 
-    List<Long> getAllItems(Long tagId);
+    List<Long> getAllItems(Long tagId) throws Exception;
 
-    Map<Long, Long> getAllItems(Long[] tagIds);
+    Map<Long, List<Long>> getAllItems(Long[] tagIds) throws Exception;
 
-    void addTag(String name, String type);
+    void addTag(String name, String type) throws Exception;
 
-    void addTag(String name, String type, String extendedValue);
+    void addTag(String name, String type, String extendedValue) throws Exception;
 
-    void removeTag(Long tagId);
+    void removeTag(Long tagId) throws Exception;
 
-    void tagging(Long tagId, Long itemId);
+    void tagging(Long tagId, Long itemId) throws Exception;
 
-    void untagging(Long tagId, Long itemId);
+    void untagging(Long tagId, Long itemId) throws Exception;
 }
