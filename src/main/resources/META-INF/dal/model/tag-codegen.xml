@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model>
+  <entity name="tag-model" root="true">
+    <entity-ref name="tag" />
+  </entity>
+  <entity name="tag">
+    <element name="id" value-type="long" />
+    <element name="name" value-type="String" />
+    <element name="type" value-type="String" />
+    <element name="value" value-type="String" />
+  </entity>
+</model>
+

@@ -40,6 +40,8 @@
          <table name="auth_user"/>
          <table name="auth_private_key"/>
          <table name="report"/>
+         <table name="tag"/>
+         <table name="tag_item"/>
       </group>
    </jdbc>
 </wizard>
