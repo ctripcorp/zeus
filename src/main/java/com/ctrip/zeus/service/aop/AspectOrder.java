@@ -17,4 +17,5 @@ public class AspectOrder {
     public static int CatReport = 3;
     public static int MessageReport = 1;
     public static int Authorization = 100;
+    public static int Access = 150;
 }
