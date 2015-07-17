@@ -1,8 +1,6 @@
 <tag-model>
-    <tag>
-        <id>123456789012</id>
+    <property>
         <name>abc</name>
-        <type>group</type>
-        <value>abc is abc</value>
-    </tag>
+        <value>group</value>
+    </property>
 </tag-model>

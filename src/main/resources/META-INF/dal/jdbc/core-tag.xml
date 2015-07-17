@@ -10,25 +10,13 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-name-and-type" type="SELECT">
+            <query name="find-by-name" type="SELECT">
                 <param name="name"/>
-                <param name="type"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='name'/> = ${name}
-                      AND <FIELD name='type'/> = ${type}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-by-id" type="SELECT">
-                <param name="id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>
@@ -37,8 +25,6 @@
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
-                    ON DUPLICATE KEY UPDATE
-                        value = values(value)
                     ]]>
                 </statement>
             </query>
@@ -54,7 +40,6 @@
         </query-defs>
     </entity>
     <entity name="tag-item" table="tag_item" alias="ti" do-class="TagItemDo">
-        <var name="tag-ids" value-type="Long[]"/>
         <query-defs>
             <query name="find-by-tag" type="SELECT" multiple="true">
                 <param name="tag-id"/>
@@ -63,16 +48,6 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='tag-id'/> = ${tag-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-by-tags" type="SELECT" multiple="true">
-                <param name="tag-ids"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='tag-id'/> in <IN> ${tag-ids} </IN>
                     ]]>
                 </statement>
             </query>
@@ -92,6 +67,99 @@
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='tag-id'/> = ${tag-id}
                       AND <FIELD name='item-id'/> = ${item-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-tag" type="DELETE">
+                <param name="tag-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='tag-id'/> = ${tag-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="property" table="property" alias="p" do-class="PropertyDo">
+        <query-defs>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete" type="DELETE">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="property-key" table="property_key" alias="pk" do-class="PropertyKeyDo">
+        <query-defs>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete" type="DELETE">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="property-item" table="tag_item" alias="ti" do-class="PropertyItemDo">
+        <query-defs>
+            <query name="find-by-property" type="SELECT" multiple="true">
+                <param name="property-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='property-id'/> = ${property-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-property-and-item" type="DELETE">
+                <param name="property-id"/>
+                <param name="item-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='property-id'/> = ${property-id}
+                      AND <FIELD name='item-id'/> = ${item-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-property" type="DELETE">
+                <param name="property-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='property-id'/> = ${property-id}
                     ]]>
                 </statement>
             </query>

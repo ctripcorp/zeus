@@ -421,6 +421,70 @@ CREATE TABLE IF NOT EXISTS `nginx_server` (
 /*!40000 ALTER TABLE `nginx_server` ENABLE KEYS */;
 
 
+-- Dumping structure for table operation_log
+DROP TABLE IF EXISTS `operation_log`;
+CREATE TABLE IF NOT EXISTS `operation_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `type` varchar(128) NOT NULL,
+  `target_id` varchar(128) NOT NULL,
+  `operation` varchar(128) NOT NULL,
+  `data` varchar(10240) DEFAULT NULL,
+  `user_name` varchar(128) DEFAULT NULL,
+  `client_ip` varchar(128) DEFAULT NULL,
+  `success` bit(1) NOT NULL,
+  `datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table property
+DROP TABLE IF EXISTS `property`;
+CREATE TABLE IF NOT EXISTS `property` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `property_key_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'property name ref id',
+  `property_value` varchar(255) NOT NULL DEFAULT '0' COMMENT 'property value',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `property_name_property_value` (`property_key_id`,`property_value`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='property table';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table property_item
+DROP TABLE IF EXISTS `property_item`;
+CREATE TABLE IF NOT EXISTS `property_item` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `property_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'property ref id',
+  `item_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'item id',
+  `type` varchar(255) NOT NULL DEFAULT '0' COMMENT 'item type',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table property_key
+DROP TABLE IF EXISTS `property_key`;
+CREATE TABLE IF NOT EXISTS `property_key` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `name` varchar(255) NOT NULL DEFAULT '0' COMMENT 'name',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table server
 DROP TABLE IF EXISTS `server`;
 CREATE TABLE IF NOT EXISTS `server` (
@@ -590,15 +654,14 @@ DROP TABLE IF EXISTS `tag`;
 CREATE TABLE IF NOT EXISTS `tag` (
   `id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'primary',
   `name` varchar(255) NOT NULL DEFAULT '0' COMMENT 'tag name',
-  `type` varchar(255) NOT NULL DEFAULT '0' COMMENT 'tag type',
-  `value` varchar(255) DEFAULT '0' COMMENT 'tag value',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name_type` (`name`,`type`),
+  UNIQUE KEY `name` (`name`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='tag def table';
 
 -- Data exporting was unselected.
+
 
 -- Dumping structure for table tag_item
 DROP TABLE IF EXISTS `tag_item`;
@@ -606,6 +669,7 @@ CREATE TABLE IF NOT EXISTS `tag_item` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary',
   `tag_id` bigint(20) NOT NULL COMMENT 'tag def id',
   `item_id` bigint(20) NOT NULL COMMENT 'item ref id',
+  `type` varchar(255) NOT NULL DEFAULT 'Undefined' COMMENT 'item type',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
