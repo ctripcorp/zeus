@@ -13,11 +13,11 @@ public interface PropertyBox {
 
     void addProperty(String pname, String pvalue) throws Exception;
 
-    void removeProperty(String panme) throws Exception;
+    void removeProperty(String pname) throws Exception;
 
-    void renameProperty(String oldName, String newName) throws Exception;
+    void renameProperty(String pname, String oldValue, String newValue) throws Exception;
 
-    void tagging(String tagName, String type, Long itemId) throws Exception;
+    void addItem(String pname, String pvalue, String type, Long itemId) throws Exception;
 
-    void untagging(String tagName, String type, Long itemId) throws Exception;
+    void deleteItem(String pname, String pvalue, String type, Long itemId) throws Exception;
 }

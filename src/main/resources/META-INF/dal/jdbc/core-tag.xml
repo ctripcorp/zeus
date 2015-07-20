@@ -28,12 +28,22 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete" type="DELETE">
+            <query name="update" type="UPDATE">
                 <param name="id"/>
                 <statement>
                     <![CDATA[
-                    DELETE FROM <TABLE/>
+                    UPDATE <TABLE/>
+                    SET <FIELD name='name'/> = ${name}
                     WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete" type="DELETE">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>
@@ -59,23 +69,20 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-tag-and-item" type="DELETE">
+            <query name="delete" type="DELETE">
                 <param name="tag-id"/>
+                <param name="type"/>
                 <param name="item-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='tag-id'/> = ${tag-id}
-                      AND <FIELD name='item-id'/> = ${item-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="delete-by-tag" type="DELETE">
-                <param name="tag-id"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='tag-id'/> = ${tag-id}
+                    <IF type='NOT_NULL' field='type'>
+                      AND <FIELD name='type/> = ${type}
+					</IF>
+					<IF type='NOT_NULL' field='item-id'>
+                      AND <FIELD name='item-id/> = ${item-id}
+					</IF>
                     ]]>
                 </statement>
             </query>
@@ -83,11 +90,35 @@
     </entity>
     <entity name="property" table="property" alias="p" do-class="PropertyDo">
         <query-defs>
-            <query name="find-all" type="SELECT" multiple="true">
+            <query name="find-all-by-key" type="SELECT" multiple="true">
+                <param name="property-key-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
+                    WHERE <FIELD name='property-key-id/> = ${property-key-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-key-and-value" type="SELECT">
+                <param name="property-key-id"/>
+                <param name="property-value"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='property-key-id/> = ${property-key-id}
+                      AND <FIELD name='property-value/> = ${property-value}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update" type="UPDATE">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='property-value'/> = ${property-value}
+                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>
@@ -109,6 +140,16 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-name" type="SELECT">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>

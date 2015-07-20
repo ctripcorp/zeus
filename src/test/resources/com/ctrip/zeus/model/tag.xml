@@ -1,6 +1,9 @@
 <tag-model>
     <property>
         <name>abc</name>
-        <value>group</value>
+        <values>
+            <value>gov</value>
+            <value>school</value>
+        </values>
     </property>
 </tag-model>
