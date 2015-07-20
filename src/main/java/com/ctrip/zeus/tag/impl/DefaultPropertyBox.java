@@ -1,10 +1,10 @@
 package com.ctrip.zeus.tag.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.tag.entity.Property;
 import org.springframework.stereotype.Component;
-import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -37,8 +37,11 @@ public class DefaultPropertyBox implements PropertyBox {
 
     @Override
     public void addProperty(String pname, String pvalue) throws Exception {
-        PropertyKeyDo d = new PropertyKeyDo().setName(pname);
-        propertyKeyDao.insert(d);
+        PropertyKeyDo d = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
+        if (d == null) {
+            d = new PropertyKeyDo().setName(pname);
+            propertyKeyDao.insert(d);
+        }
         propertyDao.insert(new PropertyDo().setPropertyKeyId(d.getId()).setPropertyValue(pvalue));
     }
 
@@ -54,27 +57,64 @@ public class DefaultPropertyBox implements PropertyBox {
     }
 
     @Override
-    public void renameProperty(String pname, String oldValue, String newValue) throws Exception {
-        PropertyDo old = findProperty(pname, oldValue);
-        propertyDao.update(old.setPropertyValue(newValue), PropertyEntity.UPDATESET_FULL);
+    public void renameProperty(String oldName, String newName) throws Exception {
+        // if key does not exist, simply return
+        PropertyKeyDo kd = propertyKeyDao.findByName(oldName, PropertyKeyEntity.READSET_FULL);
+        if (kd == null)
+            return;
+        // otherwise update key first
+        propertyKeyDao.update(kd.setName(newName), PropertyKeyEntity.UPDATESET_FULL);
     }
 
     @Override
-    public void addItem(String pname, String pvalue, String type, Long itemId) throws Exception {
-        PropertyDo d = findProperty(pname, pvalue);
+    public void renameProperty(String oldName, String newName, String oldValue, String newValue) throws Exception {
+        // if key does not exist, simply return
+        PropertyKeyDo kd = propertyKeyDao.findByName(oldName, PropertyKeyEntity.READSET_FULL);
+        if (kd == null)
+            return;
+        // otherwise check and update key first
+        if (!oldName.equalsIgnoreCase(newName)) {
+            List<PropertyDo> list = propertyDao.findAllByKey(kd.getId(), PropertyEntity.READSET_FULL);
+            if (list.size() > 1)
+                throw new ValidationException("More than one property value is attached to " + oldName + ". Cannot update.");
+        } else {
+            propertyKeyDao.update(kd.setName(newName), PropertyKeyEntity.UPDATESET_FULL);
+        }
+        PropertyDo d = propertyDao.findByKeyAndValue(kd.getId(), oldValue, PropertyEntity.READSET_FULL);
+        if (d == null)
+            return;
+        else
+            propertyDao.update(d.setPropertyValue(newValue), PropertyEntity.UPDATESET_FULL);
+    }
+
+    @Override
+    public void add(String pname, String pvalue, String type, Long itemId) throws Exception {
+        PropertyKeyDo kd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
+        PropertyDo d = null;
+        if (kd == null) {
+            kd = new PropertyKeyDo().setName(pname);
+            propertyKeyDao.insert(kd);
+        } else {
+            d = propertyDao.findByKeyAndValue(kd.getId(), pvalue, PropertyEntity.READSET_FULL);
+        }
+        if (d == null) {
+            d = new PropertyDo().setPropertyKeyId(kd.getId()).setPropertyValue(pvalue);
+            propertyDao.insert(d);
+        }
         propertyItemDao.insert(new PropertyItemDo().setPropertyId(d.getId()).setType(type).setItemId(itemId));
     }
 
     @Override
-    public void deleteItem(String pname, String pvalue, String type, Long itemId) throws Exception {
-        PropertyDo d = findProperty(pname, pvalue);
-        propertyItemDao.deleteByPropertyAndItem(new PropertyItemDo().setPropertyId(d.getId()).setType(type).setItemId(itemId));
-    }
-
-    private PropertyDo findProperty(String pname, String pvalue) throws DalException {
-        PropertyKeyDo kd= propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
+    public void delete(String pname, String pvalue, String type, Long itemId) throws Exception {
+        PropertyKeyDo kd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
         if (kd == null)
-            return null;
-        return propertyDao.findByKeyAndValue(kd.getId(), pvalue, PropertyEntity.READSET_FULL);
+            return;
+        PropertyDo d = propertyDao.findByKeyAndValue(kd.getId(), pvalue, PropertyEntity.READSET_FULL);
+        if (d == null)
+            return;
+        if (itemId != null)
+            propertyItemDao.deleteByPropertyAndItem(new PropertyItemDo().setPropertyId(d.getId()).setType(type).setItemId(itemId));
+        else
+            propertyItemDao.deleteByPropertyAndType(new PropertyItemDo().setPropertyId(d.getId()).setType(type));
     }
 }

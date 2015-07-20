@@ -1,4 +1,14 @@
 <tag-model>
+    <tag-list>
+        <total>3</total>
+        <tag>ttt</tag>
+        <tag>sss</tag>
+    </tag-list>
+    <property-list>
+        <total>3</total>
+        <property/>
+        <property/>
+    </property-list>
     <property>
         <name>abc</name>
         <values>

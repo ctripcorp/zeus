@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model>
   <entity name="tag-model" root="true">
+    <entity-ref name="tag-list" />
+    <entity-ref name="property-list" />
     <entity-ref name="property" />
+  </entity>
+  <entity name="tag-list">
+    <element name="total" value-type="int" />
+    <element name="tag" value-type="String" type="list" names="tags" />
+  </entity>
+  <entity name="property-list">
+    <element name="total" value-type="int" />
+    <entity-ref name="property" type="list" names="properties" />
   </entity>
   <entity name="property">
     <element name="name" value-type="String" />

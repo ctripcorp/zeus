@@ -29,11 +29,6 @@ public class DefaultTagBox implements TagBox {
     }
 
     @Override
-    public void addTag(String name) throws Exception {
-        tagDao.insert(new TagDo().setName(name));
-    }
-
-    @Override
     public void removeTag(String name) throws Exception {
         TagDo d = tagDao.findByName(name, TagEntity.READSET_FULL);
         if (d == null)
@@ -54,7 +49,8 @@ public class DefaultTagBox implements TagBox {
     public void tagging(String tagName, String type, Long itemId) throws Exception {
         TagDo d = tagDao.findByName(tagName, TagEntity.READSET_FULL);
         if (d == null) {
-            throw new ValidationException("Tag named " + tagName + "is not found.");
+            d = new TagDo().setName(type);
+            tagDao.insert(d);
         }
         tagItemDao.insert(new TagItemDo().setTagId(d.getId()).setType(type).setItemId(itemId));
     }

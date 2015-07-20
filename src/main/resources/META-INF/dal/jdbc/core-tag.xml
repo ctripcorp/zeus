@@ -153,6 +153,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="update" type="UPDATE">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='name'/> = ${name}
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
             <query name="delete" type="DELETE">
                 <param name="id"/>
                 <statement>
@@ -192,6 +202,17 @@
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='property-id'/> = ${property-id}
                       AND <FIELD name='item-id'/> = ${item-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-property-and-type" type="DELETE">
+                <param name="property-id"/>
+                <param name="type"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='property-id'/> = ${property-id}
+                      AND <FIELD name='type'/> = ${type}
                     ]]>
                 </statement>
             </query>
