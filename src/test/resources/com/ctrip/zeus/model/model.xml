@@ -116,6 +116,7 @@
         <slb-name>slbname</slb-name>
         <group-id>12345678901</group-id>
         <slb-id>12345678901</slb-id>
+        <activated>true</activated>
         <group-server-status>
             <ip>192.168.1.1</ip>
             <port>123456789</port>

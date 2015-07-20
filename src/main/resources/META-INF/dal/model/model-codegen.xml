@@ -115,6 +115,7 @@
     <element name="slb-name" value-type="String" />
     <element name="group-id" value-type="long" />
     <element name="slb-id" value-type="long" />
+    <element name="activated" value-type="boolean" />
     <entity-ref name="group-server-status" type="list" names="group-server-statuses" />
   </entity>
   <entity name="group-server-status">

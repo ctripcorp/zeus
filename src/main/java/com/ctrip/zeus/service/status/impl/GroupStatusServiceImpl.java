@@ -5,6 +5,7 @@ import com.ctrip.zeus.client.StatusClient;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.S;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.GroupStatusService;
@@ -39,6 +40,9 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
     @Resource
     StatusService statusService;
+    @Resource
+    private ActivateService activateService;
+
 
     private long currentSlbId = -1L;
     private Logger LOGGER = LoggerFactory.getLogger(GroupStatusServiceImpl.class);
@@ -94,6 +98,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             status.setSlbId(slbId);
             status.setGroupName(group.getName());
             status.setSlbName(slb.getName());
+            status.setActivated(activateService.isGroupActivated(groupId));
             List<GroupServer> groupServerList = groupRepository.listGroupServersByGroup(groupId);
             for (GroupServer groupServer : groupServerList) {
                 GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, groupServer.getIp(), groupServer.getPort());
