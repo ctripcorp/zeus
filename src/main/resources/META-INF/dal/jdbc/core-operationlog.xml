@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="operation-log" table="operation_log" alias="ol">
+        <var name="from-datetime" value-type="Date"/>
+        <var name="to-datetime" value-type="Date"/>
+        <var name="count" value-type="Long"/>
+        <query-defs>
+            <query name="find-by-id" type="SELECT">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-options" type="SELECT" multiple="true">
+                <param name="type"/>
+                <param name="target-id"/>
+                <param name="operation"/>
+                <param name="user-name"/>
+                <param name="client-ip"/>
+                <param name="from-datetime"/>
+                <param name="to-datetime"/>
+                <param name="count"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE (CASE WHEN ${type} IS NULL OR <FIELD name='type'/> = ${type} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${target-id} IS NULL OR <FIELD name='target-id'/> = ${target-id} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${operation} IS NULL OR <FIELD name='operation'/> = ${operation} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${user-name} IS NULL OR <FIELD name='user-name'/> = ${user-name} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${client-ip} IS NULL OR <FIELD name='client-ip'/> = ${client-ip} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${from-datetime} IS NULL OR <FIELD name='datetime'/> >= ${from-datetime} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${to-datetime} IS NULL OR <FIELD name='datetime'/> <= ${to-datetime} THEN TRUE ELSE FALSE END)
+                    LIMIT ${count}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-options-with-success" type="SELECT" multiple="true">
+                <param name="type"/>
+                <param name="target-id"/>
+                <param name="operation"/>
+                <param name="user-name"/>
+                <param name="client-ip"/>
+                <param name="success"/>
+                <param name="from-datetime"/>
+                <param name="to-datetime"/>
+                <param name="count"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE (CASE WHEN ${type} IS NULL OR <FIELD name='type'/> = ${type} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${target-id} IS NULL OR <FIELD name='target-id'/> = ${target-id} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${operation} IS NULL OR <FIELD name='operation'/> = ${operation} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${user-name} IS NULL OR <FIELD name='user-name'/> = ${user-name} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${client-ip} IS NULL OR <FIELD name='client-ip'/> = ${client-ip} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${from-datetime} IS NULL OR <FIELD name='datetime'/> >= ${from-datetime} THEN TRUE ELSE FALSE END)
+                    AND (CASE WHEN ${to-datetime} IS NULL OR <FIELD name='datetime'/> <= ${to-datetime} THEN TRUE ELSE FALSE END)
+                    AND <FIELD name='success'/> = ${success}
+                    LIMIT ${count}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>
+

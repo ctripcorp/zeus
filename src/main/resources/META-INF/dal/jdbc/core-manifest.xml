@@ -9,5 +9,6 @@
     <file path="core-lock.xml"/>
     <file path="core-auth.xml"/>
     <file path="core-report.xml"/>
+    <file path="core-operationlog.xml"/>
 </manifest>
 

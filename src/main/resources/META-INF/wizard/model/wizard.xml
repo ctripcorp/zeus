@@ -24,4 +24,7 @@
    <model package="com.ctrip.zeus.report" name="report">
       <sample-model>src/test/resources/com/ctrip/zeus/model/report.xml</sample-model>
    </model>
+   <model package="com.ctrip.zeus.operationlog" name="operationlog">
+      <sample-model>src/test/resources/com/ctrip/zeus/model/operationlog.xml</sample-model>
+   </model>
 </wizard>
