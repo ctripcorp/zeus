@@ -1,13 +1,14 @@
 package com.ctrip.zeus.service.aop;
 
-import com.ctrip.zeus.access.AccessType;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.aop.OperationLog.OperationLogConfig;
+import com.ctrip.zeus.service.aop.OperationLog.OperationLogType;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.operationLog.OperationLogService;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.aspectj.lang.JoinPoint;
@@ -43,6 +44,9 @@ public class OperationLogAspect implements Ordered {
     private GroupRepository groupRepository;
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private OperationLogService operationLogService;
+
 
     private final static String QUERY_NAME_SLB_ID="slbId";
     private final static String QUERY_NAME_SLB_NAME="slbName";
@@ -62,49 +66,48 @@ public class OperationLogAspect implements Ordered {
         if (!enableAccess.get()){
             return point.proceed();
         }
-
-        MethodSignature signature = (MethodSignature)point.getSignature();
-        Method method = signature.getMethod();
-        String key = point.getTarget().getClass().getSimpleName()+"."+method.getName();
-
-        Object[] args = point.getArgs();
+        String type = null;
+        String id =null;
+        String op = null;
+        String userName = null;
+        String remoteAddr = null;
+        HashMap<String,String> data = new HashMap<>();
+        Object response = null;
+        String errMsg = null;
+        boolean success = false;
         HttpServletRequest request = findRequestArg(point);
         if (request==null){
             return point.proceed();
         }
-        Annotation[][] annotations = method.getParameterAnnotations();
-        HttpHeaders hh = findHttpHeaders(point);
-
-        String type = OperationLogConfig.getInstance().getType(key).value();
-        String id = findId(key,request,args,point,hh);
-        String op = method.getName();
-        String userName = request.getRemoteUser();
-        String remoteAddr = request.getRemoteAddr();
-        HashMap<String,String>data = findData(key,request,args,hh,method);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat ("yyyy-MM-dd-hh:mm:ss");
-        String date = simpleDateFormat.format(new Date());
-        Object response = null;
-        String errMsg = null;
-        boolean success = false;
-
+        MethodSignature signature = (MethodSignature)point.getSignature();
+        Method method = signature.getMethod();
+        String key = point.getTarget().getClass().getSimpleName()+"."+method.getName();
+        if (!OperationLogConfig.getInstance().contain(key)){
+            return point.proceed();
+        }
+        try {
+            Object[] args = point.getArgs();
+            Annotation[][] annotations = method.getParameterAnnotations();
+            HttpHeaders hh = findHttpHeaders(point);
+            type = OperationLogConfig.getInstance().getType(key).value();
+            id = findId(key,request,args,point,hh);
+            op = method.getName();
+            userName = request.getRemoteUser();
+            remoteAddr = request.getRemoteAddr();
+            data = findData(key,request,args,hh,method);
+        }catch (Exception e){
+            logger.warn("Operation Log Aspect Exception!"+e.getMessage());
+        }
         try{
             response = point.proceed();
         }catch (Throwable throwable){
             errMsg = throwable.getMessage();
             throw throwable;
         }finally {
-            logger.info("type:"+type);
-            logger.info("id:"+id);
-            logger.info("op:"+op);
-            logger.info("userName:"+userName);
-            logger.info("remoteAddr:"+remoteAddr);
-            logger.info("data:"+data.toString());
-            logger.info("date:"+date);
-            logger.info("errMsg:"+errMsg);
             if (response!=null){
                 success=true;
             }
-            logger.info("success:"+success);
+            operationLogService.insert(type,id,op,data.toString(),userName,remoteAddr,success,errMsg,new Date());
         }
         return response;
     }
@@ -152,7 +155,7 @@ public class OperationLogAspect implements Ordered {
                     return ID_UNKNOW;
                 }
                 // 3.2 type is AccessType.SLB , parse data to Slb object.
-                if (OperationLogConfig.getInstance().getType(key)==AccessType.SLB){
+                if (OperationLogConfig.getInstance().getType(key)== OperationLogType.SLB){
                     Slb slb = parseSlb(hh.getMediaType(),(String)args[i]);
                     if (slb == null){
                         return ID_UNKNOW;//"Slb Parse Fail";
@@ -160,7 +163,7 @@ public class OperationLogAspect implements Ordered {
                     return slb.getId()!=null?String.valueOf(slb.getId()):slb.getName();
                 }
                 // 3.3 type is AccessType.GROUP , parse data to Group object.
-                if (OperationLogConfig.getInstance().getType(key)==AccessType.GROUP){
+                if (OperationLogConfig.getInstance().getType(key)==OperationLogType.GROUP){
                     Group group = parseGroup(hh.getMediaType(),(String)args[i]);
                     if (group == null){
                         return ID_UNKNOW;//"Group Parse Fail";
@@ -194,11 +197,11 @@ public class OperationLogAspect implements Ordered {
                         }
                     }
                 }
-                if (OperationLogConfig.getInstance().getType(key)==AccessType.GROUP&&name!=null)
+                if (OperationLogConfig.getInstance().getType(key)==OperationLogType.GROUP&&name!=null)
                 {
                     Group group =groupRepository.get(name);
                     return group==null?name:String.valueOf(group.getId());
-                }else if (OperationLogConfig.getInstance().getType(key)==AccessType.SLB&&name!=null){
+                }else if (OperationLogConfig.getInstance().getType(key)==OperationLogType.SLB&&name!=null){
                     Slb slb =slbRepository.get(name);
                     return slb==null?name:String.valueOf(slb.getId());
                 }else if (name!=null){
@@ -211,12 +214,13 @@ public class OperationLogAspect implements Ordered {
     private HashMap<String,String> findData(String key , HttpServletRequest request ,Object[] args ,HttpHeaders hh,Method method) throws Exception {
         HashMap<String,String>data = new HashMap<>();
         int[] ids = OperationLogConfig.getInstance().getIds(key);
-        if (ids==null||ids.length<=0){
-            return data;
-        }
+
         Annotation[][] annotations = method.getParameterAnnotations();
         //1. request Method is Post, data should be Name and Version
         if (request.getMethod().equals("POST")){
+            if (ids==null||ids.length<=0){
+                return data;
+            }
             //1.1 in case of New
             if (ids.length>0&&(ids[0]<0||ids[0]>=args.length))
             {
@@ -224,7 +228,7 @@ public class OperationLogAspect implements Ordered {
                 if (ids.length>=2&&args[ids[1]] instanceof String)
                 {
                     String postData = (String)args[ids[1]];
-                    if (OperationLogConfig.getInstance().getType(key)==AccessType.SLB&&hh!=null){
+                    if (OperationLogConfig.getInstance().getType(key)==OperationLogType.SLB&&hh!=null){
                         Slb slb = parseSlb(hh.getMediaType(),postData);
                         if (slb==null){
                             data.put("Slb","Slb Parse Fail!");
@@ -232,7 +236,7 @@ public class OperationLogAspect implements Ordered {
                             data.put("SlbName",String.valueOf(slb.getName()));
                         }
 
-                    }else if (OperationLogConfig.getInstance().getType(key)==AccessType.GROUP&&hh!=null){
+                    }else if (OperationLogConfig.getInstance().getType(key)==OperationLogType.GROUP&&hh!=null){
                         Group group = parseGroup(hh.getMediaType(),postData);
                         if (group==null){
                             data.put("Group","Group Parse Fail!");
@@ -252,7 +256,7 @@ public class OperationLogAspect implements Ordered {
                 data.put("errMsg",ids[0]+"'st argument is not String");
                 return data;
             }
-            if (OperationLogConfig.getInstance().getType(key)==AccessType.SLB&&hh!=null){
+            if (OperationLogConfig.getInstance().getType(key)==OperationLogType.SLB&&hh!=null){
                 Slb slb = parseSlb(hh.getMediaType(),tmp);
                 if (slb==null){
                     data.put("Slb","Slb Parse Fail!");
@@ -261,7 +265,7 @@ public class OperationLogAspect implements Ordered {
                     data.put("Version",String.valueOf(slb.getVersion()));
                 }
 
-            }else if (OperationLogConfig.getInstance().getType(key)==AccessType.GROUP&&hh!=null){
+            }else if (OperationLogConfig.getInstance().getType(key)==OperationLogType.GROUP&&hh!=null){
                 Group group = parseGroup(hh.getMediaType(),tmp);
                 if (group==null){
                     data.put("Group","Group Parse Fail!");
@@ -283,7 +287,7 @@ public class OperationLogAspect implements Ordered {
                     if (tmpKey.equalsIgnoreCase(QUERY_NAME_GROUP_ID)&&args[i]!=null) {
                         if (args[i] instanceof Long) {
                             Group group = groupRepository.getById((Long)args[i]);
-                            data.put(AccessType.GROUP.value(),group!=null?group.getName():args[i].toString()+"[id not found]");
+                            data.put(OperationLogType.GROUP.value(),group!=null?group.getName():args[i].toString()+"[id not found]");
                         }
                         if (args[i] instanceof List) {
                             List list = (List)args[i];
@@ -293,13 +297,13 @@ public class OperationLogAspect implements Ordered {
                                 groupNames.add(group!=null?group.getName():groupId.toString()+"[id not found]");
                             }
                             if (groupNames.size()>0) {
-                                data.put(AccessType.GROUP.value(), groupNames.toString());
+                                data.put(OperationLogType.GROUP.value(), groupNames.toString());
                             }
                         }
                     }else if (tmpKey.equalsIgnoreCase(QUERY_NAME_SLB_ID)&&args[i]!=null) {
                         if (args[i] instanceof Long) {
                             Slb slb = slbRepository.getById((Long)args[i]);
-                            data.put(AccessType.SLB.value(),slb!=null?slb.getName():args[i].toString()+"[id not found]");
+                            data.put(OperationLogType.SLB.value(),slb!=null?slb.getName():args[i].toString()+"[id not found]");
                         }
                         if (args[i] instanceof List) {
                             List list = (List)args[i];
@@ -309,11 +313,11 @@ public class OperationLogAspect implements Ordered {
                                 slbNames.add(slb!=null?slb.getName():slbId.toString()+"[id not found]");
                             }
                             if (slbNames.size()>0){
-                                data.put(AccessType.SLB.value(),slbNames.toString());
+                                data.put(OperationLogType.SLB.value(),slbNames.toString());
                             }
                         }
                     }else if (args[i]!=null){
-                        if (args[i] instanceof List&&((List)args[i]).size()>0||args[i] instanceof Long){
+                        if (args[i] instanceof List&&((List)args[i]).size()>0||args[i] instanceof Long || args[i] instanceof String){
                             data.put(tmpKey,args[i].toString());
                         }
                     }

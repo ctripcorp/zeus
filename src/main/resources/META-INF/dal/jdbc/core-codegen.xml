@@ -908,6 +908,51 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="operation-log" table="operation_log" alias="ol">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="type" field="type" value-type="String" length="128" nullable="false" />
+    <member name="target-id" field="target_id" value-type="String" length="128" nullable="false" />
+    <member name="operation" field="operation" value-type="String" length="128" nullable="false" />
+    <member name="data" field="data" value-type="String" length="10240" />
+    <member name="user-name" field="user_name" value-type="String" length="128" />
+    <member name="client-ip" field="client_ip" value-type="String" length="128" />
+    <member name="success" field="success" value-type="boolean" nullable="false" />
+    <member name="err-msg" field="err_msg" value-type="String" length="1024" />
+    <member name="datetime" field="datetime" value-type="Date" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="report" table="report" alias="r">
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" key="true" />
     <member name="status" field="status" value-type="int" length="10" nullable="false" />
