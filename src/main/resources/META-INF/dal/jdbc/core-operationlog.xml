@@ -65,6 +65,15 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-before-datetime" type="DELETE">
+                <param name="datetime"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='datetime'/> < ${datetime}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
 </entities>

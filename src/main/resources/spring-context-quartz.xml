@@ -24,16 +24,36 @@
         <property name="startDelay" value="1000"/>
         <property name="repeatInterval" value="60000"/>
     </bean>
+
+    <bean id="operationLogCleanDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.ctrip.zeus.service.operationLog.OperationLogCleanJob"/>
+        <property name="jobDataMap">
+            <map>
+                <entry key="operationLogDao" value-ref="operationLogDao" />
+            </map>
+        </property>
+        <property name="durability" value="true"/>
+    </bean>
+
+    <!-- Run the job every 1h = 60*60*1000=3600000 ms with initial delay of 1 second -->
+    <bean id="operationLogCleanTrigger"  class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="operationLogCleanDetail"/>
+        <property name="startDelay" value="1000"/>
+        <property name="repeatInterval" value="3600000"/>
+    </bean>
+
     <!-- Scheduler factory bean to glue together jobDetails and triggers to Configure Quartz Scheduler -->
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="jobDetails">
             <list>
                 <ref bean="nginxStatusFetcherDetail"/>
+                <ref bean="operationLogCleanDetail"/>
             </list>
         </property>
         <property name="triggers">
             <list>
                 <ref bean="nginxStatusFetcherTrigger"/>
+                <ref bean="operationLogCleanTrigger"/>
             </list>
         </property>
     </bean>

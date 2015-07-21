@@ -917,7 +917,7 @@
     <member name="user-name" field="user_name" value-type="String" length="128" />
     <member name="client-ip" field="client_ip" value-type="String" length="128" />
     <member name="success" field="success" value-type="boolean" nullable="false" />
-    <member name="err-msg" field="err_msg" value-type="String" length="1024" />
+    <member name="err-msg" field="err_msg" value-type="String" length="2048" />
     <member name="datetime" field="datetime" value-type="Date" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />

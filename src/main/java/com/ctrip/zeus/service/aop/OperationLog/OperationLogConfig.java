@@ -1,7 +1,13 @@
 package com.ctrip.zeus.service.aop.OperationLog;
 
 
+import com.netflix.config.DynamicPropertyFactory;
+import com.netflix.config.DynamicStringProperty;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by fanqq on 2015/7/16.
@@ -10,6 +16,9 @@ public class OperationLogConfig {
 
     private static HashMap<String,OpConf> config = new HashMap<>();
     private static OperationLogConfig logConfig = new OperationLogConfig();
+    private static DynamicStringProperty disableList = DynamicPropertyFactory.getInstance().getStringProperty("operation.log.disable.list", "");
+    private static volatile List<String> disable = new ArrayList<>();
+
 
     private OperationLogConfig() {
        loadConfig();
@@ -40,6 +49,18 @@ public class OperationLogConfig {
 
         config.put("StatusResource.allGroupStatusInSlb",new OpConf(OperationLogType.SLB,new int[]{2,3}));
 //        config.put("StatusResource.groupStatus",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
+
+        disableList.addCallback(new Runnable() {
+            @Override
+            public void run() {
+                List<String> tmp = new ArrayList<>();
+                String[] list = disableList.get().split(";");
+                if (list.length>0){
+                    tmp = Arrays.asList(list);
+                }
+                disable = tmp;
+            }
+        });
     }
 
     public static OperationLogConfig getInstance(){return logConfig;}
@@ -65,6 +86,10 @@ public class OperationLogConfig {
         return false;
     }
     public boolean contain(String key){
+        if (disable.contains(key))
+        {
+            return false;
+        }
         if (config.get(key)==null){
             return false;
         }
