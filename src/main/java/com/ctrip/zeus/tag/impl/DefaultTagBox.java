@@ -34,7 +34,7 @@ public class DefaultTagBox implements TagBox {
         if (d == null)
             return;
         tagDao.delete(d);
-        tagItemDao.delete(new TagItemDo().setTagId(d.getId()));
+        tagItemDao.deleteTag(new TagItemDo().setTagId(d.getId()));
     }
 
     @Override
@@ -49,7 +49,7 @@ public class DefaultTagBox implements TagBox {
     public void tagging(String tagName, String type, Long itemId) throws Exception {
         TagDo d = tagDao.findByName(tagName, TagEntity.READSET_FULL);
         if (d == null) {
-            d = new TagDo().setName(type);
+            d = new TagDo().setName(tagName);
             tagDao.insert(d);
         }
         tagItemDao.insert(new TagItemDo().setTagId(d.getId()).setType(type).setItemId(itemId));
@@ -61,6 +61,12 @@ public class DefaultTagBox implements TagBox {
         if (d == null) {
             throw new ValidationException("Tag named " + tagName + "is not found.");
         }
-        tagItemDao.delete(new TagItemDo().setTagId(d.getId()).setType(type).setItemId(itemId));
+        TagItemDo tid = new TagItemDo().setTagId(d.getId()).setType(type);
+        if (itemId != null) {
+            tid.setItemId(itemId);
+            tagItemDao.deleteTagItem(tid);
+        } else {
+            tagItemDao.deleteTagType(tid);
+        }
     }
 }

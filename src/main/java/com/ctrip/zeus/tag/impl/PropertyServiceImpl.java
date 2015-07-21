@@ -2,6 +2,7 @@ package com.ctrip.zeus.tag.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.tag.PropertyService;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.Map;
 /**
  * Created by zhoumy on 2015/7/21.
  */
+@Component("propertyService")
 public class PropertyServiceImpl implements PropertyService {
     @Resource
     private PropertyKeyDao propertyKeyDao;

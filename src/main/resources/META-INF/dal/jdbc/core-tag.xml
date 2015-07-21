@@ -92,7 +92,16 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete" type="DELETE">
+            <query name="delete-tag" type="DELETE">
+                <param name="tag-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='tag-id'/> = ${tag-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-tag-item" type="DELETE">
                 <param name="tag-id"/>
                 <param name="type"/>
                 <param name="item-id"/>
@@ -100,12 +109,19 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='tag-id'/> = ${tag-id}
-                    <IF type='NOT_NULL' field='type'>
-                      AND <FIELD name='type/> = ${type}
-					</IF>
-					<IF type='NOT_NULL' field='item-id'>
-                      AND <FIELD name='item-id/> = ${item-id}
-					</IF>
+                      AND <FIELD name='type'/> = ${type}
+                      AND <FIELD name='item-id'/> = ${item-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-tag-type" type="DELETE">
+                <param name="tag-id"/>
+                <param name="type"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='tag-id'/> = ${tag-id}
+                      AND <FIELD name='type'/> = ${type}
                     ]]>
                 </statement>
             </query>

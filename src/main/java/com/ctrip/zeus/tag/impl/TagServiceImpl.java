@@ -2,6 +2,7 @@ package com.ctrip.zeus.tag.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.tag.TagService;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 /**
  * Created by zhoumy on 2015/7/20.
  */
+@Component("tagService")
 public class TagServiceImpl implements TagService {
     @Resource
     private TagDao tagDao;

@@ -421,27 +421,6 @@ CREATE TABLE IF NOT EXISTS `nginx_server` (
 /*!40000 ALTER TABLE `nginx_server` ENABLE KEYS */;
 
 
--- Dumping structure for table operation_log
-DROP TABLE IF EXISTS `operation_log`;
-CREATE TABLE IF NOT EXISTS `operation_log` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
-  `type` varchar(128) NOT NULL DEFAULT 'Unknown' COMMENT 'type',
-  `target_id` varchar(128) NOT NULL DEFAULT '0' COMMENT 'target id',
-  `operation` varchar(128) NOT NULL DEFAULT 'Unknown' COMMENT 'operation',
-  `data` varchar(10240) DEFAULT NULL COMMENT 'data',
-  `user_name` varchar(128) DEFAULT NULL COMMENT 'user name',
-  `client_ip` varchar(128) DEFAULT NULL COMMENT 'client ip',
-  `success` bit(1) NOT NULL DEFAULT b'0' COMMENT 'success',
-  `err_msg` varchar(2048) DEFAULT NULL COMMENT 'err msg',
-  `datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'datetime',
-  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
-  PRIMARY KEY (`id`),
-  KEY `DataChange_LastTime` (`DataChange_LastTime`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='operation log';
-
--- Data exporting was unselected.
-
-
 -- Dumping structure for table property
 DROP TABLE IF EXISTS `property`;
 CREATE TABLE IF NOT EXISTS `property` (
@@ -655,7 +634,7 @@ CREATE TABLE IF NOT EXISTS `report` (
 -- Dumping structure for table tag
 DROP TABLE IF EXISTS `tag`;
 CREATE TABLE IF NOT EXISTS `tag` (
-  `id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'primary',
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'primary',
   `name` varchar(255) NOT NULL DEFAULT '0' COMMENT 'tag name',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),

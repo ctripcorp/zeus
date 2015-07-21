@@ -1000,6 +1000,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="property_id_item_id_type" unique="true" members="property_id ASC, item_id ASC, type ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
@@ -1037,6 +1038,8 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="name" unique="true" members="name ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1439,7 +1442,7 @@
     </query-defs>
   </entity>
   <entity name="tag" table="tag" alias="t">
-    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" />
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="name" field="name" value-type="String" length="255" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
@@ -1484,6 +1487,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="tag_id_item_id_type" unique="true" members="tag_id ASC, item_id ASC, type ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
