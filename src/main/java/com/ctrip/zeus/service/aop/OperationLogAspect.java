@@ -320,7 +320,7 @@ public class OperationLogAspect implements Ordered {
                             }
                         }
                     }else if (args[i]!=null){
-                        if (args[i] instanceof List&&((List)args[i]).size()>0||args[i] instanceof Long || args[i] instanceof String){
+                        if (args[i] instanceof List&&((List)args[i]).size()>0||!(args[i] instanceof List)){
                             data.put(tmpKey,args[i].toString());
                         }
                     }
