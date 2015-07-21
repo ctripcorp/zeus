@@ -16,8 +16,8 @@ public class OperationLogConfig {
 
     private static HashMap<String,OpConf> config = new HashMap<>();
     private static OperationLogConfig logConfig = new OperationLogConfig();
-    private static DynamicStringProperty disableList = DynamicPropertyFactory.getInstance().getStringProperty("operation.log.disable.list", "");
-    private static volatile List<String> disable = new ArrayList<>();
+    private DynamicStringProperty disableList = DynamicPropertyFactory.getInstance().getStringProperty("operation.log.disable.list", "");
+    private volatile List<String> disable = new ArrayList<>();
 
 
     private OperationLogConfig() {
