@@ -107,6 +107,9 @@ public class OperationLogAspect implements Ordered {
             if (response!=null){
                 success=true;
             }
+            if (userName == null){
+                userName = "Unknown";
+            }
             operationLogService.insert(type,id,op,data.toString(),userName,remoteAddr,success,errMsg,new Date());
         }
         return response;
