@@ -39,7 +39,7 @@ public class OperationLogConfig {
         config.put("ServerResource.downMember",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
 
         config.put("StatusResource.allGroupStatusInSlb",new OpConf(OperationLogType.SLB,new int[]{2,3}));
-        config.put("StatusResource.groupStatus",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
+//        config.put("StatusResource.groupStatus",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
     }
 
     public static OperationLogConfig getInstance(){return logConfig;}

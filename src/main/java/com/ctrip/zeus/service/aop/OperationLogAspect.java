@@ -62,7 +62,7 @@ public class OperationLogAspect implements Ordered {
     private DynamicBooleanProperty enableAccess = DynamicPropertyFactory.getInstance().getBooleanProperty("log.access.enable", true);
 
     @Around("execution(* com.ctrip.zeus.restful.resource.*Resource.*(..))")
-    public Object interceptException(ProceedingJoinPoint point) throws Throwable {
+    public Object operationLog(ProceedingJoinPoint point) throws Throwable {
         if (!enableAccess.get()){
             return point.proceed();
         }
