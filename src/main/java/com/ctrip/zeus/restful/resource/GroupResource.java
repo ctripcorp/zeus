@@ -12,6 +12,8 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.tag.PropertyService;
+import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +24,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -38,6 +42,10 @@ public class GroupResource {
     private ResponseHandler responseHandler;
     @Resource
     private DbLockFactory dbLockFactory;
+    @Resource
+    private TagService tagService;
+    @Resource
+    private PropertyService propertyService;
 
     @GET
     @Path("/groups")
@@ -47,11 +55,29 @@ public class GroupResource {
                          @Context HttpServletRequest request,
                          @QueryParam("slbId") Long slbId,
                          @QueryParam("slbName") String slbName,
-                         @QueryParam("type") String type) throws Exception {
+                         @QueryParam("type") String type,
+                         @QueryParam("tag") String tag,
+                         @QueryParam("pname") String pname,
+                         @QueryParam("pvalue") String pvalue) throws Exception {
         GroupList groupList = new GroupList();
+        Set<Long> filtered = new HashSet<>();
+        boolean noFilter = true;
+        if (tag != null) {
+            noFilter = false;
+            filtered.addAll(tagService.query(tag, "group"));
+        }
+        if (pname != null) {
+            noFilter = false;
+            if (pvalue != null)
+                filtered.addAll(propertyService.query(pname, pvalue, "group"));
+            else
+                filtered.addAll(propertyService.query(pname, "group"));
+        }
+
         if (slbId == null && slbName == null) {
             for (Group group : groupRepository.list()) {
-                groupList.addGroup(getGroupByType(group, type));
+                if (noFilter || filtered.contains(group.getId()))
+                    groupList.addGroup(getGroupByType(group, type));
             }
         } else {
             if (slbId == null) {
@@ -60,7 +86,8 @@ public class GroupResource {
                 slbId = slbRepository.get(slbName).getId();
             }
             for (Group group : groupRepository.list(slbId)) {
-                groupList.addGroup(getGroupByType(group, type));
+                if (noFilter || filtered.contains(group.getId()))
+                    groupList.addGroup(getGroupByType(group, type));
             }
         }
         groupList.setTotal(groupList.getGroups().size());
