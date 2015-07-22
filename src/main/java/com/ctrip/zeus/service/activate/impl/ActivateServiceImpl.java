@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -111,6 +112,23 @@ public class ActivateServiceImpl implements ActivateService {
             return false;
         }else {
             return true;
+        }
+    }
+    @Override
+    public HashMap<Long,Boolean> isGroupsActivated(Long[] groupIds) throws Exception {
+        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIds(groupIds,ConfGroupActiveEntity.READSET_FULL);
+        HashMap<Long,Boolean> result = new HashMap<>();
+        for (Long groupId : groupIds){
+            result.put(groupId,false);
+        }
+        if (null == groupActiveDos || groupActiveDos.size() == 0)
+        {
+            return result;
+        }else {
+            for (ConfGroupActiveDo groupActiveDo : groupActiveDos){
+                result.put(groupActiveDo.getGroupId(),true);
+            }
+            return result;
         }
     }
 }

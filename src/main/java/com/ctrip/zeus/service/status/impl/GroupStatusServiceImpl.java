@@ -19,7 +19,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -88,20 +90,23 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         GroupStatus status = null;
         Slb slb = slbRepository.getById(slbId);
         AssertUtils.assertNotNull(slb, "slb Id not found!");
-        for (Long groupId : groupIds)
+        List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
+        HashMap<Long,Boolean> isActivated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}));
+        Set<String> allUpGroupServerInSlb = statusService.findAllUpGroupServersBySlbId(slbId);
+        Set<String> allDownServers = statusService.findAllDownServers();
+        for (Group group : groups)
         {
-            Group group = groupRepository.getById(groupId);
-            AssertUtils.assertNotNull(group, "group Id not found!");
+            Long groupId = group.getId();
 
             status = new GroupStatus();
             status.setGroupId(groupId);
             status.setSlbId(slbId);
             status.setGroupName(group.getName());
             status.setSlbName(slb.getName());
-            status.setActivated(activateService.isGroupActivated(groupId));
-            List<GroupServer> groupServerList = groupRepository.listGroupServersByGroup(groupId);
+            status.setActivated(isActivated.get(groupId));
+            List<GroupServer> groupServerList = group.getGroupServers();//groupRepository.listGroupServersByGroup(groupId);
             for (GroupServer groupServer : groupServerList) {
-                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, groupServer.getIp(), groupServer.getPort());
+                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, groupServer.getIp(), groupServer.getPort(),allDownServers,allUpGroupServerInSlb,group);
                 status.addGroupServerStatus(serverStatus);
             }
             res.addGroupStatus(status);
@@ -134,15 +139,16 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
 
     @Override
-    public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port) throws Exception {
+    public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allUpGroupServerInSlb,Group group) throws Exception {
 
         GroupServerStatus groupServerStatus = new GroupServerStatus();
         groupServerStatus.setIp(ip);
         groupServerStatus.setPort(port);
+        StringBuilder sb = new StringBuilder(64);
+        sb.append(slbId).append("_").append(group.getGroupSlbs().get(0).getVirtualServer().getId()).append("_").append(groupId).append("_").append(ip);
 
-
-        boolean memberUp = statusService.getGroupServerStatus(slbId, groupId, ip);
-        boolean serverUp = statusService.getServerStatus(ip);
+        boolean memberUp = allUpGroupServerInSlb.contains(sb.toString());
+        boolean serverUp = !allDownServers.contains(ip);
         boolean backendUp = getUpstreamStatus(groupId,ip,memberUp,serverUp);
 
         groupServerStatus.setServer(serverUp);
@@ -156,7 +162,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     private boolean getUpstreamStatus(Long groupId, String ip , boolean memberUp , boolean serverUp) throws Exception {
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
-        String upstreamNameEndWith = "_"+groupRepository.getById(groupId).getId();
+        String upstreamNameEndWith = "_"+groupId;
         for (S server : servers) {
             if (!server.getUpstream().endsWith(upstreamNameEndWith))
             {

@@ -37,12 +37,6 @@ public class StatusClient extends AbstractRestClient {
         return cache.get(url);
     }
 
-    public GroupServerStatus getGroupServerStatus(Long groupId , Long slbId , String sip)throws Exception
-    {
-        String responseStr = getTarget().path("/api/status/group/"+groupId+"/slb/"+slbId+"/server/"+sip)
-                .request().headers(getDefaultHeaders()).get(String.class);
-        return DefaultJsonParser.parse(GroupServerStatus.class, responseStr);
-    }
 
     public GroupStatusList getGroupStatus(List<Long> groupIds , Long slbId)throws Exception
     {

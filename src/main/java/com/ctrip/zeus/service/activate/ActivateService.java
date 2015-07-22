@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.activate;
 
 import com.ctrip.zeus.service.Repository;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -49,5 +50,7 @@ public interface ActivateService extends Repository {
      * @throws Exception
      */
     public boolean isGroupActivated(Long groupId) throws  Exception;
+
+    public HashMap<Long,Boolean> isGroupsActivated(Long[] groupIds) throws Exception;
 
 }

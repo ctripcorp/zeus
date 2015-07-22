@@ -111,41 +111,6 @@ public class StatusResource {
     }
 
     @GET
-    @Path("/group/{groupId:[0-9]+}/slb/{slbId:[0-9]+}/server/{sip}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response groupServerStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
-                                      @PathParam("groupId") Long groupId,
-                                      @PathParam("slbId") Long slbId,
-                                      @PathParam("sip") String sip) throws Exception {
-        String[] ipPort = sip.split(":");
-        if (ipPort.length != 2) {
-            throw new IllegalArgumentException("server should be ip:port format");
-        }
-        GroupServerStatus groupServerStatus = groupStatusService.getGroupServerStatus(groupId, slbId, ipPort[0], Integer.valueOf(ipPort[1]));
-        return responseHandler.handle(groupServerStatus, hh.getMediaType());
-    }
-
-    @GET
-    @Path("/groupName/{groupName:[a-zA-Z0-9_-]+}/slbName/{slbName:[a-zA-Z0-9_-]+}/server/{sip}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response groupServerStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
-                                      @PathParam("groupName") String groupName,
-                                      @PathParam("slbName") String slbName,
-                                      @PathParam("sip") String sip) throws Exception {
-        Long groupId = groupRepository.get(groupName).getId();
-        Long slbId = slbRepository.get(slbName).getId();
-        String[] ipPort = sip.split(":");
-        if (ipPort.length != 2) {
-            throw new IllegalArgumentException("server should be ip:port format");
-        }
-        GroupServerStatus groupServerStatus = groupStatusService.getGroupServerStatus(groupId, slbId, ipPort[0], Integer.valueOf(ipPort[1]));
-        return responseHandler.handle(groupServerStatus, hh.getMediaType());
-    }
-
-
-    @GET
     @Path("/groupStatus")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)

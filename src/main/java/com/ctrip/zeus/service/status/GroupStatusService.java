@@ -1,10 +1,12 @@
 package com.ctrip.zeus.service.status;
 
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServerStatus;
 import com.ctrip.zeus.model.entity.GroupStatus;
 import com.ctrip.zeus.model.entity.GroupStatusList;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: mag
@@ -35,5 +37,6 @@ public interface GroupStatusService {
 
      GroupStatusList getLocalGroupStatus(List<Long> groupId , Long slbId) throws Exception;
 
-     GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port) throws Exception;
-}
+     GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allUpGroupServerInSlb,Group group) throws Exception;
+
+    }
