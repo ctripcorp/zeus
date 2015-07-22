@@ -276,6 +276,7 @@
                         ${basedir}/src/main/resources/META-INF/dal/model/auth-manifest.xml,
                         ${basedir}/src/main/resources/META-INF/dal/model/report-manifest.xml,
                         ${basedir}/src/main/resources/META-INF/dal/model/operationlog-manifest.xml,
+                        ${basedir}/src/main/resources/META-INF/dal/model/tag-manifest.xml,
                      ]]></manifest>
                         </configuration>
                     </execution>

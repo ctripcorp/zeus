@@ -421,6 +421,51 @@ CREATE TABLE IF NOT EXISTS `nginx_server` (
 /*!40000 ALTER TABLE `nginx_server` ENABLE KEYS */;
 
 
+-- Dumping structure for table property
+DROP TABLE IF EXISTS `property`;
+CREATE TABLE IF NOT EXISTS `property` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `property_key_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'property name ref id',
+  `property_value` varchar(255) NOT NULL DEFAULT '0' COMMENT 'property value',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `property_name_property_value` (`property_key_id`,`property_value`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='property table';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table property_item
+DROP TABLE IF EXISTS `property_item`;
+CREATE TABLE IF NOT EXISTS `property_item` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `property_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'property ref id',
+  `item_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'item id',
+  `type` varchar(255) NOT NULL DEFAULT '0' COMMENT 'item type',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `property_id_item_id_type` (`property_id`,`item_id`,`type`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table property_key
+DROP TABLE IF EXISTS `property_key`;
+CREATE TABLE IF NOT EXISTS `property_key` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `name` varchar(255) NOT NULL DEFAULT '0' COMMENT 'name',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table server
 DROP TABLE IF EXISTS `server`;
 CREATE TABLE IF NOT EXISTS `server` (
@@ -571,18 +616,47 @@ CREATE TABLE IF NOT EXISTS `status_server` (
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 
 -- Dumping structure for table report
-CREATE TABLE `report` (
-	`group_id` BIGINT(20) NOT NULL DEFAULT '0' COMMENT 'group primary key',
-	`status` INT(11) NOT NULL DEFAULT '0' COMMENT 'status',
-	`description` VARCHAR(255) NOT NULL DEFAULT '0' COMMENT 'status description',
-	`reported_version` INT(11) NOT NULL DEFAULT '0' COMMENT 'the version reported',
-	`current_version` INT(11) NOT NULL DEFAULT '0' COMMENT 'the version to report',
-	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'data changed timestamp',
-	PRIMARY KEY (`group_id`),
-	INDEX `DataChange_LastTime` (`DataChange_LastTime`)
-)
-COMMENT='store report data'
-ENGINE=InnoDB DEFAULT CHARSET=utf8;
+DROP TABLE IF EXISTS `report`;
+CREATE TABLE IF NOT EXISTS `report` (
+  `group_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'group primary key',
+  `status` int(11) NOT NULL DEFAULT '0' COMMENT 'status',
+  `description` varchar(255) NOT NULL DEFAULT '0' COMMENT 'status description',
+  `reported_version` int(11) NOT NULL DEFAULT '0' COMMENT 'the version reported',
+  `current_version` int(11) NOT NULL DEFAULT '0' COMMENT 'the version to report',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'data changed timestamp',
+  PRIMARY KEY (`group_id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='store report data';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table tag
+DROP TABLE IF EXISTS `tag`;
+CREATE TABLE IF NOT EXISTS `tag` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'primary',
+  `name` varchar(255) NOT NULL DEFAULT '0' COMMENT 'tag name',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='tag def table';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table tag_item
+DROP TABLE IF EXISTS `tag_item`;
+CREATE TABLE IF NOT EXISTS `tag_item` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary',
+  `tag_id` bigint(20) NOT NULL COMMENT 'tag def id',
+  `item_id` bigint(20) NOT NULL COMMENT 'item ref id',
+  `type` varchar(255) NOT NULL DEFAULT 'Undefined' COMMENT 'item type',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tag_id_item_id_type` (`tag_id`,`item_id`,`type`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='tag item mapping';
 
 -- Data exporting was unselected.
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

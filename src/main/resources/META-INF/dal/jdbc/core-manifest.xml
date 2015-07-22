@@ -10,5 +10,6 @@
     <file path="core-auth.xml"/>
     <file path="core-report.xml"/>
     <file path="core-operationlog.xml"/>
+    <file path="core-tag.xml"/>
 </manifest>
 

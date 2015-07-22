@@ -9,6 +9,8 @@ import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.tag.PropertyService;
+import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +21,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -33,16 +37,39 @@ public class SlbResource {
     private ResponseHandler responseHandler;
     @Resource
     private DbLockFactory dbLockFactory;
+    @Resource
+    private TagService tagService;
+    @Resource
+    private PropertyService propertyService;
 
     @GET
     @Path("/slbs")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getAllSlbs")
-    public Response list(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                         @QueryParam("type") String type) throws Exception {
+    public Response list(@Context HttpHeaders hh,
+                         @Context HttpServletRequest request,
+                         @QueryParam("type") String type,
+                         @QueryParam("tag") String tag,
+                         @QueryParam("pname") String pname,
+                         @QueryParam("pvalue") String pvalue) throws Exception {
         SlbList slbList = new SlbList();
+        boolean noFilter = true;
+        Set<Long> filtered = new HashSet<>();
+        if (tag != null) {
+            noFilter = false;
+            filtered.addAll(tagService.query(tag, "slb"));
+        }
+        if (pname != null) {
+            noFilter = false;
+            if (pvalue != null)
+                filtered.addAll(propertyService.query(pname, pvalue, "slb"));
+            else
+                filtered.addAll(propertyService.query(pname, "slb"));
+        }
+
         for (Slb slb : slbRepository.list()) {
-            slbList.addSlb(getSlbByType(slb, type));
+            if (noFilter || filtered.contains(slb.getId()))
+                slbList.addSlb(getSlbByType(slb, type));
         }
         slbList.setTotal(slbList.getSlbs().size());
         return responseHandler.handle(slbList, hh.getMediaType());
@@ -69,7 +96,7 @@ public class SlbResource {
         AssertUtils.assertNotNull(slb, "Slb cannot be found.");
         return responseHandler.handle(getSlbByType(slb, type), hh.getMediaType());
     }
-    
+
     @POST
     @Path("/slb/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
