@@ -48,7 +48,7 @@ public class PropertyServiceImpl implements PropertyService {
             return result;
         Long[] pids = new Long[l.size()];
         for (int i = 0; i < l.size(); i++) {
-            pids[i] = l.get(i).getPropertyKeyId();
+            pids[i] = l.get(i).getId();
         }
         for (PropertyItemDo propertyItemDo : propertyItemDao.findAllByPropertiesAndType(pids, type, PropertyItemEntity.READSET_FULL)) {
             result.add(propertyItemDo.getItemId());
@@ -63,7 +63,7 @@ public class PropertyServiceImpl implements PropertyService {
         List<String> result = new ArrayList<>();
         if (list.size() == 0)
             return result;
-        Long[] pids = new Long[result.size()];
+        Long[] pids = new Long[list.size()];
         for (int i = 0; i < list.size(); i++) {
             pids[i] = list.get(i).getPropertyId();
         }

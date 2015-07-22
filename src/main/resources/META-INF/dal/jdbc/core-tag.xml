@@ -146,7 +146,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='property-key-id/> = ${property-key-id}
+                    WHERE <FIELD name='property-key-id'/> = ${property-key-id}
                     ]]>
                 </statement>
             </query>
@@ -157,8 +157,8 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='property-key-id/> = ${property-key-id}
-                      AND <FIELD name='property-value/> = ${property-value}
+                    WHERE <FIELD name='property-key-id'/> = ${property-key-id}
+                      AND <FIELD name='property-value'/> = ${property-value}
                     ]]>
                 </statement>
             </query>
@@ -235,7 +235,7 @@
             </query>
         </query-defs>
     </entity>
-    <entity name="property-item" table="tag_item" alias="ti" do-class="PropertyItemDo">
+    <entity name="property-item" table="property_item" alias="pi" do-class="PropertyItemDo">
         <var name="pids" value-type="Long[]"/>
         <query-defs>
             <query name="find-all-by-property-and-type" type="SELECT" multiple="true">
@@ -246,7 +246,7 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='property-id'/> = ${property-id}
-                      AND <FIELD name='type/> = ${type}
+                      AND <FIELD name='type'/> = ${type}
                     ]]>
                 </statement>
             </query>
@@ -258,7 +258,7 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='property-id'/> in <IN>${pids}</IN>
-                      AND <FIELD name='type/> = ${type}
+                      AND <FIELD name='type'/> = ${type}
                     ]]>
                 </statement>
             </query>
@@ -270,7 +270,7 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='item-id'/> = ${item-id}
-                      AND <FIELD name='type/> = ${type}
+                      AND <FIELD name='type'/> = ${type}
                     ]]>
                 </statement>
             </query>

@@ -229,7 +229,7 @@
 			<role-hint>property-item</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
-				<physical-table-name>tag_item</physical-table-name>
+				<physical-table-name>property_item</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>

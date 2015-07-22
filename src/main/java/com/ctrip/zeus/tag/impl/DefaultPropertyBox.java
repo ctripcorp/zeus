@@ -36,16 +36,6 @@ public class DefaultPropertyBox implements PropertyBox {
     }
 
     @Override
-    public void addProperty(String pname, String pvalue) throws Exception {
-        PropertyKeyDo d = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
-        if (d == null) {
-            d = new PropertyKeyDo().setName(pname);
-            propertyKeyDao.insert(d);
-        }
-        propertyDao.insert(new PropertyDo().setPropertyKeyId(d.getId()).setPropertyValue(pvalue));
-    }
-
-    @Override
     public void removeProperty(String pname) throws Exception {
         PropertyKeyDo d = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
         List<PropertyDo> list = propertyDao.findAllByKey(d.getId(), PropertyEntity.READSET_FULL);
@@ -77,8 +67,8 @@ public class DefaultPropertyBox implements PropertyBox {
             List<PropertyDo> list = propertyDao.findAllByKey(kd.getId(), PropertyEntity.READSET_FULL);
             if (list.size() > 1)
                 throw new ValidationException("More than one property value is attached to " + oldName + ". Cannot update.");
-        } else {
-            propertyKeyDao.update(kd.setName(newName), PropertyKeyEntity.UPDATESET_FULL);
+            else
+                propertyKeyDao.update(kd.setName(newName), PropertyKeyEntity.UPDATESET_FULL);
         }
         PropertyDo d = propertyDao.findByKeyAndValue(kd.getId(), oldValue, PropertyEntity.READSET_FULL);
         if (d == null)

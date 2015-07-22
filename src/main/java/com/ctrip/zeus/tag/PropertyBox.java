@@ -11,8 +11,6 @@ public interface PropertyBox {
     
     List<Property> getAllProperties() throws Exception;
 
-    void addProperty(String pname, String pvalue) throws Exception;
-
     void removeProperty(String pname) throws Exception;
 
     void renameProperty(String oldName, String newName) throws Exception;
