@@ -1,13 +1,17 @@
 <tag-model>
     <tag-list>
         <total>3</total>
-        <tag>ttt</tag>
-        <tag>sss</tag>
+        <tags>
+            <tag>ttt</tag>
+            <tag>sss</tag>
+        </tags>
     </tag-list>
     <property-list>
         <total>3</total>
-        <property/>
-        <property/>
+        <properties>
+            <property/>
+            <property/>
+        </properties>
     </property-list>
     <property>
         <name>abc</name>
