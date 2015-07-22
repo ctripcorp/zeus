@@ -89,8 +89,9 @@ public class PropertyTest extends AbstractSpringTest {
         propertyBox.add("department", "qiche", "client", 3L);
         propertyBox.add("department", "gonglue", "client", 6L);
 
-        List<String> l = propertyService.getProperties("client", 1L);
-        Assert.assertEquals(3, l.size());
+        List<Property> l = propertyService.getProperties("client", 1L);
+        Assert.assertEquals(1, l.size());
+        Assert.assertEquals(3, l.get(0).getValues().size());
 
         propertyBox.removeProperty("department");
     }

@@ -3,8 +3,10 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.tag.PropertyBox;
+import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.entity.Property;
 import com.ctrip.zeus.tag.entity.PropertyList;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -21,17 +23,29 @@ import java.util.List;
 /**
  * Created by zhoumy on 2015/7/20.
  */
+@Component
+@Path("/")
 public class PropertyResource {
     @Resource
     private PropertyBox propertyBox;
+    @Resource
+    private PropertyService propertyService;
     @Resource
     private ResponseHandler responseHandler;
 
     @GET
     @Path("/properties")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response listProperties(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
-        List<Property> list = propertyBox.getAllProperties();
+    public Response listProperties(@Context HttpHeaders hh,
+                                   @Context HttpServletRequest request,
+                                   @QueryParam("type") String type,
+                                   @QueryParam("id") Long id) throws Exception {
+        List<Property> list;
+        if (type != null && id != null) {
+            list = propertyService.getProperties(type, id);
+        } else {
+            list = propertyBox.getAllProperties();
+        }
         PropertyList propertyList = new PropertyList().setTotal(list.size());
         for (Property property : list) {
             propertyList.addProperty(property);

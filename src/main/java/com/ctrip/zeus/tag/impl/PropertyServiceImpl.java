@@ -2,6 +2,7 @@ package com.ctrip.zeus.tag.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.tag.PropertyService;
+import com.ctrip.zeus.tag.entity.Property;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -57,12 +58,11 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public List<String> getProperties(String type, Long itemId) throws Exception {
+    public List<Property> getProperties(String type, Long itemId) throws Exception {
         // get all propertyIds from item table
         List<PropertyItemDo> list = propertyItemDao.findAllByItemAndType(itemId, type, PropertyItemEntity.READSET_FULL);
-        List<String> result = new ArrayList<>();
         if (list.size() == 0)
-            return result;
+            return new ArrayList<>();
         Long[] pids = new Long[list.size()];
         for (int i = 0; i < list.size(); i++) {
             pids[i] = list.get(i).getPropertyId();
@@ -71,25 +71,25 @@ public class PropertyServiceImpl implements PropertyService {
         // get all properties from property table, and store keyIds
         List<PropertyDo> pref = propertyDao.findAllByIds(pids, PropertyEntity.READSET_FULL);
         if (pref.size() == 0)
-            return result;
-        Map<Long, String> pkeys = new HashMap<>();
+            return new ArrayList<>();
+        Map<Long, Property> result = new HashMap<>();
         for (PropertyDo propertyDo : pref) {
-            pkeys.put(propertyDo.getPropertyKeyId(), "");
+            result.put(propertyDo.getPropertyKeyId(), new Property());
         }
         // fetch key info from property key table
-        Long[] pkids = new Long[pkeys.keySet().size()];
+        Long[] pkids = new Long[result.keySet().size()];
         int i = 0;
-        for (Long pkid : pkeys.keySet()) {
+        for (Long pkid : result.keySet()) {
             pkids[i++] = pkid;
         }
         for (PropertyKeyDo propertyKeyDo : propertyKeyDao.findAllByIds(pkids, PropertyKeyEntity.READSET_FULL)) {
-            pkeys.put(propertyKeyDo.getId(), propertyKeyDo.getName());
+            result.get(propertyKeyDo.getId()).setName(propertyKeyDo.getName());
         }
 
         // combine key value
         for (PropertyDo propertyDo : pref) {
-            result.add("(" + pkeys.get(propertyDo.getPropertyKeyId()) + ", " + propertyDo.getPropertyValue() + ")");
+            result.get(propertyDo.getPropertyKeyId()).addValue(propertyDo.getPropertyValue());
         }
-        return result;
+        return new ArrayList<>(result.values());
     }
 }

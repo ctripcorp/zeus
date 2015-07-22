@@ -3,6 +3,7 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.tag.TagBox;
+import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.tag.entity.TagList;
 import org.springframework.stereotype.Component;
 
@@ -27,13 +28,23 @@ public class TagResource {
     @Resource
     private TagBox tagBox;
     @Resource
+    private TagService tagService;
+    @Resource
     private ResponseHandler responseHandler;
 
     @GET
     @Path("/tags")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response listTags(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
-        List<String> list = tagBox.getAllTags();
+    public Response listTags(@Context HttpHeaders hh,
+                             @Context HttpServletRequest request,
+                             @QueryParam("type") String type,
+                             @QueryParam("id") Long id) throws Exception {
+        List<String> list;
+        if (type != null && id != null) {
+            list = tagService.getTags(type, id);
+        } else {
+            list = tagBox.getAllTags();
+        }
         TagList tagList = new TagList().setTotal(list.size());
         for (String s : list) {
             tagList.addTag(s);
