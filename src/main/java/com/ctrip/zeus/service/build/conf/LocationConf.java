@@ -36,6 +36,10 @@ public class LocationConf {
                 }
             }
         }
+
+        b.append("proxy_request_buffering off;\n");
+        b.append("proxy_next_upstream off;\n");
+
         b.append("proxy_set_header Host $host").append(";\n");
         b.append("proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n");
         b.append("proxy_set_header X-Real-IP $remote_addr;\n");
