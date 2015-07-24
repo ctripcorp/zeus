@@ -40,10 +40,10 @@ public class PropertyResource {
     public Response listProperties(@Context HttpHeaders hh,
                                    @Context HttpServletRequest request,
                                    @QueryParam("type") String type,
-                                   @QueryParam("id") Long id) throws Exception {
+                                   @QueryParam("targetId") Long targetId) throws Exception {
         List<Property> list;
-        if (type != null && id != null) {
-            list = propertyService.getProperties(type, id);
+        if (type != null && targetId != null) {
+            list = propertyService.getProperties(type, targetId);
         } else {
             list = propertyBox.getAllProperties();
         }
@@ -93,11 +93,11 @@ public class PropertyResource {
                                     @QueryParam("pname") String pname,
                                     @QueryParam("pvalue") String pvalue,
                                     @QueryParam("type") String type,
-                                    @QueryParam("id") List<Long> ids) throws Exception {
-        if (pname == null || pvalue == null || type == null || ids == null)
+                                    @QueryParam("targetId") List<Long> targetIds) throws Exception {
+        if (pname == null || pvalue == null || type == null || targetIds == null)
             throw new ValidationException("At least one parameter is missing.");
-        propertyBox.add(pname, pvalue, type, ids.toArray(new Long[ids.size()]));
-        return responseHandler.handle(Joiner.on(", ").join(ids) + " is added to property " + pname + "/" + pvalue + ".", hh.getMediaType());
+        propertyBox.add(pname, pvalue, type, targetIds.toArray(new Long[targetIds.size()]));
+        return responseHandler.handle(Joiner.on(", ").join(targetIds) + " is added to property " + pname + "/" + pvalue + ".", hh.getMediaType());
     }
 
     @GET
@@ -108,13 +108,13 @@ public class PropertyResource {
                                        @QueryParam("pname") String pname,
                                        @QueryParam("pvalue") String pvalue,
                                        @QueryParam("type") String type,
-                                       @QueryParam("id") List<Long> ids,
+                                       @QueryParam("targetId") List<Long> targetIds,
                                        @QueryParam("batch") Boolean batch) throws Exception {
         if ((pname == null && pvalue == null) || type == null)
             throw new ValidationException("At least one parameter is missing.");
-        if (ids != null) {
-            propertyBox.delete(pname, pvalue, type, ids.toArray(new Long[ids.size()]));
-            return responseHandler.handle(Joiner.on(", ").join(ids) + " is deleted from property " + pname + "/" + pvalue + ".", hh.getMediaType());
+        if (targetIds != null) {
+            propertyBox.delete(pname, pvalue, type, targetIds.toArray(new Long[targetIds.size()]));
+            return responseHandler.handle(Joiner.on(", ").join(targetIds) + " is deleted from property " + pname + "/" + pvalue + ".", hh.getMediaType());
         }
         if (batch != null && batch.booleanValue()) {
             propertyBox.delete(pname, pvalue, type, null);
