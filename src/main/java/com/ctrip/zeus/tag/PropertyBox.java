@@ -17,7 +17,7 @@ public interface PropertyBox {
 
     void renameProperty(String oldName, String newName, String oldValue, String newValue) throws Exception;
 
-    void add(String pname, String pvalue, String type, Long itemId) throws Exception;
+    void add(String pname, String pvalue, String type, Long[] itemIds) throws Exception;
 
-    void delete(String pname, String pvalue, String type, Long itemId) throws Exception;
+    void delete(String pname, String pvalue, String type, Long[] itemIds) throws Exception;
 }

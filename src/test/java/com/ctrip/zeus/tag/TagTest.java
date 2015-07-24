@@ -37,25 +37,25 @@ public class TagTest extends AbstractSpringTest {
 
     @Test
     public void testTaggingAndUntagging() throws Exception {
-        tagBox.tagging("testTaggingGroup", "group", 1L);
-        tagBox.tagging("testTaggingGroup", "group", 2L);
-        tagBox.tagging("testTaggingGroup", "group", 3L);
-        tagBox.tagging("testTaggingSlb", "slb", 1L);
-        tagBox.tagging("testTaggingSlb", "slb", 2L);
-        tagBox.tagging("testTaggingSlb", "slb", 3L);
-        tagBox.tagging("testTaggingSlb", "slb", 4L);
-        tagBox.tagging("testTaggingSlb", "slb", 5L);
+        tagBox.tagging("testTaggingGroup", "group", new Long[]{1L});
+        tagBox.tagging("testTaggingGroup", "group", new Long[]{2L});
+        tagBox.tagging("testTaggingGroup", "group", new Long[]{3L});
+        tagBox.tagging("testTaggingSlb", "slb", new Long[]{1L});
+        tagBox.tagging("testTaggingSlb", "slb", new Long[]{2L});
+        tagBox.tagging("testTaggingSlb", "slb", new Long[]{3L});
+        tagBox.tagging("testTaggingSlb", "slb", new Long[]{4L});
+        tagBox.tagging("testTaggingSlb", "slb", new Long[]{5L});
 
         List<Long> glist = tagService.query("testTaggingGroup", "group");
         List<Long> slist = tagService.query("testTaggingSlb", "slb");
         Assert.assertEquals(3, glist.size());
         Assert.assertEquals(5, slist.size());
 
-        tagBox.untagging("testTaggingGroup", "group", 2L);
-        tagBox.untagging("testTaggingGroup", "group", 3L);
-        tagBox.untagging("testTaggingSlb", "slb", 1L);
-        tagBox.untagging("testTaggingSlb", "slb", 2L);
-        tagBox.untagging("testTaggingSlb", "slb", 3L);
+        tagBox.untagging("testTaggingGroup", "group", new Long[]{2L});
+        tagBox.untagging("testTaggingGroup", "group", new Long[]{3L});
+        tagBox.untagging("testTaggingSlb", "slb", new Long[]{1L});
+        tagBox.untagging("testTaggingSlb", "slb", new Long[]{2L});
+        tagBox.untagging("testTaggingSlb", "slb", new Long[]{3L});
 
         glist = tagService.query("testTaggingGroup", "group");
         slist = tagService.query("testTaggingSlb", "slb");
@@ -77,9 +77,9 @@ public class TagTest extends AbstractSpringTest {
 
     @Test
     public void testRenameTag() throws Exception {
-        tagBox.tagging("testTaggingGroup", "group", 1L);
-        tagBox.tagging("testTaggingGroup", "group", 2L);
-        tagBox.tagging("testTaggingGroup", "group", 3L);
+        tagBox.tagging("testTaggingGroup", "group", new Long[]{1L});
+        tagBox.tagging("testTaggingGroup", "group", new Long[]{2L});
+        tagBox.tagging("testTaggingGroup", "group", new Long[]{3L});
 
         List<Long> l = tagService.query("testTaggingGroup", "group");
         Assert.assertEquals(3, l.size());
@@ -95,9 +95,9 @@ public class TagTest extends AbstractSpringTest {
 
     @Test
     public void testGetItemTags() throws Exception {
-        tagBox.tagging("testTaggingGroup1", "group", 1L);
-        tagBox.tagging("testTaggingGroup2", "group", 1L);
-        tagBox.tagging("testTaggingGroup3", "group", 2L);
+        tagBox.tagging("testTaggingGroup1", "group", new Long[]{1L});
+        tagBox.tagging("testTaggingGroup2", "group", new Long[]{1L});
+        tagBox.tagging("testTaggingGroup3", "group", new Long[]{2L});
 
         List<String> l = tagService.getTags("group", 1L);
         Assert.assertEquals(2, l.size());

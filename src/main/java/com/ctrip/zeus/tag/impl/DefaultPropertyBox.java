@@ -78,7 +78,7 @@ public class DefaultPropertyBox implements PropertyBox {
     }
 
     @Override
-    public void add(String pname, String pvalue, String type, Long itemId) throws Exception {
+    public void add(String pname, String pvalue, String type, Long[] itemIds) throws Exception {
         PropertyKeyDo kd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
         PropertyDo d = null;
         if (kd == null) {
@@ -91,19 +91,28 @@ public class DefaultPropertyBox implements PropertyBox {
             d = new PropertyDo().setPropertyKeyId(kd.getId()).setPropertyValue(pvalue);
             propertyDao.insert(d);
         }
-        propertyItemDao.insert(new PropertyItemDo().setPropertyId(d.getId()).setType(type).setItemId(itemId));
+        PropertyItemDo[] l = new PropertyItemDo[itemIds.length];
+        for (int i = 0; i < itemIds.length; i++) {
+            l[i] = new PropertyItemDo().setPropertyId(d.getId()).setType(type).setItemId(itemIds[i]);
+        }
+        propertyItemDao.insert(l);
     }
 
     @Override
-    public void delete(String pname, String pvalue, String type, Long itemId) throws Exception {
+    public void delete(String pname, String pvalue, String type, Long[] itemIds) throws Exception {
         PropertyKeyDo kd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
         if (kd == null)
             return;
         PropertyDo d = propertyDao.findByKeyAndValue(kd.getId(), pvalue, PropertyEntity.READSET_FULL);
         if (d == null)
             return;
-        if (itemId != null)
-            propertyItemDao.deleteByPropertyAndItem(new PropertyItemDo().setPropertyId(d.getId()).setType(type).setItemId(itemId));
+        if (itemIds != null) {
+            PropertyItemDo[] l = new PropertyItemDo[itemIds.length];
+            for (int i = 0; i < itemIds.length; i++) {
+                l[i] = new PropertyItemDo().setPropertyId(d.getId()).setType(type).setItemId(itemIds[i]);
+            }
+            propertyItemDao.deleteByPropertyAndItems(l);
+        }
         else
             propertyItemDao.deleteByPropertyAndType(new PropertyItemDo().setPropertyId(d.getId()).setType(type));
     }

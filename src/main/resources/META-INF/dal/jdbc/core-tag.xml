@@ -84,7 +84,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="insert" type="INSERT">
+            <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
@@ -101,7 +101,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-tag-item" type="DELETE">
+            <query name="delete-tag-items" type="DELETE" batch="true">
                 <param name="tag-id"/>
                 <param name="type"/>
                 <param name="item-id"/>
@@ -274,7 +274,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="insert" type="INSERT">
+            <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
@@ -282,7 +282,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-property-and-item" type="DELETE">
+            <query name="delete-by-property-and-items" type="DELETE" batch="true">
                 <param name="property-id"/>
                 <param name="item-id"/>
                 <statement>

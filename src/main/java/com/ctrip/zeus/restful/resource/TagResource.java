@@ -5,6 +5,7 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.tag.TagBox;
 import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.tag.entity.TagList;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -72,11 +73,11 @@ public class TagResource {
                             @Context HttpServletRequest request,
                             @QueryParam("tagName") String tagName,
                             @QueryParam("type") String type,
-                            @QueryParam("id") Long id) throws Exception {
-        if (tagName == null || type == null || id == null)
+                            @QueryParam("id") List<Long> ids) throws Exception {
+        if (tagName == null || type == null || ids == null)
             throw new ValidationException("At least one parameter is missing.");
-        tagBox.tagging(tagName, type, id);
-        return responseHandler.handle("Tagged " + id + " to " + tagName + ".", hh.getMediaType());
+        tagBox.tagging(tagName, type, ids.toArray(new Long[ids.size()]));
+        return responseHandler.handle("Tagged " + Joiner.on(", ").join(ids) + " to " + tagName + ".", hh.getMediaType());
     }
 
     @GET
@@ -86,13 +87,13 @@ public class TagResource {
                               @Context HttpServletRequest request,
                               @QueryParam("tagName") String tagName,
                               @QueryParam("type") String type,
-                              @QueryParam("id") Long id,
+                              @QueryParam("id") List<Long> ids,
                               @QueryParam("batch") Boolean batch) throws Exception {
         if (tagName == null)
             throw new ValidationException("Tag name is required.");
-        if (type != null && id != null) {
-            tagBox.untagging(tagName, type, id);
-            return responseHandler.handle("Untagged " + id + " from " + tagName + ".", hh.getMediaType());
+        if (type != null && ids != null) {
+            tagBox.untagging(tagName, type, ids.toArray(new Long[ids.size()]));
+            return responseHandler.handle("Untagged " + Joiner.on(", ").join(ids) + " from " + tagName + ".", hh.getMediaType());
         }
         if (batch != null && batch.booleanValue()) {
             if (type != null) {
