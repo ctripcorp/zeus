@@ -45,18 +45,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-limit" type="SELECT" multiple="true">
-                <param name="id"/>
-                <param name="max-count"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='id'/> > ${id}
-                        LIMIT ${max-count}
-                    ]]>
-                </statement>
-            </query>
             <query name="find-by-id" type="SELECT">
                 <param name="id"/>
                 <statement>
