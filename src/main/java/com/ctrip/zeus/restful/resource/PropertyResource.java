@@ -6,6 +6,7 @@ import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.entity.Property;
 import com.ctrip.zeus.tag.entity.PropertyList;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -39,10 +40,10 @@ public class PropertyResource {
     public Response listProperties(@Context HttpHeaders hh,
                                    @Context HttpServletRequest request,
                                    @QueryParam("type") String type,
-                                   @QueryParam("id") Long id) throws Exception {
+                                   @QueryParam("targetId") Long targetId) throws Exception {
         List<Property> list;
-        if (type != null && id != null) {
-            list = propertyService.getProperties(type, id);
+        if (type != null && targetId != null) {
+            list = propertyService.getProperties(type, targetId);
         } else {
             list = propertyBox.getAllProperties();
         }
@@ -92,11 +93,11 @@ public class PropertyResource {
                                     @QueryParam("pname") String pname,
                                     @QueryParam("pvalue") String pvalue,
                                     @QueryParam("type") String type,
-                                    @QueryParam("id") Long id) throws Exception {
-        if (pname == null || pvalue == null || type == null || id == null)
+                                    @QueryParam("targetId") List<Long> targetIds) throws Exception {
+        if (pname == null || pvalue == null || type == null || targetIds == null)
             throw new ValidationException("At least one parameter is missing.");
-        propertyBox.add(pname, pvalue, type, id);
-        return responseHandler.handle(id + " is added to property " + pname + "/" + pvalue + ".", hh.getMediaType());
+        propertyBox.add(pname, pvalue, type, targetIds.toArray(new Long[targetIds.size()]));
+        return responseHandler.handle(Joiner.on(", ").join(targetIds) + " is added to property " + pname + "/" + pvalue + ".", hh.getMediaType());
     }
 
     @GET
@@ -107,13 +108,13 @@ public class PropertyResource {
                                        @QueryParam("pname") String pname,
                                        @QueryParam("pvalue") String pvalue,
                                        @QueryParam("type") String type,
-                                       @QueryParam("id") Long id,
+                                       @QueryParam("targetId") List<Long> targetIds,
                                        @QueryParam("batch") Boolean batch) throws Exception {
         if ((pname == null && pvalue == null) || type == null)
             throw new ValidationException("At least one parameter is missing.");
-        if (id != null) {
-            propertyBox.delete(pname, pvalue, type, id);
-            return responseHandler.handle(id + " is deleted from property " + pname + "/" + pvalue + ".", hh.getMediaType());
+        if (targetIds != null) {
+            propertyBox.delete(pname, pvalue, type, targetIds.toArray(new Long[targetIds.size()]));
+            return responseHandler.handle(Joiner.on(", ").join(targetIds) + " is deleted from property " + pname + "/" + pvalue + ".", hh.getMediaType());
         }
         if (batch != null && batch.booleanValue()) {
             propertyBox.delete(pname, pvalue, type, null);

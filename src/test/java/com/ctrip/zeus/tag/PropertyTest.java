@@ -38,20 +38,20 @@ public class PropertyTest extends AbstractSpringTest {
 
     @Test
     public void testAddAndRemoveItem() throws Exception {
-        propertyBox.add("department", "qiche", "client", 1L);
-        propertyBox.add("department", "gonglue", "client", 1L);
-        propertyBox.add("department", "qiche", "client", 2L);
-        propertyBox.add("department", "jiudian", "client", 5L);
-        propertyBox.add("department", "qiche", "client", 3L);
-        propertyBox.add("department", "gonglue", "client", 6L);
+        propertyBox.add("department", "qiche", "client", new Long[]{1L});
+        propertyBox.add("department", "gonglue", "client", new Long[]{1L});
+        propertyBox.add("department", "qiche", "client", new Long[]{2L});
+        propertyBox.add("department", "jiudian", "client", new Long[]{5L});
+        propertyBox.add("department", "qiche", "client", new Long[]{3L});
+        propertyBox.add("department", "gonglue", "client", new Long[]{6L});
 
         List<Long> plist = propertyService.query("department", "client");
         Assert.assertEquals(6, plist.size());
         plist = propertyService.query("department", "qiche", "client");
         Assert.assertEquals(3, plist.size());
 
-        propertyBox.delete("department", "qiche", "client", 3L);
-        propertyBox.delete("department", "qiche", "client", 1L);
+        propertyBox.delete("department", "qiche", "client", new Long[]{3L});
+        propertyBox.delete("department", "qiche", "client", new Long[]{1L});
         plist = propertyService.query("department", "qiche", "client");
         Assert.assertEquals(1, plist.size());
 
@@ -64,15 +64,15 @@ public class PropertyTest extends AbstractSpringTest {
 
     @Test
     public void testRenameProperty() throws Exception {
-        propertyBox.add("bumen", "car", "client", 1L);
+        propertyBox.add("bumen", "car", "client", new Long[]{1L});
         propertyBox.renameProperty("bumen", "department", "car", "qiche");
         List<Long> plist = propertyService.query("bumen", "qiche", "client");
         Assert.assertEquals(0, plist.size());
         plist = propertyService.query("department", "qiche", "client");
         Assert.assertEquals(1, plist.size());
 
-        propertyBox.add("department", "qiche", "client", 3L);
-        propertyBox.add("department", "qiche", "client", 2L);
+        propertyBox.add("department", "qiche", "client", new Long[]{3L});
+        propertyBox.add("department", "qiche", "client", new Long[]{2L});
         propertyBox.renameProperty("department", "bumen");
         plist = propertyService.query("bumen", "qiche", "client");
         Assert.assertEquals(3, plist.size());
@@ -82,12 +82,12 @@ public class PropertyTest extends AbstractSpringTest {
 
     @Test
     public void testGetItemProperties() throws Exception {
-        propertyBox.add("department", "qiche", "client", 1L);
-        propertyBox.add("department", "gonglue", "client", 1L);
-        propertyBox.add("department", "qiche", "client", 2L);
-        propertyBox.add("department", "jiudian", "client", 1L);
-        propertyBox.add("department", "qiche", "client", 3L);
-        propertyBox.add("department", "gonglue", "client", 6L);
+        propertyBox.add("department", "qiche", "client", new Long[]{1L});
+        propertyBox.add("department", "gonglue", "client", new Long[]{1L});
+        propertyBox.add("department", "qiche", "client", new Long[]{2L});
+        propertyBox.add("department", "jiudian", "client", new Long[]{1L});
+        propertyBox.add("department", "qiche", "client", new Long[]{3L});
+        propertyBox.add("department", "gonglue", "client", new Long[]{6L});
 
         List<Property> l = propertyService.getProperties("client", 1L);
         Assert.assertEquals(1, l.size());

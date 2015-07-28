@@ -46,27 +46,33 @@ public class DefaultTagBox implements TagBox {
     }
 
     @Override
-    public void tagging(String tagName, String type, Long itemId) throws Exception {
+    public void tagging(String tagName, String type, Long[] itemIds) throws Exception {
         TagDo d = tagDao.findByName(tagName, TagEntity.READSET_FULL);
         if (d == null) {
             d = new TagDo().setName(tagName);
             tagDao.insert(d);
         }
-        tagItemDao.insert(new TagItemDo().setTagId(d.getId()).setType(type).setItemId(itemId));
+        TagItemDo[] l = new TagItemDo[itemIds.length];
+        for (int i = 0; i < itemIds.length; i++) {
+            l[i] = new TagItemDo().setTagId(d.getId()).setType(type).setItemId(itemIds[i]);
+        }
+        tagItemDao.insert(l);
     }
 
     @Override
-    public void untagging(String tagName, String type, Long itemId) throws Exception {
+    public void untagging(String tagName, String type, Long[] itemIds) throws Exception {
         TagDo d = tagDao.findByName(tagName, TagEntity.READSET_FULL);
         if (d == null) {
             throw new ValidationException("Tag named " + tagName + "is not found.");
         }
-        TagItemDo tid = new TagItemDo().setTagId(d.getId()).setType(type);
-        if (itemId != null) {
-            tid.setItemId(itemId);
-            tagItemDao.deleteTagItem(tid);
+        if (itemIds != null) {
+            TagItemDo[] l = new TagItemDo[itemIds.length];
+            for (int i = 0; i < itemIds.length; i++) {
+                l[i] = new TagItemDo().setTagId(d.getId()).setType(type).setItemId(itemIds[i]);
+            }
+            tagItemDao.deleteTagItems(l);
         } else {
-            tagItemDao.deleteTagType(tid);
+            tagItemDao.deleteTagType(new TagItemDo().setTagId(d.getId()).setType(type));
         }
     }
 }

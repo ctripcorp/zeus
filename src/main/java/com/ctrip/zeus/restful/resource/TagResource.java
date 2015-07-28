@@ -5,6 +5,7 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.tag.TagBox;
 import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.tag.entity.TagList;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -38,10 +39,10 @@ public class TagResource {
     public Response listTags(@Context HttpHeaders hh,
                              @Context HttpServletRequest request,
                              @QueryParam("type") String type,
-                             @QueryParam("id") Long id) throws Exception {
+                             @QueryParam("targetId") Long targetId) throws Exception {
         List<String> list;
-        if (type != null && id != null) {
-            list = tagService.getTags(type, id);
+        if (type != null && targetId != null) {
+            list = tagService.getTags(type, targetId);
         } else {
             list = tagBox.getAllTags();
         }
@@ -72,11 +73,11 @@ public class TagResource {
                             @Context HttpServletRequest request,
                             @QueryParam("tagName") String tagName,
                             @QueryParam("type") String type,
-                            @QueryParam("id") Long id) throws Exception {
-        if (tagName == null || type == null || id == null)
+                            @QueryParam("targetId") List<Long> targetIds) throws Exception {
+        if (tagName == null || type == null || targetIds == null)
             throw new ValidationException("At least one parameter is missing.");
-        tagBox.tagging(tagName, type, id);
-        return responseHandler.handle("Tagged " + id + " to " + tagName + ".", hh.getMediaType());
+        tagBox.tagging(tagName, type, targetIds.toArray(new Long[targetIds.size()]));
+        return responseHandler.handle("Tagged " + Joiner.on(", ").join(targetIds) + " to " + tagName + ".", hh.getMediaType());
     }
 
     @GET
@@ -86,13 +87,13 @@ public class TagResource {
                               @Context HttpServletRequest request,
                               @QueryParam("tagName") String tagName,
                               @QueryParam("type") String type,
-                              @QueryParam("id") Long id,
+                              @QueryParam("targetId") List<Long> targetIds,
                               @QueryParam("batch") Boolean batch) throws Exception {
         if (tagName == null)
             throw new ValidationException("Tag name is required.");
-        if (type != null && id != null) {
-            tagBox.untagging(tagName, type, id);
-            return responseHandler.handle("Untagged " + id + " from " + tagName + ".", hh.getMediaType());
+        if (type != null && targetIds != null) {
+            tagBox.untagging(tagName, type, targetIds.toArray(new Long[targetIds.size()]));
+            return responseHandler.handle("Untagged " + Joiner.on(", ").join(targetIds) + " from " + tagName + ".", hh.getMediaType());
         }
         if (batch != null && batch.booleanValue()) {
             if (type != null) {
