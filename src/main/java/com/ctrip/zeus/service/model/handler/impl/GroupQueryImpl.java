@@ -104,7 +104,7 @@ public class GroupQueryImpl implements GroupQuery {
         for (GroupVirtualServer groupVirtualServer : virtualServerRepository.listGroupVsByGroups(new Long[]{group.getId()})) {
             group.addGroupVirtualServer(groupVirtualServer);
         }
-        for (GroupServer server : groupMemberRepository.listGroupServerByGroup(group.getId())) {
+        for (GroupServer server : groupMemberRepository.listGroupServersByGroup(group.getId())) {
             group.addGroupServer(server);
         }
     }

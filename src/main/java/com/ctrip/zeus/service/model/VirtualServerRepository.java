@@ -23,4 +23,16 @@ public interface VirtualServerRepository {
     VirtualServer getBySlbAndName(Long slbId, String virtualServerName) throws Exception;
 
     Long[] findGroupsByVirtualServer(Long virtualServerId) throws Exception;
+
+    void addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception;
+
+    void updateVirtualServers(VirtualServer[] virtualServers) throws Exception;
+
+    void deleteVirtualServer(Long virtualServerId) throws Exception;
+
+    void batchDeleteVirtualServers(Long slbId) throws Exception;
+
+    void batchDeleteGroupVirtualServers(Long groupId) throws Exception;
+
+    void updateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception;
 }
