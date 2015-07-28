@@ -82,13 +82,13 @@
             <query name="delete-by-group-id-and-slb-id-and-virtual-server-id" type="DELETE">
                 <param name="group-id"/>
                 <param name="slb-id"/>
-                <param name="virtual-server-id"/>
+                <param name="slb-virtual-server-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
                     AND <FIELD name='slb-id'/> = ${slb-id}
-                    AND <FIELD name='virtual-server-id'/> = ${virtual-server-id}
+                    AND <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
                     ]]>
                 </statement>
             </query>
