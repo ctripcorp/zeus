@@ -50,18 +50,6 @@ public class DefaultSlbValidator implements SlbValidator {
 
     @Override
     public boolean modifiable(Slb slb) throws Exception {
-        List<SlbVirtualServerDo> l = slbVirtualServerDao.findAllBySlb(slb.getId(), SlbVirtualServerEntity.READSET_FULL);
-        Set<Long> deleted = new HashSet<>();
-        for (SlbVirtualServerDo d : l) {
-            deleted.add(d.getId());
-        }
-        for (VirtualServer vs : slb.getVirtualServers()) {
-            deleted.remove(vs.getId());
-        }
-        for (Long d : deleted) {
-            if (groupSlbDao.findAllByVirtualServer(d, GroupSlbEntity.READSET_FULL).size() > 0)
-                return false;
-        }
         return true;
     }
 }

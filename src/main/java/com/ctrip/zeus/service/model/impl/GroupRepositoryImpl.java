@@ -2,15 +2,10 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.GroupDo;
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupServer;
-import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupQuery;
-import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.handler.GroupSync;
-import com.ctrip.zeus.service.model.ArchiveService;
-import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
 
@@ -29,7 +24,9 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private GroupQuery groupQuery;
     @Resource
-    private SlbRepository slbRepository;
+    private VirtualServerRepository virtualServerRepository;
+    @Resource
+    private GroupMemberRepository groupMemberRepository;
     @Resource
     private ArchiveService archiveService;
 
@@ -40,37 +37,25 @@ public class GroupRepositoryImpl implements GroupRepository {
             list.add(group);
         }
         return list;
-
     }
 
     @Override
-    public List<Group> list(String slbName, String virtualServerName) throws Exception {
-        List<Group> list = new ArrayList<>();
-        Long slbId = slbRepository.get(slbName).getId();
-        VirtualServer vs = slbRepository.getVirtualServer(null, slbId, virtualServerName);
-        for (Group group : groupQuery.getByVirtualServer(vs.getId())) {
-            list.add(group);
-        }
-        return list;
-    }
+    public List<Group> list(Long slbId, String virtualServerName) throws Exception {
+        if (virtualServerName == null)
+            return groupQuery.getBySlb(slbId);
 
-    @Override
-    public List<Group> list(Long slbId) throws Exception {
         List<Group> result = new ArrayList<>();
-        for (GroupSlb groupSlb : slbRepository.listGroupSlbsBySlb(slbId)) {
-            result.add(getById(groupSlb.getGroupId()));
+        VirtualServer vs = virtualServerRepository.getBySlbAndName(slbId, virtualServerName);
+        Long[] groupIds = virtualServerRepository.findGroupsByVirtualServer(vs.getId());
+        for (Group group : groupQuery.batchGet(groupIds)) {
+            result.add(group);
         }
         return result;
     }
 
     @Override
-    public List<Group> listLimit(Long fromId, int maxCount) throws Exception {
-        return groupQuery.getLimit(fromId, maxCount);
-    }
-
-    @Override
     public List<Group> list(Long[] ids) throws Exception {
-        return groupQuery.batchGetByIds(ids);
+        return groupQuery.batchGet(ids);
     }
 
     @Override
@@ -115,16 +100,11 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<String> listGroupsByGroupServer(String groupServerIp) throws Exception {
-        return groupQuery.getByGroupServer(groupServerIp);
-    }
-
-    @Override
-    public List<String> listGroupServerIpsByGroup(Long groupId) throws Exception {
-        return groupQuery.getGroupServerIpsByGroup(groupId);
-    }
-
-    @Override
-    public List<GroupServer> listGroupServersByGroup(Long groupId) throws Exception {
-        return groupQuery.getGroupServersByGroup(groupId);
+        Long[] groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
+        List<String> result = new ArrayList<>();
+        for (Group group : groupQuery.batchGet(groupIds)) {
+            result.add(group.getName());
+        }
+        return result;
     }
 }

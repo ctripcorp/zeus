@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface SlbSync {
 
-    void add(Slb slb) throws DalException, ValidationException;
+    void add(Slb slb) throws Exception;
 
     void update(Slb slb) throws Exception;
 

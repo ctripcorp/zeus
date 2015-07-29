@@ -85,7 +85,7 @@ public class GroupResource {
                 AssertUtils.assertNotNull(slb, "Slb does not exist.");
                 slbId = slbRepository.get(slbName).getId();
             }
-            for (Group group : groupRepository.list(slbId)) {
+            for (Group group : groupRepository.list(slbId, null)) {
                 if (noFilter || filtered.contains(group.getId()))
                     groupList.addGroup(getGroupByType(group, type));
             }

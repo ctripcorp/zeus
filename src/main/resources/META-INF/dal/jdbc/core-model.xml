@@ -45,18 +45,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-limit" type="SELECT" multiple="true">
-                <param name="id"/>
-                <param name="max-count"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='id'/> > ${id}
-                        LIMIT ${max-count}
-                    ]]>
-                </statement>
-            </query>
             <query name="find-by-id" type="SELECT">
                 <param name="id"/>
                 <statement>
@@ -180,15 +168,23 @@
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
-                    ON DUPLICATE KEY UPDATE
-                        group_id = values(group_id),
-                        ip = values(ip),
-                        host_name = values(host_name),
-                        port = values(port),
-                        weight = values(weight),
-                        max_fails = values(max_fails),
-                        fail_timeout = values(fail_timeout),
-                        <FIELD name="data-change-last-time"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-group-and-ip" type="UPDATE">
+                <param name="group-id"/>
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='host-name'/> = ${host-name},
+                    <FIELD name='port'/> = ${port},
+                    <FIELD name='weight'/> = ${weight},
+                    <FIELD name='max-fails'/> = ${max-fails},
+                    <FIELD name='fail-timeout'/> = ${fail-timeout},
+                    <FIELD name="data-change-last-time"/> = NOW()
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                      AND <FIELD name='ip'/> = ${ip}
                     ]]>
                 </statement>
             </query>
@@ -198,6 +194,17 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-group-and-ip" type="DELETE">
+                <param name="group-id"/>
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                      AND <FIELD name='ip'/> = ${ip}
                     ]]>
                 </statement>
             </query>
@@ -217,7 +224,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='ip'/> = ${ip}
+                    WHERE <FIELD name='ip'/> = ${ip}
                     ]]>
                 </statement>
             </query>
@@ -228,7 +235,7 @@
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <var name="group-ids" value-type="Long[]"/>
         <query-defs>
-            <query name="insert" type="INSERT">
+            <query name="insert-or-update" type="INSERT">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
@@ -416,7 +423,7 @@
     </entity>
     <entity name="slb-domain" table="slb_domain" alias="sd" do-class="SlbDomainDo">
         <query-defs>
-            <query name="insert" type="INSERT">
+            <query name="insert-or-update" type="INSERT">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)

@@ -32,15 +32,6 @@ public class C {
                 .setWeight(d.getWeight());
     }
 
-    public static GroupSlb toGroupSlb(GroupSlbDo d) {
-        return new GroupSlb()
-                .setSlbId(d.getSlbId())
-                .setGroupId(d.getGroupId())
-                .setPath(d.getPath())
-                .setRewrite(d.getRewrite())
-                .setPriority(d.getPriority());
-    }
-
     public static Domain toDomain(SlbDomainDo d) {
         return new Domain()
                 .setName(d.getName());
@@ -146,16 +137,6 @@ public class C {
                 .setWeight(e.getWeight());
     }
 
-    public static GroupSlbDo toGroupSlbDo(GroupSlb e) {
-        return new GroupSlbDo()
-                .setGroupId(e.getGroupId())
-                .setSlbId(e.getSlbId())
-                .setSlbVirtualServerId(e.getVirtualServer().getId())
-                .setPath(e.getPath())
-                .setRewrite(e.getRewrite())
-                .setPriority(e.getPriority() == null ? 0 : e.getPriority().intValue());
-    }
-
     public static SlbDomainDo toSlbDomainDo(Domain e) {
         return new SlbDomainDo()
                 .setName(e.getName());
@@ -186,20 +167,23 @@ public class C {
                 .setVersion(e.getVersion() == null ? 0 : e.getVersion());
     }
 
-    public static SlbServerDo toSlbServerDo(SlbServer e) {
+    public static SlbServerDo toSlbServerDo(Long slbId, SlbServer e) {
         return new SlbServerDo()
+                .setSlbId(slbId)
                 .setHostName(e.getHostName())
                 .setIp(e.getIp());
     }
 
-    public static SlbVipDo toSlbVipDo(Vip e) {
+    public static SlbVipDo toSlbVipDo(Long slbId, Vip e) {
         return new SlbVipDo()
+                .setSlbId(slbId)
                 .setIp(e.getIp());
     }
 
-    public static SlbVirtualServerDo toSlbVirtualServerDo(Long virtualServerId, VirtualServer e) {
+    public static SlbVirtualServerDo toSlbVirtualServerDo(Long virtualServerId, Long slbId, VirtualServer e) {
         return new SlbVirtualServerDo()
                 .setId(virtualServerId)
+                .setSlbId(slbId)
                 .setPort(e.getPort())
                 .setIsSsl(e.isSsl())
                 .setName(e.getName());
