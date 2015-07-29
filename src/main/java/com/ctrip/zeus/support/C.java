@@ -3,6 +3,8 @@ package com.ctrip.zeus.support;
 import com.ctrip.zeus.auth.entity.*;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.task.entity.OpsTask;
+import com.ctrip.zeus.task.entity.Task;
 
 /**
  * @author:xingchaowang
@@ -222,5 +224,32 @@ public class C {
                 .setDescription(resource.getDescription());
     }
 
-
+    public static OpsTask toOpsTask(TaskDo task){
+        OpsTask result = new OpsTask();
+        result.setTargetSlbId(task.getTargetSlbId())
+                .setUp(task.isUp())
+                .setVersion(task.getVersion())
+                .setStatus(task.getStatus())
+                .setCreateTime(task.getCreateTime())
+                .setFailCause(task.getFailCause())
+                .setIpList(task.getIpList())
+                .setGroupId(task.getGroupId())
+                .setOpsType(task.getOpsType())
+                .setSlbId(task.getSlbId());
+        return result;
+    }
+    public static TaskDo toTaskDo(OpsTask opsTask){
+        TaskDo result = new TaskDo();
+        result.setTargetSlbId(opsTask.getTargetSlbId())
+                .setUp(opsTask.isUp())
+                .setVersion(opsTask.getVersion())
+                .setStatus(opsTask.getStatus())
+                .setCreateTime(opsTask.getCreateTime())
+                .setFailCause(opsTask.getFailCause())
+                .setIpList(opsTask.getIpList())
+                .setGroupId(opsTask.getGroupId())
+                .setOpsType(opsTask.getOpsType())
+                .setSlbId(opsTask.getSlbId());
+        return result;
+    }
 }

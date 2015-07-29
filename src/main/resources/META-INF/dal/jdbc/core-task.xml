@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="task" table="task" alias="tq">
+        <query-defs>
+            <query name="find-by-target-slb-id-and-status" type="SELECT" multiple="true">
+                <param name="status"/>
+                <param name="target-slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='status'/> = ${status}
+                        AND <FIELD name='target-slb-id'/> = ${target-slb-id}
+                    ]]>
+                </statement>
+            </query>
+
+            <query name="delete-before-datetime" type="DELETE">
+                <param name="create-time"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='create-time'/> < ${create-time}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>
+

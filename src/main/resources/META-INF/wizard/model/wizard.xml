@@ -30,4 +30,7 @@
    <model package="com.ctrip.zeus.tag" name="tag">
       <sample-model>src/test/resources/com/ctrip/zeus/model/tag.xml</sample-model>
    </model>
+   <model package="com.ctrip.zeus.task" name="task">
+      <sample-model>src/test/resources/com/ctrip/zeus/model/task.xml</sample-model>
+   </model>
 </wizard>

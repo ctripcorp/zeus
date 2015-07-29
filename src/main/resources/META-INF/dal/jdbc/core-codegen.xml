@@ -703,7 +703,7 @@
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
     <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" />
-    <member name="path" field="path" value-type="String" length="1024" nullable="false" />
+    <member name="path" field="path" value-type="String" length="4096" nullable="false" />
     <member name="rewrite" field="rewrite" value-type="String" length="16777215" />
     <member name="priority" field="priority" value-type="int" length="10" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
@@ -1489,6 +1489,51 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="tag_id_item_id_type" unique="true" members="tag_id ASC, item_id ASC, type ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="task" table="task" alias="t2">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" />
+    <member name="ops-type" field="ops_type" value-type="String" length="50" nullable="false" />
+    <member name="group-id" field="group_id" value-type="long" length="19" />
+    <member name="slb-id" field="slb_id" value-type="long" length="19" />
+    <member name="ip-list" field="ip_list" value-type="String" length="4096" />
+    <member name="up" field="up" value-type="boolean" />
+    <member name="status" field="status" value-type="String" length="50" nullable="false" />
+    <member name="target-slb-id" field="target_slb_id" value-type="long" length="19" nullable="false" />
+    <member name="version" field="version" value-type="int" length="10" />
+    <member name="fail-cause" field="fail_cause" value-type="String" length="1024" />
+    <member name="create-time" field="create_time" value-type="Date" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
