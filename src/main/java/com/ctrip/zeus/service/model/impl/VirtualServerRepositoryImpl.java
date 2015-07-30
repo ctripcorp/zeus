@@ -190,8 +190,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     private void querySlbDomains(Long slbVirtualServerId, VirtualServer virtualServer) throws DalException {
         List<SlbDomainDo> list = slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL);
         for (SlbDomainDo d : list) {
-            Domain e = C.toDomain(d);
-            virtualServer.addDomain(e);
+            virtualServer.addDomain(new Domain().setName(d.getName()));
         }
     }
 
