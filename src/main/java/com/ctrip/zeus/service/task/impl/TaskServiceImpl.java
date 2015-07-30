@@ -3,6 +3,8 @@ package com.ctrip.zeus.service.task.impl;
 import com.ctrip.zeus.dal.core.TaskDao;
 import com.ctrip.zeus.dal.core.TaskDo;
 import com.ctrip.zeus.dal.core.TaskEntity;
+import com.ctrip.zeus.lock.DbLockFactory;
+import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.service.task.TaskService;
 import com.ctrip.zeus.support.C;
 import com.ctrip.zeus.task.entity.OpsTask;
@@ -23,15 +25,32 @@ import java.util.List;
 public class TaskServiceImpl implements TaskService {
 
     private static final DynamicIntProperty taskCheckStatusInterval = DynamicPropertyFactory.getInstance().getIntProperty("task.check.status.interval", 200);
+    private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
 
     @Resource
     private TaskDao taskDao;
+    @Resource
+    private DbLockFactory dbLockFactory;
 
     @Override
     public Long add(OpsTask task) throws Exception {
         TaskDo taskDo = C.toTaskDo(task);
         taskDo.setStatus("Pending");
-        taskDao.insert(taskDo);
+        String lockName = null;
+        if ( taskDo.getOpsType().equals("ActivateSlb")){
+            lockName = "AddTask_" + taskDo.getOpsType() + taskDo.getSlbId();
+        }else if (taskDo.getOpsType().equals("ServerOps")){
+            lockName = "AddTask_" + taskDo.getOpsType();
+        }else {
+            lockName = "AddTask_" + taskDo.getOpsType() + taskDo.getGroupId();
+        }
+        DistLock buildLock = dbLockFactory.newLock( lockName );
+        try {
+            buildLock.lock(lockTimeout.get());
+            taskDao.insert(taskDo);
+        }finally {
+            buildLock.unlock();
+        }
         return taskDo.getId();
     }
 

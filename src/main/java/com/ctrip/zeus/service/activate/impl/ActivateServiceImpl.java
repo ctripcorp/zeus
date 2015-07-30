@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.activate.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupSlb;
+import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.model.ArchiveService;
@@ -77,11 +77,11 @@ public class ActivateServiceImpl implements ActivateService {
 
         confGroupSlbActiveDao.deleteByGroupId(new ConfGroupSlbActiveDo().setGroupId(groupId));
 
-        for (GroupSlb groupSlb:group.getGroupSlbs())
+        for (GroupVirtualServer groupSlb:group.getGroupVirtualServers())
         {
             confGroupSlbActiveDao.insert(new ConfGroupSlbActiveDo().setGroupId(groupId)
                                             .setPriority(groupSlb.getPriority())
-                                            .setSlbId(groupSlb.getSlbId()).setDataChangeLastTime(new Date())
+                                            .setSlbId(groupSlb.getVirtualServer().getSlbId()).setDataChangeLastTime(new Date())
                                             .setSlbVirtualServerId(groupSlb.getVirtualServer().getId()));
         }
 
