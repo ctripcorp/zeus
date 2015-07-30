@@ -14,5 +14,5 @@ public interface GroupValidator {
 
     void removable(Long groupId) throws Exception;
 
-    boolean validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception;
+    void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception;
 }

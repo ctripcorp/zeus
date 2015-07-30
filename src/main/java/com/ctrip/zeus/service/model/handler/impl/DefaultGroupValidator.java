@@ -1,17 +1,17 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.PathRewriteParser;
-import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +24,9 @@ public class DefaultGroupValidator implements GroupValidator {
     @Resource
     private ActiveConfService activeConfService;
     @Resource
-    private VirtualServerRepository virtualServerRepository;
+    private SlbVirtualServerDao slbVirtualServerDao;
+    @Resource
+    private GroupSlbDao groupSlbDao;
 
     @Override
     public void validate(Group group) throws Exception {
@@ -32,8 +34,7 @@ public class DefaultGroupValidator implements GroupValidator {
                 || group.getAppId() == null || group.getAppId().isEmpty()) {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
-        if (!validateGroupVirtualServers(group.getId(), group.getGroupVirtualServers()))
-            throw new ValidationException("Virtual server has invalid data.");
+        validateGroupVirtualServers(group.getId(), group.getGroupVirtualServers());
     }
 
     @Override
@@ -44,9 +45,9 @@ public class DefaultGroupValidator implements GroupValidator {
     }
 
     @Override
-    public boolean validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception {
+    public void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception {
         if (groupVirtualServers == null || groupVirtualServers.size() == 0)
-            return false;
+            throw new ValidationException("No virtual server is found bound to this group.");
         if (groupId == null)
             groupId = 0L;
         Set<Long> virtualServerIds = new HashSet<>();
@@ -56,9 +57,9 @@ public class DefaultGroupValidator implements GroupValidator {
                 if (!PathRewriteParser.validate(groupVirtualServer.getRewrite()))
                     throw new ValidationException("Invalid rewrite value.");
             VirtualServer vs = groupVirtualServer.getVirtualServer();
-            VirtualServer checkVs = virtualServerRepository.getById(vs.getId());
+            SlbVirtualServerDo checkVs = slbVirtualServerDao.findByPK(vs.getId(), SlbVirtualServerEntity.READSET_FULL);
             if (checkVs == null) {
-                checkVs = virtualServerRepository.getBySlbAndName(vs.getSlbId(), vs.getName());
+                checkVs = slbVirtualServerDao.findBySlbAndName(vs.getSlbId(), vs.getName(), SlbVirtualServerEntity.READSET_FULL);
                 vs.setId(checkVs.getId());
             }
             if (checkVs == null)
@@ -66,24 +67,23 @@ public class DefaultGroupValidator implements GroupValidator {
             else
                 virtualServerIds.add(vs.getId());
             if (groupPaths.contains(vs.getId() + groupVirtualServer.getPath()))
-                return false;
+                throw new ValidationException("Duplicate path \"" + groupVirtualServer.getPath() + "\" is found on virtual server " + vs.getId() + ".");
             else
                 groupPaths.add(vs.getId() + groupVirtualServer.getPath());
 
         }
         for (Long virtualServerId : virtualServerIds) {
-            Long[] groupIds = virtualServerRepository.findGroupsByVirtualServer(virtualServerId);
-            for (int i = 0; i < groupIds.length; i++) {
-                if (groupIds[i].equals(groupId))
-                    groupIds[i] = 0L;
+            List<Long> groupIds = new ArrayList<>();
+            for (GroupSlbDo groupSlb : groupSlbDao.findAllByVirtualServer(virtualServerId, GroupSlbEntity.READSET_FULL)) {
+                if (!groupId.equals(groupSlb.getGroupId()))
+                    groupIds.add(groupSlb.getGroupId());
             }
-            for (GroupVirtualServer gvs : virtualServerRepository.listGroupVsByGroups(groupIds)) {
-                if (groupPaths.contains(gvs.getVirtualServer().getId() + gvs.getPath()))
-                    return false;
+            for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByGroups(groupIds.toArray(new Long[groupIds.size()]), GroupSlbEntity.READSET_FULL)) {
+                if (groupPaths.contains(groupSlbDo.getSlbVirtualServerId() + groupSlbDo.getPath()))
+                    throw new ValidationException("Duplicate path \"" + groupSlbDo.getPath() + "\" is found on virtual server " + groupSlbDo.getSlbVirtualServerId() + ".");
                 else
-                    groupPaths.add(gvs.getVirtualServer().getId() + gvs.getPath());
+                    groupPaths.add(groupSlbDo.getSlbVirtualServerId() + groupSlbDo.getPath());
             }
         }
-        return true;
     }
 }

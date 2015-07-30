@@ -19,24 +19,45 @@ import java.util.Set;
 @Component("slbModelValidator")
 public class DefaultSlbValidator implements SlbValidator {
     @Resource
-    private GroupSlbDao groupSlbDao;
-    @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
-    
+    @Resource
+    private GroupSlbDao groupSlbDao;
+
     @Override
-    public void validate(Slb slb) throws ValidationException {
+    public void validate(Slb slb) throws Exception {
         if (slb == null || slb.getName() == null || slb.getName().isEmpty()) {
             throw new ValidationException("Slb with null value cannot be persisted.");
         }
         if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
-            throw new ValidationException("Slb with invalid server data cannot be persisted.");
+            throw new ValidationException("Slb without slb servers cannot be persisted.");
         }
-        Set<String> existingHost = new HashSet<>();
+        validateVirtualServer(slb.getVirtualServers());
+    }
+
+
+    @Override
+    public void checkVirtualServerDependencies(Slb slb) throws Exception {
+        Set<Long> deleted = new HashSet<>();
+        for (SlbVirtualServerDo virtualServer : slbVirtualServerDao.findAllBySlb(slb.getId(), SlbVirtualServerEntity.READSET_FULL)) {
+            deleted.add(virtualServer.getId());
+        }
         for (VirtualServer virtualServer : slb.getVirtualServers()) {
+            deleted.remove(virtualServer);
+        }
+        for (Long vsId : deleted) {
+            if (groupSlbDao.findAllByVirtualServer(vsId, GroupSlbEntity.READSET_FULL).size() > 0)
+                throw new ValidationException("Virtual server with id " + vsId + "cannot be deleted. Dependencies exist.");
+        }
+    }
+
+    @Override
+    public void validateVirtualServer(List<VirtualServer> virtualServers) throws Exception {
+        Set<String> existingHost = new HashSet<>();
+        for (VirtualServer virtualServer : virtualServers) {
             for (Domain domain : virtualServer.getDomains()) {
                 String key = domain.getName() + ":" + virtualServer.getPort();
                 if (existingHost.contains(key))
-                    throw new ValidationException("Duplicate domain and port is found: " + key);
+                    throw new ValidationException("Duplicate domain and port combination is found: " + key);
                 else
                     existingHost.add(key);
             }
@@ -44,12 +65,8 @@ public class DefaultSlbValidator implements SlbValidator {
     }
 
     @Override
-    public boolean removable(Slb slb) throws Exception {
-        return groupSlbDao.findAllBySlb(slb.getId(), GroupSlbEntity.READSET_FULL).size() == 0;
-    }
-
-    @Override
-    public boolean modifiable(Slb slb) throws Exception {
-        return true;
+    public void removable(Slb slb) throws Exception {
+        if (groupSlbDao.findAllBySlb(slb.getId(), GroupSlbEntity.READSET_FULL).size() > 0)
+            throw new ValidationException("Slb with id " + slb.getId() + " cannot be deleted. Dependencies exist.");
     }
 }

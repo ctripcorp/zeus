@@ -1,11 +1,6 @@
 package com.ctrip.zeus.service.model.handler;
 
-import com.ctrip.zeus.dal.core.SlbDo;
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
-import org.unidal.dal.jdbc.DalException;
-
-import java.util.List;
 
 /**
  * @author:xingchaowang
