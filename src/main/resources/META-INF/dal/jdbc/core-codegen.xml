@@ -370,13 +370,14 @@
   <entity name="conf-group-active" table="conf_group_active" alias="cga">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
+    <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
     <member name="content" field="content" value-type="String" length="16777215" />
     <member name="version" field="version" value-type="int" length="10" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="group_id" unique="true" members="group_id ASC" />
+    <index name="group_id_slb_id" unique="true" members="group_id ASC, slb_id ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />

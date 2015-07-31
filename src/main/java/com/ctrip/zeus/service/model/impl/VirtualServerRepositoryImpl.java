@@ -4,9 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
@@ -31,7 +29,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Resource
     private SlbDomainDao slbDomainDao;
     @Resource
-    private SlbRepository slbRepository;
+    private SlbDao slbDao;
 
     @Override
     public List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception {
@@ -141,9 +139,12 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             GroupSlbDo originServer = originServers.get(groupVirtualServer.getVirtualServer().getId());
             if (originServer != null)
                 originServers.remove(originServer.getSlbVirtualServerId());
-            Slb slb = slbRepository.getByVirtualServer(groupVirtualServer.getVirtualServer().getId());
+            SlbVirtualServerDo d = slbVirtualServerDao.findByPK(groupVirtualServer.getVirtualServer().getId(), SlbVirtualServerEntity.READSET_FULL);
+            if (d == null)
+                throw new ValidationException("Virtual server with id " + groupVirtualServer.getVirtualServer().getId() + " cannot be found.");
+            SlbDo slb = slbDao.findById(d.getSlbId(), SlbEntity.READSET_FULL);
             if (slb == null)
-                throw new ValidationException("Cannot find the corresponding slb from virtual server.");
+                throw new ValidationException("Cannot find the corresponding slb from virtual server with id " + d.getId() + ".");
             groupVirtualServer.getVirtualServer().setSlbId(slb.getId());
             groupSlbDao.insert(toGroupSlbDo(groupId, groupVirtualServer));
         }
@@ -189,8 +190,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     private void querySlbDomains(Long slbVirtualServerId, VirtualServer virtualServer) throws DalException {
         List<SlbDomainDo> list = slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL);
         for (SlbDomainDo d : list) {
-            Domain e = C.toDomain(d);
-            virtualServer.addDomain(e);
+            virtualServer.addDomain(new Domain().setName(d.getName()));
         }
     }
 

@@ -33,7 +33,7 @@ public class SlbSyncImpl implements SlbSync {
     private VirtualServerRepository virtualServerRepository;
     @Resource
     private SlbValidator slbModelValidator;
-    
+
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
@@ -61,15 +61,12 @@ public class SlbSyncImpl implements SlbSync {
             throw new ValidationException("Slb does not exist.");
         if (check.getVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        if (slbModelValidator.modifiable(slb)) {
-            SlbDo d = C.toSlbDo(slb.getId(), slb);
-            slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
-            Long id = d.getId();
-            syncSlbVips(id, slb.getVips());
-            syncSlbServers(id, slb.getSlbServers());
-        } else {
-            throw new ValidationException(check.getName() + " cannot be updated. Dependency exists.");
-        }
+        slbModelValidator.checkVirtualServerDependencies(slb);
+        SlbDo d = C.toSlbDo(slb.getId(), slb);
+        slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
+        Long id = d.getId();
+        syncSlbVips(id, slb.getVips());
+        syncSlbServers(id, slb.getSlbServers());
     }
 
     @Override
@@ -77,13 +74,11 @@ public class SlbSyncImpl implements SlbSync {
         SlbDo d = slbDao.findById(slbId, SlbEntity.READSET_FULL);
         if (d == null)
             return 0;
-        if (slbModelValidator.removable(C.toSlb(d))) {
-            slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(slbId));
-            slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(slbId));
-            virtualServerRepository.batchDeleteVirtualServers(slbId);
-            return slbDao.deleteByPK(d);
-        }
-        throw new ValidationException(d.getName() + " cannot be deleted. Dependency exists.");
+        slbModelValidator.removable(C.toSlb(d));
+        slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(slbId));
+        slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(slbId));
+        virtualServerRepository.batchDeleteVirtualServers(slbId);
+        return slbDao.deleteByPK(d);
     }
 
     private void syncSlbVips(Long slbId, List<Vip> vips) throws DalException {

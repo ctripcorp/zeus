@@ -99,12 +99,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public List<String> listGroupsByGroupServer(String groupServerIp) throws Exception {
+    public List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception {
         Long[] groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
-        List<String> result = new ArrayList<>();
-        for (Group group : groupQuery.batchGet(groupIds)) {
-            result.add(group.getName());
-        }
-        return result;
+        return groupQuery.batchGet(groupIds);
     }
 }

@@ -29,7 +29,5 @@ public interface GroupRepository extends Repository {
 
     int delete(Long groupId) throws Exception;
 
-    List<String> listGroupsByGroupServer(String groupServerIp) throws Exception;
-
-
+    List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception;
 }

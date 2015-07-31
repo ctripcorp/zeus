@@ -1,6 +1,5 @@
 package com.ctrip.zeus.service.model.impl;
 
-import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.dal.core.NginxServerDo;
 import com.ctrip.zeus.exceptions.ValidationException;
