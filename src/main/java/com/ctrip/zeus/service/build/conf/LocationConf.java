@@ -19,7 +19,7 @@ public class LocationConf {
     private static DynamicStringProperty whiteList = DynamicPropertyFactory.getInstance().getStringProperty("bastion.white.list", null);
     private static DynamicStringProperty clientMaxSizeList = DynamicPropertyFactory.getInstance().getStringProperty("client.max.body.size.list", null);
     private static DynamicStringProperty xforwardedforEnable = DynamicPropertyFactory.getInstance().getStringProperty("x-forwarded-for.enable", null);
-    private static DynamicStringProperty xforwardedforWhileList = DynamicPropertyFactory.getInstance().getStringProperty("x-forwarded-for.white.list", "10%.32%.(.+)");
+    private static DynamicStringProperty xforwardedforWhileList = DynamicPropertyFactory.getInstance().getStringProperty("x-forwarded-for.white.list", "172\\..*|192\\.168.*|10\\..*");
 
     public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
@@ -60,11 +60,12 @@ public class LocationConf {
             }
         }
         if (needXFF){
-            b.append("rewrite_by_lua '\n")
-                    .append("local inWhite = \"\";\n")
+            b.append("if ( $remote_addr ~* \"").append(xforwardedforWhileList.get()).append("\" ){\n")
+                    .append("set $inWhite  \"true\";\n")
+                    .append("}\n")
+                    .append("rewrite_by_lua '\n")
                     .append("local headers = ngx.req.get_headers() ;\n")
-                    .append("inWhite = string.match(ngx.var.remote_addr,\"").append(xforwardedforWhileList.get()).append("\")\n")
-                    .append("if inWhite == nil or headers[\"X-Forwarded-For\"] == nil then\n")
+                    .append("if ngx.var.inWhite ~= \"true\" or headers[\"X-Forwarded-For\"] == nil then\n")
                     .append("if (headers[\"True-Client-Ip\"] ~= nil) then\n")
                     .append("ngx.req.set_header(\"X-Forwarded-For\", headers[\"True-Client-IP\"])\n")
                     .append("else\n")
