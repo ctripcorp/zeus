@@ -69,24 +69,26 @@ public class SlbRepositoryImpl implements SlbRepository {
     public List<Slb> listByGroupServerAndGroup(String groupServerIp, Long groupId) throws Exception {
         if (groupServerIp == null && groupId == null)
             throw new ValidationException("At least one parameter must not be null.");
-        Long[] groupIds = null;
-        if (groupServerIp != null) {
+        Long[] groupIds = new Long[0];
+        if (groupServerIp != null)
             groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
-        }
-        if (groupId != null) {
-            boolean existed = false;
-            for (Long id : groupIds) {
-                if (id.equals(groupId)) {
-                    existed = true;
-                    break;
-                }
+        if (groupId == null)
+            return slbQuery.getByGroups(groupIds);
+
+        if (groupId != null && groupIds.length == 0)
+            return slbQuery.getByGroups(new Long[]{groupId});
+
+        boolean existed = false;
+        for (Long id : groupIds) {
+            if (id.equals(groupId)) {
+                existed = true;
+                break;
             }
-            if (existed)
-                groupIds = new Long[]{groupId};
-            else
-                return new ArrayList<>();
         }
-        return slbQuery.getByGroups(groupIds);
+        if (existed)
+            return slbQuery.getByGroups(new Long[]{groupId});
+        else
+            return new ArrayList<>();
     }
 
     @Override

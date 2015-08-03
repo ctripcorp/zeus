@@ -42,7 +42,7 @@ public class DefaultSlbValidator implements SlbValidator {
             deleted.add(virtualServer.getId());
         }
         for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            deleted.remove(virtualServer);
+            deleted.remove(virtualServer.getId());
         }
         for (Long vsId : deleted) {
             if (groupSlbDao.findAllByVirtualServer(vsId, GroupSlbEntity.READSET_FULL).size() > 0)

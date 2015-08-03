@@ -70,6 +70,7 @@ public class C {
     public static VirtualServer toVirtualServer(SlbVirtualServerDo d) {
         return new VirtualServer()
                 .setId(d.getId())
+                .setSlbId(d.getSlbId())
                 .setPort(d.getPort())
                 .setName(d.getName())
                 .setSsl(d.isIsSsl());

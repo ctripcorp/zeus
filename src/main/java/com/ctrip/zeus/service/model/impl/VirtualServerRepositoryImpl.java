@@ -50,12 +50,10 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     public List<VirtualServer> listVirtualServerBySlb(Long slbId) throws Exception {
         List<VirtualServer> result = new ArrayList<>();
         for (SlbVirtualServerDo d : slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL)) {
-            VirtualServer e = C.toVirtualServer(d);
-            if (e == null)
+            if (d == null)
                 continue;
             else
-                result.add(e);
-            querySlbDomains(d.getId(), e);
+                result.add(createVirtualServer(d));
         }
         return result;
     }
@@ -65,9 +63,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         SlbVirtualServerDo d = slbVirtualServerDao.findByPK(virtualServerId, SlbVirtualServerEntity.READSET_FULL);
         if (d == null)
             return null;
-        VirtualServer vs = C.toVirtualServer(d);
-        querySlbDomains(d.getId(), vs);
-        return C.toVirtualServer(d);
+        return createVirtualServer(d);
     }
 
     @Override
@@ -75,9 +71,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         SlbVirtualServerDo d = slbVirtualServerDao.findBySlbAndName(slbId, virtualServerName, SlbVirtualServerEntity.READSET_FULL);
         if (d == null)
             return null;
-        VirtualServer vs = C.toVirtualServer(d);
-        querySlbDomains(d.getId(), vs);
-        return C.toVirtualServer(d);
+        return createVirtualServer(d);
     }
 
     @Override
@@ -128,17 +122,18 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void updateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception {
-        Map<Long, GroupSlbDo> originServers = Maps.uniqueIndex(
-                groupSlbDao.findAllByGroup(groupId, GroupSlbEntity.READSET_FULL), new Function<GroupSlbDo, Long>() {
+        List<GroupSlbDo> originServers = groupSlbDao.findAllByGroup(groupId, GroupSlbEntity.READSET_FULL);
+        Map<Long, GroupSlbDo> uniqueCheck = Maps.uniqueIndex(
+                originServers, new Function<GroupSlbDo, Long>() {
                     @Override
                     public Long apply(GroupSlbDo input) {
                         return input.getSlbVirtualServerId();
                     }
                 });
         for (GroupVirtualServer groupVirtualServer : groupVirtualServers) {
-            GroupSlbDo originServer = originServers.get(groupVirtualServer.getVirtualServer().getId());
+            GroupSlbDo originServer = uniqueCheck.get(groupVirtualServer.getVirtualServer().getId());
             if (originServer != null)
-                originServers.remove(originServer.getSlbVirtualServerId());
+                originServers.remove(originServer);
             SlbVirtualServerDo d = slbVirtualServerDao.findByPK(groupVirtualServer.getVirtualServer().getId(), SlbVirtualServerEntity.READSET_FULL);
             if (d == null)
                 throw new ValidationException("Virtual server with id " + groupVirtualServer.getVirtualServer().getId() + " cannot be found.");
@@ -146,9 +141,9 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             if (slb == null)
                 throw new ValidationException("Cannot find the corresponding slb from virtual server with id " + d.getId() + ".");
             groupVirtualServer.getVirtualServer().setSlbId(slb.getId());
-            groupSlbDao.insert(toGroupSlbDo(groupId, groupVirtualServer));
+            groupSlbDao.insertOrUpdate(toGroupSlbDo(groupId, groupVirtualServer));
         }
-        for (GroupSlbDo d : originServers.values()) {
+        for (GroupSlbDo d : originServers) {
             groupSlbDao.deleteByPK(d);
         }
     }
@@ -160,29 +155,35 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             result.add(gvs);
             SlbVirtualServerDo svsd = slbVirtualServerDao.findByPK(groupSlbDo.getSlbVirtualServerId(), SlbVirtualServerEntity.READSET_FULL);
             if (svsd != null)
-                gvs.setVirtualServer(toVirtualServer(svsd));
+                gvs.setVirtualServer(createVirtualServer(svsd));
         }
         return result;
     }
 
+    private VirtualServer createVirtualServer(SlbVirtualServerDo d) throws DalException {
+        VirtualServer vs = C.toVirtualServer(d);
+        querySlbDomains(d.getId(), vs);
+        return vs;
+    }
+
     private void syncDomains(Long slbVirtualServerId, List<Domain> domains) throws DalException {
-        Map<String, SlbDomainDo> originDomains = Maps.uniqueIndex(
-                slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL), new Function<SlbDomainDo, String>() {
+        List<SlbDomainDo> originDomains = slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL);
+        Map<String, SlbDomainDo> uniqueCheck = Maps.uniqueIndex(
+                originDomains, new Function<SlbDomainDo, String>() {
                     @Override
                     public String apply(SlbDomainDo input) {
                         return input.getName();
                     }
                 });
-
         for (Domain domain : domains) {
-            SlbDomainDo originDomain = originDomains.get(domain.getName());
+            SlbDomainDo originDomain = uniqueCheck.get(domain.getName());
             if (originDomain != null) {
-                originDomains.remove(originDomain.getName());
+                originDomains.remove(originDomain);
                 continue;
             }
             slbDomainDao.insert(new SlbDomainDo().setSlbVirtualServerId(slbVirtualServerId).setName(domain.getName()));
         }
-        for (SlbDomainDo d : originDomains.values()) {
+        for (SlbDomainDo d : originDomains) {
             slbDomainDao.deleteByPK(d);
         }
     }
