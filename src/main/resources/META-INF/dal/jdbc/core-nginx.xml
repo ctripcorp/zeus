@@ -36,6 +36,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-slb-id-from-version" type="DELETE">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    AND <FIELD name='version'/> > ${version}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="nginx-conf-server" table="nginx_conf_server" alias="ncs">
@@ -89,6 +100,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-slb-id-from-version" type="DELETE">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    AND <FIELD name='version'/> > ${version}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="nginx-conf-upstream" table="nginx_conf_upstream" alias="ncs">
@@ -139,6 +161,17 @@
                     FROM <TABLE/>
                         WHERE <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
                         AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb-id-from-version" type="DELETE">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    AND <FIELD name='version'/> > ${version}
                     ]]>
                 </statement>
             </query>

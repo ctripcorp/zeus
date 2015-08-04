@@ -58,16 +58,16 @@ public class BuildInfoServiceImpl implements BuildInfoService {
     }
 
     @Override
-    public boolean updateTicket(Long slbId, int ticket) throws Exception
+    public boolean updateTicket(Long slbId, int version) throws Exception
     {
         BuildInfoDo d = buildInfoDao.findBySlbId(slbId, BuildInfoEntity.READSET_FULL);
 
-        if (ticket>d.getCurrentTicket())
+        if (version>d.getCurrentTicket())
         {
-            d.setCurrentTicket(ticket);
+            d.setCurrentTicket(version);
             buildInfoDao.updateByPK(d, BuildInfoEntity.UPDATESET_FULL);
 
-            logger.debug("Update ticket success. Ticket Num: "+ticket+"Slb ID: "+ slbId);
+            logger.debug("Update ticket success. Ticket Num: "+version+"Slb ID: "+ slbId);
 
             return true;
         }else

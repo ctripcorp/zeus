@@ -1359,6 +1359,43 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="snap-server-group" table="snap_server_group" alias="ssg">
+    <member name="id" field="id" value-type="int" length="10" nullable="false" key="true" auto-increment="true" />
+    <member name="ip" field="ip" value-type="String" length="50" nullable="false" />
+    <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="int" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="status-group-server" table="status_group_server" alias="sgs">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
@@ -1521,7 +1558,7 @@
     </query-defs>
   </entity>
   <entity name="task" table="task" alias="t2">
-    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" />
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="ops-type" field="ops_type" value-type="String" length="50" nullable="false" />
     <member name="group-id" field="group_id" value-type="long" length="19" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" />

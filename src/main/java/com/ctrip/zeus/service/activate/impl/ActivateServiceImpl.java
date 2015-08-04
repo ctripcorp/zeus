@@ -4,9 +4,12 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.model.ArchiveService;
+import com.ctrip.zeus.service.task.constant.TaskStatus;
+import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +19,7 @@ import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -130,5 +134,43 @@ public class ActivateServiceImpl implements ActivateService {
             }
             return result;
         }
+    }
+
+    @Override
+    public Group getActivatingGroup(Long groupId, int version) {
+        Archive archive = archiveService.getGroupArchive(groupId,version);
+        if (archive == null ){
+            return null;
+        }
+        String content = archive.getContent();
+        try {
+            Group group = DefaultSaxParser.parseEntity(Group.class, content);
+            if (group != null){
+                return group;
+            }
+        } catch (Exception e) {
+            logger.warn("Archive Parser Fail ! GroupId:"+groupId+" Version:"+version);
+        }
+        return null;
+    }
+
+    @Override
+    public Slb getActivatingSlb(Long slbId , int version) {
+        Archive archive = archiveService.getSlbArchive(slbId, version);
+        if (archive == null ){
+            logger.warn("Archive Not Found ! SlbId:"+slbId+" Version:"+version);
+            return null;
+        }
+        String content = archive.getContent();
+        try {
+            Slb slb = DefaultSaxParser.parseEntity(Slb.class, content);
+            if (slb == null){
+                logger.warn("Archive Parser Fail ! SlbId:"+slbId+" Version:"+version);
+            }
+            return slb;
+        } catch (Exception e) {
+            logger.warn("Archive Parser Fail ! SlbId:"+slbId+" Version:"+version);
+        }
+        return null;
     }
 }

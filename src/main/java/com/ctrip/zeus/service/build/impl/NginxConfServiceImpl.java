@@ -166,12 +166,9 @@ public class NginxConfServiceImpl implements NginxConfService {
 
 
     @Override
-    public List<DyUpstreamOpsData> buildUpstream(Slb slb, Long groupId) throws Exception {
+    public List<DyUpstreamOpsData> buildUpstream(Slb slb, Long groupId ) throws Exception {
 
         List<DyUpstreamOpsData> result = new ArrayList<>();
-
-        Set<String> allDownServers = statusService.findAllDownServers();
-        Set<String> allUpGroupServers = statusService.findAllUpGroupServersBySlbId(slb.getId());
 
         List<String> groupActiveconf =activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{groupId});
 

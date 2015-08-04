@@ -12,5 +12,6 @@
     <file path="core-operationlog.xml"/>
     <file path="core-tag.xml"/>
     <file path="core-task.xml"/>
+    <file path="core-server.xml"/>
 </manifest>
 
