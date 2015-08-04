@@ -61,7 +61,6 @@ public class SlbSyncImpl implements SlbSync {
             throw new ValidationException("Slb does not exist.");
         if (check.getVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        slbModelValidator.checkVirtualServerDependencies(slb);
         SlbDo d = C.toSlbDo(slb.getId(), slb);
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
         Long id = d.getId();

@@ -54,7 +54,9 @@ public class ModelServiceTest extends AbstractSpringTest {
         addGroups();
     }
 
-    /********************* test SlbRepository *********************/
+    /**
+     * ****************** test SlbRepository ********************
+     */
 
     @Test
     public void testListSlbs() throws Exception {
@@ -117,12 +119,34 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testUpdateSlb() throws Exception {
-        Slb originSlb = slbRepository.get(defaultSlb.getName());
-        originSlb.setStatus("HANG");
-        slbRepository.update(originSlb);
-        Slb updatedSlb = slbRepository.getById(originSlb.getId());
-        ModelAssert.assertSlbEquals(originSlb, updatedSlb);
-        Assert.assertEquals(originSlb.getVersion().intValue() + 1, updatedSlb.getVersion().intValue());
+        Slb s = new Slb().setName("testUpdateSlb").setVersion(1)
+                .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf")
+                .setNginxWorkerProcesses(2).setStatus("TEST")
+                .addVip(new Vip().setIp("127.0.0.1"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.11").setHostName("dev1"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.12").setHostName("dev2"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.13").setHostName("dev3"))
+                .addVirtualServer(new VirtualServer().setName("www.nihao.com").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("www.nihao.com")))
+                .addVirtualServer(new VirtualServer().setName("www.hello.com").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("www.hello.com")));
+        slbRepository.add(s);
+        Slb newest = slbRepository.get(s.getName());
+        s.setId(newest.getId());
+        Assert.assertEquals(2, s.getVirtualServers().size());
+
+        Slb updated = new Slb().setId(newest.getId()).setName("testUpdateSlb").setVersion(1)
+                .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf")
+                .setNginxWorkerProcesses(2).setStatus("TEST")
+                .addVip(new Vip().setIp("127.0.0.1"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.11").setHostName("dev1"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.12").setHostName("dev2"));
+        slbRepository.update(updated);
+        newest = slbRepository.get(s.getName());
+        Assert.assertEquals(2, newest.getSlbServers().size());
+        // Update slb should not update virtual servers
+        Assert.assertEquals(2, newest.getVirtualServers().size());
+        Assert.assertEquals(2, newest.getVersion().intValue());
     }
 
     @Test
@@ -139,50 +163,46 @@ public class ModelServiceTest extends AbstractSpringTest {
                 .addVirtualServer(new VirtualServer().setName("www.hello.com").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("www.hello.com")));
         slbRepository.add(s);
-        Slb newest = slbRepository.get(s.getName());
-        s.setId(newest.getId());
-        Assert.assertEquals(2, s.getVirtualServers().size());
+        s = slbRepository.get(s.getName());
 
-        Slb updated = new Slb().setId(newest.getId()).setName("testUpdateVirtualServer").setVersion(1)
+        virtualServerRepository.addVirtualServer(s.getId(), new VirtualServer().setSlbId(s.getId()).setName("www.bonjour.com").setSsl(false).setPort("80")
+                .addDomain(new Domain().setName("www.bonjour.com")));
+        virtualServerRepository.addVirtualServer(s.getId(), new VirtualServer().setSlbId(s.getId()).setName("www.hallo.com").setSsl(false).setPort("80")
+                .addDomain(new Domain().setName("www.hallo.com")));
+
+        List<VirtualServer> virtualServers = s.getVirtualServers();
+        virtualServers.get(0).setName("www.nihao.com.cn");
+        virtualServers.get(1).setName("www.hello.com.cn");
+        virtualServerRepository.updateVirtualServers(virtualServers.toArray(new VirtualServer[virtualServers.size()]));
+        Slb updated = slbRepository.get(s.getName());
+        Assert.assertEquals(updated.getVirtualServers().size(), 4);
+
+        virtualServerRepository.deleteVirtualServer(virtualServers.get(0).getId());
+        virtualServerRepository.deleteVirtualServer(virtualServers.get(1).getId());
+
+        updated = slbRepository.get(s.getName());
+        Assert.assertEquals(updated.getVirtualServers().size(), 2);
+        Assert.assertEquals(updated.getVirtualServers().get(0).getName(), "www.bonjour.com");
+        Assert.assertEquals(updated.getVirtualServers().get(1).getName(), "www.hallo.com");
+
+        Slb s2 = new Slb().setName("testUpdateVirtualServer2").setVersion(1)
                 .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf")
                 .setNginxWorkerProcesses(2).setStatus("TEST")
                 .addVip(new Vip().setIp("127.0.0.1"))
                 .addSlbServer(new SlbServer().setIp("10.1.1.11").setHostName("dev1"))
-                .addSlbServer(new SlbServer().setIp("10.1.1.12").setHostName("dev2"));
-        slbRepository.update(updated);
-        newest = slbRepository.get(s.getName());
-        Assert.assertEquals(2, newest.getSlbServers().size());
-        // Update slb should not update virtual servers
-        Assert.assertEquals(2, newest.getVirtualServers().size());
-//        slbRepository.update(s.setVersion(newest.getVersion()));
-//        updated.addVirtualServer(new VirtualServer().setName("www.bonjour.com").setSsl(false).setPort("80")
-//                .addDomain(new Domain().setName("www.bonjour.com")))
-//                .addVirtualServer(new VirtualServer().setName("www.hallo.com").setSsl(false).setPort("80")
-//                        .addDomain(new Domain().setName("www.hallo.com")));
-//        slbRepository.update(updated.setVersion(s.getVersion() + 1));
-//        newest = slbRepository.get(s.getName());
-//        Assert.assertEquals(newest.getVirtualServers().size(), 2);
-//        Assert.assertEquals(newest.getVirtualServers().get(0).getName(), "www.bonjour.com");
-//        Assert.assertEquals(newest.getVirtualServers().get(1).getName(), "www.hallo.com");
-//
-//        Slb s2 = new Slb().setName("testUpdateVirtualServer2").setVersion(1)
-//                .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf")
-//                .setNginxWorkerProcesses(2).setStatus("TEST")
-//                .addVip(new Vip().setIp("127.0.0.1"))
-//                .addSlbServer(new SlbServer().setIp("10.1.1.11").setHostName("dev1"))
-//                .addSlbServer(new SlbServer().setIp("10.1.1.12").setHostName("dev2"))
-//                .addSlbServer(new SlbServer().setIp("10.1.1.13").setHostName("dev3"))
-//                .addVirtualServer(new VirtualServer().setName("www.bonjour.com").setSsl(false).setPort("80")
-//                        .addDomain(new Domain().setName("www.bonjour.com")))
-//                .addVirtualServer(new VirtualServer().setName("www.hallo.com").setSsl(false).setPort("80")
-//                        .addDomain(new Domain().setName("www.hallo.com")))
-//                .addVirtualServer(new VirtualServer().setName("www.hello.com").setSsl(false).setPort("80")
-//                        .addDomain(new Domain().setName("www.hello.com")));
-//        slbRepository.add(s2);
-//        s2 = slbRepository.get(s2.getName());
-//        newest = slbRepository.get(s.getName());
-//        Assert.assertEquals(newest.getVirtualServers().size(), 2);
-//        Assert.assertEquals(s2.getVirtualServers().size(), 3);
+                .addSlbServer(new SlbServer().setIp("10.1.1.12").setHostName("dev2"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.13").setHostName("dev3"))
+                .addVirtualServer(new VirtualServer().setName("www.bonjour.com").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("www.bonjour.com")))
+                .addVirtualServer(new VirtualServer().setName("www.hallo.com").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("www.hallo.com")))
+                .addVirtualServer(new VirtualServer().setName("www.hello.com").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("www.hello.com")));
+        slbRepository.add(s2);
+        s2 = slbRepository.get(s2.getName());
+        updated = slbRepository.get(s.getName());
+        Assert.assertEquals(updated.getVirtualServers().size(), 2);
+        Assert.assertEquals(s2.getVirtualServers().size(), 3);
     }
 
     @Test
@@ -236,7 +256,9 @@ public class ModelServiceTest extends AbstractSpringTest {
         Assert.assertEquals(1, slbRepository.delete(defaultSlb.getId()));
     }
 
-    /********************* test GroupRepository *********************/
+    /**
+     * ****************** test GroupRepository ********************
+     */
 
     @Test
     public void testGetGroup() throws Exception {
@@ -299,7 +321,7 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     private void addGroups() throws Exception {
-        testGroup = generateGroup("testGroup",  defaultSlb, defaultSlb.getVirtualServers().get(1));
+        testGroup = generateGroup("testGroup", defaultSlb, defaultSlb.getVirtualServers().get(1));
         insertedTestGroupId = groupRepository.add(testGroup).getId();
         // set virtual server full information
         testGroup.getGroupVirtualServers().get(0).setPriority(1000).setVirtualServer(defaultSlb.getVirtualServers().get(1));
@@ -327,7 +349,9 @@ public class ModelServiceTest extends AbstractSpringTest {
         }
     }
 
-    /********************* test ArchiveService *********************/
+    /**
+     * ****************** test ArchiveService ********************
+     */
 
     @Test
     public void testGetLatestGroupArchive() throws Exception {
@@ -341,7 +365,9 @@ public class ModelServiceTest extends AbstractSpringTest {
         Assert.assertTrue(archive.getVersion() > 0);
     }
 
-    /********************* test end *********************/
+    /**
+     * ****************** test end ********************
+     */
 
     @After
     public void clearDb() throws Exception {

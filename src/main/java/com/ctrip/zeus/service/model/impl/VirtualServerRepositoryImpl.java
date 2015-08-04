@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -30,6 +31,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     private SlbDomainDao slbDomainDao;
     @Resource
     private SlbDao slbDao;
+    @Resource
+    private SlbValidator slbModelValidator;
 
     @Override
     public List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception {
@@ -93,6 +96,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void updateVirtualServers(VirtualServer[] virtualServers) throws Exception {
+        slbModelValidator.validateVirtualServer(virtualServers);
         for (VirtualServer virtualServer : virtualServers) {
             if (virtualServer.getId() == null || virtualServer.getId().longValue() <= 0L)
                 throw new ValidationException("Invalid virtual server id.");
@@ -104,6 +108,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void deleteVirtualServer(Long virtualServerId) throws Exception {
+        slbModelValidator.checkVirtualServerDependencies(new VirtualServer[] {getById(virtualServerId)});
         slbDomainDao.deleteAllBySlbVirtualServer(new SlbDomainDo().setSlbVirtualServerId(virtualServerId));
         slbVirtualServerDao.deleteByPK(new SlbVirtualServerDo().setId(virtualServerId));
     }

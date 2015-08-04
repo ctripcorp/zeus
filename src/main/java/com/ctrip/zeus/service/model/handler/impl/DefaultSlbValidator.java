@@ -19,8 +19,6 @@ import java.util.Set;
 @Component("slbModelValidator")
 public class DefaultSlbValidator implements SlbValidator {
     @Resource
-    private SlbVirtualServerDao slbVirtualServerDao;
-    @Resource
     private GroupSlbDao groupSlbDao;
 
     @Override
@@ -31,27 +29,20 @@ public class DefaultSlbValidator implements SlbValidator {
         if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
             throw new ValidationException("Slb without slb servers cannot be persisted.");
         }
-        validateVirtualServer(slb.getVirtualServers());
+        List<VirtualServer> virtualServers = slb.getVirtualServers();
+        validateVirtualServer(virtualServers.toArray(new VirtualServer[virtualServers.size()]));
     }
 
-
     @Override
-    public void checkVirtualServerDependencies(Slb slb) throws Exception {
-        Set<Long> deleted = new HashSet<>();
-        for (SlbVirtualServerDo virtualServer : slbVirtualServerDao.findAllBySlb(slb.getId(), SlbVirtualServerEntity.READSET_FULL)) {
-            deleted.add(virtualServer.getId());
-        }
-        for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            deleted.remove(virtualServer.getId());
-        }
-        for (Long vsId : deleted) {
-            if (groupSlbDao.findAllByVirtualServer(vsId, GroupSlbEntity.READSET_FULL).size() > 0)
-                throw new ValidationException("Virtual server with id " + vsId + "cannot be deleted. Dependencies exist.");
+    public void checkVirtualServerDependencies(VirtualServer[] virtualServers) throws Exception {
+        for (VirtualServer vs : virtualServers) {
+            if (groupSlbDao.findAllByVirtualServer(vs.getId(), GroupSlbEntity.READSET_FULL).size() > 0)
+                throw new ValidationException("Virtual server with id " + vs.getId() + " cannot be deleted. Dependencies exist.");
         }
     }
 
     @Override
-    public void validateVirtualServer(List<VirtualServer> virtualServers) throws Exception {
+    public void validateVirtualServer(VirtualServer[] virtualServers) throws Exception {
         Set<String> existingHost = new HashSet<>();
         for (VirtualServer virtualServer : virtualServers) {
             for (Domain domain : virtualServer.getDomains()) {

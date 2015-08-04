@@ -128,6 +128,7 @@ public class ApiTest {
         Group app2 = gc.get(appName);
         // set virtual server full information
         app.getGroupVirtualServers().get(0).setVirtualServer(s.getVirtualServers().get(0));
+        app.getGroupVirtualServers().get(0).setPriority(1000);
         Assert.assertEquals(1, app2.getVersion().intValue());
         ModelAssert.assertGroupEquals(app, app2);
     }
