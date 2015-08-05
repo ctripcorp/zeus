@@ -16,7 +16,9 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -35,12 +37,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list() throws Exception {
-        List<Group> list = new ArrayList<>();
-        for (Group group : groupQuery.getAll()) {
-            list.add(group);
-        }
-        return list;
-
+        return groupQuery.getAll();
     }
 
     @Override
@@ -56,11 +53,11 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(Long slbId) throws Exception {
-        List<Group> result = new ArrayList<>();
-        for (GroupSlb groupSlb : slbRepository.listGroupSlbsBySlb(slbId)) {
-            result.add(getById(groupSlb.getGroupId()));
+        Set<Long> groupIds = new HashSet<>();
+        for (GroupSlb groupSlb :slbRepository.listGroupSlbsBySlb(slbId)) {
+            groupIds.add(groupSlb.getGroupId());
         }
-        return result;
+        return groupQuery.batchGetByIds(groupIds.toArray(new Long[groupIds.size()]));
     }
 
     @Override
