@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
@@ -33,6 +34,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     private SlbDao slbDao;
     @Resource
     private SlbValidator slbModelValidator;
+    @Resource
+    private GroupValidator groupModelValidator;
 
     @Override
     public List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception {
@@ -82,7 +85,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         List<GroupSlbDo> l = groupSlbDao.findAllByVirtualServer(virtualServerId, GroupSlbEntity.READSET_FULL);
         Long[] result = new Long[l.size()];
         for (int i = 0; i < l.size(); i++) {
-            result[i] = l.get(i).getId();
+            result[i] = l.get(i).getGroupId();
         }
         return result;
     }
@@ -127,6 +130,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void updateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception {
+        groupModelValidator.validateGroupVirtualServers(groupId, groupVirtualServers);
         List<GroupSlbDo> originServers = groupSlbDao.findAllByGroup(groupId, GroupSlbEntity.READSET_FULL);
         Map<Long, GroupSlbDo> uniqueCheck = Maps.uniqueIndex(
                 originServers, new Function<GroupSlbDo, Long>() {

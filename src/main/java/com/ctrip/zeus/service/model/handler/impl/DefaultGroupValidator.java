@@ -64,8 +64,12 @@ public class DefaultGroupValidator implements GroupValidator {
             }
             if (checkVs == null)
                 throw new ValidationException("Virtual Server does not exist.");
-            else
-                virtualServerIds.add(vs.getId());
+            else {
+                if (virtualServerIds.contains(vs.getId()))
+                    throw new ValidationException("Group-VirtualServer is an unique combination.");
+                else
+                    virtualServerIds.add(vs.getId());
+            }
             if (groupPaths.contains(vs.getId() + groupVirtualServer.getPath()))
                 throw new ValidationException("Duplicate path \"" + groupVirtualServer.getPath() + "\" is found on virtual server " + vs.getId() + ".");
             else
