@@ -158,6 +158,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         return groupServerStatus;
     }
 
+
     //TODO: should include port to get accurate upstream
     private boolean getUpstreamStatus(Long groupId, String ip , boolean memberUp , boolean serverUp) throws Exception {
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();

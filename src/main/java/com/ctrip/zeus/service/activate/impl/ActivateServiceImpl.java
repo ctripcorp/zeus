@@ -1,12 +1,10 @@
 package com.ctrip.zeus.service.activate.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.Archive;
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.activate.ActivateService;
+import com.ctrip.zeus.service.activate.ServerGroupService;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.task.constant.TaskStatus;
 import com.ctrip.zeus.task.entity.OpsTask;
@@ -16,10 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -36,13 +31,15 @@ public class ActivateServiceImpl implements ActivateService {
     private ArchiveService archiveService;
     @Resource
     ConfGroupSlbActiveDao confGroupSlbActiveDao;
+    @Resource
+    ServerGroupService serverGroupService;
 
     private Logger logger = LoggerFactory.getLogger(ActivateServiceImpl.class);
 
     @Override
-    public void activeSlb(long slbId) throws Exception {
+    public void activeSlb(long slbId , int version) throws Exception {
 
-        Archive archive = archiveService.getLatestSlbArchive(slbId);
+        Archive archive = archiveService.getSlbArchive(slbId, version);
         if (archive==null)
         {
             logger.info("getLatestSlbArchive return Null! SlbID: "+slbId);
@@ -59,8 +56,8 @@ public class ActivateServiceImpl implements ActivateService {
     }
 
     @Override
-    public void activeGroup(long groupId) throws Exception {
-        Archive archive = archiveService.getLatestGroupArchive(groupId);
+    public void activeGroup(long groupId , int version) throws Exception {
+        Archive archive = archiveService.getGroupArchive(groupId, version);
         if (archive==null)
         {
             logger.info("getLatestAppArchive return Null! GroupID: "+groupId);
@@ -88,7 +85,10 @@ public class ActivateServiceImpl implements ActivateService {
                                             .setSlbId(groupSlb.getVirtualServer().getSlbId()).setDataChangeLastTime(new Date())
                                             .setSlbVirtualServerId(groupSlb.getVirtualServer().getId()));
         }
-
+        List<GroupServer> groupServers = group.getGroupServers();
+        for (GroupServer gs : groupServers){
+            serverGroupService.insertServerGroup(gs.getIp(),groupId);
+        }
     }
 
     @Override
@@ -109,8 +109,8 @@ public class ActivateServiceImpl implements ActivateService {
     }
 
     @Override
-    public boolean isGroupActivated(Long groupId) throws Exception {
-        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIds(new Long[]{groupId},ConfGroupActiveEntity.READSET_FULL);
+    public boolean isGroupActivated(Long groupId , Long slbId) throws Exception {
+        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIdsAndSlbId(new Long[]{groupId},slbId,ConfGroupActiveEntity.READSET_FULL);
         if (null == groupActiveDos || groupActiveDos.size() == 0)
         {
             return false;
@@ -119,8 +119,8 @@ public class ActivateServiceImpl implements ActivateService {
         }
     }
     @Override
-    public HashMap<Long,Boolean> isGroupsActivated(Long[] groupIds) throws Exception {
-        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIds(groupIds,ConfGroupActiveEntity.READSET_FULL);
+    public HashMap<Long,Boolean> isGroupsActivated(Long[] groupIds,Long slbId) throws Exception {
+        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIdsAndSlbId(groupIds,slbId,ConfGroupActiveEntity.READSET_FULL);
         HashMap<Long,Boolean> result = new HashMap<>();
         for (Long groupId : groupIds){
             result.put(groupId,false);
@@ -138,12 +138,12 @@ public class ActivateServiceImpl implements ActivateService {
 
     @Override
     public Group getActivatingGroup(Long groupId, int version) {
-        Archive archive = archiveService.getGroupArchive(groupId,version);
-        if (archive == null ){
-            return null;
-        }
-        String content = archive.getContent();
         try {
+            Archive archive = archiveService.getGroupArchive(groupId,version);
+            if (archive == null ){
+                return null;
+            }
+            String content = archive.getContent();
             Group group = DefaultSaxParser.parseEntity(Group.class, content);
             if (group != null){
                 return group;
@@ -156,13 +156,13 @@ public class ActivateServiceImpl implements ActivateService {
 
     @Override
     public Slb getActivatingSlb(Long slbId , int version) {
-        Archive archive = archiveService.getSlbArchive(slbId, version);
-        if (archive == null ){
-            logger.warn("Archive Not Found ! SlbId:"+slbId+" Version:"+version);
-            return null;
-        }
-        String content = archive.getContent();
         try {
+            Archive archive = archiveService.getSlbArchive(slbId, version);
+            if (archive == null ){
+                logger.warn("Archive Not Found ! SlbId:"+slbId+" Version:"+version);
+                return null;
+            }
+            String content = archive.getContent();
             Slb slb = DefaultSaxParser.parseEntity(Slb.class, content);
             if (slb == null){
                 logger.warn("Archive Parser Fail ! SlbId:"+slbId+" Version:"+version);
@@ -170,6 +170,42 @@ public class ActivateServiceImpl implements ActivateService {
             return slb;
         } catch (Exception e) {
             logger.warn("Archive Parser Fail ! SlbId:"+slbId+" Version:"+version);
+        }
+        return null;
+    }
+
+    @Override
+    public Group getActivatedGroup(Long groupId , Long slbId) throws Exception {
+        List<ConfGroupActiveDo> list = confGroupActiveDao.findAllByGroupIdsAndSlbId(new Long[]{groupId},slbId,ConfGroupActiveEntity.READSET_FULL);
+        if (list != null && list.size()==1){
+            String content = list.get(0).getContent();
+            return DefaultSaxParser.parseEntity(Group.class,content);
+        }
+        return null;
+    }
+    @Override
+    public List<Group> getActivatedGroups(Long[] groupId , Long slbId) throws Exception {
+        List<Group> result = new ArrayList<>();
+        Group tmp = null;
+        List<ConfGroupActiveDo> list = confGroupActiveDao.findAllByGroupIdsAndSlbId(groupId,slbId,ConfGroupActiveEntity.READSET_FULL);
+        if (list != null && list.size()>0){
+            for (ConfGroupActiveDo groupActiveDo : list)
+            {
+                tmp = DefaultSaxParser.parseEntity(Group.class,groupActiveDo.getContent());
+                if (tmp!=null){
+                    result.add(tmp);
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Slb getActivatedSlb(Long slbId) throws Exception {
+        ConfSlbActiveDo slbActiveDo = confSlbActiveDao.findBySlbId(slbId,ConfSlbActiveEntity.READSET_FULL);
+        if (slbActiveDo!=null){
+            String content = slbActiveDo.getContent();
+            return DefaultSaxParser.parseEntity(Slb.class,content);
         }
         return null;
     }

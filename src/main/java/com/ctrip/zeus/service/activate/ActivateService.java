@@ -20,14 +20,14 @@ public interface ActivateService extends Repository {
      * @return
      * @throws Exception
      */
-    public void activeSlb(long slbId) throws Exception;
+    public void activeSlb(long slbId,int version) throws Exception;
     /**
      * update active data by slbname
      * @param groupId the Group id
      * @return
      * @throws Exception
      */
-    public void activeGroup(long groupId) throws Exception;
+    public void activeGroup(long groupId ,int version) throws Exception;
 
     /**
      * update active data by slbnames and appnames
@@ -52,14 +52,14 @@ public interface ActivateService extends Repository {
      * @return
      * @throws Exception
      */
-    public boolean isGroupActivated(Long groupId) throws  Exception;
+    public boolean isGroupActivated(Long groupId,Long slbId) throws  Exception;
     /**
      * group is activated
      * @param groupIds the Group id
      * @return
      * @throws Exception
      */
-    public HashMap<Long,Boolean> isGroupsActivated(Long[] groupIds) throws Exception;
+    public HashMap<Long,Boolean> isGroupsActivated(Long[] groupIds,Long slbId) throws Exception;
 
     /**
      * get activating groups
@@ -78,5 +78,27 @@ public interface ActivateService extends Repository {
 
     public Slb getActivatingSlb(Long slbId,int version);
 
+    /**
+     * get activated groups
+     * @param groupId , the Group id
+     * @return groups
+     */
+
+    public Group getActivatedGroup(Long groupId,Long slbId)throws Exception;
+    /**
+     * get activated groups
+     * @param groupId , the Group id
+     * @return groups
+     */
+
+    public List<Group> getActivatedGroups(Long[] groupId,Long slbId)throws Exception;
+
+    /**
+     * get activated slb
+     * @param slbId , the Slb id
+     * @return groups
+     */
+
+    public Slb getActivatedSlb(Long slbId)throws Exception;
 
 }

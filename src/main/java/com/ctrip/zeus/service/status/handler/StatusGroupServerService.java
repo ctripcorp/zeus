@@ -24,4 +24,5 @@ public interface StatusGroupServerService {
     void deleteBySlbIdAndGroupIdAndVsId(Long slbId,Long groupId,Long vsId) throws Exception;
 
     void updateStatusGroupServer(StatusGroupServerDo d) throws Exception;
+    void deleteByGroupIdAndSlbIdAndIp(Long slbId, Long groupId,String ip)throws Exception;
 }

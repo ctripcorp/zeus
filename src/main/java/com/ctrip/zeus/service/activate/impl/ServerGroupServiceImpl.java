@@ -26,4 +26,12 @@ public class ServerGroupServiceImpl implements ServerGroupService {
         }
         return result;
     }
+
+    @Override
+    public void insertServerGroup(String ip, Long groupId) throws Exception {
+        SnapServerGroupDo tmp = new SnapServerGroupDo();
+        tmp.setIp(ip).setGroupId(groupId);
+        snapServerGroupDao.insert(tmp);
+    }
+
 }

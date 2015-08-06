@@ -41,7 +41,7 @@ public class IntegrationTest {
         Group groupres = null;
         String groupstr = null;
         StringBuilder sb = new StringBuilder(128);
-        for (int i = 0 ; i < 10 ; i ++){
+        for (int i = 0 ; i < 3000 ; i ++){
             sb.append("groupName=__Test_app").append(i).append("&");
         }
         try{
@@ -52,7 +52,7 @@ public class IntegrationTest {
             System.out.println(e);
         }
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 3000; i++) {
             try {
                 groupstr = reqClient.getstr("/api/group?groupName=__Test_app"+i);
             }catch (Exception e)
@@ -163,10 +163,10 @@ public class IntegrationTest {
         reqClient.getstr("/api/activate/slb?slbName=__Test_slb1&slbName=__Test_slb2");
 
         List<Group> groups = new ArrayList<>();
-        for (int i = 0 ; i < 10 ; i++ )
+        for (int i = 0 ; i < 3000 ; i++ )
         {
             Group group = new Group().setName("__Test_app" + i).setAppId("1000" + i).setVersion(1).setHealthCheck(new HealthCheck().setFails(1)
-                    .setIntervals(2000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
+                    .setIntervals(30000).setPasses(1).setUri("/status.json")).setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin")
                     .setValue("test"))
                 .addGroupSlb(new GroupSlb().addVip(new Vip().setIp(hostip)).setSlbId(i % 3 == 0 ? slb2_res_obj.getId() : slb1_res_obj.getId())
                         .setSlbName(i % 3 == 0 ? slb2_res_obj.getName() : slb1_res_obj.getName())
@@ -205,12 +205,17 @@ public class IntegrationTest {
         integrationTest_update();
 
         StringBuilder sb = new StringBuilder(128);
-        for (int i = 0 ; i < 10 ; i ++){
+        for (int i = 0 ; i < 3000 ; i ++){
             sb.append("groupName=__Test_app").append(i).append("&");
+            if (i%50==0)
+            {
+                reqClient.getstr("/api/activate/group?"+sb.toString());
+                sb.setLength(0);
+            }
         }
 
-        reqClient.getstr("/api/activate/group?"+sb.toString());
-        for (int i = 0 ; i < 10 ; i ++)
+
+        for (int i = 0 ; i < 3000 ; i ++)
         {
             reqClient.get("/api/op/upMember?batch=true&groupName=__Test_app"+i);
         }

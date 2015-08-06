@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.NotFoundException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
@@ -50,6 +51,8 @@ public class BuildServiceImpl implements BuildService {
     private NginxConfUpstreamDao nginxConfUpstreamDao;
     @Resource
     private StatusService statusService;
+    @Resource
+    private ActivateService activateService;
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -67,18 +70,12 @@ public class BuildServiceImpl implements BuildService {
 
     @Override
     public List<VirtualServer> getNeedBuildVirtualServers(Long slbId,HashMap<Long , Group> activatingGroups , List<Long>groupList)throws Exception{
-        Set<VirtualServer> buildVirtualServer = new HashSet<>();
+        Set<Long> buildVirtualServer = new HashSet<>();
         List<Group> groups = new ArrayList<>();
         List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupList.toArray(new Long[]{}));
         for (String content :  l ){
             Group tmpGroup = DefaultSaxParser.parseEntity(Group.class, content);
-            if (tmpGroup!=null&&!activatingGroups.containsKey(tmpGroup.getId())) {
-                groups.add(tmpGroup);
-            }
-            Set<Long>a = new HashSet<>();
-            if (tmpGroup!=null&&activatingGroups.containsKey(tmpGroup.getId())){
-                Group tmp = activatingGroups.get(tmpGroup.getId());
-                groups.add(tmp);
+            if (tmpGroup!=null) {
                 groups.add(tmpGroup);
             }
         }
@@ -87,12 +84,19 @@ public class BuildServiceImpl implements BuildService {
             for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
                 if (gvs.getVirtualServer().getSlbId().equals(slbId))
                 {
-                    buildVirtualServer.add(gvs.getVirtualServer());
+                    buildVirtualServer.add(gvs.getVirtualServer().getId());
                 }
             }
         }
+        Slb slb = activateService.getActivatedSlb(slbId);
+
         List<VirtualServer> result = new ArrayList<>();
-        result.addAll(buildVirtualServer);
+        List<VirtualServer> vses = slb.getVirtualServers();
+        for (VirtualServer vs : vses){
+            if (buildVirtualServer.contains(vs.getId())){
+                result.add(vs);
+            }
+        }
         return result;
     }
 
@@ -182,9 +186,7 @@ public class BuildServiceImpl implements BuildService {
         if (activatedSlb != null){
             slb = activatedSlb;
         }else{
-            String slbContent =activeConfService.getConfSlbActiveContentBySlbId(slbId);
-            AssertUtils.assertNotNull(slbContent, "Not found slb content by slbId!");
-            slb = DefaultSaxParser.parseEntity(Slb.class, slbContent);
+            slb = activateService.getActivatedSlb(slbId);
         }
 
         String conf = nginxConfigBuilder.generateNginxConf(slb);

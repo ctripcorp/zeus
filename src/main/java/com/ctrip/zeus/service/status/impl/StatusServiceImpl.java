@@ -1,12 +1,14 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.GroupSlb;
+import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupVirtualServer;
+import com.ctrip.zeus.service.activate.ActivateService;
+import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.handler.StatusGroupServerService;
 import com.ctrip.zeus.service.status.handler.StatusServerService;
 import com.ctrip.zeus.service.status.StatusService;
-import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,10 @@ public class StatusServiceImpl implements StatusService {
     private StatusGroupServerService statusGroupServerService;
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private ActivateService activateService;
+    @Resource
+    private GroupRepository groupRepository;
 
     private Logger logger = LoggerFactory.getLogger(StatusServiceImpl.class);
 
@@ -84,52 +90,57 @@ public class StatusServiceImpl implements StatusService {
 
 
     @Override
-    public void upMember(Long groupId, List<String> ips) throws Exception {
-
-        List<GroupSlb> appslblist = slbRepository.listGroupSlbsByGroups(new Long[]{groupId});
-        if (appslblist==null||appslblist.size()==0)
-        {
-            logger.warn("[up member]: Can not find appslb by GroupId! GroupId: "+groupId);
-            AssertUtils.assertNotNull(appslblist, "[up member]: Can not find GroupSlb by GroupID! Please Check the Configuration or param again!");
+    public void upMember(Long slbId ,Long groupId, List<String> ips) throws Exception {
+        Group group;
+        if(activateService.isGroupActivated(groupId,slbId)){
+            group = activateService.getActivatedGroup(groupId,slbId);
+        }else {
+            group = groupRepository.getById(groupId);
+        }
+        if (group == null){
             return;
         }
-
-        dataAdjust(appslblist,groupId);
-
-        for (GroupSlb d : appslblist)
-        {
-            for (String ip : ips)
-            {
-                statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(d.getSlbId())
-                        .setSlbVirtualServerId(d.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(true));
+        for (String ip : ips){
+            statusGroupServerService.deleteByGroupIdAndSlbIdAndIp(slbId,groupId,ip);
+        }
+        List<GroupVirtualServer> groupVirtualServers = group.getGroupVirtualServers();
+        for (GroupVirtualServer groupVirtualServer : groupVirtualServers){
+            if (!groupVirtualServer.getVirtualServer().getSlbId().equals(slbId)){
+                continue;
             }
-            logger.info("[up Member]: AppSlb:"+d.toString());
+            for (String ip : ips) {
+                statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(groupVirtualServer.getVirtualServer().getSlbId())
+                        .setSlbVirtualServerId(groupVirtualServer.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(false));
+            }
+            logger.info("[down Member]: VirtualServer:"+groupVirtualServer.toString()+"ips:"+ips.toString());
         }
     }
 
     @Override
-    public void downMember(Long groupId, List<String> ips) throws Exception {
-
-        List<GroupSlb> appslblist = slbRepository.listGroupSlbsByGroups(new Long[]{groupId});
-        if (appslblist==null||appslblist.size()==0)
-        {
-            logger.warn("[down member]: Can not find appslb by GroupId! GroupId: "+groupId);
-            AssertUtils.assertNotNull(appslblist, "[up member]: Can not find GroupSlb by GroupID! Please Check the Configuration or param again!");
+    public void downMember(Long slbId ,Long groupId, List<String> ips) throws Exception {
+        Group group;
+        if(activateService.isGroupActivated(groupId,slbId)){
+            group = activateService.getActivatedGroup(groupId,slbId);
+        }else {
+            group = groupRepository.getById(groupId);
+        }
+        if (group == null){
             return;
         }
-
-        dataAdjust(appslblist,groupId);
-
-        for (GroupSlb d : appslblist)
-        {
-            for (String ip : ips)
-            {
-                statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(d.getSlbId())
-                        .setSlbVirtualServerId(d.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(false));
-            }
-            logger.info("[down Member]: AppSlb:"+d.toString());
+        for (String ip : ips){
+            statusGroupServerService.deleteByGroupIdAndSlbIdAndIp(slbId,groupId,ip);
         }
-
+        List<GroupVirtualServer> groupVirtualServers = group.getGroupVirtualServers();
+        for (GroupVirtualServer groupVirtualServer : groupVirtualServers){
+            if (!groupVirtualServer.getVirtualServer().getSlbId().equals(slbId)){
+                continue;
+            }
+            for (String ip : ips) {
+                statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(groupVirtualServer.getVirtualServer().getSlbId())
+                        .setSlbVirtualServerId(groupVirtualServer.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(false));
+            }
+            logger.info("[down Member]: VirtualServer:"+groupVirtualServer.toString()+"ips:"+ips.toString());
+        }
     }
 
     @Override
@@ -150,36 +161,6 @@ public class StatusServiceImpl implements StatusService {
         {
             return list.get(0).isUp();
         }
-        return true;
-    }
-
-    private boolean dataAdjust(List<GroupSlb> list ,Long groupId)throws Exception{
-        Set<String> groupvs =new HashSet<>();
-        Set<Long> slbIds = new HashSet<>();
-        for (GroupSlb p : list)
-        {
-            groupvs.add(p.getGroupId().toString()+p.getSlbId()+p.getVirtualServer().getId());
-            slbIds.add(p.getSlbId());
-        }
-
-        List<StatusGroupServerDo> statuslist = new ArrayList<>();
-        for (Long slbId:slbIds){
-            List<StatusGroupServerDo> tmplist = statusGroupServerService.listBySlbIdAndGroupId(slbId, groupId);
-            if (tmplist!=null)
-            {
-                statuslist.addAll(tmplist);
-            }
-        }
-
-        for (StatusGroupServerDo d:statuslist)
-        {
-            if(!groupvs.contains(String.valueOf(d.getGroupId())+d.getSlbId()+d.getSlbVirtualServerId()))
-            {
-                statusGroupServerService.deleteBySlbIdAndGroupIdAndVsId(d.getSlbId(), d.getGroupId(), d.getSlbVirtualServerId());
-                logger.info("[status adjust]remove StatusAppServer :"+d.toString());
-            }
-        }
-
         return true;
     }
 }
