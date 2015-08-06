@@ -32,11 +32,6 @@ public class C {
                 .setWeight(d.getWeight());
     }
 
-    public static Domain toDomain(SlbDomainDo d) {
-        return new Domain()
-                .setName(d.getName());
-    }
-
     public static HealthCheck toHealthCheck(GroupHealthCheckDo d) {
         return new HealthCheck()
                 .setFails(d.getFails())
@@ -77,6 +72,7 @@ public class C {
     public static VirtualServer toVirtualServer(SlbVirtualServerDo d) {
         return new VirtualServer()
                 .setId(d.getId())
+                .setSlbId(d.getSlbId())
                 .setPort(d.getPort())
                 .setName(d.getName())
                 .setSsl(d.isIsSsl());
@@ -135,11 +131,6 @@ public class C {
                 .setMaxFails(e.getMaxFails())
                 .setPort(e.getPort())
                 .setWeight(e.getWeight());
-    }
-
-    public static SlbDomainDo toSlbDomainDo(Domain e) {
-        return new SlbDomainDo()
-                .setName(e.getName());
     }
 
     public static GroupHealthCheckDo toGroupHealthCheckDo(HealthCheck e) {

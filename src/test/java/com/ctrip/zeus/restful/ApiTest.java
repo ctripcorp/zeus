@@ -123,12 +123,12 @@ public class ApiTest {
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
                 .addGroupServer(new GroupServer().setIp("192.168.20.2").setHostName("slb001a")
                         .setFailTimeout(30).setMaxFails(2).setPort(80).setWeight(2))
-                .addGroupSlb(new GroupSlb().setSlbId(s.getId()).setSlbName("default").setVirtualServer(new VirtualServer().setId(s.getVirtualServers().get(0).getId())).setPath("/hotel"))
-        ;
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setPath("/hotel").setVirtualServer(new VirtualServer().setId(s.getVirtualServers().get(0).getId())));
         gc.add(app);
         Group app2 = gc.get(appName);
         // set virtual server full information
-        app.getGroupSlbs().get(0).setVirtualServer(s.getVirtualServers().get(0));
+        app.getGroupVirtualServers().get(0).setVirtualServer(s.getVirtualServers().get(0));
+        app.getGroupVirtualServers().get(0).setPriority(1000);
         Assert.assertEquals(1, app2.getVersion().intValue());
         ModelAssert.assertGroupEquals(app, app2);
     }

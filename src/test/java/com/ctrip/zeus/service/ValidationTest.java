@@ -4,12 +4,17 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.unidal.dal.jdbc.datasource.DataSourceManager;
+import org.unidal.dal.jdbc.transaction.TransactionManager;
+import org.unidal.lookup.ContainerLoader;
 import support.AbstractSpringTest;
 import support.MysqlDbServer;
 
@@ -26,6 +31,8 @@ public class ValidationTest extends AbstractSpringTest {
     SlbRepository slbRepository;
     @Resource
     GroupRepository groupRepository;
+    @Resource
+    VirtualServerRepository virtualServerRepository;
 
     private static Slb slb4Group;
 
@@ -98,21 +105,19 @@ public class ValidationTest extends AbstractSpringTest {
         Group group = new Group().setName("test").setAppId("000000")
                 .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
-                .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)))
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)))
                 .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
         groupRepository.add(group);
         group = groupRepository.getById(group.getId());
-        slb = new Slb().setId(slb.getId()).setName(slb.getName()).setStatus(slb.getStatus()).setVersion(slb.getVersion())
-                .setNginxConf(slb.getNginxConf()).setNginxBin(slb.getNginxBin()).setNginxWorkerProcesses(slb.getNginxWorkerProcesses())
-                .addSlbServer(slb.getSlbServers().get(0));
+        Assert.assertEquals(slb.getVirtualServers().get(0).getId(), group.getGroupVirtualServers().get(0).getVirtualServer().getId());
         try {
-            slbRepository.update(slb);
+            virtualServerRepository.deleteVirtualServer(slb.getVirtualServers().get(0).getId());
             Assert.assertTrue(false);
         } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
             System.out.println("Expected cause: virtual server has dependencies; real cause: " + e.getMessage());
         }
         groupRepository.delete(group.getId());
-        slbRepository.update(slb);
     }
 
     @Test
@@ -121,7 +126,7 @@ public class ValidationTest extends AbstractSpringTest {
         Group group = new Group().setAppId("000000")
                 .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
-                .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
         try {
             groupRepository.add(group);
             Assert.assertTrue(false);
@@ -132,7 +137,7 @@ public class ValidationTest extends AbstractSpringTest {
         group = new Group().setName("testEmptyField")
                 .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
-                .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test2").setVirtualServer(slb.getVirtualServers().get(0)));
         try {
             groupRepository.add(group);
             Assert.assertTrue(false);
@@ -149,11 +154,11 @@ public class ValidationTest extends AbstractSpringTest {
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
-            System.out.println("Expected cause: group without group-slb; real cause: " + e.getMessage());
+            System.out.println("Expected cause: group without group-vs; real cause: " + e.getMessage());
         }
 
         group = new Group().setName("testEmptyField").setAppId("000000")
-                .addGroupSlb(new GroupSlb().setSlbId(slb.getId()).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test3").setVirtualServer(slb.getVirtualServers().get(0)));
         groupRepository.add(group);
     }
 
@@ -161,7 +166,7 @@ public class ValidationTest extends AbstractSpringTest {
     public void testValidateGroup_virtualServerNotExist() throws Exception {
         Slb slb = prepareSlb();
         Group group = new Group().setName("testVirtualServerNotExist").setAppId("000000")
-                .addGroupSlb(new GroupSlb().setPath("/test").setVirtualServer(new VirtualServer().setId(1024L)));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(new VirtualServer().setId(1024L).setSlbId(10L)));
         try {
             groupRepository.add(group);
             Assert.assertTrue(false);
@@ -171,7 +176,7 @@ public class ValidationTest extends AbstractSpringTest {
         }
 
         group = new Group().setName("testVirtualServerNotExist").setAppId("000000")
-                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/test").setVirtualServer(new VirtualServer().setName("error")));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(new VirtualServer().setName("error")));
         try {
             groupRepository.add(group);
             Assert.assertTrue(false);
@@ -181,7 +186,7 @@ public class ValidationTest extends AbstractSpringTest {
         }
 
         group = new Group().setName("testVirtualServerNotExist").setAppId("000000")
-                .addGroupSlb(new GroupSlb().setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test2").setVirtualServer(slb.getVirtualServers().get(0)));
         groupRepository.add(group);
     }
 
@@ -189,8 +194,8 @@ public class ValidationTest extends AbstractSpringTest {
     public void testValidateGroup_duplicatePath() throws Exception {
         Slb slb = prepareSlb();
         Group group = new Group().setName("testDuplicatePath").setAppId("000000")
-                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)))
-                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)))
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
         try {
             groupRepository.add(group);
             Assert.assertTrue(false);
@@ -200,11 +205,11 @@ public class ValidationTest extends AbstractSpringTest {
         }
 
         group = new Group().setName("testDuplicatePath").setAppId("000000")
-                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
         groupRepository.add(group);
 
         group = new Group().setName("testDuplicatePath1").setAppId("000000")
-                .addGroupSlb(new GroupSlb().setSlbId(1L).setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(slb.getVirtualServers().get(0)));
         try {
             groupRepository.add(group);
             Assert.assertTrue(false);
@@ -227,5 +232,15 @@ public class ValidationTest extends AbstractSpringTest {
             slb4Group = slbRepository.get(slb.getName());
         }
         return slb4Group;
+    }
+
+    @AfterClass
+    public static void tearDownDb() throws InterruptedException, ComponentLookupException, ComponentLifecycleException {
+        mysqlDbServer.stop();
+
+        DataSourceManager ds = ContainerLoader.getDefaultContainer().lookup(DataSourceManager.class);
+        ContainerLoader.getDefaultContainer().release(ds);
+        TransactionManager ts = ContainerLoader.getDefaultContainer().lookup(TransactionManager.class);
+        ContainerLoader.getDefaultContainer().release(ts);
     }
 }

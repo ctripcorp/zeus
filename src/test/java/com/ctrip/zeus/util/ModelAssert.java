@@ -15,19 +15,16 @@ public class ModelAssert {
         for (int i = 0; i < expected.getGroupServers().size(); i++) {
             assertGroupServerEquals(expected.getGroupServers().get(i), actual.getGroupServers().get(i));
         }
-        Assert.assertEquals(expected.getGroupSlbs().size(), actual.getGroupSlbs().size());
-        for (int i = 0; i < expected.getGroupSlbs().size(); i++) {
-            assertGroupSlbEquals(expected.getGroupSlbs().get(i), actual.getGroupSlbs().get(i));
+        Assert.assertEquals(expected.getGroupVirtualServers().size(), actual.getGroupVirtualServers().size());
+        for (int i = 0; i < expected.getGroupVirtualServers().size(); i++) {
+            assertGroupVsEquals(expected.getGroupVirtualServers().get(i), actual.getGroupVirtualServers().get(i));
         }
         Assert.assertEquals(expected.getHealthCheck().getUri(), actual.getHealthCheck().getUri());
         Assert.assertEquals(expected.getLoadBalancingMethod().getType(), actual.getLoadBalancingMethod().getType());
     }
 
-    public static void assertGroupSlbEquals(GroupSlb expected, GroupSlb actual) {
+    public static void assertGroupVsEquals(GroupVirtualServer expected, GroupVirtualServer actual) {
         Assert.assertNotNull(actual);
-        Assert.assertEquals(expected.getSlbName(), actual.getSlbName());
-        Assert.assertEquals(expected.getSlbId(), actual.getSlbId());
-        Assert.assertEquals(expected.getVirtualServer().getId(), actual.getVirtualServer().getId());
         Assert.assertEquals(expected.getPath(), actual.getPath());
         if (expected.getRewrite() != null) {
             Assert.assertEquals(expected.getRewrite(), actual.getRewrite());

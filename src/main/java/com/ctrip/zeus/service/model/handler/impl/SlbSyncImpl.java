@@ -61,7 +61,6 @@ public class SlbSyncImpl implements SlbSync {
             throw new ValidationException("Slb does not exist.");
         if (check.getVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        slbModelValidator.checkVirtualServerDependencies(slb);
         SlbDo d = C.toSlbDo(slb.getId(), slb);
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
         Long id = d.getId();
@@ -82,41 +81,43 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     private void syncSlbVips(Long slbId, List<Vip> vips) throws DalException {
-        Map<String, SlbVipDo> originVips = Maps.uniqueIndex(
-                slbVipDao.findAllBySlb(slbId, SlbVipEntity.READSET_FULL), new Function<SlbVipDo, String>() {
+        List<SlbVipDo> originVips = slbVipDao.findAllBySlb(slbId, SlbVipEntity.READSET_FULL);
+        Map<String, SlbVipDo> uniqueCheck = Maps.uniqueIndex(
+                originVips, new Function<SlbVipDo, String>() {
                     @Override
                     public String apply(SlbVipDo input) {
                         return input.getIp();
                     }
                 });
         for (Vip e : vips) {
-            SlbVipDo originVip = originVips.get(e.getIp());
+            SlbVipDo originVip = uniqueCheck.get(e.getIp());
             if (originVip != null) {
-                originVips.remove(originVip.getIp());
+                originVips.remove(originVip);
             }
             slbVipDao.insert(C.toSlbVipDo(slbId, e).setCreatedTime(new Date()));
         }
-        for (SlbVipDo d : originVips.values()) {
+        for (SlbVipDo d : originVips) {
             slbVipDao.deleteByPK(d);
         }
     }
 
     private void syncSlbServers(Long slbId, List<SlbServer> slbServers) throws DalException {
-        Map<String, SlbServerDo> originServers = Maps.uniqueIndex(
-                slbServerDao.findAllBySlb(slbId, SlbServerEntity.READSET_FULL), new Function<SlbServerDo, String>() {
+        List<SlbServerDo> originServers = slbServerDao.findAllBySlb(slbId, SlbServerEntity.READSET_FULL);
+        Map<String, SlbServerDo> uniqueCheck = Maps.uniqueIndex(
+                originServers, new Function<SlbServerDo, String>() {
                     @Override
                     public String apply(SlbServerDo input) {
                         return input.getIp();
                     }
                 });
         for (SlbServer e : slbServers) {
-            SlbServerDo originServer = originServers.get(e.getIp());
+            SlbServerDo originServer = uniqueCheck.get(e.getIp());
             if (originServer != null) {
                 originServers.remove(originServer);
             }
             slbServerDao.insert(C.toSlbServerDo(slbId, e).setCreatedTime(new Date()));
         }
-        for (SlbServerDo d : originServers.values()) {
+        for (SlbServerDo d : originServers) {
             slbServerDao.deleteByPK(d);
         }
     }
