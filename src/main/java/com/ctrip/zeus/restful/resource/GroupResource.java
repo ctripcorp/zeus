@@ -6,10 +6,12 @@ import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupList;
+import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.tag.PropertyService;
@@ -54,11 +56,11 @@ public class GroupResource {
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
                          @QueryParam("slbId") Long slbId,
-                         @QueryParam("slbName") String slbName,
-                         @QueryParam("type") String type,
-                         @QueryParam("tag") String tag,
-                         @QueryParam("pname") String pname,
-                         @QueryParam("pvalue") String pvalue) throws Exception {
+                         @TrimmedQueryParam("slbName") String slbName,
+                         @TrimmedQueryParam("type") String type,
+                         @TrimmedQueryParam("tag") String tag,
+                         @TrimmedQueryParam("pname") String pname,
+                         @TrimmedQueryParam("pvalue") String pvalue) throws Exception {
         GroupList groupList = new GroupList();
         Set<Long> filtered = new HashSet<>();
         boolean noFilter = true;
@@ -100,9 +102,9 @@ public class GroupResource {
     @Authorize(name = "getGroup")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
                         @QueryParam("groupId") Long groupId,
-                        @QueryParam("groupName") String groupName,
-                        @QueryParam("appId") String appId,
-                        @QueryParam("type") String type) throws Exception {
+                        @TrimmedQueryParam("groupName") String groupName,
+                        @TrimmedQueryParam("appId") String appId,
+                        @TrimmedQueryParam("type") String type) throws Exception {
         Group group = null;
         if (groupId == null && groupName == null && appId == null) {
             throw new ValidationException("Missing parameters.");
@@ -167,6 +169,15 @@ public class GroupResource {
                 throw new Exception("Group cannot be parsed.");
             }
         }
+        g.setAppId(g.getAppId().trim());
+        g.setName(g.getName().trim());
+        if (g.getHealthCheck() != null)
+            g.getHealthCheck().setUri(g.getHealthCheck().getUri().trim());
+        for (GroupServer groupServer : g.getGroupServers()) {
+            groupServer.setIp(groupServer.getIp().trim());
+            groupServer.setHostName(groupServer.getHostName().trim());
+        }
+        g.getLoadBalancingMethod().setValue(g.getLoadBalancingMethod().getValue());
         return g;
     }
 

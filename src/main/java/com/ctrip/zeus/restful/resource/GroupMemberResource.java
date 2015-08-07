@@ -83,7 +83,7 @@ public class GroupMemberResource {
         }
         return responseHandler.handle("Successfully removed " + Joiner.on(",").join(ips) + " from group with id " + groupId + ".", hh.getMediaType());
     }
-    
+
     private GroupServerList parseGroupServer(MediaType mediaType, String groupServerList) throws Exception {
         GroupServerList gsl;
         if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {
