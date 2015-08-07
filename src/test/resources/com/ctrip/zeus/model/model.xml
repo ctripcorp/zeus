@@ -32,6 +32,11 @@
             <slb/>
         </slbs>
     </slb-list>
+    <virtual-server-list>
+        <total>12</total>
+        <virtual-server/>
+        <virtual-server/>
+    </virtual-server-list>
 
     <group-virtual-server priority="0">
         <path>/hotel</path>

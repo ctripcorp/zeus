@@ -573,13 +573,21 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-slb" type="SELECT" multiple="true">
                 <param name="slb-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
