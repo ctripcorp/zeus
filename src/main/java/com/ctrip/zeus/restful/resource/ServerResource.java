@@ -105,15 +105,25 @@ public class ServerResource {
         }
         List<Long> taskIds = taskService.add(tasks);
         List<TaskResult> results = taskService.getResult(taskIds,30000L);
-        
+        boolean isSuccess = true;
+        String failCause = "";
+        for (TaskResult taskResult : results){
+            if (!taskResult.isSuccess()){
+                isSuccess=false;
+                failCause += taskResult.toString();
+            }
+        }
+        if (!isSuccess){
+            throw new Exception(failCause);
+        }
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
-        List<String> applist = groupRepository.listGroupsByGroupServer(serverip);
+        List<Group> groupList = groupRepository.listGroupsByGroupServer(serverip);
 
-        if (applist!=null)
+        if (groupList!=null)
         {
-            for (String name : applist)
+            for (Group group : groupList)
             {
-                ss.addGroupName(name);
+                ss.addGroupName(group.getName());
             }
         }
 
@@ -158,8 +168,7 @@ public class ServerResource {
         {
             _ips.addAll(ips);
         }
-        statusService.upMember(_groupId,_ips);
-        return memberOps(hh, _groupId, _ips);
+        return memberOps(hh, _groupId, _ips , true);
     }
 
     @GET
@@ -197,12 +206,12 @@ public class ServerResource {
         {
             _ips.addAll(ips);
         }
-        statusService.downMember(_groupId, _ips);
-        return memberOps(hh, _groupId, _ips);
+
+        return memberOps(hh, _groupId, _ips,false);
     }
 
 
-    private Response memberOps(HttpHeaders hh,Long groupId,List<String> ips)throws Exception{
+    private Response memberOps(HttpHeaders hh,Long groupId,List<String> ips,boolean up)throws Exception{
 
         //get slb by groupId and ip
         Set<Slb> slbList = new HashSet<>();
