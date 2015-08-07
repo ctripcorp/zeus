@@ -3,6 +3,7 @@
   <entity name="task" root="true">
     <entity-ref name="ops-task" />
     <entity-ref name="task-result" />
+    <entity-ref name="task-result-list" />
   </entity>
   <entity name="ops-task">
     <element name="slb-id" value-type="long" />
@@ -22,6 +23,10 @@
     <element name="status" value-type="String" />
     <element name="date-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
     <entity-ref name="ops-task" />
+  </entity>
+  <entity name="task-result-list">
+    <element name="total" value-type="int" />
+    <entity-ref name="task-result" />
   </entity>
 </model>
 

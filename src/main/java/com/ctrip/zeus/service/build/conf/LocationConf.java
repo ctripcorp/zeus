@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.build.conf;
 
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupSlb;
+import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.PathRewriteParser;
@@ -93,8 +93,8 @@ public class LocationConf {
 
     private static String getPath(Slb slb, VirtualServer vs, Group group) throws Exception{
         String res=null;
-        for (GroupSlb groupSlb : group.getGroupSlbs()) {
-            if (slb.getId().equals(groupSlb.getSlbId()) && vs.getId().equals(groupSlb.getVirtualServer().getId())) {
+        for (GroupVirtualServer groupSlb : group.getGroupVirtualServers()) {
+            if (slb.getId().equals(groupSlb.getVirtualServer().getSlbId()) && vs.getId().equals(groupSlb.getVirtualServer().getId())) {
                 res= groupSlb.getPath();
             }
         }
@@ -105,8 +105,8 @@ public class LocationConf {
 
     private static String getRewrite(Slb slb, VirtualServer vs, Group group) throws Exception{
         String res=null;
-        for (GroupSlb groupSlb : group.getGroupSlbs()) {
-            if (slb.getId().equals(groupSlb.getSlbId()) && vs.getId().equals(groupSlb.getVirtualServer().getId())) {
+        for (GroupVirtualServer groupSlb : group.getGroupVirtualServers()) {
+            if (slb.getId().equals(groupSlb.getVirtualServer().getSlbId()) && vs.getId().equals(groupSlb.getVirtualServer().getId())) {
                 res= groupSlb.getRewrite();
             }
         }

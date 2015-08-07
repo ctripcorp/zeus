@@ -63,6 +63,7 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     private HashMap<String , OpsTask> serverOps = new HashMap<>();
     private HashMap<Long , OpsTask> activateGroupOps = new HashMap<>();
+    private HashMap<Long , OpsTask> deactivateGroupOps = new HashMap<>();
     private HashMap<Long , OpsTask> activateSlbOps = new HashMap<>();
     private HashMap<Long , OpsTask> memberOps = new HashMap<>();
 
@@ -85,7 +86,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         HashMap<Long , Group> activatingGroups ;
         Slb activatingSlb ;
         List<VirtualServer> buildVirtualServer ;
-        List<Long> groupList ;
+        Set<Long> groupList ;
 
         //1. get pending tasks , if size == 0 return
         try {
@@ -111,7 +112,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             }else{
                 buildVirtualServer = buildService.getNeedBuildVirtualServers(slbId,activatingGroups,groupList);
             }
-            Map<Long,List<Group>> groupMap = buildService.getInfluencedVsGroups(slbId,activatingGroups,buildVirtualServer);
+            Map<Long,List<Group>> groupMap = buildService.getInfluencedVsGroups(slbId,activatingGroups,buildVirtualServer,deactivateGroupOps.keySet());
             Set<String> allDownServers = getAllDownServer();
             Map<Long,Group> groups = new HashMap<>();
             for (Long vs : groupMap.keySet()){
@@ -160,6 +161,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         try {
             int current = buildInfoService.getCurrentTicket(slbId);
             buildService.rollBackConfig(slbId,current);
+            buildInfoService.updateTicket(slbId,--current);
         }catch (Exception e){
             logger.error("RollBack Fail!",e);
         }
@@ -175,6 +177,8 @@ public class TaskExecutorImpl implements TaskExecutor {
                     activateService.activeSlb(task.getSlbId(),task.getVersion());
                 }else if (task.getOpsType().equals(TaskOpsType.ACTIVATE_GROUP)){
                     activateService.activeGroup(task.getGroupId(),task.getVersion());
+                }else if (task.getOpsType().equals(TaskOpsType.DEACTIVATE_GROUP)){
+                    activateService.deactiveGroup(task.getGroupId(),slbId);
                 }else if (task.getOpsType().equals(TaskOpsType.SERVER_OPS)){
                     if (task.getUp()){
                         statusService.upServer(task.getIpList());
@@ -258,8 +262,8 @@ public class TaskExecutorImpl implements TaskExecutor {
         return allDownServers;
     }
 
-    private List<Long> getInfluencedGroups(HashMap<Long, Group> activatingGroups) throws Exception{
-        List<Long> result = new ArrayList<>();
+    private Set<Long> getInfluencedGroups(HashMap<Long, Group> activatingGroups) throws Exception{
+        Set<Long> result = new HashSet<>();
         result.addAll(activatingGroups.keySet());
         for (Long gid : memberOps.keySet()){
             if (memberOps.get(gid).getStatus().equals(TaskStatus.DOING)){
@@ -270,6 +274,8 @@ public class TaskExecutorImpl implements TaskExecutor {
             List<Long>groupIds = serverGroupService.findAllByIp(ip);
             result.addAll(groupIds);
         }
+        result.addAll(deactivateGroupOps.keySet());
+
         return result;
     }
 
@@ -311,7 +317,12 @@ public class TaskExecutorImpl implements TaskExecutor {
         HashMap<Long , Group> result = new HashMap<>();
         Set<Long> groupIds = activateGroupOps.keySet();
         for (Long groupId : groupIds){
+
             OpsTask task = activateGroupOps.get(groupId);
+            if (deactivateGroupOps.containsKey(groupId)){
+                setTaskFail(task,"Deactivating this group at the same time!");
+                continue;
+            }
             Group group = activateService.getActivatingGroup(groupId,task.getVersion());
             if (group == null){
                 setTaskFail(task,"Get Archive Group Fail! GroupId:"+groupId+";Version:"+task.getVersion());
@@ -339,6 +350,9 @@ public class TaskExecutorImpl implements TaskExecutor {
             //member ops
             if (task.getOpsType().equals(TaskOpsType.MEMBER_OPS)){
                 memberOps.put(task.getGroupId(),task);
+            }
+            if (task.getOpsType().equals(TaskOpsType.DEACTIVATE_GROUP)){
+                deactivateGroupOps.put(task.getGroupId(),task);
             }
         }
     }

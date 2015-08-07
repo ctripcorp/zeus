@@ -14,6 +14,11 @@ import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.service.task.TaskService;
+import com.ctrip.zeus.service.task.constant.TaskOpsType;
+import com.ctrip.zeus.status.entity.ServerStatus;
+import com.ctrip.zeus.task.entity.OpsTask;
+import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -63,6 +68,8 @@ public class ServerResource {
     private SlbRepository slbRepository;
     @Resource
     private ActivateService activateService;
+    @Resource
+    private TaskService taskService;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -72,51 +79,33 @@ public class ServerResource {
     @Path("/upServer")
     @Authorize(name="upDownServer")
     public Response upServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-        //update status
-        statusService.upServer(ip);
-        return serverOps(hh,ip);
+        return serverOps(hh,ip,true);
     }
 
     @GET
     @Path("/downServer")
     @Authorize(name="upDownServer")
     public Response downServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-        //update status
-        statusService.downServer(ip);
-        return serverOps(hh, ip);
+        return serverOps(hh, ip , false);
     }
 
-    private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
+    private Response serverOps(HttpHeaders hh , String serverip , boolean up)throws Exception{
         //get slb by serverip
         List<Slb> slblist = slbRepository.listByGroupServerAndGroup(serverip,null);
         AssertUtils.assertNotNull(slblist, "[UpServer/DownServer] Can not find slb by server ip :[" + serverip + "],Please check the configuration and server ip!");
-
+        List<OpsTask> tasks = new ArrayList<>();
         for (Slb slb : slblist)
         {
-            Long slbId = slb.getId();
-            int ticket = buildInfoService.getTicket(slbId);
-
-            boolean buildFlag = false;
-            DistLock buildLock = dbLockFactory.newLock(slbId + "_build");
-            try{
-                buildLock.lock(lockTimeout.get());
-                buildFlag =buildService.build(slbId,ticket);
-            }finally {
-                buildLock.unlock();
-            }
-            if (buildFlag) {
-                DistLock writeLock = dbLockFactory.newLock(slbId + "_writeAndReload");
-                try {
-                    writeLock.lock(lockTimeout.get());
-                    //Push Service
-                    nginxAgentService.writeAllAndLoadAll(slbId);
-                } finally {
-                    writeLock.unlock();
-                }
-            }
-
+            OpsTask task = new OpsTask();
+            task.setIpList(serverip);
+            task.setOpsType(TaskOpsType.SERVER_OPS);
+            task.setTargetSlbId(slb.getId());
+            task.setUp(up);
+            tasks.add(task);
         }
-
+        List<Long> taskIds = taskService.add(tasks);
+        List<TaskResult> results = taskService.getResult(taskIds,30000L);
+        
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
         List<String> applist = groupRepository.listGroupsByGroupServer(serverip);
 

@@ -91,21 +91,13 @@ public class ActivateServiceImpl implements ActivateService {
         }
     }
 
-    @Override
-    public void activate(List<Long> slbIds, List<Long> groupIds) throws Exception {
-        for (Long slbId : slbIds) {
-            activeSlb(slbId);
-        }
-        for (Long groupId : groupIds) {
-            activeGroup(groupId);
-        }
-    }
+
 
     @Override
-    public void deactiveGroup(long groupId) throws Exception
+    public void deactiveGroup(long groupId , Long slbId) throws Exception
     {
-        confGroupActiveDao.deleteByGroupId(new ConfGroupActiveDo().setGroupId(groupId));
-        confGroupSlbActiveDao.deleteByGroupId(new ConfGroupSlbActiveDo().setGroupId(groupId));
+        confGroupActiveDao.deleteByGroupIdAndSlbId(new ConfGroupActiveDo().setGroupId(groupId).setSlbId(slbId));
+        confGroupSlbActiveDao.deleteByGroupIdSlbId(new ConfGroupSlbActiveDo().setGroupId(groupId).setSlbId(slbId ));
     }
 
     @Override
@@ -180,6 +172,12 @@ public class ActivateServiceImpl implements ActivateService {
         if (list != null && list.size()==1){
             String content = list.get(0).getContent();
             return DefaultSaxParser.parseEntity(Group.class,content);
+        }else {
+            list = confGroupActiveDao.findAllByGroupIdsAndSlbId(new Long[]{groupId},0,ConfGroupActiveEntity.READSET_FULL);
+            if (list != null && list.size()==1){
+                String content = list.get(0).getContent();
+                return DefaultSaxParser.parseEntity(Group.class,content);
+            }
         }
         return null;
     }

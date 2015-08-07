@@ -69,7 +69,7 @@ public class BuildServiceImpl implements BuildService {
     }
 
     @Override
-    public List<VirtualServer> getNeedBuildVirtualServers(Long slbId,HashMap<Long , Group> activatingGroups , List<Long>groupList)throws Exception{
+    public List<VirtualServer> getNeedBuildVirtualServers(Long slbId,HashMap<Long , Group> activatingGroups , Set<Long>groupList)throws Exception{
         Set<Long> buildVirtualServer = new HashSet<>();
         List<Group> groups = new ArrayList<>();
         List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupList.toArray(new Long[]{}));
@@ -101,7 +101,7 @@ public class BuildServiceImpl implements BuildService {
     }
 
     @Override
-    public Map<Long, List<Group>> getInfluencedVsGroups(Long slbId,HashMap<Long,Group>activatingGroups,List<VirtualServer>buildVirtualServer)throws Exception{
+    public Map<Long, List<Group>> getInfluencedVsGroups(Long slbId,HashMap<Long,Group>activatingGroups,List<VirtualServer>buildVirtualServer,Set<Long> deactivateGroup)throws Exception{
         Map<Long, Map<Long,Integer>> groupMap = new HashMap<>();
         List<ConfGroupSlbActiveDo> groupSlbActiveList = confGroupSlbActiveDao.findBySlbId(slbId , ConfGroupSlbActiveEntity.READSET_FULL);
         if (groupSlbActiveList==null){
@@ -110,6 +110,9 @@ public class BuildServiceImpl implements BuildService {
         for (ConfGroupSlbActiveDo groupSlb : groupSlbActiveList)
         {
             if (activatingGroups.containsKey(groupSlb.getGroupId())){
+                continue;
+            }
+            if (deactivateGroup.contains(groupSlb.getGroupId())){
                 continue;
             }
             long vs = groupSlb.getSlbVirtualServerId();

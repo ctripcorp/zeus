@@ -29,14 +29,6 @@ public interface ActivateService extends Repository {
      */
     public void activeGroup(long groupId ,int version) throws Exception;
 
-    /**
-     * update active data by slbnames and appnames
-     * @param slbIds the slb ids
-     * @param groupIds the group ids
-     * @return
-     * @throws Exception
-     */
-    public void activate(List<Long> slbIds, List<Long> groupIds)throws Exception;
 
     /**
      * deactivate data by groupid
@@ -44,7 +36,7 @@ public interface ActivateService extends Repository {
      * @return
      * @throws Exception
      */
-    public void deactiveGroup(long groupId) throws Exception;
+    public void deactiveGroup(long groupId, Long slbId) throws Exception;
 
     /**
      * group is activated

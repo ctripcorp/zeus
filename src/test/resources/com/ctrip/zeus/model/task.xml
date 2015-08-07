@@ -29,6 +29,10 @@
         </ops-task>
         <date-time>2013-05-20 13:34:00</date-time>
     </task-result>
+    <task-result-list>
+        <total>1</total>
+        <task-result/>
+    </task-result-list>
 </task>
 
 

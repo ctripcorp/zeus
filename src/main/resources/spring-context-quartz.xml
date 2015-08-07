@@ -42,18 +42,38 @@
         <property name="repeatInterval" value="3600000"/>
     </bean>
 
+
+    <bean id="taskWorkerDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.ctrip.zeus.executor.TaskExecutorJob"/>
+        <property name="jobDataMap">
+            <map>
+                <entry key="taskWorker" value-ref="taskWorker" />
+            </map>
+        </property>
+        <property name="durability" value="true"/>
+    </bean>
+
+    <!-- Run the job every 1h = 60*60*1000=3600000 ms with initial delay of 1 second -->
+    <bean id="taskWorkerTrigger"  class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="taskWorkerDetail"/>
+        <property name="startDelay" value="1000"/>
+        <property name="repeatInterval" value="1000"/>
+    </bean>
+
     <!-- Scheduler factory bean to glue together jobDetails and triggers to Configure Quartz Scheduler -->
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="jobDetails">
             <list>
                 <ref bean="nginxStatusFetcherDetail"/>
                 <ref bean="operationLogCleanDetail"/>
+                <ref bean="taskWorkerDetail"/>
             </list>
         </property>
         <property name="triggers">
             <list>
                 <ref bean="nginxStatusFetcherTrigger"/>
                 <ref bean="operationLogCleanTrigger"/>
+                <ref bean="taskWorkerTrigger"/>
             </list>
         </property>
     </bean>

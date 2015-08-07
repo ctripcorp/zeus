@@ -130,6 +130,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-group-id-slb-id" type="DELETE">
+                <param name="group-id"/>
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    AND <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
 </entities>

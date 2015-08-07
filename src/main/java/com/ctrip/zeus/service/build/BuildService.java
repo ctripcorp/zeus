@@ -27,9 +27,9 @@ public interface BuildService extends Repository {
      */
     boolean build(Long slbId, int ticket) throws Exception;
 
-    List<VirtualServer> getNeedBuildVirtualServers(Long slbId,HashMap<Long , Group> activatingGroups , List<Long>groupList)throws Exception;
+    List<VirtualServer> getNeedBuildVirtualServers(Long slbId,HashMap<Long , Group> activatingGroups , Set<Long>groupList)throws Exception;
 
-    Map<Long,List<Group>> getInfluencedVsGroups(Long slbId,HashMap<Long,Group>activatingGroups,List<VirtualServer>buildVirtualServer)throws Exception;
+    Map<Long,List<Group>> getInfluencedVsGroups(Long slbId,HashMap<Long,Group>activatingGroups,List<VirtualServer>buildVirtualServer,Set<Long> deactivateGroup)throws Exception;
 
     void build(Long slbId,
                  Slb activatedSlb,
