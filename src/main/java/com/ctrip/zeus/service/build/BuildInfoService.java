@@ -29,14 +29,6 @@ public interface BuildInfoService extends Repository {
      */
     boolean updateTicket(Long slbId, int ticket) throws Exception;
 
-    /**
-     * get needed slb names  by slb name and app names
-     * @param slbIds the slb ids list
-     * @param groupIds the group ids list
-     * @return slb name set
-     * @throws Exception
-     */
-    Set<Long> getAllNeededSlb(List<Long> slbIds, List<Long> groupIds) throws Exception;
 
     /**
      * get current ticket by slb name
