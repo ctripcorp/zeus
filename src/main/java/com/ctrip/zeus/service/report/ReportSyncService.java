@@ -9,5 +9,7 @@ public interface ReportSyncService {
 
     String syncGroup(Long groupId) throws Exception;
 
+    String reportDeletionByGroup(Long groupId) throws Exception;
+
     boolean needSync() throws Exception;
 }

@@ -29,19 +29,30 @@ public class ReportAspect implements Ordered {
         String methodName = point.getSignature().getName();
         switch (methodName) {
             case "add":
-            case "update":
-                break;
+            case "update": {
+                Object obj = point.proceed();
+                try {
+                    // No lock is necessary here, it is covered by add_/update_groupName lock
+                    reportService.reportGroup((Group) obj);
+                } catch (Exception ex) {
+                    logger.error("Fail to report group to queue.", ex);
+                }
+                return obj;
+            }
+            case "delete": {
+                Object obj = point.proceed();
+                try {
+                    Long groupId = (Long)point.getArgs()[0];
+                    // No lock is necessary here, it is covered by delete_groupId lock
+                    reportService.reportDeletion(groupId);
+                } catch (Exception ex) {
+                    logger.error("Fail to report group to queue.", ex);
+                }
+                return obj;
+            }
             default:
                 return point.proceed();
         }
-        Object obj = point.proceed();
-        try {
-            // No lock is necessary here, it is covered by add_/update_groupName lock
-            reportService.reportGroup((Group) obj);
-        } catch (Exception ex) {
-            logger.error("Fail to report group to queue.", ex);
-        }
-        return obj;
     }
 
     @Override

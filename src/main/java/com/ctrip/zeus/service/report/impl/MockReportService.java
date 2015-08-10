@@ -18,6 +18,11 @@ public class MockReportService implements ReportService {
     }
 
     @Override
+    public void reportDeletion(Long groupId) throws Exception {
+
+    }
+
+    @Override
     public List<ReportGroup> listErrors() throws Exception {
         return null;
     }

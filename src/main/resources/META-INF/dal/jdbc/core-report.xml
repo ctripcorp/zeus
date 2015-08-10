@@ -12,13 +12,14 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all" type="SELECT" multiple="true">
+            <query name="find-all-by-status" type="SELECT" multiple="true">
+                <param name="status"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE current_version > reported_version
-                        AND status = 0
+                        AND status = ${status}
                     ]]>
                 </statement>
             </query>

@@ -12,6 +12,8 @@ public interface ReportService {
 
     void reportGroup(Group group) throws Exception;
 
+    void reportDeletion(Long groupId) throws Exception;
+
     List<ReportGroup> listErrors() throws Exception;
 
     ReportGroup getReportGroupById(Long groupId) throws Exception;

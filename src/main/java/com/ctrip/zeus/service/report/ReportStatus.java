@@ -6,6 +6,7 @@ package com.ctrip.zeus.service.report;
 public enum ReportStatus {
     WAITING(0, "Waiting to be synced."),
     SUCCESS(1, "Success."),
+    DELETED(2, "Deleted."),
     ERROR(-1, "Error");
 
     private int value;
@@ -29,6 +30,7 @@ public enum ReportStatus {
             case -1: return ERROR;
             case 0: return WAITING;
             case 1: return SUCCESS;
+            case 2: return DELETED;
         }
         return ERROR;
     }
