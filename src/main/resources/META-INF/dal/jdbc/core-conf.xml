@@ -121,6 +121,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-group-id" type="SELECT" multiple="true">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-group-id" type="DELETE">
                 <param name="group-id"/>
                 <statement>

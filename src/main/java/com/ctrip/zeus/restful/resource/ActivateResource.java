@@ -9,6 +9,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.activate.ActivateService;
+import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.model.ArchiveService;
@@ -70,6 +71,8 @@ public class ActivateResource {
     private TaskService taskService;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private ActiveConfService activeConfService;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -148,6 +151,7 @@ public class ActivateResource {
             for (GroupVirtualServer virtualServer : virtualServers){
                 slbIds.add(virtualServer.getVirtualServer().getSlbId());
             }
+            slbIds.addAll(activeConfService.getSlbIdsByGroupId(id));
             for (Long slbId : slbIds){
                 OpsTask task = new OpsTask();
                 task.setGroupId(id);

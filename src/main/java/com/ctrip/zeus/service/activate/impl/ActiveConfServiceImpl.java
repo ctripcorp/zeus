@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by fanqq on 2015/3/30.
@@ -19,6 +21,8 @@ public class ActiveConfServiceImpl implements ActiveConfService {
     private ConfGroupActiveDao confGroupActiveDao;
     @Resource
     private ConfSlbActiveDao confSlbActiveDao;
+    @Resource
+    private ConfGroupSlbActiveDao confGroupSlbActiveDao;
 
     private Logger logger = LoggerFactory.getLogger(ActiveConfServiceImpl.class);
 
@@ -53,5 +57,34 @@ public class ActiveConfServiceImpl implements ActiveConfService {
         }
 
         return d.getContent();
+    }
+
+    @Override
+    public Set<Long> getSlbIdsByGroupId(Long groupId) throws Exception {
+        List<ConfGroupSlbActiveDo> result = confGroupSlbActiveDao.findByGroupId(groupId,ConfGroupSlbActiveEntity.READSET_FULL);
+        if (result==null||result.size()==0)
+        {
+            return null;
+        }else {
+            Set<Long> slbIds = new HashSet<>();
+            for (ConfGroupSlbActiveDo confGroupSlbActiveDo : result){
+                slbIds.add(confGroupSlbActiveDo.getSlbId());
+            }
+            return slbIds;
+        }
+    }
+    @Override
+    public Set<Long> getGroupIdsBySlbId(Long slbId) throws Exception {
+        List<ConfGroupSlbActiveDo> result = confGroupSlbActiveDao.findBySlbId(slbId,ConfGroupSlbActiveEntity.READSET_FULL);
+        if (result==null||result.size()==0)
+        {
+            return null;
+        }else {
+            Set<Long> groupIds = new HashSet<>();
+            for (ConfGroupSlbActiveDo confGroupSlbActiveDo : result){
+                groupIds.add(confGroupSlbActiveDo.getGroupId());
+            }
+            return groupIds;
+        }
     }
 }

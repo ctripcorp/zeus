@@ -1,29 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model>
   <entity name="status" root="true">
-    <entity-ref name="slb-status" />
     <entity-ref name="group-status" />
     <entity-ref name="group-status-list" />
     <entity-ref name="server-status" />
     <entity-ref name="op-server-status-req" />
     <entity-ref name="op-member-status-req" />
-  </entity>
-  <entity name="slb-status">
-    <attribute name="name" value-type="String" />
-    <entity-ref name="vhost" type="list" names="vhosts" xml-indent="true" />
-  </entity>
-  <entity name="vhost">
-    <attribute name="name" value-type="String" />
-    <entity-ref name="app-status" type="list" names="apps" xml-indent="true" />
-  </entity>
-  <entity name="app-status">
-    <attribute name="name" value-type="String" />
-    <entity-ref name="server" type="list" names="servers" xml-indent="true" />
-  </entity>
-  <entity name="server">
-    <attribute name="ip" value-type="String" />
-    <attribute name="up" value-type="boolean" />
-    <element name="text" value-type="boolean" text="true" />
   </entity>
   <entity name="group-status">
     <element name="group-name" value-type="String" />
@@ -37,8 +19,9 @@
     <element name="ip" value-type="String" />
     <element name="port" value-type="int" />
     <element name="member" value-type="boolean" />
+    <element name="server" value-type="boolean" />
     <element name="up" value-type="boolean" />
-    <entity-ref name="server" />
+    <element name="discription" value-type="String" />
   </entity>
   <entity name="group-status-list">
     <element name="total" value-type="int" />
