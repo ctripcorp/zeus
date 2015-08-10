@@ -14,6 +14,7 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.util.AssertUtils;
@@ -27,6 +28,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -48,6 +50,8 @@ public class GroupResource {
     private TagService tagService;
     @Resource
     private PropertyService propertyService;
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
 
     @GET
     @Path("/groups")
@@ -57,40 +61,35 @@ public class GroupResource {
                          @Context HttpServletRequest request,
                          @QueryParam("slbId") Long slbId,
                          @TrimmedQueryParam("slbName") String slbName,
+                         @TrimmedQueryParam("domain") String domain,
                          @TrimmedQueryParam("type") String type,
                          @TrimmedQueryParam("tag") String tag,
                          @TrimmedQueryParam("pname") String pname,
                          @TrimmedQueryParam("pvalue") String pvalue) throws Exception {
         GroupList groupList = new GroupList();
-        Set<Long> filtered = new HashSet<>();
-        boolean noFilter = true;
+        Set<Long> filtered = groupCriteriaQuery.queryAll();
         if (tag != null) {
-            noFilter = false;
-            filtered.addAll(tagService.query(tag, "group"));
+            filtered.retainAll(tagService.query(tag, "group"));
         }
         if (pname != null) {
-            noFilter = false;
             if (pvalue != null)
-                filtered.addAll(propertyService.query(pname, pvalue, "group"));
+                filtered.retainAll(propertyService.query(pname, pvalue, "group"));
             else
-                filtered.addAll(propertyService.query(pname, "group"));
+                filtered.retainAll(propertyService.query(pname, "group"));
         }
-
-        if (slbId == null && slbName == null) {
-            for (Group group : groupRepository.list()) {
-                if (noFilter || filtered.contains(group.getId()))
-                    groupList.addGroup(getGroupByType(group, type));
-            }
-        } else {
+        if (domain != null) {
+            filtered.retainAll(groupCriteriaQuery.queryByDomain(domain));
+        }
+        if (slbName != null || slbId != null) {
             if (slbId == null) {
                 Slb slb = slbRepository.get(slbName);
-                AssertUtils.assertNotNull(slb, "Slb does not exist.");
-                slbId = slbRepository.get(slbName).getId();
+                if (slb != null)
+                    slbId = slb.getId();
             }
-            for (Group group : groupRepository.list(slbId, null)) {
-                if (noFilter || filtered.contains(group.getId()))
-                    groupList.addGroup(getGroupByType(group, type));
-            }
+            filtered.retainAll(groupCriteriaQuery.queryBySlbId(slbId));
+        }
+        for (Group group : groupRepository.list(filtered.toArray(new Long[filtered.size()]))) {
+            groupList.addGroup(group);
         }
         groupList.setTotal(groupList.getGroups().size());
         return responseHandler.handle(groupList, hh.getMediaType());

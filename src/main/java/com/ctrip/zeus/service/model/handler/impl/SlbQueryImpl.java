@@ -2,7 +2,6 @@ package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
@@ -28,8 +27,6 @@ public class SlbQueryImpl implements SlbQuery {
     private SlbServerDao slbServerDao;
     @Resource
     private SlbVipDao slbVipDao;
-    @Resource
-    private VirtualServerRepository virtualServerRepository;
 
     @Override
     public Slb get(String slbName) throws Exception {
@@ -100,9 +97,6 @@ public class SlbQueryImpl implements SlbQuery {
     private void cascadeQuery(Slb slb) throws Exception {
         querySlbVips(slb);
         querySlbServers(slb);
-        for (VirtualServer virtualServer : virtualServerRepository.listVirtualServerBySlb(slb.getId())) {
-            slb.addVirtualServer(virtualServer);
-        }
     }
 
     private void querySlbVips(Slb slb) throws DalException {

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -29,8 +28,6 @@ public class DefaultSlbValidator implements SlbValidator {
         if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
             throw new ValidationException("Slb without slb servers cannot be persisted.");
         }
-        List<VirtualServer> virtualServers = slb.getVirtualServers();
-        validateVirtualServer(virtualServers.toArray(new VirtualServer[virtualServers.size()]));
     }
 
     @Override
@@ -56,8 +53,8 @@ public class DefaultSlbValidator implements SlbValidator {
     }
 
     @Override
-    public void removable(Slb slb) throws Exception {
-        if (groupSlbDao.findAllBySlb(slb.getId(), GroupSlbEntity.READSET_FULL).size() > 0)
-            throw new ValidationException("Slb with id " + slb.getId() + " cannot be deleted. Dependencies exist.");
+    public void removable(Long slbId) throws Exception {
+        if (groupSlbDao.findAllBySlb(slbId, GroupSlbEntity.READSET_FULL).size() > 0)
+            throw new ValidationException("Slb with id " + slbId + " cannot be deleted. Dependencies exist.");
     }
 }
