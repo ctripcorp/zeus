@@ -14,7 +14,7 @@ public class TaskExecutorJob extends QuartzJobBean {
         taskWorker.execute();
     }
 
-    public void setTaskExecutor(TaskWorker taskWorker) {
+    public void setTaskWorker(TaskWorker taskWorker) {
         this.taskWorker = taskWorker;
     }
 }
