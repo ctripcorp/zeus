@@ -3,11 +3,11 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.SlbList;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
@@ -48,10 +48,10 @@ public class SlbResource {
     @Authorize(name = "getAllSlbs")
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
-                         @QueryParam("type") String type,
-                         @QueryParam("tag") String tag,
-                         @QueryParam("pname") String pname,
-                         @QueryParam("pvalue") String pvalue) throws Exception {
+                         @TrimmedQueryParam("type") String type,
+                         @TrimmedQueryParam("tag") String tag,
+                         @TrimmedQueryParam("pname") String pname,
+                         @TrimmedQueryParam("pvalue") String pvalue) throws Exception {
         SlbList slbList = new SlbList();
         boolean noFilter = true;
         Set<Long> filtered = new HashSet<>();
@@ -81,8 +81,8 @@ public class SlbResource {
     @Authorize(name = "getSlb")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
                         @QueryParam("slbId") Long slbId,
-                        @QueryParam("slbName") String slbName,
-                        @QueryParam("type") String type) throws Exception {
+                        @TrimmedQueryParam("slbName") String slbName,
+                        @TrimmedQueryParam("type") String type) throws Exception {
         if (slbId == null && slbName == null) {
             throw new Exception("Missing parameter.");
         }
@@ -144,6 +144,17 @@ public class SlbResource {
             } catch (Exception e) {
                 throw new Exception("Slb cannot be parsed.");
             }
+        }
+        s.setName(s.getName().trim());
+        for (VirtualServer virtualServer : s.getVirtualServers()) {
+            virtualServer.setName(virtualServer.getName().trim());
+            for (Domain domain : virtualServer.getDomains()) {
+                domain.setName(domain.getName().trim());
+            }
+        }
+        for (SlbServer slbServer : s.getSlbServers()) {
+            slbServer.setIp(slbServer.getIp().trim());
+            slbServer.setHostName(slbServer.getHostName().trim());
         }
         return s;
     }

@@ -6,10 +6,14 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.S;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
 import com.ctrip.zeus.service.activate.ActivateService;
+import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.status.entity.GroupServerStatus;
+import com.ctrip.zeus.status.entity.GroupStatus;
+import com.ctrip.zeus.status.entity.GroupStatusList;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -18,10 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -44,6 +45,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     StatusService statusService;
     @Resource
     private ActivateService activateService;
+    @Resource
+    private ActiveConfService activeConfService;
 
 
     private long currentSlbId = -1L;
@@ -62,11 +65,14 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getAllGroupStatus(Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        List<GroupSlb> groupSlbs = slbRepository.listGroupSlbsBySlb(slbId);
+        List<Group> groups = groupRepository.list(slbId, null);
         List<Long> list = new ArrayList<>();
-        for (GroupSlb groupSlb : groupSlbs) {
-            list.add(groupSlb.getGroupId());
+        Set<Long> groupIds = new HashSet<>();
+        for (Group group : groups) {
+            groupIds.add(group.getId());
         }
+        groupIds.addAll(activeConfService.getGroupIdsBySlbId(slbId));
+        list.addAll(groupIds);
         GroupStatusList appStatus = getGroupStatus(list, slbId);
         result.addAll(appStatus.getGroupStatuses());
         return result;
@@ -91,9 +97,10 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         Slb slb = slbRepository.getById(slbId);
         AssertUtils.assertNotNull(slb, "slb Id not found!");
         List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
-        HashMap<Long,Boolean> isActivated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}));
+        HashMap<Long,Boolean> isActivated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}),slbId);
         Set<String> allUpGroupServerInSlb = statusService.findAllUpGroupServersBySlbId(slbId);
         Set<String> allDownServers = statusService.findAllDownServers();
+
         for (Group group : groups)
         {
             Long groupId = group.getId();
@@ -104,9 +111,36 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             status.setGroupName(group.getName());
             status.setSlbName(slb.getName());
             status.setActivated(isActivated.get(groupId));
+
+            Group activatedGroup = null;
+            Map<String,Integer> ipPort = new HashMap<>();
+            List<String> activatedIps = new ArrayList<>();
+            if (isActivated.get(groupId))
+            {
+                activatedGroup = activateService.getActivatedGroup(groupId,slbId);
+                if (activatedGroup!=null) {
+                    for (GroupServer gs : activatedGroup.getGroupServers()){
+                        ipPort.put(gs.getIp(),gs.getPort());
+                        activatedIps.add(gs.getIp());
+                    }
+                }
+            }
             List<GroupServer> groupServerList = group.getGroupServers();//groupRepository.listGroupServersByGroup(groupId);
-            for (GroupServer groupServer : groupServerList) {
-                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, groupServer.getIp(), groupServer.getPort(),allDownServers,allUpGroupServerInSlb,group);
+            List<String> ips = new ArrayList<>();
+
+            for (GroupServer gs : groupServerList){
+                ipPort.put(gs.getIp(),gs.getPort());
+                ips.add(gs.getIp());
+            }
+            for (String ip : ipPort.keySet()) {
+                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, ip, ipPort.get(ip),allDownServers,allUpGroupServerInSlb,group);
+                if (activatedIps.contains(ip)&&ips.contains(ip)){
+                    serverStatus.setDiscription("Activated");
+                }else if (!activatedIps.contains(ip)&&ips.contains(ip)){
+                    serverStatus.setDiscription("To Activate");
+                }else if (activatedIps.contains(ip)&&!ips.contains(ip)){
+                    serverStatus.setDiscription("To Deactivate");
+                }
                 status.addGroupServerStatus(serverStatus);
             }
             res.addGroupStatus(status);
@@ -145,7 +179,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         groupServerStatus.setIp(ip);
         groupServerStatus.setPort(port);
         StringBuilder sb = new StringBuilder(64);
-        sb.append(slbId).append("_").append(group.getGroupSlbs().get(0).getVirtualServer().getId()).append("_").append(groupId).append("_").append(ip);
+        sb.append(slbId).append("_").append(group.getGroupVirtualServers().get(0).getVirtualServer().getId()).append("_").append(groupId).append("_").append(ip);
 
         boolean memberUp = allUpGroupServerInSlb.contains(sb.toString());
         boolean serverUp = !allDownServers.contains(ip);
@@ -157,6 +191,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
         return groupServerStatus;
     }
+
 
     //TODO: should include port to get accurate upstream
     private boolean getUpstreamStatus(Long groupId, String ip , boolean memberUp , boolean serverUp) throws Exception {

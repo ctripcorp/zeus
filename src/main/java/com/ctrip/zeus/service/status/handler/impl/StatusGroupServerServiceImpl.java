@@ -63,4 +63,10 @@ public class StatusGroupServerServiceImpl implements StatusGroupServerService {
         d.setCreatedTime(new Date());
         statusGroupServerDao.insert(d);
     }
+
+    @Override
+    public void deleteByGroupIdAndSlbIdAndIp(Long slbId,Long groupId, String ip) throws Exception {
+        statusGroupServerDao.deleteByGroupIdAndSlbIdAndIp(new StatusGroupServerDo().setSlbId(slbId).setGroupId(groupId).setIp(ip));
+    }
+
 }

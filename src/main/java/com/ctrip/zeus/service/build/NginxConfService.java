@@ -14,14 +14,6 @@ import java.util.List;
  */
 public interface NginxConfService extends Repository {
     /**
-     * build upstream config by app name
-     * @param slb the slb
-     * @param groupId the group id
-     * @return upstream data
-     */
-    public List<DyUpstreamOpsData> buildUpstream(Slb slb , Long groupId)throws Exception;
-
-    /**
      * build config by slb name and version number
      * @param slbId the slb id
      * @param version the ticket number , the version

@@ -25,12 +25,34 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-group-ids-and-slb-id" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
+                        AND <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-group-id" type="DELETE">
                 <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-group-id-and-slb-id" type="DELETE">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    AND <param name="slb-id"/> = ${slb-id}
                     ]]>
                 </statement>
             </query>
@@ -99,12 +121,33 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-group-id" type="SELECT" multiple="true">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-group-id" type="DELETE">
                 <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-group-id-slb-id" type="DELETE">
+                <param name="group-id"/>
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    AND <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>

@@ -1,9 +1,6 @@
 package com.ctrip.zeus.service.model.handler;
 
-import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.VirtualServer;
-import org.unidal.dal.jdbc.DalException;
 
 import java.util.List;
 
@@ -13,29 +10,15 @@ import java.util.List;
  */
 public interface SlbQuery {
 
-    Slb get(String slbName) throws DalException;
+    Slb get(String slbName) throws Exception;
 
-    Slb getById(Long id) throws DalException;
+    Slb getById(Long id) throws Exception;
 
-    Slb getBySlbServer(String slbServerIp) throws DalException;
+    Slb getBySlbServer(String slbServerIp) throws Exception;
 
-    Slb getByVirtualServer(Long virtualServerId) throws DalException;
+    List<Slb> batchGet(Long[] ids) throws Exception;
 
-    VirtualServer getVirtualServer(Long virtualServerId, Long slbId, String virtualServerName) throws DalException;
+    List<Slb> getAll() throws Exception;
 
-    List<Slb> getAll() throws DalException;
-
-    List<Slb> getByGroupServer(String groupServerIp) throws DalException;
-
-    List<Slb> getByGroups(Long[] groupIds) throws DalException;
-
-    List<Slb> getByGroupServerAndGroup(String groupServerIp, Long groupId) throws DalException;
-
-    List<String> getGroupServersBySlb(String slbName) throws DalException;
-
-    List<GroupSlb> getGroupSlbsByGroups(Long[] groupIds) throws DalException;
-
-    List<GroupSlb> getGroupSlbsBySlb(Long slbId) throws DalException;
-
-    List<GroupSlb> getGroupSlbsByVirtualServer(Long virtualServer) throws DalException;
+    List<Slb> getByGroups(Long[] groupIds) throws Exception;
 }

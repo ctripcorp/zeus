@@ -180,16 +180,23 @@ CREATE TABLE IF NOT EXISTS `build_info` (
 
 -- Dumping structure for table conf_group_active
 DROP TABLE IF EXISTS `conf_group_active`;
-CREATE TABLE IF NOT EXISTS `conf_group_active` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `group_id` bigint(20) NOT NULL DEFAULT '0',
-  `content` mediumtext,
-  `version` int(11) DEFAULT NULL,
-  `created_time` timestamp NULL DEFAULT NULL,
-  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id` (`group_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE `conf_group_active` (
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`group_id` BIGINT(20) NOT NULL DEFAULT '0',
+	`slb_id` BIGINT(20) NOT NULL DEFAULT '0' COMMENT 'null',
+	`content` MEDIUMTEXT NULL,
+	`version` INT(11) NULL DEFAULT NULL,
+	`created_time` TIMESTAMP NULL DEFAULT NULL,
+	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`),
+	UNIQUE INDEX `group_id_slb_id` (`group_id`, `slb_id`),
+	INDEX `idx_DataChange_LastTime` (`DataChange_LastTime`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=1910
+;
+
 
 -- Dumping data for table conf_group_active: ~0 rows (approximately)
 /*!40000 ALTER TABLE `conf_group_active` DISABLE KEYS */;
@@ -419,6 +426,26 @@ CREATE TABLE IF NOT EXISTS `nginx_server` (
 -- Dumping data for table nginx_server: ~0 rows (approximately)
 /*!40000 ALTER TABLE `nginx_server` DISABLE KEYS */;
 /*!40000 ALTER TABLE `nginx_server` ENABLE KEYS */;
+
+-- Dumping structure for table operation_log
+DROP TABLE IF EXISTS `operation_log`;
+CREATE TABLE IF NOT EXISTS `operation_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `type` varchar(128) NOT NULL DEFAULT 'Unknown' COMMENT 'type',
+  `target_id` varchar(128) NOT NULL DEFAULT '0' COMMENT 'target id',
+  `operation` varchar(128) NOT NULL DEFAULT 'Unknown' COMMENT 'operation',
+  `data` varchar(10240) DEFAULT NULL COMMENT 'data',
+  `user_name` varchar(128) DEFAULT NULL COMMENT 'user name',
+  `client_ip` varchar(128) DEFAULT NULL COMMENT 'client ip',
+  `success` bit(1) NOT NULL DEFAULT b'0' COMMENT 'success',
+  `err_msg` varchar(2048) DEFAULT NULL COMMENT 'err msg',
+  `datetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'datetime',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='operation log';
+
+-- Data exporting was unselected.
 
 
 -- Dumping structure for table property
@@ -662,3 +689,44 @@ CREATE TABLE IF NOT EXISTS `tag_item` (
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+
+-- Dumping structure for table task
+DROP TABLE IF EXISTS `task`;
+CREATE TABLE `task` (
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+	`ops_type` VARCHAR(50) NOT NULL DEFAULT 'UNDEFINE' COMMENT 'ops type',
+	`group_id` BIGINT(20) NULL DEFAULT NULL COMMENT 'group id',
+	`slb_id` BIGINT(20) NULL DEFAULT NULL COMMENT 'slb id',
+	`ip_list` VARCHAR(4096) NULL DEFAULT NULL COMMENT 'ip list',
+	`up` BIT(1) NULL DEFAULT NULL COMMENT 'up',
+	`status` VARCHAR(50) NOT NULL DEFAULT 'UNDEFINE' COMMENT 'status',
+	`target_slb_id` BIGINT(20) NOT NULL DEFAULT '0' COMMENT 'target slb id',
+	`version` INT(11) NULL DEFAULT '0' COMMENT 'version',
+	`fail_cause` VARCHAR(1024) NULL DEFAULT NULL COMMENT 'fail cause',
+	`create_time` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
+	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+	PRIMARY KEY (`id`),
+	INDEX `DataChange_LastTime` (`DataChange_LastTime`)
+)
+COMMENT='task queue'
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=4
+;
+
+-- Dumping structure for table snap_server_group
+DROP TABLE IF EXISTS `snap_server_group`;
+CREATE TABLE `snap_server_group` (
+	`id` INT(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+	`ip` VARCHAR(50) NOT NULL DEFAULT '0' COMMENT 'ip',
+	`group_id` BIGINT(20) NOT NULL DEFAULT '0' COMMENT 'group id',
+	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+	PRIMARY KEY (`id`),
+	INDEX `DataChange_LastTime` (`DataChange_LastTime`)
+)
+COMMENT='snap_server_group'
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=64
+;
+

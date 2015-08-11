@@ -10,10 +10,12 @@ import jersey.repackaged.com.google.common.cache.CacheLoader;
 import jersey.repackaged.com.google.common.cache.LoadingCache;
 
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -46,8 +48,12 @@ public class NginxClient extends AbstractRestClient {
         return DefaultJsonParser.parse(NginxResponse.class, responseStr);
     }
 
-    public NginxResponse write()throws IOException{
-        String responseStr = getTarget().path("/api/nginx/write").request().headers(getDefaultHeaders()).get(String.class);
+    public NginxResponse write(List<Long> vsIds)throws IOException{
+        WebTarget webTarget = getTarget().path("/api/nginx/write");
+        for (Long vsId : vsIds){
+            webTarget = webTarget.queryParam("VirtualServer",vsId);
+        }
+        String responseStr = webTarget.request().headers(getDefaultHeaders()).get(String.class);
         return DefaultJsonParser.parse(NginxResponse.class, responseStr);
     }
 

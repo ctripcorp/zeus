@@ -307,6 +307,15 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>snap-server-group</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>snap_server_group</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>status-group-server</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -338,6 +347,15 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<physical-table-name>tag_item</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>task</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>task</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>
@@ -639,6 +657,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.zeus.dal.core.SnapServerGroupDao</role>
+			<implementation>com.ctrip.zeus.dal.core.SnapServerGroupDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.zeus.dal.core.StatusGroupServerDao</role>
 			<implementation>com.ctrip.zeus.dal.core.StatusGroupServerDao</implementation>
 			<requirements>
@@ -668,6 +695,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.TagItemDao</role>
 			<implementation>com.ctrip.zeus.dal.core.TagItemDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.TaskDao</role>
+			<implementation>com.ctrip.zeus.dal.core.TaskDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

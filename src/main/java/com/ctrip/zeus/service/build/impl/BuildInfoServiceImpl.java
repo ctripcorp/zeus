@@ -1,7 +1,6 @@
 package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.GroupSlb;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.model.SlbRepository;
@@ -58,16 +57,16 @@ public class BuildInfoServiceImpl implements BuildInfoService {
     }
 
     @Override
-    public boolean updateTicket(Long slbId, int ticket) throws Exception
+    public boolean updateTicket(Long slbId, int version) throws Exception
     {
         BuildInfoDo d = buildInfoDao.findBySlbId(slbId, BuildInfoEntity.READSET_FULL);
 
-        if (ticket>d.getCurrentTicket())
+        if (version>d.getCurrentTicket())
         {
-            d.setCurrentTicket(ticket);
+            d.setCurrentTicket(version);
             buildInfoDao.updateByPK(d, BuildInfoEntity.UPDATESET_FULL);
 
-            logger.debug("Update ticket success. Ticket Num: "+ticket+"Slb ID: "+ slbId);
+            logger.debug("Update ticket success. Ticket Num: "+version+"Slb ID: "+ slbId);
 
             return true;
         }else
@@ -77,36 +76,6 @@ public class BuildInfoServiceImpl implements BuildInfoService {
 
     }
 
-    @Override
-    public Set<Long> getAllNeededSlb(List<Long> slbIds,List<Long> groupIds) throws Exception {
-        Set<Long> buildSlbIds = new HashSet<>();
-        for (Long s : slbIds)
-        {
-            if (slbRepository.getById(s)==null)
-            {
-                logger.warn("slb ["+s+"] is not exist！remove it from activate slb  list!");
-            }else {
-                buildSlbIds.add(s);
-            }
-        }
-
-
-        List<GroupSlb> list = slbRepository.listGroupSlbsByGroups(groupIds.toArray(new Long[]{}));
-
-
-        if (groupIds.size()>0)
-        {
-            AssertUtils.assertNotNull(list, "[BuildInfoService getAllNeededSlb]Not found GroupSlbs by groupIds! Please check the configuration of groupIds: " + groupIds.toString());
-        }
-
-        if (list!=null&&list.size()>0)
-        {
-            for (GroupSlb groupSlb : list) {
-                buildSlbIds.add(groupSlb.getSlbId());
-            }
-        }
-        return buildSlbIds;
-    }
 
     @Override
     public int getCurrentTicket(Long slbId) throws Exception {

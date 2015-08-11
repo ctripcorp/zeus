@@ -92,6 +92,19 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-group-id-and-slb-id-and-ip" type="DELETE">
+                <param name="group-id"/>
+                <param name="slb-id"/>
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    AND <FIELD name='slb-id'/> = ${slb-id}
+                    AND <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="status-server" table="status_server" alias="ss" do-class="StatusServerDo">

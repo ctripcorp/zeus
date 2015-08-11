@@ -8,11 +8,8 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
-import org.unidal.dal.jdbc.DalException;
-import org.xml.sax.SAXException;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -64,13 +61,13 @@ public class ArchiveServiceImpl implements ArchiveService {
 
     @Override
     public Group getGroup(Long groupId, int version) throws Exception {
-        String content =  archiveGroupDao.findByGroupAndVersion(groupId, version, ArchiveGroupEntity.READSET_FULL).getContent();
+        String content = archiveGroupDao.findByGroupAndVersion(groupId, version, ArchiveGroupEntity.READSET_FULL).getContent();
         return DefaultSaxParser.parseEntity(Group.class, content);
     }
 
     @Override
     public Slb getMaxVersionSlb(Long slbId) throws Exception {
-        String content =  archiveSlbDao.findMaxVersionBySlb(slbId, ArchiveSlbEntity.READSET_FULL).getContent();
+        String content = archiveSlbDao.findMaxVersionBySlb(slbId, ArchiveSlbEntity.READSET_FULL).getContent();
         return DefaultSaxParser.parseEntity(Slb.class, content);
     }
 
@@ -82,7 +79,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
     @Override
     public List<Slb> getAllSlb(Long slbId) throws Exception {
-        List<ArchiveSlbDo> l =  archiveSlbDao.findAllBySlb(slbId, ArchiveSlbEntity.READSET_FULL);
+        List<ArchiveSlbDo> l = archiveSlbDao.findAllBySlb(slbId, ArchiveSlbEntity.READSET_FULL);
         List<Slb> list = new ArrayList<>();
         for (ArchiveSlbDo d : l) {
             list.add(DefaultSaxParser.parseEntity(Slb.class, d.getContent()));
@@ -110,5 +107,17 @@ public class ArchiveServiceImpl implements ArchiveService {
     public Archive getLatestGroupArchive(Long groupId) throws Exception {
         ArchiveGroupDo aad = archiveGroupDao.findMaxVersionByGroup(groupId, ArchiveGroupEntity.READSET_FULL);
         return C.toGroupArchive(aad);
+    }
+
+    @Override
+    public Archive getSlbArchive(Long slbId, int version) throws Exception {
+        ArchiveSlbDo archive = archiveSlbDao.findBySlbAndVersion(slbId, version, ArchiveSlbEntity.READSET_FULL);
+        return C.toSlbArchive(archive);
+    }
+
+    @Override
+    public Archive getGroupArchive(Long groupId, int version) throws Exception {
+        ArchiveGroupDo archive = archiveGroupDao.findByGroupAndVersion(groupId, version, ArchiveGroupEntity.READSET_FULL);
+        return C.toGroupArchive(archive);
     }
 }

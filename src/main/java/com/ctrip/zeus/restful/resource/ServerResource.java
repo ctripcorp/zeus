@@ -6,6 +6,7 @@ import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.activate.ActivateService;
+import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfService;
@@ -14,6 +15,13 @@ import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.service.task.TaskService;
+import com.ctrip.zeus.service.task.constant.TaskOpsType;
+import com.ctrip.zeus.status.entity.GroupServerStatus;
+import com.ctrip.zeus.status.entity.GroupStatus;
+import com.ctrip.zeus.status.entity.ServerStatus;
+import com.ctrip.zeus.task.entity.OpsTask;
+import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -63,6 +71,10 @@ public class ServerResource {
     private SlbRepository slbRepository;
     @Resource
     private ActivateService activateService;
+    @Resource
+    private TaskService taskService;
+    @Resource
+    private ActiveConfService activeConfService;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -72,59 +84,51 @@ public class ServerResource {
     @Path("/upServer")
     @Authorize(name="upDownServer")
     public Response upServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-        //update status
-        statusService.upServer(ip);
-        return serverOps(hh,ip);
+        return serverOps(hh,ip,true);
     }
 
     @GET
     @Path("/downServer")
     @Authorize(name="upDownServer")
     public Response downServer(@Context HttpServletRequest request,@Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception{
-        //update status
-        statusService.downServer(ip);
-        return serverOps(hh, ip);
+        return serverOps(hh, ip , false);
     }
 
-    private Response serverOps(HttpHeaders hh , String serverip)throws Exception{
+    private Response serverOps(HttpHeaders hh , String serverip , boolean up)throws Exception{
         //get slb by serverip
         List<Slb> slblist = slbRepository.listByGroupServerAndGroup(serverip,null);
         AssertUtils.assertNotNull(slblist, "[UpServer/DownServer] Can not find slb by server ip :[" + serverip + "],Please check the configuration and server ip!");
-
+        List<OpsTask> tasks = new ArrayList<>();
         for (Slb slb : slblist)
         {
-            Long slbId = slb.getId();
-            int ticket = buildInfoService.getTicket(slbId);
-
-            boolean buildFlag = false;
-            DistLock buildLock = dbLockFactory.newLock(slbId + "_build");
-            try{
-                buildLock.lock(lockTimeout.get());
-                buildFlag =buildService.build(slbId,ticket);
-            }finally {
-                buildLock.unlock();
-            }
-            if (buildFlag) {
-                DistLock writeLock = dbLockFactory.newLock(slbId + "_writeAndReload");
-                try {
-                    writeLock.lock(lockTimeout.get());
-                    //Push Service
-                    nginxAgentService.writeAllAndLoadAll(slbId);
-                } finally {
-                    writeLock.unlock();
-                }
-            }
-
+            OpsTask task = new OpsTask();
+            task.setIpList(serverip);
+            task.setOpsType(TaskOpsType.SERVER_OPS);
+            task.setTargetSlbId(slb.getId());
+            task.setUp(up);
+            tasks.add(task);
         }
-
+        List<Long> taskIds = taskService.add(tasks);
+        List<TaskResult> results = taskService.getResult(taskIds,30000L);
+        boolean isSuccess = true;
+        String failCause = "";
+        for (TaskResult taskResult : results){
+            if (!taskResult.isSuccess()){
+                isSuccess=false;
+                failCause += taskResult.toString();
+            }
+        }
+        if (!isSuccess){
+            throw new Exception(failCause);
+        }
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
-        List<String> applist = groupRepository.listGroupsByGroupServer(serverip);
+        List<Group> groupList = groupRepository.listGroupsByGroupServer(serverip);
 
-        if (applist!=null)
+        if (groupList!=null)
         {
-            for (String name : applist)
+            for (Group group : groupList)
             {
-                ss.addGroupName(name);
+                ss.addGroupName(group.getName());
             }
         }
 
@@ -169,8 +173,7 @@ public class ServerResource {
         {
             _ips.addAll(ips);
         }
-        statusService.upMember(_groupId,_ips);
-        return memberOps(hh, _groupId, _ips);
+        return memberOps(hh, _groupId, _ips , true);
     }
 
     @GET
@@ -208,65 +211,37 @@ public class ServerResource {
         {
             _ips.addAll(ips);
         }
-        statusService.downMember(_groupId, _ips);
-        return memberOps(hh, _groupId, _ips);
+
+        return memberOps(hh, _groupId, _ips,false);
     }
 
 
-    private Response memberOps(HttpHeaders hh,Long groupId,List<String> ips)throws Exception{
+    private Response memberOps(HttpHeaders hh,Long groupId,List<String> ips,boolean up)throws Exception{
 
-        //get slb by groupId and ip
-        Set<Slb> slbList = new HashSet<>();
-        List<Slb> tmp ;
-        for (String ip : ips)
-        {
-            tmp = slbRepository.listByGroupServerAndGroup(ip,groupId);
-            AssertUtils.assertNotNull(tmp,"Not find slb for GroupId ["+groupId+"] and ip ["+ip+"]");
-            slbList.addAll(tmp);
+        StringBuilder sb = new StringBuilder();
+        for (String ip : ips){
+            sb.append(ip).append(";");
         }
-        AssertUtils.assertNotEquals(0,slbList.size(),"Group or ips is not correct!");
-
-        if (activateService.isGroupActivated(groupId))
-        {
-            for (Slb slb : slbList) {
-                Long slbId = slb.getId();
-                //get ticket
-                int ticket = buildInfoService.getTicket(slbId);
-
-                boolean buildFlag = false;
-                boolean dyopsFlag = false;
-                List<DyUpstreamOpsData> dyUpstreamOpsDataList = null;
-                DistLock buildLock = dbLockFactory.newLock("build_"+slbId);
-                try{
-                    buildLock.lock(lockTimeout.get());
-                    buildFlag =buildService.build(slbId,ticket);
-                }finally {
-                    buildLock.unlock();
-                }
-                if (buildFlag) {
-                    DistLock writeLock = dbLockFactory.newLock("writeAndReload_" + slbId);
-                    try {
-                        writeLock.lock(lockTimeout.get());
-                        //push
-                        dyopsFlag=nginxAgentService.writeALLToDisk(slbId);
-                        if (!dyopsFlag)
-                        {
-                            throw new Exception("write all to disk failed!");
-                        }
-                    } finally {
-                        writeLock.unlock();
-                    }
-                }
-                if (dyopsFlag){
-                    DistLock dyopsLock = dbLockFactory.newLock(slbId + "_" + groupId + "_dyops");
-                    try{
-                        dyopsLock.lock(lockTimeout.get());
-                        dyUpstreamOpsDataList = nginxConfService.buildUpstream(slb, groupId);
-                        nginxAgentService.dyops(slbId, dyUpstreamOpsDataList);
-                    }finally {
-                        dyopsLock.unlock();
-                    }
-                }
+        Set<Long> slbIds = activeConfService.getSlbIdsByGroupId(groupId);
+        List<Slb> slbs = slbRepository.listByGroups(new Long[]{groupId});
+        for (Slb slb : slbs){
+            slbIds.add(slb.getId());
+        }
+        List<OpsTask>tasks = new ArrayList<>();
+        for (Long slbId : slbIds){
+            OpsTask task = new OpsTask();
+            task.setTargetSlbId(slbId);
+            task.setOpsType(TaskOpsType.MEMBER_OPS);
+            task.setUp(up);
+            task.setGroupId(groupId);
+            task.setIpList(sb.toString());
+            tasks.add(task);
+        }
+        List<Long> taskIds = taskService.add(tasks);
+        List<TaskResult> results = taskService.getResult(taskIds,30000L);
+        for (TaskResult taskResult : results){
+            if(!taskResult.isSuccess()){
+                throw new Exception("Task Failed! Fail cause : "+taskResult.getFailCause());
             }
         }
 

@@ -1,23 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model>
   <entity name="status" root="true">
-    <entity-ref name="slb-status" />
+    <entity-ref name="group-status" />
+    <entity-ref name="group-status-list" />
+    <entity-ref name="server-status" />
+    <entity-ref name="op-server-status-req" />
+    <entity-ref name="op-member-status-req" />
   </entity>
-  <entity name="slb-status">
-    <attribute name="name" value-type="String" />
-    <entity-ref name="vhost" type="list" names="vhosts" xml-indent="true" />
+  <entity name="group-status">
+    <element name="group-name" value-type="String" />
+    <element name="slb-name" value-type="String" />
+    <element name="group-id" value-type="long" />
+    <element name="slb-id" value-type="long" />
+    <element name="activated" value-type="boolean" />
+    <entity-ref name="group-server-status" type="list" names="group-server-statuses" />
   </entity>
-  <entity name="vhost">
-    <attribute name="name" value-type="String" />
-    <entity-ref name="app-status" type="list" names="apps" xml-indent="true" />
+  <entity name="group-server-status">
+    <element name="ip" value-type="String" />
+    <element name="port" value-type="int" />
+    <element name="member" value-type="boolean" />
+    <element name="server" value-type="boolean" />
+    <element name="up" value-type="boolean" />
+    <element name="discription" value-type="String" />
   </entity>
-  <entity name="app-status">
-    <attribute name="name" value-type="String" />
-    <entity-ref name="server" type="list" names="servers" xml-indent="true" />
+  <entity name="group-status-list">
+    <element name="total" value-type="int" />
+    <entity-ref name="group-status" type="list" names="group-statuses" xml-indent="true" />
   </entity>
-  <entity name="server">
-    <attribute name="ip" value-type="String" />
-    <attribute name="up" value-type="boolean" />
+  <entity name="server-status">
+    <element name="ip" value-type="String" />
+    <element name="up" value-type="boolean" />
+    <element name="group-name" value-type="String" type="list" names="group-names" />
+  </entity>
+  <entity name="op-server-status-req">
+    <element name="operation" value-type="String" />
+    <entity-ref name="ip-addresses" type="list" names="ip-addresseses" />
+  </entity>
+  <entity name="ip-addresses">
+    <element name="ip-addr" value-type="String" />
+  </entity>
+  <entity name="op-member-status-req">
+    <element name="operation" value-type="String" />
+    <entity-ref name="ip-groupname" type="list" names="ip-groupnames" />
+  </entity>
+  <entity name="ip-groupname">
+    <element name="member-ip" value-type="String" />
+    <element name="member-groupname" value-type="String" />
   </entity>
 </model>
 

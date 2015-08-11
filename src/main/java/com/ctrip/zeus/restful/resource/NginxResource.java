@@ -79,9 +79,9 @@ public class NginxResource {
     @GET
     @Path("/write")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response write(@Context HttpServletRequest request,@Context HttpHeaders hh )throws Exception
+    public Response write(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("VirtualServer")List<Long> vsIds )throws Exception
     {
-        NginxResponse result = nginxService.writeToDisk();
+        NginxResponse result = nginxService.writeToDisk(vsIds);
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
             return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
         } else {

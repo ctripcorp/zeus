@@ -3,6 +3,8 @@ package com.ctrip.zeus.support;
 import com.ctrip.zeus.auth.entity.*;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.task.entity.OpsTask;
+import com.ctrip.zeus.task.entity.Task;
 
 /**
  * @author:xingchaowang
@@ -28,20 +30,6 @@ public class C {
                 .setMaxFails(d.getMaxFails())
                 .setPort(d.getPort())
                 .setWeight(d.getWeight());
-    }
-
-    public static GroupSlb toGroupSlb(GroupSlbDo d) {
-        return new GroupSlb()
-                .setSlbId(d.getSlbId())
-                .setGroupId(d.getGroupId())
-                .setPath(d.getPath())
-                .setRewrite(d.getRewrite())
-                .setPriority(d.getPriority());
-    }
-
-    public static Domain toDomain(SlbDomainDo d) {
-        return new Domain()
-                .setName(d.getName());
     }
 
     public static HealthCheck toHealthCheck(GroupHealthCheckDo d) {
@@ -84,6 +72,7 @@ public class C {
     public static VirtualServer toVirtualServer(SlbVirtualServerDo d) {
         return new VirtualServer()
                 .setId(d.getId())
+                .setSlbId(d.getSlbId())
                 .setPort(d.getPort())
                 .setName(d.getName())
                 .setSsl(d.isIsSsl());
@@ -144,21 +133,6 @@ public class C {
                 .setWeight(e.getWeight());
     }
 
-    public static GroupSlbDo toGroupSlbDo(GroupSlb e) {
-        return new GroupSlbDo()
-                .setGroupId(e.getGroupId())
-                .setSlbId(e.getSlbId())
-                .setSlbVirtualServerId(e.getVirtualServer().getId())
-                .setPath(e.getPath())
-                .setRewrite(e.getRewrite())
-                .setPriority(e.getPriority() == null ? 0 : e.getPriority().intValue());
-    }
-
-    public static SlbDomainDo toSlbDomainDo(Domain e) {
-        return new SlbDomainDo()
-                .setName(e.getName());
-    }
-
     public static GroupHealthCheckDo toGroupHealthCheckDo(HealthCheck e) {
         return new GroupHealthCheckDo()
                 .setUri(e.getUri())
@@ -184,20 +158,23 @@ public class C {
                 .setVersion(e.getVersion() == null ? 0 : e.getVersion());
     }
 
-    public static SlbServerDo toSlbServerDo(SlbServer e) {
+    public static SlbServerDo toSlbServerDo(Long slbId, SlbServer e) {
         return new SlbServerDo()
+                .setSlbId(slbId)
                 .setHostName(e.getHostName())
                 .setIp(e.getIp());
     }
 
-    public static SlbVipDo toSlbVipDo(Vip e) {
+    public static SlbVipDo toSlbVipDo(Long slbId, Vip e) {
         return new SlbVipDo()
+                .setSlbId(slbId)
                 .setIp(e.getIp());
     }
 
-    public static SlbVirtualServerDo toSlbVirtualServerDo(Long virtualServerId, VirtualServer e) {
+    public static SlbVirtualServerDo toSlbVirtualServerDo(Long virtualServerId, Long slbId, VirtualServer e) {
         return new SlbVirtualServerDo()
                 .setId(virtualServerId)
+                .setSlbId(slbId)
                 .setPort(e.getPort())
                 .setIsSsl(e.isSsl())
                 .setName(e.getName());
@@ -222,5 +199,34 @@ public class C {
                 .setDescription(resource.getDescription());
     }
 
-
+    public static OpsTask toOpsTask(TaskDo task){
+        OpsTask result = new OpsTask();
+        result.setId(task.getId())
+                .setTargetSlbId(task.getTargetSlbId())
+                .setUp(task.isUp())
+                .setVersion(task.getVersion())
+                .setStatus(task.getStatus())
+                .setCreateTime(task.getCreateTime())
+                .setFailCause(task.getFailCause())
+                .setIpList(task.getIpList())
+                .setGroupId(task.getGroupId())
+                .setOpsType(task.getOpsType())
+                .setSlbId(task.getSlbId());
+        return result;
+    }
+    public static TaskDo toTaskDo(OpsTask opsTask){
+        TaskDo result = new TaskDo();
+        result.setId(opsTask.getId()==null?0L:opsTask.getId())
+                .setTargetSlbId(opsTask.getTargetSlbId()==null?0:opsTask.getTargetSlbId())
+                .setUp(opsTask.isUp())
+                .setVersion(opsTask.getVersion()==null?0:opsTask.getVersion())
+                .setStatus(opsTask.getStatus())
+                .setCreateTime(opsTask.getCreateTime())
+                .setFailCause(opsTask.getFailCause())
+                .setIpList(opsTask.getIpList())
+                .setGroupId(opsTask.getGroupId()==null?0:opsTask.getGroupId())
+                .setOpsType(opsTask.getOpsType())
+                .setSlbId(opsTask.getSlbId()==null?0:opsTask.getSlbId());
+        return result;
+    }
 }

@@ -58,7 +58,7 @@ public interface StatusService extends Repository {
      * @return
      * @throws Exception
      */
-    void upMember(Long groupId, List<String> ips)throws Exception;
+    void upMember(Long slbId ,Long groupId, List<String> ips)throws Exception;
     /**
      * down member by app server ip and appname
      * @param ips the app server ips
@@ -66,7 +66,7 @@ public interface StatusService extends Repository {
      * @return
      * @throws Exception
      */
-    void downMember(Long groupId, List<String> ips)throws Exception;
+    void downMember(Long slbId ,Long groupId, List<String> ips)throws Exception;
 
     /**
      * get App server status by app name and slbname and virtual server ip

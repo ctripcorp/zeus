@@ -164,34 +164,6 @@ public class NginxConfServiceImpl implements NginxConfService {
         return buildInfoService.getCurrentTicket(slbId);
     }
 
-
-    @Override
-    public List<DyUpstreamOpsData> buildUpstream(Slb slb, Long groupId) throws Exception {
-
-        List<DyUpstreamOpsData> result = new ArrayList<>();
-
-        Set<String> allDownServers = statusService.findAllDownServers();
-        Set<String> allUpGroupServers = statusService.findAllUpGroupServersBySlbId(slb.getId());
-
-        List<String> groupActiveconf =activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{groupId});
-
-        if (groupActiveconf.size()!=1){ throw new NotFoundException("Activate Conf is Null! GroupId "+ groupId);}
-        Group group = DefaultSaxParser.parseEntity(Group.class, groupActiveconf.get(0));
-
-        List<GroupSlb> groupSlbList = group.getGroupSlbs();
-        VirtualServer vs = null;
-        for (GroupSlb groupSlb : groupSlbList )
-        {
-            vs  = groupSlb.getVirtualServer();
-
-            String upstreambody = UpstreamsConf.buildUpstreamConfBody(slb,vs,group,allDownServers,allUpGroupServers);
-            String upstreamName = UpstreamsConf.buildUpstreamName(slb,vs,group);
-            result.add(new DyUpstreamOpsData().setUpstreamCommands(upstreambody).setUpstreamName(upstreamName));
-        }
-
-        return result;
-    }
-
     @Override
     public void build( Long slbId, int version) throws Exception {
 

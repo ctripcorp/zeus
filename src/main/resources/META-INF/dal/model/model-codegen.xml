@@ -1,24 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model>
   <entity name="model" root="true">
+    <entity-ref name="virtual-server" />
     <entity-ref name="slb" />
     <entity-ref name="slb-list" />
-    <entity-ref name="vip" />
+    <entity-ref name="virtual-server-list" />
+    <entity-ref name="group-virtual-server" />
+    <entity-ref name="group-server" />
+    <entity-ref name="group-server-list" />
     <entity-ref name="group" />
-    <entity-ref name="archive" />
     <entity-ref name="group-list" />
+    <entity-ref name="archive" />
     <entity-ref name="member-action" />
     <entity-ref name="server-action" />
-    <entity-ref name="group-status" />
-    <entity-ref name="group-status-list" />
-    <entity-ref name="server-status" />
     <entity-ref name="conf-req" />
-    <entity-ref name="op-server-status-req" />
-    <entity-ref name="op-member-status-req" />
     <entity-ref name="nginx-conf-upstream-data" />
     <entity-ref name="nginx-conf-server-data" />
     <entity-ref name="dy-upstream-ops-data" />
     <entity-ref name="slb-validate-response" />
+  </entity>
+  <entity name="virtual-server">
+    <attribute name="name" value-type="String" />
+    <attribute name="id" value-type="long" />
+    <attribute name="ssl" value-type="boolean" />
+    <element name="slb-id" value-type="long" />
+    <element name="port" value-type="String" />
+    <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
+  </entity>
+  <entity name="domain">
+    <attribute name="name" value-type="String" />
   </entity>
   <entity name="slb">
     <attribute name="id" value-type="long" />
@@ -40,19 +50,31 @@
     <attribute name="ip" value-type="String" />
     <attribute name="host-name" value-type="String" />
   </entity>
-  <entity name="virtual-server">
-    <attribute name="name" value-type="String" />
-    <attribute name="id" value-type="long" />
-    <attribute name="ssl" value-type="boolean" />
-    <element name="port" value-type="String" />
-    <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
-  </entity>
-  <entity name="domain">
-    <attribute name="name" value-type="String" />
-  </entity>
   <entity name="slb-list">
     <element name="total" value-type="int" />
     <entity-ref name="slb" type="list" names="slbs" xml-indent="true" />
+  </entity>
+  <entity name="virtual-server-list">
+    <element name="total" value-type="int" />
+    <entity-ref name="virtual-server" type="list" names="virtual-servers" />
+  </entity>
+  <entity name="group-virtual-server">
+    <attribute name="priority" value-type="int" />
+    <element name="path" value-type="String" />
+    <element name="rewrite" value-type="String" />
+    <entity-ref name="virtual-server" />
+  </entity>
+  <entity name="group-server">
+    <attribute name="port" value-type="int" />
+    <attribute name="weight" value-type="int" />
+    <attribute name="max-fails" value-type="int" />
+    <attribute name="fail-timeout" value-type="int" />
+    <element name="host-name" value-type="String" />
+    <element name="ip" value-type="String" />
+  </entity>
+  <entity name="group-server-list">
+    <element name="groupId" value-type="long" />
+    <entity-ref name="group-server" type="list" names="group-servers" xml-indent="true" />
   </entity>
   <entity name="group">
     <attribute name="id" value-type="long" />
@@ -60,20 +82,10 @@
     <attribute name="app-id" value-type="String" />
     <attribute name="version" value-type="int" />
     <attribute name="ssl" value-type="boolean" />
-    <entity-ref name="group-slb" type="list" names="group-slbs" xml-indent="true" />
+    <entity-ref name="group-virtual-server" type="list" names="group-virtual-servers" xml-indent="true" />
     <entity-ref name="health-check" />
     <entity-ref name="load-balancing-method" />
     <entity-ref name="group-server" type="list" names="group-servers" xml-indent="true" />
-  </entity>
-  <entity name="group-slb">
-    <attribute name="priority" value-type="int" />
-    <element name="group-id" value-type="long" />
-    <element name="slb-id" value-type="long" />
-    <element name="slb-name" value-type="String" />
-    <element name="path" value-type="String" />
-    <element name="rewrite" value-type="String" />
-    <entity-ref name="vip" type="list" names="slb-vips" xml-indent="true" />
-    <entity-ref name="virtual-server" />
   </entity>
   <entity name="health-check">
     <attribute name="intervals" value-type="int" />
@@ -85,22 +97,14 @@
     <attribute name="type" value-type="String" />
     <element name="value" value-type="String" />
   </entity>
-  <entity name="group-server">
-    <attribute name="port" value-type="int" />
-    <attribute name="weight" value-type="int" />
-    <attribute name="max-fails" value-type="int" />
-    <attribute name="fail-timeout" value-type="int" />
-    <element name="host-name" value-type="String" />
-    <element name="ip" value-type="String" />
+  <entity name="group-list">
+    <element name="total" value-type="int" />
+    <entity-ref name="group" type="list" names="groups" xml-indent="true" />
   </entity>
   <entity name="archive">
     <element name="id" value-type="long" />
     <element name="content" value-type="String" />
     <element name="version" value-type="int" />
-  </entity>
-  <entity name="group-list">
-    <element name="total" value-type="int" />
-    <entity-ref name="group" type="list" names="groups" xml-indent="true" />
   </entity>
   <entity name="member-action">
     <element name="group-name" value-type="String" />
@@ -109,30 +113,6 @@
   <entity name="server-action">
     <element name="name" value-type="String" />
     <element name="ip" value-type="String" type="list" names="ips" />
-  </entity>
-  <entity name="group-status">
-    <element name="group-name" value-type="String" />
-    <element name="slb-name" value-type="String" />
-    <element name="group-id" value-type="long" />
-    <element name="slb-id" value-type="long" />
-    <element name="activated" value-type="boolean" />
-    <entity-ref name="group-server-status" type="list" names="group-server-statuses" />
-  </entity>
-  <entity name="group-server-status">
-    <element name="ip" value-type="String" />
-    <element name="port" value-type="String" />
-    <element name="member" value-type="boolean" />
-    <element name="server" value-type="boolean" />
-    <element name="up" value-type="boolean" />
-  </entity>
-  <entity name="group-status-list">
-    <element name="total" value-type="int" />
-    <entity-ref name="group-status" type="list" names="group-statuses" xml-indent="true" />
-  </entity>
-  <entity name="server-status">
-    <element name="ip" value-type="String" />
-    <element name="up" value-type="boolean" />
-    <element name="group-name" value-type="String" type="list" names="group-names" />
   </entity>
   <entity name="conf-req">
     <entity-ref name="conf-slb-name" type="list" names="conf-slb-names" />
@@ -143,21 +123,6 @@
   </entity>
   <entity name="conf-group-name">
     <attribute name="groupname" value-type="String" />
-  </entity>
-  <entity name="op-server-status-req">
-    <element name="operation" value-type="String" />
-    <entity-ref name="ip-addresses" type="list" names="ip-addresseses" />
-  </entity>
-  <entity name="ip-addresses">
-    <element name="ip-addr" value-type="String" />
-  </entity>
-  <entity name="op-member-status-req">
-    <element name="operation" value-type="String" />
-    <entity-ref name="ip-groupname" type="list" names="ip-groupnames" />
-  </entity>
-  <entity name="ip-groupname">
-    <element name="member-ip" value-type="String" />
-    <element name="member-groupname" value-type="String" />
   </entity>
   <entity name="nginx-conf-upstream-data">
     <element name="vs-id" value-type="long" />

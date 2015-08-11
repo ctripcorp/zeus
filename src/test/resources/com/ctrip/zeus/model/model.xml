@@ -1,35 +1,30 @@
 <model>
+    <virtual-server name="vs001" id="123456789012" ssl="true">
+        <slb-id>123456789012</slb-id>
+        <port>80,8099</port>
+        <domains>
+            <domain name="www.ctrip.com"/>
+            <domain name="hotel.ctrip.com"/>
+        </domains>
+    </virtual-server>
     <slb id="123456789012" name="default" version="1">
         <nginx-bin>/usr/local/nginx/bin</nginx-bin>
         <nginx-conf>/usr/local/nginx/conf</nginx-conf>
         <nginx-worker-processes>1</nginx-worker-processes>
         <vips>
-            <vip/>
-            <vip/>
+            <vip ip="192.168.1.1"/>
+            <vip ip="192.168.1.1"/>
         </vips>
         <slb-servers>
             <slb-server slb-id="123456789012" ip="192.168.1.1" host-name="slb001"/>
             <slb-server slb-id="123456789012" ip="192.168.1.2" host-name="slb002"/>
         </slb-servers>
         <virtual-servers>
-            <virtual-server name="vs001" id="123456789012" ssl="true">
-                <port>80,8099</port>
-                <domains>
-                    <domain name="www.ctrip.com"/>
-                    <domain name="hotel.ctrip.com"/>
-                </domains>
-            </virtual-server>
-            <virtual-server name="vs001" id="1" ssl="true">
-                <port>80</port>
-                <domains>
-                    <domain name="www.ctrip.com"/>
-                    <domain name="hotel.ctrip.com"/>
-                </domains>
-            </virtual-server>
+            <virtual-server/>
+            <virtual-server/>
         </virtual-servers>
         <status>healthy</status>
     </slb>
-
     <slb-list>
         <total>11</total>
         <slbs>
@@ -37,36 +32,33 @@
             <slb/>
         </slbs>
     </slb-list>
+    <virtual-server-list>
+        <total>12</total>
+        <virtual-server/>
+        <virtual-server/>
+    </virtual-server-list>
 
-    <vip ip="192.168.1.1"/>
-
+    <group-virtual-server priority="0">
+        <path>/hotel</path>
+        <rewrite>^/regex</rewrite>
+        <virtual-server/>
+    </group-virtual-server>
+    <group-server port="80" weight="5" max-fails="5" fail-timeout="30">
+        <host-name>local</host-name>
+        <ip>192.168.1.11</ip>
+    </group-server>
+    <group-server-list>
+        <groupId>123456789012</groupId>
+        <group-servers>
+            <group-server/>
+            <group-server/>
+        </group-servers>
+    </group-server-list>
     <group id="123456789012" name="gateway" app-id="app921822" version="1" ssl="false">
-        <group-slbs>
-            <group-slb priority="0">
-                <group-id>12345678901</group-id>
-                <slb-id>1</slb-id>
-                <slb-name>default</slb-name>
-                <slb-vips>
-                    <vip/>
-                    <vip/>
-                </slb-vips>
-                <path>/hotel</path>
-                <rewrite>^/regex</rewrite>
-                <virtual-server/>
-            </group-slb>
-            <group-slb priority="0">
-                <group-id>12345678901</group-id>
-
-                <slb-id>1</slb-id>
-                <slb-vips>
-                    <vip ip="192.168.1.1"/>
-                    <vip ip="192.168.1.2"/>
-                </slb-vips>
-                <path>/hotel</path>
-                <rewrite>*/regex</rewrite>
-                <virtual-server/>
-            </group-slb>
-        </group-slbs>
+        <group-virtual-servers>
+            <group-virtual-server/>
+            <group-virtual-server/>
+        </group-virtual-servers>
         <health-check intervals="10" fails="2" passes="2">
             <uri>/health-check</uri>
         </health-check>
@@ -74,23 +66,10 @@
             <value>uri</value>
         </load-balancing-method>
         <group-servers>
-            <group-server port="80" weight="5" max-fails="5" fail-timeout="30">
-                <host-name>local</host-name>
-                <ip>192.168.1.10</ip>
-            </group-server>
-            <group-server port="80" weight="5" max-fails="5" fail-timeout="30">
-                <host-name>local</host-name>
-                <ip>192.168.1.11</ip>
-            </group-server>
+            <group-server/>
+            <group-server/>
         </group-servers>
     </group>
-
-    <archive>
-        <id>12345678901</id>
-        <content>groupXmlString</content>
-        <version>1</version>
-    </archive>
-
     <group-list>
         <total>11</total>
         <groups>
@@ -98,6 +77,12 @@
             <group/>
         </groups>
     </group-list>
+
+    <archive>
+        <id>12345678901</id>
+        <content>groupXmlString</content>
+        <version>1</version>
+    </archive>
 
     <member-action>
         <group-name>group002</group-name>
@@ -111,44 +96,7 @@
         <ip>192.68.3</ip>
     </server-action>
 
-    <group-status>
-        <group-name>groupname</group-name>
-        <slb-name>slbname</slb-name>
-        <group-id>12345678901</group-id>
-        <slb-id>12345678901</slb-id>
-        <activated>true</activated>
-        <group-server-status>
-            <ip>192.168.1.1</ip>
-            <port>123456789</port>
-            <member>true</member>
-            <server>true</server>
-            <up>true</up>
-        </group-server-status>
-        <group-server-status>
-            <ip>192.168.1.1</ip>
-            <port>123456789</port>
-            <member>true</member>
-            <server>true</server>
-            <up>true</up>
-        </group-server-status>
-    </group-status>
 
-    <group-status-list>
-        <total>11</total>
-        <group-statuses>
-            <group-status/>
-            <group-status/>
-        </group-statuses>
-    </group-status-list>
-
-    <server-status>
-        <ip>192.168.1.1</ip>
-        <up>true</up>
-        <group-name>group1</group-name>
-        <group-name>group2</group-name>
-        <group-name>group3</group-name>
-        <group-name>group4</group-name>
-    </server-status>
 
     <!--added by fanqq-->
     <!--activate service-->
@@ -164,23 +112,7 @@
         </conf-group-name>
     </conf-req>
 
-    <op-server-status-req>
-        <ip-addresses><ip-addr>addr</ip-addr></ip-addresses>
-        <ip-addresses><ip-addr>addr</ip-addr></ip-addresses>
-        <operation>upserver</operation>
-    </op-server-status-req>
 
-    <op-member-status-req>
-        <ip-groupname>
-            <member-ip>str</member-ip>
-            <member-groupname>str</member-groupname>
-        </ip-groupname>
-        <ip-groupname>
-            <member-ip>str</member-ip>
-            <member-groupname>str</member-groupname>
-        </ip-groupname>
-        <operation>upmember</operation>
-    </op-member-status-req>
 
     <nginx-conf-upstream-data>
         <vs-id>123456789012</vs-id>
@@ -202,6 +134,4 @@
         <slb-id>12345678901</slb-id>
         <ip>127.0.0.1</ip>
     </slb-validate-response>
-
-
 </model>

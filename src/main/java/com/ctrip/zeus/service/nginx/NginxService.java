@@ -19,20 +19,20 @@ public interface NginxService {
      * @return the result of "ngnix -t"
      * @throws Exception
      */
-    NginxResponse writeToDisk() throws Exception;
+    NginxResponse writeToDisk(List<Long> vsIds) throws Exception;
 
     /**
      * write all server conf of nginx server conf in the slb
      * @return is all success
      * @throws Exception
      */
-    boolean writeALLToDisk(Long slbId) throws Exception;
+    boolean writeALLToDisk(Long slbId, List<Long> vsIds) throws Exception;
     /**
      * write all server conf of nginx server conf in the slb
      * @return list the results
      * @throws Exception
      */
-    List<NginxResponse> writeALLToDiskListResult(Long slbId) throws Exception;
+    List<NginxResponse> writeALLToDiskListResult(Long slbId, List<Long> vsIds) throws Exception;
 
     /**
      * load the colocated nginx server conf from disk
@@ -54,7 +54,7 @@ public interface NginxService {
      * @param slbId
      * @return List<NginxResponse>
      */
-    List<NginxResponse> writeAllAndLoadAll(Long slbId) throws Exception;
+    List<NginxResponse> writeAllAndLoadAll(Long slbId, List<Long> vsIds) throws Exception;
 
     /**
      *dy upstream ops api

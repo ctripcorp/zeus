@@ -1,9 +1,9 @@
 package com.ctrip.zeus.service.status;
 
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupServerStatus;
-import com.ctrip.zeus.model.entity.GroupStatus;
-import com.ctrip.zeus.model.entity.GroupStatusList;
+import com.ctrip.zeus.status.entity.GroupServerStatus;
+import com.ctrip.zeus.status.entity.GroupStatus;
+import com.ctrip.zeus.status.entity.GroupStatusList;
 
 import java.util.List;
 import java.util.Set;

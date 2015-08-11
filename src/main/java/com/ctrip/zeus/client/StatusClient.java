@@ -1,16 +1,13 @@
 package com.ctrip.zeus.client;
 
-import com.ctrip.zeus.model.entity.GroupServerStatus;
-import com.ctrip.zeus.model.entity.GroupStatus;
-import com.ctrip.zeus.model.entity.GroupStatusList;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
+import com.ctrip.zeus.status.entity.GroupStatusList;
+import com.ctrip.zeus.status.transform.DefaultJsonParser;
 import jersey.repackaged.com.google.common.cache.CacheBuilder;
 import jersey.repackaged.com.google.common.cache.CacheLoader;
 import jersey.repackaged.com.google.common.cache.LoadingCache;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;

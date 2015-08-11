@@ -11,6 +11,8 @@ import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.GroupStatusService;
+import com.ctrip.zeus.status.entity.GroupStatus;
+import com.ctrip.zeus.status.entity.GroupStatusList;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;

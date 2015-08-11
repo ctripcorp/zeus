@@ -10,21 +10,32 @@ import java.util.List;
  * @date: 3/14/2015.
  */
 public interface ArchiveService {
+
     int archiveSlb(Slb slb) throws Exception;
+
     int archiveGroup(Group app) throws Exception;
 
     int deleteSlbArchive(Long slbId) throws Exception;
+
     int deleteGroupArchive(Long groupId) throws Exception;
 
     Slb getSlb(Long slbId, int version) throws Exception;
+
     Group getGroup(Long groupId, int version) throws Exception;
 
     Slb getMaxVersionSlb(Long slbId) throws Exception;
+
     Group getMaxVersionGroup(Long groupId) throws Exception;
 
     List<Slb> getAllSlb(Long slbId) throws Exception;
+
     List<Group> getAllGroup(Long groupId) throws Exception;
 
     Archive getLatestSlbArchive(Long slbId) throws Exception;
+
     Archive getLatestGroupArchive(Long groupId) throws Exception;
+
+    Archive getSlbArchive(Long slbId, int version) throws Exception;
+
+    Archive getGroupArchive(Long groupId, int version) throws Exception;
 }
