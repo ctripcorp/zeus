@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by fanqq on 2015/7/31.
@@ -73,16 +74,18 @@ public class TaskExecutorImpl implements TaskExecutor {
     public void execute(Long slbId) {
         DistLock buildLock = dbLockFactory.newLock( "TaskWorker_" + slbId );
         try {
-            buildLock.lock(lockTimeout.get());
-            executeJob(slbId);
+//            buildLock.lock(lockTimeout.get());
+            if (buildLock.tryLock()){
+                executeJob(slbId);
+            }
         }catch (Exception e){
-            logger.warn("TaskWorker get lock failed! TaskWorker: "+slbId);
+            logger.warn("TaskWorker get lock failed! Or Executor Failed! TaskWorker: " + slbId);
         } finally{
             buildLock.unlock();
         }
     }
 
-    private void executeJob(Long slbId){
+    private void executeJob(Long slbId) throws Exception{
         HashMap<Long , Group> activatingGroups ;
         Slb activatingSlb ;
         List<VirtualServer> buildVirtualServer ;
@@ -144,6 +147,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             // failed
             setTaskResult(slbId,false,e.getMessage());
             rollBack(slbId);
+            throw e;
         }
 
     }
@@ -334,7 +338,13 @@ public class TaskExecutorImpl implements TaskExecutor {
     }
 
     private void sortTaskData(Long slbId){
+        activateGroupOps.clear();
+        activateSlbOps.clear();
+        serverOps.clear();
+        memberOps.clear();
+        deactivateGroupOps.clear();
         for (OpsTask task : tasks){
+            task.setStatus(TaskStatus.DOING);
             //Activate group
             if (task.getOpsType().equals(TaskOpsType.ACTIVATE_GROUP)){
                 activateGroupOps.put(task.getGroupId(), task);

@@ -6,6 +6,7 @@
     <entity-ref name="task-result-list" />
   </entity>
   <entity name="ops-task">
+    <element name="id" value-type="long" />
     <element name="slb-id" value-type="long" />
     <element name="group-id" value-type="long" />
     <element name="ops-type" value-type="String" />

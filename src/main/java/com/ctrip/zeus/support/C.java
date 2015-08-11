@@ -201,7 +201,8 @@ public class C {
 
     public static OpsTask toOpsTask(TaskDo task){
         OpsTask result = new OpsTask();
-        result.setTargetSlbId(task.getTargetSlbId())
+        result.setId(task.getId())
+                .setTargetSlbId(task.getTargetSlbId())
                 .setUp(task.isUp())
                 .setVersion(task.getVersion())
                 .setStatus(task.getStatus())
@@ -215,16 +216,17 @@ public class C {
     }
     public static TaskDo toTaskDo(OpsTask opsTask){
         TaskDo result = new TaskDo();
-        result.setTargetSlbId(opsTask.getTargetSlbId())
+        result.setId(opsTask.getId()==null?0L:opsTask.getId())
+                .setTargetSlbId(opsTask.getTargetSlbId()==null?0:opsTask.getTargetSlbId())
                 .setUp(opsTask.isUp())
-                .setVersion(opsTask.getVersion())
+                .setVersion(opsTask.getVersion()==null?0:opsTask.getVersion())
                 .setStatus(opsTask.getStatus())
                 .setCreateTime(opsTask.getCreateTime())
                 .setFailCause(opsTask.getFailCause())
                 .setIpList(opsTask.getIpList())
-                .setGroupId(opsTask.getGroupId())
+                .setGroupId(opsTask.getGroupId()==null?0:opsTask.getGroupId())
                 .setOpsType(opsTask.getOpsType())
-                .setSlbId(opsTask.getSlbId());
+                .setSlbId(opsTask.getSlbId()==null?0:opsTask.getSlbId());
         return result;
     }
 }

@@ -145,8 +145,13 @@ public class BuildServiceImpl implements BuildService {
         Map<Long, List<Group>> groupsMap = new HashMap<>();
         for (VirtualServer vs : buildVirtualServer){
             final Map<Long,Integer> groupPriorityMap = groupMap.get(vs.getId());
+
             List<Group> groupList = new ArrayList<>();
             List<Long> groupInDb = new ArrayList<>();
+            if (groupPriorityMap==null){
+                groupsMap.put(vs.getId(), groupList);
+                continue;
+            }
             Set<Long> groupIds =groupPriorityMap.keySet();
             for (Long gid : groupIds){
                 Group group = activatingGroups.get(gid);
@@ -232,28 +237,24 @@ public class BuildServiceImpl implements BuildService {
             slbVirtualServers.add(virtualServer.getId());
         }
 
-        NginxConfServerDo[] nginxConfServerDos = new NginxConfServerDo[length];
-        NginxConfUpstreamDo[] nginxConfUpstreamDos = new NginxConfUpstreamDo[length];
-
-        int index = 0 ;
         for (NginxConfServerDo nginxConfServerDo : nginxConfServerDoList){
-            if (nginxConfServerDoMap.containsKey(nginxConfServerDo.getSlbVirtualServerId())){
-                nginxConfServerDos[index++] = nginxConfServerDoMap.get(nginxConfServerDo.getSlbVirtualServerId());
-            }else if (slbVirtualServers.contains(nginxConfServerDo.getSlbVirtualServerId())){
-                nginxConfServerDo.setVersion(version);
-                nginxConfServerDos[index++]=nginxConfServerDo;
+            if (!slbVirtualServers.contains(nginxConfServerDo.getSlbVirtualServerId())){
+                continue;
+            }
+            if (!nginxConfServerDoMap.containsKey(nginxConfServerDo.getSlbVirtualServerId())){
+                nginxConfServerDoMap.put(nginxConfServerDo.getSlbVirtualServerId(),nginxConfServerDo.setVersion(version));
             }
         }
         for (NginxConfUpstreamDo nginxConfUpstreamDo : nginxConfUpstreamDoList){
-            if (nginxConfUpstreamDoMap.containsKey(nginxConfUpstreamDo.getSlbVirtualServerId())){
-                nginxConfUpstreamDos[index++] = nginxConfUpstreamDoMap.get(nginxConfUpstreamDo.getSlbVirtualServerId());
-            }else if (slbVirtualServers.contains(nginxConfUpstreamDo.getSlbVirtualServerId())){
-                nginxConfUpstreamDo.setVersion(version);
-                nginxConfUpstreamDos[index++]=nginxConfUpstreamDo;
+            if (!slbVirtualServers.contains(nginxConfUpstreamDo.getSlbVirtualServerId())){
+                continue;
+            }
+            if (!nginxConfUpstreamDoMap.containsKey(nginxConfUpstreamDo.getSlbVirtualServerId())){
+                nginxConfUpstreamDoMap.put(nginxConfUpstreamDo.getSlbVirtualServerId(),nginxConfUpstreamDo.setVersion(version));
             }
         }
-        nginxConfServerDao.insert(nginxConfServerDos);
-        nginxConfUpstreamDao.insert(nginxConfUpstreamDos);
+        nginxConfServerDao.insert(nginxConfServerDoMap.values().toArray(new NginxConfServerDo[]{}));
+        nginxConfUpstreamDao.insert(nginxConfUpstreamDoMap.values().toArray(new NginxConfUpstreamDo[]{}));
     }
 
 

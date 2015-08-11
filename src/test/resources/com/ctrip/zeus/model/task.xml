@@ -1,5 +1,6 @@
 <task>
     <ops-task>
+        <id>12345678901</id>
         <slb-id>12345678901</slb-id>
         <group-id>12345678901</group-id>
         <ops-type>type</ops-type>
