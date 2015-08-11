@@ -188,8 +188,8 @@ public class BuildServiceImpl implements BuildService {
                       Set<String>allDownServers,
                       Set<String>allUpGroupServers
                       )throws Exception{
+        int version = buildInfoService.getPaddingTicket(slbId);
         int currentVersion = buildInfoService.getCurrentTicket(slbId);
-        int version = currentVersion + 1 ;
         Slb slb = null;
         if (activatedSlb != null){
             slb = activatedSlb;
@@ -231,7 +231,6 @@ public class BuildServiceImpl implements BuildService {
                     .setContent(upstreamConf)
                     .setVersion(version));
         }
-        int length = slb.getVirtualServers().size();
         List<Long> slbVirtualServers = new ArrayList<>();
         for (VirtualServer virtualServer: slb.getVirtualServers()){
             slbVirtualServers.add(virtualServer.getId());

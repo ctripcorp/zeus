@@ -50,10 +50,10 @@ public interface NginxConfService extends Repository {
     public List<NginxConfUpstreamData> getNginxConfUpstream(Long slbId, int version) throws Exception;
 
     /**
-     * get current version by slb name
+     * get current building version by slb name
      * @param slbId the slb slbId
      * @return current version
      * @throws Exception
      */
-    public int getCurrentVersion(Long slbId) throws Exception;
+    public int getCurrentBuildingVersion(Long slbId) throws Exception;
 }

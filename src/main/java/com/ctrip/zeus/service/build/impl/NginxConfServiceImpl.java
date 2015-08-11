@@ -50,7 +50,7 @@ public class NginxConfServiceImpl implements NginxConfService {
 
     @Override
     public String getNginxConf(Long slbId, int _version) throws Exception {
-        int version = getCurrentVersion(slbId);
+        int version = getCurrentBuildingVersion(slbId);
         if (version <= _version)
         {
             return  nginxConfDao.findBySlbIdAndVersion(slbId,version, NginxConfEntity.READSET_FULL).getContent();
@@ -75,7 +75,7 @@ public class NginxConfServiceImpl implements NginxConfService {
     @Override
     public  List<NginxConfServerData> getNginxConfServer(Long slbId, int _version) throws Exception {
 
-        int version = getCurrentVersion(slbId);
+        int version = getCurrentBuildingVersion(slbId);
 
         List<NginxConfServerData> r = new ArrayList<>();
 
@@ -118,7 +118,7 @@ public class NginxConfServiceImpl implements NginxConfService {
     }
     @Override
     public List<NginxConfUpstreamData> getNginxConfUpstream(Long slbId , int _version) throws Exception {
-        int version = getCurrentVersion(slbId);
+        int version = getCurrentBuildingVersion(slbId);
 
         List<NginxConfUpstreamData> r = new ArrayList<>();
 
@@ -160,8 +160,8 @@ public class NginxConfServiceImpl implements NginxConfService {
     }
 
     @Override
-    public int getCurrentVersion(Long slbId) throws Exception {
-        return buildInfoService.getCurrentTicket(slbId);
+    public int getCurrentBuildingVersion(Long slbId) throws Exception {
+        return buildInfoService.getPaddingTicket(slbId);
     }
 
     @Override

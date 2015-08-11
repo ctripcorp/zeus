@@ -59,7 +59,7 @@ public class NginxServiceImpl implements NginxService {
         String ip = S.getIp();
         Slb slb = slbRepository.getBySlbServer(ip);
         Long slbId = slb.getId();
-        int version = nginxConfService.getCurrentVersion(slbId);
+        int version = nginxConfService.getCurrentBuildingVersion(slbId);
 
         NginxServerDo nginxServerDo = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
         if (nginxServerDo != null && nginxServerDo.getVersion() >= version) {
@@ -76,8 +76,14 @@ public class NginxServiceImpl implements NginxService {
 
         NginxResponse response = nginxOperator.reloadConfTest();
         response.setServerIp(ip);
-
-        //ToDo: for rollback
+        if(response.getSucceed()){
+            NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
+            if (nginxServer == null)
+            {
+                nginxServer = new NginxServerDo().setIp(ip).setVersion(version);
+            }
+            nginxServerDao.updateByPK(nginxServer.setVersion(version), NginxServerEntity.UPDATESET_FULL);
+        }
         return response;
     }
 
@@ -108,10 +114,6 @@ public class NginxServiceImpl implements NginxService {
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
             logger.info("[ writeAllToDisk ]: start write to server : " + slbServer.getIp());
-//            if (ip.equals(slbServer.getIp())) {
-//                result.add(writeToDisk(vsIds));
-//                continue;
-//            }
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             NginxResponse response = nginxClient.write(vsIds);
             result.add(response);
@@ -135,7 +137,7 @@ public class NginxServiceImpl implements NginxService {
         String ip = S.getIp();
         Slb slb = slbRepository.getBySlbServer(ip);
         Long slbId = slb.getId();
-        int version = nginxConfService.getCurrentVersion(slbId);
+        int version = nginxConfService.getCurrentBuildingVersion(slbId);
 
         NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
         if (nginxServer != null && nginxServer.getVersion() >= version) {
@@ -150,12 +152,6 @@ public class NginxServiceImpl implements NginxService {
         // reload configuration
         NginxResponse response = nginxOperator.reloadConf();
         response.setServerIp(ip);
-
-        if (response.getSucceed()) {
-            // update the used version in the db
-            NginxServerDo nginxServerDo = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
-            nginxServerDao.updateByPK(nginxServerDo.setVersion(version), NginxServerEntity.UPDATESET_FULL);
-        }
         return response;
     }
 
@@ -206,7 +202,6 @@ public class NginxServiceImpl implements NginxService {
     public List<NginxResponse> dyops(Long slbId, List<DyUpstreamOpsData> dyups) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
         Slb slb = slbRepository.getById(slbId);
-        int version = nginxConfService.getCurrentVersion(slbId);
         boolean flag = false;
 
         List<SlbServer> slbServers = slb.getSlbServers();
@@ -218,13 +213,6 @@ public class NginxServiceImpl implements NginxService {
                 response.setServerIp(slbServer.getIp());
                 result.add(response);
                 flag = flag && response.getSucceed();
-            }
-            if (flag) {
-                // update the used version in the db
-                NginxServerDo nginxServerDo = nginxServerDao.findByIp(slbServer.getIp(), NginxServerEntity.READSET_FULL);
-                nginxServerDao.updateByPK(nginxServerDo.setVersion(version), NginxServerEntity.UPDATESET_FULL);
-            }else {
-                throw new Exception("Dyups all failed !");
             }
         }
         return result;

@@ -165,7 +165,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         try {
             int current = buildInfoService.getCurrentTicket(slbId);
             buildService.rollBackConfig(slbId,current);
-            buildInfoService.updateTicket(slbId,--current);
+            buildInfoService.resetPaddingTicket(slbId);
         }catch (Exception e){
             logger.error("RollBack Fail!",e);
         }

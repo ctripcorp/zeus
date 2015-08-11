@@ -88,4 +88,15 @@ public class BuildInfoServiceImpl implements BuildInfoService {
         BuildInfoDo d = buildInfoDao.findBySlbId(slbId, BuildInfoEntity.READSET_FULL);
         return d.getPendingTicket();
     }
+
+    @Override
+    public int resetPaddingTicket(Long slbId) throws Exception {
+        BuildInfoDo d = buildInfoDao.findBySlbId(slbId, BuildInfoEntity.READSET_FULL);
+        if (d!=null){
+            buildInfoDao.updateByPK(d.setPendingTicket(d.getCurrentTicket()), BuildInfoEntity.UPDATESET_FULL);
+            return d.getPendingTicket();
+        }else {
+            return 0;
+        }
+    }
 }
