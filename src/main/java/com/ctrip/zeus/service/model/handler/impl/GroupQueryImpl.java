@@ -2,8 +2,6 @@ package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.GroupMemberRepository;
-import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
@@ -28,11 +26,6 @@ public class GroupQueryImpl implements GroupQuery {
     private GroupHealthCheckDao groupHealthCheckDao;
     @Resource
     private GroupLoadBalancingMethodDao groupLoadBalancingMethodDao;
-    @Resource
-    private VirtualServerRepository virtualServerRepository;
-    @Resource
-    private GroupMemberRepository groupMemberRepository;
-
 
     @Override
     public Group get(String name) throws Exception {
@@ -101,12 +94,6 @@ public class GroupQueryImpl implements GroupQuery {
     private void cascadeQuery(Group group) throws Exception {
         queryGroupHealthCheck(group);
         queryLoadBalancingMethod(group);
-        for (GroupVirtualServer groupVirtualServer : virtualServerRepository.listGroupVsByGroups(new Long[]{group.getId()})) {
-            group.addGroupVirtualServer(groupVirtualServer);
-        }
-        for (GroupServer server : groupMemberRepository.listGroupServersByGroup(group.getId())) {
-            group.addGroupServer(server);
-        }
     }
 
     private void queryGroupHealthCheck(Group group) throws Exception {

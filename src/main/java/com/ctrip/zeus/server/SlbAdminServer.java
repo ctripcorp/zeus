@@ -2,6 +2,7 @@ package com.ctrip.zeus.server;
 
 import com.ctrip.zeus.auth.impl.IPAuthenticationFilter;
 import com.ctrip.zeus.restful.resource.SlbResourcePackage;
+import com.ctrip.zeus.server.config.SlbAdminResourceConfig;
 import com.ctrip.zeus.util.AccessLogFilter;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
@@ -57,7 +58,7 @@ public class SlbAdminServer extends AbstractServer {
 
 
         //Config Jersey
-        ResourceConfig config = new ResourceConfig();
+        ResourceConfig config = new SlbAdminResourceConfig();
         config.packages(SlbResourcePackage.class.getPackage().getName());
 
         //Create and Config Jetty Request Handler

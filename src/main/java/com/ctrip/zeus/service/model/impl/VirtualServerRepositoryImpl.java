@@ -56,10 +56,16 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     public List<VirtualServer> listVirtualServerBySlb(Long slbId) throws Exception {
         List<VirtualServer> result = new ArrayList<>();
         for (SlbVirtualServerDo d : slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL)) {
-            if (d == null)
-                continue;
-            else
-                result.add(createVirtualServer(d));
+            result.add(createVirtualServer(d));
+        }
+        return result;
+    }
+
+    @Override
+    public List<VirtualServer> listAll() throws Exception {
+        List<VirtualServer> result = new ArrayList<>();
+        for (SlbVirtualServerDo d : slbVirtualServerDao.findAll(SlbVirtualServerEntity.READSET_FULL)) {
+            result.add(createVirtualServer(d));
         }
         return result;
     }
@@ -91,10 +97,11 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public void addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception {
+    public VirtualServer addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception {
         SlbVirtualServerDo d = C.toSlbVirtualServerDo(0L, slbId, virtualServer);
         slbVirtualServerDao.insert(d);
         syncDomains(d.getId(), virtualServer.getDomains());
+        return virtualServer.setId(d.getId()).setSlbId(slbId);
     }
 
     @Override
@@ -111,7 +118,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void deleteVirtualServer(Long virtualServerId) throws Exception {
-        slbModelValidator.checkVirtualServerDependencies(new VirtualServer[] {getById(virtualServerId)});
+        slbModelValidator.checkVirtualServerDependencies(new VirtualServer[]{getById(virtualServerId)});
         slbDomainDao.deleteAllBySlbVirtualServer(new SlbDomainDo().setSlbVirtualServerId(virtualServerId));
         slbVirtualServerDao.deleteByPK(new SlbVirtualServerDo().setId(virtualServerId));
     }

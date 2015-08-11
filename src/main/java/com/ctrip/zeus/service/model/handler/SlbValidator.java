@@ -14,5 +14,5 @@ public interface SlbValidator {
 
     void validateVirtualServer(VirtualServer[] virtualServers) throws Exception;
 
-    void removable(Slb slb) throws Exception;
+    void removable(Long slbId) throws Exception;
 }

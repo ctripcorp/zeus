@@ -1,9 +1,6 @@
 package com.ctrip.zeus.service.model.handler;
 
-import com.ctrip.zeus.dal.core.GroupDo;
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
-import org.unidal.dal.jdbc.DalException;
 
 /**
  * @author:xingchaowang
@@ -11,9 +8,9 @@ import org.unidal.dal.jdbc.DalException;
  */
 public interface GroupSync {
 
-    GroupDo add(Group group) throws Exception;
+    Long add(Group group) throws Exception;
 
-    GroupDo update(Group group) throws Exception;
+    Long update(Group group) throws Exception;
 
     int delete(Long groupId) throws Exception;
 }

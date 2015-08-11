@@ -3,9 +3,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.SlbSync;
-import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -29,33 +27,21 @@ public class SlbSyncImpl implements SlbSync {
     private SlbServerDao slbServerDao;
     @Resource
     private SlbVipDao slbVipDao;
-    @Resource
-    private VirtualServerRepository virtualServerRepository;
-    @Resource
-    private SlbValidator slbModelValidator;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public void add(Slb slb) throws Exception {
-        slbModelValidator.validate(slb);
+    public Long add(Slb slb) throws Exception {
         SlbDo d = C.toSlbDo(0L, slb);
-        d.setCreatedTime(new Date());
-        d.setVersion(1);
-
+        d.setCreatedTime(new Date()).setVersion(1);
         slbDao.insert(d);
-        Long id = d.getId();
-        slb.setId(id);
-        syncSlbVips(id, slb.getVips());
-        syncSlbServers(id, slb.getSlbServers());
-        for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            virtualServerRepository.addVirtualServer(id, virtualServer);
-        }
+        syncSlbVips(d.getId(), slb.getVips());
+        syncSlbServers(d.getId(), slb.getSlbServers());
+        return d.getId();
     }
 
     @Override
-    public void update(Slb slb) throws Exception {
-        slbModelValidator.validate(slb);
+    public Long update(Slb slb) throws Exception {
         SlbDo check = slbDao.findById(slb.getId(), SlbEntity.READSET_FULL);
         if (check == null)
             throw new ValidationException("Slb does not exist.");
@@ -63,21 +49,16 @@ public class SlbSyncImpl implements SlbSync {
             throw new ValidationException("Newer Slb version is detected.");
         SlbDo d = C.toSlbDo(slb.getId(), slb);
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
-        Long id = d.getId();
-        syncSlbVips(id, slb.getVips());
-        syncSlbServers(id, slb.getSlbServers());
+        syncSlbVips(d.getId(), slb.getVips());
+        syncSlbServers(d.getId(), slb.getSlbServers());
+        return d.getId();
     }
 
     @Override
     public int delete(Long slbId) throws Exception {
-        SlbDo d = slbDao.findById(slbId, SlbEntity.READSET_FULL);
-        if (d == null)
-            return 0;
-        slbModelValidator.removable(C.toSlb(d));
         slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(slbId));
         slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(slbId));
-        virtualServerRepository.batchDeleteVirtualServers(slbId);
-        return slbDao.deleteByPK(d);
+        return slbDao.deleteByPK(new SlbDo().setId(slbId));
     }
 
     private void syncSlbVips(Long slbId, List<Vip> vips) throws DalException {

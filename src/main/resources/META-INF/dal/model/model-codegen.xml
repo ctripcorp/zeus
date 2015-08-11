@@ -4,6 +4,7 @@
     <entity-ref name="virtual-server" />
     <entity-ref name="slb" />
     <entity-ref name="slb-list" />
+    <entity-ref name="virtual-server-list" />
     <entity-ref name="group-virtual-server" />
     <entity-ref name="group-server" />
     <entity-ref name="group-server-list" />
@@ -52,6 +53,10 @@
   <entity name="slb-list">
     <element name="total" value-type="int" />
     <entity-ref name="slb" type="list" names="slbs" xml-indent="true" />
+  </entity>
+  <entity name="virtual-server-list">
+    <element name="total" value-type="int" />
+    <entity-ref name="virtual-server" type="list" names="virtual-servers" />
   </entity>
   <entity name="group-virtual-server">
     <attribute name="priority" value-type="int" />

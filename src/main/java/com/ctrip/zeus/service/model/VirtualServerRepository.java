@@ -18,13 +18,15 @@ public interface VirtualServerRepository {
 
     List<VirtualServer> listVirtualServerBySlb(Long slbId) throws Exception;
 
+    List<VirtualServer> listAll() throws Exception;
+
     VirtualServer getById(Long virtualServerId) throws Exception;
 
     VirtualServer getBySlbAndName(Long slbId, String virtualServerName) throws Exception;
 
     Long[] findGroupsByVirtualServer(Long virtualServerId) throws Exception;
 
-    void addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception;
+    VirtualServer addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception;
 
     void updateVirtualServers(VirtualServer[] virtualServers) throws Exception;
 
