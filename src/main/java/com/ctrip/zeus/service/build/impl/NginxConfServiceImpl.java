@@ -165,6 +165,11 @@ public class NginxConfServiceImpl implements NginxConfService {
     }
 
     @Override
+    public int getCurrentVersion(Long slbId) throws Exception {
+        return buildInfoService.getCurrentTicket(slbId);
+    }
+
+    @Override
     public void build( Long slbId, int version) throws Exception {
 
         Map<Long, Map<Long,Integer>> groupNamesMap = new HashMap<>();
