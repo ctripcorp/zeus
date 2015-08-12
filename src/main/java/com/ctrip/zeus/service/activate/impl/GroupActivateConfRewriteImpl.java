@@ -23,7 +23,7 @@ public class GroupActivateConfRewriteImpl implements GroupActivateConfRewrite {
 //        List<ConfGroupActiveDo> newGroupConf = new ArrayList<>();
         for (ConfGroupActiveDo confGroupActiveDo : allGroupConf){
             String content = confGroupActiveDo.getContent();
-            String newContent = null;//xxx.parser(content);
+            String newContent = content;//xxx.parser(content);
             confGroupActiveDo.setContent(newContent);
         }
         confGroupActiveDao.insert(allGroupConf.toArray(new ConfGroupActiveDo[allGroupConf.size()]));
