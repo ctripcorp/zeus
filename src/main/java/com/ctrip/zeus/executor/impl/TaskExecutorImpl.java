@@ -39,14 +39,6 @@ public class TaskExecutorImpl implements TaskExecutor {
     @Resource
     private TaskService taskService;
     @Resource
-    private GroupRepository groupRepository;
-    @Resource
-    private SlbRepository slbRepository;
-    @Resource
-    private ArchiveService archiveService;
-    @Resource
-    private ActiveConfService activeConfService;
-    @Resource
     private ActivateService activateService;
     @Resource
     private BuildService buildService;
