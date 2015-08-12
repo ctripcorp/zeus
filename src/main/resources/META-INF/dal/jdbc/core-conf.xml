@@ -3,7 +3,7 @@
     <entity name="conf-group-active" table="conf_group_active" alias="cga">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
-            <query name="insert" type="INSERT">
+            <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
@@ -22,6 +22,14 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
                     ]]>
                 </statement>
             </query>

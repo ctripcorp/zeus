@@ -10,6 +10,7 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
+import com.ctrip.zeus.service.activate.GroupActivateConfRewrite;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.model.ArchiveService;
@@ -73,6 +74,8 @@ public class ActivateResource {
     private ResponseHandler responseHandler;
     @Resource
     private ActiveConfService activeConfService;
+    @Resource
+    private GroupActivateConfRewrite groupActivateConfRewrite;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -172,4 +175,11 @@ public class ActivateResource {
         return responseHandler.handle(resultList,hh.getMediaType());
 
     }
+    @GET
+    @Path("/group/rewriteConf")
+    public Response rewriteConf(@Context HttpServletRequest request,@Context HttpHeaders hh) throws Exception {
+        groupActivateConfRewrite.rewriteAllGroupActivteConf();
+        return Response.ok().entity("RewriteSuccess").build();
+    }
+
 }
