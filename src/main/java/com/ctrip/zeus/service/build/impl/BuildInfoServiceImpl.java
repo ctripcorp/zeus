@@ -47,8 +47,8 @@ public class BuildInfoServiceImpl implements BuildInfoService {
             return 1;
         }
 
-        int pending = d.getPendingTicket();
-        d.setPendingTicket(pending + 1).setDataChangeLastTime(new Date());
+        int current = d.getCurrentTicket();
+        d.setPendingTicket(current + 1).setDataChangeLastTime(new Date());
         buildInfoDao.updateBySlbId(d, BuildInfoEntity.UPDATESET_FULL);
 
         logger.debug("Get Ticket success. Ticket Num: " + d.getPendingTicket() + "Slb Id: " + slbId);

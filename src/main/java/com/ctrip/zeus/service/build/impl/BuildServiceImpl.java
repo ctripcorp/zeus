@@ -188,7 +188,7 @@ public class BuildServiceImpl implements BuildService {
                       Set<String>allDownServers,
                       Set<String>allUpGroupServers
                       )throws Exception{
-        int version = buildInfoService.getPaddingTicket(slbId);
+        int version = buildInfoService.getTicket(slbId);
         int currentVersion = buildInfoService.getCurrentTicket(slbId);
         Slb slb = null;
         if (activatedSlb != null){
