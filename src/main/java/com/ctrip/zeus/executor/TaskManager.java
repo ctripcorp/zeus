@@ -62,7 +62,7 @@ public class TaskManager {
             if (results != null) {
                 return results;
             } else if (System.currentTimeMillis() > deadLine) {
-                throw new Exception("Get Operation Result TimeOut, Operation is still in task list .");
+                throw new Exception("Get Operation Result TimeOut, Operation is still in task list .TaskIds: "+taskIds.toString());
             }
         }
     }
@@ -75,7 +75,7 @@ public class TaskManager {
             if (results != null) {
                 return results;
             } else if (System.currentTimeMillis() > deadLine) {
-                throw new Exception("Get Operation Result TimeOut, Operation is still in task list .");
+                throw new Exception("Get Operation Result TimeOut, Operation is still in task list .TaskId: "+taskId.toString());
             }
         }
     }
