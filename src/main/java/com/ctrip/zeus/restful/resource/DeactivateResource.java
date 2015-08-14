@@ -2,6 +2,7 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.NotFoundException;
+import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.Archive;
@@ -66,7 +67,7 @@ public class DeactivateResource {
     @Resource
     private ActiveConfService activeConfService;
     @Resource
-    private TaskService taskService;
+    private TaskManager taskManager;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -107,8 +108,8 @@ public class DeactivateResource {
                 tasks.add(task);
             }
         }
-        List<Long> taskIds = taskService.add(tasks);
-        List<TaskResult> results = taskService.getResult(taskIds,30000L);
+        List<Long> taskIds = taskManager.addTask(tasks);
+        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
 
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results){

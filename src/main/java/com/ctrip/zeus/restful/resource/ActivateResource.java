@@ -3,6 +3,7 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.NotFoundException;
 import com.ctrip.zeus.exceptions.SlbValidatorException;
+import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
@@ -69,7 +70,7 @@ public class ActivateResource {
     @Resource
     private SlbValidator slbValidator;
     @Resource
-    private TaskService taskService;
+    private TaskManager taskManager;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
@@ -115,8 +116,8 @@ public class ActivateResource {
             task.setVersion(archive.getVersion());
             tasks.add(task);
         }
-        List<Long> taskIds = taskService.add(tasks);
-        List<TaskResult> results = taskService.getResult(taskIds,30000L);
+        List<Long> taskIds = taskManager.addTask(tasks);
+        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
 
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results){
@@ -164,8 +165,8 @@ public class ActivateResource {
                 tasks.add(task);
             }
         }
-        List<Long> taskIds = taskService.add(tasks);
-        List<TaskResult> results = taskService.getResult(taskIds,30000L);
+        List<Long> taskIds = taskManager.addTask(tasks);
+        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
 
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results){

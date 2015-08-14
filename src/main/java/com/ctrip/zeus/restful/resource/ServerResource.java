@@ -2,6 +2,7 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
@@ -72,7 +73,7 @@ public class ServerResource {
     @Resource
     private ActivateService activateService;
     @Resource
-    private TaskService taskService;
+    private TaskManager taskManager;
     @Resource
     private ActiveConfService activeConfService;
 
@@ -108,8 +109,8 @@ public class ServerResource {
             task.setUp(up);
             tasks.add(task);
         }
-        List<Long> taskIds = taskService.add(tasks);
-        List<TaskResult> results = taskService.getResult(taskIds,30000L);
+        List<Long> taskIds = taskManager.addTask(tasks);
+        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
         boolean isSuccess = true;
         String failCause = "";
         for (TaskResult taskResult : results){
@@ -237,8 +238,8 @@ public class ServerResource {
             task.setIpList(sb.toString());
             tasks.add(task);
         }
-        List<Long> taskIds = taskService.add(tasks);
-        List<TaskResult> results = taskService.getResult(taskIds,30000L);
+        List<Long> taskIds = taskManager.addTask(tasks);
+        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
         for (TaskResult taskResult : results){
             if(!taskResult.isSuccess()){
                 throw new Exception("Task Failed! Fail cause : "+taskResult.getFailCause());

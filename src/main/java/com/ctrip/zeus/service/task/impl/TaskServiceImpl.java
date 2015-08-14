@@ -38,21 +38,7 @@ public class TaskServiceImpl implements TaskService {
     public Long add(OpsTask task) throws Exception {
         TaskDo taskDo = C.toTaskDo(task);
         taskDo.setStatus(TaskStatus.PENDING);
-        String lockName = null;
-        if ( taskDo.getOpsType().equals(TaskOpsType.ACTIVATE_SLB)){
-            lockName = "AddTask_" + taskDo.getOpsType() + taskDo.getSlbId();
-        }else if (taskDo.getOpsType().equals(TaskOpsType.SERVER_OPS)){
-            lockName = "AddTask_" + taskDo.getOpsType();
-        }else {
-            lockName = "AddTask_" + taskDo.getOpsType() + taskDo.getGroupId();
-        }
-        DistLock buildLock = dbLockFactory.newLock( lockName );
-        try {
-            buildLock.lock(lockTimeout.get());
-            taskDao.insert(taskDo);
-        }finally {
-            buildLock.unlock();
-        }
+        taskDao.insert(taskDo);
         return taskDo.getId();
     }
 
@@ -66,52 +52,40 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<TaskResult> getResult(List<Long> taskIds,Long timeOut) throws Exception {
-        Long deadLine = System.currentTimeMillis() + timeOut;
+    public List<TaskResult> getResult(List<Long> taskIds) throws Exception {
         List<TaskResult> results = new ArrayList<>();
         List<Long> ids = new ArrayList<>(taskIds);
-        while (true){
-            Thread.sleep(taskCheckStatusInterval.get());
-            for (int i = 0 ; i < ids.size() ; i ++){
-                TaskDo tmp = taskDao.findByPK(ids.get(i), TaskEntity.READSET_FULL);
-                if (tmp.getStatus().equals(TaskStatus.SUCCESS)){
-                    results.add(new TaskResult().setDateTime(new Date()).setSuccess(true).setOpsTask(C.toOpsTask(tmp)));
-                    ids.remove(i--);
-                }
-                if (tmp.getStatus().equals(TaskStatus.FAIL)){
-                    results.add(new TaskResult().setDateTime(new Date()).setSuccess(false).setFailCause(tmp.getFailCause()).setOpsTask(C.toOpsTask(tmp)));
-                    ids.remove(i--);
-                }
-            }
-            if ( ids.size() == 0){
-                break;
-            }
-            if (System.currentTimeMillis() > deadLine){
-                throw new Exception("Get Operation Result TimeOut, Operation is still in task list .");
-            }
+        List<TaskDo> tmp = taskDao.findByIds(ids.toArray(new Long[ids.size()]), TaskEntity.READSET_FULL);
+        if (tmp==null || tmp.size()!= ids.size()) {
+            return null;
         }
-        return results;
+        for (TaskDo task : tmp){
+                if (task.getStatus().equals(TaskStatus.SUCCESS)){
+                    results.add(new TaskResult().setDateTime(new Date()).setSuccess(true).setOpsTask(C.toOpsTask(task)));
+                }
+                if (task.getStatus().equals(TaskStatus.FAIL)){
+                    results.add(new TaskResult().setDateTime(new Date()).setSuccess(false).setFailCause(task.getFailCause()).setOpsTask(C.toOpsTask(task)));
+                }
+            }
+            if ( results.size() == tmp.size()){
+                return results;
+            }else {
+                return null;
+            }
     }
 
     @Override
-    public TaskResult getResult(Long taskId, Long timeOut) throws Exception {
-        Long deadLine = System.currentTimeMillis() + timeOut;
+    public TaskResult getResult(Long taskId) throws Exception {
         TaskResult result = new TaskResult();
-        while (true){
-            Thread.sleep(taskCheckStatusInterval.get());
 
-            TaskDo tmp = taskDao.findByPK(taskId, TaskEntity.READSET_FULL);
-            if (tmp.getStatus().equals(TaskStatus.SUCCESS)){
-                result.setDateTime(new Date()).setSuccess(true).setOpsTask(C.toOpsTask(tmp));
-                break;
-            }
-            if (tmp.getStatus().equals(TaskStatus.FAIL)){
-                result.setDateTime(new Date()).setSuccess(false).setFailCause(tmp.getFailCause()).setOpsTask(C.toOpsTask(tmp));
-                break;
-            }
-            if (System.currentTimeMillis() > deadLine){
-                throw new Exception("Get Operation Result TimeOut, Operation is still in task list .");
-            }
+        TaskDo tmp = taskDao.findByPK(taskId, TaskEntity.READSET_FULL);
+        if (tmp==null)return null;
+        if (tmp.getStatus().equals(TaskStatus.SUCCESS)){
+            result.setDateTime(new Date()).setSuccess(true).setOpsTask(C.toOpsTask(tmp));
+        }else if (tmp.getStatus().equals(TaskStatus.FAIL)){
+            result.setDateTime(new Date()).setSuccess(false).setFailCause(tmp.getFailCause()).setOpsTask(C.toOpsTask(tmp));
+        }else {
+            return  null;
         }
         return result;
     }

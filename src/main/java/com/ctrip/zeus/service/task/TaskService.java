@@ -14,8 +14,8 @@ public interface TaskService {
 
     public List<Long> add(List<OpsTask> task) throws Exception;
 
-    public List<TaskResult> getResult(List<Long> taskIds,Long timeOut) throws Exception;
-    public TaskResult getResult(Long taskId,Long timeOut) throws Exception;
+    public List<TaskResult> getResult(List<Long> taskIds) throws Exception;
+    public TaskResult getResult(Long taskId) throws Exception;
 
     public List<OpsTask> getPendingTasks(Long slbId) throws Exception;
 
