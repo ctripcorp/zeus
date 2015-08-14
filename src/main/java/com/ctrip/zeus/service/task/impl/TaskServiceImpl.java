@@ -6,6 +6,8 @@ import com.ctrip.zeus.dal.core.TaskEntity;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.service.task.TaskService;
+import com.ctrip.zeus.service.task.constant.TaskOpsType;
+import com.ctrip.zeus.service.task.constant.TaskStatus;
 import com.ctrip.zeus.support.C;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
@@ -35,11 +37,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public Long add(OpsTask task) throws Exception {
         TaskDo taskDo = C.toTaskDo(task);
-        taskDo.setStatus("Pending");
+        taskDo.setStatus(TaskStatus.PENDING);
         String lockName = null;
-        if ( taskDo.getOpsType().equals("ActivateSlb")){
+        if ( taskDo.getOpsType().equals(TaskOpsType.ACTIVATE_SLB)){
             lockName = "AddTask_" + taskDo.getOpsType() + taskDo.getSlbId();
-        }else if (taskDo.getOpsType().equals("ServerOps")){
+        }else if (taskDo.getOpsType().equals(TaskOpsType.SERVER_OPS)){
             lockName = "AddTask_" + taskDo.getOpsType();
         }else {
             lockName = "AddTask_" + taskDo.getOpsType() + taskDo.getGroupId();
@@ -72,11 +74,11 @@ public class TaskServiceImpl implements TaskService {
             Thread.sleep(taskCheckStatusInterval.get());
             for (int i = 0 ; i < ids.size() ; i ++){
                 TaskDo tmp = taskDao.findByPK(ids.get(i), TaskEntity.READSET_FULL);
-                if (tmp.getStatus().equals("SUCCESS")){
+                if (tmp.getStatus().equals(TaskStatus.SUCCESS)){
                     results.add(new TaskResult().setDateTime(new Date()).setSuccess(true).setOpsTask(C.toOpsTask(tmp)));
                     ids.remove(i--);
                 }
-                if (tmp.getStatus().equals("FAIL")){
+                if (tmp.getStatus().equals(TaskStatus.FAIL)){
                     results.add(new TaskResult().setDateTime(new Date()).setSuccess(false).setFailCause(tmp.getFailCause()).setOpsTask(C.toOpsTask(tmp)));
                     ids.remove(i--);
                 }
@@ -99,11 +101,11 @@ public class TaskServiceImpl implements TaskService {
             Thread.sleep(taskCheckStatusInterval.get());
 
             TaskDo tmp = taskDao.findByPK(taskId, TaskEntity.READSET_FULL);
-            if (tmp.getStatus().equals("SUCCESS")){
+            if (tmp.getStatus().equals(TaskStatus.SUCCESS)){
                 result.setDateTime(new Date()).setSuccess(true).setOpsTask(C.toOpsTask(tmp));
                 break;
             }
-            if (tmp.getStatus().equals("FAIL")){
+            if (tmp.getStatus().equals(TaskStatus.FAIL)){
                 result.setDateTime(new Date()).setSuccess(false).setFailCause(tmp.getFailCause()).setOpsTask(C.toOpsTask(tmp));
                 break;
             }
@@ -116,7 +118,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<OpsTask> getPendingTasks(Long slbId) throws Exception {
-        List<TaskDo> tmp = taskDao.findByTargetSlbIdAndStatus("Pending",slbId,TaskEntity.READSET_FULL);
+        List<TaskDo> tmp = taskDao.findByTargetSlbIdAndStatus(TaskStatus.PENDING,slbId,TaskEntity.READSET_FULL);
         List<OpsTask> result = new ArrayList<>();
         for (TaskDo taskDo :tmp){
             result.add(C.toOpsTask(taskDo));
