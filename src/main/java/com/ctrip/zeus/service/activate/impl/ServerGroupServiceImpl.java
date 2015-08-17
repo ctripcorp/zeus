@@ -34,4 +34,9 @@ public class ServerGroupServiceImpl implements ServerGroupService {
         snapServerGroupDao.insert(tmp);
     }
 
+    @Override
+    public void deleteByGroupId(Long groupId) throws Exception {
+        snapServerGroupDao.deleteByGroupId(new SnapServerGroupDo().setGroupId(groupId));
+    }
+
 }

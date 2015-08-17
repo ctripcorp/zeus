@@ -11,4 +11,5 @@ public interface ServerGroupService {
 
     List<Long> findAllByIp(String ip)throws Exception;
     void insertServerGroup(String ip, Long groupId)throws Exception;
+    void deleteByGroupId(Long groupId)throws  Exception;
 }

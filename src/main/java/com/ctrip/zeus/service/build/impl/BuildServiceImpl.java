@@ -258,19 +258,22 @@ public class BuildServiceImpl implements BuildService {
 
 
     public List<DyUpstreamOpsData> buildUpstream(Long slbId, Set<String>allDownServers ,Set<String> allUpGroupServers,Group group ) throws Exception {
-        Slb slb = null;
-        String slbContent =activeConfService.getConfSlbActiveContentBySlbId(slbId);
-        AssertUtils.assertNotNull(slbContent, "Not found slb content by slbId!");
-        slb = DefaultSaxParser.parseEntity(Slb.class, slbContent);
-
+        Slb slb = activateService.getActivatedSlb(slbId);
+        AssertUtils.assertNotNull(slb, "Not found slb content by slbId!");
+        HashMap<Long,VirtualServer> tmpVirtualServers = new HashMap<>();
+        for (VirtualServer virtualServer : slb.getVirtualServers()){
+            tmpVirtualServers.put(virtualServer.getId(),virtualServer);
+        }
         List<DyUpstreamOpsData> result = new ArrayList<>();
 
         List<GroupVirtualServer> groupSlbList = group.getGroupVirtualServers();
         VirtualServer vs = null;
         for (GroupVirtualServer groupSlb : groupSlbList )
         {
-            vs  = groupSlb.getVirtualServer();
-
+            if (!tmpVirtualServers.containsKey(groupSlb.getVirtualServer().getId())){
+                 continue;
+            }
+            vs = tmpVirtualServers.get(groupSlb.getVirtualServer().getId());
             String upstreambody = UpstreamsConf.buildUpstreamConfBody(slb, vs, group, allDownServers, allUpGroupServers);
             String upstreamName = UpstreamsConf.buildUpstreamName(slb,vs,group);
             result.add(new DyUpstreamOpsData().setUpstreamCommands(upstreambody).setUpstreamName(upstreamName));

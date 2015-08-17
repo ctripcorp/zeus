@@ -86,6 +86,7 @@ public class ActivateServiceImpl implements ActivateService {
                                             .setSlbVirtualServerId(groupSlb.getVirtualServer().getId()));
         }
         List<GroupServer> groupServers = group.getGroupServers();
+        serverGroupService.deleteByGroupId(groupId);
         for (GroupServer gs : groupServers){
             serverGroupService.insertServerGroup(gs.getIp(),groupId);
         }
@@ -98,6 +99,7 @@ public class ActivateServiceImpl implements ActivateService {
     {
         confGroupActiveDao.deleteByGroupIdAndSlbId(new ConfGroupActiveDo().setGroupId(groupId).setSlbId(slbId));
         confGroupSlbActiveDao.deleteByGroupIdSlbId(new ConfGroupSlbActiveDo().setGroupId(groupId).setSlbId(slbId ));
+        serverGroupService.deleteByGroupId(groupId);
     }
 
     @Override
