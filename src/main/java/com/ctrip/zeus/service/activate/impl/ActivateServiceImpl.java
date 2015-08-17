@@ -105,6 +105,10 @@ public class ActivateServiceImpl implements ActivateService {
         List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIdsAndSlbId(new Long[]{groupId},slbId,ConfGroupActiveEntity.READSET_FULL);
         if (null == groupActiveDos || groupActiveDos.size() == 0)
         {
+            groupActiveDos = confGroupActiveDao.findAllByGroupIdsAndSlbId(new Long[]{groupId},0,ConfGroupActiveEntity.READSET_FULL);
+            if (groupActiveDos != null && groupActiveDos.size()==1){
+                return true;
+            }
             return false;
         }else {
             return true;
@@ -113,6 +117,12 @@ public class ActivateServiceImpl implements ActivateService {
     @Override
     public HashMap<Long,Boolean> isGroupsActivated(Long[] groupIds,Long slbId) throws Exception {
         List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIdsAndSlbId(groupIds,slbId,ConfGroupActiveEntity.READSET_FULL);
+        List<ConfGroupActiveDo> groupActiveDosOld = confGroupActiveDao.findAllByGroupIdsAndSlbId(groupIds,0,ConfGroupActiveEntity.READSET_FULL);
+        if (groupActiveDos == null){
+            groupActiveDos = groupActiveDosOld;
+        }else if (groupActiveDosOld != null){
+            groupActiveDos.addAll(groupActiveDosOld);
+        }
         HashMap<Long,Boolean> result = new HashMap<>();
         for (Long groupId : groupIds){
             result.put(groupId,false);

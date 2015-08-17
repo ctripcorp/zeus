@@ -110,9 +110,9 @@ public class StatusServiceImpl implements StatusService {
             }
             for (String ip : ips) {
                 statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(groupVirtualServer.getVirtualServer().getSlbId())
-                        .setSlbVirtualServerId(groupVirtualServer.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(false));
+                        .setSlbVirtualServerId(groupVirtualServer.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(true));
             }
-            logger.info("[down Member]: VirtualServer:"+groupVirtualServer.toString()+"ips:"+ips.toString());
+            logger.info("[up Member]: VirtualServer:"+groupVirtualServer.toString()+"ips:"+ips.toString());
         }
     }
 
