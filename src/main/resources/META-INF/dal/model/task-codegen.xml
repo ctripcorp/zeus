@@ -27,7 +27,7 @@
   </entity>
   <entity name="task-result-list">
     <element name="total" value-type="int" />
-    <entity-ref name="task-result" />
+    <entity-ref name="task-result" type="list" names="task-results" />
   </entity>
 </model>
 

@@ -121,7 +121,7 @@ public class ActivateResource {
 
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results){
-            resultList.setTaskResult(t);
+            resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
         return responseHandler.handle(resultList,hh.getMediaType());
@@ -170,7 +170,7 @@ public class ActivateResource {
 
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results){
-            resultList.setTaskResult(t);
+            resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
         return responseHandler.handle(resultList,hh.getMediaType());
