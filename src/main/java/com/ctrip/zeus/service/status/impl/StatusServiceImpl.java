@@ -109,6 +109,10 @@ public class StatusServiceImpl implements StatusService {
                 continue;
             }
             for (String ip : ips) {
+                if (ip==null||ip.isEmpty())
+                {
+                    continue;
+                }
                 statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(groupVirtualServer.getVirtualServer().getSlbId())
                         .setSlbVirtualServerId(groupVirtualServer.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(true));
             }
@@ -136,6 +140,10 @@ public class StatusServiceImpl implements StatusService {
                 continue;
             }
             for (String ip : ips) {
+                if (ip==null||ip.isEmpty())
+                {
+                    continue;
+                }
                 statusGroupServerService.updateStatusGroupServer(new StatusGroupServerDo().setSlbId(groupVirtualServer.getVirtualServer().getSlbId())
                         .setSlbVirtualServerId(groupVirtualServer.getVirtualServer().getId()).setGroupId(groupId).setIp(ip).setUp(false));
             }

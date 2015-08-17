@@ -188,7 +188,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                     if (task.getUp()){
                         statusService.upMember(slbId,task.getGroupId(), ipList);
                     }else {
-                        statusService.upMember(slbId,task.getGroupId(), ipList);
+                        statusService.downMember(slbId,task.getGroupId(), ipList);
                     }
                 }
             }
