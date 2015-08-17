@@ -32,8 +32,10 @@
     </task-result>
     <task-result-list>
         <total>1</total>
-        <task-result/>
-        <task-result/>
+        <task-results>
+            <task-result/>
+            <task-result/>
+        </task-results>
     </task-result-list>
 </task>
 
