@@ -96,7 +96,7 @@ public class ActivateServiceImpl implements ActivateService {
 
 
     @Override
-    public void deactiveGroup(long groupId , Long slbId) throws Exception
+    public void deactiveGroup(Long groupId , Long slbId) throws Exception
     {
         confGroupActiveDao.deleteByGroupIdAndSlbId(new ConfGroupActiveDo().setGroupId(groupId).setSlbId(slbId));
         confGroupActiveDao.deleteByGroupIdAndSlbId(new ConfGroupActiveDo().setGroupId(groupId).setSlbId(0));

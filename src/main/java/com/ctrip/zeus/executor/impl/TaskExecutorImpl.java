@@ -122,7 +122,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 vsIds.add(vs.getId());
             }
             nginxService.writeALLToDisk(slbId,vsIds);
-            if (activatingSlb!=null||activatingGroups.size()>0){
+            if (activatingSlb!=null||activatingGroups.size()>0||deactivateGroupOps.size()>0){
                 nginxService.loadAll(slbId);
             }else {
                 //dyups

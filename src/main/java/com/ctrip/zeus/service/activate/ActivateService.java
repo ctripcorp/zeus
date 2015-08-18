@@ -36,7 +36,7 @@ public interface ActivateService extends Repository {
      * @return
      * @throws Exception
      */
-    public void deactiveGroup(long groupId, Long slbId) throws Exception;
+    public void deactiveGroup(Long groupId, Long slbId) throws Exception;
 
     /**
      * group is activated

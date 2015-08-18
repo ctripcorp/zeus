@@ -61,12 +61,12 @@ public class ActiveConfServiceImpl implements ActiveConfService {
 
     @Override
     public Set<Long> getSlbIdsByGroupId(Long groupId) throws Exception {
+        Set<Long> slbIds = new HashSet<>();
         List<ConfGroupSlbActiveDo> result = confGroupSlbActiveDao.findByGroupId(groupId,ConfGroupSlbActiveEntity.READSET_FULL);
         if (result==null||result.size()==0)
         {
-            return null;
+            return slbIds;
         }else {
-            Set<Long> slbIds = new HashSet<>();
             for (ConfGroupSlbActiveDo confGroupSlbActiveDo : result){
                 slbIds.add(confGroupSlbActiveDo.getSlbId());
             }
