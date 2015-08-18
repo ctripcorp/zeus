@@ -48,8 +48,8 @@ public class NginxClient extends AbstractRestClient {
         return DefaultJsonParser.parse(NginxResponse.class, responseStr);
     }
 
-    public NginxResponse write(List<Long> vsIds)throws IOException{
-        WebTarget webTarget = getTarget().path("/api/nginx/write");
+    public NginxResponse write(List<Long> vsIds , Long slbId,Integer slbVersion)throws IOException{
+        WebTarget webTarget = getTarget().path("/api/nginx/write").queryParam("slbId",slbId).queryParam("version",slbVersion);
         for (Long vsId : vsIds){
             webTarget = webTarget.queryParam("VirtualServer",vsId);
         }

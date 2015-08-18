@@ -11,11 +11,13 @@ import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.nginx.RollingTrafficStatus;
+import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.S;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -50,19 +52,26 @@ public class NginxServiceImpl implements NginxService {
     private NginxServerDao nginxServerDao;
     @Resource
     private RollingTrafficStatus rollingTrafficStatus;
+    @Resource
+    private ActivateService activateService;
 
 
     private Logger logger = LoggerFactory.getLogger(NginxServiceImpl.class);
 
     @Override
-    public NginxResponse writeToDisk(List<Long> vsIds) throws Exception {
+    public NginxResponse writeToDisk(List<Long> vsIds , Long slbId ,Integer slbVersion) throws Exception {
         String ip = S.getIp();
-        Slb slb = slbRepository.getBySlbServer(ip);
-        Long slbId = slb.getId();
+        Slb slb ;
+        if (slbVersion!=null&&slbVersion!=0){
+            slb = activateService.getActivatingSlb(slbId,slbVersion);
+        }else {
+            slb = activateService.getActivatedSlb(slbId);
+        }
+        AssertUtils.assertNotNull(slb,"Can't found slbId when writing config to disk!");
         int version = nginxConfService.getCurrentBuildingVersion(slbId);
 
         NginxServerDo nginxServerDo = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
-        if (nginxServerDo != null && nginxServerDo.getVersion() >= version) {
+        if (nginxServerDo != null && nginxServerDo.getVersion() == version) {
             NginxResponse res = new NginxResponse();
             res.setServerIp(ip).setSucceed(true).setOutMsg("current version is lower then or equal the version used!current version ["
                     + version + "],used version [" + nginxServerDo.getVersion() + "]");
@@ -88,18 +97,18 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public boolean writeALLToDisk(Long slbId, List<Long> vsIds) throws Exception {
-        return writeALLToDisk(slbId,vsIds, null);
+    public boolean writeALLToDisk(Long slbId, Integer slbVersion ,List<Long> vsIds) throws Exception {
+        return writeALLToDisk(slbId,slbVersion,vsIds, null);
     }
 
     @Override
-    public List<NginxResponse> writeALLToDiskListResult(Long slbId,List<Long> vsIds ) throws Exception {
+    public List<NginxResponse> writeALLToDiskListResult(Long slbId,Integer slbVersion ,List<Long> vsIds ) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
-        writeALLToDisk(slbId,vsIds, result);
+        writeALLToDisk(slbId, slbVersion ,vsIds, result);
         return result;
     }
 
-    public boolean writeALLToDisk(Long slbId,List<Long> vsIds , List<NginxResponse> responses) throws Exception {
+    public boolean writeALLToDisk(Long slbId,Integer slbVersion , List<Long> vsIds , List<NginxResponse> responses) throws Exception {
         List<NginxResponse> result = null;
         boolean sucess = true;
         if (responses != null) {
@@ -108,14 +117,18 @@ public class NginxServiceImpl implements NginxService {
             result = new ArrayList<>();
         }
 
-        String ip = S.getIp();
-        Slb slb = slbRepository.getById(slbId);
-
+        Slb slb ;
+        if (slbVersion!=null&&slbVersion!=0){
+            slb = activateService.getActivatingSlb(slbId,slbVersion);
+        }else {
+            slb =activateService.getActivatedSlb(slbId);
+        }
+        AssertUtils.assertNotNull(slb,"Can't found slbId when writing config to disk!");
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
             logger.info("[ writeAllToDisk ]: start write to server : " + slbServer.getIp());
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
-            NginxResponse response = nginxClient.write(vsIds);
+            NginxResponse response = nginxClient.write(vsIds,slbId,slbVersion);
             result.add(response);
 
             logger.info("[ writeAllToDisk ]: write to server finished : " + slbServer.getIp());
@@ -177,9 +190,9 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public List<NginxResponse> writeAllAndLoadAll(Long slbId,List<Long> vsIds) throws Exception {
+    public List<NginxResponse> writeAllAndLoadAll(Long slbId,Integer slbVersion,List<Long> vsIds) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
-        if (!writeALLToDisk(slbId,vsIds, result)) {
+        if (!writeALLToDisk(slbId,slbVersion,vsIds, result)) {
             LOGGER.error("Write All To Disk Failed!");
             StringBuilder sb = new StringBuilder(128);
             sb.append("[");
