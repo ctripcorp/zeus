@@ -28,7 +28,7 @@ public class PathRewriteParser {
             if (i % 2 == 0)
                 oneRecord = "\"" + output.get(i) + "\"";
             else {
-                oneRecord += " " + output.get(i) + ";";
+                oneRecord += " " + output.get(i);
                 result.add(oneRecord);
             }
         }
