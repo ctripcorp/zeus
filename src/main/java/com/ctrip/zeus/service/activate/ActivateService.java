@@ -27,7 +27,7 @@ public interface ActivateService extends Repository {
      * @return
      * @throws Exception
      */
-    public void activeGroup(long groupId ,int version) throws Exception;
+    public void activeGroup(long groupId ,int version , Long slbId) throws Exception;
 
 
     /**

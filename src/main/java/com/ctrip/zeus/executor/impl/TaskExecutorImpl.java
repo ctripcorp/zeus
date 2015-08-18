@@ -172,7 +172,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 if (task.getOpsType().equals(TaskOpsType.ACTIVATE_SLB)){
                     activateService.activeSlb(task.getSlbId(),task.getVersion());
                 }else if (task.getOpsType().equals(TaskOpsType.ACTIVATE_GROUP)){
-                    activateService.activeGroup(task.getGroupId(),task.getVersion());
+                    activateService.activeGroup(task.getGroupId(),task.getVersion(),slbId);
                 }else if (task.getOpsType().equals(TaskOpsType.DEACTIVATE_GROUP)){
                     activateService.deactiveGroup(task.getGroupId(),slbId);
                 }else if (task.getOpsType().equals(TaskOpsType.SERVER_OPS)){

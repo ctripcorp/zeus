@@ -56,7 +56,7 @@ public class ActivateServiceImpl implements ActivateService {
     }
 
     @Override
-    public void activeGroup(long groupId , int version) throws Exception {
+    public void activeGroup(long groupId , int version , Long slbId) throws Exception {
         Archive archive = archiveService.getGroupArchive(groupId, version);
         if (archive==null)
         {
@@ -66,8 +66,9 @@ public class ActivateServiceImpl implements ActivateService {
         }
 
         ConfGroupActiveDo c = new ConfGroupActiveDo().setCreatedTime(new Date());
-        c.setGroupId(archive.getId()).setContent(archive.getContent()).setVersion(archive.getVersion());
+        c.setGroupId(archive.getId()).setContent(archive.getContent()).setVersion(archive.getVersion()).setSlbId(slbId);
         confGroupActiveDao.insert(c);
+        confGroupActiveDao.deleteByGroupIdAndSlbId(new ConfGroupActiveDo().setGroupId(groupId).setSlbId(0));
 
         logger.debug("Conf Group Active Inserted: [GroupId: "+c.getId()+",Content: "+c.getContent()+",Version: "+c.getVersion()+"]");
 
@@ -98,6 +99,7 @@ public class ActivateServiceImpl implements ActivateService {
     public void deactiveGroup(long groupId , Long slbId) throws Exception
     {
         confGroupActiveDao.deleteByGroupIdAndSlbId(new ConfGroupActiveDo().setGroupId(groupId).setSlbId(slbId));
+        confGroupActiveDao.deleteByGroupIdAndSlbId(new ConfGroupActiveDo().setGroupId(groupId).setSlbId(0));
         confGroupSlbActiveDao.deleteByGroupIdSlbId(new ConfGroupSlbActiveDo().setGroupId(groupId).setSlbId(slbId ));
         serverGroupService.deleteByGroupId(groupId);
     }
