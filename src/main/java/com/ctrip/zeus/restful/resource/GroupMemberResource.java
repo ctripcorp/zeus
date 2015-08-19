@@ -39,7 +39,7 @@ public class GroupMemberResource {
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
                          @QueryParam("groupId") Long groupId) throws Exception {
-        GroupServerList groupServerList = new GroupServerList();
+        GroupServerList groupServerList = new GroupServerList().setGroupId(groupId);
         for (GroupServer groupServer : groupMemberRepository.listGroupServersByGroup(groupId)) {
             groupServerList.addGroupServer(groupServer);
         }

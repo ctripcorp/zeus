@@ -60,6 +60,11 @@ public class TaskManager {
             Thread.sleep(taskCheckStatusInterval.get());
             List<TaskResult> results = taskService.getResult(taskIds);
             if (results != null) {
+                for (TaskResult taskResult : results){
+                    if (!taskResult.isSuccess()){
+                        throw new Exception("Some Task Failed! TaskResults: "+taskResult.toString());
+                    }
+                }
                 return results;
             } else if (System.currentTimeMillis() > deadLine) {
                 throw new Exception("Get Operation Result TimeOut, Operation is still in task list .TaskIds: "+taskIds.toString());
