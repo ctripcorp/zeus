@@ -130,7 +130,6 @@ public class IntegrationData {
             groups.add(groupres);
         }
         reqClient.markPass("/api/group/new");
-        reqClient.markPass("/api/groups");
         reqClient.getstr("/api/activate/slb?slbName=__Test_slb1&slbName=__Test_slb2");
     }
 }
