@@ -39,12 +39,11 @@ public class TaskWorkerImpl implements TaskWorker {
     }
 
     private void init()throws Exception{
-        if (workerSlbId != null) return;
         Slb slb = slbRepository.getBySlbServer(S.getIp());
-        if (slb == null){
+        if (slb != null && slb.getId()!=null){
+            workerSlbId = slb.getId();
+        }else{
             logger.error("Can Not Found Slb by Local Ip. TaskExecutor is not working!");
-            return;
         }
-        workerSlbId = slb.getId();
     }
 }

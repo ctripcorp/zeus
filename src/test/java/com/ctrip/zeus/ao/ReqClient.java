@@ -75,7 +75,7 @@ public class ReqClient {
         }
     }
 
-    public static String buildReport()
+    public String buildReport()
     {
         StringBuilder sb = new StringBuilder(10240);
 
