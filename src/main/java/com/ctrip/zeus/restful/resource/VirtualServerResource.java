@@ -17,6 +17,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 /**
  * Created by zhoumy on 2015/8/5.
@@ -34,9 +35,16 @@ public class VirtualServerResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getAllVses")
     public Response list(@Context HttpHeaders hh,
-                         @Context HttpServletRequest request) throws Exception {
+                         @Context HttpServletRequest request,
+                         @QueryParam("slbId") Long slbId) throws Exception {
         VirtualServerList vslist = new VirtualServerList();
-        for (VirtualServer virtualServer : virtualServerRepository.listAll()) {
+        List<VirtualServer> result ;
+        if (slbId != null){
+            result = virtualServerRepository.listVirtualServerBySlb(slbId);
+        }else {
+            result = virtualServerRepository.listAll();
+        }
+        for (VirtualServer virtualServer : result) {
             vslist.addVirtualServer(virtualServer);
         }
         return responseHandler.handle(vslist, hh.getMediaType());

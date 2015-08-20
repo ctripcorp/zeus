@@ -97,7 +97,7 @@ public class ModelIntegrationTest  extends AbstractCase {
         Assert.assertEquals(true,slbRes.getVirtualServers().contains(virtualServer));
 
         // /vs/update
-        virtualServer.setPort("8080");
+        virtualServer.setPort("443");
         IntegrationData.getReqClient().post("/api/vs/update",String.format(VirtualServer.JSON,virtualServer));
         vses = IntegrationData.getReqClient().getstr("/api/vses?slbId="+slb.getId());
         virtualServerList = DefaultJsonParser.parse(VirtualServerList.class,vses);
