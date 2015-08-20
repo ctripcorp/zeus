@@ -4,6 +4,7 @@ import com.ctrip.zeus.executor.TaskExecutor;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.activate.ServerGroupService;
@@ -127,9 +128,20 @@ public class TaskExecutorImpl implements TaskExecutor {
             }else {
                 //dyups
                 Collection<Group> dyupsGroupList = groups.values();
+                boolean isFail = false;
                 for (Group group : dyupsGroupList){
                     List<DyUpstreamOpsData> dyUpstreamOpsDataList = buildService.buildUpstream(slbId,allDownServers,allUpGroupServers,group);
-                    nginxService.dyops(slbId,dyUpstreamOpsDataList);
+                    List<NginxResponse> responses = nginxService.dyops(slbId,dyUpstreamOpsDataList);
+                    for (NginxResponse response : responses){
+                        if (!response.getSucceed()){
+                            isFail = true;
+                            break;
+                        }
+                    }
+                    if (isFail){
+                        nginxService.loadAll(slbId);
+                        break;
+                    }
                 }
             }
             performTasks(slbId);
