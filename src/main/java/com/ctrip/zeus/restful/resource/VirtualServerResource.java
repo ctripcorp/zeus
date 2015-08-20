@@ -39,7 +39,7 @@ public class VirtualServerResource {
         for (VirtualServer virtualServer : virtualServerRepository.listAll()) {
             vslist.addVirtualServer(virtualServer);
         }
-        return responseHandler.handle(virtualServerRepository, hh.getMediaType());
+        return responseHandler.handle(vslist, hh.getMediaType());
     }
 
     @GET

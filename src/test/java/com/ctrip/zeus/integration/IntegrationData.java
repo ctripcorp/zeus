@@ -20,7 +20,6 @@ public class IntegrationData {
     public static final String slb2_name = "__Test_slb2";
     public static final int GROUP_NUM = 10;
     public static ReqClient reqClient = new ReqClient(host);
-    public static final StringBuilder groupNameQuery = new StringBuilder(128);
     public static final List<Group> groups = new ArrayList<>();
     public static Slb slb1 = null;
     public static Slb slb2 = null;
@@ -29,10 +28,6 @@ public class IntegrationData {
         return reqClient;
     }
     public static void clean() throws IOException {
-
-        for (int i = 0 ; i < GROUP_NUM ; i ++){
-            groupNameQuery.append("groupName=__Test_app").append(i).append("&");
-        }
         String groupstr;
         Group groupres;
         for (int i = 0; i < GROUP_NUM; i++) {
@@ -130,6 +125,7 @@ public class IntegrationData {
             groups.add(groupres);
         }
         reqClient.markPass("/api/group/new");
+        Thread.sleep(1000);
         reqClient.getstr("/api/activate/slb?slbName=__Test_slb1&slbName=__Test_slb2");
     }
 }
