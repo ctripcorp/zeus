@@ -228,7 +228,7 @@ public class RollingTrafficStatus {
         Map<String, Long[]> result = new HashMap<>();
         for (int i = 0; i < upstreamValues.length; i++) {
             String[] values = upstreamValues[i].split(",");
-            Preconditions.checkState(values != null && values.length == ReqStatusOffset.values().length + 1);
+            Preconditions.checkState(values != null);
             Long[] data = new Long[ReqStatusOffset.values().length];
             for (int j = 0; j < data.length; j++) {
                 data[j] = Long.parseLong(values[j + 1]);
