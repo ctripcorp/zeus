@@ -70,7 +70,7 @@
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='datetime'/> < ${datetime}
+                    WHERE <FIELD name='datetime'/> < ${datetime} LIMIT 1000
                     ]]>
                 </statement>
             </query>

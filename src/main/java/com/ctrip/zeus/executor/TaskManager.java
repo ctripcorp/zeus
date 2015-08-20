@@ -26,7 +26,7 @@ public class TaskManager {
     private DbLockFactory dbLockFactory;
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
-    private static final DynamicIntProperty taskCheckStatusInterval = DynamicPropertyFactory.getInstance().getIntProperty("task.check.status.interval", 200);
+    private static final DynamicIntProperty taskCheckStatusInterval = DynamicPropertyFactory.getInstance().getIntProperty("task.check.status.interval", 500);
 
 
     public Long addTask(OpsTask task)throws Exception{
@@ -56,6 +56,7 @@ public class TaskManager {
 
     public List<TaskResult> getResult(List<Long> taskIds , Long timeOut) throws Exception{
         Long deadLine = System.currentTimeMillis() + timeOut;
+        Thread.sleep(taskCheckStatusInterval.get());
         while (true) {
             Thread.sleep(taskCheckStatusInterval.get());
             List<TaskResult> results = taskService.getResult(taskIds);

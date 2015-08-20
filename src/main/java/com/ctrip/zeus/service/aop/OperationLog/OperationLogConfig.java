@@ -30,14 +30,14 @@ public class OperationLogConfig {
 
         config.put("DeactivateResource.deactivateGroup",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
 
-        config.put("GroupResource.list",new OpConf(OperationLogType.GROUP,null,true));
-        config.put("GroupResource.get",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
+//        config.put("GroupResource.list",new OpConf(OperationLogType.GROUP,null,true));
+//        config.put("GroupResource.get",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
         config.put("GroupResource.add",new OpConf(OperationLogType.GROUP,new int[]{-1,2}));
         config.put("GroupResource.update",new OpConf(OperationLogType.GROUP,new int[]{2}));
         config.put("GroupResource.delete",new OpConf(OperationLogType.GROUP,new int[]{2}));
 
-        config.put("SlbResource.list",new OpConf(OperationLogType.SLB,null,true));
-        config.put("SlbResource.get",new OpConf(OperationLogType.SLB,new int[]{2,3}));
+//        config.put("SlbResource.list",new OpConf(OperationLogType.SLB,null,true));
+//        config.put("SlbResource.get",new OpConf(OperationLogType.SLB,new int[]{2,3}));
         config.put("SlbResource.add",new OpConf(OperationLogType.SLB,new int[]{-1,2}));
         config.put("SlbResource.update",new OpConf(OperationLogType.SLB,new int[]{2}));
         config.put("SlbResource.delete",new OpConf(OperationLogType.SLB,new int[]{2}));
@@ -47,7 +47,7 @@ public class OperationLogConfig {
         config.put("ServerResource.upMember",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
         config.put("ServerResource.downMember",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
 
-        config.put("StatusResource.allGroupStatusInSlb",new OpConf(OperationLogType.SLB,new int[]{2,3}));
+//        config.put("StatusResource.allGroupStatusInSlb",new OpConf(OperationLogType.SLB,new int[]{2,3}));
 //        config.put("StatusResource.groupStatus",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
 
         disableList.addCallback(new Runnable() {

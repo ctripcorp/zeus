@@ -38,6 +38,7 @@ public class TaskServiceImpl implements TaskService {
     public Long add(OpsTask task) throws Exception {
         TaskDo taskDo = C.toTaskDo(task);
         taskDo.setStatus(TaskStatus.PENDING);
+        taskDo.setCreateTime(new Date());
         taskDao.insert(taskDo);
         return taskDo.getId();
     }

@@ -33,7 +33,7 @@
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='create-time'/> < ${create-time}
+                    WHERE <FIELD name='create-time'/> < ${create-time} LIMIT 1000
                     ]]>
                 </statement>
             </query>

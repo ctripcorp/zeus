@@ -920,6 +920,7 @@
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="idx_datetime" members="datetime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
