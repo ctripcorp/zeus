@@ -122,7 +122,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             for (VirtualServer vs : buildVirtualServer){
                 vsIds.add(vs.getId());
             }
-            int slbVersion = getSlbVersion(slbId);
+            Integer slbVersion = getSlbVersion(slbId);
             nginxService.writeALLToDisk(slbId,slbVersion,vsIds);
             if (activatingSlb!=null||activatingGroups.size()>0||deactivateGroupOps.size()>0){
                 nginxService.loadAll(slbId,slbVersion);
