@@ -43,8 +43,8 @@ public class NginxResource {
     @GET
     @Path("/load")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response load(@Context HttpServletRequest request,@Context HttpHeaders hh) throws Exception{
-        NginxResponse result = nginxService.load();
+    public Response load(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") Long slbId, @QueryParam("version") Integer version) throws Exception{
+        NginxResponse result = nginxService.load(slbId,version);
         if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
             return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
         } else {
@@ -153,7 +153,7 @@ public class NginxResource {
     @Path("/loadAll/slb/{slbId:[0-9]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response loadAll(@Context HttpServletRequest request,@Context HttpHeaders hh, @PathParam("slbId") Long slbId) throws Exception {
-        List<NginxResponse> nginxResponseList = nginxService.loadAll(slbId);
+        List<NginxResponse> nginxResponseList = nginxService.loadAll(slbId,null);
         NginxResponseList result = new NginxResponseList();
         for (NginxResponse nginxResponse : nginxResponseList) {
             result.addNginxResponse(nginxResponse);

@@ -122,9 +122,10 @@ public class TaskExecutorImpl implements TaskExecutor {
             for (VirtualServer vs : buildVirtualServer){
                 vsIds.add(vs.getId());
             }
-            nginxService.writeALLToDisk(slbId,getSlbVersion(slbId),vsIds);
+            int slbVersion = getSlbVersion(slbId);
+            nginxService.writeALLToDisk(slbId,slbVersion,vsIds);
             if (activatingSlb!=null||activatingGroups.size()>0||deactivateGroupOps.size()>0){
-                nginxService.loadAll(slbId);
+                nginxService.loadAll(slbId,slbVersion);
             }else {
                 //dyups
                 Collection<Group> dyupsGroupList = groups.values();
@@ -139,7 +140,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                         }
                     }
                     if (isFail){
-                        nginxService.loadAll(slbId);
+                        nginxService.loadAll(slbId,slbVersion);
                         break;
                     }
                 }

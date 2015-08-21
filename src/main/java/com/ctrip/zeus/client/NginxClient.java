@@ -43,13 +43,21 @@ public class NginxClient extends AbstractRestClient {
     }
 
 
-    public NginxResponse load() throws IOException{
-        String responseStr = getTarget().path("/api/nginx/load").request().headers(getDefaultHeaders()).get(String.class);
+    public NginxResponse load(Long slbId , Integer version) throws IOException{
+        WebTarget webTarget = getTarget().path("/api/nginx/load").queryParam("slbId",slbId);
+        if (version!=null){
+            webTarget = webTarget.queryParam("version",version);
+        }
+        String responseStr = webTarget.request().headers(getDefaultHeaders()).get(String.class);
         return DefaultJsonParser.parse(NginxResponse.class, responseStr);
     }
 
     public NginxResponse write(List<Long> vsIds , Long slbId,Integer slbVersion)throws IOException{
-        WebTarget webTarget = getTarget().path("/api/nginx/write").queryParam("slbId",slbId).queryParam("version",slbVersion);
+        WebTarget webTarget = getTarget().path("/api/nginx/write").queryParam("slbId",slbId);
+        if (slbVersion!=null)
+        {
+            webTarget = webTarget.queryParam("version",slbVersion);
+        }
         for (Long vsId : vsIds){
             webTarget = webTarget.queryParam("VirtualServer",vsId);
         }

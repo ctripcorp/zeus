@@ -75,7 +75,7 @@ public class BuildServiceImpl implements BuildService {
         List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupList.toArray(new Long[]{}));
         for (String content :  l ){
             Group tmpGroup = DefaultSaxParser.parseEntity(Group.class, content);
-            if (tmpGroup!=null) {
+            if (tmpGroup!=null&&!activatingGroups.containsKey(tmpGroup.getId())) {
                 groups.add(tmpGroup);
             }
         }

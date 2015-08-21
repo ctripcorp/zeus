@@ -40,7 +40,7 @@ public interface NginxService {
      * @return result of "ngnix -s reload"
      * @throws Exception
      */
-    NginxResponse load() throws Exception;
+    NginxResponse load(Long slbId , Integer version) throws Exception;
 
     /**
      * load all nginx server conf in the slb from disk
@@ -48,7 +48,7 @@ public interface NginxService {
      * @return all response
      * @throws Exception
      */
-    List<NginxResponse> loadAll(Long slbId) throws Exception;
+    List<NginxResponse> loadAll(Long slbId , Integer version) throws Exception;
 
     /**
      *write all and then load all , throw Exception while write failed

@@ -146,18 +146,13 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public NginxResponse load() throws Exception {
+    public NginxResponse load(Long slbId , Integer version) throws Exception {
         String ip = S.getIp();
-        Slb slb = slbRepository.getBySlbServer(ip);
-        Long slbId = slb.getId();
-        int version = nginxConfService.getCurrentBuildingVersion(slbId);
-
-        NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
-        if (nginxServer != null && nginxServer.getVersion() >= version) {
-            NginxResponse res = new NginxResponse();
-            res.setServerIp(ip).setSucceed(true).setOutMsg("current version is lower then or equal the version used,Don't update!current version ["
-                    + version + "],used version [" + nginxServer.getVersion() + "]");
-            return res;
+        Slb slb ;
+        if (version!=null&&version!=0){
+            slb = activateService.getActivatingSlb(slbId,version);
+        }else {
+            slb = activateService.getActivatedSlb(slbId);
         }
 
         NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
@@ -170,19 +165,19 @@ public class NginxServiceImpl implements NginxService {
 
 
     @Override
-    public List<NginxResponse> loadAll(Long slbId) throws Exception {
+    public List<NginxResponse> loadAll(Long slbId , Integer version) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
-        String ip = S.getIp();
-        Slb slb = slbRepository.getById(slbId);
+        Slb slb;
+        if (version!=null&&version!=0){
+            slb = activateService.getActivatingSlb(slbId,version);
+        }else {
+            slb = activateService.getActivatedSlb(slbId);
+        }
 
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
-            if (ip.equals(slbServer.getIp())) {
-                result.add(load());
-                continue;
-            }
             NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
-            NginxResponse response = nginxClient.load();
+            NginxResponse response = nginxClient.load(slbId,version);
             result.add(response);
         }
         return result;
@@ -202,7 +197,7 @@ public class NginxServiceImpl implements NginxService {
             sb.append("]");
             throw new Exception("Write All To Disk Failed!\nDetail:\n" + sb.toString());
         }
-        result = loadAll(slbId);
+        result = loadAll(slbId , slbVersion);
         return result;
     }
 
