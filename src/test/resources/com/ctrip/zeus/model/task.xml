@@ -12,6 +12,12 @@
         <fail-cause>fail</fail-cause>
         <create-time>2013-05-20 13:34:00</create-time>
     </ops-task>
+    <ops-task-list>
+        <ops-tasks>
+            <ops-task/>
+            <ops-task/>
+        </ops-tasks>
+    </ops-task-list>
     <task-result>
         <success>true</success>
         <fail-cause>cause</fail-cause>

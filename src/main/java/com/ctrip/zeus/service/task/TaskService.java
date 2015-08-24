@@ -1,8 +1,10 @@
 package com.ctrip.zeus.service.task;
 
 import com.ctrip.zeus.task.entity.OpsTask;
+import com.ctrip.zeus.task.entity.OpsTaskList;
 import com.ctrip.zeus.task.entity.TaskResult;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -20,4 +22,5 @@ public interface TaskService {
     public List<OpsTask> getPendingTasks(Long slbId) throws Exception;
 
     public void updateTasks(List<OpsTask> tasks) throws Exception;
+    public OpsTaskList find(Date fromDate,String opsType,Long targetSlbId)throws Exception;
 }

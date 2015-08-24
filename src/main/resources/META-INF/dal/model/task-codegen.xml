@@ -2,6 +2,7 @@
 <model>
   <entity name="task" root="true">
     <entity-ref name="ops-task" />
+    <entity-ref name="ops-task-list" />
     <entity-ref name="task-result" />
     <entity-ref name="task-result-list" />
   </entity>
@@ -17,6 +18,9 @@
     <element name="version" value-type="int" />
     <element name="fail-cause" value-type="String" />
     <element name="create-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+  </entity>
+  <entity name="ops-task-list">
+    <entity-ref name="ops-task" type="list" names="ops-tasks" xml-indent="true" />
   </entity>
   <entity name="task-result">
     <element name="success" value-type="boolean" />

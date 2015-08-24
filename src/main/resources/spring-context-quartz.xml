@@ -42,6 +42,23 @@
         <property name="repeatInterval" value="3600000"/>
     </bean>
 
+    <bean id="taskCleanDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.ctrip.zeus.service.task.TaskCleanJob"/>
+        <property name="jobDataMap">
+            <map>
+                <entry key="taskDao" value-ref="taskDao" />
+            </map>
+        </property>
+        <property name="durability" value="true"/>
+    </bean>
+
+    <!-- Run the job every 1h = 60*60*1000=3600000 ms with initial delay of 1 second -->
+    <bean id="taskCleanTrigger"  class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="taskCleanDetail"/>
+        <property name="startDelay" value="1000"/>
+        <property name="repeatInterval" value="3600000"/>
+    </bean>
+
 
     <bean id="taskWorkerDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
         <property name="jobClass" value="com.ctrip.zeus.executor.TaskExecutorJob"/>
@@ -67,6 +84,7 @@
                 <ref bean="nginxStatusFetcherDetail"/>
                 <ref bean="operationLogCleanDetail"/>
                 <ref bean="taskWorkerDetail"/>
+                <ref bean="taskCleanDetail"/>
             </list>
         </property>
         <property name="triggers">
@@ -74,6 +92,7 @@
                 <ref bean="nginxStatusFetcherTrigger"/>
                 <ref bean="operationLogCleanTrigger"/>
                 <ref bean="taskWorkerTrigger"/>
+                <ref bean="taskCleanTrigger"/>
             </list>
         </property>
     </bean>

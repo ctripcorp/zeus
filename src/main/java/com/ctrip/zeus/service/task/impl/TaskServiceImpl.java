@@ -10,6 +10,7 @@ import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.task.constant.TaskStatus;
 import com.ctrip.zeus.support.C;
 import com.ctrip.zeus.task.entity.OpsTask;
+import com.ctrip.zeus.task.entity.OpsTaskList;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -106,5 +107,18 @@ public class TaskServiceImpl implements TaskService {
         for (OpsTask opsTask : tasks){
             taskDao.updateByPK(C.toTaskDo(opsTask),TaskEntity.UPDATESET_FULL);
         }
+    }
+
+    @Override
+    public OpsTaskList find(Date fromDate, String opsType, Long targetSlbId) throws Exception {
+        List<TaskDo> taskDos = taskDao.find(fromDate,opsType,targetSlbId,TaskEntity.READSET_FULL);
+        OpsTaskList result = new OpsTaskList();
+        if(taskDos==null){
+            return result;
+        }
+        for (TaskDo taskDo:taskDos){
+            result.addOpsTask(C.toOpsTask(taskDo));
+        }
+        return result;
     }
 }
