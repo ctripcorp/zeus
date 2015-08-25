@@ -111,6 +111,10 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public OpsTaskList find(Date fromDate, String opsType, Long targetSlbId) throws Exception {
+        if (targetSlbId==null)
+        {
+            targetSlbId = -1L;
+        }
         List<TaskDo> taskDos = taskDao.find(fromDate,opsType,targetSlbId,TaskEntity.READSET_FULL);
         OpsTaskList result = new OpsTaskList();
         if(taskDos==null){

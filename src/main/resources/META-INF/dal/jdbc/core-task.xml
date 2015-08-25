@@ -46,7 +46,7 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE  (CASE WHEN ${ops-type} IS NULL OR <FIELD name='ops-type'/> = ${ops-type} THEN TRUE ELSE FALSE END)
-                        AND (CASE WHEN ${target-slb-id} IS NULL OR <FIELD name='target-slb-id'/> = ${target-slb-id} THEN TRUE ELSE FALSE END)
+                        AND (CASE WHEN ${target-slb-id} < 0 OR <FIELD name='target-slb-id'/> = ${target-slb-id} THEN TRUE ELSE FALSE END)
                         AND (CASE WHEN ${create-time} IS NULL OR <FIELD name='create-time'/> >= ${create-time} THEN TRUE ELSE FALSE END)
                         ORDER BY <FIELD name='create-time'/> DESC
                         LIMIT 1000
