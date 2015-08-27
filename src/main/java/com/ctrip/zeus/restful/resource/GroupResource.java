@@ -60,6 +60,7 @@ public class GroupResource {
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
                          @QueryParam("slbId") Long slbId,
+                         @QueryParam("appId") String appId,
                          @TrimmedQueryParam("slbName") String slbName,
                          @TrimmedQueryParam("domain") String domain,
                          @TrimmedQueryParam("type") String type,
@@ -68,6 +69,9 @@ public class GroupResource {
                          @TrimmedQueryParam("pvalue") String pvalue) throws Exception {
         GroupList groupList = new GroupList();
         Set<Long> filtered = groupCriteriaQuery.queryAll();
+        if (appId != null) {
+            filtered.retainAll(groupCriteriaQuery.queryByAppId(appId));
+        }
         if (tag != null) {
             filtered.retainAll(tagService.query(tag, "group"));
         }
@@ -102,10 +106,9 @@ public class GroupResource {
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
                         @QueryParam("groupId") Long groupId,
                         @TrimmedQueryParam("groupName") String groupName,
-                        @TrimmedQueryParam("appId") String appId,
                         @TrimmedQueryParam("type") String type) throws Exception {
         Group group = null;
-        if (groupId == null && groupName == null && appId == null) {
+        if (groupId == null && groupName == null) {
             throw new ValidationException("Missing parameters.");
         }
         if (groupId != null) {
@@ -113,9 +116,6 @@ public class GroupResource {
         }
         if (group == null && groupName != null) {
             group = groupRepository.get(groupName);
-        }
-        if (group == null && appId != null) {
-            group = groupRepository.getByAppId(appId);
         }
         AssertUtils.assertNotNull(group, "Group cannot be found.");
         return responseHandler.handle(getGroupByType(group, type), hh.getMediaType());

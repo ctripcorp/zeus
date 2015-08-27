@@ -23,9 +23,13 @@ public interface ArchiveService {
 
     Group getGroup(Long groupId, int version) throws Exception;
 
-    Slb getMaxVersionSlb(Long slbId) throws Exception;
+    Slb getLatestSlb(Long slbId) throws Exception;
 
-    Group getMaxVersionGroup(Long groupId) throws Exception;
+    Group getLatestGroup(Long groupId) throws Exception;
+
+    List<Slb> getLatestSlbs(Long[] slbIds) throws Exception;
+
+    List<Group> getLatestGroups(Long[] groupIds) throws Exception;
 
     List<Slb> getAllSlb(Long slbId) throws Exception;
 

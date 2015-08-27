@@ -43,7 +43,7 @@ public class GroupQueryImpl implements GroupQuery {
 
     @Override
     public Group getByAppId(String groupId) throws Exception {
-        GroupDo d = groupDao.findByAppId(groupId, GroupEntity.READSET_FULL);
+        GroupDo d = groupDao.findByAppId(groupId, GroupEntity.READSET_FULL).get(0);
         return createGroup(d);
     }
 

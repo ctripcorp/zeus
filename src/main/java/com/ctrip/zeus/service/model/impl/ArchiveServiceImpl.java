@@ -66,15 +66,48 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     @Override
-    public Slb getMaxVersionSlb(Long slbId) throws Exception {
+    public Slb getLatestSlb(Long slbId) throws Exception {
         String content = archiveSlbDao.findMaxVersionBySlb(slbId, ArchiveSlbEntity.READSET_FULL).getContent();
         return DefaultSaxParser.parseEntity(Slb.class, content);
     }
 
     @Override
-    public Group getMaxVersionGroup(Long groupId) throws Exception {
+    public Group getLatestGroup(Long groupId) throws Exception {
         String content = archiveGroupDao.findMaxVersionByGroup(groupId, ArchiveGroupEntity.READSET_FULL).getContent();
         return DefaultSaxParser.parseEntity(Group.class, content);
+    }
+
+    @Override
+    public List<Slb> getLatestSlbs(Long[] slbIds) throws Exception {
+        List<Slb> slbs = new ArrayList<>();
+        for (ArchiveSlbDo archiveSlbDo : archiveSlbDao.findMaxVersionBySlbs(slbIds, ArchiveSlbEntity.READSET_FULL)) {
+            try {
+                Slb slb = DefaultSaxParser.parseEntity(Slb.class, archiveSlbDo.getContent());
+                slbs.add(slb);
+            } catch (Exception ex) {
+                slbs.add(new Slb().setId(archiveSlbDo.getId()));
+            }
+        }
+        return slbs;
+    }
+
+    @Override
+    public List<Group> getLatestGroups(Long[] groupIds) throws Exception {
+        List<Group> groups = new ArrayList<>();
+//        List<ArchiveGroupDo> latestIds = archiveGroupDao.findMaxVersions(groupIds, ArchiveGroupEntity.READSET_FULL);
+//        Long[] archiveIds = new Long[latestIds.size()];
+//        for (int i = 0; i < latestIds.size(); i++) {
+//            archiveIds[i] = latestIds.get(i).getId();
+//        }
+        for (ArchiveGroupDo archiveGroupDo : archiveGroupDao.findMaxVersionByGroups(groupIds, ArchiveGroupEntity.READSET_FULL)) {
+            try {
+                Group group = DefaultSaxParser.parseEntity(Group.class, archiveGroupDo.getContent());
+                groups.add(group);
+            } catch (Exception ex) {
+                groups.add(new Group().setId(archiveGroupDo.getId()));
+            }
+        }
+        return groups;
     }
 
     @Override
