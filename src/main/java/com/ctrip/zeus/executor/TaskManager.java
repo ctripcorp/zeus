@@ -26,25 +26,11 @@ public class TaskManager {
     private DbLockFactory dbLockFactory;
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
-    private static final DynamicIntProperty taskCheckStatusInterval = DynamicPropertyFactory.getInstance().getIntProperty("task.check.status.interval", 500);
+    private static final DynamicIntProperty taskCheckStatusInterval = DynamicPropertyFactory.getInstance().getIntProperty("task.check.status.interval", 300);
 
 
     public Long addTask(OpsTask task)throws Exception{
-        String lockName = null;
-        if ( task.getOpsType().equals(TaskOpsType.ACTIVATE_SLB)){
-            lockName = "AddTask_" + task.getOpsType() + task.getSlbId();
-        }else if (task.getOpsType().equals(TaskOpsType.SERVER_OPS)){
-            lockName = "AddTask_" + task.getOpsType();
-        }else {
-            lockName = "AddTask_" + task.getOpsType() + task.getGroupId();
-        }
-        DistLock buildLock = dbLockFactory.newLock( lockName );
-        try {
-            buildLock.lock(lockTimeout.get());
-            return taskService.add(task);
-        }finally {
-            buildLock.unlock();
-        }
+        return taskService.add(task);
     }
     public List<Long> addTask(List<OpsTask> tasks)throws Exception{
         List<Long> result = new ArrayList<>();

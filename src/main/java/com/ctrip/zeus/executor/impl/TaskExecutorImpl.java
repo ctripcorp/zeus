@@ -59,7 +59,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     private HashMap<Long , OpsTask> activateGroupOps = new HashMap<>();
     private HashMap<Long , OpsTask> deactivateGroupOps = new HashMap<>();
     private HashMap<Long , OpsTask> activateSlbOps = new HashMap<>();
-    private HashMap<Long , OpsTask> memberOps = new HashMap<>();
+    private HashMap<Long , List<OpsTask>> memberOps = new HashMap<>();
 
     private List<OpsTask> tasks = null;
 
@@ -99,7 +99,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             sortTaskData(slbId);
             activatingGroups = getActivatingGroups(activateGroupOps);
             activatingSlb = getActivatingSlb(activateSlbOps,slbId);
-
+            //memberOperations of unactivated groups
             preMemberOperation(slbId,memberOps);
             groupList = getInfluencedGroups(activatingGroups);
 
@@ -178,24 +178,39 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     private void performTasks(Long slbId) {
         try {
-            for (OpsTask task : tasks){
+            for (OpsTask task :activateGroupOps.values()){
                 if (!task.getStatus().equals(TaskStatus.DOING)){
                     continue;
                 }
-                if (task.getOpsType().equals(TaskOpsType.ACTIVATE_SLB)){
-                    activateService.activeSlb(task.getSlbId(),task.getVersion());
-                }else if (task.getOpsType().equals(TaskOpsType.ACTIVATE_GROUP)){
-                    activateService.activeGroup(task.getGroupId(),task.getVersion(),slbId);
-                }else if (task.getOpsType().equals(TaskOpsType.DEACTIVATE_GROUP)){
-                    activateService.deactiveGroup(task.getGroupId(),slbId);
-                }else if (task.getOpsType().equals(TaskOpsType.SERVER_OPS)){
-                    if (task.getUp()){
-                        statusService.upServer(task.getIpList());
-                    }else {
-                        statusService.downServer(task.getIpList());
+                activateService.activeGroup(task.getGroupId(),task.getVersion(),slbId);
+            }
+            for (OpsTask task :activateSlbOps.values()){
+                if (!task.getStatus().equals(TaskStatus.DOING)){
+                    continue;
+                }
+                activateService.activeSlb(task.getSlbId(),task.getVersion());
+            }
+            for (OpsTask task :deactivateGroupOps.values()){
+                if (!task.getStatus().equals(TaskStatus.DOING)){
+                    continue;
+                }
+                activateService.deactiveGroup(task.getGroupId(),slbId);
+            }
+            for (OpsTask task :serverOps.values()){
+                if (!task.getStatus().equals(TaskStatus.DOING)){
+                    continue;
+                }
+                if (task.getUp()){
+                    statusService.upServer(task.getIpList());
+                }else {
+                    statusService.downServer(task.getIpList());
+                }
+            }
+            for (List<OpsTask> taskList :memberOps.values()){
+                for (OpsTask task : taskList){
+                    if (!task.getStatus().equals(TaskStatus.DOING)){
+                        continue;
                     }
-                }else if (task.getOpsType().equals(TaskOpsType.MEMBER_OPS)){
-
                     String [] ips = task.getIpList().split(";");
                     List<String>ipList = Arrays.asList(ips);
                     if (task.getUp()){
@@ -238,22 +253,27 @@ public class TaskExecutorImpl implements TaskExecutor {
             if (groupTmp==null){
                 groupTmp = groups.get(gid);
             }
-            String ipList = memberOps.get(gid).getIpList();
-            String[]ips = ipList.split(";");
-            for (GroupVirtualServer gvs : groupTmp.getGroupVirtualServers()){
-                if (!gvs.getVirtualServer().getSlbId().equals(slbId)){
-                    continue;
-                }
-                if (memberOps.get(gid).getUp()){
-                    for (String ip : ips){
-                        allUpGroupServers.add(slbId+"_"+gvs.getVirtualServer().getId()+"_"+gid+"_"+ip);
+            List<OpsTask> taskList = memberOps.get(gid);
+            for (OpsTask opsTask : taskList)
+            {
+                String ipList =opsTask.getIpList();
+                String[]ips = ipList.split(";");
+                for (GroupVirtualServer gvs : groupTmp.getGroupVirtualServers()){
+                    if (!gvs.getVirtualServer().getSlbId().equals(slbId)){
+                        continue;
                     }
-                }else {
-                    for (String ip : ips){
-                        allUpGroupServers.remove(slbId + "_" + gvs.getVirtualServer().getId() + "_" + gid + "_" + ip);
+                    if (opsTask.getUp()){
+                        for (String ip : ips){
+                            allUpGroupServers.add(slbId+"_"+gvs.getVirtualServer().getId()+"_"+gid+"_"+ip);
+                        }
+                    }else {
+                        for (String ip : ips){
+                            allUpGroupServers.remove(slbId + "_" + gvs.getVirtualServer().getId() + "_" + gid + "_" + ip);
+                        }
                     }
                 }
             }
+
         }
         return allUpGroupServers;
     }
@@ -275,7 +295,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         Set<Long> result = new HashSet<>();
         result.addAll(activatingGroups.keySet());
         for (Long gid : memberOps.keySet()){
-            if (memberOps.get(gid).getStatus().equals(TaskStatus.DOING)){
+            if (memberOps.get(gid).get(0).getStatus().equals(TaskStatus.DOING)){
                 result.add(gid);
             }
         }
@@ -288,19 +308,22 @@ public class TaskExecutorImpl implements TaskExecutor {
         return result;
     }
 
-    private void preMemberOperation(Long slbId , HashMap<Long, OpsTask> memberOps) {
+    private void preMemberOperation(Long slbId , HashMap<Long, List<OpsTask>> memberOps) {
         try {
             Set<Long> memberGroups = memberOps.keySet();
             for (Long groupId : memberGroups){
                 if (!activateService.isGroupActivated(groupId,slbId)){
-                    String ips = memberOps.get(groupId).getIpList();
-                    String[]iplist = ips.split(";");
-                    if (memberOps.get(groupId).getUp()){
-                        statusService.upMember(slbId , groupId, Arrays.asList(iplist));
-                    }else {
-                        statusService.downMember(slbId ,groupId, Arrays.asList(iplist));
+                    List<OpsTask> tasksList = memberOps.get(groupId);
+                    for(OpsTask opsTask : tasksList){
+                        String ips = opsTask.getIpList();
+                        String[]iplist = ips.split(";");
+                        if (opsTask.getUp()){
+                            statusService.upMember(slbId , groupId, Arrays.asList(iplist));
+                        }else {
+                            statusService.downMember(slbId ,groupId, Arrays.asList(iplist));
+                        }
+                        opsTask.setStatus(TaskStatus.SUCCESS);
                     }
-                    memberOps.get(groupId).setStatus(TaskStatus.SUCCESS);
                     memberOps.remove(groupId);
                 }
             }
@@ -372,7 +395,12 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
             //member ops
             if (task.getOpsType().equals(TaskOpsType.MEMBER_OPS)){
-                memberOps.put(task.getGroupId(),task);
+                List<OpsTask> taskList = memberOps.get(task.getGroupId());
+                if (taskList==null){
+                    taskList = new ArrayList<>();
+                    memberOps.put(task.getGroupId(),taskList);
+                }
+                taskList.add(task);
             }
             if (task.getOpsType().equals(TaskOpsType.DEACTIVATE_GROUP)){
                 deactivateGroupOps.put(task.getGroupId(),task);
