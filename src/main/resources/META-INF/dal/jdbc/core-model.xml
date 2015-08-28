@@ -502,7 +502,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-ip" type="SELECT" multiple="true">
+            <query name="find-by-ip" type="SELECT">
                 <param name="ip"/>
                 <statement>
                     <![CDATA[
@@ -714,10 +714,10 @@
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE  <FIELD name='slb-id'/> in <IN>${ids}</IN>
-                        ORDER BY <FIELD name='version'/> DESC
-                        LIMIT 1
+                    FROM (SELECT * from archive_slb
+                        WHERE slb_id in <IN>${ids}</IN>
+                        ORDER BY version DESC) as3
+                    GROUP BY slb_id
                     ]]>
                 </statement>
             </query>

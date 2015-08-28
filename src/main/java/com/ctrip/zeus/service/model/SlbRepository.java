@@ -21,7 +21,7 @@ public interface SlbRepository extends Repository {
 
     Slb getByVirtualServer(Long virtualServerId) throws Exception;
 
-    List<Slb> listByGroupServerAndGroup(String groupServerIp, Long groupId) throws Exception;
+    List<Slb> listByGroupServer(String groupServerIp) throws Exception;
 
     List<Slb> listByGroups(Long[] groupIds) throws Exception;
 
