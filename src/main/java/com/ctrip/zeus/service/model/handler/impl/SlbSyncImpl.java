@@ -55,6 +55,11 @@ public class SlbSyncImpl implements SlbSync {
     }
 
     @Override
+    public void updateVersion(Long slbId) throws Exception {
+        slbDao.updateById(slbDao.findById(slbId, SlbEntity.READSET_FULL), SlbEntity.UPDATESET_FULL);
+    }
+
+    @Override
     public int delete(Long slbId) throws Exception {
         slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(slbId));
         slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(slbId));

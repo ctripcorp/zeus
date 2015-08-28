@@ -27,6 +27,10 @@ public interface GroupRepository extends Repository {
 
     Group update(Group group) throws Exception;
 
+    void updateVersion(Long groupId) throws Exception;
+
+    void updateVersionByVirtualServer(Long vsId) throws Exception;
+
     int delete(Long groupId) throws Exception;
 
     List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception;

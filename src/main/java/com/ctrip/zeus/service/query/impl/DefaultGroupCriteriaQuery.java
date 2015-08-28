@@ -68,4 +68,18 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
         }
         return groupIds;
     }
+
+    @Override
+    public Set<Long> queryByVsId(Long vsId) throws Exception {
+        List<SlbDomainDo> dlist = slbDomainDao.findAllBySlbVirtualServer(vsId, SlbDomainEntity.READSET_FULL);
+        Long[] vsIds = new Long[dlist.size()];
+        for (int i = 0; i < dlist.size(); i++) {
+            vsIds[i] = dlist.get(i).getSlbVirtualServerId();
+        }
+        Set<Long> groupIds = new HashSet<>();
+        for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByVirtualServers(vsIds, GroupSlbEntity.READSET_FULL)) {
+            groupIds.add(groupSlbDo.getGroupId());
+        }
+        return groupIds;
+    }
 }

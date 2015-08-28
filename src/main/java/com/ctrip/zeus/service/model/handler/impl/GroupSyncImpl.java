@@ -53,6 +53,12 @@ public class GroupSyncImpl implements GroupSync {
     }
 
     @Override
+    public void updateVersion(Long[] groupIds) throws Exception {
+        List<GroupDo> groupDos = groupDao.findAllByIds(groupIds, GroupEntity.READSET_FULL);
+        groupDao.updateById(groupDos.toArray(new GroupDo[groupDos.size()]), GroupEntity.UPDATESET_FULL);
+    }
+
+    @Override
     public int delete(Long groupId) throws Exception {
         groupHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(groupId));
         groupLoadBalancingMethodDao.deleteByGroup(new GroupLoadBalancingMethodDo().setGroupId(groupId));

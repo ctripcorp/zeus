@@ -15,7 +15,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="update-by-id" type="UPDATE">
+            <query name="update-by-id" type="UPDATE" batch="true">
                 <param name="id"/>
                 <statement>
                     <![CDATA[

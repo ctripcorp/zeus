@@ -30,4 +30,6 @@ public interface SlbRepository extends Repository {
     Slb update(Slb slb) throws Exception;
 
     int delete(Long slbId) throws Exception;
+
+    void updateVersion(Long slbId) throws Exception;
 }

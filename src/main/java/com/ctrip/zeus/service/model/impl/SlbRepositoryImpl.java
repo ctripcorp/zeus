@@ -9,7 +9,6 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.GroupMemberRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
-import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
@@ -91,8 +90,8 @@ public class SlbRepositoryImpl implements SlbRepository {
         Long slbId = slbSync.add(slb);
         slb.setId(slbId);
         addVs(slb);
+        archiveService.archiveSlb(slbId);
         Slb result = getById(slbId);
-        archiveService.archiveSlb(result);
 
         for (SlbServer slbServer : result.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
@@ -108,8 +107,9 @@ public class SlbRepositoryImpl implements SlbRepository {
     public Slb update(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
         Long slbId = slbSync.update(slb);
+        archiveService.archiveSlb(slbId);
         Slb result = getById(slbId);
-        archiveService.archiveSlb(result);
+
         for (SlbServer slbServer : result.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
                     .setIp(slbServer.getIp())
@@ -126,6 +126,12 @@ public class SlbRepositoryImpl implements SlbRepository {
         removeVsBySlb(slbId);
         int count = slbSync.delete(slbId);
         return count;
+    }
+
+    @Override
+    public void updateVersion(Long slbId) throws Exception {
+        slbSync.updateVersion(slbId);
+        archiveService.archiveSlb(slbId);
     }
 
     private List<Slb> batchGet(Long[] slbIds) throws Exception {

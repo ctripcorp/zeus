@@ -9,6 +9,7 @@ import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.GroupMemberRepository;
+import com.ctrip.zeus.service.model.GroupRepository;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +30,8 @@ import java.util.List;
 public class GroupMemberResource {
     @Resource
     private GroupMemberRepository groupMemberRepository;
+    @Resource
+    private GroupRepository groupRepository;
     @Resource
     private ResponseHandler responseHandler;
 
@@ -52,9 +55,12 @@ public class GroupMemberResource {
     @Authorize(name = "addMember")
     public Response addMember(@Context HttpHeaders hh, @Context HttpServletRequest request, String groupServerList) throws Exception {
         GroupServerList gsl = parseGroupServer(hh.getMediaType(), groupServerList);
+        if (gsl.getGroupId() == null)
+            throw new ValidationException("Group id is required.");
         for (GroupServer groupServer : gsl.getGroupServers()) {
             groupMemberRepository.addGroupServer(gsl.getGroupId(), groupServer);
         }
+        groupRepository.updateVersion(gsl.getGroupId());
         return responseHandler.handle("Successfully added group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -64,9 +70,12 @@ public class GroupMemberResource {
     @Authorize(name = "updateMember")
     public Response updateMember(@Context HttpHeaders hh, @Context HttpServletRequest request, String groupServerList) throws Exception {
         GroupServerList gsl = parseGroupServer(hh.getMediaType(), groupServerList);
+        if (gsl.getGroupId() == null)
+            throw new ValidationException("Group id is required.");
         for (GroupServer groupServer : gsl.getGroupServers()) {
             groupMemberRepository.updateGroupServer(gsl.getGroupId(), groupServer);
         }
+        groupRepository.updateVersion(gsl.getGroupId());
         return responseHandler.handle("Successfully updated group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -77,10 +86,11 @@ public class GroupMemberResource {
     public Response removeMember(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("groupId") Long groupId,
                                  @QueryParam("ip") List<String> ips) throws Exception {
         if (groupId == null)
-            throw new ValidationException("No groupId is provided.");
+            throw new ValidationException("Group id parameter is required.");
         for (String ip : ips) {
             groupMemberRepository.removeGroupServer(groupId, ip);
         }
+        groupRepository.updateVersion(groupId);
         return responseHandler.handle("Successfully removed " + Joiner.on(",").join(ips) + " from group with id " + groupId + ".", hh.getMediaType());
     }
 

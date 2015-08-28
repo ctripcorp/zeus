@@ -12,5 +12,7 @@ public interface GroupSync {
 
     Long update(Group group) throws Exception;
 
+    void updateVersion(Long[] groupIds) throws Exception;
+
     int delete(Long groupId) throws Exception;
 }

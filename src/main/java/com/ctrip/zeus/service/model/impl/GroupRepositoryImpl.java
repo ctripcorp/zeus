@@ -2,17 +2,13 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.*;
-import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -75,9 +71,8 @@ public class GroupRepositoryImpl implements GroupRepository {
         Long groupId = groupSync.add(group);
         group.setId(groupId);
         syncVsAndGs(group);
-        Group result = getById(groupId);
-        archiveService.archiveGroup(result);
-        return result;
+        archiveService.archiveGroup(groupId);
+        return getById(groupId);
 
     }
 
@@ -87,9 +82,23 @@ public class GroupRepositoryImpl implements GroupRepository {
         Long groupId = groupSync.update(group);
         group.setId(groupId);
         syncVsAndGs(group);
-        Group result = getById(groupId);
-        archiveService.archiveGroup(result);
-        return result;
+        archiveService.archiveGroup(groupId);
+        return getById(groupId);
+    }
+
+    @Override
+    public void updateVersion(Long groupId) throws Exception {
+        groupSync.updateVersion(new Long[]{groupId});
+        archiveService.archiveGroup(groupId);
+    }
+
+    @Override
+    public void updateVersionByVirtualServer(Long vsId) throws Exception {
+        Set<Long> groupIds = groupCriteriaQuery.queryByVsId(vsId);
+        groupSync.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
+        for (Long groupId : groupIds) {
+            archiveService.archiveGroup(groupId);
+        }
     }
 
     @Override
@@ -98,7 +107,6 @@ public class GroupRepositoryImpl implements GroupRepository {
         cascadeRemoveByGroup(groupId);
         int count = groupSync.delete(groupId);
         return count;
-
     }
 
     @Override

@@ -1,22 +1,14 @@
 package com.ctrip.zeus.service.validate.impl;
 
 import com.ctrip.zeus.client.ValidateClient;
-import com.ctrip.zeus.dal.core.GroupSlbDo;
-import com.ctrip.zeus.dal.core.GroupSlbEntity;
-import com.ctrip.zeus.dal.core.SlbDao;
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.validate.SlbValidator;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Created by fanqq on 2015/6/25.
