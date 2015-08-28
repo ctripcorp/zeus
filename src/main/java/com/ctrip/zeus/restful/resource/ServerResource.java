@@ -97,7 +97,7 @@ public class ServerResource {
 
     private Response serverOps(HttpHeaders hh , String serverip , boolean up)throws Exception{
         //get slb by serverip
-        List<Slb> slblist = slbRepository.listByGroupServerAndGroup(serverip,null);
+        List<Slb> slblist = slbRepository.listByGroupServer(serverip);
         AssertUtils.assertNotNull(slblist, "[UpServer/DownServer] Can not find slb by server ip :[" + serverip + "],Please check the configuration and server ip!");
         List<OpsTask> tasks = new ArrayList<>();
         for (Slb slb : slblist)

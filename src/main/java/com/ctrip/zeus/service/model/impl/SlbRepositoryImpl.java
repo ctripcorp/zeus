@@ -9,16 +9,15 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.GroupMemberRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
-import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -33,6 +32,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Resource
     private SlbQuery slbQuery;
     @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
+    @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
     private GroupMemberRepository groupMemberRepository;
@@ -43,69 +44,45 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public List<Slb> list() throws Exception {
-        List<Slb> result = slbQuery.getAll();
-        for (Slb slb : result) {
-            cascadeVs(slb);
-        }
-        return result;
+        Set<Long> slbIds = slbCriteriaQuery.queryAll();
+        return archiveService.getLatestSlbs(slbIds.toArray(new Long[slbIds.size()]));
     }
 
     @Override
     public Slb getById(Long slbId) throws Exception {
-        return cascadeVs(slbQuery.getById(slbId));
+        return archiveService.getLatestSlb(slbId);
     }
 
     @Override
     public Slb get(String slbName) throws Exception {
-        return cascadeVs(slbQuery.get(slbName));
+        return getById(slbCriteriaQuery.queryByName(slbName));
     }
 
     @Override
     public Slb getBySlbServer(String slbServerIp) throws Exception {
-        return cascadeVs(slbQuery.getBySlbServer(slbServerIp));
+        return getById(slbCriteriaQuery.queryBySlbServer(slbServerIp));
     }
 
     @Override
     public Slb getByVirtualServer(Long virtualServerId) throws Exception {
         VirtualServer vs = virtualServerRepository.getById(virtualServerId);
-        return cascadeVs(slbQuery.getById(vs.getSlbId()));
+        return getById(vs.getSlbId());
     }
 
     @Override
-    public List<Slb> listByGroupServerAndGroup(String groupServerIp, Long groupId) throws Exception {
-        if (groupServerIp == null && groupId == null)
-            throw new ValidationException("At least one parameter must not be null.");
-        Long[] groupIds = new Long[0];
-        if (groupServerIp != null)
-            groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
-        if (groupId == null)
-            return slbQuery.getByGroups(groupIds);
-
-        if (groupId != null && groupIds.length == 0)
-            return slbQuery.getByGroups(new Long[]{groupId});
-        boolean existed = false;
-        for (Long id : groupIds) {
-            if (id.equals(groupId)) {
-                existed = true;
-                break;
-            }
-        }
-        List<Slb> result = new ArrayList<>();
-        if (existed)
-            result = slbQuery.getByGroups(new Long[]{groupId});
-        for (Slb slb : result) {
-            cascadeVs(slb);
-        }
-        return result;
+    public List<Slb> listByGroupServer(String groupServerIp) throws Exception {
+        if (groupServerIp == null)
+            throw new ValidationException("group server ip must not be empty.");
+        Long[] groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
+        if (groupIds.length == 0)
+            return new ArrayList<>();
+        return listByGroups(groupIds);
     }
 
     @Override
     public List<Slb> listByGroups(Long[] groupIds) throws Exception {
-        List<Slb> result = slbQuery.getByGroups(groupIds);
-        for (Slb slb : result) {
-            cascadeVs(slb);
-        }
-        return result;
+        Set<Long> slbIds = slbCriteriaQuery.queryByGroups(groupIds);
+        return batchGet(slbIds.toArray(new Long[slbIds.size()]));
     }
 
     @Override
@@ -116,8 +93,8 @@ public class SlbRepositoryImpl implements SlbRepository {
         Long slbId = slbSync.add(slb);
         slb.setId(slbId);
         addVs(slb);
+        archive(slbId);
         Slb result = getById(slbId);
-        archiveService.archiveSlb(result);
 
         for (SlbServer slbServer : result.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
@@ -133,8 +110,9 @@ public class SlbRepositoryImpl implements SlbRepository {
     public Slb update(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
         Long slbId = slbSync.update(slb);
+        archive(slbId);
         Slb result = getById(slbId);
-        archiveService.archiveSlb(result);
+
         for (SlbServer slbServer : result.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
                     .setIp(slbServer.getIp())
@@ -153,11 +131,22 @@ public class SlbRepositoryImpl implements SlbRepository {
         return count;
     }
 
-    private Slb cascadeVs(Slb slb) throws Exception {
+    @Override
+    public void updateVersion(Long slbId) throws Exception {
+        slbSync.updateVersion(slbId);
+        archive(slbId);
+    }
+
+    private void archive(Long slbId) throws Exception {
+        Slb slb = slbQuery.getById(slbId);
         for (VirtualServer virtualServer : virtualServerRepository.listVirtualServerBySlb(slb.getId())) {
             slb.addVirtualServer(virtualServer);
         }
-        return slb;
+        archiveService.archiveSlb(slb);
+    }
+
+    private List<Slb> batchGet(Long[] slbIds) throws Exception {
+        return archiveService.getLatestSlbs(slbIds);
     }
 
     private void addVs(Slb slb) throws Exception {

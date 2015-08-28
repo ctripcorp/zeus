@@ -84,13 +84,8 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testListSlbsByGroupServerAndGroup() throws Exception {
-        List<Slb> slbsByGroupServer = slbRepository.listByGroupServerAndGroup("10.2.6.201", null);
+        List<Slb> slbsByGroupServer = slbRepository.listByGroupServer("10.2.6.201");
         Assert.assertEquals(1, slbsByGroupServer.size());
-        List<Slb> slbsByGroupName = slbRepository.listByGroupServerAndGroup(null, testGroup.getId());
-        Assert.assertEquals(1, slbsByGroupName.size());
-        List<Slb> slbs = slbRepository.listByGroupServerAndGroup("10.2.6.201", testGroup.getId());
-        Assert.assertEquals(1, slbs.size());
-        ModelAssert.assertSlbEquals(defaultSlb, slbs.get(0));
     }
 
     @Test
@@ -183,8 +178,9 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testGetGroupByAppId() throws Exception {
-        Group group = groupRepository.getByAppId(testGroup.getAppId());
-        ModelAssert.assertGroupEquals(testGroup, group);
+        List<Group> list = groupRepository.listByAppId(testGroup.getAppId());
+        Assert.assertEquals(7, list.size());
+        ModelAssert.assertGroupEquals(testGroup, list.get(0));
     }
 
     @Test
@@ -195,8 +191,7 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testListGroupsBy() throws Exception {
-        String virtualServerName = "testsite1";
-        List<Group> list = groupRepository.list(defaultSlb.getId(), virtualServerName);
+        List<Group> list = groupRepository.list(defaultSlb.getId());
         Assert.assertTrue(list.size() >= 6);
     }
 
@@ -299,6 +294,7 @@ public class ModelServiceTest extends AbstractSpringTest {
 
         gvs.add(new GroupVirtualServer().setPath("/testUpdateGroupVsNew").setVirtualServer(new VirtualServer().setId(defaultSlb.getVirtualServers().get(0).getId())));
         virtualServerRepository.updateGroupVirtualServers(testGroup.getId(), gvs);
+        groupRepository.updateVersion(testGroup.getId());
         Assert.assertEquals(gvs.size(), groupRepository.get(testGroup.getName()).getGroupVirtualServers().size());
         Assert.assertEquals(gvs.size(), virtualServerRepository.listGroupVsByGroups(new Long[]{testGroup.getId()}).size());
 
@@ -309,12 +305,14 @@ public class ModelServiceTest extends AbstractSpringTest {
         gvs.get(0).setVirtualServer(new VirtualServer().setId(defaultSlb.getVirtualServers().get(1).getId()));
         try {
             virtualServerRepository.updateGroupVirtualServers(testGroup.getId(), gvs);
+            groupRepository.updateVersion(testGroup.getId());
             Assert.assertTrue(false);
         } catch (Exception ex) {
             Assert.assertTrue(ex instanceof ValidationException);
         }
         gvs.remove(gvs.get(1));
         virtualServerRepository.updateGroupVirtualServers(testGroup.getId(), gvs);
+        groupRepository.updateVersion(testGroup.getId());
         gvs = virtualServerRepository.listGroupVsByGroups(new Long[]{testGroup.getId()});
 
         Assert.assertEquals(1, gvs.size());
@@ -335,25 +333,38 @@ public class ModelServiceTest extends AbstractSpringTest {
                 .addVirtualServer(new VirtualServer().setName("www.hello.com").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("www.hello.com")));
         slbRepository.add(raw);
-        Long slbId = slbRepository.get(raw.getName()).getId();
+        Slb created = slbRepository.get(raw.getName());
 
-        virtualServerRepository.addVirtualServer(slbId, new VirtualServer().setSlbId(slbId).setName("www.bonjour.com").setSsl(false).setPort("80")
+        Group group = generateGroup("testUpdateVirtualServerGroup", created, created.getVirtualServers().get(1));
+        groupRepository.add(group);
+
+        virtualServerRepository.addVirtualServer(created.getId(), new VirtualServer().setSlbId(created.getId()).setName("www.bonjour.com").setSsl(false).setPort("80")
                 .addDomain(new Domain().setName("www.bonjour.com")));
-        virtualServerRepository.addVirtualServer(slbId, new VirtualServer().setSlbId(slbId).setName("www.hallo.com").setSsl(false).setPort("80")
+        virtualServerRepository.addVirtualServer(created.getId(), new VirtualServer().setSlbId(created.getId()).setName("www.hallo.com").setSsl(false).setPort("80")
                 .addDomain(new Domain().setName("www.hallo.com")));
 
-        List<VirtualServer> virtualServers = virtualServerRepository.listVirtualServerBySlb(slbId);
+        List<VirtualServer> virtualServers = virtualServerRepository.listVirtualServerBySlb(created.getId());
         virtualServers.get(0).setName("www.nihao.com.cn");
         virtualServers.get(1).setName("www.hello.com.cn");
-        virtualServerRepository.updateVirtualServers(virtualServers.toArray(new VirtualServer[virtualServers.size()]));
-        Slb updated = slbRepository.getById(slbId);
-        Assert.assertEquals(4, updated.getVirtualServers().size());
-        Assert.assertEquals(4, virtualServerRepository.listVirtualServerBySlb(slbId).size());
+        for (VirtualServer virtualServer : virtualServers) {
+            virtualServerRepository.updateVirtualServer(virtualServer);
+            groupRepository.updateVersionByVirtualServer(virtualServer.getId());
+        }
+        slbRepository.updateVersion(created.getId());
 
+        Slb updated = slbRepository.getById(created.getId());
+        Group updatedGroup = groupRepository.get(group.getName());
+
+        Assert.assertEquals(4, updated.getVirtualServers().size());
+        Assert.assertEquals(4, virtualServerRepository.listVirtualServerBySlb(created.getId()).size());
+        Assert.assertEquals(virtualServers.get(0).getName(), updatedGroup.getGroupVirtualServers().get(0).getVirtualServer().getName());
+
+        groupRepository.delete(updatedGroup.getId());
         virtualServerRepository.deleteVirtualServer(virtualServers.get(0).getId());
         virtualServerRepository.deleteVirtualServer(virtualServers.get(1).getId());
+        slbRepository.updateVersion(created.getId());
 
-        virtualServers = virtualServerRepository.listVirtualServerBySlb(slbId);
+        virtualServers = virtualServerRepository.listVirtualServerBySlb(created.getId());
         Assert.assertEquals(2, virtualServers.size());
         Assert.assertEquals("www.bonjour.com", virtualServers.get(0).getName());
         Assert.assertEquals("www.hallo.com", virtualServers.get(1).getName());
@@ -373,7 +384,7 @@ public class ModelServiceTest extends AbstractSpringTest {
                         .addDomain(new Domain().setName("www.hello.com")));
         slbRepository.add(s2);
         s2 = slbRepository.get(s2.getName());
-        updated = slbRepository.getById(slbId);
+        updated = slbRepository.getById(created.getId());
         Assert.assertEquals(updated.getVirtualServers().size(), 2);
         Assert.assertEquals(s2.getVirtualServers().size(), 3);
     }

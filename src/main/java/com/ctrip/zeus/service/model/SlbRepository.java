@@ -21,7 +21,7 @@ public interface SlbRepository extends Repository {
 
     Slb getByVirtualServer(Long virtualServerId) throws Exception;
 
-    List<Slb> listByGroupServerAndGroup(String groupServerIp, Long groupId) throws Exception;
+    List<Slb> listByGroupServer(String groupServerIp) throws Exception;
 
     List<Slb> listByGroups(Long[] groupIds) throws Exception;
 
@@ -30,4 +30,6 @@ public interface SlbRepository extends Repository {
     Slb update(Slb slb) throws Exception;
 
     int delete(Long slbId) throws Exception;
+
+    void updateVersion(Long slbId) throws Exception;
 }

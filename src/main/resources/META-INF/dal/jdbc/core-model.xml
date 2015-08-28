@@ -15,7 +15,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="update-by-id" type="UPDATE">
+            <query name="update-by-id" type="UPDATE" batch="true">
                 <param name="id"/>
                 <statement>
                     <![CDATA[
@@ -65,7 +65,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-app-id" type="SELECT">
+            <query name="find-by-app-id" type="SELECT" multiple="true">
                 <param name="app-id"/>
                 <statement>
                     <![CDATA[
@@ -502,7 +502,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-ip" type="SELECT" multiple="true">
+            <query name="find-by-ip" type="SELECT">
                 <param name="ip"/>
                 <statement>
                     <![CDATA[
@@ -625,7 +625,8 @@
             </query>
         </query-defs>
     </entity>
-    <entity name="archive-group" table="archive_group" alias="aa" do-class="ArchiveGroupDo">
+    <entity name="archive-group" table="archive_group" alias="ag" do-class="ArchiveGroupDo">
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="delete-by-group" type="DELETE">
                 <param name="group-id"/>
@@ -645,6 +646,18 @@
                         WHERE  <FIELD name='group-id'/> = ${group-id}
                         ORDER BY <FIELD name='version'/> DESC
                         LIMIT 1
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-max-version-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM (SELECT * from archive_group
+                        WHERE group_id in <IN>${ids}</IN>
+                        ORDER BY version DESC) ag
+                    GROUP BY group_id
                     ]]>
                 </statement>
             </query>
@@ -673,6 +686,7 @@
         </query-defs>
     </entity>
     <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="delete-by-slb" type="DELETE">
                 <param name="slb-id"/>
@@ -692,6 +706,18 @@
                         WHERE  <FIELD name='slb-id'/> = ${slb-id}
                         ORDER BY <FIELD name='version'/> DESC
                         LIMIT 1
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-max-version-by-slbs" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM (SELECT * from archive_slb
+                        WHERE slb_id in <IN>${ids}</IN>
+                        ORDER BY version DESC) as3
+                    GROUP BY slb_id
                     ]]>
                 </statement>
             </query>

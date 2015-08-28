@@ -105,15 +105,13 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public void updateVirtualServers(VirtualServer[] virtualServers) throws Exception {
-        slbModelValidator.validateVirtualServer(virtualServers);
-        for (VirtualServer virtualServer : virtualServers) {
-            if (virtualServer.getId() == null || virtualServer.getId().longValue() <= 0L)
-                throw new ValidationException("Invalid virtual server id.");
-            SlbVirtualServerDo d = C.toSlbVirtualServerDo(virtualServer.getId(), virtualServer.getSlbId(), virtualServer);
-            slbVirtualServerDao.insertOrUpdate(d);
-            syncDomains(d.getId(), virtualServer.getDomains());
-        }
+    public void updateVirtualServer(VirtualServer virtualServer) throws Exception {
+        slbModelValidator.validateVirtualServer(new VirtualServer[]{virtualServer});
+        if (virtualServer.getId() == null || virtualServer.getId().longValue() <= 0L)
+            throw new ValidationException("Invalid virtual server id.");
+        SlbVirtualServerDo d = C.toSlbVirtualServerDo(virtualServer.getId(), virtualServer.getSlbId(), virtualServer);
+        slbVirtualServerDao.insertOrUpdate(d);
+        syncDomains(d.getId(), virtualServer.getDomains());
     }
 
     @Override

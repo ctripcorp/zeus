@@ -2,11 +2,14 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServerList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.model.GroupRepository;
+import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +30,10 @@ import java.util.List;
 public class VirtualServerResource {
     @Resource
     private VirtualServerRepository virtualServerRepository;
+    @Resource
+    private SlbRepository slbRepository;
+    @Resource
+    private GroupRepository groupRepository;
     @Resource
     private ResponseHandler responseHandler;
 
@@ -71,6 +78,7 @@ public class VirtualServerResource {
         if (virtualServer.getSlbId() == null)
             throw new ValidationException("Slb id is not provided.");
         virtualServer = virtualServerRepository.addVirtualServer(virtualServer.getSlbId(), virtualServer);
+        slbRepository.updateVersion(virtualServer.getSlbId());
         return responseHandler.handle(virtualServer, hh.getMediaType());
 
     }
@@ -84,7 +92,9 @@ public class VirtualServerResource {
         VirtualServer virtualServer = parseVirtualServer(hh.getMediaType(), vs);
         if (virtualServer.getSlbId() == null)
             throw new ValidationException("Slb id is not provided.");
-        virtualServerRepository.updateVirtualServers(new VirtualServer[]{virtualServer});
+        virtualServerRepository.updateVirtualServer(virtualServer);
+        slbRepository.updateVersion(virtualServer.getSlbId());
+        groupRepository.updateVersionByVirtualServer(virtualServer.getId());
         return responseHandler.handle(virtualServer, hh.getMediaType());
     }
 
@@ -97,7 +107,12 @@ public class VirtualServerResource {
                                         @QueryParam("vsId") Long vsId) throws Exception {
         if (vsId == null)
             throw new ValidationException("vsId is required.");
+        Slb slb = slbRepository.getByVirtualServer(vsId);
+        if (slb == null) {
+            throw new ValidationException("Cannot find slb with vsId " + vsId + ".");
+        }
         virtualServerRepository.deleteVirtualServer(vsId);
+        slbRepository.updateVersion(slb.getId());
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
     }
 

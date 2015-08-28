@@ -65,7 +65,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getAllGroupStatus(Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        List<Group> groups = groupRepository.list(slbId, null);
+        List<Group> groups = groupRepository.list(slbId);
         List<Long> list = new ArrayList<>();
         Set<Long> groupIds = new HashSet<>();
         for (Group group : groups) {

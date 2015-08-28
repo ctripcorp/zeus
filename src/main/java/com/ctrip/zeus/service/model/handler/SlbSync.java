@@ -12,5 +12,7 @@ public interface SlbSync {
 
     Long update(Slb slb) throws Exception;
 
+    void updateVersion(Long slbId) throws Exception;
+
     int delete(Long slbId) throws Exception;
 }

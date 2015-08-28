@@ -3,15 +3,14 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +26,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private GroupQuery groupQuery;
     @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
     private GroupMemberRepository groupMemberRepository;
@@ -37,51 +38,35 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list() throws Exception {
-        List<Group> list = new ArrayList<>();
-        for (Group group : groupQuery.getAll()) {
-            cascadeVsAndGs(group);
-            list.add(group);
-        }
-        return list;
+        Set<Long> groupIds = groupCriteriaQuery.queryAll();
+        return list(groupIds.toArray(new Long[groupIds.size()]));
     }
 
     @Override
-    public List<Group> list(Long slbId, String virtualServerName) throws Exception {
-        if (virtualServerName == null)
-            return groupQuery.getBySlb(slbId);
-
-        List<Group> result = new ArrayList<>();
-        VirtualServer vs = virtualServerRepository.getBySlbAndName(slbId, virtualServerName);
-        Long[] groupIds = virtualServerRepository.findGroupsByVirtualServer(vs.getId());
-        for (Group group : groupQuery.batchGet(groupIds)) {
-            cascadeVsAndGs(group);
-            result.add(group);
-        }
-        return result;
+    public List<Group> list(Long slbId) throws Exception {
+        Set<Long> groupIds = groupCriteriaQuery.queryBySlbId(slbId);
+        return list(groupIds.toArray(new Long[groupIds.size()]));
     }
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
-        List<Group> result = groupQuery.batchGet(ids);
-        for (Group group : result) {
-            cascadeVsAndGs(group);
-        }
-        return result;
+        return archiveService.getLatestGroups(ids);
     }
 
     @Override
     public Group getById(Long id) throws Exception {
-        return cascadeVsAndGs(groupQuery.getById(id));
+        return archiveService.getLatestGroup(id);
     }
 
     @Override
     public Group get(String groupName) throws Exception {
-        return cascadeVsAndGs(groupQuery.get(groupName));
+        return getById(groupCriteriaQuery.queryByName(groupName));
     }
 
     @Override
-    public Group getByAppId(String appId) throws Exception {
-        return cascadeVsAndGs(groupQuery.getByAppId(appId));
+    public List<Group> listByAppId(String appId) throws Exception {
+        Set<Long> groupIds = groupCriteriaQuery.queryByAppId(appId);
+        return archiveService.getLatestGroups(groupIds.toArray(new Long[groupIds.size()]));
     }
 
     @Override
@@ -90,9 +75,8 @@ public class GroupRepositoryImpl implements GroupRepository {
         Long groupId = groupSync.add(group);
         group.setId(groupId);
         syncVsAndGs(group);
-        Group result = getById(groupId);
-        archiveService.archiveGroup(result);
-        return result;
+        archive(groupId);
+        return getById(groupId);
 
     }
 
@@ -102,9 +86,23 @@ public class GroupRepositoryImpl implements GroupRepository {
         Long groupId = groupSync.update(group);
         group.setId(groupId);
         syncVsAndGs(group);
-        Group result = getById(groupId);
-        archiveService.archiveGroup(result);
-        return result;
+        archive(groupId);
+        return getById(groupId);
+    }
+
+    @Override
+    public void updateVersion(Long groupId) throws Exception {
+        groupSync.updateVersion(new Long[]{groupId});
+        archive(groupId);
+    }
+
+    @Override
+    public void updateVersionByVirtualServer(Long vsId) throws Exception {
+        Set<Long> groupIds = groupCriteriaQuery.queryByVsId(vsId);
+        groupSync.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
+        for (Long groupId : groupIds) {
+            archive(groupId);
+        }
     }
 
     @Override
@@ -113,27 +111,23 @@ public class GroupRepositoryImpl implements GroupRepository {
         cascadeRemoveByGroup(groupId);
         int count = groupSync.delete(groupId);
         return count;
-
     }
 
     @Override
     public List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception {
         Long[] groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
-        List<Group> result = groupQuery.batchGet(groupIds);
-        for (Group group : result) {
-            cascadeVsAndGs(group);
-        }
-        return result;
+        return list(groupIds);
     }
 
-    private Group cascadeVsAndGs(Group group) throws Exception {
+    private void archive(Long groupId) throws Exception {
+        Group group = groupQuery.getById(groupId);
         for (GroupVirtualServer groupVirtualServer : virtualServerRepository.listGroupVsByGroups(new Long[]{group.getId()})) {
             group.addGroupVirtualServer(groupVirtualServer);
         }
         for (GroupServer server : groupMemberRepository.listGroupServersByGroup(group.getId())) {
             group.addGroupServer(server);
         }
-        return group;
+        archiveService.archiveGroup(group);
     }
 
     private void syncVsAndGs(Group group) throws Exception {

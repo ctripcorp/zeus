@@ -41,7 +41,7 @@ public class MysqlDbServer implements SmartLifecycle {
 
         port = Integer.parseInt(System.getProperty("mysql.test-port", "3336"));
         userName = "root";
-        password = "";
+        password = "root";
 
         mysqldResource = startDatabase(databaseDir, port, userName, password);
 
@@ -99,7 +99,7 @@ public class MysqlDbServer implements SmartLifecycle {
         database_options.put(MysqldResourceI.PORT, Integer.toString(port));
         database_options.put(MysqldResourceI.INITIALIZE_USER, "true");
         database_options.put(MysqldResourceI.INITIALIZE_USER_NAME, userName);
-        database_options.put(MysqldResourceI.INITIALIZE_PASSWORD, password);
+        database_options.put(MysqldResourceI.INITIALIZE_PASSWORD, "root");
         mysqldResource.start("test-mysqld-thread" + new Random().nextInt(), database_options);
         if (!mysqldResource.isRunning()) {
             throw new RuntimeException("MySQL did not start.");
@@ -114,7 +114,7 @@ public class MysqlDbServer implements SmartLifecycle {
         try {
             String url = "jdbc:mysql://localhost:" + port + "/" + dbName
                     + "?" + "createDatabaseIfNotExist=true";
-            conn = DriverManager.getConnection(url, userName, password);
+            conn = DriverManager.getConnection(url, userName, "root");
 
             runScript(conn, new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(tablesSqlFile))));
 

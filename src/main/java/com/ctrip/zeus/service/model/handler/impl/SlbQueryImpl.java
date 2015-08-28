@@ -42,10 +42,8 @@ public class SlbQueryImpl implements SlbQuery {
 
     @Override
     public Slb getBySlbServer(String slbServerIp) throws Exception {
-        List<SlbServerDo> list = slbServerDao.findAllByIp(slbServerIp, SlbServerEntity.READSET_FULL);
-        if (list.size() == 0)
-            return null;
-        return getById(list.get(0).getSlbId());
+        SlbServerDo ss = slbServerDao.findByIp(slbServerIp, SlbServerEntity.READSET_FULL);
+        return ss == null ? null : getById(ss.getSlbId());
     }
 
     @Override

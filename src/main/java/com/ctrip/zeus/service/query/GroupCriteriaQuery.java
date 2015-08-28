@@ -7,9 +7,15 @@ import java.util.Set;
  */
 public interface GroupCriteriaQuery {
 
+    Long queryByName(String name) throws Exception;
+
+    Set<Long> queryByAppId(String appId) throws Exception;
+
     Set<Long> queryAll() throws Exception;
 
     Set<Long> queryByDomain(String domain) throws Exception;
 
     Set<Long> queryBySlbId(Long slbId) throws Exception;
+
+    Set<Long> queryByVsId(Long vsId) throws Exception;
 }

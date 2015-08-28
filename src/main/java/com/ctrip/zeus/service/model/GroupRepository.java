@@ -13,7 +13,7 @@ public interface GroupRepository extends Repository {
 
     List<Group> list() throws Exception;
 
-    List<Group> list(Long slbId, String virtualServerName) throws Exception;
+    List<Group> list(Long slbId) throws Exception;
 
     List<Group> list(Long[] ids) throws Exception;
 
@@ -21,11 +21,15 @@ public interface GroupRepository extends Repository {
 
     Group get(String groupName) throws Exception;
 
-    Group getByAppId(String appId) throws Exception;
+    List<Group> listByAppId(String appId) throws Exception;
 
     Group add(Group group) throws Exception;
 
     Group update(Group group) throws Exception;
+
+    void updateVersion(Long groupId) throws Exception;
+
+    void updateVersionByVirtualServer(Long vsId) throws Exception;
 
     int delete(Long groupId) throws Exception;
 
