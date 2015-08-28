@@ -41,7 +41,7 @@ public class MysqlDbServer implements SmartLifecycle {
 
         port = Integer.parseInt(System.getProperty("mysql.test-port", "3336"));
         userName = "root";
-        password = "root";
+        password = "";
 
         mysqldResource = startDatabase(databaseDir, port, userName, password);
 
