@@ -2,7 +2,9 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
+import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
@@ -21,6 +23,8 @@ import java.util.Set;
 public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private GroupSync groupSync;
+    @Resource
+    private GroupQuery groupQuery;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
@@ -71,7 +75,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         Long groupId = groupSync.add(group);
         group.setId(groupId);
         syncVsAndGs(group);
-        archiveService.archiveGroup(groupId);
+        archive(groupId);
         return getById(groupId);
 
     }
@@ -82,14 +86,14 @@ public class GroupRepositoryImpl implements GroupRepository {
         Long groupId = groupSync.update(group);
         group.setId(groupId);
         syncVsAndGs(group);
-        archiveService.archiveGroup(groupId);
+        archive(groupId);
         return getById(groupId);
     }
 
     @Override
     public void updateVersion(Long groupId) throws Exception {
         groupSync.updateVersion(new Long[]{groupId});
-        archiveService.archiveGroup(groupId);
+        archive(groupId);
     }
 
     @Override
@@ -97,7 +101,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         Set<Long> groupIds = groupCriteriaQuery.queryByVsId(vsId);
         groupSync.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         for (Long groupId : groupIds) {
-            archiveService.archiveGroup(groupId);
+            archive(groupId);
         }
     }
 
@@ -113,6 +117,17 @@ public class GroupRepositoryImpl implements GroupRepository {
     public List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception {
         Long[] groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
         return list(groupIds);
+    }
+
+    private void archive(Long groupId) throws Exception {
+        Group group = groupQuery.getById(groupId);
+        for (GroupVirtualServer groupVirtualServer : virtualServerRepository.listGroupVsByGroups(new Long[]{group.getId()})) {
+            group.addGroupVirtualServer(groupVirtualServer);
+        }
+        for (GroupServer server : groupMemberRepository.listGroupServersByGroup(group.getId())) {
+            group.addGroupServer(server);
+        }
+        archiveService.archiveGroup(group);
     }
 
     private void syncVsAndGs(Group group) throws Exception {

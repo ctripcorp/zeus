@@ -10,6 +10,7 @@ import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.GroupMemberRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -28,6 +29,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     private NginxServerDao nginxServerDao;
     @Resource
     private SlbSync slbSync;
+    @Resource
+    private SlbQuery slbQuery;
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
@@ -90,7 +93,7 @@ public class SlbRepositoryImpl implements SlbRepository {
         Long slbId = slbSync.add(slb);
         slb.setId(slbId);
         addVs(slb);
-        archiveService.archiveSlb(slbId);
+        archive(slbId);
         Slb result = getById(slbId);
 
         for (SlbServer slbServer : result.getSlbServers()) {
@@ -107,7 +110,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     public Slb update(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
         Long slbId = slbSync.update(slb);
-        archiveService.archiveSlb(slbId);
+        archive(slbId);
         Slb result = getById(slbId);
 
         for (SlbServer slbServer : result.getSlbServers()) {
@@ -131,7 +134,15 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Override
     public void updateVersion(Long slbId) throws Exception {
         slbSync.updateVersion(slbId);
-        archiveService.archiveSlb(slbId);
+        archive(slbId);
+    }
+
+    private void archive(Long slbId) throws Exception {
+        Slb slb = slbQuery.getById(slbId);
+        for (VirtualServer virtualServer : virtualServerRepository.listVirtualServerBySlb(slb.getId())) {
+            slb.addVirtualServer(virtualServer);
+        }
+        archiveService.archiveSlb(slb);
     }
 
     private List<Slb> batchGet(Long[] slbIds) throws Exception {

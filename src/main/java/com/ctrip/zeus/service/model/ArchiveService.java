@@ -11,10 +11,6 @@ import java.util.List;
  */
 public interface ArchiveService {
 
-    void archiveSlb(Long slbId) throws Exception;
-
-    void archiveGroup(Long groupId) throws Exception;
-
     int archiveSlb(Slb slb) throws Exception;
 
     int archiveGroup(Group app) throws Exception;

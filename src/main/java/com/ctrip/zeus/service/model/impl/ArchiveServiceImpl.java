@@ -4,10 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.ArchiveService;
-import com.ctrip.zeus.service.model.GroupMemberRepository;
-import com.ctrip.zeus.service.model.VirtualServerRepository;
-import com.ctrip.zeus.service.model.handler.GroupQuery;
-import com.ctrip.zeus.service.model.handler.SlbQuery;
+
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
 
@@ -23,29 +20,9 @@ import java.util.List;
 @Component("archiveService")
 public class ArchiveServiceImpl implements ArchiveService {
     @Resource
-    private SlbQuery slbQuery;
-    @Resource
-    private GroupQuery groupQuery;
-    @Resource
-    private VirtualServerRepository virtualServerRepository;
-    @Resource
-    private GroupMemberRepository groupMemberRepository;
-    @Resource
     private ArchiveSlbDao archiveSlbDao;
     @Resource
     private ArchiveGroupDao archiveGroupDao;
-
-    @Override
-    public void archiveSlb(Long slbId) throws Exception {
-        Slb slb = slbQuery.getById(slbId);
-        archiveSlb(cascadeVs(slb));
-    }
-
-    @Override
-    public void archiveGroup(Long groupId) throws Exception {
-        Group group = groupQuery.getById(groupId);
-        archiveGroup(cascadeVsAndGs(group));
-    }
 
     @Override
     public int archiveSlb(Slb slb) throws Exception {
@@ -169,22 +146,5 @@ public class ArchiveServiceImpl implements ArchiveService {
     public Archive getGroupArchive(Long groupId, int version) throws Exception {
         ArchiveGroupDo archive = archiveGroupDao.findByGroupAndVersion(groupId, version, ArchiveGroupEntity.READSET_FULL);
         return C.toGroupArchive(archive);
-    }
-
-    private Slb cascadeVs(Slb slb) throws Exception {
-        for (VirtualServer virtualServer : virtualServerRepository.listVirtualServerBySlb(slb.getId())) {
-            slb.addVirtualServer(virtualServer);
-        }
-        return slb;
-    }
-
-    private Group cascadeVsAndGs(Group group) throws Exception {
-        for (GroupVirtualServer groupVirtualServer : virtualServerRepository.listGroupVsByGroups(new Long[]{group.getId()})) {
-            group.addGroupVirtualServer(groupVirtualServer);
-        }
-        for (GroupServer server : groupMemberRepository.listGroupServersByGroup(group.getId())) {
-            group.addGroupServer(server);
-        }
-        return group;
     }
 }
