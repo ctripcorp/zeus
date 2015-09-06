@@ -209,7 +209,7 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public List<NginxResponse> dyops(Long slbId, List<DyUpstreamOpsData> dyups) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
-        Slb slb = slbRepository.getById(slbId);
+        Slb slb = activateService.getActivatedSlb(slbId);
         boolean flag = false;
 
         List<SlbServer> slbServers = slb.getSlbServers();

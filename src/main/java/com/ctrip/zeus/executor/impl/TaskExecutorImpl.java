@@ -128,9 +128,13 @@ public class TaskExecutorImpl implements TaskExecutor {
                 nginxService.loadAll(slbId,slbVersion);
             }else {
                 //dyups
-                Collection<Group> dyupsGroupList = groups.values();
                 boolean isFail = false;
-                for (Group group : dyupsGroupList){
+                for (Long groupId : groupList){
+                    Group group = groups.get(groupId);
+                    if (group==null){
+                        logger.warn("[dyups-group] Not found groupId:"+groupId +"in groupMap");
+                        continue;
+                    }
                     List<DyUpstreamOpsData> dyUpstreamOpsDataList = buildService.buildUpstream(slbId,allDownServers,allUpGroupServers,group);
                     List<NginxResponse> responses = nginxService.dyops(slbId,dyUpstreamOpsDataList);
                     for (NginxResponse response : responses){
