@@ -93,7 +93,7 @@ public class GroupResource {
             filtered.retainAll(groupCriteriaQuery.queryBySlbId(slbId));
         }
         for (Group group : groupRepository.list(filtered.toArray(new Long[filtered.size()]))) {
-            groupList.addGroup(group);
+            groupList.addGroup(getGroupByType(group, type));
         }
         groupList.setTotal(groupList.getGroups().size());
         return responseHandler.handle(groupList, hh.getMediaType());
