@@ -71,8 +71,15 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         for (Group group : groups) {
             groupIds.add(group.getId());
         }
-        groupIds.addAll(activeConfService.getGroupIdsBySlbId(slbId));
+        Set<Long> activated = activeConfService.getGroupIdsBySlbId(slbId);
+        if (activated != null)
+        {
+            groupIds.addAll(activated);
+        }
         list.addAll(groupIds);
+        if ( list.size() == 0 ){
+            return result;
+        }
         GroupStatusList appStatus = getGroupStatus(list, slbId);
         result.addAll(appStatus.getGroupStatuses());
         return result;
