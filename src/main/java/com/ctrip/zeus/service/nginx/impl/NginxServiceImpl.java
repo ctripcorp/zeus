@@ -98,7 +98,17 @@ public class NginxServiceImpl implements NginxService {
 
     @Override
     public boolean writeALLToDisk(Long slbId, Integer slbVersion ,List<Long> vsIds) throws Exception {
-        return writeALLToDisk(slbId,slbVersion,vsIds, null);
+        List<NginxResponse> responses = new ArrayList<>();
+        if (!writeALLToDisk(slbId,slbVersion,vsIds, responses)){
+            for (NginxResponse response : responses){
+                if (!response.getSucceed()){
+                    throw new Exception("Write To Disk Failed! Detail: "+String.format(NginxResponse.JSON,response));
+                }
+            }
+            throw new Exception("Write To Disk Failed! Detail: None.");
+        }else{
+            return true;
+        }
     }
 
     @Override
