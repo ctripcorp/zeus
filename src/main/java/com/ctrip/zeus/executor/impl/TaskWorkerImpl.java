@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import javax.annotation.Resource;   
 
 /**
  * Created by fanqq on 2015/7/31.
@@ -22,6 +22,7 @@ public class TaskWorkerImpl implements TaskWorker {
     @Resource
     TaskExecutor taskExecutor;
     Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static int initFailCount = 0;
     @Override
     public void execute() {
         try {
@@ -42,7 +43,11 @@ public class TaskWorkerImpl implements TaskWorker {
         Slb slb = slbRepository.getBySlbServer(S.getIp());
         if (slb != null && slb.getId()!=null){
             workerSlbId = slb.getId();
+            initFailCount = 0;
         }else{
+            if (++initFailCount > 3){
+                workerSlbId = null;
+            }
             logger.error("Can Not Found Slb by Local Ip. TaskExecutor is not working!");
         }
     }
