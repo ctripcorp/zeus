@@ -71,6 +71,15 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
+    public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
+        List<VirtualServer> result = new ArrayList<>();
+        for (SlbVirtualServerDo slbVirtualServerDo : slbVirtualServerDao.findAllByIds(vsIds, SlbVirtualServerEntity.READSET_FULL)) {
+            result.add(createVirtualServer(slbVirtualServerDo));
+        }
+        return result;
+    }
+
+    @Override
     public VirtualServer getById(Long virtualServerId) throws Exception {
         SlbVirtualServerDo d = slbVirtualServerDao.findByPK(virtualServerId, SlbVirtualServerEntity.READSET_FULL);
         if (d == null)

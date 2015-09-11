@@ -571,6 +571,7 @@
     <entity name="slb-virtual-server" table="slb_virtual_server" alias="svs" do-class="SlbVirtualServerDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -598,6 +599,16 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='id'/> in <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>

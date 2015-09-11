@@ -20,6 +20,8 @@ public interface VirtualServerRepository {
 
     List<VirtualServer> listAll() throws Exception;
 
+    List<VirtualServer> listAll(Long[] vsIds) throws Exception;
+
     VirtualServer getById(Long virtualServerId) throws Exception;
 
     VirtualServer getBySlbAndName(Long slbId, String virtualServerName) throws Exception;
