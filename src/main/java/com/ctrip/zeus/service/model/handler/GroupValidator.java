@@ -10,6 +10,8 @@ import java.util.List;
  */
 public interface GroupValidator {
 
+    boolean exists(Long groupId) throws Exception;
+
     void validate(Group group) throws Exception;
 
     void removable(Long groupId) throws Exception;

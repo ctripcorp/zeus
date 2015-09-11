@@ -27,6 +27,13 @@ public class DefaultGroupValidator implements GroupValidator {
     private SlbVirtualServerDao slbVirtualServerDao;
     @Resource
     private GroupSlbDao groupSlbDao;
+    @Resource
+    private GroupDao groupDao;
+
+    @Override
+    public boolean exists(Long groupId) throws Exception {
+        return groupDao.findById(groupId, GroupEntity.READSET_FULL) != null;
+    }
 
     @Override
     public void validate(Group group) throws Exception {

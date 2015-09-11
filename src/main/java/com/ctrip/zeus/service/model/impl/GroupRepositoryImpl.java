@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.model.impl;
 
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
@@ -55,7 +56,10 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group getById(Long id) throws Exception {
-        return archiveService.getLatestGroup(id);
+        if (groupModelValidator.exists(id)) {
+            return archiveService.getLatestGroup(id);
+        }
+        throw new ValidationException("Group does not exist.");
     }
 
     @Override
