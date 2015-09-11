@@ -55,11 +55,18 @@ public class VirtualServerResource {
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
                          @QueryParam("slbId") Long slbId,
+                         @TrimmedQueryParam("domain") String domain,
                          @TrimmedQueryParam("tag") String tag,
                          @TrimmedQueryParam("pname") String pname,
                          @TrimmedQueryParam("pvalue") String pvalue) throws Exception {
         VirtualServerList vslist = new VirtualServerList();
         Set<Long> filtered = virtualServerCriteriaQuery.queryAll();
+        if (slbId != null) {
+            filtered.retainAll(virtualServerCriteriaQuery.queryBySlbId(slbId));
+        }
+        if (domain != null) {
+            filtered.retainAll(virtualServerCriteriaQuery.queryByDomain(domain));
+        }
         if (tag != null) {
             filtered.retainAll(tagService.query(tag, "vs"));
         }
@@ -68,9 +75,6 @@ public class VirtualServerResource {
                 filtered.retainAll(propertyService.query(pname, pvalue, "vs"));
             else
                 filtered.retainAll(propertyService.query(pname, "vs"));
-        }
-        if (slbId != null) {
-            filtered.retainAll(virtualServerCriteriaQuery.queryBySlbId(slbId));
         }
         for (VirtualServer virtualServer : virtualServerRepository.listAll(filtered.toArray(new Long[filtered.size()]))) {
             vslist.addVirtualServer(virtualServer);

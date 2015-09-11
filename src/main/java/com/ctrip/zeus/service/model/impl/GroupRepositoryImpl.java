@@ -102,7 +102,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public void updateVersionByVirtualServer(Long vsId) throws Exception {
-        Set<Long> groupIds = groupCriteriaQuery.queryByVsId(vsId);
+        Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[] {vsId});
         groupSync.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         for (Long groupId : groupIds) {
             archive(groupId);

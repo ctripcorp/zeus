@@ -1,8 +1,6 @@
 package com.ctrip.zeus.service.query.impl;
 
-import com.ctrip.zeus.dal.core.SlbVirtualServerDao;
-import com.ctrip.zeus.dal.core.SlbVirtualServerDo;
-import com.ctrip.zeus.dal.core.SlbVirtualServerEntity;
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +13,10 @@ import java.util.Set;
  */
 @Component("virtualServerCriteriaQuery")
 public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQuery {
-
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
+    @Resource
+    private SlbDomainDao slbDomainDao;
 
     @Override
     public Set<Long> queryAll() throws Exception {
@@ -33,6 +32,15 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
         Set<Long> result = new HashSet<>();
         for (SlbVirtualServerDo slbVirtualServerDo : slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL)) {
             result.add(slbVirtualServerDo.getId());
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Long> queryByDomain(String domain) throws Exception {
+        Set<Long> result = new HashSet<>();
+        for (SlbDomainDo slbDomainDo : slbDomainDao.findAllByName(domain, SlbDomainEntity.READSET_FULL)) {
+            result.add(slbDomainDo.getSlbVirtualServerId());
         }
         return result;
     }

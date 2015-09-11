@@ -13,9 +13,7 @@ public interface GroupCriteriaQuery {
 
     Set<Long> queryAll() throws Exception;
 
-    Set<Long> queryByDomain(String domain) throws Exception;
-
     Set<Long> queryBySlbId(Long slbId) throws Exception;
 
-    Set<Long> queryByVsId(Long vsId) throws Exception;
+    Set<Long> queryByVsIds(Long[] vsIds) throws Exception;
 }
