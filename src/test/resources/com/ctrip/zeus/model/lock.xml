@@ -1,6 +1,8 @@
 <model>
     <lock-status>
         <key>test</key>
+        <owner>123456789012</owner>
+        <server>192.168.1.1</server>
         <created-time>2013-05-20 13:34:00</created-time>
     </lock-status>
 
