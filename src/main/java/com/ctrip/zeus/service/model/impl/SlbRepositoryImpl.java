@@ -14,6 +14,7 @@ import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -35,6 +36,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private VirtualServerRepository virtualServerRepository;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
     private GroupMemberRepository groupMemberRepository;
     @Resource
@@ -137,7 +140,8 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     private Slb archive(Long slbId) throws Exception {
         Slb slb = slbQuery.getById(slbId);
-        for (VirtualServer virtualServer : virtualServerRepository.listVirtualServerBySlb(slb.getId())) {
+        Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
+        for (VirtualServer virtualServer : virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()]))) {
             slb.addVirtualServer(virtualServer);
         }
         archiveService.archiveSlb(slb);

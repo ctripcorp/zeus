@@ -10,15 +10,5 @@ import java.util.List;
  */
 public interface GroupQuery {
 
-    Group get(String name) throws Exception;
-
     Group getById(Long id) throws Exception;
-
-    Group getByAppId(String appId) throws Exception;
-
-    List<Group> batchGet(Long[] ids) throws Exception;
-
-    List<Group> getAll() throws Exception;
-
-    List<Group> getBySlb(Long slbId) throws Exception;
 }

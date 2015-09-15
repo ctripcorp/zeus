@@ -9,8 +9,6 @@ import java.util.List;
  */
 public interface GroupMemberRepository {
 
-    List<String> listGroupServersBySlb(Long slbId) throws Exception;
-
     List<String> listGroupServerIpsByGroup(Long groupId) throws Exception;
 
     List<GroupServer> listGroupServersByGroup(Long groupId) throws Exception;

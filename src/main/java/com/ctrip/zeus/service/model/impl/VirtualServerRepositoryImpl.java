@@ -49,29 +49,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public List<GroupVirtualServer> listGroupVsBySlb(Long slbId) throws Exception {
-        return batchFetch(groupSlbDao.findAllBySlb(slbId, GroupSlbEntity.READSET_FULL));
-    }
-
-    @Override
-    public List<VirtualServer> listVirtualServerBySlb(Long slbId) throws Exception {
-        List<VirtualServer> result = new ArrayList<>();
-        for (SlbVirtualServerDo d : slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL)) {
-            result.add(createVirtualServer(d));
-        }
-        return result;
-    }
-
-    @Override
-    public List<VirtualServer> listAll() throws Exception {
-        List<VirtualServer> result = new ArrayList<>();
-        for (SlbVirtualServerDo d : slbVirtualServerDao.findAll(SlbVirtualServerEntity.READSET_FULL)) {
-            result.add(createVirtualServer(d));
-        }
-        return result;
-    }
-
-    @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
         List<VirtualServer> result = new ArrayList<>();
         for (SlbVirtualServerDo slbVirtualServerDo : slbVirtualServerDao.findAllByIds(vsIds, SlbVirtualServerEntity.READSET_FULL)) {
@@ -86,24 +63,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         if (d == null)
             return null;
         return createVirtualServer(d);
-    }
-
-    @Override
-    public VirtualServer getBySlbAndName(Long slbId, String virtualServerName) throws Exception {
-        SlbVirtualServerDo d = slbVirtualServerDao.findBySlbAndName(slbId, virtualServerName, SlbVirtualServerEntity.READSET_FULL);
-        if (d == null)
-            return null;
-        return createVirtualServer(d);
-    }
-
-    @Override
-    public Long[] findGroupsByVirtualServer(Long virtualServerId) throws Exception {
-        List<GroupSlbDo> l = groupSlbDao.findAllByVirtualServer(virtualServerId, GroupSlbEntity.READSET_FULL);
-        Long[] result = new Long[l.size()];
-        for (int i = 0; i < l.size(); i++) {
-            result[i] = l.get(i).getGroupId();
-        }
-        return result;
     }
 
     @Override
