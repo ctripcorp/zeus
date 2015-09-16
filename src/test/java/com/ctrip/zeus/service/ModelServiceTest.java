@@ -258,15 +258,6 @@ public class ModelServiceTest extends AbstractSpringTest {
     }
 
     @Test
-    public void testGroupVsByVsId() throws Exception {
-        List<GroupVirtualServer> groupVirtualServers = virtualServerRepository.listGroupVsByVsId(defaultSlb.getVirtualServers().get(0).getId());
-        Assert.assertEquals(6, groupVirtualServers.size());
-        for (GroupVirtualServer groupVirtualServer : groupVirtualServers) {
-            Assert.assertNotNull(groupVirtualServer.getVirtualServer());
-        }
-    }
-
-    @Test
     public void testVirtualServerGet() throws Exception {
         virtualServerRepository.addVirtualServer(defaultSlb.getId(), new VirtualServer().setSlbId(defaultSlb.getId()).setName("www.testGet1.com").setSsl(false).setPort("80")
                 .addDomain(new Domain().setName("www.testGet1.com")));

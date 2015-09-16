@@ -44,11 +44,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public List<GroupVirtualServer> listGroupVsByVsId(Long virtualServerId) throws Exception {
-        return batchFetch(groupSlbDao.findAllByVirtualServer(virtualServerId, GroupSlbEntity.READSET_FULL));
-    }
-
-    @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
         List<VirtualServer> result = new ArrayList<>();
         for (SlbVirtualServerDo slbVirtualServerDo : slbVirtualServerDao.findAllByIds(vsIds, SlbVirtualServerEntity.READSET_FULL)) {

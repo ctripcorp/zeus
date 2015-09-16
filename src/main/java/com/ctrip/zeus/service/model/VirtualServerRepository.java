@@ -12,8 +12,6 @@ public interface VirtualServerRepository {
 
     List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception;
 
-    List<GroupVirtualServer> listGroupVsByVsId(Long virtualServerId) throws Exception;
-
     List<VirtualServer> listAll(Long[] vsIds) throws Exception;
 
     VirtualServer getById(Long virtualServerId) throws Exception;
