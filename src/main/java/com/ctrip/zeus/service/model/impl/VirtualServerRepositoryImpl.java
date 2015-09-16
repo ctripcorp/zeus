@@ -8,6 +8,7 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -15,15 +16,15 @@ import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/7/27.
  */
 @Component("virtualServerRepository")
 public class VirtualServerRepositoryImpl implements VirtualServerRepository {
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
     private GroupSlbDao groupSlbDao;
     @Resource
@@ -107,6 +108,11 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception {
+        Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
+        List<VirtualServer> check = listAll(checkIds.toArray(new Long[checkIds.size()]));
+        check.add(virtualServer);
+        slbModelValidator.validateVirtualServer(check.toArray(new VirtualServer[check.size()]));
+
         SlbVirtualServerDo d = C.toSlbVirtualServerDo(0L, slbId, virtualServer);
         slbVirtualServerDao.insert(d);
         syncDomains(d.getId(), virtualServer.getDomains());
@@ -115,9 +121,18 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void updateVirtualServer(VirtualServer virtualServer) throws Exception {
-        slbModelValidator.validateVirtualServer(new VirtualServer[]{virtualServer});
         if (virtualServer.getId() == null || virtualServer.getId().longValue() <= 0L)
             throw new ValidationException("Invalid virtual server id.");
+        Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
+        Map<Long, VirtualServer> check = new HashMap<>();
+        for (VirtualServer vs : listAll(checkIds.toArray(new Long[checkIds.size()]))) {
+            check.put(vs.getId(), vs);
+        }
+        if (!check.keySet().contains(virtualServer.getId()))
+            throw new ValidationException("Virtual server doesn't exist, please new one first.");
+        check.put(virtualServer.getId(), virtualServer);
+        slbModelValidator.validateVirtualServer(check.values().toArray(new VirtualServer[check.size()]));
+
         SlbVirtualServerDo d = C.toSlbVirtualServerDo(virtualServer.getId(), virtualServer.getSlbId(), virtualServer);
         slbVirtualServerDao.insertOrUpdate(d);
         syncDomains(d.getId(), virtualServer.getDomains());
