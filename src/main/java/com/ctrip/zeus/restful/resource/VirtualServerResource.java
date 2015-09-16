@@ -153,7 +153,7 @@ public class VirtualServerResource {
             try {
                 vs = DefaultJsonParser.parse(VirtualServer.class, virtualServer);
             } catch (Exception e) {
-                throw new Exception("Group cannot be parsed.");
+                throw new Exception("Virtual server cannot be parsed.");
             }
         }
         return vs;
