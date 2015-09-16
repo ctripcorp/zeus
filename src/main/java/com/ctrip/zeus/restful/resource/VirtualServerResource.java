@@ -12,6 +12,7 @@ import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
@@ -41,6 +42,8 @@ public class VirtualServerResource {
     private GroupRepository groupRepository;
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private TagService tagService;
     @Resource
@@ -119,7 +122,8 @@ public class VirtualServerResource {
             throw new ValidationException("Slb id is not provided.");
         virtualServerRepository.updateVirtualServer(virtualServer);
         slbRepository.updateVersion(virtualServer.getSlbId());
-        groupRepository.updateVersionByVirtualServer(virtualServer.getId());
+        Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[] {virtualServer.getId()});
+        groupRepository.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         return responseHandler.handle(virtualServer, hh.getMediaType());
     }
 

@@ -93,8 +93,7 @@ public class SlbRepositoryImpl implements SlbRepository {
         Long slbId = slbSync.add(slb);
         slb.setId(slbId);
         addVs(slb);
-        archive(slbId);
-        Slb result = getById(slbId);
+        Slb result = archive(slbId);
 
         for (SlbServer slbServer : result.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
@@ -110,8 +109,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     public Slb update(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
         Long slbId = slbSync.update(slb);
-        archive(slbId);
-        Slb result = getById(slbId);
+        Slb result = archive(slbId);
 
         for (SlbServer slbServer : result.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
@@ -132,17 +130,18 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public void updateVersion(Long slbId) throws Exception {
+    public Slb updateVersion(Long slbId) throws Exception {
         slbSync.updateVersion(slbId);
-        archive(slbId);
+        return archive(slbId);
     }
 
-    private void archive(Long slbId) throws Exception {
+    private Slb archive(Long slbId) throws Exception {
         Slb slb = slbQuery.getById(slbId);
         for (VirtualServer virtualServer : virtualServerRepository.listVirtualServerBySlb(slb.getId())) {
             slb.addVirtualServer(virtualServer);
         }
         archiveService.archiveSlb(slb);
+        return slb;
     }
 
     private List<Slb> batchGet(Long[] slbIds) throws Exception {

@@ -3,6 +3,7 @@ package com.ctrip.zeus.service;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.util.ModelAssert;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
@@ -18,6 +19,7 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/3/24.
@@ -28,6 +30,8 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Resource
     private GroupRepository groupRepository;
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private SlbRepository slbRepository;
     @Resource
@@ -90,7 +94,7 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testListSlbsByGroups() throws Exception {
-        List<Slb> slbs = slbRepository.listByGroups(new Long[]{testGroup.getId(), testGroup.getId() + 1});
+        List<Slb> slbs = slbRepository.listByGroups(new Long[]{testGroup.getId(), testGroup.getId() + 1 });
         Assert.assertEquals(1, slbs.size());
     }
 
@@ -294,7 +298,7 @@ public class ModelServiceTest extends AbstractSpringTest {
 
         gvs.add(new GroupVirtualServer().setPath("/testUpdateGroupVsNew").setVirtualServer(new VirtualServer().setId(defaultSlb.getVirtualServers().get(0).getId())));
         virtualServerRepository.updateGroupVirtualServers(testGroup.getId(), gvs);
-        groupRepository.updateVersion(testGroup.getId());
+        groupRepository.updateVersion(new Long[] {testGroup.getId()});
         Assert.assertEquals(gvs.size(), groupRepository.get(testGroup.getName()).getGroupVirtualServers().size());
         Assert.assertEquals(gvs.size(), virtualServerRepository.listGroupVsByGroups(new Long[]{testGroup.getId()}).size());
 
@@ -305,14 +309,14 @@ public class ModelServiceTest extends AbstractSpringTest {
         gvs.get(0).setVirtualServer(new VirtualServer().setId(defaultSlb.getVirtualServers().get(1).getId()));
         try {
             virtualServerRepository.updateGroupVirtualServers(testGroup.getId(), gvs);
-            groupRepository.updateVersion(testGroup.getId());
+            groupRepository.updateVersion(new Long[] {testGroup.getId()});
             Assert.assertTrue(false);
         } catch (Exception ex) {
             Assert.assertTrue(ex instanceof ValidationException);
         }
         gvs.remove(gvs.get(1));
         virtualServerRepository.updateGroupVirtualServers(testGroup.getId(), gvs);
-        groupRepository.updateVersion(testGroup.getId());
+        groupRepository.updateVersion(new Long[] {testGroup.getId()});
         gvs = virtualServerRepository.listGroupVsByGroups(new Long[]{testGroup.getId()});
 
         Assert.assertEquals(1, gvs.size());
@@ -348,7 +352,8 @@ public class ModelServiceTest extends AbstractSpringTest {
         virtualServers.get(1).setName("www.hello.com.cn");
         for (VirtualServer virtualServer : virtualServers) {
             virtualServerRepository.updateVirtualServer(virtualServer);
-            groupRepository.updateVersionByVirtualServer(virtualServer.getId());
+            Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[] {virtualServer.getId()});
+            groupRepository.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         }
         slbRepository.updateVersion(created.getId());
 
