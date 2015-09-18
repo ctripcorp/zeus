@@ -62,7 +62,7 @@ public class HealthCheckConf {
             if (group.getSsl()){
                 b.append(" port=").append(80);
             }
-            b.append(" type=http").append(";\n")
+            b.append(" type=http default_down=false").append(";\n")
                     .append("check_keepalive_requests 100").append(";\n")
                     .append("check_http_send \"")
                     .append("GET ").append(h.getUri()).append(" HTTP/1.0\\r\\n")
