@@ -102,8 +102,8 @@ public class SlbResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addSlb")
     public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
-        slbRepository.add(parseSlb(hh.getMediaType(), slb));
-        return Response.ok().build();
+        Slb s = slbRepository.add(parseSlb(hh.getMediaType(), slb));
+        return responseHandler.handle(s, hh.getMediaType());
     }
 
     @POST
@@ -115,11 +115,11 @@ public class SlbResource {
         DistLock lock = dbLockFactory.newLock(s.getName() + "_updateSlb");
         try {
             lock.lock();
-            slbRepository.update(s);
+            s = slbRepository.update(s);
         } finally {
             lock.unlock();
         }
-        return Response.ok().build();
+        return responseHandler.handle(s, hh.getMediaType());
     }
 
     @GET

@@ -8,9 +8,14 @@ import com.ctrip.zeus.model.entity.VirtualServerList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.ctrip.zeus.tag.PropertyService;
+import com.ctrip.zeus.tag.TagService;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -21,6 +26,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/8/5.
@@ -35,6 +41,14 @@ public class VirtualServerResource {
     @Resource
     private GroupRepository groupRepository;
     @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private TagService tagService;
+    @Resource
+    private PropertyService propertyService;
+    @Resource
     private ResponseHandler responseHandler;
 
     @GET
@@ -43,15 +57,29 @@ public class VirtualServerResource {
     @Authorize(name = "getAllVses")
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
-                         @QueryParam("slbId") Long slbId) throws Exception {
+                         @QueryParam("slbId") Long slbId,
+                         @TrimmedQueryParam("domain") String domain,
+                         @TrimmedQueryParam("tag") String tag,
+                         @TrimmedQueryParam("pname") String pname,
+                         @TrimmedQueryParam("pvalue") String pvalue) throws Exception {
         VirtualServerList vslist = new VirtualServerList();
-        List<VirtualServer> result ;
-        if (slbId != null){
-            result = virtualServerRepository.listVirtualServerBySlb(slbId);
-        }else {
-            result = virtualServerRepository.listAll();
+        Set<Long> filtered = virtualServerCriteriaQuery.queryAll();
+        if (slbId != null) {
+            filtered.retainAll(virtualServerCriteriaQuery.queryBySlbId(slbId));
         }
-        for (VirtualServer virtualServer : result) {
+        if (domain != null) {
+            filtered.retainAll(virtualServerCriteriaQuery.queryByDomain(domain));
+        }
+        if (tag != null) {
+            filtered.retainAll(tagService.query(tag, "vs"));
+        }
+        if (pname != null) {
+            if (pvalue != null)
+                filtered.retainAll(propertyService.query(pname, pvalue, "vs"));
+            else
+                filtered.retainAll(propertyService.query(pname, "vs"));
+        }
+        for (VirtualServer virtualServer : virtualServerRepository.listAll(filtered.toArray(new Long[filtered.size()]))) {
             vslist.addVirtualServer(virtualServer);
         }
         return responseHandler.handle(vslist, hh.getMediaType());
@@ -94,7 +122,8 @@ public class VirtualServerResource {
             throw new ValidationException("Slb id is not provided.");
         virtualServerRepository.updateVirtualServer(virtualServer);
         slbRepository.updateVersion(virtualServer.getSlbId());
-        groupRepository.updateVersionByVirtualServer(virtualServer.getId());
+        Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[] {virtualServer.getId()});
+        groupRepository.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         return responseHandler.handle(virtualServer, hh.getMediaType());
     }
 
@@ -124,7 +153,7 @@ public class VirtualServerResource {
             try {
                 vs = DefaultJsonParser.parse(VirtualServer.class, virtualServer);
             } catch (Exception e) {
-                throw new Exception("Group cannot be parsed.");
+                throw new Exception("Virtual server cannot be parsed.");
             }
         }
         return vs;

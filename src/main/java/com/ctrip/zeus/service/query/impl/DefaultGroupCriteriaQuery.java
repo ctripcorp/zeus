@@ -45,21 +45,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
         }
         return groupIds;
     }
-
-    @Override
-    public Set<Long> queryByDomain(String domain) throws Exception {
-        List<SlbDomainDo> dlist = slbDomainDao.findAllByName(domain, SlbDomainEntity.READSET_FULL);
-        Long[] vsIds = new Long[dlist.size()];
-        for (int i = 0; i < dlist.size(); i++) {
-            vsIds[i] = dlist.get(i).getSlbVirtualServerId();
-        }
-        Set<Long> groupIds = new HashSet<>();
-        for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByVirtualServers(vsIds, GroupSlbEntity.READSET_FULL)) {
-            groupIds.add(groupSlbDo.getGroupId());
-        }
-        return groupIds;
-    }
-
+    
     @Override
     public Set<Long> queryBySlbId(Long slbId) throws Exception {
         Set<Long> groupIds = new HashSet<>();
@@ -70,12 +56,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
-    public Set<Long> queryByVsId(Long vsId) throws Exception {
-        List<SlbDomainDo> dlist = slbDomainDao.findAllBySlbVirtualServer(vsId, SlbDomainEntity.READSET_FULL);
-        Long[] vsIds = new Long[dlist.size()];
-        for (int i = 0; i < dlist.size(); i++) {
-            vsIds[i] = dlist.get(i).getSlbVirtualServerId();
-        }
+    public Set<Long> queryByVsIds(Long[] vsIds) throws Exception {
         Set<Long> groupIds = new HashSet<>();
         for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByVirtualServers(vsIds, GroupSlbEntity.READSET_FULL)) {
             groupIds.add(groupSlbDo.getGroupId());

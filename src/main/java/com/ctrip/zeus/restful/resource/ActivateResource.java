@@ -1,26 +1,19 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
-import com.ctrip.zeus.exceptions.NotFoundException;
 import com.ctrip.zeus.exceptions.SlbValidatorException;
 import com.ctrip.zeus.executor.TaskManager;
-import com.ctrip.zeus.lock.DbLockFactory;
-import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.activate.GroupActivateConfRewrite;
-import com.ctrip.zeus.service.build.BuildInfoService;
-import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.nginx.NginxService;
-import com.ctrip.zeus.service.task.TaskService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.validate.SlbValidator;
+import com.ctrip.zeus.tag.TagBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.task.entity.TaskResultList;
@@ -52,15 +45,7 @@ import java.util.Set;
 public class ActivateResource {
 
     @Resource
-    private ActivateService activateService;
-    @Resource
-    private NginxService nginxAgentService;
-    @Resource
-    private BuildInfoService buildInfoService;
-    @Resource
-    private BuildService buildService;
-    @Resource
-    private DbLockFactory dbLockFactory;
+    private TagBox tagBox;
     @Resource
     private SlbRepository slbRepository;
     @Resource
@@ -173,6 +158,11 @@ public class ActivateResource {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
+        try {
+            tagBox.tagging("active", "group", _groupIds.toArray(new Long[_groupIds.size()]));
+            tagBox.untagging("deactive", "group", _groupIds.toArray(new Long[_groupIds.size()]));
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(resultList,hh.getMediaType());
 
     }

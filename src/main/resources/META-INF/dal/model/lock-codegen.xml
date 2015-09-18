@@ -6,6 +6,8 @@
   </entity>
   <entity name="lock-status">
     <element name="key" value-type="String" />
+    <element name="owner" value-type="long" />
+    <element name="server" value-type="String" />
     <element name="created-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
   </entity>
   <entity name="lock-list">

@@ -10,15 +10,5 @@ import java.util.List;
  */
 public interface SlbQuery {
 
-    Slb get(String slbName) throws Exception;
-
     Slb getById(Long id) throws Exception;
-
-    Slb getBySlbServer(String slbServerIp) throws Exception;
-
-    List<Slb> batchGet(Long[] ids) throws Exception;
-
-    List<Slb> getAll() throws Exception;
-
-    List<Slb> getByGroups(Long[] groupIds) throws Exception;
 }

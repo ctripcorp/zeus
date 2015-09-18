@@ -12,19 +12,9 @@ public interface VirtualServerRepository {
 
     List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception;
 
-    List<GroupVirtualServer> listGroupVsByVsId(Long virtualServerId) throws Exception;
-
-    List<GroupVirtualServer> listGroupVsBySlb(Long slbId) throws Exception;
-
-    List<VirtualServer> listVirtualServerBySlb(Long slbId) throws Exception;
-
-    List<VirtualServer> listAll() throws Exception;
+    List<VirtualServer> listAll(Long[] vsIds) throws Exception;
 
     VirtualServer getById(Long virtualServerId) throws Exception;
-
-    VirtualServer getBySlbAndName(Long slbId, String virtualServerName) throws Exception;
-
-    Long[] findGroupsByVirtualServer(Long virtualServerId) throws Exception;
 
     VirtualServer addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception;
 

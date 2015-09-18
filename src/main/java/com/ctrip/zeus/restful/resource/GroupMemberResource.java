@@ -60,7 +60,7 @@ public class GroupMemberResource {
         for (GroupServer groupServer : gsl.getGroupServers()) {
             groupMemberRepository.addGroupServer(gsl.getGroupId(), groupServer);
         }
-        groupRepository.updateVersion(gsl.getGroupId());
+        groupRepository.updateVersion(new Long[] {gsl.getGroupId()});
         return responseHandler.handle("Successfully added group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -75,7 +75,7 @@ public class GroupMemberResource {
         for (GroupServer groupServer : gsl.getGroupServers()) {
             groupMemberRepository.updateGroupServer(gsl.getGroupId(), groupServer);
         }
-        groupRepository.updateVersion(gsl.getGroupId());
+        groupRepository.updateVersion(new Long[] {gsl.getGroupId()});
         return responseHandler.handle("Successfully updated group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -90,7 +90,7 @@ public class GroupMemberResource {
         for (String ip : ips) {
             groupMemberRepository.removeGroupServer(groupId, ip);
         }
-        groupRepository.updateVersion(groupId);
+        groupRepository.updateVersion(new Long[] {groupId});
         return responseHandler.handle("Successfully removed " + Joiner.on(",").join(ips) + " from group with id " + groupId + ".", hh.getMediaType());
     }
 

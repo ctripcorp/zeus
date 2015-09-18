@@ -88,6 +88,7 @@
     <var name="key-private-key" value-type="String" key-member="private-key" />
     <primary-key name="PRIMARY" members="private_key" />
     <index name="time idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -128,6 +129,7 @@
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -169,6 +171,7 @@
     <index name="role_idx" members="role_name ASC" />
     <index name="res_idx" members="resource_name ASC" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -209,6 +212,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="role_idx" unique="true" members="role_name ASC" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -249,6 +253,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="usr_name_idx" unique="true" members="user_name ASC" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -290,6 +295,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="usr_idx" members="user_name ASC" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -487,6 +493,8 @@
   </entity>
   <entity name="dist-lock" table="dist_lock" alias="dl">
     <member name="lock-key" field="lock_key" value-type="String" length="255" nullable="false" key="true" />
+    <member name="owner" field="owner" value-type="long" length="19" />
+    <member name="server" field="server" value-type="String" length="50" />
     <member name="created-time" field="created_time" value-type="long" length="19" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-lock-key" value-type="String" key-member="lock-key" />
@@ -790,7 +798,6 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="slb_virtual_server_id_version" unique="true" members="slb_virtual_server_id ASC, version ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
-    <index name="idx_slb_id_virtual_server_id_version" members="slb_id ASC, slb_virtual_server_id ASC, version ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -833,7 +840,6 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="slb_virtual_server_id_version" unique="true" members="slb_virtual_server_id ASC, version ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
-    <index name="idx_slb_id_virtual_server_id_version" members="slb_id ASC, slb_virtual_server_id ASC, version ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

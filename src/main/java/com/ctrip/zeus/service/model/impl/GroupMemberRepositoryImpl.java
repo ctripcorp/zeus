@@ -16,29 +16,7 @@ import java.util.List;
 @Component("groupMemberRepository")
 public class GroupMemberRepositoryImpl implements GroupMemberRepository {
     @Resource
-    private GroupSlbDao groupSlbDao;
-    @Resource
     private GroupServerDao groupServerDao;
-
-    @Override
-    public List<String> listGroupServersBySlb(Long slbId) throws Exception {
-        List<String> result = new ArrayList<>();
-        List<GroupSlbDo> groupSlbDos = groupSlbDao.findAllBySlb(slbId, GroupSlbEntity.READSET_FULL);
-        if (groupSlbDos.size() == 0)
-            return result;
-        List<GroupServerDo> groupServerDos = new ArrayList<>();
-        for (GroupSlbDo groupSlbDo : groupSlbDos) {
-            groupServerDos.addAll(groupServerDao.findAllByGroup(groupSlbDo.getGroupId(), GroupServerEntity.READSET_FULL));
-        }
-        if (groupServerDos.size() == 0)
-            return result;
-        for (GroupServerDo groupServerDo : groupServerDos) {
-            if (result.contains(groupServerDo.getIp()))
-                continue;
-            result.add(groupServerDo.getIp());
-        }
-        return result;
-    }
 
     @Override
     public List<String> listGroupServerIpsByGroup(Long groupId) throws Exception {

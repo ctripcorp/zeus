@@ -1,28 +1,16 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
-import com.ctrip.zeus.exceptions.NotFoundException;
 import com.ctrip.zeus.executor.TaskManager;
-import com.ctrip.zeus.lock.DbLockFactory;
-import com.ctrip.zeus.lock.DistLock;
-import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
-import com.ctrip.zeus.service.build.BuildInfoService;
-import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.nginx.NginxService;
-import com.ctrip.zeus.service.task.TaskService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
+import com.ctrip.zeus.tag.TagBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.task.entity.TaskResultList;
-import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -37,7 +25,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -49,17 +36,7 @@ import java.util.Set;
 @Path("/deactivate")
 public class DeactivateResource {
     @Resource
-    private ActivateService activateService;
-    @Resource
-    private NginxService nginxAgentService;
-    @Resource
-    private BuildInfoService buildInfoService;
-    @Resource
-    private BuildService buildService;
-    @Resource
-    private DbLockFactory dbLockFactory;
-    @Resource
-    private SlbRepository slbRepository;
+    private TagBox tagBox;
     @Resource
     private GroupRepository groupRepository;
     @Resource
@@ -75,22 +52,18 @@ public class DeactivateResource {
 
     @GET
     @Path("/group")
-    @Authorize(name="deactivate")
-    public Response deactivateGroup(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("groupId") List<Long> groupIds,  @QueryParam("groupName") List<String> groupNames)throws Exception{
+    @Authorize(name = "deactivate")
+    public Response deactivateGroup(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") List<Long> groupIds, @QueryParam("groupName") List<String> groupNames) throws Exception {
         List<Long> _groupIds = new ArrayList<>();
         List<Long> _slbIds = new ArrayList<>();
 
-        if ( groupIds!=null && !groupIds.isEmpty() )
-        {
+        if (groupIds != null && !groupIds.isEmpty()) {
             _groupIds.addAll(groupIds);
         }
-        if ( groupNames!=null && !groupNames.isEmpty() )
-        {
-            for (String groupName : groupNames)
-            {
+        if (groupNames != null && !groupNames.isEmpty()) {
+            for (String groupName : groupNames) {
                 Group group = groupRepository.get(groupName);
-                if (group == null)
-                {
+                if (group == null) {
                     continue;
                 }
                 _groupIds.add(group.getId());
@@ -99,8 +72,8 @@ public class DeactivateResource {
 
         List<OpsTask> tasks = new ArrayList<>();
         for (Long id : _groupIds) {
-            Set<Long> slbIds =activeConfService.getSlbIdsByGroupId(id);
-            for (Long slbId : slbIds){
+            Set<Long> slbIds = activeConfService.getSlbIdsByGroupId(id);
+            for (Long slbId : slbIds) {
                 OpsTask task = new OpsTask();
                 task.setGroupId(id);
                 task.setOpsType(TaskOpsType.DEACTIVATE_GROUP);
@@ -109,14 +82,20 @@ public class DeactivateResource {
             }
         }
         List<Long> taskIds = taskManager.addTask(tasks);
-        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
+        List<TaskResult> results = taskManager.getResult(taskIds, 30000L);
 
         TaskResultList resultList = new TaskResultList();
-        for (TaskResult t : results){
+        for (TaskResult t : results) {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
-        return responseHandler.handle(resultList,hh.getMediaType());
+
+        try {
+            tagBox.tagging("deactive", "group", _groupIds.toArray(new Long[_groupIds.size()]));
+            tagBox.untagging("active", "group", _groupIds.toArray(new Long[_groupIds.size()]));
+        } catch (Exception ex) {
+        }
+        return responseHandler.handle(resultList, hh.getMediaType());
     }
 
 }

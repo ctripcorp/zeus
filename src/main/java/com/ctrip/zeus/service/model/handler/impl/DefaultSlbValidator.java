@@ -60,7 +60,7 @@ public class DefaultSlbValidator implements SlbValidator {
 
     private Set<String> getPortWhiteList() {
         Set<String> result = new HashSet<>();
-        String whiteList = portWhiteList.getValue();
+        String whiteList = portWhiteList.get();
         for (String s : whiteList.split(",")) {
             result.add(s.trim());
         }

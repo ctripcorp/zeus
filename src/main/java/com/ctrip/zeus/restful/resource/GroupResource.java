@@ -15,6 +15,7 @@ import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.util.AssertUtils;
@@ -52,6 +53,8 @@ public class GroupResource {
     private PropertyService propertyService;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     @GET
     @Path("/groups")
@@ -82,7 +85,8 @@ public class GroupResource {
                 filtered.retainAll(propertyService.query(pname, "group"));
         }
         if (domain != null) {
-            filtered.retainAll(groupCriteriaQuery.queryByDomain(domain));
+            Set<Long> vsIds = virtualServerCriteriaQuery.queryByDomain(domain);
+            filtered.retainAll(groupCriteriaQuery.queryByVsIds(vsIds.toArray(new Long[vsIds.size()])));
         }
         if (slbName != null || slbId != null) {
             if (slbId == null) {
