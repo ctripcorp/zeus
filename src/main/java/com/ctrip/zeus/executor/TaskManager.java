@@ -54,7 +54,13 @@ public class TaskManager {
                 }
                 return results;
             } else if (System.currentTimeMillis() > deadLine) {
-                throw new Exception("Get Operation Result TimeOut, Operation is still in task list .TaskIds: "+taskIds.toString());
+                List<Long> cancelFail = new ArrayList<>();
+                for (Long tid : taskIds){
+                    if (!taskService.taskCancel(tid)){
+                        cancelFail.add(tid);
+                    }
+                }
+                throw new Exception("Waiting Timeout.Task canceled. TasksIds: "+taskIds.toString() + "Cancel Fail TaskIds: "+cancelFail.toString());
             }
         }
     }

@@ -23,4 +23,6 @@ public interface TaskService {
 
     public void updateTasks(List<OpsTask> tasks) throws Exception;
     public OpsTaskList find(Date fromDate,String opsType,Long targetSlbId)throws Exception;
+
+    public boolean taskCancel(Long taskId)throws Exception;
 }

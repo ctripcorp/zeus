@@ -67,7 +67,11 @@ public class TaskExecutorImpl implements TaskExecutor {
     public void execute(Long slbId) {
         DistLock buildLock = dbLockFactory.newLock( "TaskWorker_" + slbId );
         try {
-//            buildLock.lock(lockTimeout.get());
+            List<OpsTask> pendingTasks = taskService.getPendingTasks(slbId);
+            if (pendingTasks.size()==0){
+                return;
+            }
+
             if (buildLock.tryLock()){
                 executeJob(slbId);
             }

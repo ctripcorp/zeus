@@ -2,6 +2,7 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="task" table="task" alias="tq">
         <var name="ids" value-type="Long[]"/>
+        <var name="expect-status" value-type="String"/>
         <query-defs>
             <query name="find-by-target-slb-id-and-status" type="SELECT" multiple="true">
                 <param name="status"/>
@@ -34,6 +35,19 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='create-time'/> < ${create-time} LIMIT 1000
+                    ]]>
+                </statement>
+            </query>
+            <query name="compare-and-update" type="UPDATE">
+                <param name="status"/>
+                <param name="id"/>
+                <param name="expect-status"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='status'/> = ${status}
+                    WHERE <FIELD name='id'/> = ${id}
+                    AND  <FIELD name='status'/> = ${expect-status}
                     ]]>
                 </statement>
             </query>
