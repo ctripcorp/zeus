@@ -335,7 +335,7 @@ CREATE TABLE IF NOT EXISTS `m_vs_content` (
   `vs_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'vs_archive_id',
   `content` mediumtext NOT NULL COMMENT 'vs_archive_content',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
-  UNIQUE KEY `vs_id` (`vs_id`),
+  PRIMARY KEY (`vs_id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='metadata table of virtual server content';
 
@@ -497,9 +497,11 @@ CREATE TABLE IF NOT EXISTS `report` (
 -- Dumping structure for table r_vs_domain
 DROP TABLE IF EXISTS `r_vs_domain`;
 CREATE TABLE IF NOT EXISTS `r_vs_domain` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
   `vs_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb_virtual_server_id',
   `domain` varchar(200) NOT NULL DEFAULT 'Undefined' COMMENT 'slb_domain_name',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
   UNIQUE KEY `vs_id_domain` (`vs_id`,`domain`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of vs and domain';
@@ -510,9 +512,11 @@ CREATE TABLE IF NOT EXISTS `r_vs_domain` (
 -- Dumping structure for table r_vs_slb
 DROP TABLE IF EXISTS `r_vs_slb`;
 CREATE TABLE IF NOT EXISTS `r_vs_slb` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
   `vs_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb_virtual_server_id',
   `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb_id',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
   UNIQUE KEY `slb_id_vs_id` (`slb_id`,`vs_id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of slb and vs';
