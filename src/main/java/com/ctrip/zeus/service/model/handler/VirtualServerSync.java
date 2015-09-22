@@ -19,4 +19,7 @@ public interface VirtualServerSync {
 
     @Deprecated
     List<Long> port(VirtualServer[] vses) throws Exception;
+
+    @Deprecated
+    void port(VirtualServer vs) throws Exception;
 }

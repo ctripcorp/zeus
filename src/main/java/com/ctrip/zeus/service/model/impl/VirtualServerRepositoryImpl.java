@@ -150,6 +150,13 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         return virtualServerEntityManager.port(vses);
     }
 
+    @Override
+    public void portVirtualServerRel(Long vsId) throws Exception {
+        SlbVirtualServerDo d = slbVirtualServerDao.findByPK(vsId, SlbVirtualServerEntity.READSET_FULL);
+        VirtualServer vs = createVirtualServer(d);
+        virtualServerEntityManager.port(vs);
+    }
+
     private List<GroupVirtualServer> batchFetch(List<GroupSlbDo> list) throws Exception {
         List<GroupVirtualServer> result = new ArrayList<>();
         for (GroupSlbDo groupSlbDo : list) {

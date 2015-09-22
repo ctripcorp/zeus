@@ -30,4 +30,7 @@ public interface VirtualServerRepository {
 
     @Deprecated
     List<Long> portVirtualServerRel() throws Exception;
+
+    @Deprecated
+    void portVirtualServerRel(Long vsId) throws Exception;
 }

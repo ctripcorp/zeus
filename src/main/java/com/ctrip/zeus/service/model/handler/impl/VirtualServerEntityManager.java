@@ -71,7 +71,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         SlbVirtualServerDo[] vses = new SlbVirtualServerDo[size];
         for (int i = 0; i < size; i++) {
             relSlbs[i] = new RelVsSlbDo().setVsId(vsIds[i]);
-            relDomains[i]  = new RelVsDomainDo().setVsId(vsIds[i]);
+            relDomains[i] = new RelVsDomainDo().setVsId(vsIds[i]);
             vses[i] = new SlbVirtualServerDo().setId(vsIds[i]);
         }
         rVsSlbDao.deleteByVs(relSlbs);
@@ -94,9 +94,18 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         return fails;
     }
 
+    @Override
+    public void port(VirtualServer vs) throws Exception {
+        mVsContentDao.insertOrUpdate(new MetaVsContentDo().setVsId(vs.getId()).setContent(ContentWriters.writeVirtualServerContent(vs)));
+        RelVsSlbDo d = new RelVsSlbDo().setVsId(vs.getId()).setSlbId(vs.getSlbId());
+        rVsSlbDao.deleteByVs(d);
+        rVsSlbDao.insert(d);
+        relSyncDomain(vs.getId(), vs.getDomains());
+    }
+
     private void relSyncDomain(Long vsId, List<Domain> domains) throws DalException {
         // add/remove domains
-        List<RelVsDomainDo> originDomains = rVsDomainDao.findAllDomainsByVses(new Long[] {vsId}, RVsDomainEntity.READSET_FULL);
+        List<RelVsDomainDo> originDomains = rVsDomainDao.findAllDomainsByVses(new Long[]{vsId}, RVsDomainEntity.READSET_FULL);
         Map<String, RelVsDomainDo> uniqueCheck = Maps.uniqueIndex(
                 originDomains, new Function<RelVsDomainDo, String>() {
                     @Override

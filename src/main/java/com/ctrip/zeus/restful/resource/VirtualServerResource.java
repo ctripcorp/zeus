@@ -149,14 +149,23 @@ public class VirtualServerResource {
     @GET
     @Path("/vs/upgradeAll")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "deleteVs")
-    public Response deleteVirtualServer(@Context HttpHeaders hh,
-                                        @Context HttpServletRequest request) throws Exception {
+    public Response upgradeAll(@Context HttpHeaders hh,
+                               @Context HttpServletRequest request) throws Exception {
         List<Long> vsIds = virtualServerRepository.portVirtualServerRel();
         if (vsIds.size() == 0)
-            return responseHandler.handle("Successfully ported all virtual server relations", hh.getMediaType());
+            return responseHandler.handle("Successfully ported all virtual server relations.", hh.getMediaType());
         else
             return responseHandler.handle("Error occurs when porting virtual server relations on id " + Joiner.on(',').join(vsIds) + ".", hh.getMediaType());
+    }
+
+    @GET
+    @Path("/vs/upgrade")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeSingle(@Context HttpHeaders hh,
+                                  @Context HttpServletRequest request,
+                                  @QueryParam("vsId") Long vsId) throws Exception {
+        virtualServerRepository.portVirtualServerRel(vsId);
+        return responseHandler.handle("Successfully ported virtual server relations.", hh.getMediaType());
     }
 
     private VirtualServer parseVirtualServer(MediaType mediaType, String virtualServer) throws Exception {
