@@ -13,5 +13,8 @@
     <file path="core-tag.xml"/>
     <file path="core-task.xml"/>
     <file path="core-server.xml"/>
+
+    <file path="rel-vs.xml"/>
+    <file path="meta-vs.xml"/>
 </manifest>
 

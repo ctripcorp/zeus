@@ -16,6 +16,7 @@ import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -122,7 +123,7 @@ public class VirtualServerResource {
             throw new ValidationException("Slb id is not provided.");
         virtualServerRepository.updateVirtualServer(virtualServer);
         slbRepository.updateVersion(virtualServer.getSlbId());
-        Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[] {virtualServer.getId()});
+        Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[]{virtualServer.getId()});
         groupRepository.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         return responseHandler.handle(virtualServer, hh.getMediaType());
     }
@@ -143,6 +144,28 @@ public class VirtualServerResource {
         virtualServerRepository.deleteVirtualServer(vsId);
         slbRepository.updateVersion(slb.getId());
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
+    }
+
+    @GET
+    @Path("/vs/upgradeAll")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeAll(@Context HttpHeaders hh,
+                               @Context HttpServletRequest request) throws Exception {
+        List<Long> vsIds = virtualServerRepository.portVirtualServerRel();
+        if (vsIds.size() == 0)
+            return responseHandler.handle("Successfully ported all virtual server relations.", hh.getMediaType());
+        else
+            return responseHandler.handle("Error occurs when porting virtual server relations on id " + Joiner.on(',').join(vsIds) + ".", hh.getMediaType());
+    }
+
+    @GET
+    @Path("/vs/upgrade")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeSingle(@Context HttpHeaders hh,
+                                  @Context HttpServletRequest request,
+                                  @QueryParam("vsId") Long vsId) throws Exception {
+        virtualServerRepository.portVirtualServerRel(vsId);
+        return responseHandler.handle("Successfully ported virtual server relations.", hh.getMediaType());
     }
 
     private VirtualServer parseVirtualServer(MediaType mediaType, String virtualServer) throws Exception {

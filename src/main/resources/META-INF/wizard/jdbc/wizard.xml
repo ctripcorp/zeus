@@ -46,6 +46,11 @@
          <table name="property"/>
          <table name="property_item"/>
          <table name="property_key"/>
+         <table name="r_vs_domain"/>
+         <table name="snap_server_group"/>
+         <table name="r_vs_slb"/>
+         <table name="task"/>
+         <table name="m_vs_content"/>
       </group>
    </jdbc>
 </wizard>
