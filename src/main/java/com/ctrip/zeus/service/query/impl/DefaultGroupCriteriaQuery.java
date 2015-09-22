@@ -18,8 +18,6 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     @Resource
     private GroupDao groupDao;
     @Resource
-    private SlbDomainDao slbDomainDao;
-    @Resource
     private GroupSlbDao groupSlbDao;
 
     @Override

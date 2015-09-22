@@ -162,9 +162,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         for (GroupSlbDo groupSlbDo : list) {
             GroupVirtualServer gvs = toGroupVirtualServer(groupSlbDo);
             result.add(gvs);
-            SlbVirtualServerDo svsd = slbVirtualServerDao.findByPK(groupSlbDo.getSlbVirtualServerId(), SlbVirtualServerEntity.READSET_FULL);
-            if (svsd != null)
-                gvs.setVirtualServer(getById(svsd.getId()));
+            gvs.setVirtualServer(getById(groupSlbDo.getSlbVirtualServerId()));
         }
         return result;
     }
