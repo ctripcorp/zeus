@@ -745,6 +745,37 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="m-vs-content" table="m_vs_content" alias="mvc">
+    <member name="vs-id" field="vs_id" value-type="long" length="19" nullable="false" />
+    <member name="content" field="content" value-type="String" length="16777215" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <primary-key />
+    <index name="vs_id" unique="true" members="vs_id ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <statement><![CDATA[DELETE FROM <TABLE/>]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="nginx-conf" table="nginx_conf" alias="nc">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
@@ -1070,6 +1101,68 @@
         <param name="key-id" />
         <statement><![CDATA[DELETE FROM <TABLE/>
         WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="r-vs-domain" table="r_vs_domain" alias="rvd">
+    <member name="vs-id" field="vs_id" value-type="long" length="19" nullable="false" />
+    <member name="domain" field="domain" value-type="String" length="200" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <primary-key />
+    <index name="vs_id_domain" unique="true" members="vs_id ASC, domain ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <statement><![CDATA[DELETE FROM <TABLE/>]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="r-vs-slb" table="r_vs_slb" alias="rvs">
+    <member name="vs-id" field="vs_id" value-type="long" length="19" nullable="false" />
+    <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <primary-key />
+    <index name="slb_id_vs_id" unique="true" members="slb_id ASC, vs_id ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <statement><![CDATA[DELETE FROM <TABLE/>]]></statement>
       </query>
     </query-defs>
   </entity>

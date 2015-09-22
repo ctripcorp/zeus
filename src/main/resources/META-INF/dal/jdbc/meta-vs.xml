@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="m-vs-content" table="m_vs_content" alias="mvc" do-class="MetaVsContentDo">
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="find-by-id" type="SELECT">
+                <param name="vs-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert-or-update" type="INSERT" batch="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        content = values(content),
+                        <FIELD name="data-change-last-time"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="slb-virtual-server" table="slb_virtual_server" alias="svs" do-class="SlbVirtualServerDo">
+        <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert-or-update" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        slb_id = values(slb_id),
+                        name = values(name),
+                        port = values(port),
+                        is_ssl = values(is_ssl)
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-id" type="DELETE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-and-name" type="SELECT">
+                <param name="slb-id"/>
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        AND <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>
+

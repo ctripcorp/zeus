@@ -16,7 +16,9 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
     @Resource
-    private SlbDomainDao slbDomainDao;
+    private RVsSlbDao rVsSlbDao;
+    @Resource
+    private RVsDomainDao rVsDomainDao;
 
     @Override
     public Set<Long> queryAll() throws Exception {
@@ -30,8 +32,8 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     @Override
     public Set<Long> queryBySlbId(Long slbId) throws Exception {
         Set<Long> result = new HashSet<>();
-        for (SlbVirtualServerDo slbVirtualServerDo : slbVirtualServerDao.findAllBySlb(slbId, SlbVirtualServerEntity.READSET_FULL)) {
-            result.add(slbVirtualServerDo.getId());
+        for (RelVsSlbDo relVsSlbDo : rVsSlbDao.findAllVsesBySlb(slbId, RVsSlbEntity.READSET_FULL)) {
+            result.add(relVsSlbDo.getVsId());
         }
         return result;
     }
@@ -39,8 +41,8 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     @Override
     public Set<Long> queryByDomain(String domain) throws Exception {
         Set<Long> result = new HashSet<>();
-        for (SlbDomainDo slbDomainDo : slbDomainDao.findAllByName(domain, SlbDomainEntity.READSET_FULL)) {
-            result.add(slbDomainDo.getSlbVirtualServerId());
+        for (RelVsDomainDo relVsDomainDo : rVsDomainDao.findAllVsesByDomain(domain, RVsDomainEntity.READSET_FULL)) {
+            result.add(relVsDomainDo.getVsId());
         }
         return result;
     }

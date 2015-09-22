@@ -10,8 +10,6 @@ import java.util.List;
  */
 public interface VirtualServerRepository {
 
-    List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception;
-
     List<VirtualServer> listAll(Long[] vsIds) throws Exception;
 
     VirtualServer getById(Long virtualServerId) throws Exception;
@@ -24,7 +22,12 @@ public interface VirtualServerRepository {
 
     void batchDeleteVirtualServers(Long slbId) throws Exception;
 
+    List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception;
+
     void batchDeleteGroupVirtualServers(Long groupId) throws Exception;
 
     void updateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception;
+
+    @Deprecated
+    List<Long> portVirtualServerRel() throws Exception;
 }
