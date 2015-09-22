@@ -1,6 +1,5 @@
 package com.ctrip.zeus.lock;
 
-import com.ctrip.zeus.lock.impl.MysqlDistLock;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;

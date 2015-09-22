@@ -55,7 +55,7 @@ public class MysqlDistLock implements DistLock {
         DistLockDo d = new DistLockDo().setLockKey(key)
                 .setOwner(Thread.currentThread().getId()).setServer(S.getIp())
                 .setCreatedTime(System.currentTimeMillis());
-        while(System.currentTimeMillis() < end) {
+        while (System.currentTimeMillis() < end) {
             try {
                 if (tryAddLock(d))
                     return;
@@ -73,7 +73,7 @@ public class MysqlDistLock implements DistLock {
                 .setOwner(Thread.currentThread().getId()).setServer(S.getIp())
                 .setCreatedTime(System.currentTimeMillis());
         int count = 1;
-        while (true){
+        while (true) {
             try {
                 if (tryAddLock(d))
                     return;
@@ -86,22 +86,25 @@ public class MysqlDistLock implements DistLock {
 
     @Override
     public void unlock() {
+        DistLockDo d = new DistLockDo().setLockKey(key);
+        DalException logEx = null;
         try {
-            DistLockDo d = new DistLockDo().setLockKey(key);
             if (unlock(d))
                 return;
-            for (int i = 1; i < MAX_RETRIES; i++) {
-                try {
-                    if (unlock(d))
-                        return;
-                    retryDelay(key, i);
-                } catch (DalException e) {
-                    retryDelay(key, i);
-                }
-            }
         } catch (DalException e) {
-            logger.warn("Fail to unlock the lock " + key);
+            logEx = e;
         }
+        for (int i = 1; i < MAX_RETRIES; i++) {
+            try {
+                if (unlock(d))
+                    return;
+                retryDelay(key, i);
+            } catch (DalException e) {
+                retryDelay(key, i);
+                logEx = e;
+            }
+        }
+        logger.warn("Fail to unlock the lock " + key + ", throwing ex: " + (logEx == null ? " Unknown" : logEx.getMessage()));
     }
 
     private boolean tryAddLock(DistLockDo d) throws DalException {
