@@ -60,7 +60,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         if (groupModelValidator.exists(id)) {
             return archiveService.getLatestGroup(id);
         }
-        throw new ValidationException("Group does not exist.");
+        return null;
     }
 
     @Override
