@@ -87,12 +87,11 @@ public class MysqlDistLock implements DistLock {
     @Override
     public void unlock() {
         DistLockDo d = new DistLockDo().setLockKey(key);
-        DalException logEx = null;
         try {
             if (unlock(d))
                 return;
         } catch (DalException e) {
-            logEx = e;
+            logger.warn("Fail to unlock the lock " + key + ", throwing ex: " + (e == null ? " Unknown" : e.getMessage()));
         }
         for (int i = 1; i < MAX_RETRIES; i++) {
             try {
@@ -101,10 +100,10 @@ public class MysqlDistLock implements DistLock {
                 retryDelay(key, i);
             } catch (DalException e) {
                 retryDelay(key, i);
-                logEx = e;
+                logger.warn("Fail to unlock the lock " + key + ", throwing ex: " + (e == null ? " Unknown" : e.getMessage()));
             }
         }
-        logger.warn("Fail to unlock the lock " + key + ", throwing ex: " + (logEx == null ? " Unknown" : logEx.getMessage()));
+        logger.warn("Abnormal unlock tries. Fail to unlock the lock " + key + ".");
     }
 
     private boolean tryAddLock(DistLockDo d) throws DalException {
