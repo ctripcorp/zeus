@@ -8,9 +8,9 @@ import com.ctrip.zeus.model.entity.Group;
  */
 public interface GroupSync {
 
-    Long add(Group group) throws Exception;
+    void add(Group group) throws Exception;
 
-    Long update(Group group) throws Exception;
+    void update(Group group) throws Exception;
 
     void updateVersion(Long[] groupIds) throws Exception;
 

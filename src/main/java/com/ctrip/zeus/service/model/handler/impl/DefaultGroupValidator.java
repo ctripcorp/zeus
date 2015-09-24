@@ -11,7 +11,6 @@ import com.ctrip.zeus.service.model.handler.GroupValidator;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +25,7 @@ public class DefaultGroupValidator implements GroupValidator {
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
     @Resource
-    private GroupSlbDao groupSlbDao;
+    private RGroupVsDao rGroupVsDao;
     @Resource
     private GroupDao groupDao;
 
@@ -81,20 +80,14 @@ public class DefaultGroupValidator implements GroupValidator {
                 throw new ValidationException("Duplicate path \"" + groupVirtualServer.getPath() + "\" is found on virtual server " + vs.getId() + ".");
             else
                 groupPaths.add(vs.getId() + groupVirtualServer.getPath());
-
         }
-        for (Long virtualServerId : virtualServerIds) {
-            List<Long> groupIds = new ArrayList<>();
-            for (GroupSlbDo groupSlb : groupSlbDao.findAllByVirtualServer(virtualServerId, GroupSlbEntity.READSET_FULL)) {
-                if (!groupId.equals(groupSlb.getGroupId()))
-                    groupIds.add(groupSlb.getGroupId());
-            }
-            for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByGroups(groupIds.toArray(new Long[groupIds.size()]), GroupSlbEntity.READSET_FULL)) {
-                if (groupPaths.contains(groupSlbDo.getSlbVirtualServerId() + groupSlbDo.getPath()))
-                    throw new ValidationException("Duplicate path \"" + groupSlbDo.getPath() + "\" is found on virtual server " + groupSlbDo.getSlbVirtualServerId() + ".");
-                else
-                    groupPaths.add(groupSlbDo.getSlbVirtualServerId() + groupSlbDo.getPath());
-            }
+        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllGroupsByVses(virtualServerIds.toArray(new Long[virtualServerIds.size()]), RGroupVsEntity.READSET_FULL)) {
+            if (groupId.equals(relGroupVsDo.getGroupId()))
+                continue;
+            if (groupPaths.contains(relGroupVsDo.getVsId() + relGroupVsDo.getPath()))
+                throw new ValidationException("Duplicate path \"" + relGroupVsDo.getPath() + "\" is found on virtual server " + relGroupVsDo.getVsId() + ".");
+            else
+                groupPaths.add(relGroupVsDo.getVsId() + relGroupVsDo.getPath());
         }
     }
 }

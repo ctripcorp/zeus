@@ -19,6 +19,8 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     private RVsSlbDao rVsSlbDao;
     @Resource
     private RVsDomainDao rVsDomainDao;
+    @Resource
+    private RGroupVsDao rGroupVsDao;
 
     @Override
     public Set<Long> queryAll() throws Exception {
@@ -34,6 +36,15 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
         Set<Long> result = new HashSet<>();
         for (RelVsSlbDo relVsSlbDo : rVsSlbDao.findAllVsesBySlb(slbId, RVsSlbEntity.READSET_FULL)) {
             result.add(relVsSlbDo.getVsId());
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Long> queryByGroupIds(Long[] groupIds) throws Exception {
+        Set<Long> result = new HashSet<>();
+        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllVsesByGroups(groupIds, RGroupVsEntity.READSET_FULL)) {
+            result.add(relGroupVsDo.getVsId());
         }
         return result;
     }

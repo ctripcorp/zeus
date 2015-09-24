@@ -11,5 +11,7 @@ public interface VirtualServerCriteriaQuery {
 
     Set<Long> queryBySlbId(Long slbId) throws Exception;
 
+    Set<Long> queryByGroupIds(Long[] groupIds) throws Exception;
+
     Set<Long> queryByDomain(String domain) throws Exception;
 }

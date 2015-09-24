@@ -29,17 +29,16 @@ public class GroupSyncImpl implements GroupSync {
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public Long add(Group group) throws Exception {
+    public void add(Group group) throws Exception {
         GroupDo d = C.toGroupDo(0L, group);
         d.setCreatedTime(new Date()).setVersion(1);
         groupDao.insert(d);
         group.setId(d.getId());
         cascadeSync(group);
-        return d.getId();
     }
 
     @Override
-    public Long update(Group group) throws Exception {
+    public void update(Group group) throws Exception {
         GroupDo check = groupDao.findById(group.getId(), GroupEntity.READSET_FULL);
         if (check == null)
             throw new ValidationException("Group with id " + group.getId() + "does not exist.");
@@ -49,7 +48,6 @@ public class GroupSyncImpl implements GroupSync {
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
         group.setId(d.getId());
         cascadeSync(group);
-        return d.getId();
     }
 
     @Override

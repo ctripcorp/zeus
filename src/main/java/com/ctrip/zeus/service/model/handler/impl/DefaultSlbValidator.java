@@ -5,7 +5,9 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.springframework.stereotype.Component;
@@ -20,7 +22,7 @@ import java.util.Set;
 @Component("slbModelValidator")
 public class DefaultSlbValidator implements SlbValidator {
     @Resource
-    private GroupSlbDao groupSlbDao;
+    private GroupCriteriaQuery groupCriteriaQuery;
     private DynamicStringProperty portWhiteList = DynamicPropertyFactory.getInstance().getStringProperty("port.whitelist", "80,443");
 
     @Override
@@ -35,8 +37,12 @@ public class DefaultSlbValidator implements SlbValidator {
 
     @Override
     public void checkVirtualServerDependencies(VirtualServer[] virtualServers) throws Exception {
+        Long[] vsIds = new Long[virtualServers.length];
+        for (int i = 0; i < vsIds.length; i++) {
+            vsIds[i] = virtualServers[i].getId();
+        }
         for (VirtualServer vs : virtualServers) {
-            if (groupSlbDao.findAllByVirtualServer(vs.getId(), GroupSlbEntity.READSET_FULL).size() > 0)
+            if (groupCriteriaQuery.queryByVsId(vs.getId()).size() > 0)
                 throw new ValidationException("Virtual server with id " + vs.getId() + " cannot be deleted. Dependencies exist.");
         }
     }
@@ -69,7 +75,7 @@ public class DefaultSlbValidator implements SlbValidator {
 
     @Override
     public void removable(Long slbId) throws Exception {
-        if (groupSlbDao.findAllBySlb(slbId, GroupSlbEntity.READSET_FULL).size() > 0)
+        if (groupCriteriaQuery.queryBySlbId(slbId).size() > 0)
             throw new ValidationException("Slb with id " + slbId + " cannot be deleted. Dependencies exist.");
     }
 }

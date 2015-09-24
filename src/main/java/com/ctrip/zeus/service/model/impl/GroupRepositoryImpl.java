@@ -1,14 +1,17 @@
 package com.ctrip.zeus.service.model.impl;
 
+import com.ctrip.zeus.dal.core.GroupDao;
+import com.ctrip.zeus.dal.core.GroupDo;
+import com.ctrip.zeus.dal.core.GroupEntity;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.service.model.*;
-import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -24,9 +27,7 @@ import java.util.Set;
 @Repository("groupRepository")
 public class GroupRepositoryImpl implements GroupRepository {
     @Resource
-    private GroupSync groupSync;
-    @Resource
-    private GroupQuery groupQuery;
+    private GroupSync groupEntityManager;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
@@ -37,6 +38,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     private ArchiveService archiveService;
     @Resource
     private GroupValidator groupModelValidator;
+    @Resource
+    private GroupDao groupDao;
 
     @Override
     public List<Group> list() throws Exception {
@@ -77,28 +80,27 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public Group add(Group group) throws Exception {
         groupModelValidator.validate(group);
-        Long groupId = groupSync.add(group);
-        group.setId(groupId);
+        groupEntityManager.add(group);
         syncVsAndGs(group);
-        return archive(groupId);
+        return group;
     }
 
     @Override
     public Group update(Group group) throws Exception {
         groupModelValidator.validate(group);
-        Long groupId = groupSync.update(group);
-        group.setId(groupId);
+        groupEntityManager.update(group);
         syncVsAndGs(group);
-        return archive(groupId);
+        return group;
     }
 
     @Override
     public List<Group> updateVersion(Long[] groupIds) throws Exception {
         List<Group> result = new ArrayList<>();
-        groupSync.updateVersion(groupIds);
         for (Long groupId : groupIds) {
-            Group group = archive(groupId);
-            result.add(group);
+            Group g = fresh(groupId);
+            if (g != null)
+                groupEntityManager.update(g);
+            result.add(g);
         }
         return result;
     }
@@ -107,8 +109,7 @@ public class GroupRepositoryImpl implements GroupRepository {
     public int delete(Long groupId) throws Exception {
         groupModelValidator.removable(groupId);
         cascadeRemoveByGroup(groupId);
-        int count = groupSync.delete(groupId);
-        return count;
+        return groupEntityManager.delete(groupId);
     }
 
     @Override
@@ -117,15 +118,17 @@ public class GroupRepositoryImpl implements GroupRepository {
         return list(groupIds);
     }
 
-    private Group archive(Long groupId) throws Exception {
-        Group group = groupQuery.getById(groupId);
+    private Group fresh(Long groupId) throws Exception {
+        GroupDo d = groupDao.findById(groupId, GroupEntity.READSET_FULL);
+        if (d == null)
+            return null;
+        Group group = C.toGroup(d);
         for (GroupVirtualServer groupVirtualServer : virtualServerRepository.listGroupVsByGroups(new Long[]{group.getId()})) {
             group.addGroupVirtualServer(groupVirtualServer);
         }
         for (GroupServer server : groupMemberRepository.listGroupServersByGroup(group.getId())) {
             group.addGroupServer(server);
         }
-        archiveService.archiveGroup(group);
         return group;
     }
 
