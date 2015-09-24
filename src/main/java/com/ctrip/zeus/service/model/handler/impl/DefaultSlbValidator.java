@@ -8,9 +8,12 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.springframework.stereotype.Component;
+import org.unidal.dal.jdbc.DalException;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.HashSet;
@@ -23,7 +26,14 @@ import java.util.Set;
 public class DefaultSlbValidator implements SlbValidator {
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private SlbDao slbDao;
     private DynamicStringProperty portWhiteList = DynamicPropertyFactory.getInstance().getStringProperty("port.whitelist", "80,443");
+
+    @Override
+    public boolean exists(Long targetId) throws Exception {
+        return slbDao.findById(targetId, SlbEntity.READSET_FULL) != null;
+    }
 
     @Override
     public void validate(Slb slb) throws Exception {
@@ -33,6 +43,15 @@ public class DefaultSlbValidator implements SlbValidator {
         if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
             throw new ValidationException("Slb without slb servers cannot be persisted.");
         }
+    }
+
+    @Override
+    public void checkVersion(Slb target) throws Exception {
+        SlbDo check = slbDao.findById(target.getId(), SlbEntity.READSET_FULL);
+        if (check == null)
+            throw new ValidationException("Slb with id " + target.getId() + " does not exist.");
+        if (!target.getVersion().equals(check.getVersion()))
+            throw new ValidationException("Newer Group version is detected.");
     }
 
     @Override

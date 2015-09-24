@@ -9,6 +9,7 @@ import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import org.springframework.stereotype.Component;
+import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.HashSet;
@@ -30,22 +31,35 @@ public class DefaultGroupValidator implements GroupValidator {
     private GroupDao groupDao;
 
     @Override
-    public boolean exists(Long groupId) throws Exception {
-        return groupDao.findById(groupId, GroupEntity.READSET_FULL) != null;
+    public boolean exists(Long targetId) throws Exception {
+        return groupDao.findById(targetId, GroupEntity.READSET_FULL) != null;
     }
 
     @Override
-    public void validate(Group group) throws Exception {
-        if (group == null || group.getName() == null || group.getName().isEmpty()
-                || group.getAppId() == null || group.getAppId().isEmpty()) {
+    public void validate(Group target) throws Exception {
+        if (target == null || target.getName() == null || target.getName().isEmpty()
+                || target.getAppId() == null || target.getAppId().isEmpty()) {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
-        validateGroupVirtualServers(group.getId(), group.getGroupVirtualServers());
+        if (target.getHealthCheck() != null) {
+            if (target.getHealthCheck().getUri() == null || target.getHealthCheck().getUri().isEmpty())
+                throw new ValidationException("Health check path cannot be empty.");
+        }
+        validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers());
     }
 
     @Override
-    public void removable(Long groupId) throws Exception {
-        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{groupId});
+    public void checkVersion(Group target) throws Exception {
+        GroupDo check = groupDao.findById(target.getId(), GroupEntity.READSET_FULL);
+        if (check == null)
+            throw new ValidationException("Group with id " + target.getId() + " does not exists.");
+        if (!target.getVersion().equals(check.getVersion()))
+            throw new ValidationException("Newer Group version is detected.");
+    }
+
+    @Override
+    public void removable(Long targetId) throws Exception {
+        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{targetId});
         if (l.size() > 0)
             throw new ValidationException("Group must be deactivated before deletion.");
     }

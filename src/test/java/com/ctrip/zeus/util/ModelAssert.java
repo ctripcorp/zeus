@@ -29,7 +29,7 @@ public class ModelAssert {
         if (expected.getRewrite() != null) {
             Assert.assertEquals(expected.getRewrite(), actual.getRewrite());
         }
-        Assert.assertEquals(expected.getPriority() == null ? 0 : expected.getPriority().intValue(), actual.getPriority().intValue());
+        Assert.assertEquals(expected.getPriority() == null ? 1000 : expected.getPriority().intValue(), actual.getPriority().intValue());
         assertVirtualServerEquals(expected.getVirtualServer(), actual.getVirtualServer());
     }
 

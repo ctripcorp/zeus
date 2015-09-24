@@ -11,17 +11,9 @@ import java.util.List;
  */
 public interface GroupRepository extends Repository {
 
-    List<Group> list() throws Exception;
-
-    List<Group> list(Long slbId) throws Exception;
-
     List<Group> list(Long[] ids) throws Exception;
 
     Group getById(Long id) throws Exception;
-
-    Group get(String groupName) throws Exception;
-
-    List<Group> listByAppId(String appId) throws Exception;
 
     Group add(Group group) throws Exception;
 
@@ -31,5 +23,14 @@ public interface GroupRepository extends Repository {
 
     int delete(Long groupId) throws Exception;
 
+    void autofill(Group group) throws Exception;
+
+    @Deprecated
     List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception;
+
+    @Deprecated
+    Group get(String groupName) throws Exception;
+
+    @Deprecated
+    List<Group> list(Long slbId) throws Exception;
 }

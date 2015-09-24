@@ -6,13 +6,9 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 /**
  * Created by zhoumy on 2015/6/30.
  */
-public interface SlbValidator {
-
-    void validate(Slb slb) throws Exception;
+public interface SlbValidator extends ModelValidator<Slb> {
 
     void checkVirtualServerDependencies(VirtualServer[] virtualServers) throws Exception;
 
     void validateVirtualServer(VirtualServer[] virtualServers) throws Exception;
-
-    void removable(Long slbId) throws Exception;
 }

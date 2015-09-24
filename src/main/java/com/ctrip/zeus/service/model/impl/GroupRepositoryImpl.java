@@ -4,9 +4,7 @@ import com.ctrip.zeus.dal.core.GroupDao;
 import com.ctrip.zeus.dal.core.GroupDo;
 import com.ctrip.zeus.dal.core.GroupEntity;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupServer;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
@@ -38,14 +36,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     private ArchiveService archiveService;
     @Resource
     private GroupValidator groupModelValidator;
-    @Resource
-    private GroupDao groupDao;
-
-    @Override
-    public List<Group> list() throws Exception {
-        Set<Long> groupIds = groupCriteriaQuery.queryAll();
-        return list(groupIds.toArray(new Long[groupIds.size()]));
-    }
 
     @Override
     public List<Group> list(Long slbId) throws Exception {
@@ -72,13 +62,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public List<Group> listByAppId(String appId) throws Exception {
-        Set<Long> groupIds = groupCriteriaQuery.queryByAppId(appId);
-        return archiveService.getLatestGroups(groupIds.toArray(new Long[groupIds.size()]));
-    }
-
-    @Override
     public Group add(Group group) throws Exception {
+        autofill(group);
         groupModelValidator.validate(group);
         groupEntityManager.add(group);
         syncVsAndGs(group);
@@ -87,6 +72,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group update(Group group) throws Exception {
+        autofill(group);
         groupModelValidator.validate(group);
         groupEntityManager.update(group);
         syncVsAndGs(group);
@@ -98,8 +84,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         List<Group> result = new ArrayList<>();
         for (Long groupId : groupIds) {
             Group g = fresh(groupId);
-            if (g != null)
-                groupEntityManager.update(g);
+            groupEntityManager.update(g);
             result.add(g);
         }
         return result;
@@ -113,19 +98,39 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
+    public void autofill(Group group) throws Exception {
+        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+            VirtualServer tvs = gvs.getVirtualServer();
+            VirtualServer vs = virtualServerRepository.getById(gvs.getVirtualServer().getId());
+            tvs.setName(vs.getName()).setSlbId(vs.getSlbId()).setPort(vs.getPort()).setSsl(vs.getSsl());
+            tvs.getDomains().clear();
+            for (Domain domain : vs.getDomains()) {
+                tvs.getDomains().add(domain);
+            }
+        }
+        HealthCheck hc = group.getHealthCheck();
+        if (hc != null) {
+            hc.setIntervals(hc.getIntervals() == null ? 5000 : hc.getIntervals())
+                    .setFails(hc.getFails() == null ? 5 : hc.getFails())
+                    .setPasses(hc.getPasses() == null ? 1 : hc.getPasses());
+        }
+        LoadBalancingMethod lbm = group.getLoadBalancingMethod();
+        if (lbm == null)
+            lbm = new LoadBalancingMethod();
+        lbm.setType("roundrobin").setValue(lbm.getValue() == null ? "Default" : lbm.getValue());
+    }
+
+    @Override
     public List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception {
         Long[] groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
         return list(groupIds);
     }
 
+    // this would be called iff virtual/group servers are modified
     private Group fresh(Long groupId) throws Exception {
-        GroupDo d = groupDao.findById(groupId, GroupEntity.READSET_FULL);
-        if (d == null)
-            return null;
-        Group group = C.toGroup(d);
-        for (GroupVirtualServer groupVirtualServer : virtualServerRepository.listGroupVsByGroups(new Long[]{group.getId()})) {
-            group.addGroupVirtualServer(groupVirtualServer);
-        }
+        Group group = getById(groupId);
+        autofill(group);
+        group.getGroupServers().clear();
         for (GroupServer server : groupMemberRepository.listGroupServersByGroup(group.getId())) {
             group.addGroupServer(server);
         }
