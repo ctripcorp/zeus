@@ -13,6 +13,7 @@ import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Repository;
@@ -44,6 +45,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     private ArchiveService archiveService;
     @Resource
     private SlbValidator slbModelValidator;
+    @Resource
+    private VirtualServerValidator virtualServerModelValidator;
 
     @Override
     public List<Slb> list() throws Exception {
@@ -91,8 +94,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Override
     public Slb add(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
-        slbModelValidator.validateVirtualServer(slb.getVirtualServers().toArray(
-                new VirtualServer[slb.getVirtualServers().size()]));
+        virtualServerModelValidator.validateVirtualServers(slb.getVirtualServers());
         Long slbId = slbSync.add(slb);
         slb.setId(slbId);
         addVs(slb);

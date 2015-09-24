@@ -8,6 +8,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
+import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
@@ -36,6 +37,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     private ArchiveService archiveService;
     @Resource
     private GroupValidator groupModelValidator;
+    @Resource
+    private VirtualServerValidator virtualServerModelValidator;
 
     @Override
     public List<Group> list(Long slbId) throws Exception {

@@ -28,7 +28,6 @@ public class DefaultSlbValidator implements SlbValidator {
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private SlbDao slbDao;
-    private DynamicStringProperty portWhiteList = DynamicPropertyFactory.getInstance().getStringProperty("port.whitelist", "80,443");
 
     @Override
     public boolean exists(Long targetId) throws Exception {
@@ -52,44 +51,6 @@ public class DefaultSlbValidator implements SlbValidator {
             throw new ValidationException("Slb with id " + target.getId() + " does not exist.");
         if (!target.getVersion().equals(check.getVersion()))
             throw new ValidationException("Newer Group version is detected.");
-    }
-
-    @Override
-    public void checkVirtualServerDependencies(VirtualServer[] virtualServers) throws Exception {
-        Long[] vsIds = new Long[virtualServers.length];
-        for (int i = 0; i < vsIds.length; i++) {
-            vsIds[i] = virtualServers[i].getId();
-        }
-        for (VirtualServer vs : virtualServers) {
-            if (groupCriteriaQuery.queryByVsId(vs.getId()).size() > 0)
-                throw new ValidationException("Virtual server with id " + vs.getId() + " cannot be deleted. Dependencies exist.");
-        }
-    }
-
-    @Override
-    public void validateVirtualServer(VirtualServer[] virtualServers) throws Exception {
-        Set<String> existingHost = new HashSet<>();
-        for (VirtualServer virtualServer : virtualServers) {
-            for (Domain domain : virtualServer.getDomains()) {
-                if (!getPortWhiteList().contains(virtualServer.getPort())) {
-                    throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed.");
-                }
-                String key = domain.getName() + ":" + virtualServer.getPort();
-                if (existingHost.contains(key))
-                    throw new ValidationException("Duplicate domain and port combination is found: " + key);
-                else
-                    existingHost.add(key);
-            }
-        }
-    }
-
-    private Set<String> getPortWhiteList() {
-        Set<String> result = new HashSet<>();
-        String whiteList = portWhiteList.get();
-        for (String s : whiteList.split(",")) {
-            result.add(s.trim());
-        }
-        return result;
     }
 
     @Override

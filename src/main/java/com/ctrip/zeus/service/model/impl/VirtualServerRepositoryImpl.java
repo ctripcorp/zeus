@@ -8,9 +8,9 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
-import com.ctrip.zeus.service.query.ArchiveCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
@@ -40,6 +40,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     private SlbDomainDao slbDomainDao;
     @Resource
     private SlbDao slbDao;
+    @Resource
+    private VirtualServerValidator virtualServerModelValidator;
     @Resource
     private SlbValidator slbModelValidator;
     @Resource
@@ -72,7 +74,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
         List<VirtualServer> check = listAll(checkIds.toArray(new Long[checkIds.size()]));
         check.add(virtualServer);
-        slbModelValidator.validateVirtualServer(check.toArray(new VirtualServer[check.size()]));
+        virtualServerModelValidator.validateVirtualServers(check);
         virtualServerEntityManager.addVirtualServer(virtualServer);
         return virtualServer;
     }
@@ -89,13 +91,13 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         if (!check.keySet().contains(virtualServer.getId()))
             throw new ValidationException("Virtual server doesn't exist, please new one first.");
         check.put(virtualServer.getId(), virtualServer);
-        slbModelValidator.validateVirtualServer(check.values().toArray(new VirtualServer[check.size()]));
+        virtualServerModelValidator.validateVirtualServers(new ArrayList<VirtualServer>(check.values()));
         virtualServerEntityManager.updateVirtualServer(virtualServer);
     }
 
     @Override
     public void deleteVirtualServer(Long virtualServerId) throws Exception {
-        slbModelValidator.checkVirtualServerDependencies(new VirtualServer[]{getById(virtualServerId)});
+        virtualServerModelValidator.removable(getById(virtualServerId));
         virtualServerEntityManager.deleteVirtualServer(virtualServerId);
     }
 
