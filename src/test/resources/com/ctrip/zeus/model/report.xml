@@ -3,6 +3,7 @@
         <id>s999999</id>
         <name>lg-group</name>
         <path>lg-relativeUri</path>
+        <rewrite>/test/groups</rewrite>
         <appPoolName>app_pool_name</appPoolName>
         <physicalPath>physic_path</physicalPath>
         <healthCheckUri>healthcheck.html</healthCheckUri>

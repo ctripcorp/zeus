@@ -10,6 +10,7 @@
     <element name="id" value-type="String" />
     <element name="name" value-type="String" />
     <element name="path" value-type="String" />
+    <element name="rewrite" value-type="String" />
     <element name="appPoolName" value-type="String" />
     <element name="physicalPath" value-type="String" />
     <element name="healthCheckUri" value-type="String" />
