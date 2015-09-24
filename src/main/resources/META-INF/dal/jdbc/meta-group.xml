@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="group" table="group" alias="a" do-class="GroupDo">
+        <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
+        <var name="ids" value-type="Long[]"/>
+        <var name="names" value-type="String[]"/>
+        <var name="max-count" value-type="int"/>
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-id" type="UPDATE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='name'/> = ${name},
+                        <FIELD name='app-id'/> = ${app-id},
+                        <FIELD name='ssl'/> = ${ssl},
+                        <FIELD name='version'/> = ${version}
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-id" type="DELETE">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-id" type="SELECT">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-name" type="SELECT">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-app-id" type="SELECT" multiple="true">
+                <param name="app-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='app-id'/> = ${app-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>
