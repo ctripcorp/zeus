@@ -20,6 +20,8 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     private SlbServerDao slbServerDao;
     @Resource
     private GroupSlbDao groupSlbDao;
+    @Resource
+    private SlbVirtualServerDao slbVirtualServerDao;
 
     @Override
     public Long queryByName(String name) throws Exception {
@@ -31,6 +33,12 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     public Long queryBySlbServer(String ip) throws Exception {
         SlbServerDo ss = slbServerDao.findByIp(ip, SlbServerEntity.READSET_FULL);
         return ss == null ? 0L : ss.getSlbId();
+    }
+
+    @Override
+    public Long queryByVs(Long vsId) throws Exception {
+        SlbVirtualServerDo vs = slbVirtualServerDao.findByPK(vsId, SlbVirtualServerEntity.READSET_FULL);
+        return vs == null ? 0L : vs.getSlbId();
     }
 
     @Override

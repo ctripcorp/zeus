@@ -79,15 +79,16 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void updateVirtualServer(VirtualServer virtualServer) throws Exception {
-        if (virtualServer.getId() == null || virtualServer.getId().longValue() <= 0L)
-            throw new ValidationException("Invalid virtual server id.");
         Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
         Map<Long, VirtualServer> check = new HashMap<>();
         for (VirtualServer vs : listAll(checkIds.toArray(new Long[checkIds.size()]))) {
             check.put(vs.getId(), vs);
         }
-        if (!check.keySet().contains(virtualServer.getId()))
-            throw new ValidationException("Virtual server doesn't exist, please new one first.");
+        if (!check.containsKey(virtualServer.getId())) {
+            if (slbDao.findById(virtualServer.getSlbId(), SlbEntity.READSET_FULL) == null) {
+                throw new ValidationException("Slb with id " + virtualServer.getSlbId() + " does not exists.");
+            }
+        }
         check.put(virtualServer.getId(), virtualServer);
         slbModelValidator.validateVirtualServer(check.values().toArray(new VirtualServer[check.size()]));
         virtualServerEntityManager.updateVirtualServer(virtualServer);
