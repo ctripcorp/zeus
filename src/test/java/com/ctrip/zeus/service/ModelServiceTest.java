@@ -98,7 +98,7 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testListSlbsByGroups() throws Exception {
-        List<Slb> slbs = slbRepository.listByGroups(new Long[]{testGroup.getId(), testGroup.getId() + 1 });
+        List<Slb> slbs = slbRepository.listByGroups(new Long[]{testGroup.getId(), testGroup.getId() + 1});
         Assert.assertEquals(1, slbs.size());
     }
 
@@ -239,7 +239,6 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     private void deleteGroups() throws Exception {
         Assert.assertEquals(1, groupRepository.delete(testGroup.getId()));
-        Assert.assertEquals(0, virtualServerRepository.listGroupVsByGroups(new Long[]{testGroup.getId()}).size());
         for (int i = 1; i <= 6; i++) {
             Assert.assertEquals(1, groupRepository.delete(testGroup.getId() + i));
         }
@@ -248,15 +247,6 @@ public class ModelServiceTest extends AbstractSpringTest {
     /**
      * ****************** test VirtualServerRepository ********************
      */
-
-    @Test
-    public void testListGroupVirtualServerByGroups() throws Exception {
-        List<GroupVirtualServer> groupVirtualServers = virtualServerRepository.listGroupVsByGroups(new Long[]{testGroup.getId(), testGroup.getId() + 1});
-        Assert.assertEquals(2, groupVirtualServers.size());
-        for (GroupVirtualServer groupVirtualServer : groupVirtualServers) {
-            Assert.assertNotNull(groupVirtualServer.getVirtualServer());
-        }
-    }
 
     @Test
     public void testVirtualServerGet() throws Exception {
@@ -276,7 +266,7 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testFindGroupsByVirtualServer() throws Exception {
-        Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[] {defaultSlb.getVirtualServers().get(0).getId()});
+        Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[]{defaultSlb.getVirtualServers().get(0).getId()});
         Assert.assertEquals(6, groupIds.size());
     }
 
@@ -288,16 +278,26 @@ public class ModelServiceTest extends AbstractSpringTest {
         List<GroupVirtualServer> gvs = group.getGroupVirtualServers();
         gvs.get(0).setPath("/testUpdateGroupVs");
         gvs.add(new GroupVirtualServer().setPath("/testUpdateGroupVsNew").setVirtualServer(new VirtualServer().setId(defaultSlb.getVirtualServers().get(0).getId())));
-        groupRepository.update(group);
-        Assert.assertEquals(gvs.size(), groupRepository.get(testGroup.getName()).getGroupVirtualServers().size());
-        Assert.assertEquals(gvs.size(), virtualServerRepository.listGroupVsByGroups(new Long[]{testGroup.getId()}).size());
 
-        gvs = virtualServerRepository.listGroupVsByGroups(new Long[]{testGroup.getId()});
-        Assert.assertEquals(defaultSlb.getVirtualServers().get(0).getId(), gvs.get(0).getVirtualServer().getId());
-        Assert.assertEquals(defaultSlb.getVirtualServers().get(1).getId(), gvs.get(1).getVirtualServer().getId());
+        Set<Long> gvsIds = new HashSet<>();
+        gvsIds.add(defaultSlb.getVirtualServers().get(0).getId());
+        gvsIds.add(defaultSlb.getVirtualServers().get(1).getId());
+        Assert.assertTrue(gvsIds.remove(gvs.get(0).getVirtualServer().getId()));
+        Assert.assertTrue(gvsIds.remove(gvs.get(1).getVirtualServer().getId()));
+        Assert.assertEquals(0, gvsIds.size());
+
+        gvsIds.add(gvs.get(0).getVirtualServer().getId());
+        gvsIds.add(gvs.get(1).getVirtualServer().getId());
+
+        groupRepository.update(group);
 
         group = groupRepository.getById(testGroup.getId());
         gvs = group.getGroupVirtualServers();
+        Assert.assertEquals(2, gvs.size());
+        Assert.assertTrue(gvsIds.remove(gvs.get(0).getVirtualServer().getId()));
+        Assert.assertTrue(gvsIds.remove(gvs.get(1).getVirtualServer().getId()));
+        Assert.assertEquals(0, gvsIds.size());
+        
         gvs.get(0).setVirtualServer(new VirtualServer().setId(gvs.get(1).getVirtualServer().getId()));
         try {
             groupRepository.update(group);
@@ -307,7 +307,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         }
         gvs.remove(gvs.get(1));
         groupRepository.update(group);
-        gvs = virtualServerRepository.listGroupVsByGroups(new Long[]{testGroup.getId()});
+        gvs = groupRepository.getById(testGroup.getId()).getGroupVirtualServers();
         Assert.assertEquals(1, gvs.size());
     }
 
@@ -341,7 +341,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         virtualServers.get(1).setName("www.hello.com.cn");
         for (VirtualServer virtualServer : virtualServers) {
             virtualServerRepository.updateVirtualServer(virtualServer);
-            Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[] {virtualServer.getId()});
+            Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[]{virtualServer.getId()});
             groupRepository.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         }
         slbRepository.updateVersion(created.getId());

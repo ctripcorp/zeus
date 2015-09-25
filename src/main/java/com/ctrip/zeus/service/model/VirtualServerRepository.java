@@ -23,9 +23,6 @@ public interface VirtualServerRepository {
     void batchDeleteVirtualServers(Long slbId) throws Exception;
 
     @Deprecated
-    List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception;
-
-    @Deprecated
     void batchDeleteGroupVirtualServers(Long groupId) throws Exception;
 
     @Deprecated

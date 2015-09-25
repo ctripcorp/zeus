@@ -43,14 +43,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Resource
     private VirtualServerValidator virtualServerModelValidator;
     @Resource
-    private SlbValidator slbModelValidator;
-    @Resource
     private GroupValidator groupModelValidator;
-
-    @Override
-    public List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception {
-        return batchFetch(groupSlbDao.findAllByGroups(groupIds, GroupSlbEntity.READSET_FULL));
-    }
 
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
@@ -101,6 +94,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         virtualServerEntityManager.deleteVirtualServer(virtualServerId);
     }
 
+    // This would be called iff slb is to be removed. Validation is done in slb validation.
     @Override
     public void batchDeleteVirtualServers(Long slbId) throws Exception {
         //TODO validation?
