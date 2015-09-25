@@ -18,7 +18,9 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     @Resource
     private GroupDao groupDao;
     @Resource
-    private GroupSlbDao groupSlbDao;
+    private RGroupVsDao rGroupVsDao;
+    @Resource
+    private RVsSlbDao rVsSlbDao;
 
     @Override
     public Long queryByName(String name) throws Exception {
@@ -43,12 +45,21 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
         }
         return groupIds;
     }
-    
+
     @Override
     public Set<Long> queryBySlbId(Long slbId) throws Exception {
+        List<Long> vsIds = new ArrayList<>();
+        for (RelVsSlbDo relVsSlbDo : rVsSlbDao.findAllVsesBySlb(slbId, RVsSlbEntity.READSET_FULL)) {
+            vsIds.add(relVsSlbDo.getVsId());
+        }
+        return queryByVsIds(vsIds.toArray(new Long[vsIds.size()]));
+    }
+
+    @Override
+    public Set<Long> queryByVsId(Long vsId) throws Exception {
         Set<Long> groupIds = new HashSet<>();
-        for (GroupSlbDo groupSlbDo : groupSlbDao.findAllBySlb(slbId, GroupSlbEntity.READSET_FULL)) {
-            groupIds.add(groupSlbDo.getGroupId());
+        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllGroupsByVs(vsId, RGroupVsEntity.READSET_FULL)) {
+            groupIds.add(relGroupVsDo.getGroupId());
         }
         return groupIds;
     }
@@ -56,8 +67,8 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     @Override
     public Set<Long> queryByVsIds(Long[] vsIds) throws Exception {
         Set<Long> groupIds = new HashSet<>();
-        for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByVirtualServers(vsIds, GroupSlbEntity.READSET_FULL)) {
-            groupIds.add(groupSlbDo.getGroupId());
+        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllGroupsByVses(vsIds, RGroupVsEntity.READSET_FULL)) {
+            groupIds.add(relGroupVsDo.getGroupId());
         }
         return groupIds;
     }

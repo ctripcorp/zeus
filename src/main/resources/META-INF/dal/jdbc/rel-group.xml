@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="r-group-vs" table="r_group_vs" alias="rgv" do-class="RelGroupVsDo">
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="find-all-groups-by-vs" type="SELECT" multiple="true">
+                <param name="vs-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-groups-by-vses" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-vses-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-vses-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert-or-update" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        path = values(path)
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-all-by-group" type="DELETE">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-vs-and-group" type="DELETE">
+                <param name="vs-id"/>
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                        AND <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>
+

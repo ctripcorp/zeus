@@ -8,10 +8,10 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
+import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,29 +24,42 @@ public class DefaultGroupValidator implements GroupValidator {
     @Resource
     private ActiveConfService activeConfService;
     @Resource
-    private SlbVirtualServerDao slbVirtualServerDao;
+    private VirtualServerValidator virtualServerValidator;
     @Resource
-    private GroupSlbDao groupSlbDao;
+    private RGroupVsDao rGroupVsDao;
     @Resource
     private GroupDao groupDao;
 
     @Override
-    public boolean exists(Long groupId) throws Exception {
-        return groupDao.findById(groupId, GroupEntity.READSET_FULL) != null;
+    public boolean exists(Long targetId) throws Exception {
+        return groupDao.findById(targetId, GroupEntity.READSET_FULL) != null;
     }
 
     @Override
-    public void validate(Group group) throws Exception {
-        if (group == null || group.getName() == null || group.getName().isEmpty()
-                || group.getAppId() == null || group.getAppId().isEmpty()) {
+    public void validate(Group target) throws Exception {
+        if (target.getName() == null || target.getName().isEmpty()
+                || target.getAppId() == null || target.getAppId().isEmpty()) {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
-        validateGroupVirtualServers(group.getId(), group.getGroupVirtualServers());
+        if (target.getHealthCheck() != null) {
+            if (target.getHealthCheck().getUri() == null || target.getHealthCheck().getUri().isEmpty())
+                throw new ValidationException("Health check path cannot be empty.");
+        }
+        validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers());
     }
 
     @Override
-    public void removable(Long groupId) throws Exception {
-        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{groupId});
+    public void checkVersion(Group target) throws Exception {
+        GroupDo check = groupDao.findById(target.getId(), GroupEntity.READSET_FULL);
+        if (check == null)
+            throw new ValidationException("Group with id " + target.getId() + " does not exists.");
+        if (!target.getVersion().equals(check.getVersion()))
+            throw new ValidationException("Newer Group version is detected.");
+    }
+
+    @Override
+    public void removable(Long targetId) throws Exception {
+        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{targetId});
         if (l.size() > 0)
             throw new ValidationException("Group must be deactivated before deletion.");
     }
@@ -64,13 +77,8 @@ public class DefaultGroupValidator implements GroupValidator {
                 if (!PathRewriteParser.validate(groupVirtualServer.getRewrite()))
                     throw new ValidationException("Invalid rewrite value.");
             VirtualServer vs = groupVirtualServer.getVirtualServer();
-            SlbVirtualServerDo checkVs = slbVirtualServerDao.findByPK(vs.getId(), SlbVirtualServerEntity.READSET_FULL);
-            if (checkVs == null) {
-                checkVs = slbVirtualServerDao.findBySlbAndName(vs.getSlbId(), vs.getName(), SlbVirtualServerEntity.READSET_FULL);
-                vs.setId(checkVs.getId());
-            }
-            if (checkVs == null)
-                throw new ValidationException("Virtual Server does not exist.");
+            if (!virtualServerValidator.exists(vs.getId()))
+                throw new ValidationException("Virtual Server with id " + vs.getId() + " does not exist.");
             else {
                 if (virtualServerIds.contains(vs.getId()))
                     throw new ValidationException("Group-VirtualServer is an unique combination.");
@@ -78,23 +86,17 @@ public class DefaultGroupValidator implements GroupValidator {
                     virtualServerIds.add(vs.getId());
             }
             if (groupPaths.contains(vs.getId() + groupVirtualServer.getPath()))
-                throw new ValidationException("Duplicate path \"" + groupVirtualServer.getPath() + "\" is found on virtual server " + vs.getId() + ".");
+                throw new ValidationException("Duplicate path \"" + groupVirtualServer.getPath() + "\" is found on virtual server " + vs.getId() + " from post entity.");
             else
                 groupPaths.add(vs.getId() + groupVirtualServer.getPath());
-
         }
-        for (Long virtualServerId : virtualServerIds) {
-            List<Long> groupIds = new ArrayList<>();
-            for (GroupSlbDo groupSlb : groupSlbDao.findAllByVirtualServer(virtualServerId, GroupSlbEntity.READSET_FULL)) {
-                if (!groupId.equals(groupSlb.getGroupId()))
-                    groupIds.add(groupSlb.getGroupId());
-            }
-            for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByGroups(groupIds.toArray(new Long[groupIds.size()]), GroupSlbEntity.READSET_FULL)) {
-                if (groupPaths.contains(groupSlbDo.getSlbVirtualServerId() + groupSlbDo.getPath()))
-                    throw new ValidationException("Duplicate path \"" + groupSlbDo.getPath() + "\" is found on virtual server " + groupSlbDo.getSlbVirtualServerId() + ".");
-                else
-                    groupPaths.add(groupSlbDo.getSlbVirtualServerId() + groupSlbDo.getPath());
-            }
+        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllGroupsByVses(virtualServerIds.toArray(new Long[virtualServerIds.size()]), RGroupVsEntity.READSET_FULL)) {
+            if (groupId.equals(relGroupVsDo.getGroupId()))
+                continue;
+            if (groupPaths.contains(relGroupVsDo.getVsId() + relGroupVsDo.getPath()))
+                throw new ValidationException("Duplicate path \"" + relGroupVsDo.getPath() + "\" is found on virtual server " + relGroupVsDo.getVsId() + " from existing entities.");
+            else
+                groupPaths.add(relGroupVsDo.getVsId() + relGroupVsDo.getPath());
         }
     }
 }

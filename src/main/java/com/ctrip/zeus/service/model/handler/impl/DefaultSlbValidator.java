@@ -5,10 +5,15 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.model.handler.GroupQuery;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.springframework.stereotype.Component;
+import org.unidal.dal.jdbc.DalException;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.HashSet;
@@ -20,8 +25,14 @@ import java.util.Set;
 @Component("slbModelValidator")
 public class DefaultSlbValidator implements SlbValidator {
     @Resource
-    private GroupSlbDao groupSlbDao;
-    private DynamicStringProperty portWhiteList = DynamicPropertyFactory.getInstance().getStringProperty("port.whitelist", "80,443");
+    private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private SlbDao slbDao;
+
+    @Override
+    public boolean exists(Long targetId) throws Exception {
+        return slbDao.findById(targetId, SlbEntity.READSET_FULL) != null;
+    }
 
     @Override
     public void validate(Slb slb) throws Exception {
@@ -34,42 +45,17 @@ public class DefaultSlbValidator implements SlbValidator {
     }
 
     @Override
-    public void checkVirtualServerDependencies(VirtualServer[] virtualServers) throws Exception {
-        for (VirtualServer vs : virtualServers) {
-            if (groupSlbDao.findAllByVirtualServer(vs.getId(), GroupSlbEntity.READSET_FULL).size() > 0)
-                throw new ValidationException("Virtual server with id " + vs.getId() + " cannot be deleted. Dependencies exist.");
-        }
-    }
-
-    @Override
-    public void validateVirtualServer(VirtualServer[] virtualServers) throws Exception {
-        Set<String> existingHost = new HashSet<>();
-        for (VirtualServer virtualServer : virtualServers) {
-            for (Domain domain : virtualServer.getDomains()) {
-                if (!getPortWhiteList().contains(virtualServer.getPort())) {
-                    throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed.");
-                }
-                String key = domain.getName() + ":" + virtualServer.getPort();
-                if (existingHost.contains(key))
-                    throw new ValidationException("Duplicate domain and port combination is found: " + key);
-                else
-                    existingHost.add(key);
-            }
-        }
-    }
-
-    private Set<String> getPortWhiteList() {
-        Set<String> result = new HashSet<>();
-        String whiteList = portWhiteList.get();
-        for (String s : whiteList.split(",")) {
-            result.add(s.trim());
-        }
-        return result;
+    public void checkVersion(Slb target) throws Exception {
+        SlbDo check = slbDao.findById(target.getId(), SlbEntity.READSET_FULL);
+        if (check == null)
+            throw new ValidationException("Slb with id " + target.getId() + " does not exist.");
+        if (!target.getVersion().equals(check.getVersion()))
+            throw new ValidationException("Newer Group version is detected.");
     }
 
     @Override
     public void removable(Long slbId) throws Exception {
-        if (groupSlbDao.findAllBySlb(slbId, GroupSlbEntity.READSET_FULL).size() > 0)
+        if (groupCriteriaQuery.queryBySlbId(slbId).size() > 0)
             throw new ValidationException("Slb with id " + slbId + " cannot be deleted. Dependencies exist.");
     }
 }

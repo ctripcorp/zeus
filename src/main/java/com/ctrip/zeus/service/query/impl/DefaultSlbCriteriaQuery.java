@@ -1,12 +1,13 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -19,9 +20,9 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     @Resource
     private SlbServerDao slbServerDao;
     @Resource
-    private GroupSlbDao groupSlbDao;
+    private RGroupVsDao rGroupVsDao;
     @Resource
-    private SlbVirtualServerDao slbVirtualServerDao;
+    private RVsSlbDao rVsSlbDao;
 
     @Override
     public Long queryByName(String name) throws Exception {
@@ -37,15 +38,19 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
 
     @Override
     public Long queryByVs(Long vsId) throws Exception {
-        SlbVirtualServerDo vs = slbVirtualServerDao.findByPK(vsId, SlbVirtualServerEntity.READSET_FULL);
+        RelVsSlbDo vs = rVsSlbDao.findSlbByVs(vsId, RVsSlbEntity.READSET_FULL);
         return vs == null ? 0L : vs.getSlbId();
     }
 
     @Override
     public Set<Long> queryByGroups(Long[] groupIds) throws Exception {
         Set<Long> slbIds = new HashSet<>();
-        for (GroupSlbDo groupSlbDo : groupSlbDao.findAllByGroups(groupIds, GroupSlbEntity.READSET_FULL)) {
-            slbIds.add(groupSlbDo.getSlbId());
+        List<Long> vsIds = new ArrayList<>();
+        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllVsesByGroups(groupIds, RGroupVsEntity.READSET_FULL)) {
+            vsIds.add(relGroupVsDo.getVsId());
+        }
+        for (RelVsSlbDo relVsSlbDo : rVsSlbDao.findSlbsByVses(vsIds.toArray(new Long[vsIds.size()]), RVsSlbEntity.READSET_FULL)) {
+            slbIds.add(relVsSlbDo.getSlbId());
         }
         return slbIds;
     }

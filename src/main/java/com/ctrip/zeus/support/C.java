@@ -120,7 +120,7 @@ public class C {
                 .setAppId(e.getAppId())
                 .setName(e.getName())
                 .setSsl(e.isSsl())
-                .setVersion(e.getVersion() == null ? 0 : e.getVersion());
+                .setVersion(e.getVersion());
     }
 
     public static GroupServerDo toGroupServerDo(GroupServer e) {

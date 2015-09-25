@@ -8,9 +8,9 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
-import com.ctrip.zeus.service.query.ArchiveCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.C;
 import com.google.common.base.Function;
@@ -41,14 +41,11 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Resource
     private SlbDao slbDao;
     @Resource
-    private SlbValidator slbModelValidator;
+    private VirtualServerValidator virtualServerModelValidator;
     @Resource
     private GroupValidator groupModelValidator;
-
-    @Override
-    public List<GroupVirtualServer> listGroupVsByGroups(Long[] groupIds) throws Exception {
-        return batchFetch(groupSlbDao.findAllByGroups(groupIds, GroupSlbEntity.READSET_FULL));
-    }
+    @Resource
+    private SlbValidator slbModelValidator;
 
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
@@ -72,7 +69,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
         List<VirtualServer> check = listAll(checkIds.toArray(new Long[checkIds.size()]));
         check.add(virtualServer);
-        slbModelValidator.validateVirtualServer(check.toArray(new VirtualServer[check.size()]));
+        virtualServerModelValidator.validateVirtualServers(check);
         virtualServerEntityManager.addVirtualServer(virtualServer);
         return virtualServer;
     }
@@ -85,21 +82,22 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             check.put(vs.getId(), vs);
         }
         if (!check.containsKey(virtualServer.getId())) {
-            if (slbDao.findById(virtualServer.getSlbId(), SlbEntity.READSET_FULL) == null) {
+            if (!slbModelValidator.exists(virtualServer.getSlbId())) {
                 throw new ValidationException("Slb with id " + virtualServer.getSlbId() + " does not exists.");
             }
         }
         check.put(virtualServer.getId(), virtualServer);
-        slbModelValidator.validateVirtualServer(check.values().toArray(new VirtualServer[check.size()]));
+        virtualServerModelValidator.validateVirtualServers(new ArrayList<>(check.values()));
         virtualServerEntityManager.updateVirtualServer(virtualServer);
     }
 
     @Override
     public void deleteVirtualServer(Long virtualServerId) throws Exception {
-        slbModelValidator.checkVirtualServerDependencies(new VirtualServer[]{getById(virtualServerId)});
+        virtualServerModelValidator.removable(getById(virtualServerId));
         virtualServerEntityManager.deleteVirtualServer(virtualServerId);
     }
 
+    // This would be called iff slb is to be removed. Validation is done in slb validation.
     @Override
     public void batchDeleteVirtualServers(Long slbId) throws Exception {
         //TODO validation?
@@ -158,16 +156,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         virtualServerEntityManager.port(vs);
     }
 
-    private List<GroupVirtualServer> batchFetch(List<GroupSlbDo> list) throws Exception {
-        List<GroupVirtualServer> result = new ArrayList<>();
-        for (GroupSlbDo groupSlbDo : list) {
-            GroupVirtualServer gvs = toGroupVirtualServer(groupSlbDo);
-            result.add(gvs);
-            gvs.setVirtualServer(getById(groupSlbDo.getSlbVirtualServerId()));
-        }
-        return result;
-    }
-
     private VirtualServer createVirtualServer(SlbVirtualServerDo d) throws DalException {
         VirtualServer vs = C.toVirtualServer(d);
         querySlbDomains(d.getId(), vs);
@@ -180,13 +168,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         for (SlbDomainDo d : list) {
             virtualServer.addDomain(new Domain().setName(d.getName()));
         }
-    }
-
-    private static GroupVirtualServer toGroupVirtualServer(GroupSlbDo d) {
-        return new GroupVirtualServer()
-                .setPath(d.getPath())
-                .setRewrite(d.getRewrite())
-                .setPriority(d.getPriority());
     }
 
     private static GroupSlbDo toGroupSlbDo(Long groupId, GroupVirtualServer groupVirtualServer) {

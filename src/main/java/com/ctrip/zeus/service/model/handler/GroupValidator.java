@@ -8,13 +8,7 @@ import java.util.List;
 /**
  * Created by zhoumy on 2015/6/29.
  */
-public interface GroupValidator {
-
-    boolean exists(Long groupId) throws Exception;
-
-    void validate(Group group) throws Exception;
-
-    void removable(Long groupId) throws Exception;
+public interface GroupValidator extends ModelValidator<Group> {
 
     void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception;
 }
