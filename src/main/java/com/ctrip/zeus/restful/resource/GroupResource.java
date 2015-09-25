@@ -19,6 +19,7 @@ import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.util.AssertUtils;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -160,6 +161,30 @@ public class GroupResource {
         groupRepository.delete(groupId);
         return Response.ok().build();
     }
+
+    @GET
+    @Path("/group/upgradeAll")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeAll(@Context HttpHeaders hh,
+                               @Context HttpServletRequest request) throws Exception {
+
+        List<Long> groupIds = groupRepository.portGroupRel();
+        if (groupIds.size() == 0)
+            return responseHandler.handle("Successfully ported all group relations.", hh.getMediaType());
+        else
+            return responseHandler.handle("Error occurs when porting group relations on id " + Joiner.on(',').join(groupIds) + ".", hh.getMediaType());
+    }
+
+    @GET
+    @Path("/group/upgrade")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeSingle(@Context HttpHeaders hh,
+                                  @Context HttpServletRequest request,
+                                  @QueryParam("groupId") Long groupId) throws Exception {
+        groupRepository.portGroupRel(groupId);
+        return responseHandler.handle("Successfully ported group relations.", hh.getMediaType());
+    }
+
 
     private Group parseGroup(MediaType mediaType, String group) throws Exception {
         Group g;

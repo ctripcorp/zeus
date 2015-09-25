@@ -153,16 +153,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         virtualServerEntityManager.port(vs);
     }
 
-    private List<GroupVirtualServer> batchFetch(List<GroupSlbDo> list) throws Exception {
-        List<GroupVirtualServer> result = new ArrayList<>();
-        for (GroupSlbDo groupSlbDo : list) {
-            GroupVirtualServer gvs = toGroupVirtualServer(groupSlbDo);
-            result.add(gvs);
-            gvs.setVirtualServer(getById(groupSlbDo.getSlbVirtualServerId()));
-        }
-        return result;
-    }
-
     private VirtualServer createVirtualServer(SlbVirtualServerDo d) throws DalException {
         VirtualServer vs = C.toVirtualServer(d);
         querySlbDomains(d.getId(), vs);
@@ -175,13 +165,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         for (SlbDomainDo d : list) {
             virtualServer.addDomain(new Domain().setName(d.getName()));
         }
-    }
-
-    private static GroupVirtualServer toGroupVirtualServer(GroupSlbDo d) {
-        return new GroupVirtualServer()
-                .setPath(d.getPath())
-                .setRewrite(d.getRewrite())
-                .setPriority(d.getPriority());
     }
 
     private static GroupSlbDo toGroupSlbDo(Long groupId, GroupVirtualServer groupVirtualServer) {

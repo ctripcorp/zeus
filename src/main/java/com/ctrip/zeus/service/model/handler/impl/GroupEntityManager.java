@@ -59,6 +59,24 @@ public class GroupEntityManager implements GroupSync {
         return groupDao.deleteById(new GroupDo().setId(groupId));
     }
 
+    @Override
+    public List<Long> port(Group[] groups) throws Exception {
+        List<Long> fails = new ArrayList<>();
+        for (Group group : groups) {
+            try {
+                relSyncVs(group, true);
+            } catch (Exception ex) {
+                fails.add(group.getId());
+            }
+        }
+        return fails;
+    }
+
+    @Override
+    public void port(Group group) throws Exception {
+        relSyncVs(group, false);
+    }
+
     private void relSyncVs(Group group, boolean isnew) throws DalException {
         if (isnew) {
             for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
@@ -68,6 +86,9 @@ public class GroupEntityManager implements GroupSync {
             return;
         }
         List<RelGroupVsDo> originVses = rGroupVsDao.findAllVsesByGroup(group.getId(), RGroupVsEntity.READSET_FULL);
+        if (originVses.size() == 0) {
+            relSyncVs(group, true);
+        }
         // most common case
         if (group.getGroupVirtualServers().size() == 1 && originVses.size() == 1) {
             if (!group.getGroupVirtualServers().get(0).getVirtualServer().getId().equals(originVses.get(0).getVsId())) {

@@ -29,6 +29,12 @@ public interface GroupRepository extends Repository {
     List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception;
 
     @Deprecated
+    List<Long> portGroupRel() throws Exception;
+
+    @Deprecated
+    void portGroupRel(Long groupId) throws Exception;
+
+    @Deprecated
     Group get(String groupName) throws Exception;
 
     @Deprecated

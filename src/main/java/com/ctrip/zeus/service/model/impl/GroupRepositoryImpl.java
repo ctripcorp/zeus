@@ -1,16 +1,11 @@
 package com.ctrip.zeus.service.model.impl;
 
-import com.ctrip.zeus.dal.core.GroupDao;
-import com.ctrip.zeus.dal.core.GroupDo;
-import com.ctrip.zeus.dal.core.GroupEntity;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
-import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
-import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -37,8 +32,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     private ArchiveService archiveService;
     @Resource
     private GroupValidator groupModelValidator;
-    @Resource
-    private VirtualServerValidator virtualServerModelValidator;
 
     @Override
     public List<Group> list(Long slbId) throws Exception {
@@ -82,6 +75,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         return group;
     }
 
+    // this would be called iff virtual/group servers are modified
     @Override
     public List<Group> updateVersion(Long[] groupIds) throws Exception {
         List<Group> result = new ArrayList<>();
@@ -129,7 +123,19 @@ public class GroupRepositoryImpl implements GroupRepository {
         return list(groupIds);
     }
 
-    // this would be called iff virtual/group servers are modified
+    @Override
+    public List<Long> portGroupRel() throws Exception {
+        Set<Long> groupIds = groupCriteriaQuery.queryAll();
+        List<Group> groups = list(groupIds.toArray(new Long[groupIds.size()]));
+        return groupEntityManager.port(groups.toArray(new Group[groups.size()]));
+    }
+
+    @Override
+    public void portGroupRel(Long groupId) throws Exception {
+        Group group = getById(groupId);
+        groupEntityManager.port(group);
+    }
+
     private Group fresh(Long groupId) throws Exception {
         Group group = getById(groupId);
         autofill(group);

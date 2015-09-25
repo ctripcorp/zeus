@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -61,6 +62,16 @@ public class GroupSyncImpl implements GroupSync {
         groupHealthCheckDao.deleteByGroup(new GroupHealthCheckDo().setGroupId(groupId));
         groupLoadBalancingMethodDao.deleteByGroup(new GroupLoadBalancingMethodDo().setGroupId(groupId));
         return groupDao.deleteById(new GroupDo().setId(groupId));
+    }
+
+    @Override
+    public List<Long> port(Group[] groups) throws Exception {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void port(Group group) throws Exception {
+        throw new NotImplementedException();
     }
 
     private void cascadeSync(Group group) throws Exception {
