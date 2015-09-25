@@ -59,8 +59,8 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group add(Group group) throws Exception {
-        autofill(group);
         groupModelValidator.validate(group);
+        autofill(group);
         groupEntityManager.add(group);
         syncVsAndGs(group);
         return group;
@@ -68,8 +68,8 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group update(Group group) throws Exception {
-        autofill(group);
         groupModelValidator.validate(group);
+        autofill(group);
         groupEntityManager.update(group);
         syncVsAndGs(group);
         return group;
