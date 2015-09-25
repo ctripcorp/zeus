@@ -37,6 +37,12 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     }
 
     @Override
+    public Long queryByVs(Long vsId) throws Exception {
+        RelVsSlbDo vs = rVsSlbDao.findSlbByVs(vsId, RVsSlbEntity.READSET_FULL);
+        return vs == null ? 0L : vs.getSlbId();
+    }
+
+    @Override
     public Set<Long> queryByGroups(Long[] groupIds) throws Exception {
         Set<Long> slbIds = new HashSet<>();
         List<Long> vsIds = new ArrayList<>();

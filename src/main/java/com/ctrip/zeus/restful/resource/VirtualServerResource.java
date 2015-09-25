@@ -13,6 +13,7 @@ import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
@@ -45,6 +46,8 @@ public class VirtualServerResource {
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private TagService tagService;
     @Resource
@@ -119,10 +122,15 @@ public class VirtualServerResource {
     public Response updateVirtualServer(@Context HttpHeaders hh,
                                         @Context HttpServletRequest request, String vs) throws Exception {
         VirtualServer virtualServer = parseVirtualServer(hh.getMediaType(), vs);
+        if (virtualServer.getId() == null || virtualServer.getId().longValue() <= 0L)
+            throw new ValidationException("Invalid virtual server id.");
         if (virtualServer.getSlbId() == null)
             throw new ValidationException("Slb id is not provided.");
+        Long originSlbId = slbCriteriaQuery.queryByVs(virtualServer.getId());
         virtualServerRepository.updateVirtualServer(virtualServer);
         slbRepository.updateVersion(virtualServer.getSlbId());
+        if (!originSlbId.equals(virtualServer.getSlbId()))
+            slbRepository.updateVersion(originSlbId);
         Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[]{virtualServer.getId()});
         groupRepository.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         return responseHandler.handle(virtualServer, hh.getMediaType());

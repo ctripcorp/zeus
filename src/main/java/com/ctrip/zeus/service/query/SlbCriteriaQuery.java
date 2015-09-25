@@ -11,6 +11,8 @@ public interface SlbCriteriaQuery {
 
     Long queryBySlbServer(String ip) throws Exception;
 
+    Long queryByVs(Long vsId) throws Exception;
+
     Set<Long> queryByGroups(Long[] groupIds) throws Exception;
 
     Set<Long> queryAll() throws Exception;
