@@ -68,6 +68,8 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group update(Group group) throws Exception {
+        if (!groupModelValidator.exists(group.getId()))
+            throw new ValidationException("Group with id " + group.getId() + "does not exist.");
         groupModelValidator.validate(group);
         autofill(group);
         groupEntityManager.update(group);

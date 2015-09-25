@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
@@ -33,17 +34,19 @@ public class GroupEntityManager implements GroupSync {
         GroupDo d = C.toGroupDo(0L, group);
         groupDao.insert(d);
         group.setId(d.getId());
-
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
         relSyncVs(group, true);
     }
 
     @Override
     public void update(Group group) throws Exception {
+        GroupDo check = groupDao.findById(group.getId(), GroupEntity.READSET_FULL);
+        if (check.getVersion() > group.getVersion())
+            throw new ValidationException("Newer Group version is detected.");
         group.setVersion(group.getVersion() + 1);
+
         GroupDo d = C.toGroupDo(group.getId(), group);
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
-
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
         relSyncVs(group, false);
     }
@@ -81,7 +84,7 @@ public class GroupEntityManager implements GroupSync {
         if (isnew) {
             for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
                 VirtualServer vs = groupVirtualServer.getVirtualServer();
-                rGroupVsDao.insert(new RelGroupVsDo().setGroupId(group.getId()).setVsId(vs.getId()).setPath(groupVirtualServer.getPath()));
+                rGroupVsDao.insertOrUpdate(new RelGroupVsDo().setGroupId(group.getId()).setVsId(vs.getId()).setPath(groupVirtualServer.getPath()));
             }
             return;
         }
@@ -94,7 +97,7 @@ public class GroupEntityManager implements GroupSync {
             if (!group.getGroupVirtualServers().get(0).getVirtualServer().getId().equals(originVses.get(0).getVsId())) {
                 rGroupVsDao.deleteByVsAndGroup(originVses.get(0));
                 GroupVirtualServer gvs = group.getGroupVirtualServers().get(0);
-                rGroupVsDao.insert(new RelGroupVsDo().setGroupId(group.getId()).setVsId(gvs.getVirtualServer().getId()).setPath(gvs.getPath()));
+                rGroupVsDao.insertOrUpdate(new RelGroupVsDo().setGroupId(group.getId()).setVsId(gvs.getVirtualServer().getId()).setPath(gvs.getPath()));
             }
         } else {
             relUpdateVsMultiple(originVses, group);
@@ -125,7 +128,7 @@ public class GroupEntityManager implements GroupSync {
         }
         for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
             VirtualServer vs = groupVirtualServer.getVirtualServer();
-            rGroupVsDao.insert(new RelGroupVsDo().setGroupId(group.getId()).setVsId(vs.getId()).setPath(groupVirtualServer.getPath()));
+            rGroupVsDao.insertOrUpdate(new RelGroupVsDo().setGroupId(group.getId()).setVsId(vs.getId()).setPath(groupVirtualServer.getPath()));
         }
     }
 

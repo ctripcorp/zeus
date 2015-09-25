@@ -37,7 +37,7 @@ public class DefaultGroupValidator implements GroupValidator {
 
     @Override
     public void validate(Group target) throws Exception {
-        if (target == null || target.getName() == null || target.getName().isEmpty()
+        if (target.getName() == null || target.getName().isEmpty()
                 || target.getAppId() == null || target.getAppId().isEmpty()) {
             throw new ValidationException("Group with null value cannot be persisted.");
         }
