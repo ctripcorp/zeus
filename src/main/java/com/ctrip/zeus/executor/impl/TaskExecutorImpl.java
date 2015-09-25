@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -65,20 +67,28 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     @Override
     public void execute(Long slbId) {
-        DistLock buildLock = dbLockFactory.newLock( "TaskWorker_" + slbId );
+        DistLock buildLock = null;
+        boolean lockflag = false;
         try {
-            List<OpsTask> pendingTasks = taskService.getPendingTasks(slbId);
-            if (pendingTasks.size()==0){
-                return;
-            }
-
-            if (buildLock.tryLock()){
+            logger.info("JobStart:");
+//            List<OpsTask> pendingTasks = taskService.getPendingTasks(slbId);
+//            if (pendingTasks.size()==0){
+//                return;
+//            }
+            buildLock = dbLockFactory.newLock( "TaskWorker_" + slbId );
+            if (lockflag=buildLock.tryLock()){
+                logger.info("tryLockSuccess");
                 executeJob(slbId);
+            }else {
+                logger.warn("TaskWorker get lock failed! TaskWorker:" + slbId);
             }
         }catch (Exception e){
-            logger.warn("TaskWorker get lock failed! Or Executor Failed! TaskWorker: " + slbId);
+            logger.warn("Executor Job Failed! TaskWorker: " + slbId,e);
         } finally{
-            buildLock.unlock();
+            if (lockflag){
+                buildLock.unlock();
+            }
+            logger.info("JobEnd:");
         }
     }
 
@@ -158,7 +168,11 @@ public class TaskExecutorImpl implements TaskExecutor {
             setTaskResult(slbId,true,null);
         }catch (Exception e){
             // failed
-            setTaskResult(slbId,false,e.getMessage());
+            ByteArrayOutputStream out = new ByteArrayOutputStream(512);
+            PrintWriter printWriter = new PrintWriter(out);
+            e.printStackTrace(printWriter);
+            String failCause = e.getMessage()+out.toString();
+            setTaskResult(slbId, false,failCause.length() >1024 ? failCause.substring(0,1024):failCause);
             rollBack(slbId);
             throw e;
         }
@@ -243,6 +257,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }else {
                     task.setStatus(TaskStatus.FAIL);
                     task.setFailCause(failCause);
+                    logger.warn("TaskFail","Task:"+String.format(OpsTask.JSON,task)+"FailCause:"+failCause);
                 }
             }
         }
