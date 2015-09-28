@@ -115,39 +115,17 @@ public class GroupEntityManager implements GroupSync {
         for (int i = 0; i < newVsIds.length; i++) {
             newVsIds[i] = newVses.get(i).getVirtualServer().getId();
         }
-        // O(nlogn)
-        Arrays.sort(originVsIds);
-        Arrays.sort(newVsIds);
 
-        List<Long> removed = new ArrayList<>();
-        List<Long> toadd = new ArrayList<>();
-        // O(n)
-        grouping(originVsIds, newVsIds, removed, toadd);
-        for (Long rId : removed) {
+        List<Long> removing = new ArrayList<>();
+        List<Long> adding = new ArrayList<>();
+        ArraysUniquePicker.pick(originVsIds, newVsIds, removing, adding, null);
+
+        for (Long rId : removing) {
             rGroupVsDao.deleteByVsAndGroup(new RelGroupVsDo().setVsId(rId).setGroupId(group.getId()));
         }
         for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
             VirtualServer vs = groupVirtualServer.getVirtualServer();
             rGroupVsDao.insertOrUpdate(new RelGroupVsDo().setGroupId(group.getId()).setVsId(vs.getId()).setPath(groupVirtualServer.getPath()));
-        }
-    }
-
-    private void grouping(long[] originIds, long[] newIds, List<Long> removed, List<Long> toadd) {
-        int i, j;
-        i = j = 0;
-        while (i < originIds.length && j < newIds.length) {
-            if (originIds[i] == newIds[j]) {
-                ++i;
-                ++j;
-                continue;
-            } else if (originIds[i] < newIds[j]) {
-                removed.add(originIds[i]);
-                ++i;
-                continue;
-            } else { // if (originIds[i] > newIds[j]) {
-                toadd.add(newIds[j]);
-                ++j;
-            }
         }
     }
 }

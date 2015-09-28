@@ -5,7 +5,10 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
+import com.ctrip.zeus.service.model.handler.impl.ArraysUniquePicker;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -148,18 +151,47 @@ public class GroupRepositoryImpl implements GroupRepository {
     private void syncVsAndGs(Group group) throws Exception {
         Long groupId = group.getId();
 
-        Set<String> originIps = new HashSet<>(groupMemberRepository.listGroupServerIpsByGroup(groupId));
-        Set<String> inputIps = new HashSet<>();
-        for (GroupServer groupServer : group.getGroupServers()) {
-            inputIps.add(groupServer.getIp());
-            if (originIps.contains(groupServer.getIp()))
-                groupMemberRepository.updateGroupServer(groupId, groupServer);
-            else
-                groupMemberRepository.addGroupServer(groupId, groupServer);
+        Map<String, GroupServer> originGses = Maps.uniqueIndex(
+                groupMemberRepository.listGroupServersByGroup(groupId),
+                new Function<GroupServer, String>() {
+                    @Override
+                    public String apply(GroupServer input) {
+                        return input.getIp() + ":" + input.getPort();
+                    }
+                });
+        Map<String, GroupServer> newGses = Maps.uniqueIndex(
+                group.getGroupServers(),
+                new Function<GroupServer, String>() {
+                    @Override
+                    public String apply(GroupServer input) {
+                        return input.getIp() + ":" + input.getPort();
+                    }
+                });
+        String[] origServers = new String[originGses.size()];
+        String[] newServers = new String[newGses.size()];
+
+        Iterator<String> iter = originGses.keySet().iterator();
+        for (int i = 0; i < origServers.length; i++) {
+            origServers[i] = iter.next();
         }
-        originIps.removeAll(inputIps);
-        for (String originIp : originIps) {
-            groupMemberRepository.removeGroupServer(groupId, originIp);
+        iter = newGses.keySet().iterator();
+        for (int i = 0; i < newServers.length; i++) {
+            newServers[i] = iter.next();
+        }
+
+        List<String> removing = new ArrayList<>();
+        List<String> adding = new ArrayList<>();
+        List<String> updating = new ArrayList<>();
+        ArraysUniquePicker.pick(origServers, newServers, removing, adding, updating);
+
+        for (String id : removing) {
+            groupMemberRepository.removeGroupServer(groupId, originGses.get(id).getIp());
+        }
+        for (String id : adding) {
+            groupMemberRepository.addGroupServer(groupId, newGses.get(id));
+        }
+        for (String id : updating) {
+            groupMemberRepository.updateGroupServer(groupId, newGses.get(id));
         }
     }
 

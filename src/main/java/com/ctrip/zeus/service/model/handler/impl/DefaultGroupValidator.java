@@ -3,10 +3,12 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.PathRewriteParser;
+import com.ctrip.zeus.service.model.handler.GroupServerValidator;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import org.springframework.stereotype.Component;
@@ -24,7 +26,9 @@ public class DefaultGroupValidator implements GroupValidator {
     @Resource
     private ActiveConfService activeConfService;
     @Resource
-    private VirtualServerValidator virtualServerValidator;
+    private VirtualServerValidator virtualServerModelValidator;
+    @Resource
+    private GroupServerValidator groupServerModelValidator;
     @Resource
     private RGroupVsDao rGroupVsDao;
     @Resource
@@ -46,6 +50,7 @@ public class DefaultGroupValidator implements GroupValidator {
                 throw new ValidationException("Health check path cannot be empty.");
         }
         validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers());
+        validateGroupServers(target.getGroupServers());
     }
 
     @Override
@@ -77,7 +82,7 @@ public class DefaultGroupValidator implements GroupValidator {
                 if (!PathRewriteParser.validate(groupVirtualServer.getRewrite()))
                     throw new ValidationException("Invalid rewrite value.");
             VirtualServer vs = groupVirtualServer.getVirtualServer();
-            if (!virtualServerValidator.exists(vs.getId()))
+            if (!virtualServerModelValidator.exists(vs.getId()))
                 throw new ValidationException("Virtual Server with id " + vs.getId() + " does not exist.");
             else {
                 if (virtualServerIds.contains(vs.getId()))
@@ -98,5 +103,10 @@ public class DefaultGroupValidator implements GroupValidator {
             else
                 groupPaths.add(relGroupVsDo.getVsId() + relGroupVsDo.getPath());
         }
+    }
+
+    @Override
+    public void validateGroupServers(List<GroupServer> groupServers) throws Exception {
+        groupServerModelValidator.validateGroupServers(groupServers);
     }
 }
