@@ -52,7 +52,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     @Override
     public Set<Long> queryByDomain(String domain) throws Exception {
         Set<Long> result = new HashSet<>();
-        for (RelVsDomainDo relVsDomainDo : rVsDomainDao.findAllVsesByDomain(domain, RVsDomainEntity.READSET_FULL)) {
+        for (RelVsDomainDo relVsDomainDo : rVsDomainDao.findAllVsesByDomain(domain.toLowerCase(), RVsDomainEntity.READSET_FULL)) {
             result.add(relVsDomainDo.getVsId());
         }
         return result;

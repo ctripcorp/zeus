@@ -65,7 +65,9 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Override
     public VirtualServer addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception {
         virtualServer.setSlbId(slbId);
-
+        for (Domain domain : virtualServer.getDomains()) {
+            domain.setName(domain.getName().toLowerCase());
+        }
         Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
         List<VirtualServer> check = listAll(checkIds.toArray(new Long[checkIds.size()]));
         check.add(virtualServer);
@@ -76,6 +78,9 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void updateVirtualServer(VirtualServer virtualServer) throws Exception {
+        for (Domain domain : virtualServer.getDomains()) {
+            domain.setName(domain.getName().toLowerCase());
+        }
         Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
         Map<Long, VirtualServer> check = new HashMap<>();
         for (VirtualServer vs : listAll(checkIds.toArray(new Long[checkIds.size()]))) {
@@ -166,7 +171,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     private void querySlbDomains(Long slbVirtualServerId, VirtualServer virtualServer) throws DalException {
         List<SlbDomainDo> list = slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL);
         for (SlbDomainDo d : list) {
-            virtualServer.addDomain(new Domain().setName(d.getName()));
+            virtualServer.addDomain(new Domain().setName(d.getName().toLowerCase()));
         }
     }
 

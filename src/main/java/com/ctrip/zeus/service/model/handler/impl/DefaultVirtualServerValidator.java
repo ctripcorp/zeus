@@ -41,7 +41,7 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
                 if (!getPortWhiteList().contains(virtualServer.getPort())) {
                     throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed.");
                 }
-                String key = domain.getName() + ":" + virtualServer.getPort();
+                String key = domain.getName().toLowerCase() + ":" + virtualServer.getPort();
                 if (existingHost.contains(key))
                     throw new ValidationException("Duplicate domain and port combination is found: " + key);
                 else
