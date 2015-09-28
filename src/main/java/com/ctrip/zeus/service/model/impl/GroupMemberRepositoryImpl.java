@@ -17,15 +17,8 @@ import java.util.List;
 public class GroupMemberRepositoryImpl implements GroupMemberRepository {
     @Resource
     private GroupServerDao groupServerDao;
-
-    @Override
-    public List<String> listGroupServerIpsByGroup(Long groupId) throws Exception {
-        List<String> result = new ArrayList<>();
-        for (GroupServerDo groupServerDo : groupServerDao.findAllByGroup(groupId, GroupServerEntity.READSET_FULL)) {
-            result.add(groupServerDo.getIp());
-        }
-        return result;
-    }
+    @Resource
+    private RGroupGsDao rGroupGsDao;
 
     @Override
     public List<GroupServer> listGroupServersByGroup(Long groupId) throws Exception {
@@ -37,22 +30,15 @@ public class GroupMemberRepositoryImpl implements GroupMemberRepository {
     }
 
     @Override
-    public Long[] findGroupsByGroupServerIp(String groupServerIp) throws Exception {
-        List<GroupServerDo> l = groupServerDao.findAllByIp(groupServerIp, GroupServerEntity.READSET_FULL);
-        Long[] result = new Long[l.size()];
-        for (int i = 0; i < l.size(); i++) {
-            result[i] = l.get(i).getGroupId();
-        }
-        return result;
-    }
-
-    @Override
     public void addGroupServer(Long groupId, GroupServer groupServer) throws Exception {
+        autofill(groupServer);
         groupServerDao.insert(C.toGroupServerDo(groupServer).setGroupId(groupId));
+        rGroupGsDao.insert(new RelGroupGsDo().setGroupId(groupId).setIp(groupServer.getIp()));
     }
 
     @Override
     public void updateGroupServer(Long groupId, GroupServer groupServer) throws Exception {
+        autofill(groupServer);
         groupServerDao.updateByGroupAndIp(C.toGroupServerDo(groupServer).setGroupId(groupId), GroupServerEntity.UPDATESET_FULL);
     }
 
@@ -60,8 +46,16 @@ public class GroupMemberRepositoryImpl implements GroupMemberRepository {
     public void removeGroupServer(Long groupId, String ip) throws Exception {
         if (ip != null) {
             groupServerDao.deleteByGroupAndIp(new GroupServerDo().setGroupId(groupId).setIp(ip));
+            rGroupGsDao.deleteByGroupAndIp(new RelGroupGsDo().setGroupId(groupId).setIp(ip));
         } else {
             groupServerDao.deleteByGroup(new GroupServerDo().setGroupId(groupId));
+            rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(groupId));
         }
+    }
+
+    private void autofill(GroupServer groupServer) {
+        groupServer.setWeight(groupServer.getWeight() == null ? 5 : groupServer.getWeight())
+                .setFailTimeout(groupServer.getFailTimeout() == null ? 30 : groupServer.getFailTimeout())
+                .setFailTimeout(groupServer.getMaxFails() == null ? 0 : groupServer.getMaxFails());
     }
 }

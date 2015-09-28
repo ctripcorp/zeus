@@ -9,10 +9,7 @@ import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -121,8 +118,8 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception {
-        Long[] groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
-        return list(groupIds);
+        Set<Long> groupIds = groupCriteriaQuery.queryByGroupServerIp(groupServerIp);
+        return list(groupIds.toArray(new Long[groupIds.size()]));
     }
 
     @Override

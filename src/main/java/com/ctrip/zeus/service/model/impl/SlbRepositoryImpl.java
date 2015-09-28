@@ -14,6 +14,7 @@ import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Repository;
@@ -36,11 +37,11 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
-    @Resource
-    private GroupMemberRepository groupMemberRepository;
     @Resource
     private ArchiveService archiveService;
     @Resource
@@ -79,10 +80,10 @@ public class SlbRepositoryImpl implements SlbRepository {
     public List<Slb> listByGroupServer(String groupServerIp) throws Exception {
         if (groupServerIp == null)
             throw new ValidationException("group server ip must not be empty.");
-        Long[] groupIds = groupMemberRepository.findGroupsByGroupServerIp(groupServerIp);
-        if (groupIds.length == 0)
+        Set<Long> groupIds = groupCriteriaQuery.queryByGroupServerIp(groupServerIp);
+        if (groupIds.size() == 0)
             return new ArrayList<>();
-        return listByGroups(groupIds);
+        return listByGroups(groupIds.toArray(new Long[groupIds.size()]));
     }
 
     @Override

@@ -9,11 +9,7 @@ import java.util.List;
  */
 public interface GroupMemberRepository {
 
-    List<String> listGroupServerIpsByGroup(Long groupId) throws Exception;
-
     List<GroupServer> listGroupServersByGroup(Long groupId) throws Exception;
-
-    Long[] findGroupsByGroupServerIp(String groupServerIp) throws Exception;
 
     void addGroupServer(Long groupId, GroupServer groupServer) throws Exception;
 
