@@ -149,5 +149,13 @@ public class GroupEntityManager implements GroupSync {
                 ++j;
             }
         }
+        while (i < originIds.length) {
+            removed.add(originIds[i]);
+            ++i;
+        }
+        while (j < newIds.length) {
+            toadd.add(newIds[j]);
+            ++j;
+        }
     }
 }
