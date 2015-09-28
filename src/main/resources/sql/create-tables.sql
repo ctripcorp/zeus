@@ -494,6 +494,20 @@ CREATE TABLE IF NOT EXISTS `report` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table r_group_gs
+DROP TABLE IF EXISTS `r_group_gs`;
+CREATE TABLE IF NOT EXISTS `r_group_gs` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `group_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'group_id',
+  `ip` varchar(200) NOT NULL DEFAULT '0' COMMENT 'group_server ip',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of group and group server ip';
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table r_group_vs
 DROP TABLE IF EXISTS `r_group_vs`;
 CREATE TABLE IF NOT EXISTS `r_group_vs` (
@@ -503,6 +517,7 @@ CREATE TABLE IF NOT EXISTS `r_group_vs` (
   `path` varchar(4096) DEFAULT NULL COMMENT 'path',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
+  UNIQUE KEY `group_id_vs_id` (`group_id`,`vs_id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of group and vs';
 
