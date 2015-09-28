@@ -150,7 +150,6 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     private void syncVsAndGs(Group group) throws Exception {
         Long groupId = group.getId();
-        virtualServerRepository.updateGroupVirtualServers(groupId, group.getGroupVirtualServers());
 
         Set<String> originIps = new HashSet<>(groupMemberRepository.listGroupServerIpsByGroup(groupId));
         Set<String> inputIps = new HashSet<>();
@@ -168,7 +167,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     private void cascadeRemoveByGroup(Long groupId) throws Exception {
-        virtualServerRepository.batchDeleteGroupVirtualServers(groupId);
         groupMemberRepository.removeGroupServer(groupId, null);
     }
 }

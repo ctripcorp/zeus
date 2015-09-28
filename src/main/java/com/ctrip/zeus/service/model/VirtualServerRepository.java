@@ -1,6 +1,5 @@
 package com.ctrip.zeus.service.model;
 
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 
 import java.util.List;
@@ -21,12 +20,6 @@ public interface VirtualServerRepository {
     void deleteVirtualServer(Long virtualServerId) throws Exception;
 
     void batchDeleteVirtualServers(Long slbId) throws Exception;
-
-    @Deprecated
-    void batchDeleteGroupVirtualServers(Long groupId) throws Exception;
-
-    @Deprecated
-    void updateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception;
 
     @Deprecated
     List<Long> portVirtualServerRel() throws Exception;
