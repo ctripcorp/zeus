@@ -9,6 +9,7 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.util.AssertUtils;
@@ -21,7 +22,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -33,6 +33,8 @@ import java.util.Set;
 public class SlbResource {
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
@@ -53,23 +55,18 @@ public class SlbResource {
                          @TrimmedQueryParam("pname") String pname,
                          @TrimmedQueryParam("pvalue") String pvalue) throws Exception {
         SlbList slbList = new SlbList();
-        boolean noFilter = true;
-        Set<Long> filtered = new HashSet<>();
+        Set<Long> filtered = slbCriteriaQuery.queryAll();
         if (tag != null) {
-            noFilter = false;
-            filtered.addAll(tagService.query(tag, "slb"));
+            filtered.retainAll(tagService.query(tag, "slb"));
         }
         if (pname != null) {
-            noFilter = false;
             if (pvalue != null)
-                filtered.addAll(propertyService.query(pname, pvalue, "slb"));
+                filtered.retainAll(propertyService.query(pname, pvalue, "slb"));
             else
-                filtered.addAll(propertyService.query(pname, "slb"));
+                filtered.retainAll(propertyService.query(pname, "slb"));
         }
-
-        for (Slb slb : slbRepository.list()) {
-            if (noFilter || filtered.contains(slb.getId()))
-                slbList.addSlb(getSlbByType(slb, type));
+        for (Slb slb : slbRepository.list(filtered.toArray(new Long[filtered.size()]))) {
+            slbList.addSlb(getSlbByType(slb, type));
         }
         slbList.setTotal(slbList.getSlbs().size());
         return responseHandler.handle(slbList, hh.getMediaType());
@@ -86,12 +83,12 @@ public class SlbResource {
         if (slbId == null && slbName == null) {
             throw new Exception("Missing parameter.");
         }
-        Slb slb = null;
+        Slb slb = new Slb();
+        if (slbId == null && slbName != null) {
+            slbId = slbCriteriaQuery.queryByName(slbName);
+        }
         if (slbId != null) {
             slb = slbRepository.getById(slbId);
-        }
-        if (slb == null && slbName != null) {
-            slb = slbRepository.get(slbName);
         }
         AssertUtils.assertNotNull(slb, "Slb cannot be found.");
         return responseHandler.handle(getSlbByType(slb, type), hh.getMediaType());

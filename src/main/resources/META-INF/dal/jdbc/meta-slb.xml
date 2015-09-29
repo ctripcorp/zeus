@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="slb" table="slb" alias="s2" do-class="SlbDo">
+        <var name="names" value-type="String[]"/>
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        name = values(name),
+                        nginx_bin = values(nginx_bin),
+                        nginx_conf = values(nginx_conf),
+                        nginx_worker_processes = values(nginx_worker_processes),
+                        status = values(status),
+                        version = version + 1,
+                        <FIELD name="data-change-last-time"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-id" type="UPDATE">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='name'/> = ${name},
+                        <FIELD name='nginx-bin'/> = ${nginx-bin},
+                        <FIELD name='nginx-conf'/> = ${nginx-conf},
+                        <FIELD name='nginx-worker-processes'/> = ${nginx-worker-processes},
+                        <FIELD name='status'/> = ${status},
+                        version = version + 1,
+                        <FIELD name="data-change-last-time"/> = NOW()
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-names" type="SELECT" multiple="true">
+                <param name="names"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> in <IN>${names}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                SELECT <FIELDS/>
+                FROM <TABLE/>
+                    WHERE <FIELD name='id'/> in <IN>${ids}</IN>
+                ]]>
+                </statement>
+            </query>
+            <query name="find-by-name" type="SELECT">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-id" type="SELECT">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="delete-by-slb" type="DELETE">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-max-version-by-slb" type="SELECT">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE  <FIELD name='slb-id'/> = ${slb-id}
+                        ORDER BY <FIELD name='version'/> DESC
+                        LIMIT 1
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-max-version-by-slbs" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM (SELECT * from archive_slb
+                        WHERE slb_id in <IN>${ids}</IN>
+                        ORDER BY version DESC) as3
+                    GROUP BY slb_id
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-and-version" type="SELECT">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>

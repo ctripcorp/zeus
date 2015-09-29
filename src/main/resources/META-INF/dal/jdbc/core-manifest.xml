@@ -18,5 +18,6 @@
     <file path="rel-group.xml"/>
     <file path="meta-vs.xml"/>
     <file path="meta-group.xml"/>
+    <file path="meta-slb.xml"/>
 </manifest>
 

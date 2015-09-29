@@ -56,8 +56,16 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
+    public List<Slb> list(Long[] slbIds) throws Exception {
+        return archiveService.getLatestSlbs(slbIds);
+    }
+
+    @Override
     public Slb getById(Long slbId) throws Exception {
-        return archiveService.getLatestSlb(slbId);
+        if (slbModelValidator.exists(slbId)) {
+            return archiveService.getLatestSlb(slbId);
+        }
+        return null;
     }
 
     @Override
@@ -78,8 +86,6 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public List<Slb> listByGroupServer(String groupServerIp) throws Exception {
-        if (groupServerIp == null)
-            throw new ValidationException("group server ip must not be empty.");
         Set<Long> groupIds = groupCriteriaQuery.queryByGroupServerIp(groupServerIp);
         if (groupIds.size() == 0)
             return new ArrayList<>();
