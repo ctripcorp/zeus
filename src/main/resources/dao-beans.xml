@@ -128,6 +128,10 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RGroupVsDao"/>
     </bean>
 
+    <bean id="rSlbSlbServerDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RSlbSlbServerDao"/>
+    </bean>
+
     <bean id="rVsDomainDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RVsDomainDao"/>
     </bean>

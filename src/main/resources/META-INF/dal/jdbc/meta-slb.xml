@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="slb" table="slb" alias="s2" do-class="SlbDo">
+        <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <var name="names" value-type="String[]"/>
         <var name="ids" value-type="Long[]"/>
         <query-defs>
@@ -15,8 +16,7 @@
                         nginx_conf = values(nginx_conf),
                         nginx_worker_processes = values(nginx_worker_processes),
                         status = values(status),
-                        version = version + 1,
-                        <FIELD name="data-change-last-time"/> = NOW()
+                        version = values(version)
                     ]]>
                 </statement>
             </query>
@@ -30,8 +30,7 @@
                         <FIELD name='nginx-conf'/> = ${nginx-conf},
                         <FIELD name='nginx-worker-processes'/> = ${nginx-worker-processes},
                         <FIELD name='status'/> = ${status},
-                        version = version + 1,
-                        <FIELD name="data-change-last-time"/> = NOW()
+                        <FIELD name='version'/> = ${version}
                     WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
@@ -87,6 +86,7 @@
         </query-defs>
     </entity>
     <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
+        <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="delete-by-slb" type="DELETE">

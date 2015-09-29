@@ -271,6 +271,15 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>r-slb-slb-server</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>r_slb_slb_server</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>r-vs-domain</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -659,6 +668,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.RGroupVsDao</role>
 			<implementation>com.ctrip.zeus.dal.core.RGroupVsDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.RSlbSlbServerDao</role>
+			<implementation>com.ctrip.zeus.dal.core.RSlbSlbServerDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

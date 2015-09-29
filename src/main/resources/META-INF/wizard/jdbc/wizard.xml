@@ -53,6 +53,7 @@
          <table name="m_vs_content"/>
          <table name="r_group_vs"/>
          <table name="r_group_gs"/>
+         <table name="r_slb_slb_server"/>
       </group>
    </jdbc>
 </wizard>

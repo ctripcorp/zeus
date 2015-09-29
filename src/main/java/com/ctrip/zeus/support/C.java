@@ -155,7 +155,7 @@ public class C {
                 .setNginxConf(e.getNginxConf())
                 .setNginxWorkerProcesses(e.getNginxWorkerProcesses())
                 .setStatus(e.getStatus())
-                .setVersion(e.getVersion() == null ? 0 : e.getVersion());
+                .setVersion(e.getVersion());
     }
 
     public static SlbServerDo toSlbServerDo(Long slbId, SlbServer e) {
