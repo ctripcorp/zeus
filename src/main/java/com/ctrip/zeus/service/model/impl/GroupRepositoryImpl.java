@@ -129,12 +129,15 @@ public class GroupRepositoryImpl implements GroupRepository {
     public List<Long> portGroupRel() throws Exception {
         Set<Long> groupIds = groupCriteriaQuery.queryAll();
         List<Group> groups = list(groupIds.toArray(new Long[groupIds.size()]));
-        return groupEntityManager.port(groups.toArray(new Group[groups.size()]));
+        Group[] batch = groups.toArray(new Group[groups.size()]);
+        groupMemberRepository.port(batch);
+        return groupEntityManager.port(batch);
     }
 
     @Override
     public void portGroupRel(Long groupId) throws Exception {
         Group group = getById(groupId);
+        groupMemberRepository.port(new Group[]{group});
         groupEntityManager.port(group);
     }
 

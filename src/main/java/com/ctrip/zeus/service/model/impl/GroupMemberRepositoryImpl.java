@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.service.model.GroupMemberRepository;
 import com.ctrip.zeus.support.C;
@@ -51,6 +52,17 @@ public class GroupMemberRepositoryImpl implements GroupMemberRepository {
             groupServerDao.deleteByGroup(new GroupServerDo().setGroupId(groupId));
             rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(groupId));
         }
+    }
+
+    @Override
+    public void port(Group[] groups) throws Exception {
+        List<RelGroupGsDo> batch = new ArrayList<>();
+        for (Group group : groups) {
+            for (GroupServer groupServer : group.getGroupServers()) {
+                batch.add(new RelGroupGsDo().setGroupId(group.getId()).setIp(groupServer.getIp()));
+            }
+        }
+        rGroupGsDao.insert(batch.toArray(new RelGroupGsDo[batch.size()]));
     }
 
     private void autofill(GroupServer groupServer) {
