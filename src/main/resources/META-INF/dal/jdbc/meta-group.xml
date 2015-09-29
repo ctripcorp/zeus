@@ -86,4 +86,64 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="archive-group" table="archive_group" alias="ag" do-class="ArchiveGroupDo">
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-max-version-by-group" type="SELECT">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE  <FIELD name='group-id'/> = ${group-id}
+                        ORDER BY <FIELD name='version'/> DESC
+                        LIMIT 1
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-max-version-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM (SELECT * from archive_group
+                        WHERE group_id in <IN>${ids}</IN>
+                        ORDER BY version DESC) ag
+                    GROUP BY group_id
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-group-and-version" type="SELECT">
+                <param name="group-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='group-id'/> = ${group-id}
+                        AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
 </entities>
