@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.handler;
 
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 
 import java.util.List;
@@ -11,4 +12,6 @@ import java.util.List;
 public interface GroupValidator extends ModelValidator<Group> {
 
     void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception;
+
+    void validateGroupServers(List<GroupServer> groupServers) throws Exception;
 }

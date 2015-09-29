@@ -20,6 +20,8 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     @Resource
     private RGroupVsDao rGroupVsDao;
     @Resource
+    private RGroupGsDao rGroupGsDao;
+    @Resource
     private RVsSlbDao rVsSlbDao;
 
     @Override
@@ -69,6 +71,15 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
         Set<Long> groupIds = new HashSet<>();
         for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllGroupsByVses(vsIds, RGroupVsEntity.READSET_FULL)) {
             groupIds.add(relGroupVsDo.getGroupId());
+        }
+        return groupIds;
+    }
+
+    @Override
+    public Set<Long> queryByGroupServerIp(String ip) throws Exception {
+        Set<Long> groupIds = new HashSet<>();
+        for (RelGroupGsDo relGroupGsDo : rGroupGsDao.findAllGroupsByIp(ip, RGroupGsEntity.READSET_FULL)) {
+            groupIds.add(relGroupGsDo.getGroupId());
         }
         return groupIds;
     }

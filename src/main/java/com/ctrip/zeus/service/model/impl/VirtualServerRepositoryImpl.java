@@ -6,15 +6,12 @@ import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
-import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.C;
-import com.google.common.base.Function;
-import com.google.common.collect.Maps;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
@@ -33,17 +30,11 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Resource
     private MVsContentDao mVsContentDao;
     @Resource
-    private GroupSlbDao groupSlbDao;
-    @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
     @Resource
     private SlbDomainDao slbDomainDao;
     @Resource
-    private SlbDao slbDao;
-    @Resource
     private VirtualServerValidator virtualServerModelValidator;
-    @Resource
-    private GroupValidator groupModelValidator;
     @Resource
     private SlbValidator slbModelValidator;
 
@@ -108,40 +99,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         //TODO validation?
         Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slbId);
         virtualServerEntityManager.deleteVirtualServers(vsIds.toArray(new Long[vsIds.size()]));
-    }
-
-    @Override
-    public void batchDeleteGroupVirtualServers(Long groupId) throws Exception {
-        groupSlbDao.deleteByGroup(new GroupSlbDo().setGroupId(groupId));
-    }
-
-    @Override
-    public void updateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception {
-        groupModelValidator.validateGroupVirtualServers(groupId, groupVirtualServers);
-        List<GroupSlbDo> originServers = groupSlbDao.findAllByGroup(groupId, GroupSlbEntity.READSET_FULL);
-        Map<Long, GroupSlbDo> uniqueCheck = Maps.uniqueIndex(
-                originServers, new Function<GroupSlbDo, Long>() {
-                    @Override
-                    public Long apply(GroupSlbDo input) {
-                        return input.getSlbVirtualServerId();
-                    }
-                });
-        for (GroupVirtualServer groupVirtualServer : groupVirtualServers) {
-            GroupSlbDo originServer = uniqueCheck.get(groupVirtualServer.getVirtualServer().getId());
-            if (originServer != null)
-                originServers.remove(originServer);
-            SlbVirtualServerDo d = slbVirtualServerDao.findByPK(groupVirtualServer.getVirtualServer().getId(), SlbVirtualServerEntity.READSET_FULL);
-            if (d == null)
-                throw new ValidationException("Virtual server with id " + groupVirtualServer.getVirtualServer().getId() + " cannot be found.");
-            SlbDo slb = slbDao.findById(d.getSlbId(), SlbEntity.READSET_FULL);
-            if (slb == null)
-                throw new ValidationException("Cannot find the corresponding slb from virtual server with id " + d.getId() + ".");
-            groupVirtualServer.getVirtualServer().setSlbId(slb.getId());
-            groupSlbDao.insertOrUpdate(toGroupSlbDo(groupId, groupVirtualServer));
-        }
-        for (GroupSlbDo d : originServers) {
-            groupSlbDao.deleteByPK(d);
-        }
     }
 
     @Override

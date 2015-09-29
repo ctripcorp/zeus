@@ -297,7 +297,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         Assert.assertTrue(gvsIds.remove(gvs.get(0).getVirtualServer().getId()));
         Assert.assertTrue(gvsIds.remove(gvs.get(1).getVirtualServer().getId()));
         Assert.assertEquals(0, gvsIds.size());
-        
+
         gvs.get(0).setVirtualServer(new VirtualServer().setId(gvs.get(1).getVirtualServer().getId()));
         try {
             groupRepository.update(group);
@@ -397,7 +397,10 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testListGroupServersByGroup() throws Exception {
-        List<String> groupServers = groupMemberRepository.listGroupServerIpsByGroup(testGroup.getId());
+        List<String> groupServers = new ArrayList<>();
+        for (GroupServer groupServer : groupMemberRepository.listGroupServersByGroup(testGroup.getId())) {
+            groupServers.add(groupServer.getIp());
+        }
         List<String> groupServersRef = new ArrayList<>();
         for (GroupServer as : testGroup.getGroupServers()) {
             groupServersRef.add(as.getIp());
@@ -408,7 +411,7 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testFindGroupsByGroupServerIp() throws Exception {
-        Long[] groupIds = groupMemberRepository.findGroupsByGroupServerIp(testGroup.getGroupServers().get(0).getIp());
+        Set<Long> groupIds = groupCriteriaQuery.queryByGroupServerIp(testGroup.getGroupServers().get(0).getIp());
         boolean containsTestGroup = false;
         for (Long groupId : groupIds) {
             if (groupId.equals(testGroup.getId())) {

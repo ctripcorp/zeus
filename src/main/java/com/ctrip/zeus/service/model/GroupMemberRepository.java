@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.model;
 
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 
 import java.util.List;
@@ -9,15 +10,14 @@ import java.util.List;
  */
 public interface GroupMemberRepository {
 
-    List<String> listGroupServerIpsByGroup(Long groupId) throws Exception;
-
     List<GroupServer> listGroupServersByGroup(Long groupId) throws Exception;
-
-    Long[] findGroupsByGroupServerIp(String groupServerIp) throws Exception;
 
     void addGroupServer(Long groupId, GroupServer groupServer) throws Exception;
 
     void updateGroupServer(Long groupId, GroupServer groupServer) throws Exception;
 
     void removeGroupServer(Long groupId, String ip) throws Exception;
+
+    @Deprecated
+    void port(Group[] groups) throws Exception;
 }
