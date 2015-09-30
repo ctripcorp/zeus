@@ -18,6 +18,8 @@ public interface GroupMemberRepository {
 
     void removeGroupServer(Long groupId, String ip) throws Exception;
 
+    void autofill(GroupServer groupServer) throws Exception;
+
     @Deprecated
     void port(Group[] groups) throws Exception;
 }

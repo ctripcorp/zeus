@@ -43,7 +43,7 @@ public class DefaultGroupValidator implements GroupValidator {
     public void validate(Group target) throws Exception {
         if (target.getName() == null || target.getName().isEmpty()
                 || target.getAppId() == null || target.getAppId().isEmpty()) {
-            throw new ValidationException("Group with null value cannot be persisted.");
+            throw new ValidationException("Group name and app id are required.");
         }
         if (target.getHealthCheck() != null) {
             if (target.getHealthCheck().getUri() == null || target.getHealthCheck().getUri().isEmpty())
