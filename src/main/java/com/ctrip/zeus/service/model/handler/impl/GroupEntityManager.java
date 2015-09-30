@@ -72,7 +72,7 @@ public class GroupEntityManager implements GroupSync {
         List<Long> fails = new ArrayList<>();
         for (Group group : groups) {
             try {
-                relSyncVs(group, true);
+                relSyncVs(group, false);
             } catch (Exception ex) {
                 fails.add(group.getId());
             }
