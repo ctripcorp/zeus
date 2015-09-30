@@ -19,7 +19,7 @@ public interface VirtualServerRepository {
 
     void deleteVirtualServer(Long virtualServerId) throws Exception;
 
-    void batchDeleteVirtualServers(Long slbId) throws Exception;
+    void autofill(VirtualServer virtualServer);
 
     @Deprecated
     List<Long> portVirtualServerRel() throws Exception;

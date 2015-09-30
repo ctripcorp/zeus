@@ -17,6 +17,7 @@ import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
+import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
@@ -97,6 +98,7 @@ public class VirtualServerResource {
                                      @Context HttpServletRequest request,
                                      @QueryParam("vsId") Long vsId) throws Exception {
         VirtualServer vs = virtualServerRepository.getById(vsId);
+        AssertUtils.assertNotNull(vs, "Virtual server cannot be found.");
         return responseHandler.handle(vs, hh.getMediaType());
     }
 
@@ -145,7 +147,7 @@ public class VirtualServerResource {
                                         @QueryParam("vsId") Long vsId) throws Exception {
         if (vsId == null)
             throw new ValidationException("vsId is required.");
-        Slb slb = slbRepository.getByVirtualServer(vsId);
+        Slb slb = slbRepository.getById(slbCriteriaQuery.queryByVs(vsId));
         if (slb == null) {
             throw new ValidationException("Cannot find slb with vsId " + vsId + ".");
         }

@@ -2,22 +2,14 @@ package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.model.handler.GroupQuery;
+import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
-import com.netflix.config.DynamicPropertyFactory;
-import com.netflix.config.DynamicStringProperty;
 import org.springframework.stereotype.Component;
-import org.unidal.dal.jdbc.DalException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/6/30.
@@ -26,6 +18,8 @@ import java.util.Set;
 public class DefaultSlbValidator implements SlbValidator {
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private SlbDao slbDao;
 
@@ -36,11 +30,28 @@ public class DefaultSlbValidator implements SlbValidator {
 
     @Override
     public void validate(Slb slb) throws Exception {
-        if (slb == null || slb.getName() == null || slb.getName().isEmpty()) {
-            throw new ValidationException("Slb with null value cannot be persisted.");
+        if (slb.getName() == null || slb.getName().isEmpty()) {
+            throw new ValidationException("Slb name is required.");
+        }
+        if (slb.getVips() == null || slb.getVips().size() == 0) {
+            throw new ValidationException("Slb vip is required.");
         }
         if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
-            throw new ValidationException("Slb without slb servers cannot be persisted.");
+            throw new ValidationException("Slb without slb servers cannot be created.");
+        }
+        Long nameCheck = slbCriteriaQuery.queryByName(slb.getName());
+        if (!nameCheck.equals(0L) && !nameCheck.equals(slb.getId())) {
+            throw new ValidationException("Duplicate name " + slb.getName() + " is found at slb " + nameCheck + ".");
+        }
+        String[] ips = new String[slb.getSlbServers().size()];
+        for (int i = 0; i < ips.length; i++) {
+            ips[i] = slb.getSlbServers().get(i).getIp();
+        }
+        for (SlbServer slbServer : slb.getSlbServers()) {
+            Long slbId = slbCriteriaQuery.queryBySlbServerIp(slbServer.getIp());
+            if (!slbId.equals(0L) && !slbId.equals(slb.getId())) {
+                throw new ValidationException("Slb server " + slbServer.getIp() + " is added to slb " + slbId + ". Unique server ip is required.");
+            }
         }
     }
 

@@ -77,13 +77,23 @@
     </entity>
     <entity name="r-group-gs" table="r_group_gs" alias="rgg" do-class="RelGroupGsDo">
         <query-defs>
-            <query name="find-all-groups-by-ip" type="SELECT" multiple="true">
+            <query name="find-all-by-ip" type="SELECT" multiple="true">
                 <param name="ip"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='ip'/> = ${ip}
+                ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                 ]]>
                 </statement>
             </query>
@@ -104,7 +114,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-group-and-ip" type="DELETE">
+            <query name="delete-by-group-and-ip" type="DELETE" batch="true">
                 <param name="group-id"/>
                 <param name="ip"/>
                 <statement>

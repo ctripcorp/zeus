@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -31,17 +32,17 @@ public class SlbSyncImpl implements SlbSync {
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public Long add(Slb slb) throws Exception {
+    public void add(Slb slb) throws Exception {
         SlbDo d = C.toSlbDo(0L, slb);
         d.setCreatedTime(new Date()).setVersion(1);
         slbDao.insert(d);
         syncSlbVips(d.getId(), slb.getVips());
         syncSlbServers(d.getId(), slb.getSlbServers());
-        return d.getId();
+        slb.setId(d.getId());
     }
 
     @Override
-    public Long update(Slb slb) throws Exception {
+    public void update(Slb slb) throws Exception {
         SlbDo check = slbDao.findById(slb.getId(), SlbEntity.READSET_FULL);
         if (check == null)
             throw new ValidationException("Slb does not exist.");
@@ -51,7 +52,6 @@ public class SlbSyncImpl implements SlbSync {
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
         syncSlbVips(d.getId(), slb.getVips());
         syncSlbServers(d.getId(), slb.getSlbServers());
-        return d.getId();
     }
 
     @Override
@@ -64,6 +64,16 @@ public class SlbSyncImpl implements SlbSync {
         slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(slbId));
         slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(slbId));
         return slbDao.deleteByPK(new SlbDo().setId(slbId));
+    }
+
+    @Override
+    public List<Long> port(Slb[] slbs) throws Exception {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void port(Slb slb) throws Exception {
+        throw new NotImplementedException();
     }
 
     private void syncSlbVips(Long slbId, List<Vip> vips) throws DalException {

@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.handler.GroupSync;
@@ -13,7 +14,6 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,6 +27,8 @@ public class GroupEntityManager implements GroupSync {
     private ArchiveGroupDao archiveGroupDao;
     @Resource
     private RGroupVsDao rGroupVsDao;
+    @Resource
+    private RGroupGsDao rGroupGsDao;
 
     @Override
     public void add(Group group) throws Exception {
@@ -36,6 +38,7 @@ public class GroupEntityManager implements GroupSync {
         group.setId(d.getId());
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
         relSyncVs(group, true);
+        relSyncGs(group, true);
     }
 
     @Override
@@ -49,6 +52,7 @@ public class GroupEntityManager implements GroupSync {
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
         relSyncVs(group, false);
+        relSyncGs(group, false);
     }
 
     @Override
@@ -59,6 +63,7 @@ public class GroupEntityManager implements GroupSync {
     @Override
     public int delete(Long groupId) throws Exception {
         rGroupVsDao.deleteAllByGroup(new RelGroupVsDo().setGroupId(groupId));
+        rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(groupId));
         return groupDao.deleteById(new GroupDo().setId(groupId));
     }
 
@@ -78,6 +83,45 @@ public class GroupEntityManager implements GroupSync {
     @Override
     public void port(Group group) throws Exception {
         relSyncVs(group, false);
+    }
+
+    private void relSyncGs(Group group, boolean isnew) throws DalException {
+        if (isnew) {
+            RelGroupGsDo[] dos = new RelGroupGsDo[group.getGroupServers().size()];
+            for (int i = 0; i < dos.length; i++) {
+                dos[i] = new RelGroupGsDo().setGroupId(group.getId()).setIp(group.getGroupServers().get(i).getIp());
+            }
+            rGroupGsDao.insert(dos);
+            return;
+        }
+        List<RelGroupGsDo> originGses = rGroupGsDao.findAllByGroup(group.getId(), RGroupGsEntity.READSET_FULL);
+        if (originGses.size() == 0) {
+            relSyncGs(group, true);
+        }
+        List<GroupServer> newGses = group.getGroupServers();
+        String[] originGsIps = new String[originGses.size()];
+        String[] newGsIps = new String[newGses.size()];
+        for (int i = 0; i < originGsIps.length; i++) {
+            originGsIps[i] = originGses.get(i).getIp();
+        }
+        for (int i = 0; i < newGsIps.length; i++) {
+            newGsIps[i] = newGses.get(i).getIp();
+        }
+        List<String> removing = new ArrayList<>();
+        List<String> adding = new ArrayList<>();
+        ArraysUniquePicker.pick(originGsIps, newGsIps, removing, adding);
+
+        RelGroupGsDo[] dos = new RelGroupGsDo[removing.size()];
+        for (int i = 0; i < dos.length; i++) {
+            dos[i] = new RelGroupGsDo().setGroupId(group.getId()).setIp(removing.get(i));
+        }
+        rGroupGsDao.deleteByGroupAndIp(dos);
+
+        dos = new RelGroupGsDo[adding.size()];
+        for (int i = 0; i < dos.length; i++) {
+            dos[i] = new RelGroupGsDo().setGroupId(group.getId()).setIp(adding.get(i));
+        }
+        rGroupGsDao.insert(dos);
     }
 
     private void relSyncVs(Group group, boolean isnew) throws DalException {
@@ -117,8 +161,7 @@ public class GroupEntityManager implements GroupSync {
         }
 
         List<Long> removing = new ArrayList<>();
-        List<Long> adding = new ArrayList<>();
-        ArraysUniquePicker.pick(originVsIds, newVsIds, removing, adding, null);
+        ArraysUniquePicker.pick(originVsIds, newVsIds, removing, new ArrayList<Long>());
 
         for (Long rId : removing) {
             rGroupVsDao.deleteByVsAndGroup(new RelGroupVsDo().setVsId(rId).setGroupId(group.getId()));

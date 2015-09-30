@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="r-slb-slb-server" table="r_slb_slb_server" alias="rsss" do-class="RelSlbSlbServerDo">
+        <query-defs>
+            <query name="find-all-ips-by-slb" type="SELECT" multiple="true">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-slb-by-ip" type="SELECT">
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert" type="INSERT" batch="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-all-by-slb" type="DELETE">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb-and-ip" type="DELETE" batch="true">
+                <param name="slb-id"/>
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                      AND <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+</entities>
+

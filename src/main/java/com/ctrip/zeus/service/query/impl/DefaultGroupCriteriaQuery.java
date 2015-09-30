@@ -78,7 +78,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     @Override
     public Set<Long> queryByGroupServerIp(String ip) throws Exception {
         Set<Long> groupIds = new HashSet<>();
-        for (RelGroupGsDo relGroupGsDo : rGroupGsDao.findAllGroupsByIp(ip, RGroupGsEntity.READSET_FULL)) {
+        for (RelGroupGsDo relGroupGsDo : rGroupGsDao.findAllByIp(ip, RGroupGsEntity.READSET_FULL)) {
             groupIds.add(relGroupGsDo.getGroupId());
         }
         return groupIds;

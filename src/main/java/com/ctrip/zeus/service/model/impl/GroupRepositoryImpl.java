@@ -5,10 +5,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
-import com.ctrip.zeus.service.model.handler.impl.ArraysUniquePicker;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
-import com.google.common.base.Function;
-import com.google.common.collect.Maps;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -62,7 +59,6 @@ public class GroupRepositoryImpl implements GroupRepository {
         groupModelValidator.validate(group);
         autofill(group);
         groupEntityManager.add(group);
-        syncVsAndGs(group);
         return group;
     }
 
@@ -73,16 +69,16 @@ public class GroupRepositoryImpl implements GroupRepository {
         groupModelValidator.validate(group);
         autofill(group);
         groupEntityManager.update(group);
-        syncVsAndGs(group);
         return group;
     }
 
-    // this would be called iff virtual/group servers are modified
+    // this would be called iff virtual servers are modified
     @Override
     public List<Group> updateVersion(Long[] groupIds) throws Exception {
         List<Group> result = new ArrayList<>();
         for (Long groupId : groupIds) {
-            Group g = fresh(groupId);
+            Group g = getById(groupId);
+            autofill(g);
             groupEntityManager.update(g);
             result.add(g);
         }
@@ -92,7 +88,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public int delete(Long groupId) throws Exception {
         groupModelValidator.removable(groupId);
-        cascadeRemoveByGroup(groupId);
         return groupEntityManager.delete(groupId);
     }
 
@@ -117,6 +112,9 @@ public class GroupRepositoryImpl implements GroupRepository {
         if (lbm == null)
             lbm = new LoadBalancingMethod();
         lbm.setType("roundrobin").setValue(lbm.getValue() == null ? "Default" : lbm.getValue());
+        for (GroupServer groupServer : group.getGroupServers()) {
+            groupMemberRepository.autofill(groupServer);
+        }
     }
 
     @Override
@@ -139,66 +137,5 @@ public class GroupRepositoryImpl implements GroupRepository {
         Group group = getById(groupId);
         groupMemberRepository.port(new Group[]{group});
         groupEntityManager.port(group);
-    }
-
-    private Group fresh(Long groupId) throws Exception {
-        Group group = getById(groupId);
-        autofill(group);
-        group.getGroupServers().clear();
-        for (GroupServer server : groupMemberRepository.listGroupServersByGroup(group.getId())) {
-            group.addGroupServer(server);
-        }
-        return group;
-    }
-
-    private void syncVsAndGs(Group group) throws Exception {
-        Long groupId = group.getId();
-
-        Map<String, GroupServer> originGses = Maps.uniqueIndex(
-                groupMemberRepository.listGroupServersByGroup(groupId),
-                new Function<GroupServer, String>() {
-                    @Override
-                    public String apply(GroupServer input) {
-                        return input.getIp() + ":" + input.getPort();
-                    }
-                });
-        Map<String, GroupServer> newGses = Maps.uniqueIndex(
-                group.getGroupServers(),
-                new Function<GroupServer, String>() {
-                    @Override
-                    public String apply(GroupServer input) {
-                        return input.getIp() + ":" + input.getPort();
-                    }
-                });
-        String[] origServers = new String[originGses.size()];
-        String[] newServers = new String[newGses.size()];
-
-        Iterator<String> iter = originGses.keySet().iterator();
-        for (int i = 0; i < origServers.length; i++) {
-            origServers[i] = iter.next();
-        }
-        iter = newGses.keySet().iterator();
-        for (int i = 0; i < newServers.length; i++) {
-            newServers[i] = iter.next();
-        }
-
-        List<String> removing = new ArrayList<>();
-        List<String> adding = new ArrayList<>();
-        List<String> updating = new ArrayList<>();
-        ArraysUniquePicker.pick(origServers, newServers, removing, adding, updating);
-
-        for (String id : removing) {
-            groupMemberRepository.removeGroupServer(groupId, originGses.get(id).getIp());
-        }
-        for (String id : adding) {
-            groupMemberRepository.addGroupServer(groupId, newGses.get(id));
-        }
-        for (String id : updating) {
-            groupMemberRepository.updateGroupServer(groupId, newGses.get(id));
-        }
-    }
-
-    private void cascadeRemoveByGroup(Long groupId) throws Exception {
-        groupMemberRepository.removeGroupServer(groupId, null);
     }
 }

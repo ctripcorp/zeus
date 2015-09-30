@@ -65,7 +65,8 @@ public class GroupMemberRepositoryImpl implements GroupMemberRepository {
         rGroupGsDao.insert(batch.toArray(new RelGroupGsDo[batch.size()]));
     }
 
-    private void autofill(GroupServer groupServer) {
+    @Override
+    public void autofill(GroupServer groupServer) {
         groupServer.setWeight(groupServer.getWeight() == null ? 5 : groupServer.getWeight())
                 .setFailTimeout(groupServer.getFailTimeout() == null ? 30 : groupServer.getFailTimeout())
                 .setFailTimeout(groupServer.getMaxFails() == null ? 0 : groupServer.getMaxFails());

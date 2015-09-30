@@ -41,8 +41,6 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
-    private GroupMemberRepository groupMemberRepository;
-    @Resource
     private ArchiveService archiveService;
 
     private Slb defaultSlb;
@@ -118,14 +116,14 @@ public class ModelServiceTest extends AbstractSpringTest {
         slbRepository.add(s);
         Slb newest = slbRepository.get(s.getName());
         s.setId(newest.getId());
-        Assert.assertEquals(2, s.getVirtualServers().size());
+        Assert.assertEquals(2, newest.getVirtualServers().size());
 
         Slb updated = new Slb().setId(newest.getId()).setName("testUpdateSlb").setVersion(1)
                 .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf")
                 .setNginxWorkerProcesses(2).setStatus("TEST")
                 .addVip(new Vip().setIp("127.0.0.1"))
-                .addSlbServer(new SlbServer().setIp("10.1.1.11").setHostName("dev1"))
-                .addSlbServer(new SlbServer().setIp("10.1.1.12").setHostName("dev2"));
+                .addSlbServer(new SlbServer().setIp("10.1.1.111").setHostName("dev1"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.121").setHostName("dev2"));
         slbRepository.update(updated);
         newest = slbRepository.get(s.getName());
         Assert.assertEquals(2, newest.getSlbServers().size());
@@ -150,7 +148,7 @@ public class ModelServiceTest extends AbstractSpringTest {
             Assert.assertTrue("valid update action throws exception.", false);
         }
         targetSlb.getVirtualServers().remove(0);
-        slbRepository.update(targetSlb);
+        virtualServerRepository.deleteVirtualServer(targetSlb.getVirtualServers().get(0).getId());
     }
 
     private void addSlb() throws Exception {
@@ -317,9 +315,9 @@ public class ModelServiceTest extends AbstractSpringTest {
                 .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf")
                 .setNginxWorkerProcesses(2).setStatus("TEST")
                 .addVip(new Vip().setIp("127.0.0.1"))
-                .addSlbServer(new SlbServer().setIp("10.1.1.11").setHostName("dev1"))
-                .addSlbServer(new SlbServer().setIp("10.1.1.12").setHostName("dev2"))
-                .addSlbServer(new SlbServer().setIp("10.1.1.13").setHostName("dev3"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.01").setHostName("dev1"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.02").setHostName("dev2"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.03").setHostName("dev3"))
                 .addVirtualServer(new VirtualServer().setName("www.nihao.com").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("www.nihao.com")))
                 .addVirtualServer(new VirtualServer().setName("www.hello.com").setSsl(false).setPort("80")
@@ -375,9 +373,9 @@ public class ModelServiceTest extends AbstractSpringTest {
                 .setNginxBin("/opt/group/nginx/sbin").setNginxConf("/opt/group/nginx/conf")
                 .setNginxWorkerProcesses(2).setStatus("TEST")
                 .addVip(new Vip().setIp("127.0.0.1"))
-                .addSlbServer(new SlbServer().setIp("10.1.1.11").setHostName("dev1"))
-                .addSlbServer(new SlbServer().setIp("10.1.1.12").setHostName("dev2"))
-                .addSlbServer(new SlbServer().setIp("10.1.1.13").setHostName("dev3"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.011").setHostName("dev1"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.012").setHostName("dev2"))
+                .addSlbServer(new SlbServer().setIp("10.1.1.013").setHostName("dev3"))
                 .addVirtualServer(new VirtualServer().setName("www.bonjour.com").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("www.bonjour.com")))
                 .addVirtualServer(new VirtualServer().setName("www.hallo.com").setSsl(false).setPort("80")
@@ -398,7 +396,7 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Test
     public void testListGroupServersByGroup() throws Exception {
         List<String> groupServers = new ArrayList<>();
-        for (GroupServer groupServer : groupMemberRepository.listGroupServersByGroup(testGroup.getId())) {
+        for (GroupServer groupServer : groupRepository.getById(testGroup.getId()).getGroupServers()) {
             groupServers.add(groupServer.getIp());
         }
         List<String> groupServersRef = new ArrayList<>();
@@ -424,21 +422,24 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testGroupServerModification() throws Exception {
-        List<GroupServer> groupMembers = groupMemberRepository.listGroupServersByGroup(testGroup.getId());
+        List<GroupServer> groupMembers = testGroup.getGroupServers();
         groupMembers.get(0).setPort(8899);
-        groupMemberRepository.updateGroupServer(testGroup.getId(), groupMembers.get(0));
-        List<GroupServer> updated = groupMemberRepository.listGroupServersByGroup(testGroup.getId());
+        groupRepository.update(testGroup);
+
+        List<GroupServer> updated = groupRepository.getById(testGroup.getId()).getGroupServers();
         ModelAssert.assertGroupServerEquals(groupMembers.get(0), updated.get(0));
         ModelAssert.assertGroupServerEquals(groupMembers.get(1), updated.get(1));
 
         GroupServer add = new GroupServer().setFailTimeout(70).setHostName("NET182").setIp("192.168.10.2").setMaxFails(0).setPort(80).setWeight(5);
-        groupMemberRepository.addGroupServer(testGroup.getId(), add);
-        updated = groupMemberRepository.listGroupServersByGroup(testGroup.getId());
+        testGroup.addGroupServer(add);
+        groupRepository.update(testGroup);
+        updated = groupRepository.getById(testGroup.getId()).getGroupServers();
         Assert.assertEquals(3, updated.size());
         ModelAssert.assertGroupServerEquals(add, updated.get(2));
 
-        groupMemberRepository.removeGroupServer(testGroup.getId(), add.getIp());
-        updated = groupMemberRepository.listGroupServersByGroup(testGroup.getId());
+        testGroup.getGroupServers().remove(testGroup.getGroupServers().size() - 1);
+        groupRepository.update(testGroup);
+        updated = groupRepository.getById(testGroup.getId()).getGroupServers();
         Assert.assertEquals(2, updated.size());
         ModelAssert.assertGroupServerEquals(groupMembers.get(0), updated.get(0));
         ModelAssert.assertGroupServerEquals(groupMembers.get(1), updated.get(1));

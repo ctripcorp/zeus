@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 
 /**
@@ -13,5 +14,9 @@ public class ContentWriters {
 
     public static String writeGroupContent(Group g) {
         return String.format(Group.XML, g);
+    }
+
+    public static String writeSlbContent(Slb s) {
+        return String.format(Slb.XML, s);
     }
 }
