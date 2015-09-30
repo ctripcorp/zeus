@@ -259,7 +259,7 @@ public class ModelServiceTest extends AbstractSpringTest {
         Assert.assertEquals(1, vsIds.size());
         VirtualServer vs = virtualServerRepository.getById((Long) vsIds.toArray()[0]);
         Assert.assertEquals("www.testGet1.com", vs.getName());
-        Assert.assertEquals("www.testGet1.com", vs.getDomains().get(0).getName());
+        Assert.assertEquals("www.testGet1.com".toLowerCase(), vs.getDomains().get(0).getName());
         VirtualServer vs1 = virtualServerRepository.getById(vs.getId());
         ModelAssert.assertVirtualServerEquals(vs, vs1);
     }
