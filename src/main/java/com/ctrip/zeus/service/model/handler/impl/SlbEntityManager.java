@@ -77,7 +77,7 @@ public class SlbEntityManager implements SlbSync {
         List<Long> fails = new ArrayList<>();
         for (Slb slb : slbs) {
             try {
-                relSyncSlbServer(slb, true);
+                relSyncSlbServer(slb, false);
             } catch (Exception ex) {
                 fails.add(slb.getId());
             }

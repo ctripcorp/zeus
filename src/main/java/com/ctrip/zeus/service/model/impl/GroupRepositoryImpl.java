@@ -24,8 +24,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
-    private GroupMemberRepository groupMemberRepository;
-    @Resource
     private ArchiveService archiveService;
     @Resource
     private GroupValidator groupModelValidator;
@@ -113,7 +111,9 @@ public class GroupRepositoryImpl implements GroupRepository {
             lbm = new LoadBalancingMethod();
         lbm.setType("roundrobin").setValue(lbm.getValue() == null ? "Default" : lbm.getValue());
         for (GroupServer groupServer : group.getGroupServers()) {
-            groupMemberRepository.autofill(groupServer);
+            groupServer.setWeight(groupServer.getWeight() == null ? 5 : groupServer.getWeight())
+                    .setFailTimeout(groupServer.getFailTimeout() == null ? 30 : groupServer.getFailTimeout())
+                    .setFailTimeout(groupServer.getMaxFails() == null ? 0 : groupServer.getMaxFails());
         }
     }
 
@@ -128,14 +128,12 @@ public class GroupRepositoryImpl implements GroupRepository {
         Set<Long> groupIds = groupCriteriaQuery.queryAll();
         List<Group> groups = list(groupIds.toArray(new Long[groupIds.size()]));
         Group[] batch = groups.toArray(new Group[groups.size()]);
-        groupMemberRepository.port(batch);
         return groupEntityManager.port(batch);
     }
 
     @Override
     public void portGroupRel(Long groupId) throws Exception {
         Group group = getById(groupId);
-        groupMemberRepository.port(new Group[]{group});
         groupEntityManager.port(group);
     }
 }

@@ -72,7 +72,8 @@ public class GroupEntityManager implements GroupSync {
         List<Long> fails = new ArrayList<>();
         for (Group group : groups) {
             try {
-                relSyncVs(group, true);
+                relSyncGs(group, false);
+                relSyncVs(group, false);
             } catch (Exception ex) {
                 fails.add(group.getId());
             }
@@ -82,6 +83,7 @@ public class GroupEntityManager implements GroupSync {
 
     @Override
     public void port(Group group) throws Exception {
+        relSyncGs(group, false);
         relSyncVs(group, false);
     }
 
@@ -97,6 +99,7 @@ public class GroupEntityManager implements GroupSync {
         List<RelGroupGsDo> originGses = rGroupGsDao.findAllByGroup(group.getId(), RGroupGsEntity.READSET_FULL);
         if (originGses.size() == 0) {
             relSyncGs(group, true);
+            return;
         }
         List<GroupServer> newGses = group.getGroupServers();
         String[] originGsIps = new String[originGses.size()];
