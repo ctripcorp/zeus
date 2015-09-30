@@ -116,8 +116,7 @@ public class GroupEntityManager implements GroupSync {
         }
 
         List<Long> removing = new ArrayList<>();
-        List<Long> adding = new ArrayList<>();
-        ArraysUniquePicker.pick(originVsIds, newVsIds, removing, adding, null);
+        ArraysUniquePicker.pick(originVsIds, newVsIds, removing, new ArrayList<Long>(), null);
 
         for (Long rId : removing) {
             rGroupVsDao.deleteByVsAndGroup(new RelGroupVsDo().setVsId(rId).setGroupId(group.getId()));

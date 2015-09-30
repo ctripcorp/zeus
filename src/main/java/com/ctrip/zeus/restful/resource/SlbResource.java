@@ -13,6 +13,7 @@ import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.ctrip.zeus.util.AssertUtils;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -22,6 +23,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -129,6 +131,29 @@ public class SlbResource {
         }
         slbRepository.delete(slbId);
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("/slb/upgradeAll")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeAll(@Context HttpHeaders hh,
+                               @Context HttpServletRequest request) throws Exception {
+
+        List<Long> slbIds =slbRepository.portSlbRel();
+        if (slbIds.size() == 0)
+            return responseHandler.handle("Successfully ported all slb relations.", hh.getMediaType());
+        else
+            return responseHandler.handle("Error occurs when porting slb relations on id " + Joiner.on(',').join(slbIds) + ".", hh.getMediaType());
+    }
+
+    @GET
+    @Path("/slb/upgrade")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeSingle(@Context HttpHeaders hh,
+                                  @Context HttpServletRequest request,
+                                  @QueryParam("slbId") Long slbId) throws Exception {
+        slbRepository.portSlbRel(slbId);
+        return responseHandler.handle("Successfully ported slb relations.", hh.getMediaType());
     }
 
     private Slb parseSlb(MediaType mediaType, String slb) throws Exception {

@@ -72,6 +72,24 @@ public class SlbEntityManager implements SlbSync {
         return slbDao.deleteByPK(new SlbDo().setId(slbId));
     }
 
+    @Override
+    public List<Long> port(Slb[] slbs) throws Exception {
+        List<Long> fails = new ArrayList<>();
+        for (Slb slb : slbs) {
+            try {
+                relSyncSlbServer(slb, true);
+            } catch (Exception ex) {
+                fails.add(slb.getId());
+            }
+        }
+        return fails;
+    }
+
+    @Override
+    public void port(Slb slb) throws Exception {
+        relSyncSlbServer(slb, false);
+    }
+
     private void relSyncSlbServer(Slb slb, boolean isnew) throws Exception {
         if (isnew) {
             RelSlbSlbServerDo[] dos = new RelSlbSlbServerDo[slb.getSlbServers().size()];
@@ -103,7 +121,7 @@ public class SlbEntityManager implements SlbSync {
 
         dos = new RelSlbSlbServerDo[adding.size()];
         for (int i = 0; i < dos.length; i++) {
-            dos[i] = new RelSlbSlbServerDo().setSlbId(slb.getId()).setIp(removing.get(i));
+            dos[i] = new RelSlbSlbServerDo().setSlbId(slb.getId()).setIp(adding.get(i));
         }
         rSlbSlbServerDao.insert(dos);
     }

@@ -39,13 +39,17 @@ public class DefaultSlbValidator implements SlbValidator {
         if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
             throw new ValidationException("Slb without slb servers cannot be created.");
         }
+        Long nameCheck = slbCriteriaQuery.queryByName(slb.getName());
+        if (!nameCheck.equals(0L) && !nameCheck.equals(slb.getId())) {
+            throw new ValidationException("Duplicate name " + slb.getName() + " is found at slb " + nameCheck + ".");
+        }
         String[] ips = new String[slb.getSlbServers().size()];
         for (int i = 0; i < ips.length; i++) {
             ips[i] = slb.getSlbServers().get(i).getIp();
         }
         for (SlbServer slbServer : slb.getSlbServers()) {
             Long slbId = slbCriteriaQuery.queryBySlbServerIp(slbServer.getIp());
-            if (!slbId.equals(0L)) {
+            if (!slbId.equals(0L) && !slbId.equals(slb.getId())) {
                 throw new ValidationException("Slb server " + slbServer.getIp() + " is added to slb " + slbId + ". Unique server ip is required.");
             }
         }

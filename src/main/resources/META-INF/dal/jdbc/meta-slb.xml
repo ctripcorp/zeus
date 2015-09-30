@@ -10,13 +10,6 @@
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
-                    ON DUPLICATE KEY UPDATE
-                        name = values(name),
-                        nginx_bin = values(nginx_bin),
-                        nginx_conf = values(nginx_conf),
-                        nginx_worker_processes = values(nginx_worker_processes),
-                        status = values(status),
-                        version = values(version)
                     ]]>
                 </statement>
             </query>

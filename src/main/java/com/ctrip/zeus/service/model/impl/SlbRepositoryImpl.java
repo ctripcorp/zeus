@@ -152,6 +152,19 @@ public class SlbRepositoryImpl implements SlbRepository {
         }
     }
 
+    @Override
+    public List<Long> portSlbRel() throws Exception {
+        Set<Long> slbIds = slbCriteriaQuery.queryAll();
+        List<Slb> slbs = list(slbIds.toArray(new Long[slbIds.size()]));
+        return slbEntityManager.port(slbs.toArray(new Slb[slbs.size()]));
+    }
+
+    @Override
+    public void portSlbRel(Long slbId) throws Exception {
+        Slb slb = getById(slbId);
+        slbEntityManager.port(slb);
+    }
+
     private Slb fresh(Long slbId) throws Exception {
         Slb slb = getById(slbId);
         autofill(slb);

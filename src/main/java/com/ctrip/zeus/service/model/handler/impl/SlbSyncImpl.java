@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -63,6 +64,16 @@ public class SlbSyncImpl implements SlbSync {
         slbVipDao.deleteBySlb(new SlbVipDo().setSlbId(slbId));
         slbServerDao.deleteBySlb(new SlbServerDo().setSlbId(slbId));
         return slbDao.deleteByPK(new SlbDo().setId(slbId));
+    }
+
+    @Override
+    public List<Long> port(Slb[] slbs) throws Exception {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void port(Slb slb) throws Exception {
+        throw new NotImplementedException();
     }
 
     private void syncSlbVips(Long slbId, List<Vip> vips) throws DalException {
