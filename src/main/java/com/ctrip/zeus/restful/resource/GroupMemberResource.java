@@ -2,13 +2,12 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupServerList;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.model.GroupMemberRepository;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
@@ -20,7 +19,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zhoumy on 2015/8/6.
@@ -28,8 +29,6 @@ import java.util.List;
 @Component
 @Path("/")
 public class GroupMemberResource {
-    @Resource
-    private GroupMemberRepository groupMemberRepository;
     @Resource
     private GroupRepository groupRepository;
     @Resource
@@ -42,8 +41,11 @@ public class GroupMemberResource {
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
                          @QueryParam("groupId") Long groupId) throws Exception {
+        Group group = groupRepository.getById(groupId);
+        if (group == null)
+            throw new ValidationException("Group with id " + groupId + " does not exist.");
         GroupServerList groupServerList = new GroupServerList().setGroupId(groupId);
-        for (GroupServer groupServer : groupMemberRepository.listGroupServersByGroup(groupId)) {
+        for (GroupServer groupServer : group.getGroupServers()) {
             groupServerList.addGroupServer(groupServer);
         }
         return responseHandler.handle(groupServerList, hh.getMediaType());
@@ -57,10 +59,13 @@ public class GroupMemberResource {
         GroupServerList gsl = parseGroupServer(hh.getMediaType(), groupServerList);
         if (gsl.getGroupId() == null)
             throw new ValidationException("Group id is required.");
+        Group group = groupRepository.getById(gsl.getGroupId());
+        if (group == null)
+            throw new ValidationException("Group with id " + gsl.getGroupId() + " does not exist.");
         for (GroupServer groupServer : gsl.getGroupServers()) {
-            groupMemberRepository.addGroupServer(gsl.getGroupId(), groupServer);
+            group.getGroupServers().add(groupServer);
         }
-        groupRepository.updateVersion(new Long[] {gsl.getGroupId()});
+        groupRepository.update(group);
         return responseHandler.handle("Successfully added group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -72,10 +77,24 @@ public class GroupMemberResource {
         GroupServerList gsl = parseGroupServer(hh.getMediaType(), groupServerList);
         if (gsl.getGroupId() == null)
             throw new ValidationException("Group id is required.");
-        for (GroupServer groupServer : gsl.getGroupServers()) {
-            groupMemberRepository.updateGroupServer(gsl.getGroupId(), groupServer);
+        Group group = groupRepository.getById(gsl.getGroupId());
+        if (group == null)
+            throw new ValidationException("Group with id " + gsl.getGroupId() + " does not exist.");
+        Map<String, GroupServer> groupServers = new HashMap<>();
+        for (GroupServer gs : group.getGroupServers()) {
+            groupServers.put(gs.getIp() + ":" + gs.getPort(), gs);
         }
-        groupRepository.updateVersion(new Long[] {gsl.getGroupId()});
+        // replace old values with new ones
+        for (GroupServer gs : gsl.getGroupServers()) {
+            String key = gs.getIp() + ":" + gs.getPort();
+            if (groupServers.containsKey(key))
+                groupServers.put(key, gs);
+        }
+        group.getGroupServers().clear();
+        for (GroupServer gs : groupServers.values()) {
+            group.getGroupServers().add(gs);
+        }
+        groupRepository.update(group);
         return responseHandler.handle("Successfully updated group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -83,14 +102,26 @@ public class GroupMemberResource {
     @Path("/member/remove")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "removeMember")
-    public Response removeMember(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("groupId") Long groupId,
+    public Response removeMember(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                 @QueryParam("groupId") Long groupId,
                                  @QueryParam("ip") List<String> ips) throws Exception {
         if (groupId == null)
             throw new ValidationException("Group id parameter is required.");
-        for (String ip : ips) {
-            groupMemberRepository.removeGroupServer(groupId, ip);
+        Group group = groupRepository.getById(groupId);
+        if (group == null)
+            throw new ValidationException("Group with id " + groupId + " does not exist.");
+        Map<String, GroupServer> groupServers = new HashMap<>();
+        for (GroupServer gs : group.getGroupServers()) {
+            groupServers.put(gs.getIp(), gs);
         }
-        groupRepository.updateVersion(new Long[] {groupId});
+        for (String ip : ips) {
+            groupServers.remove(ip);
+        }
+        group.getGroupServers().clear();
+        for (GroupServer gs : groupServers.values()) {
+            group.getGroupServers().add(gs);
+        }
+        groupRepository.update(group);
         return responseHandler.handle("Successfully removed " + Joiner.on(",").join(ips) + " from group with id " + groupId + ".", hh.getMediaType());
     }
 

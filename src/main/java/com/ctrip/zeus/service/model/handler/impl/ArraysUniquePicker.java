@@ -10,18 +10,15 @@ import java.util.List;
 public class ArraysUniquePicker {
 
     // O(nlogn)
-    public static void pick(long[] arr1, long[] arr2, List<Long> arr1picker, List<Long> arr2picker, List<Long> shared) {
+    public static void pick(long[] arr1, long[] arr2, List<Long> arr1picker, List<Long> arr2picker) {
         // DualPivotQuicksort: O(nlogn)
         Arrays.sort(arr1);
         Arrays.sort(arr2);
         int i, j;
         i = j = 0;
-        if (shared == null)
-            shared = new ArrayList<>();
         // O(n)
         while (i < arr1.length && j < arr2.length) {
             if (arr1[i] == arr2[j]) {
-                shared.add(arr1[i]);
                 ++i;
                 ++j;
                 continue;
@@ -44,17 +41,14 @@ public class ArraysUniquePicker {
         }
     }
 
-    public static void pick(String[] arr1, String[] arr2, List<String> arr1picker, List<String> arr2picker, List<String> shared) {
+    public static void pick(String[] arr1, String[] arr2, List<String> arr1picker, List<String> arr2picker) {
         // ComparableTimSort: O(nlogn)
         Arrays.sort(arr1);
         Arrays.sort(arr2);
         int i, j;
         i = j = 0;
-        if (shared == null)
-            shared = new ArrayList<>();
         while (i < arr1.length && j < arr2.length) {
             if (arr1[i].contentEquals(arr2[j])) {
-                shared.add(arr1[i]);
                 ++i;
                 ++j;
                 continue;

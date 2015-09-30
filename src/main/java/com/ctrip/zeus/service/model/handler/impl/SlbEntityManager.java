@@ -111,7 +111,7 @@ public class SlbEntityManager implements SlbSync {
         }
         List<String> removing = new ArrayList<>();
         List<String> adding = new ArrayList<>();
-        ArraysUniquePicker.pick(originIps, newIps, removing, adding, null);
+        ArraysUniquePicker.pick(originIps, newIps, removing, adding);
 
         RelSlbSlbServerDo[] dos = new RelSlbSlbServerDo[removing.size()];
         for (int i = 0; i < dos.length; i++) {

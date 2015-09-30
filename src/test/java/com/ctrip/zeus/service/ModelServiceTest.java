@@ -41,8 +41,6 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
-    private GroupMemberRepository groupMemberRepository;
-    @Resource
     private ArchiveService archiveService;
 
     private Slb defaultSlb;
@@ -139,19 +137,19 @@ public class ModelServiceTest extends AbstractSpringTest {
         slbRepository.delete(defaultSlb.getId());
     }
 
-//    @Test(expected = ValidationException.class)
-//    public void testSlbModifiable() throws Exception {
-//        Slb targetSlb = slbRepository.get(defaultSlb.getName());
-//        VirtualServer vs = new VirtualServer().setName("testnew").setSsl(false).setPort("80").addDomain(new Domain().setName("s1new.ctrip.com"));
-//        targetSlb.addVirtualServer(vs);
-//        try {
-//            slbRepository.update(targetSlb);
-//        } catch (Exception e) {
-//            Assert.assertTrue("valid update action throws exception.", false);
-//        }
-//        targetSlb.getVirtualServers().remove(0);
-//        slbRepository.update(targetSlb);
-//    }
+    @Test(expected = ValidationException.class)
+    public void testSlbModifiable() throws Exception {
+        Slb targetSlb = slbRepository.get(defaultSlb.getName());
+        VirtualServer vs = new VirtualServer().setName("testnew").setSsl(false).setPort("80").addDomain(new Domain().setName("s1new.ctrip.com"));
+        targetSlb.addVirtualServer(vs);
+        try {
+            slbRepository.update(targetSlb);
+        } catch (Exception e) {
+            Assert.assertTrue("valid update action throws exception.", false);
+        }
+        targetSlb.getVirtualServers().remove(0);
+        virtualServerRepository.deleteVirtualServer(targetSlb.getVirtualServers().get(0).getId());
+    }
 
     private void addSlb() throws Exception {
         defaultSlb = new Slb().setName("default").setVersion(1)
@@ -398,7 +396,7 @@ public class ModelServiceTest extends AbstractSpringTest {
     @Test
     public void testListGroupServersByGroup() throws Exception {
         List<String> groupServers = new ArrayList<>();
-        for (GroupServer groupServer : groupMemberRepository.listGroupServersByGroup(testGroup.getId())) {
+        for (GroupServer groupServer : groupRepository.getById(testGroup.getId()).getGroupServers()) {
             groupServers.add(groupServer.getIp());
         }
         List<String> groupServersRef = new ArrayList<>();
@@ -424,21 +422,24 @@ public class ModelServiceTest extends AbstractSpringTest {
 
     @Test
     public void testGroupServerModification() throws Exception {
-        List<GroupServer> groupMembers = groupMemberRepository.listGroupServersByGroup(testGroup.getId());
+        List<GroupServer> groupMembers = testGroup.getGroupServers();
         groupMembers.get(0).setPort(8899);
-        groupMemberRepository.updateGroupServer(testGroup.getId(), groupMembers.get(0));
-        List<GroupServer> updated = groupMemberRepository.listGroupServersByGroup(testGroup.getId());
+        groupRepository.update(testGroup);
+
+        List<GroupServer> updated = groupRepository.getById(testGroup.getId()).getGroupServers();
         ModelAssert.assertGroupServerEquals(groupMembers.get(0), updated.get(0));
         ModelAssert.assertGroupServerEquals(groupMembers.get(1), updated.get(1));
 
         GroupServer add = new GroupServer().setFailTimeout(70).setHostName("NET182").setIp("192.168.10.2").setMaxFails(0).setPort(80).setWeight(5);
-        groupMemberRepository.addGroupServer(testGroup.getId(), add);
-        updated = groupMemberRepository.listGroupServersByGroup(testGroup.getId());
+        testGroup.addGroupServer(add);
+        groupRepository.update(testGroup);
+        updated = groupRepository.getById(testGroup.getId()).getGroupServers();
         Assert.assertEquals(3, updated.size());
         ModelAssert.assertGroupServerEquals(add, updated.get(2));
 
-        groupMemberRepository.removeGroupServer(testGroup.getId(), add.getIp());
-        updated = groupMemberRepository.listGroupServersByGroup(testGroup.getId());
+        testGroup.getGroupServers().remove(testGroup.getGroupServers().size() - 1);
+        groupRepository.update(testGroup);
+        updated = groupRepository.getById(testGroup.getId()).getGroupServers();
         Assert.assertEquals(2, updated.size());
         ModelAssert.assertGroupServerEquals(groupMembers.get(0), updated.get(0));
         ModelAssert.assertGroupServerEquals(groupMembers.get(1), updated.get(1));
