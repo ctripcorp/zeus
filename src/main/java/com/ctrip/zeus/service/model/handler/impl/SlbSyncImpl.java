@@ -31,17 +31,17 @@ public class SlbSyncImpl implements SlbSync {
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public Long add(Slb slb) throws Exception {
+    public void add(Slb slb) throws Exception {
         SlbDo d = C.toSlbDo(0L, slb);
         d.setCreatedTime(new Date()).setVersion(1);
         slbDao.insert(d);
         syncSlbVips(d.getId(), slb.getVips());
         syncSlbServers(d.getId(), slb.getSlbServers());
-        return d.getId();
+        slb.setId(d.getId());
     }
 
     @Override
-    public Long update(Slb slb) throws Exception {
+    public void update(Slb slb) throws Exception {
         SlbDo check = slbDao.findById(slb.getId(), SlbEntity.READSET_FULL);
         if (check == null)
             throw new ValidationException("Slb does not exist.");
@@ -51,7 +51,6 @@ public class SlbSyncImpl implements SlbSync {
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
         syncSlbVips(d.getId(), slb.getVips());
         syncSlbServers(d.getId(), slb.getSlbServers());
-        return d.getId();
     }
 
     @Override

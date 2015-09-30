@@ -18,9 +18,9 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     @Resource
     private SlbDao slbDao;
     @Resource
-    private SlbServerDao slbServerDao;
-    @Resource
     private RGroupVsDao rGroupVsDao;
+    @Resource
+    private RSlbSlbServerDao rSlbSlbServerDao;
     @Resource
     private RVsSlbDao rVsSlbDao;
 
@@ -31,8 +31,8 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     }
 
     @Override
-    public Long queryBySlbServer(String ip) throws Exception {
-        SlbServerDo ss = slbServerDao.findByIp(ip, SlbServerEntity.READSET_FULL);
+    public Long queryBySlbServerIp(String ip) throws Exception {
+        RelSlbSlbServerDo ss = rSlbSlbServerDao.findSlbByIp(ip, RSlbSlbServerEntity.READSET_FULL);
         return ss == null ? 0L : ss.getSlbId();
     }
 

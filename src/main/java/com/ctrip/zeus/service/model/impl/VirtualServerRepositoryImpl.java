@@ -56,7 +56,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Override
     public VirtualServer addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception {
         virtualServer.setSlbId(slbId);
-
         Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
         List<VirtualServer> check = listAll(checkIds.toArray(new Long[checkIds.size()]));
         check.add(virtualServer);
@@ -88,12 +87,9 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         virtualServerEntityManager.deleteVirtualServer(virtualServerId);
     }
 
-    // This would be called iff slb is to be removed. Validation is done in slb validation.
     @Override
-    public void batchDeleteVirtualServers(Long slbId) throws Exception {
-        //TODO validation?
-        Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slbId);
-        virtualServerEntityManager.deleteVirtualServers(vsIds.toArray(new Long[vsIds.size()]));
+    public void autofill(VirtualServer virtualServer) {
+        virtualServer.setSsl(virtualServer.getSsl() == null ? false : virtualServer.getSsl());
     }
 
     @Override

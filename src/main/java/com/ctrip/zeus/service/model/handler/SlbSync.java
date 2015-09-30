@@ -8,9 +8,9 @@ import com.ctrip.zeus.model.entity.Slb;
  */
 public interface SlbSync {
 
-    Long add(Slb slb) throws Exception;
+    void add(Slb slb) throws Exception;
 
-    Long update(Slb slb) throws Exception;
+    void update(Slb slb) throws Exception;
 
     void updateVersion(Long slbId) throws Exception;
 

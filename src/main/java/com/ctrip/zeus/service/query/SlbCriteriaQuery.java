@@ -9,7 +9,7 @@ public interface SlbCriteriaQuery {
 
     Long queryByName(String name) throws Exception;
 
-    Long queryBySlbServer(String ip) throws Exception;
+    Long queryBySlbServerIp(String ip) throws Exception;
 
     Long queryByVs(Long vsId) throws Exception;
 

@@ -23,6 +23,8 @@ public interface SlbRepository extends Repository {
 
     Slb updateVersion(Long slbId) throws Exception;
 
+    void autofill(Slb slb) throws Exception;
+
     @Deprecated
     List<Slb> list() throws Exception;
 
