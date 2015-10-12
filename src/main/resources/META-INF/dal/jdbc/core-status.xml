@@ -11,6 +11,7 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         up = values(up),
+                        slb_id = values(slb_id),
                         <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
@@ -23,6 +24,7 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         status = status & ${reset} | values(status),
+                        slb_id = values(slb_id),
                         <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
