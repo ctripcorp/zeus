@@ -37,6 +37,6 @@ public interface GroupStatusService {
 
      GroupStatusList getLocalGroupStatus(List<Long> groupId , Long slbId) throws Exception;
 
-     GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allUpGroupServerInSlb,Group group) throws Exception;
+     GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allUpGroupServerInSlb,Set<String> allPullInGroupServerInSlb,Group group) throws Exception;
 
     }

@@ -10,6 +10,7 @@ import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.GroupStatusService;
+import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
@@ -104,8 +105,9 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         Slb slb = slbRepository.getById(slbId);
         AssertUtils.assertNotNull(slb, "slb Id not found!");
         List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
-        HashMap<Long,Boolean> isActivated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}),slbId);
-        Set<String> allUpGroupServerInSlb = statusService.findAllUpGroupServersBySlbId(slbId);
+        HashMap<Long,Boolean> isActivated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}), slbId);
+        Set<String> allUpGroupServerInSlb = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.MEMBER_OPS);
+        Set<String> allPullInGroupServerInSlb = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.PULL_OPS);
         Set<String> allDownServers = statusService.findAllDownServers();
 
         for (Group group : groups)
@@ -140,7 +142,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 ips.add(gs.getIp());
             }
             for (String ip : ipPort.keySet()) {
-                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, ip, ipPort.get(ip),allDownServers,allUpGroupServerInSlb,group);
+                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, ip, ipPort.get(ip),allDownServers,allUpGroupServerInSlb,allPullInGroupServerInSlb,group);
                 if (activatedIps.contains(ip)&&ips.contains(ip)){
                     serverStatus.setDiscription("Activated");
                 }else if (!activatedIps.contains(ip)&&ips.contains(ip)){
@@ -180,7 +182,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
 
     @Override
-    public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allUpGroupServerInSlb,Group group) throws Exception {
+    public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allUpGroupServerInSlb,Set<String> allPullInGroupServerInSlb ,Group group) throws Exception {
 
         GroupServerStatus groupServerStatus = new GroupServerStatus();
         groupServerStatus.setIp(ip);
@@ -189,11 +191,13 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         sb.append(slbId).append("_").append(group.getGroupVirtualServers().get(0).getVirtualServer().getId()).append("_").append(groupId).append("_").append(ip);
 
         boolean memberUp = allUpGroupServerInSlb.contains(sb.toString());
+        boolean pullIn = allPullInGroupServerInSlb.contains(sb.toString());
         boolean serverUp = !allDownServers.contains(ip);
-        boolean backendUp = getUpstreamStatus(groupId,ip,memberUp,serverUp);
+        boolean backendUp = getUpstreamStatus(groupId,ip,memberUp,serverUp,pullIn);
 
         groupServerStatus.setServer(serverUp);
         groupServerStatus.setMember(memberUp);
+        groupServerStatus.setPull(pullIn);
         groupServerStatus.setUp(backendUp);
 
         return groupServerStatus;
@@ -201,7 +205,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
 
     //TODO: should include port to get accurate upstream
-    private boolean getUpstreamStatus(Long groupId, String ip , boolean memberUp , boolean serverUp) throws Exception {
+    private boolean getUpstreamStatus(Long groupId, String ip , boolean memberUp , boolean serverUp ,boolean pullIn) throws Exception {
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
         List<S> servers = upstreamStatus.getServers().getServer();
         String upstreamNameEndWith = "_"+groupId;
@@ -215,9 +219,9 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             if (ipPorts.length == 2){
                 if (ipPorts[0].equals(ip)){
                     boolean flag = "up".equalsIgnoreCase(server.getStatus());
-                    if (!(memberUp&&serverUp)&&flag)
+                    if (!(memberUp&&serverUp&&pullIn)&&flag)
                     {
-                        LOGGER.error("nginx status api return status while memberUp or serverUp is down! ip:"+ip+" groupId:"+groupId);
+                        LOGGER.error("nginx status api return status while memberUp or serverUp or pull is down! ip:"+ip+" groupId:"+groupId);
                     }
                     return flag;
                 }
@@ -225,6 +229,6 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         }
         //Not found status from nginx , ip is mark down or health check is disable
         // return memberUp&&serverUp
-        return memberUp&&serverUp;
+        return memberUp&&serverUp&&pullIn;
     }
 }

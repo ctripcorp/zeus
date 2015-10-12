@@ -10,6 +10,7 @@
             <port>11</port>
             <member>true</member>
             <server>true</server>
+            <pull>true</pull>
             <up>true</up>
             <discription>status</discription>
         </group-server-status>
@@ -18,6 +19,7 @@
             <port>11</port>
             <member>true</member>
             <server>true</server>
+            <pull>true</pull>
             <up>true</up>
             <discription>status</discription>
         </group-server-status>

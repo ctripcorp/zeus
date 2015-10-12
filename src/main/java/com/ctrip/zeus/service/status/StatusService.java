@@ -20,20 +20,19 @@ public interface StatusService extends Repository {
     Set<String> findAllDownServers() throws Exception;
 
     /**
-     * get all down app servers by slbname
-     * @param slbId the slb id
-     * @return app server ip list
-     * @throws Exception
-     */
-    Set<String> findAllDownGroupServersBySlbId(Long slbId) throws Exception;
-
-    /**
      * get all up app servers by slbId
      * @param slbId the slb id
      * @return app server ip list
      * @throws Exception
      */
     Set<String> findAllUpGroupServersBySlbId(Long slbId) throws Exception;
+    /**
+     * get group servers by slbId and status offset
+     * @param slbId the slb id
+     * @return app server ip list
+     * @throws Exception
+     */
+    Set<String> findAllGroupServersBySlbIdAndStatusOffset(Long slbId , int offset) throws Exception;
 
     /**
      * up server by app server ip
@@ -67,6 +66,16 @@ public interface StatusService extends Repository {
      * @throws Exception
      */
     void downMember(Long slbId ,Long groupId, List<String> ips)throws Exception;
+    /**
+     * update status by group server ip and slbId and group id
+     * @param ips the group server ips
+     * @param groupId  group id
+     * @param offset  offset [0-30]
+     * @param status  status enable = true , disable = false
+     * @return
+     * @throws Exception
+     */
+    void updateStatus(Long slbId ,Long groupId, List<String> ips , int offset , boolean status)throws Exception;
 
     /**
      * get App server status by app name and slbname and virtual server ip
