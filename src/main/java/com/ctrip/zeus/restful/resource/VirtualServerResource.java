@@ -120,6 +120,7 @@ public class VirtualServerResource {
         for (VirtualServer virtualServer : virtualServerRepository.listAll(executer.run())) {
             vslist.addVirtualServer(virtualServer);
         }
+        vslist.setTotal(vslist.getVirtualServers().size());
         return responseHandler.handle(vslist, hh.getMediaType());
     }
 
