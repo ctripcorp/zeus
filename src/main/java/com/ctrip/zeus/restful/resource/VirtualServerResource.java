@@ -7,6 +7,8 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServerList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.restful.filter.FilterSet;
+import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.GroupRepository;
@@ -62,29 +64,60 @@ public class VirtualServerResource {
     @Authorize(name = "getAllVses")
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
-                         @QueryParam("slbId") Long slbId,
-                         @TrimmedQueryParam("domain") String domain,
-                         @TrimmedQueryParam("tag") String tag,
-                         @TrimmedQueryParam("pname") String pname,
-                         @TrimmedQueryParam("pvalue") String pvalue) throws Exception {
+                         @QueryParam("slbId") final Long slbId,
+                         @TrimmedQueryParam("domain") final String domain,
+                         @TrimmedQueryParam("tag") final String tag,
+                         @TrimmedQueryParam("pname") final String pname,
+                         @TrimmedQueryParam("pvalue") final String pvalue) throws Exception {
         VirtualServerList vslist = new VirtualServerList();
-        Set<Long> filtered = virtualServerCriteriaQuery.queryAll();
-        if (slbId != null) {
-            filtered.retainAll(virtualServerCriteriaQuery.queryBySlbId(slbId));
-        }
-        if (domain != null) {
-            filtered.retainAll(virtualServerCriteriaQuery.queryByDomain(domain));
-        }
-        if (tag != null) {
-            filtered.retainAll(tagService.query(tag, "vs"));
-        }
-        if (pname != null) {
-            if (pvalue != null)
-                filtered.retainAll(propertyService.query(pname, pvalue, "vs"));
-            else
-                filtered.retainAll(propertyService.query(pname, "vs"));
-        }
-        for (VirtualServer virtualServer : virtualServerRepository.listAll(filtered.toArray(new Long[filtered.size()]))) {
+        QueryExecuter executer = new QueryExecuter.Builder()
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        return virtualServerCriteriaQuery.queryAll();
+                    }
+                })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        if (slbId != null) {
+                            input.retainAll(virtualServerCriteriaQuery.queryBySlbId(slbId));
+                        }
+                        return input;
+                    }
+                })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        if (domain != null) {
+                            input.retainAll(virtualServerCriteriaQuery.queryByDomain(domain));
+                        }
+                        return input;
+                    }
+                })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        if (tag != null) {
+                            input.retainAll(tagService.query(tag, "vs"));
+                        }
+                        return input;
+                    }
+                })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        if (pname != null) {
+                            if (pvalue != null)
+                                input.retainAll(propertyService.query(pname, pvalue, "vs"));
+                            else
+                                input.retainAll(propertyService.query(pname, "vs"));
+                        }
+                        return input;
+                    }
+                })
+                .build();
+        for (VirtualServer virtualServer : virtualServerRepository.listAll(executer.run())) {
             vslist.addVirtualServer(virtualServer);
         }
         return responseHandler.handle(vslist, hh.getMediaType());

@@ -1,11 +1,14 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.restful.filter.FilterSet;
+import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.SlbRepository;
@@ -50,24 +53,43 @@ public class SlbResource {
     @Path("/slbs")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getAllSlbs")
-    public Response list(@Context HttpHeaders hh,
+    public Response list(@Context final HttpHeaders hh,
                          @Context HttpServletRequest request,
-                         @TrimmedQueryParam("type") String type,
-                         @TrimmedQueryParam("tag") String tag,
-                         @TrimmedQueryParam("pname") String pname,
-                         @TrimmedQueryParam("pvalue") String pvalue) throws Exception {
-        SlbList slbList = new SlbList();
-        Set<Long> filtered = slbCriteriaQuery.queryAll();
-        if (tag != null) {
-            filtered.retainAll(tagService.query(tag, "slb"));
-        }
-        if (pname != null) {
-            if (pvalue != null)
-                filtered.retainAll(propertyService.query(pname, pvalue, "slb"));
-            else
-                filtered.retainAll(propertyService.query(pname, "slb"));
-        }
-        for (Slb slb : slbRepository.list(filtered.toArray(new Long[filtered.size()]))) {
+                         @TrimmedQueryParam("type") final String type,
+                         @TrimmedQueryParam("tag") final String tag,
+                         @TrimmedQueryParam("pname") final String pname,
+                         @TrimmedQueryParam("pvalue") final String pvalue) throws Exception {
+        final SlbList slbList = new SlbList();
+        QueryExecuter executer = new QueryExecuter.Builder()
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        return slbCriteriaQuery.queryAll();
+                    }
+                })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        if (tag != null) {
+                            input.retainAll(tagService.query(tag, "slb"));
+                        }
+                        return input;
+                    }
+                })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        if (pname != null) {
+                            if (pvalue != null)
+                                input.retainAll(propertyService.query(pname, pvalue, "slb"));
+                            else
+                                input.retainAll(propertyService.query(pname, "slb"));
+                        }
+                        return input;
+                    }
+                })
+                .build();
+        for (Slb slb : slbRepository.list(executer.run())) {
             slbList.addSlb(getSlbByType(slb, type));
         }
         slbList.setTotal(slbList.getSlbs().size());
@@ -85,14 +107,13 @@ public class SlbResource {
         if (slbId == null && slbName == null) {
             throw new Exception("Missing parameter.");
         }
-        Slb slb = new Slb();
         if (slbId == null && slbName != null) {
             slbId = slbCriteriaQuery.queryByName(slbName);
         }
-        if (slbId != null) {
-            slb = slbRepository.getById(slbId);
-        }
-        AssertUtils.assertNotNull(slb, "Slb cannot be found.");
+        if (slbId == null)
+            throw new ValidationException("Slb id cannot be found.");
+
+        Slb slb = slbRepository.getById(slbId);
         return responseHandler.handle(getSlbByType(slb, type), hh.getMediaType());
     }
 
@@ -139,7 +160,7 @@ public class SlbResource {
     public Response upgradeAll(@Context HttpHeaders hh,
                                @Context HttpServletRequest request) throws Exception {
 
-        List<Long> slbIds =slbRepository.portSlbRel();
+        List<Long> slbIds = slbRepository.portSlbRel();
         if (slbIds.size() == 0)
             return responseHandler.handle("Successfully ported all slb relations.", hh.getMediaType());
         else
