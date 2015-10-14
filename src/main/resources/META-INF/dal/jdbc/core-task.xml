@@ -40,12 +40,14 @@
             </query>
             <query name="compare-and-update" type="UPDATE">
                 <param name="status"/>
+                <param name="fail-cause"/>
                 <param name="id"/>
                 <param name="expect-status"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='status'/> = ${status}
+                    SET <FIELD name='status'/> = ${status},
+                    <FIELD name='fail-cause'/> = ${fail-cause}
                     WHERE <FIELD name='id'/> = ${id}
                     AND  <FIELD name='status'/> = ${expect-status}
                     ]]>

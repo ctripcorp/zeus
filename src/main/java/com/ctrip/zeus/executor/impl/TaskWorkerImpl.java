@@ -48,7 +48,7 @@ public class TaskWorkerImpl implements TaskWorker {
             if (++initFailCount > 3){
                 workerSlbId = null;
             }
-            logger.error("Can Not Found Slb by Local Ip. TaskExecutor is not working!");
+            logger.error("Can Not Found Slb by Local Ip. TaskExecutor is not working!Local Ip : "+S.getIp());
         }
     }
 }

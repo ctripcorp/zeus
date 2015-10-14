@@ -128,7 +128,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public boolean taskCancel(Long taskId) throws Exception {
-        int i = taskDao.compareAndUpdate(new TaskDo().setId(taskId).setStatus(TaskStatus.FAIL).setExpectStatus(TaskStatus.PENDING),TaskEntity.UPDATESET_FULL);
+        int i = taskDao.compareAndUpdate(new TaskDo().setFailCause("Task Pending timeout.Task is canceled").setId(taskId).setStatus(TaskStatus.FAIL).setExpectStatus(TaskStatus.PENDING),TaskEntity.UPDATESET_FULL);
         return i > 0 ;
     }
 }
