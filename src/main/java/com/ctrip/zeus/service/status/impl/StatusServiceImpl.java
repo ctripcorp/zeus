@@ -14,10 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -203,7 +200,8 @@ public class StatusServiceImpl implements StatusService {
                 data.setSlbId(slbId)
                         .setSlbVirtualServerId(groupVirtualServer.getVirtualServer().getId())
                         .setGroupId(groupId)
-                        .setIp(ip);
+                        .setIp(ip)
+                        .setCreatedTime(new Date());
                 int reset = ~(1 << offset);
                 int updatestatus = (status?0:1)<<offset;
                 data.setReset(reset).setStatus(updatestatus);
