@@ -19,6 +19,10 @@ public class CleanDbManager {
     private CleanFilter oprationLogCleanFilter;
     @Resource
     private CleanFilter taskCleanFilter;
+    @Resource
+    private CleanFilter archiveCleanFilter;
+    @Resource
+    private CleanFilter confCleanFilter;
 
     private List<CleanFilter> filters = new ArrayList<>();
     private boolean inited = false;
@@ -48,6 +52,8 @@ public class CleanDbManager {
 
         filters.add(oprationLogCleanFilter);
         filters.add(taskCleanFilter);
+        filters.add(confCleanFilter);
+        filters.add(archiveCleanFilter);
 
         inited = true;
     }

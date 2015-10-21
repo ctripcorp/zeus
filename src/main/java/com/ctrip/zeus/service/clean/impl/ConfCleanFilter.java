@@ -5,6 +5,7 @@ import com.ctrip.zeus.service.clean.CleanFilter;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Set;
@@ -12,6 +13,7 @@ import java.util.Set;
 /**
  * Created by fanqq on 2015/10/20.
  */
+@Service("confCleanFilter")
 public class ConfCleanFilter implements CleanFilter {
     @Resource
     private NginxConfDao nginxConfDao;

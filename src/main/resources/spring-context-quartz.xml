@@ -99,18 +99,14 @@
         <property name="jobDetails">
             <list>
                 <ref bean="nginxStatusFetcherDetail"/>
-                <ref bean="operationLogCleanDetail"/>
                 <ref bean="taskWorkerDetail"/>
-                <ref bean="taskCleanDetail"/>
                 <ref bean="cleanManagerDetail"/>
             </list>
         </property>
         <property name="triggers">
             <list>
                 <ref bean="nginxStatusFetcherTrigger"/>
-                <ref bean="operationLogCleanTrigger"/>
                 <ref bean="taskWorkerTrigger"/>
-                <ref bean="taskCleanTrigger"/>
                 <ref bean="cleanManagerTrigger"/>
             </list>
         </property>

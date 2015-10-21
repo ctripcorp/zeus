@@ -144,6 +144,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-group-id-less-than-version" type="DELETE">
+                <param name="group-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    AND <FIELD name='version'/> < ${version}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
 </entities>
