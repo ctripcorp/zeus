@@ -46,6 +46,8 @@ public class OperationLogConfig {
         config.put("ServerResource.downServer",new OpConf(OperationLogType.SERVER,new int[]{2}));
         config.put("ServerResource.upMember",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
         config.put("ServerResource.downMember",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
+        config.put("ServerResource.pullIn",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
+        config.put("ServerResource.pullOut",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
 
 //        config.put("StatusResource.allGroupStatusInSlb",new OpConf(OperationLogType.SLB,new int[]{2,3}));
 //        config.put("StatusResource.groupStatus",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
