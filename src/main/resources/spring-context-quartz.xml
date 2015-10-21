@@ -77,6 +77,23 @@
         <property name="repeatInterval" value="1000"/>
     </bean>
 
+    <bean id="cleanManagerDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.ctrip.zeus.clean.CleanDbJob"/>
+        <property name="jobDataMap">
+            <map>
+                <entry key="cleanDbManager" value-ref="cleanDbManager" />
+            </map>
+        </property>
+        <property name="durability" value="true"/>
+    </bean>
+
+    <!-- Run the job every 1h = 60*60*1000=3600000 ms with initial delay of 1 second -->
+    <bean id="cleanManagerTrigger"  class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="cleanManagerDetail"/>
+        <property name="startDelay" value="1000"/>
+        <property name="repeatInterval" value="3600000"/>
+    </bean>
+
     <!-- Scheduler factory bean to glue together jobDetails and triggers to Configure Quartz Scheduler -->
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="jobDetails">
@@ -85,6 +102,7 @@
                 <ref bean="operationLogCleanDetail"/>
                 <ref bean="taskWorkerDetail"/>
                 <ref bean="taskCleanDetail"/>
+                <ref bean="cleanManagerDetail"/>
             </list>
         </property>
         <property name="triggers">
@@ -93,6 +111,7 @@
                 <ref bean="operationLogCleanTrigger"/>
                 <ref bean="taskWorkerTrigger"/>
                 <ref bean="taskCleanTrigger"/>
+                <ref bean="cleanManagerTrigger"/>
             </list>
         </property>
     </bean>

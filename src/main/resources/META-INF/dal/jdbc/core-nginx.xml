@@ -24,6 +24,18 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-slb-id-and-max-version" type="SELECT">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        ORDER BY <FIELD name='version'/> DESC
+                        LIMIT 1
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-slb-id-and-version" type="SELECT">
                 <param name="slb-id"/>
                 <param name="version"/>
@@ -44,6 +56,17 @@
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='slb-id'/> = ${slb-id}
                     AND <FIELD name='version'/> > ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb-id-less-than-version" type="DELETE">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    AND <FIELD name='version'/> < ${version}
                     ]]>
                 </statement>
             </query>
@@ -100,6 +123,18 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-slb-id-and-max-version" type="SELECT">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        ORDER BY <FIELD name='version'/> DESC
+                        LIMIT 1
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-slb-id-from-version" type="DELETE">
                 <param name="slb-id"/>
                 <param name="version"/>
@@ -108,6 +143,17 @@
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='slb-id'/> = ${slb-id}
                     AND <FIELD name='version'/> > ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb-id-less-than-version" type="DELETE">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    AND <FIELD name='version'/> < ${version}
                     ]]>
                 </statement>
             </query>
@@ -164,6 +210,18 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-slb-id-and-max-version" type="SELECT">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        ORDER BY <FIELD name='version'/> DESC
+                        LIMIT 1
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-slb-id-from-version" type="DELETE">
                 <param name="slb-id"/>
                 <param name="version"/>
@@ -172,6 +230,17 @@
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='slb-id'/> = ${slb-id}
                     AND <FIELD name='version'/> > ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb-id-less-than-version" type="DELETE">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    AND <FIELD name='version'/> < ${version}
                     ]]>
                 </statement>
             </query>
