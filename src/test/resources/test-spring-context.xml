@@ -16,4 +16,5 @@
 
     <!--For unit tests-->
     <import resource="classpath*:spring-context.xml"/>
+    <bean id="applicationContextProvider" class="support.SpringApplicationContextProvider"/>
 </beans>
