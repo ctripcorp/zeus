@@ -141,7 +141,12 @@ public class TaskExecutorImpl implements TaskExecutor {
             Integer slbVersion = getSlbVersion(slbId);
             nginxService.writeALLToDisk(slbId,slbVersion,vsIds);
             if (activatingSlb!=null||activatingGroups.size()>0||deactivateGroupOps.size()>0){
-                nginxService.loadAll(slbId,slbVersion);
+                List<NginxResponse> responses = nginxService.loadAll(slbId,slbVersion);
+                for (NginxResponse response : responses){
+                    if (!response.getSucceed()){
+                        throw new Exception("LoadAll Fail.Fail Response:"+ String.format(NginxResponse.JSON,response));
+                    }
+                }
             }else {
                 //dyups
                 boolean isFail = false;
@@ -160,7 +165,13 @@ public class TaskExecutorImpl implements TaskExecutor {
                         }
                     }
                     if (isFail){
-                        nginxService.loadAll(slbId,slbVersion);
+                        logger.warn("[dyups failed. try to reload all]");
+                        responses = nginxService.loadAll(slbId,slbVersion);
+                        for (NginxResponse response : responses){
+                            if (!response.getSucceed()){
+                                throw new Exception("[dyups failed. try to reload all] LoadAll Fail.Fail Response:"+ String.format(NginxResponse.JSON,response));
+                            }
+                        }
                         break;
                     }
                 }
@@ -181,12 +192,13 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     }
 
-    private void updateVersion(Long slbId) {
+    private void updateVersion(Long slbId) throws Exception{
         try {
             int current = buildInfoService.getCurrentTicket(slbId);
             buildInfoService.updateTicket(slbId,current+1);
         }catch (Exception e){
             logger.error("Update Version Fail!",e);
+            throw e;
         }
     }
 
@@ -200,7 +212,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private void performTasks(Long slbId) {
+    private void performTasks(Long slbId) throws Exception{
         try {
             for (OpsTask task :activateGroupOps.values()){
                 if (!task.getStatus().equals(TaskStatus.DOING)){
@@ -212,13 +224,13 @@ public class TaskExecutorImpl implements TaskExecutor {
                 if (!task.getStatus().equals(TaskStatus.DOING)){
                     continue;
                 }
-                activateService.activeSlb(task.getSlbId(),task.getVersion());
+                activateService.activeSlb(task.getSlbId(), task.getVersion());
             }
             for (OpsTask task :deactivateGroupOps.values()){
                 if (!task.getStatus().equals(TaskStatus.DOING)){
                     continue;
                 }
-                activateService.deactiveGroup(task.getGroupId(),slbId);
+                activateService.deactiveGroup(task.getGroupId(), slbId);
             }
             for (OpsTask task :serverOps.values()){
                 if (!task.getStatus().equals(TaskStatus.DOING)){
@@ -251,9 +263,9 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }
             }
         }catch (Exception e){
-            logger.error("Perform Tasks Fail! TargetSlbId:"+tasks.get(0).getTargetSlbId());
+            logger.error("Perform Tasks Fail! TargetSlbId:"+tasks.get(0).getTargetSlbId(),e);
+            throw e;
         }
-
     }
 
     private void setTaskResult(Long slbId,boolean isSuc,String failCause) {
@@ -375,9 +387,9 @@ public class TaskExecutorImpl implements TaskExecutor {
         return result;
     }
 
-    private void preMemberOperation(Long slbId , HashMap<Long, List<OpsTask>> memberOps) {
+    private void preMemberOperation(Long slbId , HashMap<Long, List<OpsTask>> memberOps)throws Exception{
         try {
-            Set<Long> memberGroups = memberOps.keySet();
+            Set<Long> memberGroups = new HashSet<>(memberOps.keySet());
             for (Long groupId : memberGroups){
                 if (!activateService.isGroupActivated(groupId,slbId)){
                     List<OpsTask> tasksList = memberOps.get(groupId);
@@ -390,7 +402,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                     memberOps.remove(groupId);
                 }
             }
-            Set<Long> pullMemberGroups = pullMemberOps.keySet();
+            Set<Long> pullMemberGroups = new HashSet<>(pullMemberOps.keySet());
             for (Long groupId : pullMemberGroups){
                 if (!activateService.isGroupActivated(groupId,slbId)){
                     List<OpsTask> tasksList = pullMemberOps.get(groupId);
@@ -405,6 +417,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
         }catch (Exception e){
             logger.error("PreMemberOperation Fail!",e);
+            throw e;
         }
     }
 
