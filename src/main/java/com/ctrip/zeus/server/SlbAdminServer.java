@@ -10,6 +10,7 @@ import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -117,9 +118,14 @@ public class SlbAdminServer extends AbstractServer {
         handler.addServlet(new ServletHolder(new ForwardServlet("/op.jsp")), "/op");
         handler.addServlet(new ServletHolder(new ForwardServlet("/status.jsp")), "/status");
 
+        // Set Statistics Handler for graceful shutdown handling
+        StatisticsHandler statsHandler = new StatisticsHandler();
+        statsHandler.setHandler(handler);
+
         //Create Jetty Server
         server = new Server(serverPort.get());
-        server.setHandler(handler);
+        server.setHandler(statsHandler);
+        server.setStopTimeout(30000L);
     }
 
 
