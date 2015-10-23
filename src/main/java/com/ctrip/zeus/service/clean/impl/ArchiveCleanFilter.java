@@ -26,7 +26,7 @@ public class ArchiveCleanFilter implements CleanFilter{
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
 
-    private static DynamicIntProperty archiveSaveCounts = DynamicPropertyFactory.getInstance().getIntProperty("archive.save.count", 200);
+    private static DynamicIntProperty archiveSaveCounts = DynamicPropertyFactory.getInstance().getIntProperty("archive.save.count", 100);
 
     @Override
     public void runFilter() throws Exception {
@@ -45,6 +45,6 @@ public class ArchiveCleanFilter implements CleanFilter{
 
     @Override
     public int interval() {
-        return 12;
+        return 24;
     }
 }

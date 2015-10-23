@@ -23,7 +23,7 @@ public class ConfCleanFilter implements CleanFilter {
     private NginxConfUpstreamDao nginxConfUpstreamDao;
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
-    private static DynamicIntProperty confSaveCounts = DynamicPropertyFactory.getInstance().getIntProperty("config.save.count", 100000);
+    private static DynamicIntProperty confSaveCounts = DynamicPropertyFactory.getInstance().getIntProperty("config.save.count", 10000);
 
     @Override
     public void runFilter() throws Exception {
@@ -45,6 +45,6 @@ public class ConfCleanFilter implements CleanFilter {
 
     @Override
     public int interval() {
-        return 12;
+        return 24;
     }
 }

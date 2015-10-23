@@ -32,6 +32,6 @@ public class TaskCleanFilter implements CleanFilter {
 
     @Override
     public int interval() {
-        return 12;
+        return 24;
     }
 }

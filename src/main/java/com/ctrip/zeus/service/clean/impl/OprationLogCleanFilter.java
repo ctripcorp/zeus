@@ -32,6 +32,6 @@ public class OprationLogCleanFilter implements CleanFilter {
 
     @Override
     public int interval() {
-        return 12;
+        return 24;
     }
 }
