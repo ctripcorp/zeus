@@ -82,7 +82,7 @@ public class ActivateServiceImpl implements ActivateService {
         for (GroupVirtualServer groupSlb:group.getGroupVirtualServers())
         {
             confGroupSlbActiveDao.insert(new ConfGroupSlbActiveDo().setGroupId(groupId)
-                                            .setPriority(groupSlb.getPriority())
+                                            .setPriority(groupSlb.getPriority()==null?1000:groupSlb.getPriority())
                                             .setSlbId(groupSlb.getVirtualServer().getSlbId()).setDataChangeLastTime(new Date())
                                             .setSlbVirtualServerId(groupSlb.getVirtualServer().getId()));
         }

@@ -197,8 +197,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             int current = buildInfoService.getCurrentTicket(slbId);
             buildInfoService.updateTicket(slbId,current+1);
         }catch (Exception e){
-            logger.error("Update Version Fail!",e);
-            throw e;
+            throw new Exception("Update Version Fail!",e);
         }
     }
 
@@ -263,12 +262,11 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }
             }
         }catch (Exception e){
-            logger.error("Perform Tasks Fail! TargetSlbId:"+tasks.get(0).getTargetSlbId(),e);
-            throw e;
+            throw new Exception("Perform Tasks Fail! TargetSlbId:"+tasks.get(0).getTargetSlbId(),e);
         }
     }
 
-    private void setTaskResult(Long slbId,boolean isSuc,String failCause) {
+    private void setTaskResult(Long slbId,boolean isSuc,String failCause) throws Exception{
         for (OpsTask task : tasks){
             if (task.getStatus().equals(TaskStatus.DOING)){
                 if (isSuc)
@@ -285,6 +283,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             taskService.updateTasks(tasks);
         } catch (Exception e) {
             logger.error("Task Update Failed! TargetSlbId:"+slbId,e);
+            throw new Exception("Task Update Failed! TargetSlbId:"+slbId,e);
         }
     }
 
@@ -416,8 +415,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }
             }
         }catch (Exception e){
-            logger.error("PreMemberOperation Fail!",e);
-            throw e;
+            throw new Exception("PreMemberOperation Fail!",e);
         }
     }
 
