@@ -6,10 +6,7 @@ import com.ctrip.zeus.model.entity.HealthCheck;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
-import com.netflix.config.DynamicBooleanProperty;
-import com.netflix.config.DynamicPropertyFactory;
-import com.netflix.config.DynamicStringListProperty;
-import com.netflix.config.DynamicStringProperty;
+import com.netflix.config.*;
 
 /**
  * @author:xingchaowang
@@ -20,6 +17,7 @@ public class HealthCheckConf {
     private static DynamicBooleanProperty disableHealthCheck = DynamicPropertyFactory.getInstance().getBooleanProperty("build.disable.healthCheck", false);
     private static DynamicStringProperty sslHelloEnableList = DynamicPropertyFactory.getInstance().getStringProperty("build.sslHello.enable", "");
     private static DynamicStringProperty disableHealthCheckList = DynamicPropertyFactory.getInstance().getStringProperty("build.disable.healthCheck.groupId", "");
+    private static DynamicIntProperty healthCheckDefaultTimeout = DynamicPropertyFactory.getInstance().getIntProperty("healthCheck.default.timeout", 2000);
 
 
     public static String generate(Slb slb, VirtualServer vs, Group group) throws Exception {
@@ -52,7 +50,7 @@ public class HealthCheckConf {
             b.append("check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
-                    .append(" timeout=").append(1000)
+                    .append(" timeout=").append(h.getTimeout()==null?healthCheckDefaultTimeout.get():h.getTimeout())
                     .append(" type=ssl_hello").append(";\n");
         }else {
             b.append("check interval=").append(h.getIntervals())

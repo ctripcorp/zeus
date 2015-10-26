@@ -21,6 +21,8 @@ import java.util.List;
 public class ServerConf {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerConf.class);
     private static DynamicStringProperty allowSSL = DynamicPropertyFactory.getInstance().getStringProperty("virtual-server-id.ssl", "");
+    private static DynamicStringProperty errorPage_404 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.404.url", "http://slberrorpages.ctripcorp.com/slberrorpages/404.htm");
+    private static DynamicStringProperty errorPage_500 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.500.url", "http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     public static final String SSL_PATH = "/data/nginx/ssl/";
 
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
@@ -69,5 +71,15 @@ public class ServerConf {
 
         AssertUtils.assertNotEquals("", res.trim(), "virtual server [" + vs.getId() + "] domain is null or illegal!");
         return res;
+    }
+    private static void addErrorPage(StringBuilder sb){
+        sb.append("error_page 400 404 = /404page;\n");
+        sb.append("error_page 500 = /500page;\n");
+        sb.append("location /404page {\n");
+        sb.append("internal;\n");
+        sb.append("proxy_pass ").append(errorPage_404.get()).append(";\n}\n");
+        sb.append("location /500page {\n");
+        sb.append("internal;\n");
+        sb.append("proxy_pass ").append(errorPage_500.get()).append(";\n}\n");
     }
 }

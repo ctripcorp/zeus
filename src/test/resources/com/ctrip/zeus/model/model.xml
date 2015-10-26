@@ -59,7 +59,7 @@
             <group-virtual-server/>
             <group-virtual-server/>
         </group-virtual-servers>
-        <health-check intervals="10" fails="2" passes="2">
+        <health-check intervals="10" fails="2" passes="2" timeout="1000">
             <uri>/health-check</uri>
         </health-check>
         <load-balancing-method type="round-robin|least-conn|ip-hash|hash">

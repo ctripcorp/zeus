@@ -20,6 +20,7 @@ public class LocationConf {
     private static DynamicStringProperty clientMaxSizeList = DynamicPropertyFactory.getInstance().getStringProperty("client.max.body.size.list", null);
     private static DynamicStringProperty xforwardedforEnable = DynamicPropertyFactory.getInstance().getStringProperty("x-forwarded-for.enable", null);
     private static DynamicStringProperty xforwardedforWhileList = DynamicPropertyFactory.getInstance().getStringProperty("x-forwarded-for.white.list", "172\\..*|192\\.168.*|10\\..*");
+    private static DynamicStringProperty errorPageWhileList = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.white.list", null);
 
     public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
@@ -75,7 +76,7 @@ public class LocationConf {
         }else {
             b.append("proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n");
         }
-
+        addErrorPageConfig(b,group.getId());
         b.append("set $upstream ").append(upstreamName).append(";\n");
         addBastionCommand(b,upstreamName);
         //rewrite should after set $upstream
@@ -146,5 +147,18 @@ public class LocationConf {
                 .append("{\nset $upstream ").append(upstreamName).append(";\n}\n");
         sb.append("if ( $upstream != ").append(upstreamName).append(" ){\n")
                 .append("add_header Bastion $cookie_bastion;\n}\n");
+    }
+    private static void addErrorPageConfig(StringBuilder sb,Long groupId){
+        String list = errorPageWhileList.get();
+        if (list == null){
+            return;
+        }
+        String[] gids = list.split(";");
+        for (String gid:gids){
+            if (String.valueOf(groupId).equals(gid)){
+                sb.append("proxy_intercept_errors on;\n");
+                return;
+            }
+        }
     }
 }

@@ -91,6 +91,7 @@
     <attribute name="intervals" value-type="int" />
     <attribute name="fails" value-type="int" />
     <attribute name="passes" value-type="int" />
+    <attribute name="timeout" value-type="int" />
     <element name="uri" value-type="String" />
   </entity>
   <entity name="load-balancing-method">
