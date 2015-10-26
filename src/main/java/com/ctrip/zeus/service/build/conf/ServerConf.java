@@ -38,6 +38,7 @@ public class ServerConf {
         b.append("listen    ").append(vs.getPort()).append(";\n");
         b.append("server_name    ").append(getServerNames(vs)).append(";\n");
         b.append("ignore_invalid_headers off;\n");
+
         if (vs.getSsl())
         {
             String []sslList = allowSSL.get().split(";");
@@ -50,7 +51,7 @@ public class ServerConf {
                 }
             }
         }
-
+        addErrorPage(b);
         NginxConf.appendServerCommand(b);
         //add locations
         for (Group group : groups) {
