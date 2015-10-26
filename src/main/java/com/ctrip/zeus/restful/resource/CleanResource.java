@@ -29,6 +29,8 @@ public class CleanResource {
     private CleanFilter archiveCleanFilter;
     @Resource
     private CleanFilter oprationLogCleanFilter;
+    @Resource
+    private CleanFilter reportCleanFilter;
     @GET
     @Path("/task")
     @Authorize(name="activate")
@@ -57,5 +59,12 @@ public class CleanResource {
     public Response operationLogConfig(@Context HttpServletRequest request,@Context HttpHeaders hh)throws Exception{
         oprationLogCleanFilter.runFilter();
         return Response.status(200).entity("Clean Operation Log List Success.").type(MediaType.APPLICATION_JSON).build();
+    }
+    @GET
+    @Path("/report")
+    @Authorize(name="activate")
+    public Response report(@Context HttpServletRequest request,@Context HttpHeaders hh)throws Exception{
+        reportCleanFilter.runFilter();
+        return Response.status(200).entity("Clean reported version List Success.").type(MediaType.APPLICATION_JSON).build();
     }
 }

@@ -70,6 +70,14 @@
                     ]]>
                 </statement>
             </query>
+            <query name="clean-reported-items" type="DELETE">
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='reported-version'/> = 9999
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
 </entities>
