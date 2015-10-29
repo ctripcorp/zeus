@@ -52,7 +52,7 @@ import java.util.Set;
  */
 @Component
 @Path("/op")
-public class ServerResource {
+public class OperationResource {
 
     @Resource
     StatusService statusService;
