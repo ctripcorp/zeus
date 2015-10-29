@@ -21,6 +21,7 @@ public class LocationConf {
     private static DynamicStringProperty xforwardedforEnable = DynamicPropertyFactory.getInstance().getStringProperty("x-forwarded-for.enable", null);
     private static DynamicStringProperty xforwardedforWhileList = DynamicPropertyFactory.getInstance().getStringProperty("x-forwarded-for.white.list", "172\\..*|192\\.168.*|10\\..*");
     private static DynamicStringProperty errorPageWhileList = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.white.list", null);
+    private static DynamicStringProperty proxyTimeoutList = DynamicPropertyFactory.getInstance().getStringProperty("proxy.read-timeout.list", null);
 
     public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
@@ -46,6 +47,8 @@ public class LocationConf {
         b.append("proxy_set_header Host $host").append(";\n");
 
         b.append("proxy_set_header X-Real-IP $remote_addr;\n");
+
+        addProxyReadTimeout(group.getId(),b);
 
         boolean needXFF = false;
         if (xforwardedforEnable.get()==null)
@@ -90,6 +93,21 @@ public class LocationConf {
         b.append("}").append("\n");
 
         return b.toString();
+    }
+
+    private static void addProxyReadTimeout(Long gid , StringBuilder sb) {
+        String config = proxyTimeoutList.get();
+        if (config == null){
+            return;
+        }
+        String[] groupPairs = config.split(";");
+        for (String tmp : groupPairs){
+            String []pair = tmp.split("=");
+            if (pair.length == 2 && pair[0].trim().equals(String.valueOf(gid)) ){
+                sb.append("proxy_read_timeout ").append(pair[1]).append("s;\n");
+                return;
+            }
+        }
     }
 
     private static String getPath(Slb slb, VirtualServer vs, Group group) throws Exception{

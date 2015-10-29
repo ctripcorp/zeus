@@ -38,6 +38,7 @@ public class ServerConf {
         b.append("listen    ").append(vs.getPort()).append(";\n");
         b.append("server_name    ").append(getServerNames(vs)).append(";\n");
         b.append("ignore_invalid_headers off;\n");
+        b.append("proxy_http_version 1.1;\n");
 
         if (vs.getSsl())
         {
