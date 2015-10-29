@@ -72,7 +72,7 @@ public class BuildServiceImpl implements BuildService {
     public List<VirtualServer> getNeedBuildVirtualServers(Long slbId,HashMap<Long , Group> activatingGroups , Set<Long>groupList)throws Exception{
         Set<Long> buildVirtualServer = new HashSet<>();
         List<Group> groups = new ArrayList<>();
-        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupList.toArray(new Long[]{}));
+        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupList.toArray(new Long[]{}),slbId);
         for (String content :  l ){
             Group tmpGroup = DefaultSaxParser.parseEntity(Group.class, content);
 //            if (tmpGroup!=null&&!activatingGroups.containsKey(tmpGroup.getId())) {
@@ -162,7 +162,7 @@ public class BuildServiceImpl implements BuildService {
                     groupInDb.add(gid);
                 }
             }
-            List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupInDb.toArray(new Long[]{}));
+            List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupInDb.toArray(new Long[]{}),slbId);
             for (String content :  l ){
                 Group tmpGroup = DefaultSaxParser.parseEntity(Group.class, content);
                 groupList.add(tmpGroup);

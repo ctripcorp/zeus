@@ -27,6 +27,32 @@ public class ActiveConfServiceImpl implements ActiveConfService {
     private Logger logger = LoggerFactory.getLogger(ActiveConfServiceImpl.class);
 
     @Override
+    public List<String> getConfGroupActiveContentByGroupIds(Long[] groupIds,Long slbId) throws Exception {
+
+
+        List<ConfGroupActiveDo> list = confGroupActiveDao.findAllByGroupIds(groupIds, ConfGroupActiveEntity.READSET_FULL);
+        List<ConfGroupActiveDo> l = new ArrayList<>();
+        for (ConfGroupActiveDo confGroupActiveDo : list){
+            if (confGroupActiveDo.getSlbId()==slbId||confGroupActiveDo.getSlbId()==0){
+                l.add(confGroupActiveDo);
+            }
+        }
+        List<String> res = new ArrayList<>();
+
+        if (l==null)
+        {
+            logger.warn("No ConfAppActive for apps:"+groupIds.toString());
+            return res;
+        }
+
+        for (ConfGroupActiveDo a : l)
+        {
+            res.add(a.getContent());
+        }
+        return res;
+    }
+
+    @Override
     public List<String> getConfGroupActiveContentByGroupIds(Long[] groupIds) throws Exception {
 
 
@@ -46,7 +72,6 @@ public class ActiveConfServiceImpl implements ActiveConfService {
         }
         return res;
     }
-
     @Override
     public String getConfSlbActiveContentBySlbId(Long slbId) throws Exception {
          ConfSlbActiveDo d = confSlbActiveDao.findBySlbId(slbId, ConfSlbActiveEntity.READSET_FULL);
