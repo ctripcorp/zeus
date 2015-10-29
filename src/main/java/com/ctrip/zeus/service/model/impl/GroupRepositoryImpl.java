@@ -22,7 +22,7 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
-    private VirtualServerRepository virtualServerRepository;
+    private AutoFiller autoFiller;
     @Resource
     private ArchiveService archiveService;
     @Resource
@@ -55,7 +55,7 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public Group add(Group group) throws Exception {
         groupModelValidator.validate(group);
-        autofill(group);
+        autoFiller.autofill(group);
         groupEntityManager.add(group);
         return group;
     }
@@ -65,7 +65,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         if (!groupModelValidator.exists(group.getId()))
             throw new ValidationException("Group with id " + group.getId() + "does not exist.");
         groupModelValidator.validate(group);
-        autofill(group);
+        autoFiller.autofill(group);
         groupEntityManager.update(group);
         return group;
     }
@@ -76,7 +76,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         List<Group> result = new ArrayList<>();
         for (Long groupId : groupIds) {
             Group g = getById(groupId);
-            autofill(g);
+            autoFiller.autofill(g);
             groupEntityManager.update(g);
             result.add(g);
         }
@@ -87,34 +87,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     public int delete(Long groupId) throws Exception {
         groupModelValidator.removable(groupId);
         return groupEntityManager.delete(groupId);
-    }
-
-    @Override
-    public void autofill(Group group) throws Exception {
-        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
-            VirtualServer tvs = gvs.getVirtualServer();
-            VirtualServer vs = virtualServerRepository.getById(gvs.getVirtualServer().getId());
-            tvs.setName(vs.getName()).setSlbId(vs.getSlbId()).setPort(vs.getPort()).setSsl(vs.getSsl());
-            tvs.getDomains().clear();
-            for (Domain domain : vs.getDomains()) {
-                tvs.getDomains().add(domain);
-            }
-        }
-        HealthCheck hc = group.getHealthCheck();
-        if (hc != null) {
-            hc.setIntervals(hc.getIntervals() == null ? 5000 : hc.getIntervals())
-                    .setFails(hc.getFails() == null ? 5 : hc.getFails())
-                    .setPasses(hc.getPasses() == null ? 1 : hc.getPasses());
-        }
-        LoadBalancingMethod lbm = group.getLoadBalancingMethod();
-        if (lbm == null)
-            lbm = new LoadBalancingMethod();
-        lbm.setType("roundrobin").setValue(lbm.getValue() == null ? "Default" : lbm.getValue());
-        for (GroupServer groupServer : group.getGroupServers()) {
-            groupServer.setWeight(groupServer.getWeight() == null ? 5 : groupServer.getWeight())
-                    .setFailTimeout(groupServer.getFailTimeout() == null ? 30 : groupServer.getFailTimeout())
-                    .setFailTimeout(groupServer.getMaxFails() == null ? 0 : groupServer.getMaxFails());
-        }
     }
 
     @Override
