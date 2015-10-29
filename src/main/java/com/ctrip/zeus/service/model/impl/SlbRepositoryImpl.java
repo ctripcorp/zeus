@@ -5,10 +5,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.model.ArchiveService;
-import com.ctrip.zeus.service.model.GroupMemberRepository;
-import com.ctrip.zeus.service.model.VirtualServerRepository;
-import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
@@ -46,6 +43,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     private SlbValidator slbModelValidator;
     @Resource
     private VirtualServerValidator virtualServerModelValidator;
+    @Resource
+    private AutoFiller autoFiller;
 
     @Override
     public List<Slb> list() throws Exception {
@@ -100,7 +99,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     public Slb add(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
         virtualServerModelValidator.validateVirtualServers(slb.getVirtualServers());
-        autofill(slb);
+        autoFiller.autofill(slb);
         slbEntityManager.add(slb);
 
         for (SlbServer slbServer : slb.getSlbServers()) {
@@ -116,7 +115,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Override
     public Slb update(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
-        autofill(slb);
+        autoFiller.autofill(slb);
         freshVirtualServers(slb);
         slbEntityManager.update(slb);
 
@@ -144,15 +143,6 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public void autofill(Slb slb) throws Exception {
-        slb.setNginxBin("/opt/app/nginx/sbin").setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(9)
-                .setStatus(slb.getStatus() == null ? "Default" : slb.getStatus());
-        for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            virtualServerRepository.autofill(virtualServer);
-        }
-    }
-
-    @Override
     public List<Long> portSlbRel() throws Exception {
         Set<Long> slbIds = slbCriteriaQuery.queryAll();
         List<Slb> slbs = list(slbIds.toArray(new Long[slbIds.size()]));
@@ -167,7 +157,7 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     private Slb fresh(Long slbId) throws Exception {
         Slb slb = getById(slbId);
-        autofill(slb);
+        autoFiller.autofill(slb);
         freshVirtualServers(slb);
         return slb;
     }

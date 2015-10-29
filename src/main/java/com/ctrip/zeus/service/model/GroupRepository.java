@@ -23,8 +23,6 @@ public interface GroupRepository extends Repository {
 
     int delete(Long groupId) throws Exception;
 
-    void autofill(Group group) throws Exception;
-
     @Deprecated
     List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception;
 

@@ -94,11 +94,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public void autofill(VirtualServer virtualServer) {
-        virtualServer.setSsl(virtualServer.getSsl() == null ? false : virtualServer.getSsl());
-    }
-
-    @Override
     public List<Long> portVirtualServerRel() throws Exception {
         List<SlbVirtualServerDo> l = slbVirtualServerDao.findAll(SlbVirtualServerEntity.READSET_FULL);
         VirtualServer[] vses = new VirtualServer[l.size()];
