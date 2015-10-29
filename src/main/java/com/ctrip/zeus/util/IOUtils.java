@@ -10,19 +10,30 @@ import java.io.OutputStream;
  */
 public class IOUtils {
     /**
-     * convert input stream to string
-     * @param is the input stream
+     * Convert InputStream to string.
+     *
+     * @param is the InputStream
      * @return string from input stream
      * @throws IOException
      */
     public static String inputStreamStringify(InputStream is) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        copy(is, baos);
+        return baos.toString();
+    }
+
+    /**
+     * Copy InputStream to OutputStream.
+     *
+     * @param is the InputStream
+     * @param os the OutputStream
+     * @throws IOException
+     */
+    public static void copy(InputStream is, OutputStream os) throws IOException {
         byte[] buffer = new byte[4096];
         int n = 0;
-
         while ((n = is.read(buffer)) != -1) {
-            baos.write(buffer, 0, n);
+            os.write(buffer, 0, n);
         }
-        return baos.toString();
     }
 }

@@ -6,11 +6,15 @@ import com.ctrip.zeus.dal.core.StatusGroupServerDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
@@ -20,17 +24,17 @@ import com.ctrip.zeus.status.entity.ServerStatus;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.util.AssertUtils;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -60,7 +64,13 @@ public class OperationResource {
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
+    private ResponseHandler responseHandler;
+    @Resource
     private StatusGroupServerDao statusGroupServerDao;
+    @Resource
+    private CertificateService certificateService;
 
     @GET
     @Path("/clean")
@@ -254,6 +264,44 @@ public class OperationResource {
         return memberOps(hh, _groupId, _ips, false, TaskOpsType.PULL_MEMBER_OPS);
     }
 
+    @POST
+    @Path("/uploadcerts")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Authorize(name = "uploadCerts")
+    public Response uploadCerts(@Context HttpServletRequest request,
+                            @Context HttpHeaders hh,
+                            @FormDataParam("cert") InputStream cert,
+                            @FormDataParam("key") InputStream key,
+                            @QueryParam("vsId") Long vsId,
+                            @QueryParam("ip") List<String> ips,
+                            @QueryParam("domain") String domain) throws Exception {
+        if (domain != null && !domain.isEmpty()) {
+            Set<Long> check = virtualServerCriteriaQuery.queryByDomain(domain);
+            if (!check.contains(vsId))
+                throw new ValidationException("VsId and domain mismatched.");
+        }
+        Long slbId = slbCriteriaQuery.queryByVs(vsId);
+        Slb slb = slbRepository.getById(slbId);
+        if (slb == null) {
+            throw new ValidationException("Cannot find slb servers by the given vsId.");
+        }
+        List<String> slbIps = new ArrayList<>();
+        for (SlbServer slbServer : slb.getSlbServers()) {
+            slbIps.add(slbServer.getIp());
+        }
+        if (ips != null && ips.size() > 0) {
+            if (!slbIps.containsAll(ips)) {
+                throw new ValidationException("Some ips do not belong to the current slb.");
+            }
+        } else {
+            ips = slbIps;
+        }
+        // create a temp place to put raw cert and key.
+        certificateService.cache(cert, key, vsId);
+        // send file to related slb servers
+        certificateService.sendIfExist(vsId, ips);
+        return responseHandler.handle("Certificates uploaded.", hh.getMediaType());
+    }
 
     private Response memberOps(HttpHeaders hh, Long groupId, List<String> ips, boolean up, String type) throws Exception {
 
