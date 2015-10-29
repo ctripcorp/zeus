@@ -11,6 +11,7 @@ import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.build.conf.UpstreamsConf;
+import com.ctrip.zeus.service.model.AutoFiller;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.util.AssertUtils;
@@ -53,6 +54,8 @@ public class BuildServiceImpl implements BuildService {
     private StatusService statusService;
     @Resource
     private ActivateService activateService;
+    @Resource
+    private AutoFiller autoFiller;
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -165,6 +168,7 @@ public class BuildServiceImpl implements BuildService {
             List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupInDb.toArray(new Long[]{}),slbId);
             for (String content :  l ){
                 Group tmpGroup = DefaultSaxParser.parseEntity(Group.class, content);
+                autoFiller.autofill(tmpGroup);
                 groupList.add(tmpGroup);
             }
             Collections.sort(groupList,new Comparator<Group>(){

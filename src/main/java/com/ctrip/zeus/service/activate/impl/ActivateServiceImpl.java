@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ServerGroupService;
 import com.ctrip.zeus.service.model.ArchiveService;
+import com.ctrip.zeus.service.model.AutoFiller;
 import com.ctrip.zeus.service.task.constant.TaskStatus;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.util.AssertUtils;
@@ -33,6 +34,8 @@ public class ActivateServiceImpl implements ActivateService {
     ConfGroupSlbActiveDao confGroupSlbActiveDao;
     @Resource
     ServerGroupService serverGroupService;
+    @Resource
+    private AutoFiller autoFiller;
 
     private Logger logger = LoggerFactory.getLogger(ActivateServiceImpl.class);
 
@@ -74,7 +77,7 @@ public class ActivateServiceImpl implements ActivateService {
 
 
         Group group =  DefaultSaxParser.parseEntity(Group.class, c.getContent());
-
+        autoFiller.autofill(group);
         AssertUtils.assertNotNull(group, "App_ctive.content XML is illegal!");
 
         confGroupSlbActiveDao.deleteByGroupId(new ConfGroupSlbActiveDo().setGroupId(groupId));
