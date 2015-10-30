@@ -56,7 +56,7 @@ public class HealthCheckConf {
             b.append("check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
-                    .append(" timeout=").append(1000);
+                    .append(" timeout=").append(h.getTimeout()==null?healthCheckDefaultTimeout.get():h.getTimeout());
             if (group.getSsl()){
                 b.append(" port=").append(80);
             }
