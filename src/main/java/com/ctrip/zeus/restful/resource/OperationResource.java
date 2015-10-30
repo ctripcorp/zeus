@@ -269,12 +269,12 @@ public class OperationResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Authorize(name = "uploadCerts")
     public Response uploadCerts(@Context HttpServletRequest request,
-                            @Context HttpHeaders hh,
-                            @FormDataParam("cert") InputStream cert,
-                            @FormDataParam("key") InputStream key,
-                            @QueryParam("vsId") Long vsId,
-                            @QueryParam("ip") List<String> ips,
-                            @QueryParam("domain") String domain) throws Exception {
+                                @Context HttpHeaders hh,
+                                @FormDataParam("cert") InputStream cert,
+                                @FormDataParam("key") InputStream key,
+                                @QueryParam("vsId") Long vsId,
+                                @QueryParam("ip") List<String> ips,
+                                @QueryParam("domain") String domain) throws Exception {
         if (domain != null && !domain.isEmpty()) {
             Set<Long> check = virtualServerCriteriaQuery.queryByDomain(domain);
             if (!check.contains(vsId))
@@ -301,6 +301,20 @@ public class OperationResource {
         // send file to related slb servers
         certificateService.sendIfExist(vsId, ips);
         return responseHandler.handle("Certificates uploaded.", hh.getMediaType());
+    }
+
+    @POST
+    @Path("/installcerts")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Authorize(name = "installCerts")
+    public Response installCerts(@Context HttpServletRequest request,
+                                 @Context HttpHeaders hh,
+                                 @FormDataParam("cert") InputStream cert,
+                                 @FormDataParam("key") InputStream key,
+                                 @QueryParam("vsId") Long vsId) throws Exception {
+        final String installDir = "/data/nginx/ssl/" + vsId;
+        certificateService.save(cert, key, installDir);
+        return responseHandler.handle("Certificates are installed successfully.", hh.getMediaType());
     }
 
     private Response memberOps(HttpHeaders hh, Long groupId, List<String> ips, boolean up, String type) throws Exception {
