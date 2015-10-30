@@ -7,6 +7,7 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.StringFormat;
+import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.slf4j.Logger;
@@ -21,8 +22,9 @@ import java.util.List;
 public class ServerConf {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerConf.class);
     private static DynamicStringProperty allowSSL = DynamicPropertyFactory.getInstance().getStringProperty("virtual-server-id.ssl", "");
-    private static DynamicStringProperty errorPage_404 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.404.url", "http://slberrorpages.ctripcorp.com/slberrorpages/404.htm");
-    private static DynamicStringProperty errorPage_500 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.500.url", "http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicStringProperty errorPage_404 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.404.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/404.htm");
+    private static DynamicStringProperty errorPage_500 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.500.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicBooleanProperty errorPageEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     public static final String SSL_PATH = "/data/nginx/ssl/";
 
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
@@ -75,6 +77,9 @@ public class ServerConf {
         return res;
     }
     private static void addErrorPage(StringBuilder sb){
+        if (!errorPageEnable.get()||errorPage_404.get()==null || errorPage_500.get() == null){
+            return;
+        }
         sb.append("error_page 400 404 = /404page;\n");
         sb.append("error_page 500 = /500page;\n");
         sb.append("location /404page {\n");
