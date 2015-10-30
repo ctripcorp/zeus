@@ -124,6 +124,9 @@ public class TaskExecutorImpl implements TaskExecutor {
             }else{
                 buildVirtualServer = buildService.getNeedBuildVirtualServers(slbId,activatingGroups,groupList);
             }
+            if (buildVirtualServer.size()==0){
+                throw new Exception("Not Found Related Virtual Server.");
+            }
             Map<Long,List<Group>> groupMap = buildService.getInfluencedVsGroups(slbId,activatingGroups,buildVirtualServer,deactivateGroupOps.keySet());
             Set<String> allDownServers = getAllDownServer();
             Map<Long,Group> groups = new HashMap<>();
