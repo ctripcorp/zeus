@@ -88,12 +88,12 @@ public class NginxOperator {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
             String rollbackConfDir  = nginxConfDir + "/Rollbacks/" + sdf.format(new Date());
             makeSurePathExist(rollbackConfDir);
-            String mvVhostCommand = " mv "+nginxConfDir+"/vhosts " + rollbackConfDir + "/ ;";
-            String mvUpstreamCommand = " mv "+nginxConfDir+"/upstreams "+ rollbackConfDir + "/ ;";
-            String mvNginxConfCommand = " mv "+nginxConfDir+"/nginx.conf" + rollbackConfDir + "/ ;";
+            String mvVhostCommand = " mv "+nginxConfDir+"/vhosts " + rollbackConfDir + "/ ";
+            String mvUpstreamCommand = " mv "+nginxConfDir+"/upstreams "+ rollbackConfDir + "/ ";
+            String mvNginxConfCommand = " cp "+nginxConfDir+"/nginx.conf " + rollbackConfDir + "/ ";
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
-            CommandLine commandline = CommandLine.parse(mvVhostCommand+mvUpstreamCommand+mvNginxConfCommand);
+            CommandLine commandline = CommandLine.parse(mvVhostCommand);
             DefaultExecutor exec = new DefaultExecutor();
             exec.setExitValues(null);
             PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream,errorStream);
@@ -109,7 +109,35 @@ public class NginxOperator {
 
             LOGGER.info("Back Up rollback conf",response.toString());
             if (!response.getSucceed()){
-                throw new Exception("Fail to backup rollback conf. Response:"+response.toString());
+                throw new Exception("Fail to backup rollback server conf. Response:"+response.toString());
+            }
+
+            commandline = CommandLine.parse(mvUpstreamCommand);
+            exitVal = exec.execute(commandline);
+            out = outputStream.toString("UTF-8");
+            error = errorStream.toString("UTF-8");
+            response = new NginxResponse();
+            response.setOutMsg(out);
+            response.setErrMsg(error);
+            response.setSucceed(0==exitVal);
+
+            LOGGER.info("Back Up rollback conf",response.toString());
+            if (!response.getSucceed()){
+                throw new Exception("Fail to backup rollback upstream conf. Response:"+response.toString());
+            }
+
+            commandline = CommandLine.parse(mvNginxConfCommand);
+            exitVal = exec.execute(commandline);
+            out = outputStream.toString("UTF-8");
+            error = errorStream.toString("UTF-8");
+            response = new NginxResponse();
+            response.setOutMsg(out);
+            response.setErrMsg(error);
+            response.setSucceed(0==exitVal);
+
+            LOGGER.info("Back Up rollback conf",response.toString());
+            if (!response.getSucceed()){
+                throw new Exception("Fail to backup rollback nginx.conf. Response:"+response.toString());
             }
             return response;
         } catch (IOException e) {

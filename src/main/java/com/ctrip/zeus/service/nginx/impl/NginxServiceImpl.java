@@ -120,6 +120,9 @@ public class NginxServiceImpl implements NginxService {
 
         for (NginxResponse res : result) {
             sucess = sucess && res.getSucceed();
+            if (!sucess){
+                logger.error("[ RollbackAllConf ]: rollback fail. Response:"+res.toString());
+            }
         }
 
         return sucess;
