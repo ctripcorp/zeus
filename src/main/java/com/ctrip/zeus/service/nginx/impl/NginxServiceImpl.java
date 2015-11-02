@@ -59,6 +59,75 @@ public class NginxServiceImpl implements NginxService {
     private Logger logger = LoggerFactory.getLogger(NginxServiceImpl.class);
 
     @Override
+    public NginxResponse localRollbackConf(Long slbId, Integer slbVersion) throws Exception {
+        String ip = S.getIp();
+        Slb slb ;
+        if (slbVersion!=null&&slbVersion!=0){
+            slb = activateService.getActivatingSlb(slbId,slbVersion);
+        }else {
+            slb = activateService.getActivatedSlb(slbId);
+        }
+        AssertUtils.assertNotNull(slb,"Can't found slbId when writing config to disk!");
+        int version = nginxConfService.getCurrentVersion(slbId);
+
+        NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
+        rollbackConfBackUp(nginxOperator);
+        List<VirtualServer> list = slb.getVirtualServers();
+        List<Long> vsIds = new ArrayList<>();
+        for (VirtualServer vs : list){
+            vsIds.add(vs.getId());
+        }
+        writeConfToDisk(slbId, version, vsIds, nginxOperator);
+
+        NginxResponse response = nginxOperator.reloadConfTest();
+        response.setServerIp(ip);
+        if(response.getSucceed()){
+            NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
+            if (nginxServer == null)
+            {
+                nginxServer = new NginxServerDo().setIp(ip).setVersion(version);
+            }
+            nginxServerDao.updateByPK(nginxServer.setVersion(version), NginxServerEntity.UPDATESET_FULL);
+        }
+        return response;
+    }
+
+    @Override
+    public boolean rollbackAllConf(Long slbId, Integer slbVersion) throws Exception {
+        List<NginxResponse> result = new ArrayList<>();
+        boolean sucess = true;
+
+        Slb slb ;
+        if (slbVersion!=null&&slbVersion!=0){
+            slb = activateService.getActivatingSlb(slbId,slbVersion);
+        }else {
+            slb =activateService.getActivatedSlb(slbId);
+        }
+        AssertUtils.assertNotNull(slb,"Can't found slbId when rolling back configs!");
+        List<SlbServer> slbServers = slb.getSlbServers();
+        for (SlbServer slbServer : slbServers) {
+            logger.info("[ RollbackAllConf ]: start rollback server : " + slbServer.getIp());
+            NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
+            NginxResponse response = nginxClient.rollbackConf(slbId,slbVersion);
+            result.add(response);
+
+            logger.info("[ RollbackAllConf ]: rollback server finished : " + slbServer.getIp());
+        }
+
+        if (result.size() == 0) {
+            sucess = false;
+        }
+
+        for (NginxResponse res : result) {
+            sucess = sucess && res.getSucceed();
+        }
+
+        return sucess;
+    }
+    private void rollbackConfBackUp(NginxOperator nginxOperator) throws Exception{
+        NginxResponse response = nginxOperator.rollbackBackupConf();
+    }
+    @Override
     public NginxResponse writeToDisk(List<Long> vsIds , Long slbId ,Integer slbVersion) throws Exception {
         String ip = S.getIp();
         Slb slb ;

@@ -16,6 +16,19 @@ import java.util.List;
 public interface NginxService {
 
     /**
+     * Local rollback  Conf
+     * @return the result of "ngnix -t"
+     * @throws Exception
+     */
+    NginxResponse localRollbackConf( Long slbId , Integer slbVersion) throws Exception;
+    /**
+     *  Rollback  All  Conf
+     * @return the result of "ngnix -t"
+     * @throws Exception
+     */
+    boolean rollbackAllConf( Long slbId , Integer slbVersion) throws Exception;
+
+    /**
      * write conf to disk
      * @return the result of "ngnix -t"
      * @throws Exception

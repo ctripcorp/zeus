@@ -49,7 +49,13 @@ public class NginxClient extends AbstractRestClient {
             webTarget = webTarget.queryParam("version",version);
         }
         String responseStr = webTarget.request().headers(getDefaultHeaders()).get(String.class);
-        return DefaultJsonParser.parse(NginxResponse.class, responseStr);
+        try{
+            return DefaultJsonParser.parse(NginxResponse.class, responseStr);
+        }catch (Exception e){
+            NginxResponse response = new NginxResponse();
+            response.setSucceed(false).setErrMsg(e.getMessage()).setOutMsg(responseStr);
+            return response;
+        }
     }
 
     public NginxResponse write(List<Long> vsIds , Long slbId,Integer slbVersion)throws IOException{
@@ -62,14 +68,42 @@ public class NginxClient extends AbstractRestClient {
             webTarget = webTarget.queryParam("VirtualServer",vsId);
         }
         String responseStr = webTarget.request().headers(getDefaultHeaders()).get(String.class);
-        return DefaultJsonParser.parse(NginxResponse.class, responseStr);
+        try{
+            return DefaultJsonParser.parse(NginxResponse.class, responseStr);
+        }catch (Exception e){
+            NginxResponse response = new NginxResponse();
+            response.setSucceed(false).setErrMsg(e.getMessage()).setOutMsg(responseStr);
+            return response;
+        }
     }
+    public NginxResponse rollbackConf(Long slbId,Integer slbVersion)throws IOException{
+        WebTarget webTarget = getTarget().path("/api/nginx/rollback").queryParam("slbId",slbId);
+        if (slbVersion!=null)
+        {
+            webTarget = webTarget.queryParam("version",slbVersion);
+        }
+        String responseStr = webTarget.request().headers(getDefaultHeaders()).get(String.class);
+        try{
+            return DefaultJsonParser.parse(NginxResponse.class, responseStr);
+        }catch (Exception e){
+            NginxResponse response = new NginxResponse();
+            response.setSucceed(false).setErrMsg(e.getMessage()).setOutMsg(responseStr);
+            return response;
+        }
+    }
+
 
     public NginxResponse dyups(String upsName ,String upsCommands)throws IOException{
         String responseStr = getTarget().path("/api/nginx/dyups/" + upsName).request().headers(getDefaultHeaders()).post(Entity.entity(upsCommands,
                 MediaType.APPLICATION_JSON
         ),String.class);
-        return DefaultJsonParser.parse(NginxResponse.class,responseStr);
+        try{
+            return DefaultJsonParser.parse(NginxResponse.class, responseStr);
+        }catch (Exception e){
+            NginxResponse response = new NginxResponse();
+            response.setSucceed(false).setErrMsg(e.getMessage()).setOutMsg(responseStr);
+            return response;
+        }
     }
 
     public TrafficStatusList getTrafficStatus(Long since, int count) throws Exception {

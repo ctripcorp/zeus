@@ -89,6 +89,21 @@ public class NginxResource {
         }
 
     }
+    @GET
+    @Path("/rollback")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response rollback(@Context HttpServletRequest request,
+                             @Context HttpHeaders hh,
+                             @QueryParam("slbId") Long slbId ,
+                             @QueryParam("version") Integer version)throws Exception
+    {
+        NginxResponse result = nginxService.localRollbackConf(slbId,version);
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
+        }
+    }
     @POST
     @Path("/dyups/{upStreamName:[a-zA-Z0-9_-]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

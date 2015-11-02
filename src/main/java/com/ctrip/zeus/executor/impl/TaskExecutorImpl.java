@@ -208,6 +208,9 @@ public class TaskExecutorImpl implements TaskExecutor {
         try {
             int current = buildInfoService.getCurrentTicket(slbId);
             buildService.rollBackConfig(slbId,current);
+            if (!nginxService.rollbackAllConf(slbId,getSlbVersion(slbId))){
+                logger.error("[Rollback] Rollback config on disk fail. ");
+            }
             buildInfoService.resetPaddingTicket(slbId);
         }catch (Exception e){
             logger.error("RollBack Fail!",e);

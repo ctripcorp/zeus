@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class NginxOperator {
@@ -79,6 +81,39 @@ public class NginxOperator {
         } catch (IOException e) {
             LOGGER.error("Test Nginx Conf Failed",e);
             throw e;
+        }
+    }
+    public NginxResponse rollbackBackupConf()throws Exception{
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+            String rollbackConfDir  = nginxConfDir + "/Rollbacks/" + sdf.format(new Date());
+            makeSurePathExist(rollbackConfDir);
+            String mvVhostCommand = " mv "+nginxConfDir+"/vhosts " + rollbackConfDir + "/ ;";
+            String mvUpstreamCommand = " mv "+nginxConfDir+"/upstreams "+ rollbackConfDir + "/ ;";
+            String mvNginxConfCommand = " mv "+nginxConfDir+"/nginx.conf" + rollbackConfDir + "/ ;";
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+            CommandLine commandline = CommandLine.parse(mvVhostCommand+mvUpstreamCommand+mvNginxConfCommand);
+            DefaultExecutor exec = new DefaultExecutor();
+            exec.setExitValues(null);
+            PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream,errorStream);
+            exec.setStreamHandler(streamHandler);
+
+            int exitVal = exec.execute(commandline);
+            String out = outputStream.toString("UTF-8");
+            String error = errorStream.toString("UTF-8");
+            NginxResponse response = new NginxResponse();
+            response.setOutMsg(out);
+            response.setErrMsg(error);
+            response.setSucceed(0==exitVal);
+
+            LOGGER.info("Back Up rollback conf",response.toString());
+            if (!response.getSucceed()){
+                throw new Exception("Fail to backup rollback conf. Response:"+response.toString());
+            }
+            return response;
+        } catch (IOException e) {
+            throw new Exception("Fail to backup rollback conf",e);
         }
     }
     public NginxResponse cleanConf(List<Long> vsid) throws IOException{
