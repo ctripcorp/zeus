@@ -2,6 +2,7 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.SlbValidatorException;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
@@ -11,6 +12,7 @@ import com.ctrip.zeus.service.activate.GroupActivateConfRewrite;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.validate.SlbValidator;
 import com.ctrip.zeus.tag.TagBox;
@@ -62,6 +64,8 @@ public class ActivateResource {
     private ActiveConfService activeConfService;
     @Resource
     private GroupActivateConfRewrite groupActivateConfRewrite;
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -118,7 +122,7 @@ public class ActivateResource {
     public Response activateGroup(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("groupId") List<Long> groupIds,  @QueryParam("groupName") List<String> groupNames)throws Exception{
         List<Long> _groupIds = new ArrayList<>();
 
-        if ( groupIds!=null && !groupIds.isEmpty() )
+        if ( groupIds!=null && !groupIds.isEmpty())
         {
             _groupIds.addAll(groupIds);
         }
@@ -126,7 +130,12 @@ public class ActivateResource {
         {
             for (String groupName : groupNames)
             {
-                _groupIds.add(groupRepository.get(groupName).getId());
+                _groupIds.add(groupCriteriaQuery.queryByName(groupName));
+            }
+        }
+        for (Long id : _groupIds){
+            if (groupRepository.getById(id)==null){
+                throw new ValidationException("Group Id Not Found : "+id);
             }
         }
         List<OpsTask> tasks = new ArrayList<>();
