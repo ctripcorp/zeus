@@ -114,6 +114,8 @@ public class SlbResource {
             throw new ValidationException("Slb id cannot be found.");
 
         Slb slb = slbRepository.getById(slbId);
+        if (slb == null)
+            throw new ValidationException("Slb cannot be found.");
         return responseHandler.handle(getSlbByType(slb, type), hh.getMediaType());
     }
 

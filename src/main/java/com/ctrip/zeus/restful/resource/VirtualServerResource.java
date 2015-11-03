@@ -132,7 +132,8 @@ public class VirtualServerResource {
                                      @Context HttpServletRequest request,
                                      @QueryParam("vsId") Long vsId) throws Exception {
         VirtualServer vs = virtualServerRepository.getById(vsId);
-        AssertUtils.assertNotNull(vs, "Virtual server cannot be found.");
+        if (vs == null)
+            throw new ValidationException("Virtual server cannot be found.");
         return responseHandler.handle(vs, hh.getMediaType());
     }
 

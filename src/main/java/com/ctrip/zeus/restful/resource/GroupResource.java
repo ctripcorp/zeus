@@ -154,10 +154,11 @@ public class GroupResource {
         if (groupId == null) {
             groupId = groupCriteriaQuery.queryByName(groupName);
         }
-        if (groupId == null)
-            throw new ValidationException("Group id cannot be found.");
         if (groupId != null) {
             group = groupRepository.getById(groupId);
+        }
+        if (group == null) {
+            throw new ValidationException("Group cannot be found.");
         }
         return responseHandler.handle(getGroupByType(group, type), hh.getMediaType());
     }
