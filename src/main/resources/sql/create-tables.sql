@@ -1,5 +1,4 @@
 -- --------------------------------------------------------
--- Host:                         pub.mysql.db.dev.sh.ctripcorp.com
 -- Server version:               5.6.12-log - MySQL Community Server (GPL)
 -- Server OS:                    Linux
 -- HeidiSQL Version:             8.3.0.4694
@@ -167,18 +166,35 @@ CREATE TABLE IF NOT EXISTS `build_info` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table certificate
+DROP TABLE IF EXISTS `certificate`;
+CREATE TABLE IF NOT EXISTS `certificate` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `domain` varchar(1024) NOT NULL DEFAULT 'localhost' COMMENT 'certificate domain',
+  `cert` mediumblob NOT NULL COMMENT 'certificate file',
+  `key` mediumblob NOT NULL COMMENT 'key file',
+  `state` bit(1) NOT NULL DEFAULT b'1' COMMENT 'state',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='meta data table of certificate';
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table conf_group_active
 DROP TABLE IF EXISTS `conf_group_active`;
 CREATE TABLE IF NOT EXISTS `conf_group_active` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'null',
   `group_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'null',
   `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'null',
+  `slb_virtual_server_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'null',
   `content` mediumtext COMMENT 'null',
   `version` int(11) DEFAULT NULL COMMENT 'null',
   `created_time` timestamp NULL DEFAULT NULL COMMENT 'null',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'null',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id_slb_id` (`group_id`,`slb_id`),
+  UNIQUE KEY `group_id_virtual_server_id` (`group_id`,`slb_virtual_server_id`),
   KEY `idx_DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='null';
 
@@ -494,6 +510,23 @@ CREATE TABLE IF NOT EXISTS `report` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table r_certificate_slb_server
+DROP TABLE IF EXISTS `r_certificate_slb_server`;
+CREATE TABLE IF NOT EXISTS `r_certificate_slb_server` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `cert_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'certificate id',
+  `command` bigint(20) NOT NULL DEFAULT '0' COMMENT 'commanded cert id',
+  `vs_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'virtual server id',
+  `ip` varchar(100) NOT NULL DEFAULT '0' COMMENT 'slb server ip',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ip_vs_id` (`ip`,`vs_id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of certificate and slb server';
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table r_group_gs
 DROP TABLE IF EXISTS `r_group_gs`;
 CREATE TABLE IF NOT EXISTS `r_group_gs` (
@@ -533,7 +566,7 @@ CREATE TABLE IF NOT EXISTS `r_slb_slb_server` (
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of slb and slb server';
 
 -- Data exporting was unselected.
 
@@ -697,6 +730,7 @@ CREATE TABLE IF NOT EXISTS `status_group_server` (
   `up` bit(1) NOT NULL DEFAULT b'0' COMMENT 'null',
   `created_time` timestamp NULL DEFAULT NULL COMMENT 'null',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'null',
+  `status` int(20) NOT NULL DEFAULT '0' COMMENT 'status',
   PRIMARY KEY (`id`),
   UNIQUE KEY `slb_virtual_server_id_group_id_ip` (`slb_virtual_server_id`,`group_id`,`ip`),
   KEY `idx_DataChange_LastTime` (`DataChange_LastTime`)

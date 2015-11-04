@@ -17,8 +17,10 @@
     <file path="rel-vs.xml"/>
     <file path="rel-group.xml"/>
     <file path="rel-slb.xml"/>
+    <file path="rel-cert.xml"/>
     <file path="meta-vs.xml"/>
     <file path="meta-group.xml"/>
     <file path="meta-slb.xml"/>
+    <file path="meta-cert.xml"/>
 </manifest>
 
