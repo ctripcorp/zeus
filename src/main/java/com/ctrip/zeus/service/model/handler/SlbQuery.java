@@ -1,7 +1,5 @@
 package com.ctrip.zeus.service.model.handler;
 
-import com.ctrip.zeus.model.entity.Slb;
-
 import java.util.List;
 
 /**
@@ -10,5 +8,5 @@ import java.util.List;
  */
 public interface SlbQuery {
 
-    Slb getById(Long id) throws Exception;
+    List<String> getSlbIps(Long slbId) throws Exception;
 }

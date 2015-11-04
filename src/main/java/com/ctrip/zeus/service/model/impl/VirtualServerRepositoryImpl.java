@@ -3,13 +3,14 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
+import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,10 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     private VirtualServerValidator virtualServerModelValidator;
     @Resource
     private SlbValidator slbModelValidator;
+    @Resource
+    private SlbQuery slbQuery;
+    @Resource
+    private CertificateService certificateService;
 
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
@@ -64,11 +69,17 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         check.add(virtualServer);
         virtualServerModelValidator.validateVirtualServers(check);
         virtualServerEntityManager.addVirtualServer(virtualServer);
+        if (virtualServer.getSsl().booleanValue()) {
+            installCertificate(virtualServer);
+        }
         return virtualServer;
     }
 
     @Override
     public void updateVirtualServer(VirtualServer virtualServer) throws Exception {
+        VirtualServer origin = getById(virtualServer.getId());
+        if (origin == null)
+            throw new ValidationException("Virtual server with id " + virtualServer.getId() + " does not exist.");
         for (Domain domain : virtualServer.getDomains()) {
             domain.setName(domain.getName().toLowerCase());
         }
@@ -79,12 +90,15 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         }
         if (!check.containsKey(virtualServer.getId())) {
             if (!slbModelValidator.exists(virtualServer.getSlbId())) {
-                throw new ValidationException("Slb with id " + virtualServer.getSlbId() + " does not exists.");
+                throw new ValidationException("Slb with id " + virtualServer.getSlbId() + " does not exist.");
             }
         }
         check.put(virtualServer.getId(), virtualServer);
         virtualServerModelValidator.validateVirtualServers(new ArrayList<>(check.values()));
         virtualServerEntityManager.updateVirtualServer(virtualServer);
+        if (virtualServer.getSsl().booleanValue()) {
+            installCertificate(virtualServer);
+        }
     }
 
     @Override
@@ -110,28 +124,23 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         virtualServerEntityManager.port(vs);
     }
 
+    private void installCertificate(VirtualServer virtualServer) throws Exception {
+        List<String> ips = slbQuery.getSlbIps(virtualServer.getSlbId());
+        Long certId = certificateService.pickCertificate(virtualServer);
+        certificateService.command(virtualServer.getId(), ips, certId);
+        certificateService.install(virtualServer.getId());
+    }
+
     private VirtualServer createVirtualServer(SlbVirtualServerDo d) throws DalException {
         VirtualServer vs = C.toVirtualServer(d);
         querySlbDomains(d.getId(), vs);
         return vs;
     }
 
-
     private void querySlbDomains(Long slbVirtualServerId, VirtualServer virtualServer) throws DalException {
         List<SlbDomainDo> list = slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL);
         for (SlbDomainDo d : list) {
             virtualServer.addDomain(new Domain().setName(d.getName().toLowerCase()));
         }
-    }
-
-    private static GroupSlbDo toGroupSlbDo(Long groupId, GroupVirtualServer groupVirtualServer) {
-        VirtualServer vs = groupVirtualServer.getVirtualServer();
-        return new GroupSlbDo()
-                .setGroupId(groupId)
-                .setSlbId(vs.getSlbId())
-                .setSlbVirtualServerId(vs.getId())
-                .setPath(groupVirtualServer.getPath())
-                .setRewrite(groupVirtualServer.getRewrite())
-                .setPriority(groupVirtualServer.getPriority() == null ? 1000 : groupVirtualServer.getPriority());
     }
 }

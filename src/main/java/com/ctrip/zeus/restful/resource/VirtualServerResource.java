@@ -3,7 +3,6 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServerList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
@@ -15,7 +14,6 @@ import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
-import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -48,8 +46,6 @@ public class VirtualServerResource {
     private SlbRepository slbRepository;
     @Resource
     private GroupRepository groupRepository;
-    @Resource
-    private CertificateService certificateService;
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
@@ -153,9 +149,6 @@ public class VirtualServerResource {
             throw new ValidationException("Slb id is not provided.");
         virtualServer = virtualServerRepository.addVirtualServer(virtualServer.getSlbId(), virtualServer);
         slbRepository.updateVersion(virtualServer.getSlbId());
-        if (virtualServer.getSsl().booleanValue()) {
-            installCertificate(virtualServer);
-        }
         return responseHandler.handle(virtualServer, hh.getMediaType());
 
     }
@@ -178,9 +171,6 @@ public class VirtualServerResource {
             slbRepository.updateVersion(originSlbId);
         Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[]{virtualServer.getId()});
         groupRepository.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
-        if (virtualServer.getSsl().booleanValue()) {
-            installCertificate(virtualServer);
-        }
         return responseHandler.handle(virtualServer, hh.getMediaType());
     }
 
@@ -222,16 +212,6 @@ public class VirtualServerResource {
                                   @QueryParam("vsId") Long vsId) throws Exception {
         virtualServerRepository.portVirtualServerRel(vsId);
         return responseHandler.handle("Successfully ported virtual server relations.", hh.getMediaType());
-    }
-
-    private void installCertificate(VirtualServer virtualServer) throws Exception {
-        List<String> ips = new ArrayList<>();
-        for (SlbServer slbServer : slbRepository.getById(virtualServer.getSlbId()).getSlbServers()) {
-            ips.add(slbServer.getIp());
-        }
-        Long certId = certificateService.pickCertificate(virtualServer);
-        certificateService.command(virtualServer.getId(), ips, certId);
-        certificateService.install(virtualServer.getId());
     }
 
     private VirtualServer parseVirtualServer(MediaType mediaType, String virtualServer) throws Exception {
