@@ -5,15 +5,14 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
+import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/9/24.
@@ -27,7 +26,7 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
     @Resource
-    private RCertificateSlbServerDao rCertificateSlbServerDao;
+    private CertificateService certificateService;
 
     @Override
     public boolean exists(Long vsId) throws Exception {
@@ -56,9 +55,7 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
 
     @Override
     public void validateSslVirtualServer(VirtualServer virtualServer) throws Exception {
-        List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(virtualServer.getId(), RCertificateSlbServerEntity.READSET_FULL);
-        if (dos.size() == 0)
-            throw new ValidationException("No certificate is found by ssl virtual server " + virtualServer.getId() + ".");
+        certificateService.pickCertificate(virtualServer);
     }
 
     @Override

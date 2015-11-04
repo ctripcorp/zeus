@@ -2,6 +2,7 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="certificate" table="certificate" alias="c" do-class="CertificateDo">
         <var name="domains" value-type="String[]"/>
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -19,6 +20,18 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='domain'/>  in <IN>${domains}</IN>
+                        AND <FIELD name='state'/> = ${state}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-id-and-state" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="state"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='id'/>  in <IN>${ids}</IN>
                         AND <FIELD name='state'/> = ${state}
                     ]]>
                 </statement>

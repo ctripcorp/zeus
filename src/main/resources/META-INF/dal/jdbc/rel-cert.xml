@@ -44,6 +44,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-all-by-vs-and-ip" type="DELETE" batch="true">
+                <param name="vs-id"/>
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                        AND <FIELD name='ip'/> = ${ip}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
 </entities>

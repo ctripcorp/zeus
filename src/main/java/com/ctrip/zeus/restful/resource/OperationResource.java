@@ -296,6 +296,7 @@ public class OperationResource {
         ips = configureIps(vsId, ips);
         Long certId = certificateService.upload(cert, key, domain, CertificateConfig.ONBOARD);
         certificateService.command(vsId, ips, certId);
+        certificateService.install(vsId);
         return responseHandler.handle("Certificates uploaded. Re-activate the virtual server to take effect.", hh.getMediaType());
     }
 

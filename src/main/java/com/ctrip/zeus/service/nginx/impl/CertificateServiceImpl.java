@@ -5,7 +5,6 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.util.IOUtils;
@@ -27,11 +26,23 @@ import java.util.Map;
 @Service("certificateService")
 public class CertificateServiceImpl implements CertificateService {
     @Resource
-    private VirtualServerRepository virtualServerRepository;
-    @Resource
     private CertificateDao certificateDao;
     @Resource
     private RCertificateSlbServerDao rCertificateSlbServerDao;
+
+    @Override
+    public Long pickCertificate(VirtualServer virtualServer) throws Exception {
+        CertificateDo value = null;
+        if (virtualServer.getId() != null && virtualServer.getId().longValue() > 0L) {
+            value = tryFetch(virtualServer);
+        }
+        if (value != null)
+            return value.getId();
+        value = tryMatch(virtualServer);
+        if (value == null)
+            throw new ValidationException("Some error occurred when matching certificate.");
+        return value.getId();
+    }
 
     @Override
     public Long upload(InputStream cert, InputStream key, String domain, boolean state) throws Exception {
@@ -41,17 +52,6 @@ public class CertificateServiceImpl implements CertificateService {
                 .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state);
         certificateDao.insert(d);
         return d.getId();
-    }
-
-    @Override
-    public void command(Long vsId, List<String> ips, boolean state) throws Exception {
-        CertificateDo cert = pickCert(vsId, state);
-        if (cert == null)
-            throw new ValidationException("Some error occurred when searching the certificate.");
-        for (String ip : ips) {
-            rCertificateSlbServerDao.insertOrUpdateCommand(
-                    new RelCertSlbServerDo().setIp(ip).setCommand(cert.getId()).setVsId(vsId));
-        }
     }
 
     @Override
@@ -73,7 +73,7 @@ public class CertificateServiceImpl implements CertificateService {
         for (RelCertSlbServerDo d : dos) {
             if (d.getCertId() == d.getCommand())
                 continue;
-            CertSyncClient c = new CertSyncClient("http://" + d.getIp() + ":8099/api/op/installcerts");
+            CertSyncClient c = new CertSyncClient("http://" + d.getIp() + ":8099");
             Response res = c.requestInstall(vsId, d.getCommand());
             // retry
             if (res.getStatus() / 100 > 2)
@@ -92,12 +92,25 @@ public class CertificateServiceImpl implements CertificateService {
         }
     }
 
-    private CertificateDo pickCert(Long vsId, boolean state) throws Exception {
-        VirtualServer vs = virtualServerRepository.getById(vsId);
-        String[] searchRange = getDomainSearchRange(vs.getDomains());
+    private CertificateDo tryFetch(VirtualServer virtualServer) throws Exception {
+        List<Long> certIds = new ArrayList<>();
+        for (RelCertSlbServerDo d : rCertificateSlbServerDao.findByVs(virtualServer.getId(), RCertificateSlbServerEntity.READSET_FULL)) {
+            certIds.add(d.getId());
+        }
+        List<CertificateDo> result = certificateDao.findByIdAndState(certIds.toArray(new Long[certIds.size()]), CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
+        int count;
+        if ((count = result.size()) == 0)
+            return null;
+        if (count > 1)
+            throw new Exception("Too many certificates are found.");
+        return result.get(0);
+    }
+
+    private CertificateDo tryMatch(VirtualServer virtualServer) throws Exception {
         CertificateDo value;
+        String[] searchRange = getDomainSearchRange(virtualServer.getDomains());
         if (searchRange.length == 1) {
-            List<CertificateDo> result = certificateDao.findByDomainAndState(searchRange, state, CertificateEntity.READSET_FULL);
+            List<CertificateDo> result = certificateDao.findByDomainAndState(searchRange, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
             if (result.size() == 0)
                 throw new ValidationException("Cannot find corresponding certificate.");
             value = result.get(0);
@@ -142,7 +155,7 @@ public class CertificateServiceImpl implements CertificateService {
         }
 
         public Response requestInstall(Long vsId, Long certId) throws ValidationException {
-            return getTarget().queryParam("vsId", vsId).queryParam("certId", certId).request().get();
+            return getTarget().path("/api/op/installcerts").queryParam("vsId", vsId).queryParam("certId", certId).request().get();
         }
     }
 }
