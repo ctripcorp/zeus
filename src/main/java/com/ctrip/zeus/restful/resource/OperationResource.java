@@ -10,7 +10,8 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.nginx.CertificateConfig;
+import com.ctrip.zeus.service.nginx.CertificateInstaller;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -71,6 +72,8 @@ public class OperationResource {
     private StatusGroupServerDao statusGroupServerDao;
     @Resource
     private CertificateService certificateService;
+    @Resource
+    private CertificateInstaller certificateInstaller;
 
     @GET
     @Path("/clean")
@@ -272,35 +275,28 @@ public class OperationResource {
                                 @Context HttpHeaders hh,
                                 @FormDataParam("cert") InputStream cert,
                                 @FormDataParam("key") InputStream key,
+                                @QueryParam("domain") String domain,
                                 @QueryParam("vsId") Long vsId,
-                                @QueryParam("ip") List<String> ips,
-                                @QueryParam("domain") String domain) throws Exception {
-        if (domain != null && !domain.isEmpty()) {
-            Set<Long> check = virtualServerCriteriaQuery.queryByDomain(domain);
-            if (!check.contains(vsId))
-                throw new ValidationException("VsId and domain mismatched.");
+                                @QueryParam("ip") List<String> ips) throws Exception {
+        if (domain == null || domain.isEmpty()) {
+            throw new ValidationException("Domain info is required.");
         }
-        Long slbId = slbCriteriaQuery.queryByVs(vsId);
-        Slb slb = slbRepository.getById(slbId);
-        if (slb == null) {
-            throw new ValidationException("Cannot find slb servers by the given vsId.");
+        if (vsId == null && (ips != null || ips.size() > 0)) {
+            throw new ValidationException("vsId is required when running certificate grayscale test.");
         }
-        List<String> slbIps = new ArrayList<>();
-        for (SlbServer slbServer : slb.getSlbServers()) {
-            slbIps.add(slbServer.getIp());
+        // simply upload file, init state
+        if (vsId == null) {
+            certificateService.upload(cert, key, domain, CertificateConfig.ONBOARD);
+            return responseHandler.handle("Certificates uploaded. Virtual server creation is permitted.", hh.getMediaType());
         }
-        if (ips != null && ips.size() > 0) {
-            if (!slbIps.containsAll(ips)) {
-                throw new ValidationException("Some ips do not belong to the current slb.");
-            }
-        } else {
-            ips = slbIps;
-        }
-        // create a temp place to put raw cert and key.
-        certificateService.cache(cert, key, vsId);
-        // send file to related slb servers
-        certificateService.sendIfExist(vsId, ips);
-        return responseHandler.handle("Certificates uploaded.", hh.getMediaType());
+        // update certificate or run grayscale test
+        Set<Long> check = virtualServerCriteriaQuery.queryByDomain(domain);
+        if (!check.contains(vsId))
+            throw new ValidationException("VsId and domain mismatched.");
+        ips = configureIps(vsId, ips);
+        Long certId = certificateService.upload(cert, key, domain, CertificateConfig.ONBOARD);
+        certificateService.command(vsId, ips, certId);
+        return responseHandler.handle("Certificates uploaded. Re-activate the virtual server to take effect.", hh.getMediaType());
     }
 
     @POST
@@ -309,16 +305,15 @@ public class OperationResource {
     @Authorize(name = "installCerts")
     public Response installCerts(@Context HttpServletRequest request,
                                  @Context HttpHeaders hh,
-                                 @FormDataParam("cert") InputStream cert,
-                                 @FormDataParam("key") InputStream key,
-                                 @QueryParam("vsId") Long vsId) throws Exception {
-        final String installDir = "/data/nginx/ssl/" + vsId;
-        certificateService.save(cert, key, installDir);
-        return responseHandler.handle("Certificates are installed successfully.", hh.getMediaType());
+                                 @QueryParam("vsId") Long vsId,
+                                 @QueryParam("certId") Long certId) throws Exception {
+        if (vsId == null || certId == null)
+            throw new ValidationException("vsId and certId are required.");
+        String domain = certificateInstaller.localInstall(vsId, certId);
+        return responseHandler.handle("Certificates with domain " + domain + " are installed successfully.", hh.getMediaType());
     }
 
     private Response memberOps(HttpHeaders hh, Long groupId, List<String> ips, boolean up, String type) throws Exception {
-
         StringBuilder sb = new StringBuilder();
         for (String ip : ips) {
             sb.append(ip).append(";");
@@ -362,6 +357,26 @@ public class OperationResource {
         } else {
             return Response.status(200).entity(String.format(GroupStatus.JSON, groupStatusList)).type(MediaType.APPLICATION_JSON).build();
         }
+    }
+
+    private List<String> configureIps(Long vsId, List<String> ips) throws Exception {
+        Long slbId = slbCriteriaQuery.queryByVs(vsId);
+        Slb slb = slbRepository.getById(slbId);
+        if (slb == null) {
+            throw new ValidationException("Cannot find slb servers by the given vsId.");
+        }
+        List<String> slbIps = new ArrayList<>();
+        for (SlbServer slbServer : slb.getSlbServers()) {
+            slbIps.add(slbServer.getIp());
+        }
+        if (ips != null && ips.size() > 0) {
+            if (!slbIps.containsAll(ips)) {
+                throw new ValidationException("Some ips do not belong to the current slb.");
+            }
+        } else {
+            ips = slbIps;
+        }
+        return ips;
     }
 
 }

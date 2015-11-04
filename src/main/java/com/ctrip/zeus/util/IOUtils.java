@@ -22,6 +22,12 @@ public class IOUtils {
         return baos.toString();
     }
 
+    public static byte[] getBytes(InputStream is) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        copy(is, baos);
+        return baos.toByteArray();
+    }
+
     /**
      * Copy InputStream to OutputStream.
      *

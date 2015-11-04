@@ -7,12 +7,13 @@ import java.util.List;
  * Created by zhoumy on 2015/10/29.
  */
 public interface CertificateService {
+//    Certificate get(Long vsId);
 
-    CertificateConfig getConfig();
+    Long upload(InputStream cert, InputStream key, String domain, boolean state) throws Exception;
 
-    void cache(InputStream cert, InputStream key, Long vsId) throws Exception;
+    void command(Long vsId, List<String> ips, boolean state) throws Exception;
 
-    void save(InputStream cert, InputStream key, String dir) throws Exception;
+    void command(Long vsId, List<String> ips, Long certId) throws Exception;
 
-    void sendIfExist(Long vsId, List<String> ips) throws Exception;
+    void install(Long vsId) throws Exception;
 }

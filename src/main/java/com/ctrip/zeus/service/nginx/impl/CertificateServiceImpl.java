@@ -1,99 +1,144 @@
 package com.ctrip.zeus.service.nginx.impl;
 
 import com.ctrip.zeus.client.AbstractRestClient;
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.model.entity.Domain;
+import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.util.IOUtils;
-import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import org.springframework.stereotype.Service;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
+import javax.annotation.Nullable;
+import javax.annotation.Resource;
 import javax.ws.rs.core.Response;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zhoumy on 2015/10/29.
  */
 @Service("certificateService")
 public class CertificateServiceImpl implements CertificateService {
-    private CertificateConfig config = new CertificateConfig();
+    @Resource
+    private VirtualServerRepository virtualServerRepository;
+    @Resource
+    private CertificateDao certificateDao;
+    @Resource
+    private RCertificateSlbServerDao rCertificateSlbServerDao;
 
     @Override
-    public CertificateConfig getConfig() {
-        return config;
+    public Long upload(InputStream cert, InputStream key, String domain, boolean state) throws Exception {
+        List<CertificateDo> abandoned = certificateDao.findByDomainAndState(new String[]{domain}, state, CertificateEntity.READSET_FULL);
+        certificateDao.deleteById(abandoned.toArray(new CertificateDo[abandoned.size()]));
+        CertificateDo d = new CertificateDo()
+                .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state);
+        certificateDao.insert(d);
+        return d.getId();
     }
 
     @Override
-    public void cache(InputStream cert, InputStream key, Long vsId) throws Exception {
-        save(cert, key, config.getCacheDir() + vsId);
-    }
-
-    @Override
-    public void save(InputStream cert, InputStream key, String dir) throws Exception {
-        File f = new File(dir);
-        if (!f.exists()) {
-            f.mkdirs();
-        }
-        OutputStream certos = new FileOutputStream(f.getPath() + "/ssl.crt", config.getWriteFileOption());
-        OutputStream keyos = new FileOutputStream(f.getPath() + "/ssl.key", config.getWriteFileOption());
-        try {
-            IOUtils.copy(cert, certos);
-            certos.flush();
-            IOUtils.copy(key, keyos);
-            certos.flush();
-        } finally {
-            certos.close();
-            keyos.close();
-        }
-    }
-
-    @Override
-    public void sendIfExist(Long vsId, List<String> ips) throws Exception {
-        String errMsg = "";
-        boolean success = true;
+    public void command(Long vsId, List<String> ips, boolean state) throws Exception {
+        CertificateDo cert = pickCert(vsId, state);
+        if (cert == null)
+            throw new ValidationException("Some error occurred when searching the certificate.");
         for (String ip : ips) {
-            CertSyncClient c = new CertSyncClient("http://" + ip + ":8099/api/op/installcerts", config.getCacheDir() + vsId);
-            Response res = c.sync(vsId);
+            rCertificateSlbServerDao.insert(new RelCertSlbServerDo().setIp(ip).setCommand(cert.getId()).setVsId(vsId));
+        }
+    }
+
+    @Override
+    public void command(Long vsId, List<String> ips, Long certId) throws Exception {
+        CertificateDo cert = certificateDao.findByPK(certId, CertificateEntity.READSET_FULL);
+        if (cert == null)
+            throw new ValidationException("Certificate cannot be found.");
+        for (String ip : ips) {
+            rCertificateSlbServerDao.insert(new RelCertSlbServerDo().setIp(ip).setCommand(cert.getId()).setVsId(vsId));
+        }
+    }
+
+    @Override
+    public void install(Long vsId) throws Exception {
+        List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
+        boolean success = true;
+        String errMsg = "";
+        for (RelCertSlbServerDo d : dos) {
+            CertSyncClient c = new CertSyncClient("http://" + d.getIp() + ":8099/api/op/installcerts");
+            Response res = c.requestInstall(vsId, d.getCommand());
             // retry
             if (res.getStatus() / 100 > 2)
-                res = c.sync(vsId);
+                res = c.requestInstall(vsId, d.getCommand());
             // still failed after retry
             if (res.getStatus() / 100 > 2) {
                 success &= false;
                 try {
-                    errMsg += ip + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + ";";
+                    errMsg += d.getIp() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + ";";
                 } catch (IOException e) {
-                    errMsg += ip + ":" + "Unable to parse response entity.";
+                    errMsg += d.getIp() + ":" + "Unable to parse the response entity.";
                 }
             }
+            if (!success)
+                throw new Exception(errMsg);
         }
-        if (success)
-            return;
-        throw new Exception(errMsg);
+    }
+
+    private CertificateDo pickCert(Long vsId, boolean state) throws Exception {
+        VirtualServer vs = virtualServerRepository.getById(vsId);
+        String[] searchRange = getDomainSearchRange(vs.getDomains());
+        CertificateDo value;
+        if (searchRange.length == 1) {
+            List<CertificateDo> result = certificateDao.findByDomainAndState(searchRange, state, CertificateEntity.READSET_FULL);
+            if (result.size() == 0)
+                throw new ValidationException("Cannot find corresponding certificate.");
+            value = result.get(0);
+        } else {
+            Map<String, CertificateDo> check = Maps.uniqueIndex(certificateDao.findByDomainAndState(searchRange, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL),
+                    new Function<CertificateDo, String>() {
+                        @Nullable
+                        @Override
+                        public String apply(CertificateDo certificateDo) {
+                            return certificateDo.getDomain();
+                        }
+                    });
+            if (check.isEmpty())
+                throw new ValidationException("Cannot find corresponding certificate.");
+            if ((value = check.get(searchRange[searchRange.length - 1])) == null) {
+                if (check.values().size() > 1)
+                    throw new ValidationException("Multiple certificates found referring the domain list.");
+                value = check.values().iterator().next();
+            }
+        }
+        return value;
+    }
+
+    private String[] getDomainSearchRange(List<Domain> range) {
+        String groupKey = "";
+        List<String> values = new ArrayList<>();
+        for (Domain domain : range) {
+            groupKey += (domain.getName() + ",");
+            values.add(domain.getName());
+        }
+        if (values.size() == 0)
+            return new String[0];
+        if (values.size() == 1)
+            return new String[]{values.get(0)};
+        values.add(groupKey);
+        return values.toArray(new String[values.size()]);
     }
 
     private static class CertSyncClient extends AbstractRestClient {
-        private final String fileDir;
-
-        protected CertSyncClient(String url, String fileDir) {
+        protected CertSyncClient(String url) {
             super(url);
-            this.fileDir = fileDir;
         }
 
-        public Response sync(Long vsId) throws ValidationException {
-            File cert = new File(fileDir + "/ssl.crt");
-            File key = new File(fileDir + "/ssl.key");
-            if (cert.exists() && key.exists()) {
-                MultiPart mp = new MultiPart().bodyPart(new FileDataBodyPart("cert", cert, MediaType.APPLICATION_OCTET_STREAM_TYPE))
-                        .bodyPart(new FileDataBodyPart("key", key, MediaType.APPLICATION_OCTET_STREAM_TYPE));
-                return getTarget().queryParam("vsId", vsId).request(MediaType.MULTIPART_FORM_DATA).post(
-                        Entity.entity(mp, mp.getMediaType()));
-            }
-            throw new ValidationException("Certificate files cannot be found under " + fileDir);
+        public Response requestInstall(Long vsId, Long certId) throws ValidationException {
+            return getTarget().queryParam("vsId", vsId).queryParam("certId", certId).request().get();
         }
     }
 }
