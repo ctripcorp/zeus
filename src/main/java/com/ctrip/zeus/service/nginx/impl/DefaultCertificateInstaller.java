@@ -1,11 +1,10 @@
 package com.ctrip.zeus.service.nginx.impl;
 
-import com.ctrip.zeus.dal.core.CertificateDao;
-import com.ctrip.zeus.dal.core.CertificateDo;
-import com.ctrip.zeus.dal.core.CertificateEntity;
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateInstaller;
+import com.ctrip.zeus.util.S;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -22,6 +21,8 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
 
     @Resource
     private CertificateDao certificateDao;
+    @Resource
+    private RCertificateSlbServerDao rCertificateSlbServerDao;
 
     @Override
     public CertificateConfig getConfig() {
@@ -50,6 +51,8 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
             certos.close();
             keyos.close();
         }
+        rCertificateSlbServerDao.insertOrUpdateCert(
+                new RelCertSlbServerDo().setVsId(vsId).setIp(S.getIp()).setCertId(certId));
         return cert.getDomain();
     }
 

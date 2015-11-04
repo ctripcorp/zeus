@@ -13,5 +13,7 @@ public interface VirtualServerValidator {
 
     void validateVirtualServers(List<VirtualServer> virtualServers) throws Exception;
 
+    void validateSslVirtualServer(VirtualServer virtualServer) throws Exception;
+
     void removable(VirtualServer virtualServer) throws Exception;
 }

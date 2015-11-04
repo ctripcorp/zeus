@@ -2,11 +2,23 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="r-certificate-slb-server" table="r_certificate_slb_server" alias="rcss" do-class="RelCertSlbServerDo">
         <query-defs>
-            <query name="insert" type="INSERT">
+            <query name="insert-or-update-command" type="INSERT">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        command = values(command)
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert-or-update-cert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        cert_id = values(cert_id)
                     ]]>
                 </statement>
             </query>
@@ -17,7 +29,18 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='vs-id'/> = ${vs-id}
-                        AND cert_id != command
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-vs-and-ip" type="SELECT" multiple="true">
+                <param name="vs-id"/>
+                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                        AND <FIELD name='ip'/> = ${ip}
                     ]]>
                 </statement>
             </query>

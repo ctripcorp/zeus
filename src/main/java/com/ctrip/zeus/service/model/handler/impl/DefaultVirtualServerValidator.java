@@ -1,7 +1,6 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
-import com.ctrip.zeus.dal.core.SlbVirtualServerDao;
-import com.ctrip.zeus.dal.core.SlbVirtualServerEntity;
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
@@ -27,6 +26,8 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
+    @Resource
+    private RCertificateSlbServerDao rCertificateSlbServerDao;
 
     @Override
     public boolean exists(Long vsId) throws Exception {
@@ -37,6 +38,9 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     public void validateVirtualServers(List<VirtualServer> virtualServers) throws Exception {
         Set<String> existingHost = new HashSet<>();
         for (VirtualServer virtualServer : virtualServers) {
+            if (virtualServer.getSsl().booleanValue()) {
+                validateSslVirtualServer(virtualServer);
+            }
             for (Domain domain : virtualServer.getDomains()) {
                 if (!getPortWhiteList().contains(virtualServer.getPort())) {
                     throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed.");
@@ -48,6 +52,13 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
                     existingHost.add(key);
             }
         }
+    }
+
+    @Override
+    public void validateSslVirtualServer(VirtualServer virtualServer) throws Exception {
+        List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(virtualServer.getId(), RCertificateSlbServerEntity.READSET_FULL);
+        if (dos.size() == 0)
+            throw new ValidationException("No certificate is found by ssl virtual server " + virtualServer.getId() + ".");
     }
 
     @Override

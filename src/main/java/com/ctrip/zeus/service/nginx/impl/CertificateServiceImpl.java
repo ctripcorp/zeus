@@ -49,7 +49,8 @@ public class CertificateServiceImpl implements CertificateService {
         if (cert == null)
             throw new ValidationException("Some error occurred when searching the certificate.");
         for (String ip : ips) {
-            rCertificateSlbServerDao.insert(new RelCertSlbServerDo().setIp(ip).setCommand(cert.getId()).setVsId(vsId));
+            rCertificateSlbServerDao.insertOrUpdateCommand(
+                    new RelCertSlbServerDo().setIp(ip).setCommand(cert.getId()).setVsId(vsId));
         }
     }
 
@@ -59,7 +60,8 @@ public class CertificateServiceImpl implements CertificateService {
         if (cert == null)
             throw new ValidationException("Certificate cannot be found.");
         for (String ip : ips) {
-            rCertificateSlbServerDao.insert(new RelCertSlbServerDo().setIp(ip).setCommand(cert.getId()).setVsId(vsId));
+            rCertificateSlbServerDao.insertOrUpdateCommand(
+                    new RelCertSlbServerDo().setIp(ip).setCommand(cert.getId()).setVsId(vsId));
         }
     }
 
@@ -69,6 +71,8 @@ public class CertificateServiceImpl implements CertificateService {
         boolean success = true;
         String errMsg = "";
         for (RelCertSlbServerDo d : dos) {
+            if (d.getCertId() == d.getCommand())
+                continue;
             CertSyncClient c = new CertSyncClient("http://" + d.getIp() + ":8099/api/op/installcerts");
             Response res = c.requestInstall(vsId, d.getCommand());
             // retry
