@@ -3,12 +3,11 @@ package com.ctrip.zeus.service.nginx.impl;
 import com.ctrip.zeus.client.AbstractRestClient;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.Domain;
-import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.util.IOUtils;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +15,7 @@ import javax.annotation.Nullable;
 import javax.annotation.Resource;
 import javax.ws.rs.core.Response;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/10/29.
@@ -32,14 +28,31 @@ public class CertificateServiceImpl implements CertificateService {
     private RCertificateSlbServerDao rCertificateSlbServerDao;
 
     @Override
-    public Long pickCertificate(VirtualServer virtualServer) throws Exception {
-        CertificateDo value = null;
-        if (virtualServer.getId() != null && virtualServer.getId().longValue() > 0L) {
-            value = tryFetch(virtualServer);
+    public Long pickCertificate(String[] domains) throws Exception {
+        CertificateDo value;
+        String[] searchRange = getDomainSearchRange(domains);
+        if (searchRange.length == 1) {
+            List<CertificateDo> result = certificateDao.findByDomainAndState(searchRange, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
+            if (result.size() == 0)
+                throw new ValidationException("Cannot find corresponding certificate.");
+            value = result.get(0);
+        } else {
+            Map<String, CertificateDo> check = Maps.uniqueIndex(certificateDao.findByDomainAndState(searchRange, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL),
+                    new Function<CertificateDo, String>() {
+                        @Nullable
+                        @Override
+                        public String apply(CertificateDo certificateDo) {
+                            return certificateDo.getDomain();
+                        }
+                    });
+            if (check.isEmpty())
+                throw new ValidationException("Cannot find corresponding certificate.");
+            if ((value = check.get(searchRange[0])) == null) {
+                if (check.values().size() > 1)
+                    throw new ValidationException("Multiple certificates found referring the domain list.");
+                value = check.values().iterator().next();
+            }
         }
-        if (value != null)
-            return value.getId();
-        value = tryMatch(virtualServer);
         if (value == null)
             throw new ValidationException("Some error occurred when matching certificate.");
         return value.getId();
@@ -136,61 +149,18 @@ public class CertificateServiceImpl implements CertificateService {
             throw new Exception(errMsg);
     }
 
-    private CertificateDo tryFetch(VirtualServer virtualServer) throws Exception {
-        List<Long> certIds = new ArrayList<>();
-        for (RelCertSlbServerDo d : rCertificateSlbServerDao.findByVs(virtualServer.getId(), RCertificateSlbServerEntity.READSET_FULL)) {
-            certIds.add(d.getId());
-        }
-        List<CertificateDo> result = certificateDao.findByIdAndState(certIds.toArray(new Long[certIds.size()]), CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
-        int count;
-        if ((count = result.size()) == 0)
-            return null;
-        if (count > 1)
-            throw new Exception("Too many certificates are found.");
-        return result.get(0);
-    }
-
-    private CertificateDo tryMatch(VirtualServer virtualServer) throws Exception {
-        CertificateDo value;
-        String[] searchRange = getDomainSearchRange(virtualServer.getDomains());
-        if (searchRange.length == 1) {
-            List<CertificateDo> result = certificateDao.findByDomainAndState(searchRange, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
-            if (result.size() == 0)
-                throw new ValidationException("Cannot find corresponding certificate.");
-            value = result.get(0);
-        } else {
-            Map<String, CertificateDo> check = Maps.uniqueIndex(certificateDao.findByDomainAndState(searchRange, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL),
-                    new Function<CertificateDo, String>() {
-                        @Nullable
-                        @Override
-                        public String apply(CertificateDo certificateDo) {
-                            return certificateDo.getDomain();
-                        }
-                    });
-            if (check.isEmpty())
-                throw new ValidationException("Cannot find corresponding certificate.");
-            if ((value = check.get(searchRange[searchRange.length - 1])) == null) {
-                if (check.values().size() > 1)
-                    throw new ValidationException("Multiple certificates found referring the domain list.");
-                value = check.values().iterator().next();
+    private String[] getDomainSearchRange(String[] domains) {
+        if (domains.length <= 1)
+            return domains;
+        else {
+            Arrays.sort(domains);
+            String[] values = new String[domains.length + 1];
+            values[0] = Joiner.on("|").join(domains);
+            for (int i = 1; i < values.length; i++) {
+                values[i] = domains[i - 1];
             }
+            return values;
         }
-        return value;
-    }
-
-    private String[] getDomainSearchRange(List<Domain> range) {
-        String groupKey = "";
-        List<String> values = new ArrayList<>();
-        for (Domain domain : range) {
-            groupKey += (domain.getName() + ",");
-            values.add(domain.getName());
-        }
-        if (values.size() == 0)
-            return new String[0];
-        if (values.size() == 1)
-            return new String[]{values.get(0)};
-        values.add(groupKey);
-        return values.toArray(new String[values.size()]);
     }
 
     private static class CertSyncClient extends AbstractRestClient {

@@ -1,7 +1,5 @@
 package com.ctrip.zeus.service.nginx;
 
-import com.ctrip.zeus.model.entity.VirtualServer;
-
 import java.io.InputStream;
 import java.util.List;
 
@@ -11,7 +9,7 @@ import java.util.List;
 public interface CertificateService {
 //    Certificate get(Long vsId);
 
-    Long pickCertificate(VirtualServer virtualServer) throws Exception;
+    Long pickCertificate(String[] domains) throws Exception;
 
     Long upload(InputStream cert, InputStream key, String domain, boolean state) throws Exception;
 

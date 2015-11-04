@@ -126,7 +126,12 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     private void installCertificate(VirtualServer virtualServer) throws Exception {
         List<String> ips = slbQuery.getSlbIps(virtualServer.getSlbId());
-        Long certId = certificateService.pickCertificate(virtualServer);
+        List<Domain> vsDomains = virtualServer.getDomains();
+        String[] domains = new String[vsDomains.size()];
+        for (int i = 0; i < domains.length; i++) {
+            domains[i] = vsDomains.get(i).getName();
+        }
+        Long certId = certificateService.pickCertificate(domains);
         certificateService.command(virtualServer.getId(), ips, certId);
         certificateService.install(virtualServer.getId());
     }

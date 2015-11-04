@@ -25,6 +25,7 @@ import com.ctrip.zeus.status.entity.ServerStatus;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.util.AssertUtils;
+import com.google.common.base.Joiner;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +38,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -275,49 +277,88 @@ public class OperationResource {
                                 @Context HttpHeaders hh,
                                 @FormDataParam("cert") InputStream cert,
                                 @FormDataParam("key") InputStream key,
+                                @QueryParam("domain") String domain) throws Exception {
+        if (domain == null || domain.isEmpty()) {
+            throw new ValidationException("Domain info is required.");
+        }
+        String[] domainMembers = domain.split("|");
+        Arrays.sort(domainMembers);
+        domain = Joiner.on("|").join(domainMembers);
+
+        certificateService.upload(cert, key, domain, CertificateConfig.ONBOARD);
+        return responseHandler.handle("Certificates uploaded. Virtual server creation is permitted.", hh.getMediaType());
+    }
+
+    @POST
+    @Path("/updatecerts")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Authorize(name = "updateCerts")
+    public Response updateCerts(@Context HttpServletRequest request,
+                                @Context HttpHeaders hh,
+                                @FormDataParam("cert") InputStream cert,
+                                @FormDataParam("key") InputStream key,
                                 @QueryParam("domain") String domain,
                                 @QueryParam("vsId") Long vsId,
                                 @QueryParam("ip") List<String> ips) throws Exception {
         if (domain == null || domain.isEmpty()) {
             throw new ValidationException("Domain info is required.");
         }
-        if (vsId == null && (ips != null || ips.size() > 0)) {
-            throw new ValidationException("vsId is required when running certificate grayscale test.");
-        }
-        // simply upload file, init state
         if (vsId == null) {
-            certificateService.upload(cert, key, domain, CertificateConfig.ONBOARD);
-            return responseHandler.handle("Certificates uploaded. Virtual server creation is permitted.", hh.getMediaType());
+            throw new ValidationException("vsId is required when updating certificate.");
         }
         // update certificate or run grayscale test
         Set<Long> check = virtualServerCriteriaQuery.queryByDomain(domain);
         if (!check.contains(vsId))
             throw new ValidationException("VsId and domain mismatched.");
+        boolean grayscale = ips == null;
         ips = configureIps(vsId, ips);
-        Long certId = certificateService.upload(cert, key, domain, CertificateConfig.ONBOARD);
+
+        String[] domainMembers = domain.split("|");
+        Arrays.sort(domainMembers);
+        domain = Joiner.on("|").join(domainMembers);
+
+        Long certId = certificateService.upload(cert, key, domain,
+                grayscale ? CertificateConfig.GRAYSCALE : CertificateConfig.ONBOARD);
+        return responseHandler.handle("Certificate uploaded. New cert-id is " + certId + ". Contact slb team with the given cert-id to install the new certificate.", hh.getMediaType());
+//        certificateService.command(vsId, ips, certId);
+//        certificateService.install(vsId);
+//        return responseHandler.handle("Certificates uploaded. Re-activate the virtual server to take effect.", hh.getMediaType());
+    }
+
+    @GET
+    @Path("/dropcerts")
+    @Authorize(name = "dropCerts")
+    public Response dropCerts(@Context HttpServletRequest request,
+                                @Context HttpHeaders hh,
+                                @QueryParam("vsId") Long vsId,
+                                @QueryParam("ip") List<String> ips) throws Exception {
+        return responseHandler.handle("dropcerts is not available at the moment.", hh.getMediaType());
+//        if (vsId == null && (ips == null || ips.size() == 0))
+//            throw new ValidationException("vsId and ip addresses are required.");
+//        certificateService.recall(vsId, ips);
+//        certificateService.uninstallIfRecalled(vsId);
+//        return responseHandler.handle("Certificates dropped successfully. Re-activate the virtual server to take effect.", hh.getMediaType());
+    }
+
+    @GET
+    @Path("/cert/remoteInstall")
+    @Authorize(name = "remoteInstallCerts")
+    public Response remoteInstall(@Context HttpServletRequest request,
+                                  @Context HttpHeaders hh,
+                                  @QueryParam("certId") Long certId,
+                                  @QueryParam("vsId") Long vsId,
+                                  @QueryParam("ips") List<String> ips) throws Exception {
+        if (certId == null || ips == null || vsId == null) {
+            throw new ValidationException("certId, vsId and ips are required.");
+        }
+        ips = configureIps(vsId, ips);
         certificateService.command(vsId, ips, certId);
         certificateService.install(vsId);
         return responseHandler.handle("Certificates uploaded. Re-activate the virtual server to take effect.", hh.getMediaType());
     }
 
-    @POST
-    @Path("/dropcerts")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Authorize(name = "dropcerts")
-    public Response uploadCerts(@Context HttpServletRequest request,
-                                @Context HttpHeaders hh,
-                                @QueryParam("vsId") Long vsId,
-                                @QueryParam("ip") List<String> ips) throws Exception {
-        if (vsId == null && (ips == null || ips.size() == 0))
-            throw new ValidationException("vsId and ip addresses are required.");
-        certificateService.recall(vsId, ips);
-        certificateService.uninstallIfRecalled(vsId);
-        return responseHandler.handle("Certificates dropped successfully. Re-activate the virtual server to take effect.", hh.getMediaType());
-    }
-
-    @POST
+    @GET
     @Path("/installcerts")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Authorize(name = "installCerts")
     public Response installCerts(@Context HttpServletRequest request,
                                  @Context HttpHeaders hh,
@@ -329,9 +370,8 @@ public class OperationResource {
         return responseHandler.handle("Certificates with domain " + domain + " are installed successfully.", hh.getMediaType());
     }
 
-    @POST
+    @GET
     @Path("/uninstallcerts")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Authorize(name = "uninstallCerts")
     public Response uninstallCerts(@Context HttpServletRequest request,
                                    @Context HttpHeaders hh,

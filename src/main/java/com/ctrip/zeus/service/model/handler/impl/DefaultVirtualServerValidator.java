@@ -5,7 +5,6 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
-import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
@@ -25,8 +24,6 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
-    @Resource
-    private CertificateService certificateService;
 
     @Override
     public boolean exists(Long vsId) throws Exception {
@@ -37,9 +34,6 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     public void validateVirtualServers(List<VirtualServer> virtualServers) throws Exception {
         Set<String> existingHost = new HashSet<>();
         for (VirtualServer virtualServer : virtualServers) {
-            if (virtualServer.getSsl().booleanValue()) {
-                validateSslVirtualServer(virtualServer);
-            }
             for (Domain domain : virtualServer.getDomains()) {
                 if (!getPortWhiteList().contains(virtualServer.getPort())) {
                     throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed.");
@@ -51,11 +45,6 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
                     existingHost.add(key);
             }
         }
-    }
-
-    @Override
-    public void validateSslVirtualServer(VirtualServer virtualServer) throws Exception {
-        certificateService.pickCertificate(virtualServer);
     }
 
     @Override
