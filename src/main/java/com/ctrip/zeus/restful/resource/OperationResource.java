@@ -301,6 +301,21 @@ public class OperationResource {
     }
 
     @POST
+    @Path("/dropcerts")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Authorize(name = "dropcerts")
+    public Response uploadCerts(@Context HttpServletRequest request,
+                                @Context HttpHeaders hh,
+                                @QueryParam("vsId") Long vsId,
+                                @QueryParam("ip") List<String> ips) throws Exception {
+        if (vsId == null && (ips == null || ips.size() == 0))
+            throw new ValidationException("vsId and ip addresses are required.");
+        certificateService.recall(vsId, ips);
+        certificateService.uninstallIfRecalled(vsId);
+        return responseHandler.handle("Certificates dropped successfully. Re-activate the virtual server to take effect.", hh.getMediaType());
+    }
+
+    @POST
     @Path("/installcerts")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Authorize(name = "installCerts")
@@ -312,6 +327,19 @@ public class OperationResource {
             throw new ValidationException("vsId and certId are required.");
         String domain = certificateInstaller.localInstall(vsId, certId);
         return responseHandler.handle("Certificates with domain " + domain + " are installed successfully.", hh.getMediaType());
+    }
+
+    @POST
+    @Path("/uninstallcerts")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Authorize(name = "uninstallCerts")
+    public Response uninstallCerts(@Context HttpServletRequest request,
+                                   @Context HttpHeaders hh,
+                                   @QueryParam("vsId") Long vsId) throws Exception {
+        if (vsId == null)
+            throw new ValidationException("vsId and certId are required.");
+        certificateInstaller.localUninstall(vsId);
+        return responseHandler.handle("Certificates for vsId " + vsId + " are uninstalled.", hh.getMediaType());
     }
 
     private Response memberOps(HttpHeaders hh, Long groupId, List<String> ips, boolean up, String type) throws Exception {

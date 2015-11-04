@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 
 /**
@@ -54,6 +55,20 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
         rCertificateSlbServerDao.insertOrUpdateCert(
                 new RelCertSlbServerDo().setVsId(vsId).setIp(S.getIp()).setCertId(certId));
         return cert.getDomain();
+    }
+
+    @Override
+    public void localUninstall(Long vsId) throws IOException {
+        File f = new File(config.getInstallDir(vsId));
+        if (!f.exists())
+            return;
+        File[] subFiles = f.listFiles();
+        for (File subFile : subFiles) {
+            if (!subFile.delete())
+                throw new IOException("Unable to delete file " + subFile.getName());
+        }
+        if (!f.delete())
+            throw new IOException("Unable to directory " + f.getName());
     }
 
     @Override

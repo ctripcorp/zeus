@@ -9,5 +9,7 @@ public interface CertificateInstaller {
 
     String localInstall(Long vsId, Long certId) throws Exception;
 
+    void localUninstall(Long vsId) throws Exception;
+
     boolean exists(Long vsId);
 }

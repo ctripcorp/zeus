@@ -17,5 +17,9 @@ public interface CertificateService {
 
     void command(Long vsId, List<String> ips, Long certId) throws Exception;
 
+    void recall(Long vsId, List<String> ips) throws Exception;
+
     void install(Long vsId) throws Exception;
+
+    void uninstallIfRecalled(Long vsId) throws Exception;
 }

@@ -17,6 +17,7 @@ import javax.annotation.Resource;
 import javax.ws.rs.core.Response;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,6 +67,14 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
+    public void recall(Long vsId, List<String> ips) throws Exception {
+        for (String ip : ips) {
+            rCertificateSlbServerDao.insertOrUpdateCommand(
+                    new RelCertSlbServerDo().setIp(ip).setCommand(0L).setVsId(vsId));
+        }
+    }
+
+    @Override
     public void install(Long vsId) throws Exception {
         List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
         boolean success = true;
@@ -82,14 +91,49 @@ public class CertificateServiceImpl implements CertificateService {
             if (res.getStatus() / 100 > 2) {
                 success &= false;
                 try {
-                    errMsg += d.getIp() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + ";";
+                    errMsg += d.getIp() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
                 } catch (IOException e) {
-                    errMsg += d.getIp() + ":" + "Unable to parse the response entity.";
+                    errMsg += d.getIp() + ":" + "Unable to parse the response entity.\n";
                 }
             }
             if (!success)
                 throw new Exception(errMsg);
         }
+    }
+
+    @Override
+    public void uninstallIfRecalled(Long vsId) throws Exception {
+        List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
+        Map<String, RelCertSlbServerDo> abandoned = new HashMap<>();
+        for (RelCertSlbServerDo d : dos) {
+            if (d.getCommand() == 0L) {
+                abandoned.put(d.getIp(), d);
+            }
+        }
+        boolean success = true;
+        String errMsg = "";
+        for (Map.Entry<String, RelCertSlbServerDo> entry : abandoned.entrySet()) {
+            boolean result = true;
+            CertSyncClient c = new CertSyncClient("http://" + entry.getKey() + ":8099");
+            Response res = c.requestUninstall(vsId);
+            // retry
+            if (res.getStatus() / 100 > 2)
+                res = c.requestUninstall(vsId);
+            // still failed after retry
+            if (res.getStatus() / 100 > 2) {
+                result &= false;
+                try {
+                    errMsg += entry.getKey() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
+                } catch (IOException e) {
+                    errMsg += entry.getKey() + ":" + "Unable to parse the response entity.\n";
+                }
+            }
+            if (result)
+                rCertificateSlbServerDao.deleteAllById(entry.getValue());
+            success &= result;
+        }
+        if (!success)
+            throw new Exception(errMsg);
     }
 
     private CertificateDo tryFetch(VirtualServer virtualServer) throws Exception {
@@ -156,6 +200,10 @@ public class CertificateServiceImpl implements CertificateService {
 
         public Response requestInstall(Long vsId, Long certId) throws ValidationException {
             return getTarget().path("/api/op/installcerts").queryParam("vsId", vsId).queryParam("certId", certId).request().get();
+        }
+
+        public Response requestUninstall(Long vsId) throws ValidationException {
+            return getTarget().path("/api/op/uninstallcerts").queryParam("vsId", vsId).request().get();
         }
     }
 }
