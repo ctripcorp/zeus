@@ -26,6 +26,7 @@ public class LocationConf {
     private static DynamicStringProperty errorPage_404 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.404.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/404.htm");
     private static DynamicStringProperty errorPage_500 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.500.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty errorPageEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicBooleanProperty errorPageEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable-all", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
 
     public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
@@ -171,6 +172,10 @@ public class LocationConf {
                 .append("add_header Bastion $cookie_bastion;\n}\n");
     }
     private static void addErrorPageConfig(StringBuilder sb,Long groupId){
+        if (errorPageEnableAll.get()){
+            sb.append("proxy_intercept_errors on;\n");
+            return;
+        }
         if (!errorPageEnable.get()||errorPage_404.get()==null || errorPage_500.get() == null){
             return;
         }
