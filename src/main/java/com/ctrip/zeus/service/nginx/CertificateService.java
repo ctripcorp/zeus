@@ -13,6 +13,8 @@ public interface CertificateService {
 
     Long upload(InputStream cert, InputStream key, String domain, boolean state) throws Exception;
 
+    Long uploadByReplace(InputStream cert, InputStream key, String domain, boolean state) throws Exception;
+
     void command(Long vsId, List<String> ips, Long certId) throws Exception;
 
     void recall(Long vsId, List<String> ips) throws Exception;

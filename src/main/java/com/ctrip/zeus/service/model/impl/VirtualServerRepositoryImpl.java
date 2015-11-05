@@ -124,7 +124,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         virtualServerEntityManager.port(vs);
     }
 
-    private void installCertificate(VirtualServer virtualServer) throws Exception {
+    @Override
+    public void installCertificate(VirtualServer virtualServer) throws Exception {
         List<String> ips = slbQuery.getSlbIps(virtualServer.getSlbId());
         List<Domain> vsDomains = virtualServer.getDomains();
         String[] domains = new String[vsDomains.size()];

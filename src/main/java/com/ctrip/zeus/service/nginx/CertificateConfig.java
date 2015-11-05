@@ -20,7 +20,16 @@ public class CertificateConfig {
         return installDir + vsId;
     }
 
+    public void setInstallDir(String installDir) {
+        this.installDir = installDir;
+    }
+
     public boolean getWriteFileOption() {
         return writeFileOption;
     }
+    
+    public void setWriteFileOption(boolean writeFileOption) {
+        this.writeFileOption = writeFileOption;
+    }
+
 }

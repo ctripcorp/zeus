@@ -102,6 +102,12 @@ public class SlbRepositoryImpl implements SlbRepository {
         autoFiller.autofill(slb);
         slbEntityManager.add(slb);
 
+        for (VirtualServer virtualServer : slb.getVirtualServers()) {
+            if (virtualServer.getSsl().booleanValue()) {
+                virtualServerRepository.installCertificate(virtualServer);
+            }
+        }
+
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()
                     .setIp(slbServer.getIp())

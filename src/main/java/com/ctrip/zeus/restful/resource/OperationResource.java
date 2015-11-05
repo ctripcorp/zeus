@@ -281,7 +281,7 @@ public class OperationResource {
         if (domain == null || domain.isEmpty()) {
             throw new ValidationException("Domain info is required.");
         }
-        String[] domainMembers = domain.split("|");
+        String[] domainMembers = domain.split("\\|");
         Arrays.sort(domainMembers);
         domain = Joiner.on("|").join(domainMembers);
 
@@ -313,11 +313,11 @@ public class OperationResource {
         boolean grayscale = ips == null;
         ips = configureIps(vsId, ips);
 
-        String[] domainMembers = domain.split("|");
+        String[] domainMembers = domain.split("\\|");
         Arrays.sort(domainMembers);
         domain = Joiner.on("|").join(domainMembers);
 
-        Long certId = certificateService.upload(cert, key, domain,
+        Long certId = certificateService.uploadByReplace(cert, key, domain,
                 grayscale ? CertificateConfig.GRAYSCALE : CertificateConfig.ONBOARD);
         return responseHandler.handle("Certificate uploaded. New cert-id is " + certId + ". Contact slb team with the given cert-id to install the new certificate.", hh.getMediaType());
 //        certificateService.command(vsId, ips, certId);

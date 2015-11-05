@@ -1,23 +1,15 @@
 package com.ctrip.zeus.service;
 
+import com.ctrip.zeus.AbstractServerTest;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.util.ModelAssert;
-import com.ctrip.zeus.util.S;
-import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.*;
-import org.unidal.dal.jdbc.datasource.DataSourceManager;
-import org.unidal.dal.jdbc.transaction.TransactionManager;
-import org.unidal.lookup.ContainerLoader;
-import support.AbstractSpringTest;
-import support.MysqlDbServer;
 
 import javax.annotation.Resource;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,10 +18,7 @@ import java.util.Set;
 /**
  * Created by zhoumy on 2015/3/24.
  */
-public class ModelServiceTest extends AbstractSpringTest {
-
-    private static MysqlDbServer mysqlDbServer;
-
+public class ModelServiceTest extends AbstractServerTest {
     @Resource
     private GroupRepository groupRepository;
     @Resource
@@ -47,17 +36,16 @@ public class ModelServiceTest extends AbstractSpringTest {
     private Group testGroup;
     private long insertedTestGroupId;
 
-    @BeforeClass
-    public static void setUpDb() throws ComponentLookupException, ComponentLifecycleException {
-        S.setPropertyDefaultValue("CONF_DIR", new File("").getAbsolutePath() + "/conf/test");
-        mysqlDbServer = new MysqlDbServer();
-        mysqlDbServer.start();
-    }
-
     @Before
     public void fillDb() throws Exception {
         addSlb();
         addGroups();
+    }
+
+    @After
+    public void clearDb() throws Exception {
+        deleteGroups();
+        deleteSlb();
     }
 
     /**
@@ -459,25 +447,5 @@ public class ModelServiceTest extends AbstractSpringTest {
     public void testGetLatestSlbArchive() throws Exception {
         Archive archive = archiveService.getLatestSlbArchive(defaultSlb.getId());
         Assert.assertTrue(archive.getVersion() > 0);
-    }
-
-    /**
-     * ****************** test end ********************
-     */
-
-    @After
-    public void clearDb() throws Exception {
-        deleteGroups();
-        deleteSlb();
-    }
-
-    @AfterClass
-    public static void tearDownDb() throws InterruptedException, ComponentLookupException, ComponentLifecycleException {
-        mysqlDbServer.stop();
-
-        DataSourceManager ds = ContainerLoader.getDefaultContainer().lookup(DataSourceManager.class);
-        ContainerLoader.getDefaultContainer().release(ds);
-        TransactionManager ts = ContainerLoader.getDefaultContainer().lookup(TransactionManager.class);
-        ContainerLoader.getDefaultContainer().release(ts);
     }
 }

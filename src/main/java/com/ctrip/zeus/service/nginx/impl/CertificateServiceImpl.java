@@ -60,8 +60,24 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     public Long upload(InputStream cert, InputStream key, String domain, boolean state) throws Exception {
+        if (cert == null || key == null)
+            throw new ValidationException("Cert or key file is null.");
+        List<CertificateDo> existing = certificateDao.findByDomainAndState(new String[]{domain}, state, CertificateEntity.READSET_FULL);
+        if (existing.size() > 0)
+            throw new ValidationException("Certificate exists.");
+        CertificateDo d = new CertificateDo()
+                .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state);
+        certificateDao.insert(d);
+        return d.getId();
+    }
+
+    @Override
+    public Long uploadByReplace(InputStream cert, InputStream key, String domain, boolean state) throws Exception {
+        if (cert == null || key == null)
+            throw new ValidationException("Cert or key file is null.");
         List<CertificateDo> abandoned = certificateDao.findByDomainAndState(new String[]{domain}, state, CertificateEntity.READSET_FULL);
-        certificateDao.deleteById(abandoned.toArray(new CertificateDo[abandoned.size()]));
+        if (abandoned.size() > 0)
+            certificateDao.deleteById(abandoned.toArray(new CertificateDo[abandoned.size()]));
         CertificateDo d = new CertificateDo()
                 .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state);
         certificateDao.insert(d);

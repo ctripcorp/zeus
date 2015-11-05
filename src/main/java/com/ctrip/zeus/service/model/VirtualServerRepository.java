@@ -19,6 +19,8 @@ public interface VirtualServerRepository {
 
     void deleteVirtualServer(Long virtualServerId) throws Exception;
 
+    void installCertificate(VirtualServer virtualServer) throws Exception;
+
     @Deprecated
     List<Long> portVirtualServerRel() throws Exception;
 

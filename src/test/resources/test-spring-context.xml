@@ -17,4 +17,5 @@
     <!--For unit tests-->
     <import resource="classpath*:spring-context.xml"/>
     <bean id="applicationContextProvider" class="support.SpringApplicationContextProvider"/>
+    <bean id="certificateService" class="com.ctrip.zeus.service.nginx.CertificateTestService"/>
 </beans>
