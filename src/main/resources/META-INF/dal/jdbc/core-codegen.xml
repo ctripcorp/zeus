@@ -373,6 +373,7 @@
     <member name="cert" field="cert" value-type="byte[]" length="16777215" nullable="false" />
     <member name="key" field="key" value-type="byte[]" length="16777215" nullable="false" />
     <member name="state" field="state" value-type="boolean" nullable="false" />
+    <member name="version" field="version" value-type="int" length="10" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />

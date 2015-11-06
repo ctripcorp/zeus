@@ -132,7 +132,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         for (int i = 0; i < domains.length; i++) {
             domains[i] = vsDomains.get(i).getName();
         }
-        Long certId = certificateService.pickCertificate(domains);
+        Long certId = certificateService.getCertificateOnBoard(domains);
         certificateService.command(virtualServer.getId(), ips, certId);
         certificateService.install(virtualServer.getId());
     }

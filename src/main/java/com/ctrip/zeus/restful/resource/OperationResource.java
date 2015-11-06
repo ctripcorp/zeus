@@ -290,10 +290,10 @@ public class OperationResource {
     }
 
     @POST
-    @Path("/updatecerts")
+    @Path("/upgradecerts")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Authorize(name = "updateCerts")
-    public Response updateCerts(@Context HttpServletRequest request,
+    @Authorize(name = "upgradeCerts")
+    public Response upgradeCerts(@Context HttpServletRequest request,
                                 @Context HttpHeaders hh,
                                 @FormDataParam("cert") InputStream cert,
                                 @FormDataParam("key") InputStream key,
@@ -317,7 +317,7 @@ public class OperationResource {
         Arrays.sort(domainMembers);
         domain = Joiner.on("|").join(domainMembers);
 
-        Long certId = certificateService.uploadByReplace(cert, key, domain,
+        Long certId = certificateService.upgrade(cert, key, domain,
                 grayscale ? CertificateConfig.GRAYSCALE : CertificateConfig.ONBOARD);
         return responseHandler.handle("Certificate uploaded. New cert-id is " + certId + ". Contact slb team with the given cert-id to install the new certificate.", hh.getMediaType());
 //        certificateService.command(vsId, ips, certId);

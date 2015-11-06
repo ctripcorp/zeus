@@ -1,23 +1,16 @@
 package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.AbstractServerTest;
-import com.ctrip.zeus.dal.core.RCertificateSlbServerDao;
-import com.ctrip.zeus.dal.core.RCertificateSlbServerEntity;
-import com.ctrip.zeus.dal.core.RelCertSlbServerDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
-import com.ctrip.zeus.service.nginx.CertificateInstaller;
 import com.ctrip.zeus.service.nginx.CertificateService;
-import com.ctrip.zeus.service.nginx.impl.CertificateServiceImpl;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.InputStream;
-import java.util.List;
 
 /**
  * Created by zhoumy on 2015/11/5.
@@ -37,7 +30,7 @@ public class CertificateServiceTest extends AbstractServerTest {
         Long grayscaleId = certificateService.upload(cert, key, "localhost", CertificateConfig.GRAYSCALE);
         Long noiseId = certificateService.upload(cert, key, "testUploadCertificate.noise.com", CertificateConfig.ONBOARD);
 
-        Long pickedId = certificateService.pickCertificate(new String[]{"localhost"});
+        Long pickedId = certificateService.getCertificateOnBoard(new String[]{"localhost"});
 
         Assert.assertFalse(onBoardId.longValue() == grayscaleId.longValue()
                 || grayscaleId.longValue() == noiseId.longValue()

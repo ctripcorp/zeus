@@ -6,12 +6,9 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.util.IOUtils;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Maps;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
 import javax.annotation.Resource;
 import javax.ws.rs.core.Response;
 import java.io.*;
@@ -28,33 +25,33 @@ public class CertificateServiceImpl implements CertificateService {
     private RCertificateSlbServerDao rCertificateSlbServerDao;
 
     @Override
-    public Long pickCertificate(String[] domains) throws Exception {
+    public Long getCertificateOnBoard(String[] domains) throws Exception {
         CertificateDo value;
         String[] searchRange = getDomainSearchRange(domains);
+        String domainValue;
+        boolean state = CertificateConfig.ONBOARD;
+        if (searchRange.length == 0)
+            throw new ValidationException("Domain info is not found when searching certificate.");
         if (searchRange.length == 1) {
-            List<CertificateDo> result = certificateDao.findByDomainAndState(searchRange, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
-            if (result.size() == 0)
-                throw new ValidationException("Cannot find corresponding certificate.");
-            value = result.get(0);
+            domainValue = searchRange[0];
+            value = certificateDao.findMaxByDomainAndState(domainValue, state, CertificateEntity.READSET_FULL);
         } else {
-            Map<String, CertificateDo> check = Maps.uniqueIndex(certificateDao.findByDomainAndState(searchRange, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL),
-                    new Function<CertificateDo, String>() {
-                        @Nullable
-                        @Override
-                        public String apply(CertificateDo certificateDo) {
-                            return certificateDo.getDomain();
-                        }
-                    });
+            List<CertificateDo> check = certificateDao.grossByDomainAndState(domains, state, CertificateEntity.READSET_FULL);
             if (check.isEmpty())
                 throw new ValidationException("Cannot find corresponding certificate.");
-            if ((value = check.get(searchRange[0])) == null) {
-                if (check.values().size() > 1)
-                    throw new ValidationException("Multiple certificates found referring the domain list.");
-                value = check.values().iterator().next();
+            Iterator<CertificateDo> iter = check.iterator();
+            while (iter.hasNext()) {
+                if (!searchRange[0].equals(iter.next().getDomain()))
+                    iter.remove();
             }
+            if (check.size() > 1) {
+                throw new ValidationException("Multiple certificates found referring the domain list.");
+            }
+            domainValue = check.get(0).getDomain();
+            value = certificateDao.findMaxByDomainAndState(domainValue, state, CertificateEntity.READSET_FULL);
         }
         if (value == null)
-            throw new ValidationException("Some error occurred when matching certificate.");
+            throw new ValidationException("Cannot find corresponding certificate referring domain " + domainValue + ".");
         return value.getId();
     }
 
@@ -62,24 +59,24 @@ public class CertificateServiceImpl implements CertificateService {
     public Long upload(InputStream cert, InputStream key, String domain, boolean state) throws Exception {
         if (cert == null || key == null)
             throw new ValidationException("Cert or key file is null.");
-        List<CertificateDo> existing = certificateDao.findByDomainAndState(new String[]{domain}, state, CertificateEntity.READSET_FULL);
-        if (existing.size() > 0)
+        CertificateDo max = certificateDao.findMaxByDomainAndState(domain, state, CertificateEntity.READSET_FULL);
+        if (max != null)
             throw new ValidationException("Certificate exists.");
         CertificateDo d = new CertificateDo()
-                .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state);
+                .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state).setVersion(1);
         certificateDao.insert(d);
         return d.getId();
     }
 
     @Override
-    public Long uploadByReplace(InputStream cert, InputStream key, String domain, boolean state) throws Exception {
+    public Long upgrade(InputStream cert, InputStream key, String domain, boolean state) throws Exception {
         if (cert == null || key == null)
             throw new ValidationException("Cert or key file is null.");
-        List<CertificateDo> abandoned = certificateDao.findByDomainAndState(new String[]{domain}, state, CertificateEntity.READSET_FULL);
-        if (abandoned.size() > 0)
-            certificateDao.deleteById(abandoned.toArray(new CertificateDo[abandoned.size()]));
+        CertificateDo max = certificateDao.findMaxByDomainAndState(domain, state, CertificateEntity.READSET_FULL);
+        if (max == null)
+            throw new ValidationException("No history has found. No need to upgrade.");
         CertificateDo d = new CertificateDo()
-                .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state);
+                .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state).setVersion(max.getVersion() + 1);
         certificateDao.insert(d);
         return d.getId();
     }

@@ -2,7 +2,6 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="certificate" table="certificate" alias="c" do-class="CertificateDo">
         <var name="domains" value-type="String[]"/>
-        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -12,27 +11,30 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-domain-and-state" type="SELECT" multiple="true">
+            <query name="gross-by-domain-and-state" type="SELECT" multiple="true">
                 <param name="domains"/>
                 <param name="state"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='domain'/>  in <IN>${domains}</IN>
+                    WHERE <FIELD name='domain'/> in <IN>${domains}</IN>
                         AND <FIELD name='state'/> = ${state}
+                    GROUP By domain
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-id-and-state" type="SELECT" multiple="true">
-                <param name="ids"/>
+            <query name="find-max-by-domain-and-state" type="SELECT">
+                <param name="domain"/>
                 <param name="state"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='id'/>  in <IN>${ids}</IN>
+                    WHERE <FIELD name='domain'/> = ${domain}
                         AND <FIELD name='state'/> = ${state}
+                    ORDER BY id DESC
+                    LIMIT 1
                     ]]>
                 </statement>
             </query>
