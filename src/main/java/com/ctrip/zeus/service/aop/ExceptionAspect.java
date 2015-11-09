@@ -21,7 +21,7 @@ import java.lang.reflect.InvocationTargetException;
  */
 @Aspect
 @Component
-public class ExceptionAspect implements Ordered{
+public class ExceptionAspect implements Ordered {
     @Resource
     private ErrorResponseHandler errorResponseHandler;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -43,17 +43,23 @@ public class ExceptionAspect implements Ordered{
                 logger.error(builder.toString());
 
                 MediaType mediaType = null;
+                boolean printStackTrace = false;
                 for (Object arg : point.getArgs()) {
                     if (arg instanceof ContainerRequest) {
                         ContainerRequest cr = (ContainerRequest) arg;
                         mediaType = cr.getMediaType();
+                        try {
+                            printStackTrace = Boolean.parseBoolean(cr.getHeaderString("slb-stack-trace"));
+                        } catch (Exception ex) {
+                            printStackTrace = false;
+                        }
                         break;
                     }
                 }
                 if (mediaType == null) {
                     logger.warn("Request media type cannot be found - use json by default.");
                 }
-                return errorResponseHandler.handle(cause, mediaType);
+                return errorResponseHandler.handle(cause, mediaType, printStackTrace);
             } catch (Exception e) {
                 logger.error("Error response handler doesn't work.");
                 return null;
