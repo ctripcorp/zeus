@@ -36,13 +36,19 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
-        return archiveService.getLatestGroups(ids);
+        List<Group> result = archiveService.getLatestGroups(ids);
+        for (Group group : result) {
+            autoFiller.autofill(group);
+        }
+        return result;
     }
 
     @Override
     public Group getById(Long id) throws Exception {
         if (groupModelValidator.exists(id)) {
-            return archiveService.getLatestGroup(id);
+            Group result = archiveService.getLatestGroup(id);
+            autoFiller.autofill(result);
+            return result;
         }
         return null;
     }

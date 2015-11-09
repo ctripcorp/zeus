@@ -28,7 +28,8 @@ public class AutoFiller {
         if (hc != null) {
             hc.setIntervals(hc.getIntervals() == null ? 5000 : hc.getIntervals())
                     .setFails(hc.getFails() == null ? 5 : hc.getFails())
-                    .setPasses(hc.getPasses() == null ? 1 : hc.getPasses());
+                    .setPasses(hc.getPasses() == null ? 1 : hc.getPasses())
+                    .setTimeout(hc.getTimeout() == null ? 2000 : hc.getTimeout());
         }
         LoadBalancingMethod lbm = group.getLoadBalancingMethod();
         if (lbm == null)
