@@ -49,6 +49,22 @@ CREATE TABLE IF NOT EXISTS `archive_slb` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table archive_vs
+DROP TABLE IF EXISTS `archive_vs`;
+CREATE TABLE IF NOT EXISTS `archive_vs` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `vs_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'virtual server id',
+  `content` mediumtext NOT NULL COMMENT 'content',
+  `version` int(11) NOT NULL DEFAULT '0' COMMENT 'version',
+  `DateTime_LastChange` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `vs_id_version` (`vs_id`,`version`),
+  KEY `DateTime_LastChange` (`DateTime_LastChange`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='table of virtual server archive';
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table auth_private_key
 DROP TABLE IF EXISTS `auth_private_key`;
 CREATE TABLE IF NOT EXISTS `auth_private_key` (
@@ -174,6 +190,7 @@ CREATE TABLE IF NOT EXISTS `certificate` (
   `cert` mediumblob NOT NULL COMMENT 'certificate file',
   `key` mediumblob NOT NULL COMMENT 'key file',
   `state` bit(1) NOT NULL DEFAULT b'1' COMMENT 'state',
+  `version` int(11) NOT NULL DEFAULT '0' COMMENT 'version',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
@@ -696,6 +713,7 @@ CREATE TABLE IF NOT EXISTS `slb_virtual_server` (
   `port` varchar(200) NOT NULL DEFAULT '0' COMMENT 'null',
   `is_ssl` bit(1) NOT NULL DEFAULT b'0' COMMENT 'null',
   `created_time` timestamp NULL DEFAULT NULL COMMENT 'null',
+  `version` int(11) NOT NULL DEFAULT '0' COMMENT 'version',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'null',
   PRIMARY KEY (`id`),
   UNIQUE KEY `slb_id_name` (`slb_id`,`name`),

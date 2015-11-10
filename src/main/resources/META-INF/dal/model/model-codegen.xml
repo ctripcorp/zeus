@@ -23,6 +23,7 @@
     <attribute name="name" value-type="String" />
     <attribute name="id" value-type="long" />
     <attribute name="ssl" value-type="boolean" />
+    <attribute name="version" value-type="int" />
     <element name="slb-id" value-type="long" />
     <element name="port" value-type="String" />
     <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
