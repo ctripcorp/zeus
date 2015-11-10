@@ -197,7 +197,7 @@ public class VirtualServerResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response upgradeAll(@Context HttpHeaders hh,
                                @Context HttpServletRequest request) throws Exception {
-        List<Long> vsIds = virtualServerRepository.portVirtualServerRel();
+        List<Long> vsIds = virtualServerRepository.portVirtualServerArchives();
         if (vsIds.size() == 0)
             return responseHandler.handle("Successfully ported all virtual server relations.", hh.getMediaType());
         else
@@ -210,7 +210,7 @@ public class VirtualServerResource {
     public Response upgradeSingle(@Context HttpHeaders hh,
                                   @Context HttpServletRequest request,
                                   @QueryParam("vsId") Long vsId) throws Exception {
-        virtualServerRepository.portVirtualServerRel(vsId);
+        virtualServerRepository.portVirtualServerArchive(vsId);
         return responseHandler.handle("Successfully ported virtual server relations.", hh.getMediaType());
     }
 

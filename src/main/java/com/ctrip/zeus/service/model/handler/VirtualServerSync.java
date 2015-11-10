@@ -18,8 +18,8 @@ public interface VirtualServerSync {
     void deleteVirtualServers(Long[] vsIds) throws Exception;
 
     @Deprecated
-    List<Long> port(VirtualServer[] vses) throws Exception;
+    List<Long> port(Long[] vsIds) throws Exception;
 
     @Deprecated
-    void port(VirtualServer vs) throws Exception;
+    void port(Long vsId) throws Exception;
 }

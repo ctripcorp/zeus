@@ -177,7 +177,8 @@ public class C {
                 .setSlbId(slbId)
                 .setPort(e.getPort())
                 .setIsSsl(e.isSsl())
-                .setName(e.getName());
+                .setName(e.getName())
+                .setVersion(e.getVersion());
     }
 
     public static AuthRoleDo toRoleDo(Role role) {
