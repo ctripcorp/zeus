@@ -15,7 +15,6 @@ import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
-import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
@@ -152,8 +151,9 @@ public class SlbResource {
         if (slbId == null) {
             throw new Exception("Missing parameter.");
         }
-        slbRepository.delete(slbId);
-        return Response.ok().build();
+        int count = slbRepository.delete(slbId);
+        String message = count == 1 ? "Delete slb successfully." : "No deletion is needed.";
+        return responseHandler.handle(message, hh.getMediaType());
     }
 
     @GET

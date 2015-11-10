@@ -42,6 +42,7 @@ public class SlbEntityManager implements SlbSync {
             virtualServer.setSlbId(slb.getId());
             virtualServerEntityManager.addVirtualServer(virtualServer);
         }
+        slb.getVirtualServers().clear();
         archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion()).setContent(ContentWriters.writeSlbContent(slb)));
         relSyncSlbServer(slb, true);
     }
@@ -69,7 +70,9 @@ public class SlbEntityManager implements SlbSync {
         Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slbId);
         virtualServerEntityManager.deleteVirtualServers(vsIds.toArray(new Long[vsIds.size()]));
         rSlbSlbServerDao.deleteAllBySlb(new RelSlbSlbServerDo().setSlbId(slbId));
-        return slbDao.deleteByPK(new SlbDo().setId(slbId));
+        int count = slbDao.deleteByPK(new SlbDo().setId(slbId));
+        archiveSlbDao.deleteBySlb(new ArchiveSlbDo().setSlbId(slbId));
+        return count;
     }
 
     @Override

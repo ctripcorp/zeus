@@ -26,6 +26,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private ArchiveService archiveService;
     @Resource
+    private VirtualServerRepository virtualServerRepository;
+    @Resource
     private GroupValidator groupModelValidator;
 
     @Override
@@ -36,13 +38,25 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
-        return archiveService.getLatestGroups(ids);
+        List<Group> result = archiveService.getLatestGroups(ids);
+        for (Group group : result) {
+            for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
+                groupVirtualServer.setVirtualServer(
+                        virtualServerRepository.getById(groupVirtualServer.getVirtualServer().getId()));
+            }
+        }
+        return result;
     }
 
     @Override
     public Group getById(Long id) throws Exception {
         if (groupModelValidator.exists(id)) {
-            return archiveService.getLatestGroup(id);
+            Group result = archiveService.getLatestGroup(id);
+            for (GroupVirtualServer groupVirtualServer : result.getGroupVirtualServers()) {
+                groupVirtualServer.setVirtualServer(
+                        virtualServerRepository.getById(groupVirtualServer.getVirtualServer().getId()));
+            }
+            return result;
         }
         return null;
     }
@@ -68,19 +82,6 @@ public class GroupRepositoryImpl implements GroupRepository {
         autoFiller.autofill(group);
         groupEntityManager.update(group);
         return group;
-    }
-
-    // this would be called iff virtual servers are modified
-    @Override
-    public List<Group> updateVersion(Long[] groupIds) throws Exception {
-        List<Group> result = new ArrayList<>();
-        for (Long groupId : groupIds) {
-            Group g = getById(groupId);
-            autoFiller.autofill(g);
-            groupEntityManager.update(g);
-            result.add(g);
-        }
-        return result;
     }
 
     @Override

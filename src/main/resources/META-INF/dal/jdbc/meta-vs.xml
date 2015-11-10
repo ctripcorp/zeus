@@ -63,12 +63,12 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-all-by-vs-id" type="DELETE" batch="true">
+            <query name="delete-all-by-vs" type="DELETE" batch="true">
                 <param name="vs-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='vs-id"'/> = ${vs-id"}
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
                     ]]>
                 </statement>
             </query>

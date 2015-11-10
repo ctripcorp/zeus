@@ -49,18 +49,28 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Override
     public List<Slb> list() throws Exception {
         Set<Long> slbIds = slbCriteriaQuery.queryAll();
-        return archiveService.getLatestSlbs(slbIds.toArray(new Long[slbIds.size()]));
+        return list(slbIds.toArray(new Long[slbIds.size()]));
     }
 
     @Override
     public List<Slb> list(Long[] slbIds) throws Exception {
-        return archiveService.getLatestSlbs(slbIds);
+        List<Slb> result = archiveService.getLatestSlbs(slbIds);
+        for (Slb slb : result) {
+            slb.getVirtualServers().clear();
+            Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
+            slb.getVirtualServers().addAll(virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()])));
+        }
+        return result;
     }
 
     @Override
     public Slb getById(Long slbId) throws Exception {
         if (slbModelValidator.exists(slbId)) {
-            return archiveService.getLatestSlb(slbId);
+            Slb result = archiveService.getLatestSlb(slbId);
+            result.getVirtualServers().clear();
+            Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slbId);
+            result.getVirtualServers().addAll(virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()])));
+            return result;
         }
         return null;
     }
@@ -102,6 +112,8 @@ public class SlbRepositoryImpl implements SlbRepository {
         autoFiller.autofill(slb);
         slbEntityManager.add(slb);
 
+        slb = getById(slb.getId());
+
         for (VirtualServer virtualServer : slb.getVirtualServers()) {
             if (virtualServer.getSsl().booleanValue()) {
                 virtualServerRepository.installCertificate(virtualServer);
@@ -139,13 +151,6 @@ public class SlbRepositoryImpl implements SlbRepository {
     public int delete(Long slbId) throws Exception {
         slbModelValidator.removable(slbId);
         return slbEntityManager.delete(slbId);
-    }
-
-    @Override
-    public Slb updateVersion(Long slbId) throws Exception {
-        Slb slb = fresh(slbId);
-        slbEntityManager.update(slb);
-        return slb;
     }
 
     @Override

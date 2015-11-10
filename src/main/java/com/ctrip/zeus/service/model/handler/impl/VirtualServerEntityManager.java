@@ -71,7 +71,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         rVsSlbDao.deleteByVs(new RelVsSlbDo().setVsId(vsId));
         rVsDomainDao.deleteAllByVs(new RelVsDomainDo().setVsId(vsId));
         slbVirtualServerDao.deleteByPK(new SlbVirtualServerDo().setId(vsId));
-        archiveVsDao.deleteAllByVsId(new MetaVsArchiveDo().setVsId(vsId));
+        archiveVsDao.deleteAllByVs(new MetaVsArchiveDo().setVsId(vsId));
     }
 
     @Override
@@ -90,7 +90,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         rVsSlbDao.deleteByVs(relSlbs);
         rVsDomainDao.deleteAllByVs(relDomains);
         slbVirtualServerDao.deleteById(vses);
-        archiveVsDao.deleteAllByVsId(archs);
+        archiveVsDao.deleteAllByVs(archs);
     }
 
     @Override
