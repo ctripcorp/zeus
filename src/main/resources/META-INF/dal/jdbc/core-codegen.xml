@@ -1640,6 +1640,7 @@
     <member name="port" field="port" value-type="String" length="200" nullable="false" />
     <member name="is-ssl" field="is_ssl" value-type="boolean" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
+    <member name="version" field="version" value-type="int" length="10" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
@@ -1719,6 +1720,7 @@
     <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" nullable="false" />
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="ip" field="ip" value-type="String" length="200" nullable="false" />
+    <member name="is-activated" field="is_activated" value-type="boolean" nullable="false" />
     <member name="up" field="up" value-type="boolean" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
@@ -1884,6 +1886,7 @@
     <member name="up" field="up" value-type="boolean" />
     <member name="status" field="status" value-type="String" length="50" nullable="false" />
     <member name="target-slb-id" field="target_slb_id" value-type="long" length="19" nullable="false" />
+    <member name="resources" field="resources" value-type="String" length="128" />
     <member name="version" field="version" value-type="int" length="10" />
     <member name="fail-cause" field="fail_cause" value-type="String" length="1024" />
     <member name="create-time" field="create_time" value-type="Date" />

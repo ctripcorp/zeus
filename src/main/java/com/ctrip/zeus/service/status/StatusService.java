@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.status;
 
 
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.service.Repository;
 
 import java.util.List;
@@ -13,85 +14,75 @@ import java.util.Set;
 public interface StatusService extends Repository {
 
     /**
-     * get all down app servers
-     * @return app server ip list
+     * get all down group servers
+     * @return group server ip list
      * @throws Exception
      */
     Set<String> findAllDownServers() throws Exception;
 
     /**
-     * get all up app servers by slbId
-     * @param slbId the slb id
-     * @return app server ip list
-     * @throws Exception
-     */
-    Set<String> findAllUpGroupServersBySlbId(Long slbId) throws Exception;
-    /**
      * get group servers by slbId and status offset
-     * @param slbId the slb id
-     * @return app server ip list
+     * @param vsIds vsIds
+     * @param offset offset [0-30]
+     * @param status status enable = true , disable = false
+     * @return set of {vsId}_{groupId}_{ip}
      * @throws Exception
      */
-    Set<String> findAllGroupServersBySlbIdAndStatusOffset(Long slbId , int offset) throws Exception;
+    Set<String> fetchGroupServersByVsIdsAndStatusOffset(Long[] vsIds , int offset , boolean status) throws Exception;
 
     /**
-     * up server by app server ip
-     * @param ip the app server ip
-     * @return
+     * up server by group server ip
+     * @param ip the group server ip
      * @throws Exception
      */
     void upServer(String ip) throws Exception;
 
     /**
-     * down server by app server ip
-     * @param ip the app server ip
-     * @return
+     * down server by group server ip
+     * @param ip the group server ip
      * @throws Exception
      */
     void downServer(String ip) throws Exception;
 
-    /**
-     * up member by app server ip and appname
-     * @param ips the app server ips
-     * @param groupId  app name
-     * @return
-     * @throws Exception
-     */
-    void upMember(Long slbId ,Long groupId, List<String> ips)throws Exception;
-    /**
-     * down member by app server ip and appname
-     * @param ips the app server ips
-     * @param groupId  app name
-     * @return
-     * @throws Exception
-     */
-    void downMember(Long slbId ,Long groupId, List<String> ips)throws Exception;
     /**
      * update status by group server ip and slbId and group id
      * @param ips the group server ips
      * @param groupId  group id
      * @param offset  offset [0-30]
      * @param status  status enable = true , disable = false
-     * @return
      * @throws Exception
      */
     void updateStatus(Long slbId ,Long groupId, List<String> ips , int offset , boolean status)throws Exception;
 
     /**
-     * get App server status by app name and slbname and virtual server ip
-     * @param slbId the slb name
-     * @param groupId  app name
-     * @param vsip  virtual server ip
+     * get server status by server ip
+     * @param ip server ip
      * @return true : status=up false : status = down
      * @throws Exception
      */
-    boolean getGroupServerStatus(Long slbId,Long groupId, String vsip)throws Exception;
+    boolean getServerStatus(String ip )throws  Exception;
 
     /**
-     * get server status by virtual server ip
-     * @param vsip  virtual server ip
-     * @return true : status=up false : status = down
+     * find group id by ip
+     * @param ip server ip
+     * @return Group ids
      * @throws Exception
      */
-    boolean getServerStatus(String vsip )throws  Exception;
+    Set<Long> findGroupIdByIp(String ip )throws  Exception;
+
+    /**
+     * Init group server status for new/update group
+     * @param groupId Group Id
+     * @param vsIds vsIds
+     * @param ips server ips
+     * @throws Exception
+     */
+    void groupServerStatusInit(Long groupId , Long[] vsIds , String[]ips )throws  Exception;
+    /**
+     * Init group server status when activate group
+     * @param group Group Obj
+     * @param vsId vsId
+     * @throws Exception
+     */
+    void activateGroupStatusInit(Group group , Long vsId )throws  Exception;
 }
