@@ -32,7 +32,7 @@ public interface StatusService extends Repository {
      * @return app server ip list
      * @throws Exception
      */
-    Set<String> findAllGroupServersBySlbIdAndStatusOffset(Long slbId , int offset) throws Exception;
+    Set<String> findAllGroupServersBySlbIdAndStatusOffset(Long slbId , int offset , boolean status) throws Exception;
 
     /**
      * up server by app server ip

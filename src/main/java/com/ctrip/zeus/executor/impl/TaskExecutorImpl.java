@@ -295,7 +295,7 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     private Set<String> getAllUpGroupServers(Long slbId,Map<Long, Group> groups, HashMap<Long, Group> activatingGroups) throws Exception {
 //        Set<String> allUpGroupServers = statusService.findAllUpGroupServersBySlbId(slbId);
-        Set<String> memberOpsUpGroupServers = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.MEMBER_OPS);
+        Set<String> memberOpsUpGroupServers = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.MEMBER_OPS,true);
         Set<Long> tmpid = memberOps.keySet();
         for (Long gid : tmpid){
             Group groupTmp = activatingGroups.get(gid);
@@ -323,7 +323,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }
             }
         }
-        Set<String> pullMemberOpsUpGroupServers = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId,StatusOffset.PULL_OPS);
+        Set<String> pullMemberOpsUpGroupServers = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId,StatusOffset.PULL_OPS,true);
         tmpid = pullMemberOps.keySet();
         for (Long gid : tmpid){
             Group groupTmp = activatingGroups.get(gid);

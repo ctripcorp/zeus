@@ -106,8 +106,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         AssertUtils.assertNotNull(slb, "slb Id not found!");
         List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
         HashMap<Long,Boolean> isActivated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}), slbId);
-        Set<String> allUpGroupServerInSlb = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.MEMBER_OPS);
-        Set<String> allPullInGroupServerInSlb = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.PULL_OPS);
+        Set<String> allDownGroupServerInSlb = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.MEMBER_OPS,false);
+        Set<String> allPullInGroupServerInSlb = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.PULL_OPS,true);
         Set<String> allDownServers = statusService.findAllDownServers();
 
         for (Group group : groups)
@@ -142,7 +142,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 ips.add(gs.getIp());
             }
             for (String ip : ipPort.keySet()) {
-                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, ip, ipPort.get(ip),allDownServers,allUpGroupServerInSlb,allPullInGroupServerInSlb,group);
+                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, ip, ipPort.get(ip),allDownServers,allDownGroupServerInSlb,allPullInGroupServerInSlb,group);
                 if (activatedIps.contains(ip)&&ips.contains(ip)){
                     serverStatus.setDiscription("Activated");
                 }else if (!activatedIps.contains(ip)&&ips.contains(ip)){
@@ -182,7 +182,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
 
     @Override
-    public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allUpGroupServerInSlb,Set<String> allPullInGroupServerInSlb ,Group group) throws Exception {
+    public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allDownGroupServerInSlb,Set<String> allPullInGroupServerInSlb ,Group group) throws Exception {
 
         GroupServerStatus groupServerStatus = new GroupServerStatus();
         groupServerStatus.setIp(ip);
@@ -190,7 +190,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         StringBuilder sb = new StringBuilder(64);
         sb.append(slbId).append("_").append(group.getGroupVirtualServers().get(0).getVirtualServer().getId()).append("_").append(groupId).append("_").append(ip);
 
-        boolean memberUp = allUpGroupServerInSlb.contains(sb.toString());
+        boolean memberUp = !allDownGroupServerInSlb.contains(sb.toString());
         boolean pullIn = allPullInGroupServerInSlb.contains(sb.toString());
         boolean serverUp = !allDownServers.contains(ip);
         boolean backendUp = getUpstreamStatus(groupId,ip,memberUp,serverUp,pullIn);

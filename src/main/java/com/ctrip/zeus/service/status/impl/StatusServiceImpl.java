@@ -63,13 +63,14 @@ public class StatusServiceImpl implements StatusService {
     }
 
     @Override
-    public Set<String> findAllGroupServersBySlbIdAndStatusOffset(Long slbId, int offset) throws Exception {
+    public Set<String> findAllGroupServersBySlbIdAndStatusOffset(Long slbId, int offset , boolean status) throws Exception {
         Set<String> allUpAppServers = new HashSet<>();
-        List<StatusGroupServerDo> allUpAppServerList = statusGroupServerDao.findAllBySlbId(slbId,StatusGroupServerEntity.READSET_FULL);
+        List<StatusGroupServerDo> allUpAppServerList = statusGroupServerDao.findAllBySlbId(slbId, StatusGroupServerEntity.READSET_FULL);
         int tmp = ~(1 << offset);
         for (StatusGroupServerDo statusGroupServerDo : allUpAppServerList){
-            int status = statusGroupServerDo.getStatus();
-            if (tmp == (status|tmp)){
+            int tmpstatus = statusGroupServerDo.getStatus();
+            boolean offsetStatus = tmp == (tmpstatus|tmp);
+            if (offsetStatus == status){
                 allUpAppServers.add(statusGroupServerDo.getSlbId() + "_" + statusGroupServerDo.getSlbVirtualServerId() + "_" + statusGroupServerDo.getGroupId() + "_" + statusGroupServerDo.getIp());
             }
         }
@@ -195,6 +196,14 @@ public class StatusServiceImpl implements StatusService {
                         .setSlbId(slbId)
                         .setGroupId(groupId)
                         .setIp(ip).setExVirtualServerIds(vsIds.toArray(new Long[]{})));
+                StatusGroupServerDo defaultData = new StatusGroupServerDo();
+                defaultData.setSlbId(slbId)
+                        .setSlbVirtualServerId(groupVirtualServer.getVirtualServer().getId())
+                        .setGroupId(groupId)
+                        .setIp(ip)
+                        .setCreatedTime(new Date())
+                        .setStatus(2);
+                statusGroupServerDao.insert(defaultData);
 
                 StatusGroupServerDo data = new StatusGroupServerDo();
                 data.setSlbId(slbId)
