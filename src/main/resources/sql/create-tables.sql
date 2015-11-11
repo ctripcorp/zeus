@@ -174,6 +174,7 @@ CREATE TABLE IF NOT EXISTS `certificate` (
   `cert` mediumblob NOT NULL COMMENT 'certificate file',
   `key` mediumblob NOT NULL COMMENT 'key file',
   `state` bit(1) NOT NULL DEFAULT b'1' COMMENT 'state',
+  `version` int(11) NOT NULL DEFAULT '0' COMMENT 'version',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
