@@ -92,7 +92,7 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
-                    WHERE <FIELD name='is-activated'/> = ${is-activated}
+                    AND <FIELD name='is-activated'/> = ${is-activated}
                     AND <FIELD name='slb-virtual-server-id'/> in <IN> ${virtual-server-ids} </IN>
                     AND <FIELD name='ip'/> not in <IN> ${ips} </IN>
                     ]]>
@@ -138,6 +138,40 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='up'/> = ${up}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="status-health-check" table="status_health_check" alias="sas" do-class="StatusHealthCheckDo">
+        <var name="slb-server-ips" value-type="String[]"/>
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        rise = values(rise),
+                        fail = values(fall),
+                        <FIELD name="data-change-last-time"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-server-ip" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-server-ip'/> = ${slb-server-ip}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb-server-ip" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-server-ip'/> = ${slb-server-ip}
                     ]]>
                 </statement>
             </query>
