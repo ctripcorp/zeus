@@ -1,5 +1,5 @@
 <model>
-    <virtual-server name="vs001" id="123456789012" ssl="true">
+    <virtual-server name="vs001" id="123456789012" ssl="true" version="1">
         <slb-id>123456789012</slb-id>
         <port>80,8099</port>
         <domains>

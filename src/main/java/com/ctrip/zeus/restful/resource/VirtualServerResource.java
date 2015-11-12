@@ -11,15 +11,12 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
-import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
-import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
-import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +27,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -45,11 +41,7 @@ public class VirtualServerResource {
     @Resource
     private SlbRepository slbRepository;
     @Resource
-    private GroupRepository groupRepository;
-    @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
-    @Resource
-    private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
@@ -148,7 +140,6 @@ public class VirtualServerResource {
         if (virtualServer.getSlbId() == null)
             throw new ValidationException("Slb id is not provided.");
         virtualServer = virtualServerRepository.addVirtualServer(virtualServer.getSlbId(), virtualServer);
-        slbRepository.updateVersion(virtualServer.getSlbId());
         return responseHandler.handle(virtualServer, hh.getMediaType());
 
     }
@@ -164,13 +155,7 @@ public class VirtualServerResource {
             throw new ValidationException("Invalid virtual server id.");
         if (virtualServer.getSlbId() == null)
             throw new ValidationException("Slb id is not provided.");
-        Long originSlbId = slbCriteriaQuery.queryByVs(virtualServer.getId());
         virtualServerRepository.updateVirtualServer(virtualServer);
-        slbRepository.updateVersion(virtualServer.getSlbId());
-        if (!originSlbId.equals(virtualServer.getSlbId()))
-            slbRepository.updateVersion(originSlbId);
-        Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[]{virtualServer.getId()});
-        groupRepository.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         return responseHandler.handle(virtualServer, hh.getMediaType());
     }
 
@@ -188,7 +173,6 @@ public class VirtualServerResource {
             throw new ValidationException("Cannot find slb with vsId " + vsId + ".");
         }
         virtualServerRepository.deleteVirtualServer(vsId);
-        slbRepository.updateVersion(slb.getId());
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
     }
 
@@ -197,7 +181,7 @@ public class VirtualServerResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response upgradeAll(@Context HttpHeaders hh,
                                @Context HttpServletRequest request) throws Exception {
-        List<Long> vsIds = virtualServerRepository.portVirtualServerRel();
+        List<Long> vsIds = virtualServerRepository.portVirtualServerArchives();
         if (vsIds.size() == 0)
             return responseHandler.handle("Successfully ported all virtual server relations.", hh.getMediaType());
         else
@@ -210,7 +194,7 @@ public class VirtualServerResource {
     public Response upgradeSingle(@Context HttpHeaders hh,
                                   @Context HttpServletRequest request,
                                   @QueryParam("vsId") Long vsId) throws Exception {
-        virtualServerRepository.portVirtualServerRel(vsId);
+        virtualServerRepository.portVirtualServerArchive(vsId);
         return responseHandler.handle("Successfully ported virtual server relations.", hh.getMediaType());
     }
 

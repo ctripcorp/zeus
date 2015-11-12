@@ -82,6 +82,46 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="archive-vs" table="archive_vs" alias="av">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="vs-id" field="vs_id" value-type="long" length="19" nullable="false" />
+    <member name="content" field="content" value-type="String" length="16777215" nullable="false" />
+    <member name="version" field="version" value-type="int" length="10" nullable="false" />
+    <member name="date-time-last-change" field="DateTime_LastChange" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="vs_id_version" unique="true" members="vs_id ASC, version ASC" />
+    <index name="DateTime_LastChange" members="DateTime_LastChange ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="auth-private-key" table="auth_private_key" alias="apk">
     <member name="private-key" field="private_key" value-type="String" length="50" nullable="false" key="true" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />

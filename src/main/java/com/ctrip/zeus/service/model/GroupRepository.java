@@ -19,8 +19,6 @@ public interface GroupRepository extends Repository {
 
     Group update(Group group) throws Exception;
 
-    List<Group> updateVersion(Long[] groupIds) throws Exception;
-
     int delete(Long groupId) throws Exception;
 
     @Deprecated

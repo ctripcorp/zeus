@@ -327,11 +327,7 @@ public class ModelServiceTest extends AbstractServerTest {
         virtualServers.get(1).setName("www.hello.com.cn");
         for (VirtualServer virtualServer : virtualServers) {
             virtualServerRepository.updateVirtualServer(virtualServer);
-            Set<Long> groupIds = groupCriteriaQuery.queryByVsIds(new Long[]{virtualServer.getId()});
-            groupRepository.updateVersion(groupIds.toArray(new Long[groupIds.size()]));
         }
-        slbRepository.updateVersion(created.getId());
-
         Slb updated = slbRepository.getById(created.getId());
         Group updatedGroup = groupRepository.get(group.getName());
 
@@ -349,7 +345,6 @@ public class ModelServiceTest extends AbstractServerTest {
         groupRepository.delete(updatedGroup.getId());
         virtualServerRepository.deleteVirtualServer(virtualServers.get(0).getId());
         virtualServerRepository.deleteVirtualServer(virtualServers.get(1).getId());
-        slbRepository.updateVersion(created.getId());
 
         vsIds = virtualServerCriteriaQuery.queryBySlbId(created.getId());
         virtualServers = virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()]));
