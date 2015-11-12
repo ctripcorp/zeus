@@ -133,8 +133,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             domains[i] = vsDomains.get(i).getName();
         }
         Long certId = certificateService.getCertificateOnBoard(domains);
-        certificateService.command(virtualServer.getId(), ips, certId);
-        certificateService.install(virtualServer.getId());
+        certificateService.install(virtualServer.getId(), ips, certId);
     }
 
     private VirtualServer createVirtualServer(SlbVirtualServerDo d) throws DalException {
