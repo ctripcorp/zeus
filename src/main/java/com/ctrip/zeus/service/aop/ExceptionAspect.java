@@ -1,8 +1,8 @@
 package com.ctrip.zeus.service.aop;
 
 import com.ctrip.zeus.restful.message.impl.ErrorResponseHandler;
-import com.ctrip.zeus.restful.response.entity.ErrorMessage;
-import com.ctrip.zeus.util.ExceptionUtils;
+import com.netflix.config.DynamicBooleanProperty;
+import com.netflix.config.DynamicPropertyFactory;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -22,6 +22,9 @@ import java.lang.reflect.InvocationTargetException;
 @Aspect
 @Component
 public class ExceptionAspect implements Ordered {
+
+    private static DynamicBooleanProperty PrintStackTrace = DynamicPropertyFactory.getInstance().getBooleanProperty("slb.stack.trace", false);
+
     @Resource
     private ErrorResponseHandler errorResponseHandler;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -43,15 +46,16 @@ public class ExceptionAspect implements Ordered {
                 logger.error(builder.toString());
 
                 MediaType mediaType = null;
-                boolean printStackTrace = false;
+                boolean printStackTrace = PrintStackTrace.get();
                 for (Object arg : point.getArgs()) {
                     if (arg instanceof ContainerRequest) {
                         ContainerRequest cr = (ContainerRequest) arg;
                         mediaType = cr.getMediaType();
                         try {
-                            printStackTrace = Boolean.parseBoolean(cr.getHeaderString("slb-stack-trace"));
+                            String stackTrace = cr.getUriInfo().getQueryParameters().getFirst("stackTrace");
+                            if (stackTrace != null)
+                                printStackTrace = Boolean.parseBoolean(stackTrace);
                         } catch (Exception ex) {
-                            printStackTrace = false;
                         }
                         break;
                     }
