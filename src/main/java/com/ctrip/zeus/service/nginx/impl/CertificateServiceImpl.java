@@ -82,44 +82,29 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
-    public void command(Long vsId, List<String> ips, Long certId) throws Exception {
-        CertificateDo cert = certificateDao.findByPK(certId, CertificateEntity.READSET_FULL);
-        if (cert == null)
-            throw new ValidationException("Certificate cannot be found.");
-        for (String ip : ips) {
-            rCertificateSlbServerDao.insertOrUpdateCommand(
-                    new RelCertSlbServerDo().setIp(ip).setCommand(cert.getId()).setVsId(vsId));
-        }
-    }
-
-    @Override
-    public void recall(Long vsId, List<String> ips) throws Exception {
-        for (String ip : ips) {
-            rCertificateSlbServerDao.insertOrUpdateCommand(
-                    new RelCertSlbServerDo().setIp(ip).setCommand(0L).setVsId(vsId));
-        }
-    }
-
-    @Override
-    public void install(Long vsId) throws Exception {
+    public void install(Long vsId, List<String> ips, Long certId) throws Exception {
         List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
+        Set<String> check = new HashSet<>();
+        for (RelCertSlbServerDo d : dos) {
+            check.add(d.getIp() + "#" + vsId + "#" + d.getCertId());
+        }
         boolean success = true;
         String errMsg = "";
-        for (RelCertSlbServerDo d : dos) {
-            if (d.getCertId() == d.getCommand())
+        for (String ip : ips) {
+            if (check.contains(ip + "#" + vsId + "#" + certId))
                 continue;
-            CertSyncClient c = new CertSyncClient("http://" + d.getIp() + ":8099");
-            Response res = c.requestInstall(vsId, d.getCommand());
+            CertSyncClient c = new CertSyncClient("http://" + ip + ":8099");
+            Response res = c.requestInstall(vsId, certId);
             // retry
             if (res.getStatus() / 100 > 2)
-                res = c.requestInstall(vsId, d.getCommand());
+                res = c.requestInstall(vsId, certId);
             // still failed after retry
             if (res.getStatus() / 100 > 2) {
                 success &= false;
                 try {
-                    errMsg += d.getIp() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
+                    errMsg += ip + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
                 } catch (IOException e) {
-                    errMsg += d.getIp() + ":" + "Unable to parse the response entity.\n";
+                    errMsg += ip + ":" + "Unable to parse the response entity.\n";
                 }
             }
             if (!success)
@@ -128,13 +113,11 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
-    public void uninstallIfRecalled(Long vsId) throws Exception {
-        List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
+    public void uninstallIfRecalled(Long vsId, List<String> ips) throws Exception {
         Map<String, RelCertSlbServerDo> abandoned = new HashMap<>();
-        for (RelCertSlbServerDo d : dos) {
-            if (d.getCommand() == 0L) {
+        for (RelCertSlbServerDo d : rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL)) {
+            if (ips.contains(d.getIp()))
                 abandoned.put(d.getIp(), d);
-            }
         }
         boolean success = true;
         String errMsg = "";

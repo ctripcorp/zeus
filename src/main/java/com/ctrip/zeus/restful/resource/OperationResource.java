@@ -352,8 +352,7 @@ public class OperationResource {
             throw new ValidationException("certId, vsId and ips are required.");
         }
         ips = configureIps(vsId, ips);
-        certificateService.command(vsId, ips, certId);
-        certificateService.install(vsId);
+        certificateService.install(vsId, ips, certId);
         return responseHandler.handle("Certificates uploaded. Re-activate the virtual server to take effect.", hh.getMediaType());
     }
 

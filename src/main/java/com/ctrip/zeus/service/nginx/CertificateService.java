@@ -15,11 +15,7 @@ public interface CertificateService {
 
     Long upgrade(InputStream cert, InputStream key, String domain, boolean state) throws Exception;
 
-    void command(Long vsId, List<String> ips, Long certId) throws Exception;
+    void install(Long vsId, List<String> ips, Long certId) throws Exception;
 
-    void recall(Long vsId, List<String> ips) throws Exception;
-
-    void install(Long vsId) throws Exception;
-
-    void uninstallIfRecalled(Long vsId) throws Exception;
+    void uninstallIfRecalled(Long vsId, List<String> ips) throws Exception;
 }
