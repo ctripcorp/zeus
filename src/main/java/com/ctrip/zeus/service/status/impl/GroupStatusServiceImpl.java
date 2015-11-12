@@ -38,10 +38,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
     @Resource
     SlbRepository slbRepository;
-
     @Resource
     GroupRepository groupRepository;
-
     @Resource
     StatusService statusService;
     @Resource
@@ -49,8 +47,6 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Resource
     private ActiveConfService activeConfService;
 
-
-    private long currentSlbId = -1L;
     private Logger LOGGER = LoggerFactory.getLogger(GroupStatusServiceImpl.class);
 
     @Override
@@ -103,10 +99,11 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         GroupStatusList res = new GroupStatusList();
         GroupStatus status = null;
         Slb slb = slbRepository.getById(slbId);
+//        Slb slb = activateService.getActivatedSlb(slbId);
         AssertUtils.assertNotNull(slb, "slb Id not found!");
         List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
         HashMap<Long,Boolean> isActivated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}), slbId);
-        Set<String> allUpGroupServerInSlb = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.MEMBER_OPS);
+        Set<String> allUpGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(slbId, StatusOffset.MEMBER_OPS, true);
         Set<String> allPullInGroupServerInSlb = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.PULL_OPS);
         Set<String> allDownServers = statusService.findAllDownServers();
 

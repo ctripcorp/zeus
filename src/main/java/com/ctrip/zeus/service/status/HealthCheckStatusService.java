@@ -19,4 +19,10 @@ public interface HealthCheckStatusService extends Repository {
      *  @return {Map<String,Boolean>} key:{groupId}_{ip} value:{status}
      */
     public Map<String,Boolean> getHealthCheckStatusBySlbId(Long slbId)throws Exception;
+    /**
+     *  get HealthCheck Status By serverIp
+     *  @param serverIp serverIp
+     *  @return {Map<String,Boolean>} key:{groupId}_{ip} value:{status}
+     */
+    public Map<String,Boolean> getHealthCheckStatusBySlbServer(String serverIp)throws Exception;
 }

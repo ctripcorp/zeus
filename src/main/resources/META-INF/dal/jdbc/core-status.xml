@@ -158,7 +158,8 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-slb-server-ip" type="INSERT">
+            <query name="find-by-slb-server-ip" type="SELECT" multiple="true">
+                <param name="slb-server-ip"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
@@ -168,6 +169,7 @@
                 </statement>
             </query>
             <query name="delete-by-slb-server-ip" type="INSERT">
+                <param name="slb-server-ip"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>

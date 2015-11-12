@@ -1764,6 +1764,7 @@
     <member name="slb-server-ip" field="slb_server_ip" value-type="String" length="64" nullable="false" />
     <member name="upstream-name" field="upstream_name" value-type="String" length="128" nullable="false" />
     <member name="member-ip-port" field="member_ip_port" value-type="String" length="128" nullable="false" />
+    <member name="status" field="status" value-type="String" length="128" />
     <member name="rise" field="rise" value-type="int" length="10" nullable="false" />
     <member name="fall" field="fall" value-type="int" length="10" nullable="false" />
     <member name="type" field="type" value-type="String" length="128" />
