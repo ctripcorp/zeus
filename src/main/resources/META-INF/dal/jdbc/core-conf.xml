@@ -25,6 +25,30 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-group-ids-and-slb-virtual-server-id" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="slb-virtual-server-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
+                        AND <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-group-id-and-virtual-server-id" type="SELECT">
+                <param name="group-id"/>
+                <param name="slb-virtual-server-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='group-id'/> = ${group-id}
+                        AND <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all" type="SELECT" multiple="true">
                 <statement>
                     <![CDATA[
@@ -33,18 +57,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-group-ids-and-slb-id" type="SELECT" multiple="true">
-                <param name="ids"/>
-                <param name="slb-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
-                        AND <FIELD name='slb-id'/> = ${slb-id}
-                    ]]>
-                </statement>
-            </query>
+
             <query name="delete-by-group-id" type="DELETE">
                 <param name="group-id"/>
                 <statement>
@@ -54,14 +67,84 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-group-id-and-slb-id" type="DELETE">
+            <query name="delete-by-group-id-and-slb-virtual-server-id" type="DELETE">
                 <param name="group-id"/>
-                <param name="slb-id"/>
+                <param name="slb-virtual-server-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
-                    AND <FIELD name="slb-id"/> = ${slb-id}
+                    AND <FIELD name="slb-virtual-server-id"/> = ${slb-virtual-server-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="conf-slb-virtual-server-active" table="conf_slb_virtual_server_active" alias="csvsa">
+        <var name="slb-virtual-server-ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        content = values(content),
+                        version = values(version),
+                        <FIELD name="data-change-last-time"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-id" type="SELECT" multiple="true">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-virtual-server-id" type="SELECT">
+                <param name="slb-virtual-server-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-virtual-server-ids" type="SELECT" multiple="true">
+                <param name="slb-virtual-server-ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-virtual-server-id'/> in in <IN>${slb-virtual-server-ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-id-and-slb-virtual-server-ids" type="SELECT" multiple="true">
+                <param name="slb-virtual-server-ids"/>
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-virtual-server-id'/> in in <IN>${slb-virtual-server-ids}</IN>
+                        AND <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb-id-and-slb-virtual-server-id" type="DELETE">
+                <param name="slb-id"/>
+                <param name="slb-virtual-server-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    AND <FIELD name="slb-virtual-server-id"/> = ${slb-virtual-server-id}
                     ]]>
                 </statement>
             </query>

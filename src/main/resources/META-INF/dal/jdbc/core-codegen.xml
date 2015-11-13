@@ -573,6 +573,48 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="conf-slb-virtual-server-active" table="conf_slb_virtual_server_active" alias="csvsa">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" nullable="false" />
+    <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
+    <member name="content" field="content" value-type="String" length="16777215" />
+    <member name="version" field="version" value-type="int" length="10" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="slb_virtual_server_id_slb_id" unique="true" members="slb_virtual_server_id ASC, slb_id ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="dist-lock" table="dist_lock" alias="dl">
     <member name="lock-key" field="lock_key" value-type="String" length="255" nullable="false" key="true" />
     <member name="owner" field="owner" value-type="long" length="19" />
@@ -1760,7 +1802,6 @@
     <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" nullable="false" />
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="ip" field="ip" value-type="String" length="200" nullable="false" />
-    <member name="is-activated" field="is_activated" value-type="boolean" nullable="false" />
     <member name="up" field="up" value-type="boolean" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />

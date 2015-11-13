@@ -2,11 +2,10 @@ package com.ctrip.zeus.service.activate;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.Repository;
-import com.ctrip.zeus.task.entity.OpsTask;
-
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author:xingchaowang
@@ -15,43 +14,63 @@ import java.util.List;
 public interface ActivateService extends Repository {
 
     /**
-     * update active data by slbname
+     * active Slb
      * @param slbId the slb id
      * @return
      * @throws Exception
      */
     public void activeSlb(long slbId,int version) throws Exception;
     /**
-     * update active data by slbname
+     * activate group
      * @param groupId the Group id
-     * @return
+     * @param version the version
+     * @param vsId the vsId
+     * @param slbId the slbId
      * @throws Exception
      */
-    public void activeGroup(long groupId ,int version , Long slbId) throws Exception;
+    public void activeGroup(long groupId ,int version , Long vsId , Long slbId) throws Exception;
+
+    /**
+     * activate group
+     * @param version the version
+     * @param vsId the vsId
+     * @param slbId the slbId
+     * @throws Exception
+     */
+    public void activeVirtualServer(long vsId ,int version , Long slbId) throws Exception;
 
 
     /**
      * deactivate data by groupid
      * @param groupId the Group id
-     * @return
+     * @param vsId the vsId
      * @throws Exception
      */
-    public void deactiveGroup(Long groupId, Long slbId) throws Exception;
+    public void deactiveGroup(Long groupId, Long vsId) throws Exception;
+
+    /**
+     * deactivate data by groupid
+     * @param vsId the vsId
+     * @param slbId the slbId
+     * @throws Exception
+     */
+    public void deactiveVirtualServer(Long vsId , Long slbId) throws Exception;
 
     /**
      * group is activated
      * @param groupId the Group id
+     * @param vsId the Group vsId
      * @return
      * @throws Exception
      */
-    public boolean isGroupActivated(Long groupId,Long slbId) throws  Exception;
+    public boolean isGroupActivated(Long groupId,Long vsId) throws  Exception;
     /**
      * group is activated
      * @param groupIds the Group id
-     * @return
+     * @param vsId the Group vsId
      * @throws Exception
      */
-    public HashMap<Long,Boolean> isGroupsActivated(Long[] groupIds,Long slbId) throws Exception;
+    public Map<Long,Boolean> isGroupsActivated(Long[] groupIds,Long vsId) throws Exception;
 
     /**
      * get activating groups
@@ -61,6 +80,15 @@ public interface ActivateService extends Repository {
      */
 
     public Group getActivatingGroup(Long groupId, int version);
+    /**
+     * get activating slb
+     * @param vsId the slb ID
+     * @param version the version
+     * @return groups
+     */
+
+    public VirtualServer getActivatingVirtualServer(Long vsId,int version);
+
     /**
      * get activating slb
      * @param slbId the slb ID
@@ -73,17 +101,19 @@ public interface ActivateService extends Repository {
     /**
      * get activated groups
      * @param groupId , the Group id
+     * @param vsId , the vsId
      * @return groups
      */
 
-    public Group getActivatedGroup(Long groupId,Long slbId)throws Exception;
+    public Group getActivatedGroup(Long groupId,Long vsId)throws Exception;
     /**
-     * get activated groups
-     * @param groupId , the Group id
+     * get activated vs
+     * @param vsId , the vsId
      * @return groups
      */
 
-    public List<Group> getActivatedGroups(Long[] groupId,Long slbId)throws Exception;
+    public VirtualServer getActivatedVirtualServer(Long vsId)throws Exception;
+
 
     /**
      * get activated slb

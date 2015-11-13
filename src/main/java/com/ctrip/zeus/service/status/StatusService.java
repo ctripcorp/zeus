@@ -78,11 +78,11 @@ public interface StatusService extends Repository {
      * @throws Exception
      */
     void groupServerStatusInit(Long groupId , Long[] vsIds , String[]ips )throws  Exception;
+
     /**
-     * Init group server status when activate group
-     * @param group Group Obj
-     * @param vsId vsId
+     * clean group Server Status
+     * @param groupId Group Id
      * @throws Exception
      */
-    void activateGroupStatusInit(Group group , Long vsId )throws  Exception;
+    void cleanGroupServerStatus(Long groupId )throws  Exception;
 }

@@ -83,18 +83,12 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-group-id-and-virtual-server-ids-and-exp-ips-and-is-activated" type="DELETE">
+            <query name="delete-by-group-id" type="DELETE">
                 <param name="group-id"/>
-                <param name="ips"/>
-                <param name="virtual-server-ids"/>
-                <param name="is-activated"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
-                    AND <FIELD name='is-activated'/> = ${is-activated}
-                    AND <FIELD name='slb-virtual-server-id'/> in <IN> ${virtual-server-ids} </IN>
-                    AND <FIELD name='ip'/> not in <IN> ${ips} </IN>
                     ]]>
                 </statement>
             </query>

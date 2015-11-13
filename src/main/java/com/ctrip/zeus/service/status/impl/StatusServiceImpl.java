@@ -161,38 +161,14 @@ public class StatusServiceImpl implements StatusService {
                         .setGroupId(groupId)
                         .setSlbVirtualServerId(vsId)
                         .setIp(ip)
-                        .setIsActivated(false)
                         .setStatus(statusOffset.getDefaultStatus())
                         .setCreatedTime(new Date()));
             }
         }
-        statusGroupServerDao.deleteByGroupIdAndVirtualServerIdsAndExpIpsAndIsActivated(new StatusGroupServerDo()
-                .setGroupId(groupId)
-                .setVirtualServerIds(vsIds)
-                .setIsActivated(false)
-                .setIps(ips));
      }
 
     @Override
-    public void activateGroupStatusInit(Group group, Long vsId) throws Exception {
-        Long groupId = group.getId();
-        List<String> ips = new ArrayList<>();
-        for (GroupServer groupServer : group.getGroupServers()){
-            ips.add(groupServer.getIp());
-        }
-        for (String ip : ips){
-            statusGroupServerDao.insertOrUpdateIsActivated(new StatusGroupServerDo()
-                    .setGroupId(groupId)
-                    .setSlbVirtualServerId(vsId)
-                    .setIp(ip)
-                    .setIsActivated(true)
-                    .setStatus(statusOffset.getDefaultStatus())
-                    .setCreatedTime(new Date()));
-        }
-        statusGroupServerDao.deleteByGroupIdAndVirtualServerIdsAndExpIpsAndIsActivated(new StatusGroupServerDo()
-                .setGroupId(groupId)
-                .setVirtualServerIds(new Long[]{vsId})
-                .setIsActivated(true)
-                .setIps(ips.toArray(new String[]{})));
+    public void cleanGroupServerStatus(Long groupId) throws Exception {
+        statusGroupServerDao.deleteByGroupId(new StatusGroupServerDo().setGroupId(groupId));
     }
 }
