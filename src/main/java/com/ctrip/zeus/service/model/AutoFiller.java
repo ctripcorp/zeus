@@ -28,7 +28,7 @@ public class AutoFiller {
         }
         HealthCheck hc = group.getHealthCheck();
         if (hc != null) {
-            hc.setIntervals(hc.getIntervals() == null ? 5000 : hc.getIntervals())
+            hc.setIntervals(hc.getIntervals() == null ? 10000 : hc.getIntervals())
                     .setFails(hc.getFails() == null ? 5 : hc.getFails())
                     .setPasses(hc.getPasses() == null ? 1 : hc.getPasses())
                     .setTimeout(hc.getTimeout() == null ? 2000 : hc.getTimeout());
