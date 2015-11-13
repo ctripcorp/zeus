@@ -22,7 +22,9 @@ public class AutoFiller {
             for (Domain domain : vs.getDomains()) {
                 tvs.getDomains().add(domain);
             }
-            gvs.setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority());
+            if (gvs.getPriority() == null) {
+                gvs.setPriority(gvs.getRewrite() == null ? 1000 : -1000);
+            }
         }
         HealthCheck hc = group.getHealthCheck();
         if (hc != null) {
