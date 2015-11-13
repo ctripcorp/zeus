@@ -69,7 +69,9 @@ public class SlbEntityManager implements SlbSync {
         Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slbId);
         virtualServerEntityManager.deleteVirtualServers(vsIds.toArray(new Long[vsIds.size()]));
         rSlbSlbServerDao.deleteAllBySlb(new RelSlbSlbServerDo().setSlbId(slbId));
-        return slbDao.deleteByPK(new SlbDo().setId(slbId));
+        int count = slbDao.deleteByPK(new SlbDo().setId(slbId));
+        archiveSlbDao.deleteBySlb(new ArchiveSlbDo().setSlbId(slbId));
+        return count;
     }
 
     @Override

@@ -34,6 +34,15 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-vs" type="DELETE" batch="true">
+                <param name="vs-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="slb-virtual-server" table="slb_virtual_server" alias="svs" do-class="SlbVirtualServerDo">
