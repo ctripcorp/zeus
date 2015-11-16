@@ -1,6 +1,7 @@
 package com.ctrip.zeus.logstats.analyzer.util;
 
 import com.ctrip.zeus.logstats.parser.KeyValue;
+
 import java.util.List;
 
 /**
@@ -9,6 +10,16 @@ import java.util.List;
 public class JsonStringWriter {
 
     public static String write(List<KeyValue> keyValues) {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        for (KeyValue keyValue : keyValues) {
+            sb.append("\" " + keyValue.getKey() + " \"")
+                    .append(":")
+                    .append("\" " + keyValue.getValue() + " \"")
+                    .append(",");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        sb.append("}");
+        return sb.toString();
     }
 }

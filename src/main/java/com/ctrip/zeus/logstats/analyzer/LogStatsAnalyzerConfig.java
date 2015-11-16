@@ -11,7 +11,6 @@ import java.util.List;
  */
 public class LogStatsAnalyzerConfig {
     private final List<LineFormat> lineFormats;
-    private String logFilename;
     private LogTracker logTracker;
 
     public LogStatsAnalyzerConfig() {
@@ -22,24 +21,17 @@ public class LogStatsAnalyzerConfig {
         return lineFormats;
     }
 
-    public void addFormat(LineFormat lineFormat) {
+    public LogStatsAnalyzerConfig addFormat(LineFormat lineFormat) {
         lineFormats.add(lineFormat);
+        return this;
     }
 
-    public String getLogFilename() {
-        return logFilename;
-    }
-
-    public void setLogFilename(String logFilename) {
-        this.logFilename = logFilename;
-    }
-
-    public void setLogTracker(LogTracker logTracker) {
+    public LogStatsAnalyzerConfig setLogTracker(LogTracker logTracker) {
         this.logTracker = logTracker;
+        return this;
     }
 
     public LogTracker getLogTracker() {
         return logTracker;
     }
-
 }
