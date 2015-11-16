@@ -1,5 +1,7 @@
 package com.ctrip.zeus.logstats.tracker;
 
+import java.io.IOException;
+
 /**
  * Created by mengyizhou on 10/18/15.
  */
@@ -11,9 +13,9 @@ public interface LogTracker {
 
     LogTrackerStrategy getStrategy();
 
-    void start();
+    void start() throws IOException;
 
-    void stop();
+    void stop() throws IOException;
 
-    String move();
+    String move() throws IOException;
 }
