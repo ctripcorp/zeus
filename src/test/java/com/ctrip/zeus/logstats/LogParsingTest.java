@@ -59,12 +59,12 @@ public class LogParsingTest {
 
     @Test
     public void testJsonSerializer() {
-        String expectedJsonValue = "";
+        String expectedJsonValue = "{\"time_local\":\"17/Nov/2015:15:10:44 +0800\",\"host\":\"ws.you.ctripcorp.com\",\"hostname\":\"vms09191\",\"server_addr\":\"10.8.95.27\",\"request_method\":\"POST\",\"uri\":\"/gsapi/api/xml/GetRecmdProduct\",\"query_string\":\"-\",\"server_port\":\"80\",\"remote_user\":\"-\",\"remote_addr\":\"10.8.106.66\",\"http_x_forwarded_for\":\"-\",\"server_protocol\":\"HTTP/1.1\",\"http_user_agent\":\"-\",\"cookie_COOKIE\":\"-\",\"http_referer\":\"-\",\"status\":\"200\",\"body_bytes_sent\":\"521\",\"request_time\":\"0.042\",\"upstream_response_time\":\"0.039\",\"upstream_addr\":\"10.8.168.228:80\",\"upstream_status\":\"200\"}";
         LineFormat lineFormat = new AccessLogLineFormat();
         lineFormat.setFormat(accessLogFormat);
         List<LineFormat> formats = new ArrayList<>();
         formats.add(lineFormat);
         final LogParser parser = new AccessLogParser(formats);
-        System.out.println(JsonStringWriter.write(parser.parse(log)));
+        Assert.assertEquals(expectedJsonValue, JsonStringWriter.write(parser.parse(log)));
     }
 }
