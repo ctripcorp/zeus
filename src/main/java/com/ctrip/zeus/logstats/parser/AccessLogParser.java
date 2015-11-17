@@ -28,7 +28,7 @@ public class AccessLogParser implements LogParser {
         if ((matcher = pattern.matcher(line)).matches()) {
             String[] keys = mainLogFormat.getKeys();
             for (int i = 0; i < keys.length; i++) {
-                kvs.add(new KeyValue(keys[i], matcher.group(i)));
+                kvs.add(new KeyValue(keys[i], matcher.group(i + 1)));
             }
         }
         return kvs;

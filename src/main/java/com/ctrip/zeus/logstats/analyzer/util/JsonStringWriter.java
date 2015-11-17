@@ -13,9 +13,9 @@ public class JsonStringWriter {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         for (KeyValue keyValue : keyValues) {
-            sb.append("\" " + keyValue.getKey() + " \"")
-                    .append(":")
-                    .append("\" " + keyValue.getValue() + " \"")
+            sb.append("\"" + keyValue.getKey() + "\"")
+                    .append(" : ")
+                    .append("\"" + keyValue.getValue() + "\"")
                     .append(",");
         }
         sb.deleteCharAt(sb.length() - 1);

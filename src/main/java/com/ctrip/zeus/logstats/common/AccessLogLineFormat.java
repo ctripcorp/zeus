@@ -19,6 +19,11 @@ public class AccessLogLineFormat implements LineFormat {
     }
 
     @Override
+    public String getPatternString() {
+        return patternString;
+    }
+
+    @Override
     public Pattern getPattern() {
         return pattern;
     }
@@ -38,17 +43,43 @@ public class AccessLogLineFormat implements LineFormat {
         List<String> keyList = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         char[] formatChars = format.toCharArray();
+        int depth = 0;
         for (int i = 0; i < formatChars.length; i++) {
             if (formatChars[i] == '$') {
                 int start = i;
                 // word characters
-                sb.append("(\\w+)");
-                while (Character.isLetter(formatChars[++i])) {
+                sb.append(depth % 2 == 0 ? "(\\S+)" : "(.+)");
+                while (++i < formatChars.length && (Character.isLetterOrDigit(formatChars[i]) || formatChars[i] == '_')) {
                 }
-                keyList.add(i - start == 0 ? "key" + i : new String(formatChars, start, i - start));
+                keyList.add(i - start == 0 ? "key" + i : new String(formatChars, start + 1, i - start - 1));
             }
+            if (i >= formatChars.length)
+                break;
             // whitespace or predefined
-            sb.append(formatChars[i] == ' ' ? "\\s" : formatChars[i]);
+            switch (formatChars[i]) {
+                case ' ':
+                    sb.append("\\s+");
+                    break;
+                case '"':
+                    depth = depth % 2 == 0 ? depth + 1 : depth - 1;
+                    sb.append("\\\"");
+                    break;
+                case '\'':
+                    depth = depth % 2 == 0 ? depth + 1 : depth - 1;
+                    sb.append("\\'");
+                    break;
+                case '[':
+                    depth++;
+                    sb.append("\\[");
+                    break;
+                case ']':
+                    depth--;
+                    sb.append("\\]");
+                    break;
+                default:
+                    sb.append(formatChars[i]);
+                    break;
+            }
         }
         keys = keyList.toArray(new String[keyList.size()]);
         patternString = sb.toString();

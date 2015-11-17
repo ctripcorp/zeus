@@ -14,6 +14,8 @@ public interface LineFormat {
      */
     String getFormat();
 
+    String getPatternString();
+
     Pattern getPattern();
 
     String[] getKeys();
