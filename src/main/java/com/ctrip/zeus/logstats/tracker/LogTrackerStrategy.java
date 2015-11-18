@@ -9,6 +9,7 @@ public class LogTrackerStrategy {
     private String trackerMemoFilename;
     private String logFilename;
     private boolean doAsRoot;
+    private int readSize;
 
     public boolean isAllowLogRotate() {
         return allowLogRotate;
@@ -52,6 +53,15 @@ public class LogTrackerStrategy {
 
     public LogTrackerStrategy setDoAsRoot(boolean doAsRoot) {
         this.doAsRoot = doAsRoot;
+        return this;
+    }
+
+    public int getReadSize() {
+        return readSize;
+    }
+
+    public LogTrackerStrategy setReadSize(int readSize) {
+        this.readSize = readSize;
         return this;
     }
 }

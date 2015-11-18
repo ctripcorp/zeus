@@ -1,5 +1,7 @@
 package com.ctrip.zeus.logstats.tracker;
 
+import com.ctrip.zeus.logstats.StatsDelegate;
+
 import java.io.IOException;
 
 /**
@@ -18,4 +20,6 @@ public interface LogTracker {
     void stop() throws IOException;
 
     String move() throws IOException;
+
+    void fastMove(StatsDelegate<String> delegate) throws IOException;
 }
