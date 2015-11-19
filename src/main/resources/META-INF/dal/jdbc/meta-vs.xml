@@ -45,9 +45,21 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE  <FIELD name='vs-id'/> = ${vs-id}
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
                     ORDER BY version DESC
                     LIMIT 1
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-vs-and-version" type="SELECT">
+                <param name="vs-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                        AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
             </query>

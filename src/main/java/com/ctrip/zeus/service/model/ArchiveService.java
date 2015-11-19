@@ -31,10 +31,6 @@ public interface ArchiveService {
 
     List<Group> getLatestGroups(Long[] groupIds) throws Exception;
 
-    List<Slb> getAllSlb(Long slbId) throws Exception;
-
-    List<Group> getAllGroup(Long groupId) throws Exception;
-
     Archive getLatestSlbArchive(Long slbId) throws Exception;
 
     Archive getLatestGroupArchive(Long groupId) throws Exception;
@@ -42,4 +38,8 @@ public interface ArchiveService {
     Archive getSlbArchive(Long slbId, int version) throws Exception;
 
     Archive getGroupArchive(Long groupId, int version) throws Exception;
+
+    Archive getVsArchive(Long vsId, int version) throws Exception;
+
+    Archive getLatestArchive(Long vsId) throws Exception;
 }
