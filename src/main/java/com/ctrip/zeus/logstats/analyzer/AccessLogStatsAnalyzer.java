@@ -32,6 +32,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
                 .setLogFormat(AccessLogFormat)
                 .setLogFilename("/opt/app/nginx/access.log")
                 .setTrackerReadSize(TrackerReadSize)
+                .allowTracking("access-foot-print.log")
                 .build());
     }
 
@@ -75,6 +76,8 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     public static class LogStatsAnalyzerConfigBuilder {
         private String logFormat;
         private String logFilename;
+        private String trackingFilename;
+        private boolean allowTracking;
         private int trackerReadSize;
 
         public LogStatsAnalyzerConfigBuilder setLogFilename(String logFilename) throws IOException {
@@ -92,6 +95,12 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             return this;
         }
 
+        public LogStatsAnalyzerConfigBuilder allowTracking(String trackingFilename) {
+            this.allowTracking = true;
+            this.trackingFilename = trackingFilename;
+            return this;
+        }
+
         public LogStatsAnalyzerConfig build() throws IOException {
             LineFormat format = new AccessLogLineFormat();
             format.setFormat(logFormat);
@@ -100,9 +109,9 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
                 String rootDir = f.getParentFile().getAbsolutePath();
                 LogTrackerStrategy strategy = new LogTrackerStrategy()
                         .setAllowLogRotate(true)
-                        .setAllowTrackerMemo(true)
+                        .setAllowTrackerMemo(allowTracking)
                         .setDoAsRoot(true)
-                        .setTrackerMemoFilename(rootDir + "/access-foot-print.log")
+                        .setTrackerMemoFilename(allowTracking ? rootDir + "/" + trackingFilename : null)
                         .setLogFilename(logFilename)
                         .setReadSize(trackerReadSize);
                 return new LogStatsAnalyzerConfig()

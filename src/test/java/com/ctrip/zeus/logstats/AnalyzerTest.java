@@ -3,10 +3,10 @@ package com.ctrip.zeus.logstats;
 import com.ctrip.zeus.logstats.analyzer.AccessLogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzerConfig;
-import com.sun.el.stream.Stream;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -27,7 +27,7 @@ public class AnalyzerTest {
     private final URL accessLogUrl = this.getClass().getClassLoader().getResource("com.ctrip.zeus.service/access.log");
 
     @Test
-    public void testAnalyzer() throws IOException {
+    public void testInMemoryAnalyzer() throws IOException {
         final LogStatsAnalyzerConfig config =
                 new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
                         .setLogFormat(AccessLogFormat)
@@ -53,6 +53,45 @@ public class AnalyzerTest {
                 analyzer.analyze(reporter);
             }
             analyzer.stop();
+        } finally {
+            if (s != null)
+                s.close();
+        }
+        Assert.assertEquals(14, count.get());
+    }
+
+    @Test
+    public void testFileTrackingAnalyzer() throws IOException {
+        final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder =
+                new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                        .setLogFormat(AccessLogFormat)
+                        .setLogFilename(accessLogUrl.getFile())
+                        .setTrackerReadSize(TrackerReadSize)
+                        .allowTracking("access-log-test-track.log");
+        String trackingFilename = new File(accessLogUrl.getPath()).getParentFile().getAbsolutePath() + "/access-log-test-track.log";
+        File f = new File(trackingFilename);
+        if (f.exists())
+            f.delete();
+
+        final AtomicInteger count = new AtomicInteger();
+        StatsDelegate reporter = new StatsDelegate<String>() {
+            @Override
+            public void delegate(String input) {
+                Assert.assertNotNull(input);
+                count.incrementAndGet();
+                System.out.println(input);
+            }
+        };
+        InputStream s = null;
+        try {
+            s = accessLogUrl.openStream();
+            int total = s.available();
+            for (int i = 0; i < total / TrackerReadSize + 1; i++) {
+                LogStatsAnalyzer analyzer = new AccessLogStatsAnalyzer(builder.build());
+                analyzer.start();
+                analyzer.analyze(reporter);
+                analyzer.stop();
+            }
         } finally {
             if (s != null)
                 s.close();
