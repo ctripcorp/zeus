@@ -77,12 +77,6 @@ public class OperationResource {
     @Resource
     private CertificateInstaller certificateInstaller;
 
-    @GET
-    @Path("/clean")
-    public Response clean(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception {
-        statusGroupServerDao.deleteByUp(new StatusGroupServerDo().setUp(false));
-        return Response.status(200).entity("Suc").type(MediaType.APPLICATION_JSON).build();
-    }
 
     @GET
     @Path("/upServer")
@@ -409,7 +403,7 @@ public class OperationResource {
             }
         }
 
-        List<GroupStatus> statuses = groupStatusService.getGroupStatus(groupId);
+        List<GroupStatus> statuses = groupStatusService.getOnlineGroupStatus(groupId);
         //ToDo set group name and slb name
         GroupStatus groupStatusList = new GroupStatus().setGroupId(groupId).setSlbName("");
         for (GroupStatus groupStatus : statuses) {

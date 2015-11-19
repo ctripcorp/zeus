@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.handler.GroupServerValidator;
@@ -24,7 +25,7 @@ import java.util.Set;
 @Component("groupModelValidator")
 public class DefaultGroupValidator implements GroupValidator {
     @Resource
-    private ActiveConfService activeConfService;
+    private ActivateService activateService;
     @Resource
     private VirtualServerValidator virtualServerModelValidator;
     @Resource
@@ -64,9 +65,9 @@ public class DefaultGroupValidator implements GroupValidator {
 
     @Override
     public void removable(Long targetId) throws Exception {
-        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(new Long[]{targetId});
-        if (l.size() > 0)
+        if(activateService.isGroupActivated(targetId,null)){
             throw new ValidationException("Group must be deactivated before deletion.");
+        }
     }
 
     @Override
