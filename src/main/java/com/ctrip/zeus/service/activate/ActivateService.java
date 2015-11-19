@@ -71,6 +71,22 @@ public interface ActivateService extends Repository {
      * @throws Exception
      */
     public Map<Long,Boolean> isGroupsActivated(Long[] groupIds,Long vsId) throws Exception;
+    /**
+     * group is activated
+     * @param vsId the  vsId
+     * @param slbId the  slbId
+     * @return
+     * @throws Exception
+     */
+    public boolean isVsActivated(Long vsId,Long slbId) throws  Exception;
+
+    /**
+     * group is activated
+     * @param vsId the  vsId
+     * @return
+     * @throws Exception
+     */
+    public boolean hasActivatedGroupWithVsId(Long vsId) throws  Exception;
 
     /**
      * get activating groups
@@ -107,12 +123,34 @@ public interface ActivateService extends Repository {
 
     public Group getActivatedGroup(Long groupId,Long vsId)throws Exception;
     /**
+     * get activated groups
+     * @param groupIds , the Group ids
+     * @param slbId , the slbId
+     * @return groups
+     */
+
+    public List<Group> getActivatedGroups(Long[] groupIds,Long slbId)throws Exception;
+    /**
+     * get activated groups by vses
+     * @param vsIds , the vsIds
+     * @return groups
+     */
+
+    public Map<Long,List<Group>> getActivatedGroupsByVses(Long[] vsIds)throws Exception;
+    /**
      * get activated vs
      * @param vsId , the vsId
      * @return groups
      */
 
     public VirtualServer getActivatedVirtualServer(Long vsId)throws Exception;
+    /**
+     * get activated vs by slbId
+     * @param slbId , the vsId
+     * @return groups
+     */
+
+    public Map<Long,VirtualServer> getActivatedVirtualServerBySlb(Long slbId)throws Exception;
 
 
     /**

@@ -9,6 +9,8 @@
         <status>ddd</status>
         <target-slb-id>12345678901</target-slb-id>
         <version>1</version>
+        <slb-virtual-server-id>12345678901</slb-virtual-server-id>
+        <resources>resources</resources>
         <fail-cause>fail</fail-cause>
         <create-time>2013-05-20 13:34:00</create-time>
     </ops-task>

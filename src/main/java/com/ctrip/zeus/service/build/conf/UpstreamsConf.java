@@ -64,7 +64,7 @@ public class UpstreamsConf {
             String ip = as.getIp();
             boolean isDown = allDownServers.contains(ip);
             if (!isDown) {
-                isDown = !allUpGroupServers.contains(slb.getId() + "_" + vs.getId() + "_" + group.getId() + "_" + ip);
+                isDown = !allUpGroupServers.contains(vs.getId() + "_" + group.getId() + "_" + ip);
             }
 
             AssertUtils.assertNotNull(as.getPort(), "GroupServer Port config is null! virtual server " + vs.getId());

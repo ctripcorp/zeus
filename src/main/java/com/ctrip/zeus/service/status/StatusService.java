@@ -72,6 +72,7 @@ public interface StatusService extends Repository {
 
     /**
      * Init group server status for new/update group
+     * only used in group resource api
      * @param groupId Group Id
      * @param vsIds vsIds
      * @param ips server ips
@@ -81,6 +82,7 @@ public interface StatusService extends Repository {
 
     /**
      * clean group Server Status
+     * only used in group delete api
      * @param groupId Group Id
      * @throws Exception
      */

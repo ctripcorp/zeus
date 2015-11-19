@@ -56,139 +56,126 @@ public class BuildServiceImpl implements BuildService {
     private ActivateService activateService;
     @Resource
     private AutoFiller autoFiller;
+    @Resource
+    private ConfGroupActiveDao confGroupActiveDao;
+
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public boolean build(Long slbId , int ticket) throws Exception {
-        int paddingTicket = buildInfoService.getPaddingTicket( slbId );
-        ticket = paddingTicket>ticket?paddingTicket:ticket;
-        if (!buildInfoService.updateTicket(slbId, ticket))
-        {
-            return false;
-        }
-        nginxConfService.build(slbId, ticket);
-        return  true;
-    }
-
-    @Override
-    public List<VirtualServer> getNeedBuildVirtualServers(Long slbId,HashMap<Long , Group> activatingGroups , Set<Long>groupList)throws Exception{
+    public Map<Long,VirtualServer> getNeedBuildVirtualServers(Long slbId,
+                                                          Map<Long,VirtualServer> activatingVses,
+                                                          Map<Long,VirtualServer> activatedVses,
+                                                          HashMap<Long , Group> activatingGroups ,
+                                                          Set<Long>groupList) throws Exception {
         Set<Long> buildVirtualServer = new HashSet<>();
         List<Group> groups = new ArrayList<>();
-        List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupList.toArray(new Long[]{}),slbId);
-        for (String content :  l ){
-            Group tmpGroup = DefaultSaxParser.parseEntity(Group.class, content);
-//            if (tmpGroup!=null&&!activatingGroups.containsKey(tmpGroup.getId())) {
-            if (tmpGroup!=null) {
-                groups.add(tmpGroup);
-            }
-        }
+        List<Group> activatedGroups = activateService.getActivatedGroups(groupList.toArray(new Long[]{}),slbId);
+        groups.addAll(activatedGroups);
         groups.addAll(activatingGroups.values());
+        Map<Long,VirtualServer> allActivatedVses;
+        if (activatedVses!=null){
+            allActivatedVses = activatedVses;
+        }else {
+            allActivatedVses = activateService.getActivatedVirtualServerBySlb(slbId);
+        }
         for (Group group : groups) {
+            boolean flag = false ;
             for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
-                if (gvs.getVirtualServer().getSlbId().equals(slbId))
+                if (allActivatedVses.containsKey(gvs.getVirtualServer().getId())||activatingVses.containsKey(gvs.getVirtualServer().getId()))
                 {
+                    flag = true ;
                     buildVirtualServer.add(gvs.getVirtualServer().getId());
                 }
             }
+            if (!flag){
+                throw new Exception("Not Found Related Vs for Group:"+group.getId());
+            }
         }
-        Slb slb = activateService.getActivatedSlb(slbId);
-
-        List<VirtualServer> result = new ArrayList<>();
-        List<VirtualServer> vses = slb.getVirtualServers();
-        for (VirtualServer vs : vses){
-            if (buildVirtualServer.contains(vs.getId())){
-                result.add(vs);
+        if (activatedVses != null){
+            buildVirtualServer.addAll(activatedVses.keySet());
+        }
+        Map<Long,VirtualServer> result = new HashMap<>();
+        for (Long vsId : buildVirtualServer){
+            if (activatingVses.containsKey(vsId)){
+                result.put(vsId,activatingVses.get(vsId));
+            }else if (allActivatedVses.containsKey(vsId)){
+                result.put(vsId,allActivatedVses.get(vsId));
             }
         }
         return result;
     }
 
     @Override
-    public Map<Long, List<Group>> getInfluencedVsGroups(Long slbId,HashMap<Long,Group>activatingGroups,List<VirtualServer>buildVirtualServer,Set<Long> deactivateGroup)throws Exception{
-        Map<Long, Map<Long,Integer>> groupMap = new HashMap<>();
-        List<ConfGroupSlbActiveDo> groupSlbActiveList = confGroupSlbActiveDao.findBySlbId(slbId , ConfGroupSlbActiveEntity.READSET_FULL);
-        if (groupSlbActiveList==null){
-            groupSlbActiveList=new ArrayList<>();
-        }
-        for (ConfGroupSlbActiveDo groupSlb : groupSlbActiveList)
-        {
-            if (activatingGroups.containsKey(groupSlb.getGroupId())){
-                continue;
-            }
-            if (deactivateGroup.contains(groupSlb.getGroupId())){
-                continue;
-            }
-            long vs = groupSlb.getSlbVirtualServerId();
-            Map<Long,Integer> groups = groupMap.get(vs);
-            if (groups==null)
-            {
-                groups = new HashMap<>();
-                groupMap.put(vs,groups);
+    public Map<Long, List<Group>> getInfluencedVsGroups(Long slbId,
+                                                        HashMap<Long,Group>activatingGroups,
+                                                        Map<Long,VirtualServer> buildVirtualServer,
+                                                        Set<Long> deactivateGroup)throws Exception{
+        Map<Long, List<Group>> result = new HashMap<>();
+        Map<Long,List<Group>> dbGroups = activateService.getActivatedGroupsByVses(buildVirtualServer.keySet().toArray(new Long[]{}));
+        final Map<String,Integer> vsGroupPriority = new HashMap<>();
+        for (Long vsId : buildVirtualServer.keySet()){
+            List<Group> activatedGroups = dbGroups.get(vsId);
+            List<Group> groupList = result.get(vsId);
+            if (groupList == null){
+                groupList = new ArrayList<>();
+                result.put(vsId,groupList);
             }
 
-            groups.put(groupSlb.getGroupId(),groupSlb.getPriority());
-        }
-        for (Long id : activatingGroups.keySet()){
-            List<GroupVirtualServer> groupVirtualServers=activatingGroups.get(id).getGroupVirtualServers();
-            for (GroupVirtualServer gvs : groupVirtualServers){
-                if (!gvs.getVirtualServer().getSlbId().equals(slbId)){
+            for (Group g : activatedGroups){
+                if (deactivateGroup.contains(g.getId())){
                     continue;
                 }
-                Long  vsid = gvs.getVirtualServer().getId();
-                Map<Long,Integer> groups = groupMap.get(vsid);
-                if (groups==null)
-                {
-                    groups = new HashMap<>();
-                    groupMap.put(vsid,groups);
+                if (activatingGroups.containsKey(g.getId())){
+                    continue;
                 }
-                groups.put(id,gvs.getPriority());
+                for (GroupVirtualServer gv : g.getGroupVirtualServers()){
+                    if (gv.getVirtualServer().getId().equals(vsId)){
+                        vsGroupPriority.put("VS"+vsId+"_"+g.getId(), gv.getPriority());
+                        groupList.add(g);
+                    }
+                }
             }
         }
-
-        Map<Long, List<Group>> groupsMap = new HashMap<>();
-        for (VirtualServer vs : buildVirtualServer){
-            final Map<Long,Integer> groupPriorityMap = groupMap.get(vs.getId());
-
-            List<Group> groupList = new ArrayList<>();
-            List<Long> groupInDb = new ArrayList<>();
-            if (groupPriorityMap==null){
-                groupsMap.put(vs.getId(), groupList);
+        for (Long gid : activatingGroups.keySet()){
+            if (deactivateGroup.contains(gid)){
                 continue;
             }
-            Set<Long> groupIds =groupPriorityMap.keySet();
-            for (Long gid : groupIds){
-                Group group = activatingGroups.get(gid);
-                if (group!=null){
-                    groupList.add(group);
-                }else {
-                    groupInDb.add(gid);
+            Group g = activatingGroups.get(gid);
+            for (GroupVirtualServer gv : g.getGroupVirtualServers()){
+                if (buildVirtualServer.containsKey(gv.getVirtualServer().getId())){
+                    List<Group> list = result.get(gv.getVirtualServer().getId());
+                    if (list == null){
+                        list = new ArrayList<>();
+                        result.put(gv.getVirtualServer().getId(),list);
+                    }
+                    list.add(g);
+                    vsGroupPriority.put("VS"+gv.getVirtualServer().getId()+"_"+g.getId(), gv.getPriority());
+                    break;
                 }
             }
-            List<String> l = activeConfService.getConfGroupActiveContentByGroupIds(groupInDb.toArray(new Long[]{}),slbId);
-            for (String content :  l ){
-                Group tmpGroup = DefaultSaxParser.parseEntity(Group.class, content);
-                autoFiller.autofill(tmpGroup);
-                groupList.add(tmpGroup);
-            }
-            Collections.sort(groupList,new Comparator<Group>(){
+        }
+        for (Long vsId : result.keySet()){
+            final Long vs = vsId;
+            List<Group> groups = result.get(vs);
+            Collections.sort(groups,new Comparator<Group>(){
                 public int compare(Group group0, Group group1) {
-                    if (groupPriorityMap.get(group1.getId())==groupPriorityMap.get(group0.getId()))
+                    if (vsGroupPriority.get("VS"+vs+"_"+group1.getId())==vsGroupPriority.get("VS"+vs+"_"+group0.getId()))
                     {
                         return (int)(group1.getId()-group0.getId());
                     }
-                    return groupPriorityMap.get(group1.getId())-groupPriorityMap.get(group0.getId());
+                    return vsGroupPriority.get("VS"+vs+"_"+group1.getId())-vsGroupPriority.get("VS"+vs+"_"+group0.getId());
                 }
             });
-            groupsMap.put(vs.getId(), groupList);
         }
-        return groupsMap;
+        return result;
     }
 
     @Override
     public void build(Long slbId,
-                      Slb activatedSlb,
-                      List<VirtualServer>buildVirtualServer,
+                      Slb activatingSlb,
+                      Map<Long,VirtualServer>buildVirtualServer,
+                      Set<Long> deactivateVses,
                       Map<Long,List<Group>>groupsMap,
                       Set<String>allDownServers,
                       Set<String>allUpGroupServers
@@ -196,8 +183,8 @@ public class BuildServiceImpl implements BuildService {
         int version = buildInfoService.getTicket(slbId);
         int currentVersion = buildInfoService.getCurrentTicket(slbId);
         Slb slb = null;
-        if (activatedSlb != null){
-            slb = activatedSlb;
+        if (activatingSlb != null){
+            slb = activatingSlb;
         }else{
             slb = activateService.getActivatedSlb(slbId);
         }
@@ -215,7 +202,7 @@ public class BuildServiceImpl implements BuildService {
         Map <Long , NginxConfServerDo> nginxConfServerDoMap = new HashMap<>();
         Map<Long,NginxConfUpstreamDo> nginxConfUpstreamDoMap = new HashMap<>();
 
-        for (VirtualServer vs : buildVirtualServer) {
+        for (VirtualServer vs : buildVirtualServer.values()) {
             List<Group> groups = groupsMap.get(vs.getId());
             if (groups == null) {
                 groups = new ArrayList<>();
@@ -236,13 +223,9 @@ public class BuildServiceImpl implements BuildService {
                     .setContent(upstreamConf)
                     .setVersion(version));
         }
-        List<Long> slbVirtualServers = new ArrayList<>();
-        for (VirtualServer virtualServer: slb.getVirtualServers()){
-            slbVirtualServers.add(virtualServer.getId());
-        }
 
         for (NginxConfServerDo nginxConfServerDo : nginxConfServerDoList){
-            if (!slbVirtualServers.contains(nginxConfServerDo.getSlbVirtualServerId())){
+            if (deactivateVses.contains(nginxConfServerDo.getSlbVirtualServerId())){
                 continue;
             }
             if (!nginxConfServerDoMap.containsKey(nginxConfServerDo.getSlbVirtualServerId())){
@@ -250,7 +233,7 @@ public class BuildServiceImpl implements BuildService {
             }
         }
         for (NginxConfUpstreamDo nginxConfUpstreamDo : nginxConfUpstreamDoList){
-            if (!slbVirtualServers.contains(nginxConfUpstreamDo.getSlbVirtualServerId())){
+            if (deactivateVses.contains(nginxConfUpstreamDo.getSlbVirtualServerId())){
                 continue;
             }
             if (!nginxConfUpstreamDoMap.containsKey(nginxConfUpstreamDo.getSlbVirtualServerId())){
@@ -262,25 +245,23 @@ public class BuildServiceImpl implements BuildService {
     }
 
 
-    public List<DyUpstreamOpsData> buildUpstream(Long slbId, Set<String>allDownServers ,Set<String> allUpGroupServers,Group group ) throws Exception {
-        Slb slb = activateService.getActivatedSlb(slbId);
-        AssertUtils.assertNotNull(slb, "Not found slb content by slbId!");
-        HashMap<Long,VirtualServer> tmpVirtualServers = new HashMap<>();
-        for (VirtualServer virtualServer : slb.getVirtualServers()){
-            tmpVirtualServers.put(virtualServer.getId(),virtualServer);
-        }
+    public List<DyUpstreamOpsData> buildUpstream(Long slbId,
+                                                 Map<Long,VirtualServer> buildVirtualServer,
+                                                 Set<String>allDownServers ,
+                                                 Set<String> allUpGroupServers,
+                                                 Group group ) throws Exception {
         List<DyUpstreamOpsData> result = new ArrayList<>();
 
         List<GroupVirtualServer> groupSlbList = group.getGroupVirtualServers();
         VirtualServer vs = null;
         for (GroupVirtualServer groupSlb : groupSlbList )
         {
-            if (!tmpVirtualServers.containsKey(groupSlb.getVirtualServer().getId())){
+            if (!buildVirtualServer.containsKey(groupSlb.getVirtualServer().getId())){
                  continue;
             }
-            vs = tmpVirtualServers.get(groupSlb.getVirtualServer().getId());
-            String upstreambody = UpstreamsConf.buildUpstreamConfBody(slb, vs, group, allDownServers, allUpGroupServers);
-            String upstreamName = UpstreamsConf.buildUpstreamName(slb,vs,group);
+            vs = buildVirtualServer.get(groupSlb.getVirtualServer().getId());
+            String upstreambody = UpstreamsConf.buildUpstreamConfBody(null, vs, group, allDownServers, allUpGroupServers);
+            String upstreamName = UpstreamsConf.buildUpstreamName(null,vs,group);
             result.add(new DyUpstreamOpsData().setUpstreamCommands(upstreambody).setUpstreamName(upstreamName));
         }
 

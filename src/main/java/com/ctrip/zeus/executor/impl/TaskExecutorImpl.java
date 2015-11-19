@@ -6,13 +6,8 @@ import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.service.activate.ActivateService;
-import com.ctrip.zeus.service.activate.ActiveConfService;
-import com.ctrip.zeus.service.activate.ServerGroupService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
-import com.ctrip.zeus.service.model.ArchiveService;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
@@ -30,7 +25,6 @@ import javax.annotation.Resource;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by fanqq on 2015/7/31.
@@ -51,16 +45,15 @@ public class TaskExecutorImpl implements TaskExecutor {
     @Resource
     NginxService nginxService;
     @Resource
-    ServerGroupService serverGroupService;
-    @Resource
     private BuildInfoService buildInfoService;
 
-    private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private HashMap<String , OpsTask> serverOps = new HashMap<>();
     private HashMap<Long , OpsTask> activateGroupOps = new HashMap<>();
+    private HashMap<Long , OpsTask> activateVsOps = new HashMap<>();
     private HashMap<Long , OpsTask> deactivateGroupOps = new HashMap<>();
+    private HashMap<Long , OpsTask> deactivateVsOps = new HashMap<>();
     private HashMap<Long , OpsTask> activateSlbOps = new HashMap<>();
     private HashMap<Long , List<OpsTask>> memberOps = new HashMap<>();
     private HashMap<Long , List<OpsTask>> pullMemberOps = new HashMap<>();
@@ -70,80 +63,108 @@ public class TaskExecutorImpl implements TaskExecutor {
     @Override
     public void execute(Long slbId) {
         DistLock buildLock = null;
+        List<DistLock> resLocks = new ArrayList<>();
         boolean lockflag = false;
         try {
-            logger.info("JobStart:");
-//            List<OpsTask> pendingTasks = taskService.getPendingTasks(slbId);
-//            if (pendingTasks.size()==0){
-//                return;
-//            }
-            buildLock = dbLockFactory.newLock( "TaskWorker_" + slbId );
-            if (lockflag=buildLock.tryLock()){
-                logger.info("tryLockSuccess");
+            buildLock = dbLockFactory.newLock("TaskWorker_" + slbId);
+            if (lockflag = buildLock.tryLock()) {
+                fetchTask(slbId);
+                List<Long> resources = getResources();
+                for (Long res : resources){
+                    DistLock resLock = dbLockFactory.newLock("TaskRes_"+res);
+                    if (resLock.tryLock()){
+                        resLocks.add(resLock);
+                    }else {
+                        for (DistLock lock : resLocks){
+                            lock.unlock();
+                        }
+                        buildLock.unlock();
+                        return;
+                    }
+                }
                 executeJob(slbId);
-            }else {
+            } else {
                 logger.warn("TaskWorker get lock failed! TaskWorker:" + slbId);
             }
-        }catch (Exception e){
-            logger.warn("Executor Job Failed! TaskWorker: " + slbId,e);
-        } finally{
-            if (lockflag){
+        } catch (Exception e) {
+            logger.warn("Executor Job Failed! TaskWorker: " + slbId, e);
+        } finally {
+            if (lockflag) {
                 buildLock.unlock();
             }
-            logger.info("JobEnd:");
+            for (DistLock lock : resLocks){
+                lock.unlock();
+            }
+        }
+    }
+
+    private void fetchTask(Long slbId) {
+        try {
+            tasks = taskService.getPendingTasks(slbId);
+        }catch (Exception e){
+            logger.warn("Task Executor get pending tasks failed! ", e);
         }
     }
 
     private void executeJob(Long slbId) throws Exception{
         HashMap<Long , Group> activatingGroups ;
+        HashMap<Long , VirtualServer> activatingVses;
+        Map<Long , VirtualServer> activatedVses = null;
         Slb activatingSlb ;
-        List<VirtualServer> buildVirtualServer ;
+        Map<Long,VirtualServer> buildVirtualServer ;
         Set<Long> groupList ;
 
         //1. get pending tasks , if size == 0 return
-        try {
-            tasks = taskService.getPendingTasks(slbId);
-        }catch (Exception e){
-            logger.warn("Task Executor get pending tasks failed! ", e);
-            return;
-        }
         if (tasks.size()==0){
             return;
         }
 
         try {
             sortTaskData(slbId);
+            //get activating Objects
             activatingGroups = getActivatingGroups(activateGroupOps);
             activatingSlb = getActivatingSlb(activateSlbOps,slbId);
+            activatingVses = getActivatingVses(activateVsOps,slbId);
+
             //memberOperations of unactivated groups
             preMemberOperation(slbId,memberOps);
+            deactivateVsPreCheck(slbId ,deactivateVsOps,activatingGroups,activateGroupOps);
             groupList = getInfluencedGroups(activatingGroups);
 
+
             if (activatingSlb!=null){
-                buildVirtualServer = activatingSlb.getVirtualServers();
-            }else{
-                buildVirtualServer = buildService.getNeedBuildVirtualServers(slbId,activatingGroups,groupList);
+                activatedVses = activateService.getActivatedVirtualServerBySlb(slbId);
             }
-            if (buildVirtualServer.size()==0){
+
+            buildVirtualServer = buildService.getNeedBuildVirtualServers(slbId,activatingVses,activatedVses,activatingGroups,groupList);
+            if ( buildVirtualServer.size()==0 && activatingSlb==null&&deactivateVsOps.size()==0 ){
                 throw new Exception("Not Found Related Virtual Server.");
+            }
+            for (Long vsId : deactivateVsOps.keySet()){
+                if(buildVirtualServer.containsKey(vsId)){
+                    buildVirtualServer.remove(vsId);
+                }
             }
             Map<Long,List<Group>> groupMap = buildService.getInfluencedVsGroups(slbId,activatingGroups,buildVirtualServer,deactivateGroupOps.keySet());
             Set<String> allDownServers = getAllDownServer();
             Map<Long,Group> groups = new HashMap<>();
+            Map<Long,Long> groupVs = new HashMap<>();
             for (Long vs : groupMap.keySet()){
                 for (Group group : groupMap.get(vs)){
                     groups.put(group.getId(),group);
+                    groupVs.put(group.getId(),vs);
                 }
             }
-            Set<String> allUpGroupServers = getAllUpGroupServers(slbId,groups,activatingGroups);
-            buildService.build(slbId,activatingSlb,buildVirtualServer,groupMap,allDownServers,allUpGroupServers);
+            Set<String> allUpGroupServers = getAllUpGroupServers(buildVirtualServer.keySet(),groups);
+            buildService.build(slbId,activatingSlb,buildVirtualServer,deactivateVsOps.keySet(),groupMap,allDownServers,allUpGroupServers);
             List<Long> vsIds = new ArrayList<>();
-            for (VirtualServer vs : buildVirtualServer){
+            for (VirtualServer vs : buildVirtualServer.values()){
                 vsIds.add(vs.getId());
             }
             Integer slbVersion = getSlbVersion(slbId);
             nginxService.writeALLToDisk(slbId,slbVersion,vsIds);
-            if (activatingSlb!=null||activatingGroups.size()>0||deactivateGroupOps.size()>0){
+            if (activatingSlb!=null||activatingGroups.size()>0||deactivateGroupOps.size()>0
+                    ||activatingVses.size()>0 || deactivateVsOps.size()>0){
                 List<NginxResponse> responses = nginxService.loadAll(slbId,slbVersion);
                 for (NginxResponse response : responses){
                     if (!response.getSucceed()){
@@ -159,7 +180,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                         logger.warn("[dyups-group] Not found groupId:"+groupId +"in groupMap");
                         continue;
                     }
-                    List<DyUpstreamOpsData> dyUpstreamOpsDataList = buildService.buildUpstream(slbId,allDownServers,allUpGroupServers,group);
+                    List<DyUpstreamOpsData> dyUpstreamOpsDataList = buildService.buildUpstream(slbId,buildVirtualServer,allDownServers,allUpGroupServers,group);
                     List<NginxResponse> responses = nginxService.dyops(slbId,dyUpstreamOpsDataList);
                     for (NginxResponse response : responses){
                         if (!response.getSucceed()){
@@ -179,7 +200,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                     }
                 }
             }
-            performTasks(slbId);
+            performTasks(slbId,groupVs);
             updateVersion(slbId);
             setTaskResult(slbId,true,null);
         }catch (Exception e){
@@ -192,6 +213,46 @@ public class TaskExecutorImpl implements TaskExecutor {
             rollBack(slbId);
             throw e;
         }
+
+    }
+
+    private void deactivateVsPreCheck(Long slbId, HashMap<Long, OpsTask> deactivateVsOps,HashMap<Long , Group> activatingGroups,HashMap<Long, OpsTask> activateGroupOps)throws Exception{
+        Set<Long> keySet = new HashSet<>(deactivateVsOps.keySet());
+        for (Long id : keySet ){
+            OpsTask task = deactivateVsOps.get(id);
+            if (!activateService.isVsActivated(task.getSlbVirtualServerId(),slbId)){
+                setTaskFail(task,"[Deactivate Vs] Vs is unactivated!");
+                deactivateVsOps.remove(id);
+            }
+        }
+        List<Long> groups = new ArrayList<>();
+        for (Group group : activatingGroups.values()){
+            for (GroupVirtualServer gvs : group.getGroupVirtualServers()){
+                if (deactivateVsOps.containsKey(gvs.getVirtualServer().getId())){
+                    groups.add(group.getId());
+                }
+            }
+        }
+        for (Long groupId : groups){
+            setTaskFail(activateGroupOps.get(groupId),"[Vs deactivate Pre Check] Activating Group While Related Vs is deactivating!");
+            activateGroupOps.remove(groupId);
+        }
+    }
+
+    private HashMap<Long, VirtualServer> getActivatingVses(HashMap<Long, OpsTask> activateVsOps, Long slbId) {
+        HashMap<Long,VirtualServer> result = new HashMap<>();
+        Set<Long> vsIds = activateVsOps.keySet();
+        for (Long vsId : vsIds){
+            VirtualServer vs = activateService.getActivatingVirtualServer(vsId,activateVsOps.get(vsId).getVersion());
+            if ( vs != null ){
+                if ( !vs.getSlbId().equals( slbId) ){
+                    setTaskFail(activateVsOps.get(vsId), "Activating Vs Fail! Not Found Vs[" + vsId + "] In Slb: " + slbId);
+                    continue;
+                }
+                result.put(vsId,vs);
+            }
+        }
+        return result;
 
     }
 
@@ -217,25 +278,37 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private void performTasks(Long slbId) throws Exception{
+    private void performTasks(Long slbId,Map<Long,Long> groupVs) throws Exception{
         try {
-            for (OpsTask task :activateGroupOps.values()){
-                if (!task.getStatus().equals(TaskStatus.DOING)){
-                    continue;
-                }
-                activateService.activeGroup(task.getGroupId(),task.getVersion(),slbId);
-            }
             for (OpsTask task :activateSlbOps.values()){
                 if (!task.getStatus().equals(TaskStatus.DOING)){
                     continue;
                 }
                 activateService.activeSlb(task.getSlbId(), task.getVersion());
             }
+            for (OpsTask task : activateVsOps.values()){
+                if (!task.getStatus().equals(TaskStatus.DOING)){
+                    continue;
+                }
+                activateService.activeVirtualServer(task.getSlbVirtualServerId(),task.getVersion(),slbId);
+            }
+            for (OpsTask task : deactivateVsOps.values()){
+                if (!task.getStatus().equals(TaskStatus.DOING)){
+                    continue;
+                }
+                activateService.deactiveVirtualServer(task.getSlbVirtualServerId(), slbId);
+            }
+            for (OpsTask task :activateGroupOps.values()){
+                if (!task.getStatus().equals(TaskStatus.DOING)){
+                    continue;
+                }
+                activateService.activeGroup(task.getGroupId(), task.getVersion(),groupVs.get(task.getGroupId()),slbId);
+            }
             for (OpsTask task :deactivateGroupOps.values()){
                 if (!task.getStatus().equals(TaskStatus.DOING)){
                     continue;
                 }
-                activateService.deactiveGroup(task.getGroupId(), slbId);
+                activateService.deactiveGroup(task.getGroupId(), groupVs.get(task.getGroupId()));
             }
             for (OpsTask task :serverOps.values()){
                 if (!task.getStatus().equals(TaskStatus.DOING)){
@@ -293,14 +366,14 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private Set<String> getAllUpGroupServers(Long slbId,Map<Long, Group> groups, HashMap<Long, Group> activatingGroups) throws Exception {
+    private Set<String> getAllUpGroupServers(Set<Long> vsIds,Map<Long, Group> groups) throws Exception {
 //        Set<String> allUpGroupServers = statusService.findAllUpGroupServersBySlbId(slbId);
-        Set<String> memberOpsUpGroupServers = statusService.fetchGroupServersByVsIdsAndStatusOffset(slbId, StatusOffset.MEMBER_OPS , true);
+        Set<String> memberOpsUpGroupServers = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsIds.toArray(new Long[]{}), StatusOffset.MEMBER_OPS, true);
         Set<Long> tmpid = memberOps.keySet();
         for (Long gid : tmpid){
-            Group groupTmp = activatingGroups.get(gid);
+            Group groupTmp = groups.get(gid);
             if (groupTmp==null){
-                groupTmp = groups.get(gid);
+                throw new Exception("MemberOps: Group Not Found!");
             }
             List<OpsTask> taskList = memberOps.get(gid);
             for (OpsTask opsTask : taskList)
@@ -308,27 +381,27 @@ public class TaskExecutorImpl implements TaskExecutor {
                 String ipList =opsTask.getIpList();
                 String[]ips = ipList.split(";");
                 for (GroupVirtualServer gvs : groupTmp.getGroupVirtualServers()){
-                    if (!gvs.getVirtualServer().getSlbId().equals(slbId)){
+                    if (!vsIds.contains(gvs.getVirtualServer().getId())){
                         continue;
                     }
                     if (opsTask.getUp()){
                         for (String ip : ips){
-                            memberOpsUpGroupServers.add(slbId+"_"+gvs.getVirtualServer().getId()+"_"+gid+"_"+ip);
+                            memberOpsUpGroupServers.add(gvs.getVirtualServer().getId()+"_"+gid+"_"+ip);
                         }
                     }else {
                         for (String ip : ips){
-                            memberOpsUpGroupServers.remove(slbId + "_" + gvs.getVirtualServer().getId() + "_" + gid + "_" + ip);
+                            memberOpsUpGroupServers.remove(gvs.getVirtualServer().getId() + "_" + gid + "_" + ip);
                         }
                     }
                 }
             }
         }
-        Set<String> pullMemberOpsUpGroupServers = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId,StatusOffset.PULL_OPS);
+        Set<String> pullMemberOpsUpGroupServers = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsIds.toArray(new Long[]{}), StatusOffset.PULL_OPS, true);
         tmpid = pullMemberOps.keySet();
         for (Long gid : tmpid){
-            Group groupTmp = activatingGroups.get(gid);
+            Group groupTmp = groups.get(gid);
             if (groupTmp==null){
-                groupTmp = groups.get(gid);
+                throw new Exception("PullOps: Group Not Found!");
             }
             List<OpsTask> taskList = pullMemberOps.get(gid);
             for (OpsTask opsTask : taskList)
@@ -336,16 +409,16 @@ public class TaskExecutorImpl implements TaskExecutor {
                 String ipList =opsTask.getIpList();
                 String[]ips = ipList.split(";");
                 for (GroupVirtualServer gvs : groupTmp.getGroupVirtualServers()){
-                    if (!gvs.getVirtualServer().getSlbId().equals(slbId)){
+                    if (!vsIds.contains(gvs.getVirtualServer().getId())){
                         continue;
                     }
                     if (opsTask.getUp()){
                         for (String ip : ips){
-                            pullMemberOpsUpGroupServers.add(slbId+"_"+gvs.getVirtualServer().getId()+"_"+gid+"_"+ip);
+                            pullMemberOpsUpGroupServers.add(gvs.getVirtualServer().getId()+"_"+gid+"_"+ip);
                         }
                     }else {
                         for (String ip : ips){
-                            pullMemberOpsUpGroupServers.remove(slbId + "_" + gvs.getVirtualServer().getId() + "_" + gid + "_" + ip);
+                            pullMemberOpsUpGroupServers.remove(gvs.getVirtualServer().getId() + "_" + gid + "_" + ip);
                         }
                     }
                 }
@@ -384,7 +457,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
         }
         for (String ip : serverOps.keySet()){
-            List<Long>groupIds = serverGroupService.findAllByIp(ip);
+            Set<Long> groupIds = statusService.findGroupIdByIp(ip);
             result.addAll(groupIds);
         }
         result.addAll(deactivateGroupOps.keySet());
@@ -396,7 +469,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         try {
             Set<Long> memberGroups = new HashSet<>(memberOps.keySet());
             for (Long groupId : memberGroups){
-                if (!activateService.isGroupActivated(groupId,slbId)){
+                if (!activateService.isGroupActivated(groupId,null)){
                     List<OpsTask> tasksList = memberOps.get(groupId);
                     for(OpsTask opsTask : tasksList){
                         String ips = opsTask.getIpList();
@@ -409,7 +482,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
             Set<Long> pullMemberGroups = new HashSet<>(pullMemberOps.keySet());
             for (Long groupId : pullMemberGroups){
-                if (!activateService.isGroupActivated(groupId,slbId)){
+                if (!activateService.isGroupActivated(groupId,null)){
                     List<OpsTask> tasksList = pullMemberOps.get(groupId);
                     for(OpsTask opsTask : tasksList){
                         String ips = opsTask.getIpList();
@@ -473,6 +546,8 @@ public class TaskExecutorImpl implements TaskExecutor {
         memberOps.clear();
         deactivateGroupOps.clear();
         pullMemberOps.clear();
+        activateVsOps.clear();
+        deactivateVsOps.clear();
         for (OpsTask task : tasks){
             task.setStatus(TaskStatus.DOING);
             //Activate group
@@ -509,11 +584,33 @@ public class TaskExecutorImpl implements TaskExecutor {
             if (task.getOpsType().equals(TaskOpsType.DEACTIVATE_GROUP)){
                 deactivateGroupOps.put(task.getGroupId(),task);
             }
+            //deactivate vs
+            if (task.getOpsType().equals(TaskOpsType.DEACTIVATE_VS)){
+                deactivateVsOps.put(task.getSlbVirtualServerId(),task);
+            }
+            //activate vs
+            if (task.getOpsType().equals(TaskOpsType.ACTIVATE_VS)){
+                activateVsOps.put(task.getSlbVirtualServerId(),task);
+            }
         }
     }
     private void setTaskFail(OpsTask task,String failcause){
         task.setStatus(TaskStatus.FAIL);
         task.setFailCause(failcause);
         logger.warn("[Task Fail] OpsTask: Type["+task.getOpsType()+"],FailCause:"+failcause);
+    }
+
+    public  List<Long> getResources() {
+        List<Long> resources = new ArrayList<>();
+        Set<Long> tmp = new HashSet<>();
+        for (OpsTask task : tasks){
+            if (task.getResources()!=null){
+                tmp.add(Long.parseLong(task.getResources()));
+            }
+            tmp.add(task.getTargetSlbId());
+        }
+        resources.addAll(tmp);
+        Collections.sort(resources);
+        return resources;
     }
 }

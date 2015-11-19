@@ -49,7 +49,7 @@ public class TaskManager {
             if (results != null) {
                 for (TaskResult taskResult : results){
                     if (!taskResult.isSuccess()){
-                        throw new Exception("Some Task Failed! TaskResults: "+taskResult.toString());
+                        throw new Exception("Some Task Failed! TaskResults: "+String.format(TaskResult.JSON,taskResult));
                     }
                 }
                 return results;

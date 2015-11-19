@@ -117,11 +117,10 @@ public class LocationConf {
     private static String getPath(Slb slb, VirtualServer vs, Group group) throws Exception{
         String res=null;
         for (GroupVirtualServer groupSlb : group.getGroupVirtualServers()) {
-            if (slb.getId().equals(groupSlb.getVirtualServer().getSlbId()) && vs.getId().equals(groupSlb.getVirtualServer().getId())) {
+            if (vs.getId().equals(groupSlb.getVirtualServer().getId())) {
                 res= groupSlb.getPath();
             }
         }
-
         AssertUtils.assertNotNull(res, "Location path is null,Please check your configuration of SlbName:[" + slb.getName() + "] VirtualServer :[" + vs.getId() + "]");
         return res;
     }
@@ -129,7 +128,7 @@ public class LocationConf {
     private static String getRewrite(Slb slb, VirtualServer vs, Group group) throws Exception{
         String res=null;
         for (GroupVirtualServer groupSlb : group.getGroupVirtualServers()) {
-            if (slb.getId().equals(groupSlb.getVirtualServer().getSlbId()) && vs.getId().equals(groupSlb.getVirtualServer().getId())) {
+            if (vs.getId().equals(groupSlb.getVirtualServer().getId())) {
                 res= groupSlb.getRewrite();
             }
         }

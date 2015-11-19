@@ -1,15 +1,20 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.client.LocalClient;
-import com.ctrip.zeus.client.StatusClient;
+import com.ctrip.zeus.dal.core.ConfSlbActiveDao;
+import com.ctrip.zeus.dal.core.ConfSlbActiveDo;
+import com.ctrip.zeus.dal.core.ConfSlbActiveEntity;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.nginx.entity.S;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.status.GroupStatusService;
+import com.ctrip.zeus.service.status.HealthCheckStatusService;
 import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
@@ -39,72 +44,103 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Resource
     SlbRepository slbRepository;
     @Resource
+    SlbCriteriaQuery slbCriteriaQuery;
+    @Resource
+    GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
     GroupRepository groupRepository;
     @Resource
     StatusService statusService;
     @Resource
+    ConfSlbActiveDao confSlbActiveDao;
+    @Resource
     private ActivateService activateService;
     @Resource
     private ActiveConfService activeConfService;
+    @Resource
+    private HealthCheckStatusService healthCheckStatusService;
 
     private Logger LOGGER = LoggerFactory.getLogger(GroupStatusServiceImpl.class);
 
     @Override
-    public List<GroupStatus> getAllGroupStatus() throws Exception {
+    public List<GroupStatus> getAllOnlineGroupsStatus() throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        List<Slb> slbList = slbRepository.list();
-        for (Slb slb : slbList) {
-            result.addAll(getAllGroupStatus(slb.getId()));
+        List<ConfSlbActiveDo> slbList = confSlbActiveDao.findAll(ConfSlbActiveEntity.READSET_FULL);
+        for (ConfSlbActiveDo slb : slbList) {
+            result.addAll(getOnlineGroupsStatusBySlbId(slb.getSlbId()));
         }
         return result;
     }
-
     @Override
-    public List<GroupStatus> getAllGroupStatus(Long slbId) throws Exception {
+    public List<GroupStatus> getAllOfflineGroupsStatus() throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        List<Group> groups = groupRepository.list(slbId);
-        List<Long> list = new ArrayList<>();
-        Set<Long> groupIds = new HashSet<>();
-        for (Group group : groups) {
-            groupIds.add(group.getId());
+        Set<Long> slbList = slbCriteriaQuery.queryAll();
+        for (Long slbId : slbList) {
+            result.addAll(getOfflineGroupsStatusBySlbId(slbId));
         }
+        return result;
+    }
+    @Override
+    public List<GroupStatus> getOnlineGroupsStatusBySlbId(Long slbId) throws Exception {
+        List<GroupStatus> result = new ArrayList<>();
         Set<Long> activated = activeConfService.getGroupIdsBySlbId(slbId);
-        if (activated != null)
+        if (activated == null || activated.size() == 0 )
         {
-            groupIds.addAll(activated);
-        }
-        list.addAll(groupIds);
-        if ( list.size() == 0 ){
             return result;
         }
-        GroupStatusList appStatus = getGroupStatus(list, slbId);
-        result.addAll(appStatus.getGroupStatuses());
+        result = getOnlineGroupsStatus(activated, slbId);
+        return result;
+    }
+    @Override
+    public List<GroupStatus> getOfflineGroupsStatusBySlbId(Long slbId) throws Exception {
+        List<GroupStatus> result = new ArrayList<>();
+        Set<Long> activated = groupCriteriaQuery.queryBySlbId(slbId);
+        if (activated == null || activated.size() == 0 )
+        {
+            return result;
+        }
+        result = getOfflineGroupsStatus(activated, slbId);
         return result;
     }
 
     @Override
-    public List<GroupStatus> getGroupStatus(Long groupId) throws Exception {
+    public List<GroupStatus> getOnlineGroupStatus(Long groupId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        List<Slb> slbList = slbRepository.listByGroups(new Long[]{groupId});
-        List<Long> list = new ArrayList<>();
-        list.add(groupId);
-        for (Slb slb : slbList) {
-            result.addAll(getGroupStatus(list, slb.getId()).getGroupStatuses());
+        Set<Long> slbIds = activeConfService.getSlbIdsByGroupId(groupId);
+        Set<Long> gids = new HashSet<>();
+        gids.add(groupId);
+        for (Long slb : slbIds) {
+            result.addAll(getOnlineGroupsStatus(gids, slb));
         }
         return result;
     }
     @Override
-    public GroupStatusList getLocalGroupStatus(List<Long> groupIds , Long slbId) throws Exception
+    public List<GroupStatus> getOfflineGroupStatus(Long groupId) throws Exception {
+        List<GroupStatus> result = new ArrayList<>();
+        Set<Long> slbIds = slbCriteriaQuery.queryByGroups(new Long[]{groupId});
+        Set<Long> gids = new HashSet<>();
+        gids.add(groupId);
+        for (Long slb : slbIds) {
+            result.addAll(getOfflineGroupsStatus(gids, slb));
+        }
+        return result;
+    }
+    @Override
+    public List<GroupStatus> getOnlineGroupsStatus(Set<Long> groupIds , Long slbId) throws Exception
     {
-        GroupStatusList res = new GroupStatusList();
+        Slb slb = activateService.getActivatedSlb(slbId);
+        AssertUtils.assertNotNull(slb, "slbId not found!");
+        AssertUtils.assertNotEquals(0, slb.getSlbServers().size(), "Slb doesn't have any slb server!");
+        List<Group> groups = activateService.getActivatedGroups(groupIds.toArray(new Long[]{}), slbId);
+        Set<Long> vsId = activeConfService.getVsIdsBySlbId(slbId);
+        List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
-        Slb slb = slbRepository.getById(slbId);
-//        Slb slb = activateService.getActivatedSlb(slbId);
-        AssertUtils.assertNotNull(slb, "slb Id not found!");
-        List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
-        HashMap<Long,Boolean> isActivated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}), slbId);
-        Set<String> allUpGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(slbId, StatusOffset.MEMBER_OPS, true);
-        Set<String> allPullInGroupServerInSlb = statusService.findAllGroupServersBySlbIdAndStatusOffset(slbId, StatusOffset.PULL_OPS);
+
+        Set<String> allUpGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsId.toArray(new Long[]{}), StatusOffset.MEMBER_OPS, true);
+        Set<String> allPullInGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsId.toArray(new Long[]{}), StatusOffset.PULL_OPS, true);
+        Map<String,Boolean> healthCheck = healthCheckStatusService.getHealthCheckStatusBySlbId(slbId);
         Set<String> allDownServers = statusService.findAllDownServers();
 
         for (Group group : groups)
@@ -116,116 +152,86 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             status.setSlbId(slbId);
             status.setGroupName(group.getName());
             status.setSlbName(slb.getName());
-            status.setActivated(isActivated.get(groupId));
+            status.setActivated(true);
 
-            Group activatedGroup = null;
-            Map<String,Integer> ipPort = new HashMap<>();
-            List<String> activatedIps = new ArrayList<>();
-            if (isActivated.get(groupId))
-            {
-                activatedGroup = activateService.getActivatedGroup(groupId,slbId);
-                if (activatedGroup!=null) {
-                    for (GroupServer gs : activatedGroup.getGroupServers()){
-                        ipPort.put(gs.getIp(),gs.getPort());
-                        activatedIps.add(gs.getIp());
-                    }
-                }
-            }
             List<GroupServer> groupServerList = group.getGroupServers();//groupRepository.listGroupServersByGroup(groupId);
-            List<String> ips = new ArrayList<>();
-
-            for (GroupServer gs : groupServerList){
-                ipPort.put(gs.getIp(),gs.getPort());
-                ips.add(gs.getIp());
-            }
-            for (String ip : ipPort.keySet()) {
-                GroupServerStatus serverStatus = getGroupServerStatus(groupId, slbId, ip, ipPort.get(ip),allDownServers,allUpGroupServerInSlb,allPullInGroupServerInSlb,group);
-                if (activatedIps.contains(ip)&&ips.contains(ip)){
-                    serverStatus.setDiscription("Activated");
-                }else if (!activatedIps.contains(ip)&&ips.contains(ip)){
-                    serverStatus.setDiscription("To Activate");
-                }else if (activatedIps.contains(ip)&&!ips.contains(ip)){
-                    serverStatus.setDiscription("To Deactivate");
+            Long gvsId = null;
+            for (GroupVirtualServer gv : group.getGroupVirtualServers()){
+                if (vsId.contains(gv.getVirtualServer().getId())){
+                    gvsId = gv.getVirtualServer().getId();
+                    break;
                 }
-                status.addGroupServerStatus(serverStatus);
             }
-            res.addGroupStatus(status);
+            for (GroupServer gs : groupServerList){
+                GroupServerStatus groupServerStatus = new GroupServerStatus();
+                groupServerStatus.setIp(gs.getIp());
+                groupServerStatus.setPort(gs.getPort());
+                String key = gvsId + "_" + groupId +"_"+gs.getIp();
+                boolean memberUp = allUpGroupServerInSlb.contains(key);
+                boolean serverUp = !allDownServers.contains(gs.getIp());
+                boolean pullIn = allPullInGroupServerInSlb.contains(key);
+                groupServerStatus.setServer(serverUp);
+                groupServerStatus.setMember(memberUp);
+                groupServerStatus.setPull(pullIn);
+                groupServerStatus.setUp(healthCheck.containsKey(key)?healthCheck.get(key):memberUp&&serverUp&&pullIn);
+                status.addGroupServerStatus(groupServerStatus);
+            }
+            res.add(status);
         }
-        res.setTotal(res.getGroupStatuses().size());
         return res;
     }
     @Override
-    public GroupStatusList getGroupStatus(List<Long> groupIds, Long slbId) throws Exception {
+    public List<GroupStatus> getOfflineGroupsStatus(Set<Long> groupIds , Long slbId) throws Exception
+    {
         Slb slb = slbRepository.getById(slbId);
         AssertUtils.assertNotNull(slb, "slbId not found!");
         AssertUtils.assertNotEquals(0, slb.getSlbServers().size(), "Slb doesn't have any slb server!");
-        int index = ThreadLocalRandom.current().nextInt(slb.getSlbServers().size());
-        StatusClient client = StatusClient.getClient("http://"+slb.getSlbServers().get(index).getIp()+":"+adminServerPort.get());
-        return client.getGroupStatus(groupIds,slbId);
-    }
 
-    @Override
-    public GroupStatus getGroupStatus(Long groupId, Long slbId) throws Exception {
-        List<Long> list = new ArrayList<>();
-        list.add(groupId);
-        GroupStatusList res = getGroupStatus(list,slbId);
-        if (res!=null&&!res.getGroupStatuses().isEmpty())
+        List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
+        Set<Long> vsId = virtualServerCriteriaQuery.queryBySlbId(slbId);
+        List<GroupStatus> res = new ArrayList<>();
+        GroupStatus status = null;
+
+        Set<String> allUpGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsId.toArray(new Long[]{}), StatusOffset.MEMBER_OPS, true);
+        Set<String> allPullInGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsId.toArray(new Long[]{}), StatusOffset.PULL_OPS, true);
+        Map<String,Boolean> healthCheck = healthCheckStatusService.getHealthCheckStatusBySlbId(slbId);
+        Set<String> allDownServers = statusService.findAllDownServers();
+
+        for (Group group : groups)
         {
-            return res.getGroupStatuses().get(0);
-        }else{
-            return new GroupStatus();
-        }
-    }
+            Long groupId = group.getId();
 
+            status = new GroupStatus();
+            status.setGroupId(groupId);
+            status.setSlbId(slbId);
+            status.setGroupName(group.getName());
+            status.setSlbName(slb.getName());
+            status.setActivated(true);
 
-    @Override
-    public GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allUpGroupServerInSlb,Set<String> allPullInGroupServerInSlb ,Group group) throws Exception {
-
-        GroupServerStatus groupServerStatus = new GroupServerStatus();
-        groupServerStatus.setIp(ip);
-        groupServerStatus.setPort(port);
-        StringBuilder sb = new StringBuilder(64);
-        sb.append(slbId).append("_").append(group.getGroupVirtualServers().get(0).getVirtualServer().getId()).append("_").append(groupId).append("_").append(ip);
-
-        boolean memberUp = allUpGroupServerInSlb.contains(sb.toString());
-        boolean pullIn = allPullInGroupServerInSlb.contains(sb.toString());
-        boolean serverUp = !allDownServers.contains(ip);
-        boolean backendUp = getUpstreamStatus(groupId,ip,memberUp,serverUp,pullIn);
-
-        groupServerStatus.setServer(serverUp);
-        groupServerStatus.setMember(memberUp);
-        groupServerStatus.setPull(pullIn);
-        groupServerStatus.setUp(backendUp);
-
-        return groupServerStatus;
-    }
-
-
-    //TODO: should include port to get accurate upstream
-    private boolean getUpstreamStatus(Long groupId, String ip , boolean memberUp , boolean serverUp ,boolean pullIn) throws Exception {
-        UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
-        List<S> servers = upstreamStatus.getServers().getServer();
-        String upstreamNameEndWith = "_"+groupId;
-        for (S server : servers) {
-            if (!server.getUpstream().endsWith(upstreamNameEndWith))
-            {
-                continue;
-            }
-            String ipPort = server.getName();
-            String[] ipPorts = ipPort.split(":");
-            if (ipPorts.length == 2){
-                if (ipPorts[0].equals(ip)){
-                    boolean flag = "up".equalsIgnoreCase(server.getStatus());
-                    if (!(memberUp&&serverUp&&pullIn)&&flag)
-                    {
-                        LOGGER.error("nginx status api return status while memberUp or serverUp or pull is down! ip:"+ip+" groupId:"+groupId);
-                    }
-                    return flag;
+            List<GroupServer> groupServerList = group.getGroupServers();//groupRepository.listGroupServersByGroup(groupId);
+            Long gvsId = null;
+            for (GroupVirtualServer gv : group.getGroupVirtualServers()){
+                if (vsId.contains(gv.getVirtualServer().getId())){
+                    gvsId = gv.getVirtualServer().getId();
+                    break;
                 }
             }
+            for (GroupServer gs : groupServerList){
+                GroupServerStatus groupServerStatus = new GroupServerStatus();
+                groupServerStatus.setIp(gs.getIp());
+                groupServerStatus.setPort(gs.getPort());
+                String key = gvsId + "_" + groupId +"_"+gs.getIp();
+                boolean memberUp = allUpGroupServerInSlb.contains(key);
+                boolean serverUp = !allDownServers.contains(gs.getIp());
+                boolean pullIn = allPullInGroupServerInSlb.contains(key);
+                groupServerStatus.setServer(serverUp);
+                groupServerStatus.setMember(memberUp);
+                groupServerStatus.setPull(pullIn);
+                groupServerStatus.setUp(healthCheck.containsKey(key)?healthCheck.get(key):memberUp&&serverUp&&pullIn);
+                status.addGroupServerStatus(groupServerStatus);
+            }
+            res.add(status);
         }
-        //Not found status from nginx , ip is mark down or health check is disable
-        // return memberUp&&serverUp
-        return memberUp&&serverUp&&pullIn;
+        return res;
     }
 }

@@ -8,7 +8,6 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.activate.ActiveConfService;
-import com.ctrip.zeus.service.activate.GroupActivateConfRewrite;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
@@ -62,8 +61,6 @@ public class ActivateResource {
     private ResponseHandler responseHandler;
     @Resource
     private ActiveConfService activeConfService;
-    @Resource
-    private GroupActivateConfRewrite groupActivateConfRewrite;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
 
@@ -174,12 +171,6 @@ public class ActivateResource {
         }
         return responseHandler.handle(resultList,hh.getMediaType());
 
-    }
-    @GET
-    @Path("/group/rewriteConf")
-    public Response rewriteConf(@Context HttpServletRequest request,@Context HttpHeaders hh) throws Exception {
-        groupActivateConfRewrite.rewriteAllGroupActivteConf();
-        return Response.ok().entity("RewriteSuccess").build();
     }
 
 }

@@ -2,6 +2,7 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="conf-group-active" table="conf_group_active" alias="cga">
         <var name="ids" value-type="Long[]"/>
+        <var name="slb-virtual-server-ids" value-type="Long[]"/>
         <query-defs>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
@@ -46,6 +47,28 @@
                     FROM <TABLE/>
                         WHERE <FIELD name='group-id'/> = ${group-id}
                         AND <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-group-ids-and-slb-virtual-server-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="slb-virtual-server-ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
+                        AND <FIELD name='slb-virtual-server-id'/> in <IN>${slb-virtual-server-ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-byslb-virtual-server-ids" type="SELECT" multiple="true">
+                <param name="slb-virtual-server-ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-virtual-server-id'/> in <IN>${slb-virtual-server-ids}</IN>
                     ]]>
                 </statement>
             </query>
@@ -162,6 +185,14 @@
                         content = values(content),
                         version = values(version),
                         <FIELD name="data-change-last-time"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
                     ]]>
                 </statement>
             </query>
