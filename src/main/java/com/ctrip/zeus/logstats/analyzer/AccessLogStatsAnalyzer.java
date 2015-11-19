@@ -28,11 +28,15 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     private final LogParser logParser;
 
     public AccessLogStatsAnalyzer() throws IOException {
-        config = new LogStatsAnalyzerConfigBuilder()
+        this(new LogStatsAnalyzerConfigBuilder()
                 .setLogFormat(AccessLogFormat)
                 .setLogFilename("/opt/app/nginx/access.log")
                 .setTrackerReadSize(TrackerReadSize)
-                .build();
+                .build());
+    }
+
+    public AccessLogStatsAnalyzer(LogStatsAnalyzerConfig config) {
+        this.config = config;
         logTracker = config.getLogTracker();
         logParser = new AccessLogParser(config.getLineFormats());
     }
@@ -43,22 +47,32 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     }
 
     @Override
+    public void start() throws IOException {
+        logTracker.start();
+    }
+
+    @Override
+    public void stop() throws IOException {
+        logTracker.stop();
+    }
+
+    @Override
     public String analyze() throws IOException {
         String raw = logTracker.move();
         return JsonStringWriter.write(logParser.parse(raw));
     }
 
     @Override
-    public void analyze(final StatsDelegate<String> delegate) throws IOException {
+    public void analyze(final StatsDelegate<String> delegator) throws IOException {
         logTracker.fastMove(new StatsDelegate<String>() {
             @Override
             public void delegate(String input) {
-                delegate(JsonStringWriter.write(logParser.parse(input)));
+                delegator.delegate(JsonStringWriter.write(logParser.parse(input)));
             }
         });
     }
 
-    private class LogStatsAnalyzerConfigBuilder {
+    public static class LogStatsAnalyzerConfigBuilder {
         private String logFormat;
         private String logFilename;
         private int trackerReadSize;

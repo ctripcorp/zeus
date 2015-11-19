@@ -17,14 +17,13 @@ import java.util.List;
  */
 public class LogParsingTest {
 
-    private final String accessLogFormat =
+    private static final String AccessLogFormat =
             "[$time_local] $host $hostname $server_addr $request_method $uri " +
                     "\"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for " +
                     "$server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" " +
                     "$host $status $body_bytes_sent $request_time $upstream_response_time " +
                     "$upstream_addr $upstream_status";
     private final String log = "[17/Nov/2015:15:10:44 +0800] ws.you.ctripcorp.com vms09191 10.8.95.27 POST /gsapi/api/xml/GetRecmdProduct \"-\" 80 - 10.8.106.66 - HTTP/1.1 \"-\" \"-\" \"-\" ws.you.ctripcorp.com 200 521 0.042 0.039 10.8.168.228:80 200";
-
     @Test
     public void testFormatParsing() {
         String[] expectedKeys = {"time_local", "host", "hostname", "server_addr", "request_method", "uri",
@@ -35,7 +34,7 @@ public class LogParsingTest {
         String expectedPatternString = "\\[(.+)\\]\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+\\\"(.+)\\\"\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+\\\"(.+)\\\"\\s+\\\"(.+)\\\"\\s+\\\"(.+)\\\"\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)";
 
         LineFormat lineFormat = new AccessLogLineFormat();
-        lineFormat.setFormat(accessLogFormat);
+        lineFormat.setFormat(AccessLogFormat);
         String[] actualKeys = lineFormat.getKeys();
         Assert.assertArrayEquals(expectedKeys, actualKeys);
         Assert.assertEquals(expectedPatternString, lineFormat.getPatternString());
@@ -46,7 +45,7 @@ public class LogParsingTest {
         String[] expectedValues = {"17/Nov/2015:15:10:44 +0800", "ws.you.ctripcorp.com", "vms09191", "10.8.95.27", "POST", "/gsapi/api/xml/GetRecmdProduct", "-", "80", "-", "10.8.106.66", "-", "HTTP/1.1", "-", "-", "-", "ws.you.ctripcorp.com", "200", "521", "0.042", "0.039", "10.8.168.228:80", "200"};
 
         LineFormat lineFormat = new AccessLogLineFormat();
-        lineFormat.setFormat(accessLogFormat);
+        lineFormat.setFormat(AccessLogFormat);
         List<LineFormat> formats = new ArrayList<>();
         formats.add(lineFormat);
         final LogParser parser = new AccessLogParser(formats);
@@ -61,7 +60,7 @@ public class LogParsingTest {
     public void testJsonSerializer() {
         String expectedJsonValue = "{\"time_local\":\"17/Nov/2015:15:10:44 +0800\",\"host\":\"ws.you.ctripcorp.com\",\"hostname\":\"vms09191\",\"server_addr\":\"10.8.95.27\",\"request_method\":\"POST\",\"uri\":\"/gsapi/api/xml/GetRecmdProduct\",\"query_string\":\"-\",\"server_port\":\"80\",\"remote_user\":\"-\",\"remote_addr\":\"10.8.106.66\",\"http_x_forwarded_for\":\"-\",\"server_protocol\":\"HTTP/1.1\",\"http_user_agent\":\"-\",\"cookie_COOKIE\":\"-\",\"http_referer\":\"-\",\"status\":\"200\",\"body_bytes_sent\":\"521\",\"request_time\":\"0.042\",\"upstream_response_time\":\"0.039\",\"upstream_addr\":\"10.8.168.228:80\",\"upstream_status\":\"200\"}";
         LineFormat lineFormat = new AccessLogLineFormat();
-        lineFormat.setFormat(accessLogFormat);
+        lineFormat.setFormat(AccessLogFormat);
         List<LineFormat> formats = new ArrayList<>();
         formats.add(lineFormat);
         final LogParser parser = new AccessLogParser(formats);

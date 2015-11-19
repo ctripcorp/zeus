@@ -11,6 +11,10 @@ public interface LogStatsAnalyzer {
 
     LogStatsAnalyzerConfig getConfig();
 
+    void start() throws IOException;
+
+    void stop() throws IOException;
+
     String analyze() throws IOException;
 
     void analyze(StatsDelegate<String> delegate) throws IOException;

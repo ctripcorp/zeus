@@ -17,6 +17,7 @@ public class AccessLogTracker implements LogTracker {
     private final ByteBuffer buffer;
     private RandomAccessFile raf;
     private FileChannel fileChannel;
+    private int offset = 0;
 
     public AccessLogTracker(LogTrackerStrategy strategy) {
         this.strategy = strategy;
@@ -62,7 +63,7 @@ public class AccessLogTracker implements LogTracker {
     }
 
     @Override
-    public void fastMove(final StatsDelegate<String> delegate) throws IOException {
+    public void fastMove(final StatsDelegate<String> delegator) throws IOException {
         buffer.clear();
         try {
             if (fileChannel.read(buffer) == -1)
@@ -73,18 +74,16 @@ public class AccessLogTracker implements LogTracker {
         buffer.flip();
         boolean eol = false;
         int colOffset = 0;
-        int lnOffset = 0;
-
         byte[] line = new byte[size];
         while (buffer.hasRemaining()) {
-            while (!eol) {
+            while (!eol && buffer.hasRemaining()) {
                 byte b;
                 switch (b = buffer.get()) {
                     case -1:
                     case '\n':
                         eol = true;
-                        delegate.delegate(new String(line, 0, colOffset));
-                        lnOffset = ++colOffset;
+                        delegator.delegate(new String(line, 0, colOffset));
+                        offset += ++colOffset;
                         break;
                     case '\r':
                         eol = true;
@@ -92,8 +91,8 @@ public class AccessLogTracker implements LogTracker {
                             buffer.position(colOffset);
                         else
                             colOffset++;
-                        delegate.delegate(new String(line, 0, colOffset));
-                        lnOffset = ++colOffset;
+                        delegator.delegate(new String(line, 0, colOffset));
+                        offset += ++colOffset;
                         break;
                     default:
                         line[colOffset] = b;
@@ -101,7 +100,9 @@ public class AccessLogTracker implements LogTracker {
                         break;
                 } // end of switch
             }// end of while !eol
+            colOffset = 0;
+            eol = false;
         }
-        fileChannel.position(lnOffset);
+        fileChannel.position(offset);
     }
 }
