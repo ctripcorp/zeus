@@ -62,8 +62,25 @@ public class AccessLogTracker implements LogTracker {
     public void start() throws IOException {
         raf = new RandomAccessFile(getLogFilename(), "r");
         fileChannel = raf.getChannel();
-        offset = getOffset();
-        fileChannel.position(offset);
+        if (allowTracking) {
+            // init state
+            RecordOffset curr = getRecordOffset();
+            if (curr.rOffset == 0) {
+                offset = 0;
+                return;
+            }
+            // log rotate must be done
+            if (fileChannel.size() < curr.rOffset)
+                offset = 0;
+            else {
+                // check if log rotate has been done
+                fileChannel.position(curr.rOffset - curr.rValue.getBytes().length - 1);
+                String rafline = raf.readLine();
+                if (rafline.equals(curr.rValue))
+                    offset = curr.rOffset;
+            }
+            fileChannel.position(offset);
+        }
     }
 
     @Override
@@ -97,6 +114,7 @@ public class AccessLogTracker implements LogTracker {
         boolean eol = false;
         int colOffset = 0;
         byte[] line = new byte[size];
+        String fresh = "";
 
         while (buffer.hasRemaining()) {
             while (!eol && buffer.hasRemaining()) {
@@ -105,7 +123,8 @@ public class AccessLogTracker implements LogTracker {
                     case -1:
                     case '\n':
                         eol = true;
-                        delegator.delegate(new String(line, 0, colOffset));
+                        fresh = new String(line, 0, colOffset);
+                        delegator.delegate(fresh);
                         offset += ++colOffset;
                         break;
                     case '\r':
@@ -114,7 +133,8 @@ public class AccessLogTracker implements LogTracker {
                             buffer.position(colOffset);
                         else
                             colOffset++;
-                        delegator.delegate(new String(line, 0, colOffset));
+                        fresh = new String(line, 0, colOffset);
+                        delegator.delegate(fresh);
                         offset += ++colOffset;
                         break;
                     default:
@@ -127,15 +147,16 @@ public class AccessLogTracker implements LogTracker {
             eol = false;
         }
         fileChannel.position(offset);
-        tryLog(offset);
+        tryLog(offset, fresh);
     }
 
-    private void tryLog(Integer offset) {
+    private void tryLog(Integer offset, String value) {
         if (allowTracking) {
             OutputStream os = null;
             try {
                 os = new FileOutputStream(trackingFile);
-                os.write(offset.toString().getBytes());
+                String output = offset.toString() + "\n" + value;
+                os.write(output.getBytes());
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -151,16 +172,19 @@ public class AccessLogTracker implements LogTracker {
         }
     }
 
-    private int getOffset() {
-        int result = offset;
+    private RecordOffset getRecordOffset() {
+        RecordOffset result = new RecordOffset();
+        result.rOffset = offset;
         if (allowTracking) {
             Scanner scanner = null;
             try {
                 scanner = new Scanner(trackingFile);
-                if (scanner.hasNext())
-                    result = scanner.nextInt();
+                if (scanner.hasNextLine())
+                    result.rOffset = Integer.parseInt(scanner.nextLine());
+                if (scanner.hasNextLine())
+                    result.rValue = scanner.nextLine();
             } catch (FileNotFoundException e) {
-                result = 0;
+                result.rOffset = offset;
                 e.printStackTrace();
             } finally {
                 if (scanner != null)
@@ -168,5 +192,10 @@ public class AccessLogTracker implements LogTracker {
             }
         }
         return result;
+    }
+
+    private class RecordOffset {
+        int rOffset;
+        String rValue;
     }
 }
