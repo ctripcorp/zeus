@@ -75,11 +75,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                     if (resLock.tryLock()){
                         resLocks.add(resLock);
                     }else {
-                        for (DistLock lock : resLocks){
-                            lock.unlock();
-                        }
-                        buildLock.unlock();
-                        return;
+                        throw new Exception("Get Resources Failed! ResourceId : " + res);
                     }
                 }
                 executeJob(slbId);
@@ -89,12 +85,13 @@ public class TaskExecutorImpl implements TaskExecutor {
         } catch (Exception e) {
             logger.warn("Executor Job Failed! TaskWorker: " + slbId, e);
         } finally {
-            if (lockflag) {
-                buildLock.unlock();
-            }
             for (DistLock lock : resLocks){
                 lock.unlock();
             }
+            if (lockflag) {
+                buildLock.unlock();
+            }
+
         }
     }
 

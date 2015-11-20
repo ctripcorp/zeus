@@ -1,9 +1,13 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
+import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
@@ -25,6 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -45,6 +50,8 @@ public class DeactivateResource {
     private ActiveConfService activeConfService;
     @Resource
     private TaskManager taskManager;
+    @Resource
+    private ActivateService activateService;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -98,4 +105,29 @@ public class DeactivateResource {
         return responseHandler.handle(resultList, hh.getMediaType());
     }
 
+    @GET
+    @Path("/vs")
+    @Authorize(name="activate")
+    public Response deactivateVirtualServer(@Context HttpServletRequest request,
+                                          @Context HttpHeaders hh,
+                                          @QueryParam("vsId") Long vsId,
+                                          @QueryParam("slbId") Long slbId)throws Exception {
+        List<VirtualServer> vses = activateService.getActivatedVirtualServer(vsId);
+        Long taskId = null;
+        for (VirtualServer vs : vses){
+            if (vs.getSlbId().equals(slbId)){
+                OpsTask activateTask = new OpsTask();
+                activateTask.setSlbVirtualServerId(vsId);
+                activateTask.setCreateTime(new Date());
+                activateTask.setOpsType(TaskOpsType.DEACTIVATE_VS);
+                activateTask.setTargetSlbId(slbId);
+                taskId = taskManager.addTask(activateTask);
+            }
+        }
+        if (taskId == null){
+            throw new ValidationException("Not Found Activated VsId "+vsId + "In Slb "+ slbId);
+        }
+        TaskResult results = taskManager.getResult(taskId,30000L);
+        return responseHandler.handle(results,hh.getMediaType());
+    }
 }

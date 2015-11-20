@@ -143,7 +143,7 @@ public interface ActivateService extends Repository {
      * @return groups
      */
 
-    public VirtualServer getActivatedVirtualServer(Long vsId)throws Exception;
+    public List<VirtualServer> getActivatedVirtualServer(Long vsId)throws Exception;
     /**
      * get activated vs by slbId
      * @param slbId , the vsId

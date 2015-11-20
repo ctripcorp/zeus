@@ -137,7 +137,7 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     @Override
-    public Archive getLatestArchive(Long vsId) throws Exception {
+    public Archive getLatestVsArchive(Long vsId) throws Exception {
         MetaVsArchiveDo d = archiveVsDao.findMaxVersionByVs(vsId, ArchiveVsEntity.READSET_FULL);
         return new Archive().setId(d.getVsId()).setContent(d.getContent()).setVersion(d.getVersion());
     }

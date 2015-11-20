@@ -41,5 +41,5 @@ public interface ArchiveService {
 
     Archive getVsArchive(Long vsId, int version) throws Exception;
 
-    Archive getLatestArchive(Long vsId) throws Exception;
+    Archive getLatestVsArchive(Long vsId) throws Exception;
 }

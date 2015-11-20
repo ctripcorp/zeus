@@ -128,7 +128,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-slb-virtual-server-id" type="SELECT">
+            <query name="find-by-slb-virtual-server-id" type="SELECT" multiple="true">
                 <param name="slb-virtual-server-id"/>
                 <statement>
                     <![CDATA[

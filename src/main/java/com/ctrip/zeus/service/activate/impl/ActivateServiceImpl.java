@@ -86,7 +86,7 @@ public class ActivateServiceImpl implements ActivateService {
 
     @Override
     public void activeVirtualServer(long vsId, int version, Long slbId) throws Exception {
-        Archive archive = archiveService.getVirtualServerArchive(vsId,version);
+        Archive archive = archiveService.getVsArchive(vsId, version);
         AssertUtils.assertNotNull(archive, "[activate]get Virtual Server Archive return Null! VsId: " + vsId);
         ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo = new ConfSlbVirtualServerActiveDo();
         confSlbVirtualServerActiveDo.setContent(archive.getContent())
@@ -178,7 +178,7 @@ public class ActivateServiceImpl implements ActivateService {
     @Override
     public VirtualServer getActivatingVirtualServer(Long vsId, int version) {
         try {
-            Archive archive = archiveService.getVirtualServerArchive(vsId, version);
+            Archive archive = archiveService.getVsArchive(vsId, version);
             if (archive == null ){
                 return null;
             }
@@ -273,9 +273,13 @@ public class ActivateServiceImpl implements ActivateService {
     }
 
     @Override
-    public VirtualServer getActivatedVirtualServer(Long vsId) throws Exception {
-        ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo = confSlbVirtualServerActiveDao.findBySlbVirtualServerId(vsId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
-        return DefaultSaxParser.parseEntity(VirtualServer.class, confSlbVirtualServerActiveDo.getContent());
+    public List<VirtualServer> getActivatedVirtualServer(Long vsId) throws Exception {
+        List<VirtualServer>res = new ArrayList<>();
+        List<ConfSlbVirtualServerActiveDo> confSlbVirtualServerActiveDos = confSlbVirtualServerActiveDao.findBySlbVirtualServerId(vsId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        for (ConfSlbVirtualServerActiveDo c : confSlbVirtualServerActiveDos){
+            res.add(DefaultSaxParser.parseEntity(VirtualServer.class, c.getContent()));
+        }
+        return res;
     }
 
     @Override
