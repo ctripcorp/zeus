@@ -35,7 +35,8 @@ public class GroupEntityManager implements GroupSync {
     @Override
     public void add(Group group) throws Exception {
         group.setVersion(1);
-        GroupDo d = C.toGroupDo(0L, group);
+        // App id cannot be null
+        GroupDo d = C.toGroupDo(0L, group).setAppId("VirtualGroup");
         groupDao.insert(d);
         group.setId(d.getId());
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
@@ -57,7 +58,7 @@ public class GroupEntityManager implements GroupSync {
             throw new ValidationException("Newer Group version is detected.");
         group.setVersion(group.getVersion() + 1);
 
-        GroupDo d = C.toGroupDo(group.getId(), group);
+        GroupDo d = C.toGroupDo(group.getId(), group).setAppId("VirtualGroup");
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
         relSyncVs(group, false);

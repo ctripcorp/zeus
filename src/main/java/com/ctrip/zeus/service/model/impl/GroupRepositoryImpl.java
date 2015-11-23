@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
+import com.ctrip.zeus.service.model.handler.VGroupValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import org.springframework.stereotype.Repository;
 
@@ -27,6 +28,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     private ArchiveService archiveService;
     @Resource
     private GroupValidator groupModelValidator;
+    @Resource
+    private VGroupValidator vGroupValidator;
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
@@ -57,16 +60,16 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group addVGroup(Group group) throws Exception {
-        groupModelValidator.validate(group);
+        vGroupValidator.validate(group);
         autoFiller.autofillVGroup(group);
-        groupEntityManager.add(group, false);
+        groupEntityManager.add(group, true);
         return group;
     }
 
     @Override
     public Group update(Group group) throws Exception {
         if (!groupModelValidator.exists(group.getId()))
-            throw new ValidationException("Group with id " + group.getId() + "does not exist.");
+            throw new ValidationException("Group with id " + group.getId() + " does not exist.");
         groupModelValidator.validate(group);
         autoFiller.autofill(group);
         groupEntityManager.update(group);
@@ -75,9 +78,9 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group updateVGroup(Group group) throws Exception {
-        if (!groupModelValidator.exists(group.getId()))
-            throw new ValidationException("Group with id " + group.getId() + "does not exist.");
-        groupModelValidator.validate(group);
+        if (!vGroupValidator.exists(group.getId()))
+            throw new ValidationException("Group with id " + group.getId() + " does not exist.");
+        vGroupValidator.validate(group);
         autoFiller.autofillVGroup(group);
         groupEntityManager.update(group);
         return group;
@@ -104,6 +107,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public int deleteVGroup(Long groupId) throws Exception {
+        vGroupValidator.removable(groupId);
         return delete(groupId);
     }
 
