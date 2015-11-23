@@ -255,8 +255,11 @@ public class ActivateServiceImpl implements ActivateService {
 
     @Override
     public Map<Long,List<Group>> getActivatedGroupsByVses(Long[] vsIds) throws Exception {
-        List<ConfGroupActiveDo> list = confGroupActiveDao.findAllByslbVirtualServerIds(vsIds , ConfGroupActiveEntity.READSET_FULL);
         Map<Long,List<Group>> result = new HashMap<>();
+        if (vsIds == null || vsIds.length==0){
+            return result;
+        }
+        List<ConfGroupActiveDo> list = confGroupActiveDao.findAllByslbVirtualServerIds(vsIds , ConfGroupActiveEntity.READSET_FULL);
         for (ConfGroupActiveDo c : list ){
             Group group = DefaultSaxParser.parseEntity(Group.class, c.getContent());
             if (group != null){

@@ -91,7 +91,6 @@ public class TaskExecutorImpl implements TaskExecutor {
             if (lockflag) {
                 buildLock.unlock();
             }
-
         }
     }
 
@@ -121,7 +120,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             //get activating Objects
             activatingGroups = getActivatingGroups(activateGroupOps);
             activatingSlb = getActivatingSlb(activateSlbOps,slbId);
-            activatingVses = getActivatingVses(activateVsOps,slbId);
+            activatingVses = getActivatingVses(activateVsOps,deactivateVsOps,slbId);
 
             //memberOperations of unactivated groups
             preMemberOperation(slbId,memberOps);
@@ -236,10 +235,14 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private HashMap<Long, VirtualServer> getActivatingVses(HashMap<Long, OpsTask> activateVsOps, Long slbId) {
+    private HashMap<Long, VirtualServer> getActivatingVses(HashMap<Long, OpsTask> activateVsOps,HashMap<Long, OpsTask> deactivateVsOps, Long slbId) {
         HashMap<Long,VirtualServer> result = new HashMap<>();
         Set<Long> vsIds = activateVsOps.keySet();
         for (Long vsId : vsIds){
+            if (deactivateVsOps.containsKey(vsId)){
+                setTaskFail(activateVsOps.get(vsId),"Activating and Deactivating Vs at same time! VsId:"+vsId);
+                continue;
+            }
             VirtualServer vs = activateService.getActivatingVirtualServer(vsId,activateVsOps.get(vsId).getVersion());
             if ( vs != null ){
                 if ( !vs.getSlbId().equals( slbId) ){
