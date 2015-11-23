@@ -22,7 +22,7 @@ public class HealthCheckFetchJob extends QuartzJobBean {
             logger.error("[HealthCheckFetchJob] HealthCheckFetch Exception! ServerIp:" + S.getIp(), e);
         }
     }
-    public void setTaskDao(HealthCheckStatusService healthCheckStatusService) {
+    public void setHealthCheckStatusService(HealthCheckStatusService healthCheckStatusService) {
         this.healthCheckStatusService = healthCheckStatusService;
     }
 }

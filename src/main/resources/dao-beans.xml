@@ -64,6 +64,10 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfSlbActiveDao"/>
     </bean>
 
+    <bean id="confSlbVirtualServerActiveDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfSlbVirtualServerActiveDao"/>
+    </bean>
+
     <bean id="distLockDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.DistLockDao"/>
     </bean>
@@ -136,6 +140,10 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RGroupGsDao"/>
     </bean>
 
+    <bean id="rGroupVgDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RGroupVgDao"/>
+    </bean>
+
     <bean id="rGroupVsDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RGroupVsDao"/>
     </bean>
@@ -182,6 +190,10 @@
 
     <bean id="statusGroupServerDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.StatusGroupServerDao"/>
+    </bean>
+
+    <bean id="statusHealthCheckDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.StatusHealthCheckDao"/>
     </bean>
 
     <bean id="statusServerDao" factory-bean="daoFactory" factory-method="getDao">

@@ -136,6 +136,15 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>conf-slb-virtual-server-active</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>conf_slb_virtual_server_active</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>dist-lock</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -289,6 +298,15 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>r-group-vg</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>r_group_vg</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>r-group-vs</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -401,6 +419,15 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<physical-table-name>status_group_server</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>status-health-check</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>status_health_check</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>
@@ -567,6 +594,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.zeus.dal.core.ConfSlbVirtualServerActiveDao</role>
+			<implementation>com.ctrip.zeus.dal.core.ConfSlbVirtualServerActiveDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.zeus.dal.core.DistLockDao</role>
 			<implementation>com.ctrip.zeus.dal.core.DistLockDao</implementation>
 			<requirements>
@@ -720,6 +756,15 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.zeus.dal.core.RGroupVgDao</role>
+			<implementation>com.ctrip.zeus.dal.core.RGroupVgDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.zeus.dal.core.RGroupVsDao</role>
 			<implementation>com.ctrip.zeus.dal.core.RGroupVsDao</implementation>
 			<requirements>
@@ -830,6 +875,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.StatusGroupServerDao</role>
 			<implementation>com.ctrip.zeus.dal.core.StatusGroupServerDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.StatusHealthCheckDao</role>
+			<implementation>com.ctrip.zeus.dal.core.StatusHealthCheckDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
