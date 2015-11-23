@@ -131,6 +131,72 @@ public class GroupResource {
                         return input;
                     }
                 })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        input.removeAll(groupCriteriaQuery.queryAllVGroups());
+                        return input;
+                    }
+                })
+                .build();
+        for (Group group : groupRepository.list(executer.run())) {
+            groupList.addGroup(getGroupByType(group, type));
+        }
+        groupList.setTotal(groupList.getGroups().size());
+        return responseHandler.handle(groupList, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/vgroups")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "getAllGroups")
+    public Response listVGroups(@Context HttpHeaders hh,
+                         @Context HttpServletRequest request,
+                         @QueryParam("slbId") final Long slbId,
+                         @TrimmedQueryParam("domain") final String domain,
+                         @TrimmedQueryParam("type") String type,
+                         @TrimmedQueryParam("tag") final String tag,
+                         @TrimmedQueryParam("pname") final String pname,
+                         @TrimmedQueryParam("pvalue") final String pvalue) throws Exception {
+        GroupList groupList = new GroupList();
+        QueryExecuter executer = new QueryExecuter.Builder()
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        return groupCriteriaQuery.queryAllVGroups();
+                    }
+                })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        if (tag != null) {
+                            input.retainAll(tagService.query(tag, "group"));
+                        }
+                        return input;
+                    }
+                })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        if (pname != null) {
+                            if (pvalue != null)
+                                input.retainAll(propertyService.query(pname, pvalue, "group"));
+                            else
+                                input.retainAll(propertyService.query(pname, "group"));
+                        }
+                        return input;
+                    }
+                })
+                .addFilterId(new FilterSet<Long>() {
+                    @Override
+                    public Set<Long> filter(Set<Long> input) throws Exception {
+                        if (domain != null) {
+                            Set<Long> vsIds = virtualServerCriteriaQuery.queryByDomain(domain);
+                            input.retainAll(groupCriteriaQuery.queryByVsIds(vsIds.toArray(new Long[vsIds.size()])));
+                        }
+                        return input;
+                    }
+                })
                 .build();
         for (Group group : groupRepository.list(executer.run())) {
             groupList.addGroup(getGroupByType(group, type));
@@ -173,6 +239,15 @@ public class GroupResource {
     }
 
     @POST
+    @Path("/vgroup/new")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name = "addGroup")
+    public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
+        Group g = groupRepository.addVGroup(parseGroup(hh.getMediaType(), group));
+        return responseHandler.handle(g, hh.getMediaType());
+    }
+
+    @POST
     @Path("/group/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "updateGroup")
@@ -188,6 +263,22 @@ public class GroupResource {
         return responseHandler.handle(g, hh.getMediaType());
     }
 
+    @POST
+    @Path("/vgroup/update")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name = "updateGroup")
+    public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
+        Group g = parseGroup(hh.getMediaType(), group);
+        DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
+        try {
+            lock.lock();
+            g = groupRepository.updateVGroup(g);
+        } finally {
+            lock.unlock();
+        }
+        return responseHandler.handle(g, hh.getMediaType());
+    }
+
     @GET
     @Path("/group/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -196,6 +287,17 @@ public class GroupResource {
         if (groupId == null)
             throw new Exception("Missing parameter.");
         groupRepository.delete(groupId);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/vgroup/delete")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "deleteGroup")
+    public Response deleteVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("groupId") Long groupId) throws Exception {
+        if (groupId == null)
+            throw new Exception("Missing parameter.");
+        groupRepository.deleteVGroup(groupId);
         return Response.ok().build();
     }
 

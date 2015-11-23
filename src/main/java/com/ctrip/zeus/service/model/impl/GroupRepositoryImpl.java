@@ -29,12 +29,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     private GroupValidator groupModelValidator;
 
     @Override
-    public List<Group> list(Long slbId) throws Exception {
-        Set<Long> groupIds = groupCriteriaQuery.queryBySlbId(slbId);
-        return list(groupIds.toArray(new Long[groupIds.size()]));
-    }
-
-    @Override
     public List<Group> list(Long[] ids) throws Exception {
         List<Group> result = archiveService.getLatestGroups(ids);
         for (Group group : result) {
@@ -54,16 +48,13 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public Group get(String groupName) throws Exception {
-        return getById(groupCriteriaQuery.queryByName(groupName));
+    public Group add(Group group) throws Exception {
+        return add(group, false);
     }
 
     @Override
-    public Group add(Group group) throws Exception {
-        groupModelValidator.validate(group);
-        autoFiller.autofill(group);
-        groupEntityManager.add(group);
-        return group;
+    public Group addVGroup(Group group) throws Exception {
+        return add(group, true);
     }
 
     @Override
@@ -74,6 +65,11 @@ public class GroupRepositoryImpl implements GroupRepository {
         autoFiller.autofill(group);
         groupEntityManager.update(group);
         return group;
+    }
+
+    @Override
+    public Group updateVGroup(Group group) throws Exception {
+        return update(group);
     }
 
     // this would be called iff virtual servers are modified
@@ -96,6 +92,11 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
+    public int deleteVGroup(Long groupId) throws Exception {
+        return delete(groupId);
+    }
+
+    @Override
     public List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception {
         Set<Long> groupIds = groupCriteriaQuery.queryByGroupServerIp(groupServerIp);
         return list(groupIds.toArray(new Long[groupIds.size()]));
@@ -113,5 +114,23 @@ public class GroupRepositoryImpl implements GroupRepository {
     public void portGroupRel(Long groupId) throws Exception {
         Group group = getById(groupId);
         groupEntityManager.port(group);
+    }
+
+    @Override
+    public Group get(String groupName) throws Exception {
+        return getById(groupCriteriaQuery.queryByName(groupName));
+    }
+
+    @Override
+    public List<Group> list(Long slbId) throws Exception {
+        Set<Long> groupIds = groupCriteriaQuery.queryBySlbId(slbId);
+        return list(groupIds.toArray(new Long[groupIds.size()]));
+    }
+
+    private Group add(Group group, boolean isVirtual) throws Exception {
+        groupModelValidator.validate(group);
+        autoFiller.autofill(group);
+        groupEntityManager.add(group, isVirtual);
+        return group;
     }
 }

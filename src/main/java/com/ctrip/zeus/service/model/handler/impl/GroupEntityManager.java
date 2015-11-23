@@ -29,6 +29,8 @@ public class GroupEntityManager implements GroupSync {
     private RGroupVsDao rGroupVsDao;
     @Resource
     private RGroupGsDao rGroupGsDao;
+    @Resource
+    private RGroupVgDao rGroupVgDao;
 
     @Override
     public void add(Group group) throws Exception {
@@ -39,6 +41,13 @@ public class GroupEntityManager implements GroupSync {
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
         relSyncVs(group, true);
         relSyncGs(group, true);
+    }
+
+    @Override
+    public void add(Group group, boolean isVirtual) throws Exception {
+        add(group);
+        if (isVirtual)
+            relSyncVg(group);
     }
 
     @Override
@@ -64,6 +73,7 @@ public class GroupEntityManager implements GroupSync {
     public int delete(Long groupId) throws Exception {
         rGroupVsDao.deleteAllByGroup(new RelGroupVsDo().setGroupId(groupId));
         rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(groupId));
+        rGroupVgDao.deleteByPK(new RelGroupVgDo().setGroupId(groupId));
         int count = groupDao.deleteById(new GroupDo().setId(groupId));
         archiveGroupDao.deleteByGroup(new ArchiveGroupDo().setGroupId(groupId));
         return count;
@@ -127,6 +137,10 @@ public class GroupEntityManager implements GroupSync {
             dos[i] = new RelGroupGsDo().setGroupId(group.getId()).setIp(adding.get(i));
         }
         rGroupGsDao.insert(dos);
+    }
+
+    private void relSyncVg(Group group) throws DalException {
+        rGroupVgDao.insert(new RelGroupVgDo().setGroupId(group.getId()));
     }
 
     private void relSyncVs(Group group, boolean isnew) throws DalException {

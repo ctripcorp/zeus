@@ -17,11 +17,17 @@ public interface GroupRepository extends Repository {
 
     Group add(Group group) throws Exception;
 
+    Group addVGroup(Group group) throws Exception;
+
     Group update(Group group) throws Exception;
+
+    Group updateVGroup(Group group) throws Exception;
 
     List<Group> updateVersion(Long[] groupIds) throws Exception;
 
     int delete(Long groupId) throws Exception;
+
+    int deleteVGroup(Long groupId) throws Exception;
 
     @Deprecated
     List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception;
