@@ -49,12 +49,18 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group add(Group group) throws Exception {
-        return add(group, false);
+        groupModelValidator.validate(group);
+        autoFiller.autofill(group);
+        groupEntityManager.add(group, false);
+        return group;
     }
 
     @Override
     public Group addVGroup(Group group) throws Exception {
-        return add(group, true);
+        groupModelValidator.validate(group);
+        autoFiller.autofillVGroup(group);
+        groupEntityManager.add(group, false);
+        return group;
     }
 
     @Override
@@ -69,7 +75,12 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group updateVGroup(Group group) throws Exception {
-        return update(group);
+        if (!groupModelValidator.exists(group.getId()))
+            throw new ValidationException("Group with id " + group.getId() + "does not exist.");
+        groupModelValidator.validate(group);
+        autoFiller.autofillVGroup(group);
+        groupEntityManager.update(group);
+        return group;
     }
 
     // this would be called iff virtual servers are modified
@@ -125,12 +136,5 @@ public class GroupRepositoryImpl implements GroupRepository {
     public List<Group> list(Long slbId) throws Exception {
         Set<Long> groupIds = groupCriteriaQuery.queryBySlbId(slbId);
         return list(groupIds.toArray(new Long[groupIds.size()]));
-    }
-
-    private Group add(Group group, boolean isVirtual) throws Exception {
-        groupModelValidator.validate(group);
-        autoFiller.autofill(group);
-        groupEntityManager.add(group, isVirtual);
-        return group;
     }
 }

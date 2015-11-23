@@ -151,13 +151,13 @@ public class GroupResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getAllGroups")
     public Response listVGroups(@Context HttpHeaders hh,
-                         @Context HttpServletRequest request,
-                         @QueryParam("slbId") final Long slbId,
-                         @TrimmedQueryParam("domain") final String domain,
-                         @TrimmedQueryParam("type") String type,
-                         @TrimmedQueryParam("tag") final String tag,
-                         @TrimmedQueryParam("pname") final String pname,
-                         @TrimmedQueryParam("pvalue") final String pvalue) throws Exception {
+                                @Context HttpServletRequest request,
+                                @QueryParam("slbId") final Long slbId,
+                                @TrimmedQueryParam("domain") final String domain,
+                                @TrimmedQueryParam("type") String type,
+                                @TrimmedQueryParam("tag") final String tag,
+                                @TrimmedQueryParam("pname") final String pname,
+                                @TrimmedQueryParam("pvalue") final String pvalue) throws Exception {
         GroupList groupList = new GroupList();
         QueryExecuter executer = new QueryExecuter.Builder()
                 .addFilterId(new FilterSet<Long>() {
@@ -336,16 +336,21 @@ public class GroupResource {
                 throw new Exception("Group cannot be parsed.");
             }
         }
-        g.setAppId(g.getAppId().trim());
-        g.setName(g.getName().trim());
+        g.setAppId(trimIfNotNull(g.getAppId()));
+        g.setName(trimIfNotNull(g.getName()));
         if (g.getHealthCheck() != null)
-            g.getHealthCheck().setUri(g.getHealthCheck().getUri().trim());
+            g.getHealthCheck().setUri(trimIfNotNull(g.getHealthCheck().getUri()));
         for (GroupServer groupServer : g.getGroupServers()) {
-            groupServer.setIp(groupServer.getIp().trim());
-            groupServer.setHostName(groupServer.getHostName().trim());
+            groupServer.setIp(trimIfNotNull(groupServer.getIp()));
+            groupServer.setHostName(trimIfNotNull(groupServer.getHostName()));
         }
-        g.getLoadBalancingMethod().setValue(g.getLoadBalancingMethod().getValue());
+        if (g.getLoadBalancingMethod() != null)
+            g.getLoadBalancingMethod().setValue(trimIfNotNull(g.getLoadBalancingMethod().getValue()));
         return g;
+    }
+
+    private String trimIfNotNull(String value) {
+        return value != null ? value.trim() : value;
     }
 
     private Group getGroupByType(Group group, String type) {

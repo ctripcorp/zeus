@@ -48,6 +48,27 @@ public class AutoFiller {
         }
     }
 
+    public void autofillVGroup(Group group) throws Exception {
+        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+            VirtualServer tvs = gvs.getVirtualServer();
+            VirtualServer vs = virtualServerRepository.getById(gvs.getVirtualServer().getId());
+            tvs.setName(vs.getName()).setSlbId(vs.getSlbId()).setPort(vs.getPort()).setSsl(vs.getSsl());
+            tvs.getDomains().clear();
+            for (Domain domain : vs.getDomains()) {
+                tvs.getDomains().add(domain);
+            }
+            if (gvs.getPriority() == null) {
+                if (gvs.getPath().endsWith(RegexRootPath))
+                    gvs.setPriority(Integer.MIN_VALUE);
+                else
+                    gvs.setPriority(gvs.getRewrite() == null ? 1000 : -1000);
+            }
+        }
+        group.setHealthCheck(null);
+        group.setLoadBalancingMethod(null);
+        group.getGroupServers().clear();
+    }
+
     public void autofill(Slb slb) throws Exception {
         slb.setNginxBin("/opt/app/nginx/sbin").setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(9)
                 .setStatus(slb.getStatus() == null ? "Default" : slb.getStatus());
