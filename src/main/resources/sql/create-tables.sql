@@ -542,6 +542,20 @@ CREATE TABLE IF NOT EXISTS `r_group_gs` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table r_group_vg
+DROP TABLE IF EXISTS `r_group_vg`;
+CREATE TABLE IF NOT EXISTS `r_group_vg` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `group_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'group id',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `group_id` (`group_id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table r_group_vs
 DROP TABLE IF EXISTS `r_group_vs`;
 CREATE TABLE IF NOT EXISTS `r_group_vs` (

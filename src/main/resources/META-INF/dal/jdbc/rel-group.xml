@@ -10,7 +10,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-group" type="SELECT" multiple="true">
+            <query name="find-by-group" type="SELECT">
                 <param name="group-id"/>
                 <statement>
                     <![CDATA[

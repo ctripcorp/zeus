@@ -35,8 +35,10 @@ public class GroupEntityManager implements GroupSync {
     @Override
     public void add(Group group) throws Exception {
         group.setVersion(1);
-        // App id cannot be null
-        GroupDo d = C.toGroupDo(0L, group).setAppId("VirtualGroup");
+        GroupDo d = C.toGroupDo(0L, group);
+        if (d.getAppId() == null)
+            // if app id is null, it must be virtual group
+            d.setAppId("VirtualGroup");
         groupDao.insert(d);
         group.setId(d.getId());
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
