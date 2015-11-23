@@ -41,6 +41,7 @@
     <group-virtual-server priority="0">
         <path>/hotel</path>
         <rewrite>^/regex</rewrite>
+        <redirect>/fullurl</redirect>
         <virtual-server/>
     </group-virtual-server>
     <group-server port="80" weight="5" max-fails="5" fail-timeout="30">

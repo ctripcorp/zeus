@@ -62,6 +62,7 @@
     <attribute name="priority" value-type="int" />
     <element name="path" value-type="String" />
     <element name="rewrite" value-type="String" />
+    <element name="redirect" value-type="String" />
     <entity-ref name="virtual-server" />
   </entity>
   <entity name="group-server">
