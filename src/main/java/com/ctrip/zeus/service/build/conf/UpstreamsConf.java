@@ -6,6 +6,9 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.StringFormat;
+import com.netflix.config.DynamicIntProperty;
+import com.netflix.config.DynamicPropertyFactory;
+import com.netflix.config.DynamicStringProperty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +19,9 @@ import java.util.Set;
  * @date: 3/10/2015.
  */
 public class UpstreamsConf {
+    private static DynamicStringProperty upstreamKeepAlive = DynamicPropertyFactory.getInstance().getStringProperty("upstream.keep-alive", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicIntProperty upstreamKeepAliveDefault = DynamicPropertyFactory.getInstance().getIntProperty("upstream.keep-alive.default", 100);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allUpGroupServers)throws Exception {
         StringBuilder b = new StringBuilder(10240);
 
@@ -79,11 +85,28 @@ public class UpstreamsConf {
                     .append(isDown?" down":"")
                     .append(";\n");
         }
-
+        addKeepAliveSetting(b,group.getId());
         //HealthCheck
         b.append(HealthCheckConf.generate(slb, vs, group));
 
         return b.toString();
+    }
+
+    private static void addKeepAliveSetting(StringBuilder b, Long gid) {
+        String tmp = upstreamKeepAlive.get();
+        if (tmp==null||tmp.trim().equals("")){
+            return;
+        }else if (tmp.equals("All")){
+            b.append("keepalive ").append(upstreamKeepAliveDefault.get()).append(";\n");
+        }else {
+            String[] pairs = tmp.split(";");
+            for (String pair : pairs){
+                String[] t = pair.split("=");
+                if (t.length==2&&t[0].trim().equals(String.valueOf(gid))){
+                    b.append("keepalive ").append(t[1]).append(";\n");
+                }
+            }
+        }
     }
 
 }

@@ -24,7 +24,7 @@ public class NginxConf {
                     "'\"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for '\n" +
                     "'$server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" '\n" +
                     "'$host $status $body_bytes_sent $request_time $upstream_response_time '\n" +
-                    "'$upstream_addr $upstream_status';\n"
+                    "'$upstream_addr $upstream_status $proxy_host';\n"
     );
 
 
