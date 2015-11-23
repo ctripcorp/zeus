@@ -18,8 +18,8 @@ import javax.ws.rs.core.Response;
 public class ErrorResponseHandler implements ResponseHandler {
     private static final MediaType defaultMediaType = MediaType.APPLICATION_JSON_TYPE;
 
-    public Message generateMessage(Throwable object, String type) throws Exception {
-        ErrorMessage em = ExceptionUtils.getErrorMessage(object);
+    public Message generateMessage(Throwable object, String type, boolean printStackTrace) throws Exception {
+        ErrorMessage em = ExceptionUtils.getErrorMessage(object, printStackTrace);
         ErrorResponse err = new ErrorResponse();
 
         if (type.equals(MediaType.APPLICATION_XML)) {
@@ -29,15 +29,15 @@ public class ErrorResponseHandler implements ResponseHandler {
         }
         if (object instanceof NotFoundException) {
             err.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-        }else if (object instanceof BadRequestException) {
+        } else if (object instanceof BadRequestException) {
             err.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-        }else if (object instanceof ValidationException) {
+        } else if (object instanceof ValidationException) {
             err.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-        }else if (object instanceof ForbiddenException) {
+        } else if (object instanceof ForbiddenException) {
             err.setStatus(Response.Status.FORBIDDEN.getStatusCode());
-        }else if (object instanceof SlbValidatorException) {
+        } else if (object instanceof SlbValidatorException) {
             err.setStatus(506);
-        }else if (object instanceof Exception) {
+        } else if (object instanceof Exception) {
             err.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
         return err;
@@ -45,14 +45,17 @@ public class ErrorResponseHandler implements ResponseHandler {
 
     @Override
     public Response handle(Object object, MediaType mediaType) throws Exception {
+        return handle(object, mediaType, false);
+    }
+
+    public Response handle(Object object, MediaType mediaType, boolean printStackTrace) throws Exception {
         if (object == null || !(object instanceof Throwable)) {
             throw new ValidationException("ErrorResponseHandler only accepts Throwable object");
         }
-
         if (mediaType == null || !MediaType.APPLICATION_XML_TYPE.equals(mediaType)) {
             mediaType = defaultMediaType;
         }
-        Message message = generateMessage((Throwable) object, mediaType.toString());
+        Message message = generateMessage((Throwable) object, mediaType.toString(), printStackTrace);
         return Response.status(message.getStatus()).entity(message.getResponse())
                 .type(mediaType).build();
     }

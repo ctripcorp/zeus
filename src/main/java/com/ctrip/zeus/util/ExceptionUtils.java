@@ -16,15 +16,15 @@ public class ExceptionUtils {
 
     public static String getStackTrace(Throwable throwable) {
         StringBuilder builder = new StringBuilder();
-        for(StackTraceElement ste : throwable.getStackTrace()) {
+        for (StackTraceElement ste : throwable.getStackTrace()) {
             builder.append(ste.toString() + "\n");
         }
         return builder.toString();
     }
 
-    public static ErrorMessage getErrorMessage(Throwable throwable) {
+    public static ErrorMessage getErrorMessage(Throwable throwable, boolean printStackTrace) {
         return new ErrorMessage().setCode(ExceptionUtils.getErrorCode(throwable))
                 .setMessage(ExceptionUtils.getMessage(throwable))
-                .setStackTrace(ExceptionUtils.getStackTrace(throwable));
+                .setStackTrace(printStackTrace ? ExceptionUtils.getStackTrace(throwable) : null);
     }
 }

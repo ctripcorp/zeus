@@ -23,9 +23,11 @@ public class LocationConf {
     private static DynamicStringProperty xforwardedforWhileList = DynamicPropertyFactory.getInstance().getStringProperty("x-forwarded-for.white.list", "172\\..*|192\\.168.*|10\\..*");
     private static DynamicStringProperty errorPageWhileList = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.white.list", null);
     private static DynamicStringProperty proxyTimeoutList = DynamicPropertyFactory.getInstance().getStringProperty("proxy.read-timeout.list", null);
+    private static DynamicStringProperty proxyTimeoutDefault = DynamicPropertyFactory.getInstance().getStringProperty("proxy.read-timeout.default", "60");
     private static DynamicStringProperty errorPage_404 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.404.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/404.htm");
     private static DynamicStringProperty errorPage_500 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.500.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty errorPageEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicBooleanProperty errorPageEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable-all", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
 
     public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
@@ -100,10 +102,13 @@ public class LocationConf {
     }
 
     private static void addProxyReadTimeout(Long gid , StringBuilder sb) {
+        String defaultConfig = proxyTimeoutDefault.get();
         String config = proxyTimeoutList.get();
         if (config == null){
+            sb.append("proxy_read_timeout ").append(defaultConfig).append("s;\n");
             return;
         }
+
         String[] groupPairs = config.split(";");
         for (String tmp : groupPairs){
             String []pair = tmp.split("=");
@@ -112,6 +117,7 @@ public class LocationConf {
                 return;
             }
         }
+        sb.append("proxy_read_timeout ").append(defaultConfig).append("s;\n");
     }
 
     private static String getPath(Slb slb, VirtualServer vs, Group group) throws Exception{
@@ -170,6 +176,10 @@ public class LocationConf {
                 .append("add_header Bastion $cookie_bastion;\n}\n");
     }
     private static void addErrorPageConfig(StringBuilder sb,Long groupId){
+        if (errorPageEnableAll.get()){
+            sb.append("proxy_intercept_errors on;\n");
+            return;
+        }
         if (!errorPageEnable.get()||errorPage_404.get()==null || errorPage_500.get() == null){
             return;
         }

@@ -37,17 +37,17 @@ public class NginxConf {
 
 //        b.append("worker_processes ").append((worker==null||worker==0)?DEFAULT_WORKERS:worker).append(";\n");
         b.append("worker_processes auto;\n")
-         .append("user nobody;\n")
-         .append("error_log /opt/logs/nginx/error.log").append(logLevel.get()).append(";\n")
-         .append("worker_rlimit_nofile 65535;\n")
-         .append("pid logs/nginx.pid;\n");
+                .append("user nobody;\n")
+                .append("error_log /opt/logs/nginx/error.log").append(logLevel.get()).append(";\n")
+                .append("worker_rlimit_nofile 65535;\n")
+                .append("pid logs/nginx.pid;\n");
 
 
         b.append("events {\n")
-         .append("worker_connections 30720;\n")
-         .append("multi_accept on;\n")
-         .append("use epoll; \n")
-         .append("}\n");
+                .append("worker_connections 30720;\n")
+                .append("multi_accept on;\n")
+                .append("use epoll; \n")
+                .append("}\n");
 
         b.append("http {\n");
         b.append("include    mime.types;\n");
@@ -74,8 +74,7 @@ public class NginxConf {
     }
 
     //slb check health
-    private static String statusConf()
-    {
+    private static String statusConf() {
         StringBuilder b = new StringBuilder(128);
         b.append("server {").append("\n");
         b.append("listen    ").append(String.valueOf(nginxStatusPort.get())).append(";\n");
@@ -100,19 +99,19 @@ public class NginxConf {
         return b.toString();
 
     }
+
     //updown stream
-    private static String dyupstreamConf()
-    {
+    private static String dyupstreamConf() {
         int port = dyupsPort.getValue();
         StringBuilder b = new StringBuilder(128);
 
         b.append("dyups_upstream_conf  conf/dyupstream.conf;\n")
-         .append("server {\n")
-         .append("listen ").append(port).append(";\n")
-         .append("location / {\n")
-         .append("dyups_interface;\n")
-         .append("}\n")
-         .append("}\n");
+                .append("server {\n")
+                .append("listen ").append(port).append(";\n")
+                .append("location / {\n")
+                .append("dyups_interface;\n")
+                .append("}\n")
+                .append("}\n");
         return b.toString();
     }
 
@@ -132,21 +131,28 @@ public class NginxConf {
                 .append("        stub_status on;").append(LINEBREAK)
                 .append("    }").append(LINEBREAK);
     }
-    public static void appendDefaultServer(StringBuilder builder)
-    {
+
+    public static void appendDefaultServer(StringBuilder builder) {
         builder.append("server {").append("\n")
-                .append("listen  80 default_server  ;\n")
-//                .append("listen  443 default_server  ;\n")
-                .append("location = /domaininfo/OnService.html {\n")
+                .append("listen *:80 default_server  ;\n");
+        appendDefaultLocation(builder);
+
+        builder.append("server {").append("\n")
+                .append("listen *:443 default_server;").append("\n")
+                .append("ssl on;\n")
+                .append("ssl_certificate ").append(ServerConf.SSL_PATH).append("default").append("/ssl.crt;\n")
+                .append("ssl_certificate_key ").append(ServerConf.SSL_PATH).append("default").append("/ssl.key;\n");
+        appendDefaultLocation(builder);
+    }
+
+    private static void appendDefaultLocation(StringBuilder builder) {
+        builder.append("location = /domaininfo/OnService.html {\n")
                 .append("add_header Content-Type text/html;\n")
                 .append("return 200 \"4008206666\";\n")
                 .append("}\n")
                 .append("location / {\n")
                 .append("return 404 \"Not Found!\";\n")
                 .append("}\n")
-                .append("}\n")
-                ;
-
-
+                .append("}\n");
     }
 }

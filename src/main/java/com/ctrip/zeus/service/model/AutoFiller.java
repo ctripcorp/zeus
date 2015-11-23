@@ -22,13 +22,16 @@ public class AutoFiller {
             for (Domain domain : vs.getDomains()) {
                 tvs.getDomains().add(domain);
             }
-            gvs.setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority());
+            if (gvs.getPriority() == null) {
+                gvs.setPriority(gvs.getRewrite() == null ? 1000 : -1000);
+            }
         }
         HealthCheck hc = group.getHealthCheck();
         if (hc != null) {
-            hc.setIntervals(hc.getIntervals() == null ? 5000 : hc.getIntervals())
+            hc.setIntervals(hc.getIntervals() == null ? 10000 : hc.getIntervals())
                     .setFails(hc.getFails() == null ? 5 : hc.getFails())
-                    .setPasses(hc.getPasses() == null ? 1 : hc.getPasses());
+                    .setPasses(hc.getPasses() == null ? 1 : hc.getPasses())
+                    .setTimeout(hc.getTimeout() == null ? 2000 : hc.getTimeout());
         }
         LoadBalancingMethod lbm = group.getLoadBalancingMethod();
         if (lbm == null)

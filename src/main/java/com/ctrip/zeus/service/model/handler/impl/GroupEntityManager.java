@@ -64,7 +64,9 @@ public class GroupEntityManager implements GroupSync {
     public int delete(Long groupId) throws Exception {
         rGroupVsDao.deleteAllByGroup(new RelGroupVsDo().setGroupId(groupId));
         rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(groupId));
-        return groupDao.deleteById(new GroupDo().setId(groupId));
+        int count = groupDao.deleteById(new GroupDo().setId(groupId));
+        archiveGroupDao.deleteByGroup(new ArchiveGroupDo().setGroupId(groupId));
+        return count;
     }
 
     @Override
