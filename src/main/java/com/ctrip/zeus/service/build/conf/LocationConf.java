@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.build.conf;
 
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.Slb;
@@ -32,8 +33,19 @@ public class LocationConf {
 
     public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
-
+        if (group.isVirtual()){
+            b.append("location ").append(getPath(slb, vs, group)).append(" {\n");
+            if (group.getGroupVirtualServers().size()==1)
+            {
+                b.append("rewrite ").append(group.getGroupVirtualServers().get(0).getRedirect()).append(" redirect;\n");
+            }else {
+                throw new ValidationException("Virtual Group has Multiple Group VirtualServers Redirect");
+            }
+            b.append("}\n");
+            return b.toString();
+        }
         b.append("location ").append(getPath(slb, vs, group)).append(" {\n");
+
         if (clientMaxSizeList.get() !=null)
         {
             String []sizeList = clientMaxSizeList.get().split(";");

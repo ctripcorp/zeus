@@ -40,6 +40,9 @@ public class UpstreamsConf {
     }
 
     public static String buildUpstreamConf(Slb slb, VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
+        if (group.isVirtual()){
+            return "";
+        }
         StringBuilder b = new StringBuilder(1024);
         String body = buildUpstreamConfBody(slb,vs,group,allDownServers,allUpGroupServers);
         if (null == body){
