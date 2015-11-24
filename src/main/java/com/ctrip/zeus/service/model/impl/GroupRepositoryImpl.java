@@ -36,15 +36,17 @@ public class GroupRepositoryImpl implements GroupRepository {
         List<Group> result = archiveService.getLatestGroups(ids);
         for (Group group : result) {
             autoFiller.autofill(group);
+            hideVirtualValue(group);
         }
         return result;
     }
 
     @Override
     public Group getById(Long id) throws Exception {
-        if (groupModelValidator.exists(id)) {
+        if (groupModelValidator.exists(id) || vGroupValidator.exists(id)) {
             Group result = archiveService.getLatestGroup(id);
             autoFiller.autofill(result);
+            hideVirtualValue(result);
             return result;
         }
         return null;
@@ -54,6 +56,7 @@ public class GroupRepositoryImpl implements GroupRepository {
     public Group add(Group group) throws Exception {
         groupModelValidator.validate(group);
         autoFiller.autofill(group);
+        hideVirtualValue(group);
         groupEntityManager.add(group, false);
         return group;
     }
@@ -62,7 +65,9 @@ public class GroupRepositoryImpl implements GroupRepository {
     public Group addVGroup(Group group) throws Exception {
         vGroupValidator.validate(group);
         autoFiller.autofillVGroup(group);
+        group.setVirtual(true);
         groupEntityManager.add(group, true);
+        hideVirtualValue(group);
         return group;
     }
 
@@ -72,6 +77,7 @@ public class GroupRepositoryImpl implements GroupRepository {
             throw new ValidationException("Group with id " + group.getId() + " does not exist.");
         groupModelValidator.validate(group);
         autoFiller.autofill(group);
+        hideVirtualValue(group);
         groupEntityManager.update(group);
         return group;
     }
@@ -82,7 +88,9 @@ public class GroupRepositoryImpl implements GroupRepository {
             throw new ValidationException("Group with id " + group.getId() + " does not exist.");
         vGroupValidator.validate(group);
         autoFiller.autofillVGroup(group);
+        group.setVirtual(true);
         groupEntityManager.update(group);
+        hideVirtualValue(group);
         return group;
     }
 
@@ -93,6 +101,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         for (Long groupId : groupIds) {
             Group g = getById(groupId);
             autoFiller.autofill(g);
+            hideVirtualValue(g);
             groupEntityManager.update(g);
             result.add(g);
         }
@@ -140,5 +149,9 @@ public class GroupRepositoryImpl implements GroupRepository {
     public List<Group> list(Long slbId) throws Exception {
         Set<Long> groupIds = groupCriteriaQuery.queryBySlbId(slbId);
         return list(groupIds.toArray(new Long[groupIds.size()]));
+    }
+
+    private void hideVirtualValue(Group group) {
+        group.setVirtual(null);
     }
 }
