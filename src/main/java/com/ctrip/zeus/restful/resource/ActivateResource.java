@@ -1,6 +1,8 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
+import com.ctrip.zeus.dal.core.ConfSlbVirtualServerActiveDao;
+import com.ctrip.zeus.dal.core.ConfSlbVirtualServerActiveDo;
 import com.ctrip.zeus.exceptions.SlbValidatorException;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
@@ -64,6 +66,8 @@ public class ActivateResource {
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private ActivateService activateService;
+    @Resource
+    private ConfSlbVirtualServerActiveDao confSlbVirtualServerActiveDao;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -216,6 +220,28 @@ public class ActivateResource {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
-        return responseHandler.handle(resultList,hh.getMediaType());
+        return responseHandler.handle(resultList, hh.getMediaType());
+    }
+    @GET
+    @Path("/vs/dataFill")
+    @Authorize(name="activate")
+    public Response dataRewrite(@Context HttpServletRequest request,
+                                          @Context HttpHeaders hh)throws Exception {
+        Set<Long> slbIds = slbCriteriaQuery.queryAll();
+        for (Long slbId : slbIds){
+            Slb slb = activateService.getActivatedSlb(slbId);
+            List<VirtualServer> vses = slb.getVirtualServers();
+            for (VirtualServer vs : vses){
+                Archive archive = archiveService.getLatestVsArchive(vs.getId());
+                AssertUtils.assertNotNull(archive, "[activate]get Virtual Server Archive return Null! VsId: " + vs.getId());
+                ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo = new ConfSlbVirtualServerActiveDo();
+                confSlbVirtualServerActiveDo.setContent(archive.getContent())
+                        .setSlbId(slbId).setVersion(archive.getVersion())
+                        .setSlbVirtualServerId(vs.getId())
+                        .setCreatedTime(new Date());
+                confSlbVirtualServerActiveDao.insert(confSlbVirtualServerActiveDo);
+            }
+        }
+        return responseHandler.handle("update suc.", hh.getMediaType());
     }
 }
