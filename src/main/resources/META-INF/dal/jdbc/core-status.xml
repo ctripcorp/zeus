@@ -147,7 +147,7 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         rise = values(rise),
-                        fail = values(fall),
+                        fall = values(fall),
                         <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
