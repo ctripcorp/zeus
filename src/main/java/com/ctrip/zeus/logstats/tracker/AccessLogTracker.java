@@ -74,7 +74,7 @@ public class AccessLogTracker implements LogTracker {
                 offset = 0;
             else {
                 // check if log rotate has been done
-                fileChannel.position(curr.rOffset - curr.rValue.getBytes().length - 1);
+                fileChannel.position(curr.rOffset - curr.rValue.getBytes().length - 2);
                 String rafline = raf.readLine();
                 if (rafline.equals(curr.rValue))
                     offset = curr.rOffset;
@@ -129,11 +129,11 @@ public class AccessLogTracker implements LogTracker {
                         break;
                     case '\r':
                         eol = true;
+                        fresh = new String(line, 0, colOffset);
                         if ((buffer.get()) != '\n')
                             buffer.position(colOffset);
                         else
                             colOffset++;
-                        fresh = new String(line, 0, colOffset);
                         delegator.delegate(fresh);
                         offset += ++colOffset;
                         break;
