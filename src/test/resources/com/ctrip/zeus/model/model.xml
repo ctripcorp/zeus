@@ -41,6 +41,7 @@
     <group-virtual-server priority="0">
         <path>/hotel</path>
         <rewrite>^/regex</rewrite>
+        <redirect>/fullurl</redirect>
         <virtual-server/>
     </group-virtual-server>
     <group-server port="80" weight="5" max-fails="5" fail-timeout="30">
@@ -54,7 +55,7 @@
             <group-server/>
         </group-servers>
     </group-server-list>
-    <group id="123456789012" name="gateway" app-id="app921822" version="1" ssl="false">
+    <group id="123456789012" name="gateway" app-id="app921822" version="1" ssl="false" virtual="true">
         <group-virtual-servers>
             <group-virtual-server/>
             <group-virtual-server/>

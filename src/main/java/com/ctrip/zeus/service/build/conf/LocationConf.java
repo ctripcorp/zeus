@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.build.conf;
 
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.Slb;
@@ -28,11 +29,23 @@ public class LocationConf {
     private static DynamicStringProperty errorPage_500 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.500.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty errorPageEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty errorPageEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable-all", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicStringProperty upstreamKeepAlive = DynamicPropertyFactory.getInstance().getStringProperty("upstream.keep-alive", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
 
     public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
         StringBuilder b = new StringBuilder(1024);
-
+        if (group.isVirtual()){
+            b.append("location ").append(getPath(slb, vs, group)).append(" {\n");
+            if (group.getGroupVirtualServers().size()==1)
+            {
+                b.append("rewrite ").append(group.getGroupVirtualServers().get(0).getRedirect()).append(" redirect;\n");
+            }else {
+                throw new ValidationException("Virtual Group has Multiple Group VirtualServers Redirect");
+            }
+            b.append("}\n");
+            return b.toString();
+        }
         b.append("location ").append(getPath(slb, vs, group)).append(" {\n");
+
         if (clientMaxSizeList.get() !=null)
         {
             String []sizeList = clientMaxSizeList.get().split(";");
@@ -53,6 +66,7 @@ public class LocationConf {
         b.append("proxy_set_header Host $host").append(";\n");
 
         b.append("proxy_set_header X-Real-IP $remote_addr;\n");
+        addKeepAliveSettings(b,group.getId());
 
         addProxyReadTimeout(group.getId(),b);
 
@@ -99,6 +113,23 @@ public class LocationConf {
         b.append("}").append("\n");
 
         return b.toString();
+    }
+
+    private static void addKeepAliveSettings(StringBuilder b,Long groupId) {
+        String tmp = upstreamKeepAlive.get();
+        if (tmp==null||tmp.trim().equals("")){
+            return;
+        }else if (tmp.equals("All")){
+            b.append("proxy_set_header Connection \"\";\n");
+        }else {
+            String[] pairs = tmp.split(";");
+            for (String pair : pairs){
+                String[] t = pair.split("=");
+                if (t.length==2&&t[0].trim().equals(String.valueOf(groupId))){
+                    b.append("proxy_set_header Connection \"\";\n");
+                }
+            }
+        }
     }
 
     private static void addProxyReadTimeout(Long gid , StringBuilder sb) {

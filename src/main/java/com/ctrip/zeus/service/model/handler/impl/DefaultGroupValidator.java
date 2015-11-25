@@ -33,11 +33,14 @@ public class DefaultGroupValidator implements GroupValidator {
     @Resource
     private RGroupVsDao rGroupVsDao;
     @Resource
+    private RGroupVgDao rGroupVgDao;
+    @Resource
     private GroupDao groupDao;
 
     @Override
     public boolean exists(Long targetId) throws Exception {
-        return groupDao.findById(targetId, GroupEntity.READSET_FULL) != null;
+        return groupDao.findById(targetId, GroupEntity.READSET_FULL) != null
+                && rGroupVgDao.findByGroup(targetId, RGroupVgEntity.READSET_FULL) == null;
     }
 
     @Override

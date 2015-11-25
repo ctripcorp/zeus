@@ -20,4 +20,6 @@ public interface GroupCriteriaQuery {
     Set<Long> queryByVsIds(Long[] vsIds) throws Exception;
 
     Set<Long> queryByGroupServerIp(String ip) throws Exception;
+
+    Set<Long> queryAllVGroups() throws Exception;
 }

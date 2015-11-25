@@ -63,6 +63,7 @@
     <attribute name="priority" value-type="int" />
     <element name="path" value-type="String" />
     <element name="rewrite" value-type="String" />
+    <element name="redirect" value-type="String" />
     <entity-ref name="virtual-server" />
   </entity>
   <entity name="group-server">
@@ -83,6 +84,7 @@
     <attribute name="app-id" value-type="String" />
     <attribute name="version" value-type="int" />
     <attribute name="ssl" value-type="boolean" />
+    <attribute name="virtual" value-type="boolean" />
     <entity-ref name="group-virtual-server" type="list" names="group-virtual-servers" xml-indent="true" />
     <entity-ref name="health-check" />
     <entity-ref name="load-balancing-method" />

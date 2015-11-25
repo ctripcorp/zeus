@@ -39,6 +39,11 @@ public class GroupSyncImpl implements GroupSync {
     }
 
     @Override
+    public void add(Group group, boolean isVirtual) throws Exception {
+        add(group);
+    }
+
+    @Override
     public void update(Group group) throws Exception {
         GroupDo check = groupDao.findById(group.getId(), GroupEntity.READSET_FULL);
         if (check == null)

@@ -12,6 +12,8 @@ public interface GroupSync {
 
     void add(Group group) throws Exception;
 
+    void add(Group group, boolean isVirtual) throws Exception;
+
     void update(Group group) throws Exception;
 
     void updateVersion(Long[] groupIds) throws Exception;

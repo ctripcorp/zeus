@@ -12,6 +12,7 @@ import javax.annotation.Resource;
 public class AutoFiller {
     @Resource
     private VirtualServerRepository virtualServerRepository;
+    private static final String RegexRootPath = " /";
 
     public void autofill(Group group) throws Exception {
         for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
@@ -23,7 +24,10 @@ public class AutoFiller {
                 tvs.getDomains().add(domain);
             }
             if (gvs.getPriority() == null) {
-                gvs.setPriority(gvs.getRewrite() == null ? 1000 : -1000);
+                if (gvs.getPath().endsWith(RegexRootPath))
+                    gvs.setPriority(Integer.MIN_VALUE);
+                else
+                    gvs.setPriority(gvs.getRewrite() == null ? 1000 : -1000);
             }
         }
         HealthCheck hc = group.getHealthCheck();
@@ -42,6 +46,27 @@ public class AutoFiller {
                     .setFailTimeout(groupServer.getFailTimeout() == null ? 30 : groupServer.getFailTimeout())
                     .setFailTimeout(groupServer.getMaxFails() == null ? 0 : groupServer.getMaxFails());
         }
+    }
+
+    public void autofillVGroup(Group group) throws Exception {
+        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+            VirtualServer tvs = gvs.getVirtualServer();
+            VirtualServer vs = virtualServerRepository.getById(gvs.getVirtualServer().getId());
+            tvs.setName(vs.getName()).setSlbId(vs.getSlbId()).setPort(vs.getPort()).setSsl(vs.getSsl());
+            tvs.getDomains().clear();
+            for (Domain domain : vs.getDomains()) {
+                tvs.getDomains().add(domain);
+            }
+            if (gvs.getPriority() == null) {
+                if (gvs.getPath().endsWith(RegexRootPath))
+                    gvs.setPriority(Integer.MIN_VALUE);
+                else
+                    gvs.setPriority(gvs.getRewrite() == null ? 1000 : -1000);
+            }
+        }
+        group.setHealthCheck(null);
+        group.setLoadBalancingMethod(null);
+        group.getGroupServers().clear();
     }
 
     public void autofill(Slb slb) throws Exception {

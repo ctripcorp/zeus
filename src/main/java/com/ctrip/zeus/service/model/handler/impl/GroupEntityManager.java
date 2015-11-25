@@ -29,16 +29,28 @@ public class GroupEntityManager implements GroupSync {
     private RGroupVsDao rGroupVsDao;
     @Resource
     private RGroupGsDao rGroupGsDao;
+    @Resource
+    private RGroupVgDao rGroupVgDao;
 
     @Override
     public void add(Group group) throws Exception {
         group.setVersion(1);
         GroupDo d = C.toGroupDo(0L, group);
+        if (d.getAppId() == null)
+            // if app id is null, it must be virtual group
+            d.setAppId("VirtualGroup");
         groupDao.insert(d);
         group.setId(d.getId());
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
         relSyncVs(group, true);
         relSyncGs(group, true);
+    }
+
+    @Override
+    public void add(Group group, boolean isVirtual) throws Exception {
+        add(group);
+        if (isVirtual)
+            relSyncVg(group);
     }
 
     @Override
@@ -48,7 +60,7 @@ public class GroupEntityManager implements GroupSync {
             throw new ValidationException("Newer Group version is detected.");
         group.setVersion(group.getVersion() + 1);
 
-        GroupDo d = C.toGroupDo(group.getId(), group);
+        GroupDo d = C.toGroupDo(group.getId(), group).setAppId("VirtualGroup");
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion()).setContent(ContentWriters.writeGroupContent(group)));
         relSyncVs(group, false);
@@ -64,6 +76,7 @@ public class GroupEntityManager implements GroupSync {
     public int delete(Long groupId) throws Exception {
         rGroupVsDao.deleteAllByGroup(new RelGroupVsDo().setGroupId(groupId));
         rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(groupId));
+        rGroupVgDao.deleteByPK(new RelGroupVgDo().setGroupId(groupId));
         int count = groupDao.deleteById(new GroupDo().setId(groupId));
         archiveGroupDao.deleteByGroup(new ArchiveGroupDo().setGroupId(groupId));
         return count;
@@ -127,6 +140,10 @@ public class GroupEntityManager implements GroupSync {
             dos[i] = new RelGroupGsDo().setGroupId(group.getId()).setIp(adding.get(i));
         }
         rGroupGsDao.insert(dos);
+    }
+
+    private void relSyncVg(Group group) throws DalException {
+        rGroupVgDao.insert(new RelGroupVgDo().setGroupId(group.getId()));
     }
 
     private void relSyncVs(Group group, boolean isnew) throws DalException {

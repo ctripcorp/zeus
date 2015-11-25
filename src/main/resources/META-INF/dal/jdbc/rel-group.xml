@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
-    <entity name="r-group-vs" table="r_group_vs" alias="rgv" do-class="RelGroupVsDo">
+    <entity name="r-group-vg" table="r_group_vg" alias="rgv" do-class="RelGroupVgDo">
+        <query-defs>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-group" type="SELECT">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="r-group-vs" table="r_group_vs" alias="rgv2" do-class="RelGroupVsDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="find-all-groups-by-vs" type="SELECT" multiple="true">
