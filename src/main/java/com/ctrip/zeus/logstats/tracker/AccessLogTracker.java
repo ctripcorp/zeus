@@ -13,6 +13,7 @@ import java.util.Scanner;
  * Created by zhoumy on 2015/11/13.
  */
 public class AccessLogTracker implements LogTracker {
+    private final int TrackLatch = 10;
     private final LogTrackerStrategy strategy;
     private final String logFilename;
     private final int size;
@@ -20,6 +21,8 @@ public class AccessLogTracker implements LogTracker {
     private RandomAccessFile raf;
     private FileChannel fileChannel;
     private int offset;
+    private String offsetValue = "";
+    private int rollingLogCounter;
     private File trackingFile;
     private boolean allowTracking;
 
@@ -85,6 +88,8 @@ public class AccessLogTracker implements LogTracker {
 
     @Override
     public void stop() throws IOException {
+        rollingLogCounter = TrackLatch;
+        tryLog();
         if (fileChannel != null)
             fileChannel.close();
         if (raf != null)
@@ -114,7 +119,6 @@ public class AccessLogTracker implements LogTracker {
         boolean eol = false;
         int colOffset = 0;
         byte[] line = new byte[size];
-        String fresh = "";
 
         while (buffer.hasRemaining()) {
             while (!eol && buffer.hasRemaining()) {
@@ -123,18 +127,18 @@ public class AccessLogTracker implements LogTracker {
                     case -1:
                     case '\n':
                         eol = true;
-                        fresh = new String(line, 0, colOffset);
-                        delegator.delegate(fresh);
+                        offsetValue = new String(line, 0, colOffset);
+                        delegator.delegate(offsetValue);
                         offset += ++colOffset;
                         break;
                     case '\r':
                         eol = true;
-                        fresh = new String(line, 0, colOffset);
+                        offsetValue = new String(line, 0, colOffset);
                         if ((buffer.get()) != '\n')
                             buffer.position(colOffset);
                         else
                             colOffset++;
-                        delegator.delegate(fresh);
+                        delegator.delegate(offsetValue);
                         offset += ++colOffset;
                         break;
                     default:
@@ -147,15 +151,16 @@ public class AccessLogTracker implements LogTracker {
             eol = false;
         }
         fileChannel.position(offset);
-        tryLog(offset, fresh);
+        tryLog();
     }
 
-    private void tryLog(Integer offset, String value) {
-        if (allowTracking) {
+    private void tryLog() {
+        rollingLogCounter++;
+        if (allowTracking && (TrackLatch <= rollingLogCounter)) {
             OutputStream os = null;
             try {
                 os = new FileOutputStream(trackingFile);
-                String output = offset.toString() + "\n" + value;
+                String output = Integer.valueOf(offset).toString() + "\n" + offsetValue;
                 os.write(output.getBytes());
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -169,6 +174,7 @@ public class AccessLogTracker implements LogTracker {
                         e.printStackTrace();
                     }
             }
+            rollingLogCounter = 0;
         }
     }
 
