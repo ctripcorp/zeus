@@ -104,11 +104,11 @@
         <property name="durability" value="true"/>
     </bean>
 
-    <!-- Run the job every 1s  with initial delay of 1 second -->
+    <!-- Run the job every 1s  with initial delay of 5 second -->
     <bean id="healthCheckFetchTrigger"  class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
         <property name="jobDetail" ref="healthCheckFetchDetail"/>
         <property name="startDelay" value="1000"/>
-        <property name="repeatInterval" value="1000"/>
+        <property name="repeatInterval" value="5000"/>
     </bean>
 
     <!-- Scheduler factory bean to glue together jobDetails and triggers to Configure Quartz Scheduler -->
