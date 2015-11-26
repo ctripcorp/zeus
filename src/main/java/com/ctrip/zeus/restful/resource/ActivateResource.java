@@ -1,8 +1,7 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
-import com.ctrip.zeus.dal.core.ConfSlbVirtualServerActiveDao;
-import com.ctrip.zeus.dal.core.ConfSlbVirtualServerActiveDo;
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.SlbValidatorException;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
@@ -68,7 +67,8 @@ public class ActivateResource {
     private ActivateService activateService;
     @Resource
     private ConfSlbVirtualServerActiveDao confSlbVirtualServerActiveDao;
-
+    @Resource
+    private ConfGroupActiveDao confGroupActiveDao;
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
@@ -243,5 +243,36 @@ public class ActivateResource {
             }
         }
         return responseHandler.handle("update suc.", hh.getMediaType());
+    }
+    @GET
+    @Path("/group/dataFill")
+    @Authorize(name="activate")
+    public Response dataFill(@Context HttpServletRequest request,
+                                @Context HttpHeaders hh)throws Exception {
+        List<ConfGroupActiveDo> confGroupActiveDos = confGroupActiveDao.findAll(ConfGroupActiveEntity.READSET_FULL);
+        List<Long> failIds = new ArrayList<>();
+        for (ConfGroupActiveDo c : confGroupActiveDos){
+            Group group = null;
+            try{
+                group = DefaultSaxParser.parseEntity(Group.class, c.getContent());
+            }catch (Exception e){
+                failIds.add(c.getGroupId());
+                continue;
+            }
+
+            for (GroupVirtualServer gv : group.getGroupVirtualServers()){
+                if (gv.getVirtualServer().getSlbId().equals(c.getSlbId())){
+                    c.setSlbVirtualServerId(gv.getVirtualServer().getId());
+                    confGroupActiveDao.insert(c);
+                }
+                if (c.getSlbId()==0&&group.getGroupVirtualServers().size()==1){
+                    c.setSlbVirtualServerId(gv.getVirtualServer().getId());
+                    c.setSlbId(gv.getVirtualServer().getSlbId());
+                    confGroupActiveDao.deleteByGroupId(new ConfGroupActiveDo().setGroupId(c.getGroupId()));
+                    confGroupActiveDao.insert(c);
+                }
+            }
+        }
+        return responseHandler.handle("update suc."+failIds.toString(), hh.getMediaType());
     }
 }

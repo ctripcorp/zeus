@@ -11,6 +11,7 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         content = values(content),
+                        slb_virtual_server_id = values(slb_virtual_server_id),
                         version = values(version),
                         <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
@@ -144,7 +145,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-virtual-server-id'/> in in <IN>${slb-virtual-server-ids}</IN>
+                        WHERE <FIELD name='slb-virtual-server-id'/> in <IN>${slb-virtual-server-ids}</IN>
                     ]]>
                 </statement>
             </query>
@@ -155,7 +156,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-virtual-server-id'/> in in <IN>${slb-virtual-server-ids}</IN>
+                        WHERE <FIELD name='slb-virtual-server-id'/> in <IN>${slb-virtual-server-ids}</IN>
                         AND <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>

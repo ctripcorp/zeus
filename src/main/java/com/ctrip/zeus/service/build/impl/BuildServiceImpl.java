@@ -121,7 +121,9 @@ public class BuildServiceImpl implements BuildService {
                 groupList = new ArrayList<>();
                 result.put(vsId,groupList);
             }
-
+            if (activatedGroups == null){
+                continue;
+            }
             for (Group g : activatedGroups){
                 if (deactivateGroup.contains(g.getId())){
                     continue;
