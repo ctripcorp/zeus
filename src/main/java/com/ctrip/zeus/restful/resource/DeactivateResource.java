@@ -114,16 +114,32 @@ public class DeactivateResource {
                                           @QueryParam("slbId") Long slbId)throws Exception {
         List<VirtualServer> vses = activateService.getActivatedVirtualServer(vsId);
         Long taskId = null;
-        for (VirtualServer vs : vses){
-            if (vs.getSlbId().equals(slbId)){
+        if (vses.size() == 0 ){
+            throw new ValidationException("Vs is not activated!");
+        }else if (slbId == null){
+            if (vses.size() == 1 ){
                 OpsTask activateTask = new OpsTask();
                 activateTask.setSlbVirtualServerId(vsId);
                 activateTask.setCreateTime(new Date());
                 activateTask.setOpsType(TaskOpsType.DEACTIVATE_VS);
-                activateTask.setTargetSlbId(slbId);
+                activateTask.setTargetSlbId(vses.get(0).getSlbId());
                 taskId = taskManager.addTask(activateTask);
+            }else {
+                throw new ValidationException("Vs has activated in multiple slbs,please use slbId Param.");
+            }
+        }else {
+            for (VirtualServer vs : vses){
+                if (vs.getSlbId().equals(slbId)){
+                    OpsTask activateTask = new OpsTask();
+                    activateTask.setSlbVirtualServerId(vsId);
+                    activateTask.setCreateTime(new Date());
+                    activateTask.setOpsType(TaskOpsType.DEACTIVATE_VS);
+                    activateTask.setTargetSlbId(slbId);
+                    taskId = taskManager.addTask(activateTask);
+                }
             }
         }
+
         if (taskId == null){
             throw new ValidationException("Not Found Activated VsId "+vsId + "In Slb "+ slbId);
         }
