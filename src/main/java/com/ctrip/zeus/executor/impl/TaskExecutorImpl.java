@@ -15,15 +15,13 @@ import com.ctrip.zeus.service.task.TaskService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.task.constant.TaskStatus;
 import com.ctrip.zeus.task.entity.OpsTask;
-import com.netflix.config.DynamicIntProperty;
-import com.netflix.config.DynamicPropertyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 
 /**
@@ -201,10 +199,10 @@ public class TaskExecutorImpl implements TaskExecutor {
             setTaskResult(slbId,true,null);
         }catch (Exception e){
             // failed
-            ByteArrayOutputStream out = new ByteArrayOutputStream(512);
+            StringWriter out = new StringWriter(512);
             PrintWriter printWriter = new PrintWriter(out);
             e.printStackTrace(printWriter);
-            String failCause = e.getMessage()+out.toString();
+            String failCause = e.getMessage()+out.getBuffer().toString();
             setTaskResult(slbId, false,failCause.length() >1024 ? failCause.substring(0,1024):failCause);
             rollBack(slbId);
             throw e;
