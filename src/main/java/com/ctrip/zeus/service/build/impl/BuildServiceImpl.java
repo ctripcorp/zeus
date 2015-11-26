@@ -95,6 +95,7 @@ public class BuildServiceImpl implements BuildService {
         if (activatedVses != null){
             buildVirtualServer.addAll(activatedVses.keySet());
         }
+        buildVirtualServer.addAll(activatingVses.keySet());
         Map<Long,VirtualServer> result = new HashMap<>();
         for (Long vsId : buildVirtualServer){
             if (activatingVses.containsKey(vsId)){
