@@ -79,7 +79,7 @@ public class ActivateServiceImpl implements ActivateService {
         }
 
         ConfGroupActiveDo c = new ConfGroupActiveDo().setCreatedTime(new Date());
-        c.setGroupId(archive.getId()).setContent(archive.getContent()).setVersion(archive.getVersion()).setSlbVirtualServerId(vsId);
+        c.setGroupId(archive.getId()).setContent(archive.getContent()).setVersion(archive.getVersion()).setSlbVirtualServerId(vsId).setSlbId(slbId);
         confGroupActiveDao.insert(c);
         logger.info("Conf Group Active Inserted: [GroupId: " + c.getId() + ",Content: " + c.getContent() + ",Version: " + c.getVersion() + "]");
     }
