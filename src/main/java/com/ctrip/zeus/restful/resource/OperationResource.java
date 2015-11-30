@@ -407,7 +407,7 @@ public class OperationResource {
             }
         }
 
-        List<GroupStatus> statuses = groupStatusService.getOnlineGroupStatus(groupId);
+        List<GroupStatus> statuses = groupStatusService.getOfflineGroupStatus(groupId);
         //ToDo set group name and slb name
         GroupStatus groupStatusList = new GroupStatus().setGroupId(groupId).setSlbName("");
         for (GroupStatus groupStatus : statuses) {

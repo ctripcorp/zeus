@@ -41,7 +41,7 @@ public class TaskWorkerImpl implements TaskWorker {
     }
 
     private void init()throws Exception{
-        Long slbId = slbCriteriaQuery.queryBySlbServerIp(S.getIp());
+        Long slbId = slbCriteriaQuery.queryBySlbServerIp("10.2.25.95");
         if (slbId != null && slbId > 0){
             workerSlbId = slbId;
             initFailCount = 0;

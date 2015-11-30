@@ -66,9 +66,9 @@ public class StatusResource {
             _slbId = slbCriteriaQuery.queryByName(slbName);
         }
         if (null == _slbId) {
-            statusList = groupStatusService.getAllOnlineGroupsStatus();
+            statusList = groupStatusService.getAllOfflineGroupsStatus();
         } else {
-            statusList = groupStatusService.getOnlineGroupsStatusBySlbId(_slbId);
+            statusList = groupStatusService.getOfflineGroupsStatusBySlbId(_slbId);
         }
 
         GroupStatusList result = new GroupStatusList();
@@ -105,7 +105,7 @@ public class StatusResource {
             _slbId = slbCriteriaQuery.queryByName(slbName);
         }
         if (null == _slbId) {
-            List<GroupStatus> statusList = groupStatusService.getOnlineGroupStatus(_groupId);
+            List<GroupStatus> statusList = groupStatusService.getOfflineGroupStatus(_groupId);
             if (statusList != null && statusList.size() > 0) {
                 statusResult = statusList.get(0);
             } else {
@@ -114,7 +114,7 @@ public class StatusResource {
         } else {
             Set<Long> groupIds = new HashSet<>();
             groupIds.add(_groupId);
-            List<GroupStatus> res = groupStatusService.getOnlineGroupsStatus(groupIds, _slbId);
+            List<GroupStatus> res = groupStatusService.getOfflineGroupsStatus(groupIds, _slbId);
             if (res!=null && res.size()>0){
                 statusResult = res.get(0);
             }else {
