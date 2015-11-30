@@ -322,7 +322,7 @@ public class GroupResource {
                 failedIds.add(group.getId());
             }
         }
-        if (groupIds.size() == 0)
+        if (failedIds.size() == 0)
             return responseHandler.handle("Successfully synced all group statuses.", hh.getMediaType());
         else
             return responseHandler.handle("Error occurs when syncing group statuses on id " + Joiner.on(',').join(groupIds) + ".", hh.getMediaType());

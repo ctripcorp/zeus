@@ -11,6 +11,7 @@ import java.util.Set;
 public interface ActiveConfService extends Repository {
 
     public Set<Long> getSlbIdsByGroupId(Long groupId)throws Exception;
+    public Set<Long> getSlbIdsByGroupIds(Long[] groupId)throws Exception;
     public Set<Long> getGroupIdsBySlbId(Long slbId) throws Exception;
     public Set<Long> getVsIdsBySlbId(Long slbId) throws Exception;
 }

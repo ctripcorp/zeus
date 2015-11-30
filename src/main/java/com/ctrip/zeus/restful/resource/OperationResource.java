@@ -7,6 +7,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
@@ -37,10 +38,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -76,6 +74,8 @@ public class OperationResource {
     private CertificateService certificateService;
     @Resource
     private CertificateInstaller certificateInstaller;
+    @Resource
+    private ActivateService activateService;
 
 
     @GET
@@ -94,14 +94,19 @@ public class OperationResource {
 
     private Response serverOps(HttpHeaders hh, String serverip, boolean up) throws Exception {
         //get slb by serverip
-        List<Slb> slblist = slbRepository.listByGroupServer(serverip);
-        AssertUtils.assertNotNull(slblist, "[UpServer/DownServer] Can not find slb by server ip :[" + serverip + "],Please check the configuration and server ip!");
+        Set<Long> groupIds = statusService.findGroupIdByIp(serverip);
+        Set<Long> slbIds = activeConfService.getSlbIdsByGroupIds(groupIds.toArray(new Long[]{}));
+        Set<Long> slbIdsOffLine = slbCriteriaQuery.queryByGroups(groupIds.toArray(new Long[]{}));
+        slbIds.addAll(slbIdsOffLine);
+        if (slbIds == null || slbIds.size() == 0 ){
+            throw new ValidationException("Not found Server Ip.");
+        }
         List<OpsTask> tasks = new ArrayList<>();
-        for (Slb slb : slblist) {
+        for (Long slbId : slbIds) {
             OpsTask task = new OpsTask();
             task.setIpList(serverip);
             task.setOpsType(TaskOpsType.SERVER_OPS);
-            task.setTargetSlbId(slb.getId());
+            task.setTargetSlbId(slbId);
             task.setUp(up);
             tasks.add(task);
         }
@@ -119,7 +124,7 @@ public class OperationResource {
             throw new Exception(failCause);
         }
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
-        List<Group> groupList = groupRepository.listGroupsByGroupServer(serverip);
+        List<Group> groupList = groupRepository.list(groupIds.toArray(new Long[]{}));
 
         if (groupList != null) {
             for (Group group : groupList) {

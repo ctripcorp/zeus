@@ -43,6 +43,21 @@ public class ActiveConfServiceImpl implements ActiveConfService {
         return slbIds;
     }
     @Override
+    public Set<Long> getSlbIdsByGroupIds(Long[] groupId) throws Exception {
+        Set<Long> slbIds = new HashSet<>();
+
+        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIds(groupId,ConfGroupActiveEntity.READSET_FULL);
+        List<Long> vsIds = new ArrayList<>();
+        for (ConfGroupActiveDo c : groupActiveDos){
+            vsIds.add(c.getSlbVirtualServerId());
+        }
+        List<ConfSlbVirtualServerActiveDo> vsActiveDos = confSlbVirtualServerActiveDao.findBySlbVirtualServerIds(vsIds.toArray(new Long[]{}),ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        for (ConfSlbVirtualServerActiveDo c : vsActiveDos){
+            slbIds.add(c.getSlbId());
+        }
+        return slbIds;
+    }
+    @Override
     public Set<Long> getGroupIdsBySlbId(Long slbId) throws Exception {
         Set<Long> groupIds = new HashSet<>();
         List<ConfSlbVirtualServerActiveDo> vsActiveDos = confSlbVirtualServerActiveDao.findBySlbId(slbId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
