@@ -4,6 +4,7 @@ import com.ctrip.zeus.executor.TaskWorker;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.executor.TaskExecutor;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.util.S;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ import javax.annotation.Resource;
 public class TaskWorkerImpl implements TaskWorker {
     private static Long workerSlbId = null;
     @Resource
-    SlbRepository slbRepository;
+    SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     TaskExecutor taskExecutor;
     Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -40,9 +41,9 @@ public class TaskWorkerImpl implements TaskWorker {
     }
 
     private void init()throws Exception{
-        Slb slb = slbRepository.getBySlbServer(S.getIp());
-        if (slb != null && slb.getId()!=null){
-            workerSlbId = slb.getId();
+        Long slbId = slbCriteriaQuery.queryBySlbServerIp(S.getIp());
+        if (slbId != null && slbId > 0){
+            workerSlbId = slbId;
             initFailCount = 0;
         }else{
             if (++initFailCount > 3){

@@ -7,6 +7,7 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -39,6 +40,8 @@ public class NginxResource {
     private NginxConfUpstreamDao nginxConfUpstreamDao;
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
 
     @GET
     @Path("/load")
@@ -57,12 +60,11 @@ public class NginxResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getVsConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("vs") Long vsid ,@QueryParam("version") Integer versionNum) throws Exception{
         VirtualServerConfResponse response = new VirtualServerConfResponse();
-
-        Slb slb = slbRepository.getByVirtualServer(vsid);
+        Long slbId = slbCriteriaQuery.queryByVs(vsid);
         int version;
         if (null == versionNum || versionNum <= 0)
         {
-            version= nginxConfService.getCurrentVersion(slb.getId());
+            version= nginxConfService.getCurrentVersion(slbId);
         }else
         {
             version = versionNum;
