@@ -7,6 +7,7 @@ import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VGroupValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.status.StatusService;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -32,6 +33,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     private GroupValidator groupModelValidator;
     @Resource
     private VGroupValidator vGroupValidator;
+    @Resource
+    private StatusService statusService;
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
@@ -68,6 +71,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         autoFiller.autofill(group);
         hideVirtualValue(group);
         groupEntityManager.add(group, false);
+        syncMemberStatus(group);
         return group;
     }
 
@@ -89,6 +93,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         autoFiller.autofill(group);
         hideVirtualValue(group);
         groupEntityManager.update(group);
+        syncMemberStatus(group);
         return group;
     }
 
@@ -107,6 +112,7 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public int delete(Long groupId) throws Exception {
         groupModelValidator.removable(groupId);
+        statusService.cleanGroupServerStatus(groupId);
         return groupEntityManager.delete(groupId);
     }
 
@@ -123,17 +129,16 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public List<Long> portGroupRel() throws Exception {
-        Set<Long> groupIds = groupCriteriaQuery.queryAll();
-        List<Group> groups = list(groupIds.toArray(new Long[groupIds.size()]));
-        Group[] batch = groups.toArray(new Group[groups.size()]);
-        return groupEntityManager.port(batch);
-    }
-
-    @Override
-    public void portGroupRel(Long groupId) throws Exception {
-        Group group = getById(groupId);
-        groupEntityManager.port(group);
+    public void syncMemberStatus(Group group) throws Exception {
+        Long[] vsIds = new Long[group.getGroupVirtualServers().size()];
+        for (int i = 0; i < vsIds.length; i++) {
+            vsIds[i] = group.getGroupVirtualServers().get(i).getVirtualServer().getId();
+        }
+        String[] ips = new String[group.getGroupServers().size()];
+        for (int i = 0; i < ips.length; i++) {
+            ips[i] = group.getGroupServers().get(i).getIp();
+        }
+        statusService.groupServerStatusInit(group.getId(), vsIds, ips);
     }
 
     @Override
@@ -150,4 +155,5 @@ public class GroupRepositoryImpl implements GroupRepository {
     private void hideVirtualValue(Group group) {
         group.setVirtual(null);
     }
+
 }
