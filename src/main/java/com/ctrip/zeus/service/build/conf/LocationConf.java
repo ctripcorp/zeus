@@ -31,14 +31,13 @@ public class LocationConf {
     private static DynamicBooleanProperty errorPageEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable-all", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicStringProperty upstreamKeepAlive = DynamicPropertyFactory.getInstance().getStringProperty("upstream.keep-alive", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
 
-    public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName)throws Exception {
+    public static String generate(Slb slb, VirtualServer vs, Group group, String upstreamName) throws Exception {
         StringBuilder b = new StringBuilder(1024);
-        if (group.isVirtual()){
+        if (group.isVirtual()) {
             b.append("location ").append(getPath(slb, vs, group)).append(" {\n");
-            if (group.getGroupVirtualServers().size()==1)
-            {
-                b.append("rewrite ").append(group.getGroupVirtualServers().get(0).getRedirect()).append(" redirect;\n");
-            }else {
+            if (group.getGroupVirtualServers().size() == 1) {
+                addRedirectCommand(b, group);
+            } else {
                 throw new ValidationException("Virtual Group has Multiple Group VirtualServers Redirect");
             }
             b.append("}\n");
@@ -192,6 +191,19 @@ public class LocationConf {
 //            }
         }
     }
+
+    private static void addRedirectCommand(StringBuilder sb, Group group) throws Exception {
+        if (sb != null) {
+            String redirect = group.getGroupVirtualServers().get(0).getRedirect();
+            if (redirect.isEmpty())
+                return;
+            List<String> rewriteList = PathRewriteParser.getValues(redirect);
+            for (String tmp : rewriteList) {
+                sb.append("rewrite ").append(tmp).append(" redirect;\n");
+            }
+        }
+    }
+
     private static void addBastionCommand(StringBuilder sb,String upstreamName){
         String wl = whiteList.get();
         if (null == wl || wl.isEmpty() || wl.trim().equals("") || wl.contains("\""))
