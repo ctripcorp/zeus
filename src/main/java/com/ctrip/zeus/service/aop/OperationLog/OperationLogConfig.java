@@ -42,12 +42,12 @@ public class OperationLogConfig {
         config.put("SlbResource.update",new OpConf(OperationLogType.SLB,new int[]{2}));
         config.put("SlbResource.delete",new OpConf(OperationLogType.SLB,new int[]{2}));
 
-        config.put("ServerResource.upServer",new OpConf(OperationLogType.SERVER,new int[]{2}));
-        config.put("ServerResource.downServer",new OpConf(OperationLogType.SERVER,new int[]{2}));
-        config.put("ServerResource.upMember",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
-        config.put("ServerResource.downMember",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
-        config.put("ServerResource.pullIn",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
-        config.put("ServerResource.pullOut",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
+        config.put("OperationResource.upServer",new OpConf(OperationLogType.SERVER,new int[]{2}));
+        config.put("OperationResource.downServer",new OpConf(OperationLogType.SERVER,new int[]{2}));
+        config.put("OperationResource.upMember",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
+        config.put("OperationResource.downMember",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
+        config.put("OperationResource.pullIn",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
+        config.put("OperationResource.pullOut",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
 
 //        config.put("StatusResource.allGroupStatusInSlb",new OpConf(OperationLogType.SLB,new int[]{2,3}));
 //        config.put("StatusResource.groupStatus",new OpConf(OperationLogType.GROUP,new int[]{2,3}));
