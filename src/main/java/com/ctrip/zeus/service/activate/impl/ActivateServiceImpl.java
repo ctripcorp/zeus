@@ -98,9 +98,17 @@ public class ActivateServiceImpl implements ActivateService {
 
 
     @Override
-    public void deactiveGroup(Long groupId , Long vsId) throws Exception
+    public void deactiveGroup(Long groupId , Long slbId) throws Exception
     {
-        confGroupActiveDao.deleteByGroupIdAndSlbVirtualServerId(new ConfGroupActiveDo().setGroupId(groupId).setSlbVirtualServerId(vsId));
+        List<ConfSlbVirtualServerActiveDo> list = confSlbVirtualServerActiveDao.findBySlbId(slbId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        Long[]vsIds = new Long[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            vsIds[i] = list.get(i).getSlbVirtualServerId();
+        }
+        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIdsAndSlbVirtualServerIds(new Long[]{groupId},vsIds,ConfGroupActiveEntity.READSET_FULL);
+        for (ConfGroupActiveDo confGroupActiveDo : groupActiveDos){
+            confGroupActiveDao.deleteByGroupIdAndSlbVirtualServerId(new ConfGroupActiveDo().setGroupId(groupId).setSlbVirtualServerId(confGroupActiveDo.getSlbVirtualServerId()));
+        }
     }
 
     @Override

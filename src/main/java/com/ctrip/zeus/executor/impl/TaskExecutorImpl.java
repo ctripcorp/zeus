@@ -257,7 +257,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     private void updateVersion(Long slbId) throws Exception{
         try {
             int current = buildInfoService.getCurrentTicket(slbId);
-            buildInfoService.updateTicket(slbId,current+1);
+            buildInfoService.updateTicket(slbId, current + 1);
         }catch (Exception e){
             throw new Exception("Update Version Fail!",e);
         }
@@ -306,7 +306,8 @@ public class TaskExecutorImpl implements TaskExecutor {
                 if (!task.getStatus().equals(TaskStatus.DOING)){
                     continue;
                 }
-                activateService.deactiveGroup(task.getGroupId(), groupVs.get(task.getGroupId()));
+
+                activateService.deactiveGroup(task.getGroupId(), slbId);
             }
             for (OpsTask task :serverOps.values()){
                 if (!task.getStatus().equals(TaskStatus.DOING)){

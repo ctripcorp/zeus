@@ -43,10 +43,10 @@ public interface ActivateService extends Repository {
     /**
      * deactivate data by groupid
      * @param groupId the Group id
-     * @param vsId the vsId
+     * @param slbId the slbId
      * @throws Exception
      */
-    public void deactiveGroup(Long groupId, Long vsId) throws Exception;
+    public void deactiveGroup(Long groupId, Long slbId) throws Exception;
 
     /**
      * deactivate data by groupid
