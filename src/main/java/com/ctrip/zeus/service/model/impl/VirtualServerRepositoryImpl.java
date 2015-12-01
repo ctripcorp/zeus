@@ -12,9 +12,7 @@ import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
-import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
-import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -29,11 +27,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Resource
     private VirtualServerEntityManager virtualServerEntityManager;
     @Resource
-    private MVsContentDao mVsContentDao;
-    @Resource
-    private SlbVirtualServerDao slbVirtualServerDao;
-    @Resource
-    private SlbDomainDao slbDomainDao;
+    private ArchiveVsDao archiveVsDao;
     @Resource
     private VirtualServerValidator virtualServerModelValidator;
     @Resource
@@ -46,15 +40,15 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
         List<VirtualServer> result = new ArrayList<>();
-        for (MetaVsContentDo metaVsContentDo : mVsContentDao.findAllByIds(vsIds, MVsContentEntity.READSET_FULL)) {
-            result.add(ContentReaders.readVirtualServerContent(metaVsContentDo.getContent()));
+        for (MetaVsArchiveDo metaVsArchiveDo : archiveVsDao.findMaxVersionByVses(vsIds, ArchiveVsEntity.READSET_FULL)) {
+            result.add(ContentReaders.readVirtualServerContent(metaVsArchiveDo.getContent()));
         }
         return result;
     }
 
     @Override
     public VirtualServer getById(Long virtualServerId) throws Exception {
-        MetaVsContentDo d = mVsContentDao.findById(virtualServerId, MVsContentEntity.READSET_FULL);
+        MetaVsArchiveDo d = archiveVsDao.findMaxVersionByVs(virtualServerId, ArchiveVsEntity.READSET_FULL);
         return d == null ? null : ContentReaders.readVirtualServerContent(d.getContent());
     }
 
@@ -108,23 +102,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public List<Long> portVirtualServerRel() throws Exception {
-        List<SlbVirtualServerDo> l = slbVirtualServerDao.findAll(SlbVirtualServerEntity.READSET_FULL);
-        VirtualServer[] vses = new VirtualServer[l.size()];
-        for (int i = 0; i < l.size(); i++) {
-            vses[i] = createVirtualServer(l.get(i));
-        }
-        return virtualServerEntityManager.port(vses);
-    }
-
-    @Override
-    public void portVirtualServerRel(Long vsId) throws Exception {
-        SlbVirtualServerDo d = slbVirtualServerDao.findByPK(vsId, SlbVirtualServerEntity.READSET_FULL);
-        VirtualServer vs = createVirtualServer(d);
-        virtualServerEntityManager.port(vs);
-    }
-
-    @Override
     public void installCertificate(VirtualServer virtualServer) throws Exception {
         List<String> ips = slbQuery.getSlbIps(virtualServer.getSlbId());
         List<Domain> vsDomains = virtualServer.getDomains();
@@ -136,16 +113,14 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         certificateService.install(virtualServer.getId(), ips, certId);
     }
 
-    private VirtualServer createVirtualServer(SlbVirtualServerDo d) throws DalException {
-        VirtualServer vs = C.toVirtualServer(d);
-        querySlbDomains(d.getId(), vs);
-        return vs;
+    @Override
+    public List<Long> portVirtualServerArchives() throws Exception {
+        Set<Long> all = virtualServerCriteriaQuery.queryAll();
+        return virtualServerEntityManager.port(all.toArray(new Long[all.size()]));
     }
 
-    private void querySlbDomains(Long slbVirtualServerId, VirtualServer virtualServer) throws DalException {
-        List<SlbDomainDo> list = slbDomainDao.findAllBySlbVirtualServer(slbVirtualServerId, SlbDomainEntity.READSET_FULL);
-        for (SlbDomainDo d : list) {
-            virtualServer.addDomain(new Domain().setName(d.getName().toLowerCase()));
-        }
+    @Override
+    public void portVirtualServerArchive(Long vsId) throws Exception {
+        virtualServerEntityManager.port(vsId);
     }
 }

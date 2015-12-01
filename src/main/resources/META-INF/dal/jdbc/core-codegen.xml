@@ -82,12 +82,53 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="archive-vs" table="archive_vs" alias="av">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="vs-id" field="vs_id" value-type="long" length="19" nullable="false" />
+    <member name="content" field="content" value-type="String" length="16777215" nullable="false" />
+    <member name="version" field="version" value-type="int" length="10" nullable="false" />
+    <member name="date-time-last-change" field="DateTime_LastChange" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="vs_id_version" unique="true" members="vs_id ASC, version ASC" />
+    <index name="DateTime_LastChange" members="DateTime_LastChange ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="auth-private-key" table="auth_private_key" alias="apk">
     <member name="private-key" field="private_key" value-type="String" length="50" nullable="false" key="true" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-private-key" value-type="String" key-member="private-key" />
     <primary-key name="PRIMARY" members="private_key" />
     <index name="time idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -128,6 +169,7 @@
     <var name="key-id" value-type="int" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -169,6 +211,7 @@
     <index name="role_idx" members="role_name ASC" />
     <index name="res_idx" members="resource_name ASC" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -209,6 +252,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="role_idx" unique="true" members="role_name ASC" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -249,6 +293,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="usr_name_idx" unique="true" members="user_name ASC" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -290,6 +335,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="usr_idx" members="user_name ASC" />
     <index name="time_idx" members="DataChange_LastTime ASC" />
+    <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -406,13 +452,14 @@
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
+    <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" nullable="false" />
     <member name="content" field="content" value-type="String" length="16777215" />
     <member name="version" field="version" value-type="int" length="10" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="group_id_slb_id" unique="true" members="group_id ASC, slb_id ASC" />
+    <index name="group_id_slb_virtual_server_id" unique="true" members="group_id ASC, slb_virtual_server_id ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
@@ -496,6 +543,48 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="slb_id" unique="true" members="slb_id ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="conf-slb-virtual-server-active" table="conf_slb_virtual_server_active" alias="csvsa">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" nullable="false" />
+    <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
+    <member name="content" field="content" value-type="String" length="16777215" />
+    <member name="version" field="version" value-type="int" length="10" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="slb_virtual_server_id_slb_id" unique="true" members="slb_virtual_server_id ASC, slb_id ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -741,8 +830,8 @@
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
     <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" />
-    <member name="path" field="path" value-type="String" length="4096" nullable="false" />
-    <member name="rewrite" field="rewrite" value-type="String" length="16777215" />
+    <member name="path" field="path" value-type="String" length="200" nullable="false" />
+    <member name="rewrite" field="rewrite" value-type="String" length="255" />
     <member name="priority" field="priority" value-type="int" length="10" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
@@ -870,7 +959,6 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="slb_virtual_server_id_version" unique="true" members="slb_virtual_server_id ASC, version ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
-    <index name="idx_slb_id_virtual_server_id_version" members="slb_id ASC, slb_virtual_server_id ASC, version ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -913,7 +1001,6 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="slb_virtual_server_id_version" unique="true" members="slb_virtual_server_id ASC, version ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
-    <index name="idx_slb_id_virtual_server_id_version" members="slb_id ASC, slb_virtual_server_id ASC, version ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1000,7 +1087,6 @@
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
-    <index name="idx_datetime" members="datetime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1233,6 +1319,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="group_id" unique="true" members="group_id ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
@@ -1673,6 +1760,7 @@
     <member name="port" field="port" value-type="String" length="200" nullable="false" />
     <member name="is-ssl" field="is_ssl" value-type="boolean" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
+    <member name="version" field="version" value-type="int" length="10" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
@@ -1753,13 +1841,57 @@
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="ip" field="ip" value-type="String" length="200" nullable="false" />
     <member name="up" field="up" value-type="boolean" nullable="false" />
+    <member name="status" field="status" value-type="int" length="10" nullable="false" />
     <member name="created-time" field="created_time" value-type="Date" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
-    <member name="status" field="status" value-type="int" length="10" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="slb_virtual_server_id_group_id_ip" unique="true" members="slb_virtual_server_id ASC, group_id ASC, ip ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="status-health-check" table="status_health_check" alias="shc">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="slb-server-ip" field="slb_server_ip" value-type="String" length="64" nullable="false" />
+    <member name="upstream-name" field="upstream_name" value-type="String" length="128" nullable="false" />
+    <member name="member-ip-port" field="member_ip_port" value-type="String" length="128" nullable="false" />
+    <member name="status" field="status" value-type="String" length="128" />
+    <member name="rise" field="rise" value-type="int" length="10" nullable="false" />
+    <member name="fall" field="fall" value-type="int" length="10" nullable="false" />
+    <member name="type" field="type" value-type="String" length="128" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="slb_server_ip" members="slb_server_ip ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1913,10 +2045,12 @@
     <member name="ops-type" field="ops_type" value-type="String" length="50" nullable="false" />
     <member name="group-id" field="group_id" value-type="long" length="19" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" />
+    <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" />
     <member name="ip-list" field="ip_list" value-type="String" length="4096" />
     <member name="up" field="up" value-type="boolean" />
     <member name="status" field="status" value-type="String" length="50" nullable="false" />
     <member name="target-slb-id" field="target_slb_id" value-type="long" length="19" nullable="false" />
+    <member name="resources" field="resources" value-type="String" length="128" />
     <member name="version" field="version" value-type="int" length="10" />
     <member name="fail-cause" field="fail_cause" value-type="String" length="1024" />
     <member name="create-time" field="create_time" value-type="Date" />

@@ -30,6 +30,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -302,26 +304,28 @@ public class GroupResource {
     }
 
     @GET
-    @Path("/group/upgradeAll")
+    @Path("/group/syncStatus")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response upgradeAll(@Context HttpHeaders hh,
-                               @Context HttpServletRequest request) throws Exception {
-
-        List<Long> groupIds = groupRepository.portGroupRel();
-        if (groupIds.size() == 0)
-            return responseHandler.handle("Successfully ported all group relations.", hh.getMediaType());
+                               @Context HttpServletRequest request,
+                               @QueryParam("groupId") Long groupId) throws Exception {
+        if (groupId != null) {
+            groupRepository.syncMemberStatus(groupRepository.getById(groupId));
+            return responseHandler.handle("Successfully synced group status.", hh.getMediaType());
+        }
+        List<Long> failedIds = new ArrayList<>();
+        Set<Long> groupIds = groupCriteriaQuery.queryAll();
+        for (Group group : groupRepository.list(groupIds.toArray(new Long[groupIds.size()]))) {
+            try {
+                groupRepository.syncMemberStatus(group);
+            } catch (Exception ex) {
+                failedIds.add(group.getId());
+            }
+        }
+        if (failedIds.size() == 0)
+            return responseHandler.handle("Successfully synced all group statuses.", hh.getMediaType());
         else
-            return responseHandler.handle("Error occurs when porting group relations on id " + Joiner.on(',').join(groupIds) + ".", hh.getMediaType());
-    }
-
-    @GET
-    @Path("/group/upgrade")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeSingle(@Context HttpHeaders hh,
-                                  @Context HttpServletRequest request,
-                                  @QueryParam("groupId") Long groupId) throws Exception {
-        groupRepository.portGroupRel(groupId);
-        return responseHandler.handle("Successfully ported group relations.", hh.getMediaType());
+            return responseHandler.handle("Error occurs when syncing group statuses on id " + Joiner.on(',').join(groupIds) + ".", hh.getMediaType());
     }
 
 

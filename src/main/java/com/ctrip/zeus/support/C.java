@@ -177,7 +177,8 @@ public class C {
                 .setSlbId(slbId)
                 .setPort(e.getPort())
                 .setIsSsl(e.isSsl())
-                .setName(e.getName());
+                .setName(e.getName())
+                .setVersion(e.getVersion());
     }
 
     public static AuthRoleDo toRoleDo(Role role) {
@@ -211,6 +212,8 @@ public class C {
                 .setIpList(task.getIpList())
                 .setGroupId(task.getGroupId())
                 .setOpsType(task.getOpsType())
+                .setResources(task.getResources())
+                .setSlbVirtualServerId(task.getSlbVirtualServerId())
                 .setSlbId(task.getSlbId());
         return result;
     }
@@ -226,6 +229,8 @@ public class C {
                 .setIpList(opsTask.getIpList())
                 .setGroupId(opsTask.getGroupId()==null?0:opsTask.getGroupId())
                 .setOpsType(opsTask.getOpsType())
+                .setResources(opsTask.getResources())
+                .setSlbVirtualServerId(opsTask.getSlbVirtualServerId()==null?0:opsTask.getSlbVirtualServerId())
                 .setSlbId(opsTask.getSlbId()==null?0:opsTask.getSlbId());
         return result;
     }

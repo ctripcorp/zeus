@@ -22,94 +22,65 @@ public class ActiveConfServiceImpl implements ActiveConfService {
     @Resource
     private ConfSlbActiveDao confSlbActiveDao;
     @Resource
-    private ConfGroupSlbActiveDao confGroupSlbActiveDao;
+    private ConfSlbVirtualServerActiveDao confSlbVirtualServerActiveDao;
 
     private Logger logger = LoggerFactory.getLogger(ActiveConfServiceImpl.class);
 
-    @Override
-    public List<String> getConfGroupActiveContentByGroupIds(Long[] groupIds,Long slbId) throws Exception {
-
-
-        List<ConfGroupActiveDo> list = confGroupActiveDao.findAllByGroupIds(groupIds, ConfGroupActiveEntity.READSET_FULL);
-        List<ConfGroupActiveDo> l = new ArrayList<>();
-        for (ConfGroupActiveDo confGroupActiveDo : list){
-            if (confGroupActiveDo.getSlbId()==slbId||confGroupActiveDo.getSlbId()==0){
-                l.add(confGroupActiveDo);
-            }
-        }
-        List<String> res = new ArrayList<>();
-
-        if (l==null)
-        {
-            logger.warn("No ConfAppActive for apps:"+groupIds.toString());
-            return res;
-        }
-
-        for (ConfGroupActiveDo a : l)
-        {
-            res.add(a.getContent());
-        }
-        return res;
-    }
-
-    @Override
-    public List<String> getConfGroupActiveContentByGroupIds(Long[] groupIds) throws Exception {
-
-
-        List<ConfGroupActiveDo> l = confGroupActiveDao.findAllByGroupIds(groupIds, ConfGroupActiveEntity.READSET_FULL);
-
-        List<String> res = new ArrayList<>();
-
-        if (l==null)
-        {
-            logger.warn("No ConfAppActive for apps:"+groupIds.toString());
-            return res;
-        }
-
-        for (ConfGroupActiveDo a : l)
-        {
-            res.add(a.getContent());
-        }
-        return res;
-    }
-    @Override
-    public String getConfSlbActiveContentBySlbId(Long slbId) throws Exception {
-         ConfSlbActiveDo d = confSlbActiveDao.findBySlbId(slbId, ConfSlbActiveEntity.READSET_FULL);
-        if (d==null)
-        {
-            logger.warn("No conf slb active for SlbID: "+slbId);
-            return null;
-        }
-
-        return d.getContent();
-    }
 
     @Override
     public Set<Long> getSlbIdsByGroupId(Long groupId) throws Exception {
         Set<Long> slbIds = new HashSet<>();
-        List<ConfGroupSlbActiveDo> result = confGroupSlbActiveDao.findByGroupId(groupId,ConfGroupSlbActiveEntity.READSET_FULL);
-        if (result==null||result.size()==0)
-        {
-            return slbIds;
-        }else {
-            for (ConfGroupSlbActiveDo confGroupSlbActiveDo : result){
-                slbIds.add(confGroupSlbActiveDo.getSlbId());
-            }
-            return slbIds;
+
+        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIds(new Long[]{groupId},ConfGroupActiveEntity.READSET_FULL);
+        List<Long> vsIds = new ArrayList<>();
+        for (ConfGroupActiveDo c : groupActiveDos){
+            vsIds.add(c.getSlbVirtualServerId());
         }
+        List<ConfSlbVirtualServerActiveDo> vsActiveDos = confSlbVirtualServerActiveDao.findBySlbVirtualServerIds(vsIds.toArray(new Long[]{}),ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        for (ConfSlbVirtualServerActiveDo c : vsActiveDos){
+            slbIds.add(c.getSlbId());
+        }
+        return slbIds;
+    }
+    @Override
+    public Set<Long> getSlbIdsByGroupIds(Long[] groupId) throws Exception {
+        Set<Long> slbIds = new HashSet<>();
+
+        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByGroupIds(groupId,ConfGroupActiveEntity.READSET_FULL);
+        List<Long> vsIds = new ArrayList<>();
+        for (ConfGroupActiveDo c : groupActiveDos){
+            vsIds.add(c.getSlbVirtualServerId());
+        }
+        List<ConfSlbVirtualServerActiveDo> vsActiveDos = confSlbVirtualServerActiveDao.findBySlbVirtualServerIds(vsIds.toArray(new Long[]{}),ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        for (ConfSlbVirtualServerActiveDo c : vsActiveDos){
+            slbIds.add(c.getSlbId());
+        }
+        return slbIds;
     }
     @Override
     public Set<Long> getGroupIdsBySlbId(Long slbId) throws Exception {
-        List<ConfGroupSlbActiveDo> result = confGroupSlbActiveDao.findBySlbId(slbId,ConfGroupSlbActiveEntity.READSET_FULL);
-        if (result==null||result.size()==0)
-        {
-            return null;
-        }else {
-            Set<Long> groupIds = new HashSet<>();
-            for (ConfGroupSlbActiveDo confGroupSlbActiveDo : result){
-                groupIds.add(confGroupSlbActiveDo.getGroupId());
-            }
-            return groupIds;
+        Set<Long> groupIds = new HashSet<>();
+        List<ConfSlbVirtualServerActiveDo> vsActiveDos = confSlbVirtualServerActiveDao.findBySlbId(slbId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        List<Long> vsIds = new ArrayList<>();
+        for (ConfSlbVirtualServerActiveDo c : vsActiveDos){
+            vsIds.add(c.getSlbVirtualServerId());
         }
+        List<ConfGroupActiveDo> groupActiveDos = confGroupActiveDao.findAllByslbVirtualServerIds(vsIds.toArray(new Long[]{})
+                ,ConfGroupActiveEntity.READSET_FULL);
+
+        for (ConfGroupActiveDo c : groupActiveDos){
+            groupIds.add(c.getGroupId());
+        }
+        return groupIds;
+    }
+
+    @Override
+    public Set<Long> getVsIdsBySlbId(Long slbId) throws Exception {
+        List<ConfSlbVirtualServerActiveDo> vsActiveDos = confSlbVirtualServerActiveDao.findBySlbId(slbId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        Set<Long> res = new HashSet<>();
+        for (ConfSlbVirtualServerActiveDo vs : vsActiveDos){
+            res.add(vs.getSlbVirtualServerId());
+        }
+        return res;
     }
 }

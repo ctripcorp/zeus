@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <!-- TODO remove the table after first deployed archive version -->
     <entity name="m-vs-content" table="m_vs_content" alias="mvc" do-class="MetaVsContentDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
@@ -23,14 +24,75 @@
                     ]]>
                 </statement>
             </query>
-            <query name="insert-or-update" type="INSERT" batch="true">
+        </query-defs>
+    </entity>
+    <entity name="archive-vs" table="archive_vs" alias="av" do-class="MetaVsArchiveDo">
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="insert-or-update" type="INSERT">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        content = values(content),
-                        <FIELD name="data-change-last-time"/> = NOW()
+                    content = values(content)
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-max-version-by-vs" type="SELECT">
+                <param name="vs-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                    ORDER BY version DESC
+                    LIMIT 1
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-vs-and-version" type="SELECT">
+                <param name="vs-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                        AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-max-version-by-vses" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM (SELECT * from archive_vs
+                            WHERE vs_id in <IN>${ids}</IN>
+                            ORDER BY version DESC) av
+                    GROUP BY vs_id
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-all-by-vs" type="DELETE" batch="true">
+                <param name="vs-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                    ]]>
+                </statement>
+            </query>
+            <!-- for cleansing job -->
+            <query name="delete-by-vs-id-less-than-version" type="DELETE">
+                <param name="vs-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                    AND <FIELD name='version'/> < ${version}
                     ]]>
                 </statement>
             </query>
@@ -57,16 +119,17 @@
                     ]]>
                 </statement>
             </query>
-            <query name="insert-or-update" type="INSERT">
+            <query name="update" type="UPDATE">
+                <param name="id"/>
                 <statement>
                     <![CDATA[
-                    INSERT INTO <TABLE/>(<FIELDS/>)
-                    VALUES(<VALUES/>)
-                    ON DUPLICATE KEY UPDATE
-                        slb_id = values(slb_id),
-                        name = values(name),
-                        port = values(port),
-                        is_ssl = values(is_ssl)
+                    UPDATE <TABLE/>
+                    SET <FIELD name='slb-id'/> = ${slb-id},
+                        <FIELD name='name'/> = ${name},
+                        <FIELD name='port'/> = ${port},
+                        <FIELD name='is-ssl'/> = ${is-ssl},
+                        <FIELD name='version'/> = ${version}
+                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>

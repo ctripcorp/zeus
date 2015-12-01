@@ -49,7 +49,7 @@ public class TaskManager {
             if (results != null) {
                 for (TaskResult taskResult : results){
                     if (!taskResult.isSuccess()){
-                        throw new Exception("Some Task Failed! TaskResults: "+taskResult.toString());
+                        throw new Exception("Task Failed! TaskResults: \n"+String.format(TaskResult.JSON,taskResult));
                     }
                 }
                 return results;
@@ -60,7 +60,7 @@ public class TaskManager {
                         cancelFail.add(tid);
                     }
                 }
-                throw new Exception("Waiting Timeout.Task canceled. TasksIds: "+taskIds.toString() + "Cancel Fail TaskIds: "+cancelFail.toString());
+                throw new Exception("Task Timeout. TasksIds: "+taskIds.toString() + "\nCanceled TaskIds: "+cancelFail.toString());
             }
         }
     }

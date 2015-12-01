@@ -2,7 +2,8 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="status-group-server" table="status_group_server" alias="sas" do-class="StatusGroupServerDo">
         <var name="reset" value-type="Integer"/>
-        <var name="ex-virtual-server-ids" value-type="Long[]"/>
+        <var name="virtual-server-ids" value-type="Long[]"/>
+        <var name="ips" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
@@ -10,9 +11,19 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        up = values(up),
-                        slb_id = values(slb_id),
-                        <FIELD name="data-change-last-time"/> = NOW()
+                        <FIELD name="up"/> = 1 ,
+                        slb_id = 0
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert-or-update-is-activated" type="INSERT">
+                <param name="is-activated"/>
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        <FIELD name="is-activated"/> = ${is-activated}
                     ]]>
                 </statement>
             </query>
@@ -24,17 +35,8 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         status = status & ${reset} | values(status),
-                        slb_id = values(slb_id),
                         <FIELD name="up"/> = 1 ,
                         <FIELD name="data-change-last-time"/> = NOW()
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all" type="SELECT" multiple="true">
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
                     ]]>
                 </statement>
             </query>
@@ -48,13 +50,13 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
-                <param name="slb-id"/>
+            <query name="find-all-by-slb-virtual-server-ids" type="SELECT" multiple="true">
+                <param name="virtual-server-ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        WHERE <FIELD name='slb-virtual-server-id'/> in <IN> ${virtual-server-ids} </IN>
                     ]]>
                 </statement>
             </query>
@@ -68,102 +70,25 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-slb-id-and-is-up" type="SELECT" multiple="true">
-                <param name="slb-id"/>
-                <param name="up"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
-                        AND <FIELD name='up'/> = ${up}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-slb-id-and-status" type="SELECT" multiple="true">
-                <param name="slb-id"/>
-                <param name="status"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
-                        AND <FIELD name='status'/> = ${status}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-slb-id-and-group-id-and-ip" type="SELECT" multiple="true">
-                <param name="slb-id"/>
+            <query name="delete-by-group-id-and-virtual-server-id-and-exp-ips" type="DELETE">
                 <param name="group-id"/>
-                <param name="ip"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
-                        AND <FIELD name='ip'/> = ${ip}
-                        AND <FIELD name='group-id'/> = ${group-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-group-id-and-slb-id" type="SELECT" multiple="true">
-                <param name="slb-id"/>
-                <param name="group-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='slb-id'/> = ${slb-id}
-                        AND <FIELD name='group-id'/> = ${group-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="delete-by-group-id-and-slb-id-and-virtual-server-id" type="DELETE">
-                <param name="group-id"/>
-                <param name="slb-id"/>
+                <param name="ips"/>
                 <param name="slb-virtual-server-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
-                    AND <FIELD name='slb-id'/> = ${slb-id}
                     AND <FIELD name='slb-virtual-server-id'/> = ${slb-virtual-server-id}
+                    AND <FIELD name='ip'/> not in <IN> ${ips} </IN>
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-group-id-and-slb-id-and-ip" type="DELETE">
+            <query name="delete-by-group-id" type="DELETE">
                 <param name="group-id"/>
-                <param name="slb-id"/>
-                <param name="ip"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
-                    AND <FIELD name='slb-id'/> = ${slb-id}
-                    AND <FIELD name='ip'/> = ${ip}
-                    ]]>
-                </statement>
-            </query>
-            <query name="delete-by-up" type="DELETE">
-                <param name="up"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='up'/> = ${up}
-                    ]]>
-                </statement>
-            </query>
-            <query name="delete-by-group-id-and-slb-id-and-ip-and-ex-slb-virtual-server-ids" type="DELETE">
-                <param name="group-id"/>
-                <param name="slb-id"/>
-                <param name="ex-virtual-server-ids"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='group-id'/> = ${group-id}
-                    AND <FIELD name='slb-id'/> = ${slb-id}
-                    AND <FIELD name='ip'/> = ${ip}
-                    AND <FIELD name='slb-virtual-server-id'/> not in <IN> ${ex-virtual-server-ids} </IN>
                     ]]>
                 </statement>
             </query>
@@ -207,6 +132,42 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='up'/> = ${up}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="status-health-check" table="status_health_check" alias="sas" do-class="StatusHealthCheckDo">
+        <var name="slb-server-ips" value-type="String[]"/>
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        rise = values(rise),
+                        fall = values(fall),
+                        <FIELD name="data-change-last-time"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-server-ip" type="SELECT" multiple="true">
+                <param name="slb-server-ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-server-ip'/> = ${slb-server-ip}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb-server-ip" type="INSERT">
+                <param name="slb-server-ip"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-server-ip'/> = ${slb-server-ip}
                     ]]>
                 </statement>
             </query>

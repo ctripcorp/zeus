@@ -15,28 +15,66 @@ import java.util.Set;
  */
 public interface GroupStatusService {
      /**
-      * Find all app status
-      * @return
+      * Find all online groups status
+      * @return status list
       * @throws Exception
       */
-     List<GroupStatus> getAllGroupStatus() throws Exception;
+     List<GroupStatus> getAllOnlineGroupsStatus() throws Exception;
 
      /**
-      * Find all app status in the specific slb cluster
+      * Find all online group status in the specific slb cluster
       * @param slbId
-      * @return
+      * @return status list
       * @throws Exception
       */
-     List<GroupStatus> getAllGroupStatus(Long slbId) throws Exception;
+     List<GroupStatus> getOnlineGroupsStatusBySlbId(Long slbId) throws Exception;
 
-     List<GroupStatus> getGroupStatus(Long groupId) throws Exception;
+    /**
+     * Find online group status by groupId
+     * @param groupId groupId
+     * @return status list
+     * @throws Exception
+     */
+     List<GroupStatus> getOnlineGroupStatus(Long groupId) throws Exception;
 
-     GroupStatusList getGroupStatus(List<Long> groupId,Long slbId) throws Exception;
+    /**
+     * Find all online group status by groupIds and slb id
+     * @param groupIds groupIds
+     * @param slbId slbId
+     * @return status list
+     * @throws Exception
+     */
+     List<GroupStatus> getOnlineGroupsStatus(Set<Long> groupIds,Long slbId) throws Exception;
 
-     GroupStatus getGroupStatus(Long groupId,Long slbId) throws Exception;
+    /**
+     * Find all online groups status
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getAllOfflineGroupsStatus() throws Exception;
 
-     GroupStatusList getLocalGroupStatus(List<Long> groupId , Long slbId) throws Exception;
+    /**
+     * Find all online group status in the specific slb cluster
+     * @param slbId
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getOfflineGroupsStatusBySlbId(Long slbId) throws Exception;
 
-     GroupServerStatus getGroupServerStatus(Long groupId, Long slbId, String ip, Integer port , Set<String> allDownServers,Set<String> allUpGroupServerInSlb,Set<String> allPullInGroupServerInSlb,Group group) throws Exception;
+    /**
+     * Find online group status by groupId
+     * @param groupId groupId
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getOfflineGroupStatus(Long groupId) throws Exception;
 
-    }
+    /**
+     * Find all online group status by groupIds and slb id
+     * @param groupIds groupIds
+     * @param slbId slbId
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getOfflineGroupsStatus(Set<Long> groupIds,Long slbId) throws Exception;
+}

@@ -4,7 +4,7 @@
             <total>2</total>
             <generation>213</generation>
             <server>
-                <s>
+                <item>
                     <index>0</index>
                     <upstream>aa</upstream>
                     <name>10.2.24.107:80</name>
@@ -13,8 +13,8 @@
                     <fall>0</fall>
                     <type>http</type>
                     <port>0</port>
-                </s>
-                <s>
+                </item>
+                <item>
                     <index>0</index>
                     <upstream>aa</upstream>
                     <name>10.2.24.107:80</name>
@@ -23,7 +23,7 @@
                     <fall>0</fall>
                     <type>http</type>
                     <port>0</port>
-                </s>
+                </item>
             </server>
         </servers>
     </upstream-status>

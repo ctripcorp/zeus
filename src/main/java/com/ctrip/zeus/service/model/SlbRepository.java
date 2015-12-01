@@ -21,8 +21,6 @@ public interface SlbRepository extends Repository {
 
     int delete(Long slbId) throws Exception;
 
-    Slb updateVersion(Long slbId) throws Exception;
-
     @Deprecated
     List<Long> portSlbRel() throws Exception;
 

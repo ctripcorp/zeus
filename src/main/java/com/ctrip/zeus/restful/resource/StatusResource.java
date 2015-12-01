@@ -10,6 +10,8 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.GroupStatusList;
@@ -23,7 +25,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -36,9 +40,11 @@ public class StatusResource {
     @Resource
     private GroupStatusService groupStatusService;
     @Resource
-    private SlbRepository slbRepository;
-    @Resource
     private GroupRepository groupRepository;
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private NginxService nginxService;
     @Resource
@@ -57,12 +63,12 @@ public class StatusResource {
         if (slbId != null) {
             _slbId = slbId;
         } else if (slbName != null) {
-            _slbId = slbRepository.get(slbName).getId();
+            _slbId = slbCriteriaQuery.queryByName(slbName);
         }
         if (null == _slbId) {
-            statusList = groupStatusService.getAllGroupStatus();
+            statusList = groupStatusService.getAllOfflineGroupsStatus();
         } else {
-            statusList = groupStatusService.getAllGroupStatus(_slbId);
+            statusList = groupStatusService.getOfflineGroupsStatusBySlbId(_slbId);
         }
 
         GroupStatusList result = new GroupStatusList();
@@ -88,7 +94,7 @@ public class StatusResource {
         if (groupId != null) {
             _groupId = groupId;
         } else if (groupName != null) {
-            _groupId = groupRepository.get(groupName).getId();
+            _groupId = groupCriteriaQuery.queryByName(groupName);
         }
         if (null == _groupId) {
             throw new Exception("Group Id or Name not found!");
@@ -96,32 +102,27 @@ public class StatusResource {
         if (slbId != null) {
             _slbId = slbId;
         } else if (slbName != null) {
-            _slbId = slbRepository.get(slbName).getId();
+            _slbId = slbCriteriaQuery.queryByName(slbName);
         }
         if (null == _slbId) {
-            List<GroupStatus> statusList = groupStatusService.getGroupStatus(_groupId);
+            List<GroupStatus> statusList = groupStatusService.getOfflineGroupStatus(_groupId);
             if (statusList != null && statusList.size() > 0) {
                 statusResult = statusList.get(0);
             } else {
-                throw new ValidationException("SlbId param is needed!");
+                throw new ValidationException("Not Found Group Status In Slb!");
             }
         } else {
-            statusResult = groupStatusService.getGroupStatus(_groupId, _slbId);
+            Set<Long> groupIds = new HashSet<>();
+            groupIds.add(_groupId);
+            List<GroupStatus> res = groupStatusService.getOfflineGroupsStatus(groupIds, _slbId);
+            if (res!=null && res.size()>0){
+                statusResult = res.get(0);
+            }else {
+                throw new Exception("Not Found Group Status!");
+            }
         }
 
         return responseHandler.handle(statusResult, hh.getMediaType());
-    }
-
-    @GET
-    @Path("/groupStatus")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "getGroupStatus", uriGroupHint = -1)
-    public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
-                                @QueryParam("groupId") List<Long> groupId,
-                                @QueryParam("slbId") Long slbId) throws Exception {
-        GroupStatusList groupStatus = groupStatusService.getLocalGroupStatus(groupId, slbId);
-
-        return responseHandler.handle(groupStatus, hh.getMediaType());
     }
 
 

@@ -17,9 +17,9 @@
   <entity name="servers">
     <element name="total" value-type="int" />
     <element name="generation" value-type="int" />
-    <entity-ref name="s" type="list" names="server" xml-indent="true" />
+    <entity-ref name="item" type="list" names="server" xml-indent="true" />
   </entity>
-  <entity name="s">
+  <entity name="item">
     <element name="index" value-type="int" />
     <element name="upstream" value-type="String" />
     <element name="name" value-type="String" />

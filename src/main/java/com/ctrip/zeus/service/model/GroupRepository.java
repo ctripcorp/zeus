@@ -23,8 +23,6 @@ public interface GroupRepository extends Repository {
 
     Group updateVGroup(Group group) throws Exception;
 
-    List<Group> updateVersion(Long[] groupIds) throws Exception;
-
     int delete(Long groupId) throws Exception;
 
     int deleteVGroup(Long groupId) throws Exception;
@@ -33,10 +31,7 @@ public interface GroupRepository extends Repository {
     List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception;
 
     @Deprecated
-    List<Long> portGroupRel() throws Exception;
-
-    @Deprecated
-    void portGroupRel(Long groupId) throws Exception;
+    void syncMemberStatus(Group group) throws Exception;
 
     @Deprecated
     Group get(String groupName) throws Exception;

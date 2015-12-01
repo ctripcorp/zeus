@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.handler.VirtualServerSync;
@@ -27,16 +28,21 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     @Resource
     private RVsSlbDao rVsSlbDao;
     @Resource
+    private ArchiveVsDao archiveVsDao;
+
+    // TODO remove m_vs_content table
+    @Resource
     private MVsContentDao mVsContentDao;
+
 
     @Override
     public void addVirtualServer(VirtualServer virtualServer) throws Exception {
+        virtualServer.setVersion(1);
         SlbVirtualServerDo d = C.toSlbVirtualServerDo(0L, virtualServer.getSlbId(), virtualServer);
         slbVirtualServerDao.insert(d);
         Long vsId = d.getId();
         virtualServer.setId(vsId);
-        mVsContentDao.insertOrUpdate(new MetaVsContentDo().setVsId(vsId).setContent(ContentWriters.writeVirtualServerContent(virtualServer)));
-
+        archiveVsDao.insert(new MetaVsArchiveDo().setVsId(vsId).setContent(ContentWriters.writeVirtualServerContent(virtualServer)).setVersion(virtualServer.getVersion()));
         rVsSlbDao.insert(new RelVsSlbDo().setVsId(vsId).setSlbId(virtualServer.getSlbId()));
         relSyncDomain(vsId, virtualServer.getDomains());
     }
@@ -44,10 +50,14 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     @Override
     public void updateVirtualServer(VirtualServer virtualServer) throws Exception {
         Long vsId = virtualServer.getId();
-        SlbVirtualServerDo d = C.toSlbVirtualServerDo(vsId, virtualServer.getSlbId(), virtualServer);
-        slbVirtualServerDao.insertOrUpdate(d);
-        mVsContentDao.insertOrUpdate(new MetaVsContentDo().setVsId(vsId).setContent(ContentWriters.writeVirtualServerContent(virtualServer)));
+        MetaVsArchiveDo check = archiveVsDao.findMaxVersionByVs(vsId, ArchiveVsEntity.READSET_FULL);
+        if (check.getVersion() > virtualServer.getVersion())
+            throw new ValidationException("Newer virtual server version is detected.");
+        virtualServer.setVersion(virtualServer.getVersion() + 1);
 
+        SlbVirtualServerDo d = C.toSlbVirtualServerDo(vsId, virtualServer.getSlbId(), virtualServer);
+        slbVirtualServerDao.updateByPK(d, SlbVirtualServerEntity.UPDATESET_FULL);
+        archiveVsDao.insert(new MetaVsArchiveDo().setVsId(vsId).setContent(ContentWriters.writeVirtualServerContent(virtualServer)).setVersion(virtualServer.getVersion()));
         if (rVsSlbDao.findSlbByVs(virtualServer.getId(), RVsSlbEntity.READSET_FULL).getSlbId() != virtualServer.getSlbId().longValue()) {
             RelVsSlbDo rel = new RelVsSlbDo().setVsId(vsId).setSlbId(virtualServer.getSlbId());
             rVsSlbDao.deleteByVs(rel);
@@ -61,7 +71,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         rVsSlbDao.deleteByVs(new RelVsSlbDo().setVsId(vsId));
         rVsDomainDao.deleteAllByVs(new RelVsDomainDo().setVsId(vsId));
         slbVirtualServerDao.deleteByPK(new SlbVirtualServerDo().setId(vsId));
-        mVsContentDao.deleteByVs(new MetaVsContentDo().setVsId(vsId));
+        archiveVsDao.deleteAllByVs(new MetaVsArchiveDo().setVsId(vsId));
     }
 
     @Override
@@ -70,41 +80,41 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         RelVsSlbDo[] relSlbs = new RelVsSlbDo[size];
         RelVsDomainDo[] relDomains = new RelVsDomainDo[size];
         SlbVirtualServerDo[] vses = new SlbVirtualServerDo[size];
-        MetaVsContentDo[] metas = new MetaVsContentDo[size];
+        MetaVsArchiveDo[] archs = new MetaVsArchiveDo[size];
         for (int i = 0; i < size; i++) {
             relSlbs[i] = new RelVsSlbDo().setVsId(vsIds[i]);
             relDomains[i] = new RelVsDomainDo().setVsId(vsIds[i]);
             vses[i] = new SlbVirtualServerDo().setId(vsIds[i]);
-            metas[i] = new MetaVsContentDo().setVsId(vsIds[i]);
+            archs[i] = new MetaVsArchiveDo().setVsId(vsIds[i]);
         }
         rVsSlbDao.deleteByVs(relSlbs);
         rVsDomainDao.deleteAllByVs(relDomains);
         slbVirtualServerDao.deleteById(vses);
-        mVsContentDao.deleteByVs(metas);
+        archiveVsDao.deleteAllByVs(archs);
     }
 
     @Override
-    public List<Long> port(VirtualServer[] vses) {
+    public List<Long> port(Long[] vsIds) {
         List<Long> fails = new ArrayList<>();
-        for (VirtualServer vs : vses) {
+        for (Long vsId : vsIds) {
             try {
-                mVsContentDao.insertOrUpdate(new MetaVsContentDo().setVsId(vs.getId()).setContent(ContentWriters.writeVirtualServerContent(vs)));
-                rVsSlbDao.insert(new RelVsSlbDo().setVsId(vs.getId()).setSlbId(vs.getSlbId()));
-                relSyncDomain(vs.getId(), vs.getDomains());
+                port(vsId);
             } catch (Exception ex) {
-                fails.add(vs.getId());
+                fails.add(vsId);
             }
         }
         return fails;
     }
 
     @Override
-    public void port(VirtualServer vs) throws Exception {
-        mVsContentDao.insertOrUpdate(new MetaVsContentDo().setVsId(vs.getId()).setContent(ContentWriters.writeVirtualServerContent(vs)));
-        RelVsSlbDo d = new RelVsSlbDo().setVsId(vs.getId()).setSlbId(vs.getSlbId());
-        rVsSlbDao.deleteByVs(d);
-        rVsSlbDao.insert(d);
-        relSyncDomain(vs.getId(), vs.getDomains());
+    public void port(Long vsId) throws Exception {
+        MetaVsContentDo orig = mVsContentDao.findById(vsId, MVsContentEntity.READSET_FULL);
+        if (orig == null)
+            throw new ValidationException("No previous content has found.");
+        VirtualServer vs = ContentReaders.readVirtualServerContent(orig.getContent());
+        vs.setVersion(1);
+        MetaVsArchiveDo arch = new MetaVsArchiveDo().setVsId(orig.getVsId()).setContent(ContentWriters.writeVirtualServerContent(vs)).setVersion(1);
+        archiveVsDao.insertOrUpdate(arch);
     }
 
     private void relSyncDomain(Long vsId, List<Domain> domains) throws DalException {

@@ -57,6 +57,7 @@
          <table name="certificate"/>
          <table name="r_certificate_slb_server"/>
          <table name="r_group_vg"/>
+         <table name="archive_vs"/>
       </group>
    </jdbc>
 </wizard>

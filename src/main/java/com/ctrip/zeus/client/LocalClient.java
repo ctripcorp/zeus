@@ -53,13 +53,8 @@ public class LocalClient {
     }
 
     public UpstreamStatus getUpstreamStatus() throws IOException {
-        Long now = System.currentTimeMillis();
-        if (now - upstreamStatusDate > upstreamStatusInterval.get() || upstreamStatus == null)
-        {
-            String result = statusClient.getTarget().path("/status.json").request().get(String.class);
-            upstreamStatus = DefaultJsonParser.parse(UpstreamStatus.class, result);
-            upstreamStatusDate = now;
-        }
+        String result = statusClient.getTarget().path("/status.json").request().get(String.class);
+        upstreamStatus = DefaultJsonParser.parse(UpstreamStatus.class, result);
         return upstreamStatus;
     }
 

@@ -94,6 +94,23 @@
         <property name="repeatInterval" value="3600000"/>
     </bean>
 
+    <bean id="healthCheckFetchDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <property name="jobClass" value="com.ctrip.zeus.service.status.HealthCheckFetchJob"/>
+        <property name="jobDataMap">
+            <map>
+                <entry key="healthCheckStatusService" value-ref="healthCheckStatusService" />
+            </map>
+        </property>
+        <property name="durability" value="true"/>
+    </bean>
+
+    <!-- Run the job every 1s  with initial delay of 5 second -->
+    <bean id="healthCheckFetchTrigger"  class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="healthCheckFetchDetail"/>
+        <property name="startDelay" value="1000"/>
+        <property name="repeatInterval" value="5000"/>
+    </bean>
+
     <!-- Scheduler factory bean to glue together jobDetails and triggers to Configure Quartz Scheduler -->
     <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
         <property name="waitForJobsToCompleteOnShutdown" value="true"/>
@@ -102,6 +119,7 @@
                 <ref bean="nginxStatusFetcherDetail"/>
                 <ref bean="taskWorkerDetail"/>
                 <ref bean="cleanManagerDetail"/>
+                <ref bean="healthCheckFetchDetail"/>
             </list>
         </property>
         <property name="triggers">
@@ -109,6 +127,7 @@
                 <ref bean="nginxStatusFetcherTrigger"/>
                 <ref bean="taskWorkerTrigger"/>
                 <ref bean="cleanManagerTrigger"/>
+                <ref bean="healthCheckFetchTrigger"/>
             </list>
         </property>
     </bean>

@@ -1,18 +1,20 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.SlbValidatorException;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.activate.ActiveConfService;
-import com.ctrip.zeus.service.activate.GroupActivateConfRewrite;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.validate.SlbValidator;
 import com.ctrip.zeus.tag.TagBox;
@@ -33,10 +35,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by fanqq on 2015/3/20.
@@ -49,7 +48,7 @@ public class ActivateResource {
     @Resource
     private TagBox tagBox;
     @Resource
-    private SlbRepository slbRepository;
+    private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private GroupRepository groupRepository;
     @Resource
@@ -63,10 +62,13 @@ public class ActivateResource {
     @Resource
     private ActiveConfService activeConfService;
     @Resource
-    private GroupActivateConfRewrite groupActivateConfRewrite;
-    @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
-
+    @Resource
+    private ActivateService activateService;
+    @Resource
+    private ConfSlbVirtualServerActiveDao confSlbVirtualServerActiveDao;
+    @Resource
+    private ConfGroupActiveDao confGroupActiveDao;
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
@@ -85,7 +87,7 @@ public class ActivateResource {
         {
             for (String slbName : slbNames)
             {
-                _slbIds.add(slbRepository.get(slbName).getId());
+                _slbIds.add(slbCriteriaQuery.queryByName(slbName));
             }
         }
         for (Long id : _slbIds){
@@ -176,10 +178,101 @@ public class ActivateResource {
 
     }
     @GET
-    @Path("/group/rewriteConf")
-    public Response rewriteConf(@Context HttpServletRequest request,@Context HttpHeaders hh) throws Exception {
-        groupActivateConfRewrite.rewriteAllGroupActivteConf();
-        return Response.ok().entity("RewriteSuccess").build();
-    }
+    @Path("/vs")
+    @Authorize(name="activate")
+    public Response activateVirtualServer(@Context HttpServletRequest request,
+                                          @Context HttpHeaders hh,
+                                          @QueryParam("vsId") Long vsId)throws Exception {
+        Archive archive = archiveService.getLatestVsArchive(vsId);
+        Long slbId = slbCriteriaQuery.queryByVs(vsId);
+        List<VirtualServer> vses = activateService.getActivatedVirtualServer(vsId);
+        List<Long> taskIds = new ArrayList<>();
+        if ((vses.size()==1&&vses.get(0).getSlbId().equals(slbId))||vses.size() == 0){
+            OpsTask task = new OpsTask();
+            task.setSlbVirtualServerId(vsId);
+            task.setCreateTime(new Date());
+            task.setOpsType(TaskOpsType.ACTIVATE_VS);
+            task.setTargetSlbId(slbId);
+            task.setVersion(archive.getVersion());
+            taskIds.add(taskManager.addTask(task));
+        }else if (vses.size()==1 && !vses.get(0).getSlbId().equals(slbId)){
+            VirtualServer vs = vses.get(0);
+            OpsTask deactivateTask = new OpsTask();
+            deactivateTask.setSlbVirtualServerId(vsId);
+            deactivateTask.setCreateTime(new Date());
+            deactivateTask.setOpsType(TaskOpsType.DEACTIVATE_VS);
+            deactivateTask.setTargetSlbId(vs.getSlbId());
+            taskIds.add(taskManager.addTask(deactivateTask));
 
+            OpsTask activateTask = new OpsTask();
+            activateTask.setSlbVirtualServerId(vsId);
+            activateTask.setCreateTime(new Date());
+            activateTask.setOpsType(TaskOpsType.ACTIVATE_VS);
+            activateTask.setTargetSlbId(slbId);
+            activateTask.setResources(String.valueOf(vs.getSlbId()));
+            taskIds.add(taskManager.addTask(activateTask));
+        }else {
+            throw new ValidationException("Activated Date Of Virtual Server ["+vsId +"] Is Incorrect.");
+        }
+        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
+        TaskResultList resultList = new TaskResultList();
+        for (TaskResult t : results){
+            resultList.addTaskResult(t);
+        }
+        resultList.setTotal(results.size());
+        return responseHandler.handle(resultList, hh.getMediaType());
+    }
+    @GET
+    @Path("/vs/dataFill")
+    @Authorize(name="activate")
+    public Response dataRewrite(@Context HttpServletRequest request,
+                                          @Context HttpHeaders hh)throws Exception {
+        Set<Long> slbIds = slbCriteriaQuery.queryAll();
+        for (Long slbId : slbIds){
+            Slb slb = activateService.getActivatedSlb(slbId);
+            List<VirtualServer> vses = slb.getVirtualServers();
+            for (VirtualServer vs : vses){
+                Archive archive = archiveService.getLatestVsArchive(vs.getId());
+                AssertUtils.assertNotNull(archive, "[activate]get Virtual Server Archive return Null! VsId: " + vs.getId());
+                ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo = new ConfSlbVirtualServerActiveDo();
+                confSlbVirtualServerActiveDo.setContent(archive.getContent())
+                        .setSlbId(slbId).setVersion(archive.getVersion())
+                        .setSlbVirtualServerId(vs.getId())
+                        .setCreatedTime(new Date());
+                confSlbVirtualServerActiveDao.insert(confSlbVirtualServerActiveDo);
+            }
+        }
+        return responseHandler.handle("update suc.", hh.getMediaType());
+    }
+    @GET
+    @Path("/group/dataFill")
+    @Authorize(name="activate")
+    public Response dataFill(@Context HttpServletRequest request,
+                                @Context HttpHeaders hh)throws Exception {
+        List<ConfGroupActiveDo> confGroupActiveDos = confGroupActiveDao.findAll(ConfGroupActiveEntity.READSET_FULL);
+        List<Long> failIds = new ArrayList<>();
+        for (ConfGroupActiveDo c : confGroupActiveDos){
+            Group group = null;
+            try{
+                group = DefaultSaxParser.parseEntity(Group.class, c.getContent());
+            }catch (Exception e){
+                failIds.add(c.getGroupId());
+                continue;
+            }
+
+            for (GroupVirtualServer gv : group.getGroupVirtualServers()){
+                if (gv.getVirtualServer().getSlbId().equals(c.getSlbId())){
+                    c.setSlbVirtualServerId(gv.getVirtualServer().getId());
+                    confGroupActiveDao.insert(c);
+                }
+                if (c.getSlbId()==0&&group.getGroupVirtualServers().size()==1){
+                    c.setSlbVirtualServerId(gv.getVirtualServer().getId());
+                    c.setSlbId(gv.getVirtualServer().getSlbId());
+                    confGroupActiveDao.deleteByGroupId(new ConfGroupActiveDo().setGroupId(c.getGroupId()));
+                    confGroupActiveDao.insert(c);
+                }
+            }
+        }
+        return responseHandler.handle("update suc."+failIds.toString(), hh.getMediaType());
+    }
 }

@@ -10,22 +10,8 @@ import java.util.Set;
  */
 public interface ActiveConfService extends Repository {
 
-    public List<String> getConfGroupActiveContentByGroupIds(Long[] groupIds) throws Exception;
-    /**
-     * get config content of App Active by app name
-     * @param groupIds the groupIds
-     * @return content list
-     * @throws Exception
-     */
-    public List<String> getConfGroupActiveContentByGroupIds(Long []groupIds, Long slbId)throws Exception;
-    /**
-     * get config content of Slb Active by slb name
-     * @param slbId the slb name
-     * @return content string
-     * @throws Exception
-     */
-    public String getConfSlbActiveContentBySlbId(Long slbId)throws Exception;
-
     public Set<Long> getSlbIdsByGroupId(Long groupId)throws Exception;
+    public Set<Long> getSlbIdsByGroupIds(Long[] groupId)throws Exception;
     public Set<Long> getGroupIdsBySlbId(Long slbId) throws Exception;
+    public Set<Long> getVsIdsBySlbId(Long slbId) throws Exception;
 }
