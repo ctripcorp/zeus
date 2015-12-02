@@ -3,6 +3,7 @@ package com.ctrip.zeus.logstats;
 import com.ctrip.zeus.logstats.analyzer.AccessLogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzerConfig;
+import com.ctrip.zeus.logstats.tracker.LogTracker;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -10,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -97,5 +99,143 @@ public class AnalyzerTest {
                 s.close();
         }
         Assert.assertEquals(14, count.get());
+    }
+
+    @Test
+    public void testTrackerWhenLogRotating() throws Exception {
+        final String logRotateFilename = "log-rotate-access.log";
+        final String logRotateTrackingFilename = "log-rotate-tracker.log";
+        File f = new File(logRotateFilename);
+        if (f.exists())
+            f.delete();
+        f = new File(logRotateTrackingFilename);
+        if (f.exists())
+            f.delete();
+
+        final long endTime = System.currentTimeMillis() + 60 * 1000L;
+        final AtomicInteger writerCount = new AtomicInteger();
+        final AtomicInteger trackerCount = new AtomicInteger();
+        final CountDownLatch writerLatch = new CountDownLatch(1);
+        final CountDownLatch trackerLatch = new CountDownLatch(1);
+
+        Thread writer = new Thread() {
+            @Override
+            public void run() {
+                TestLogWriter writer = new TestLogWriter(logRotateFilename, 10 * 1000L);
+                try {
+                    writer.run(endTime);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                writerCount.set(writer.getCount());
+                writerLatch.countDown();
+            }
+        };
+
+        Thread reader = new Thread() {
+            @Override
+            public void run() {
+                final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder;
+                try {
+                    builder = new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                            .setLogFormat(AccessLogFormat)
+                            .setLogFilename(logRotateFilename)
+                            .setTrackerReadSize(TrackerReadSize)
+                            .allowTracking(logRotateTrackingFilename);
+                    File f = new File(logRotateTrackingFilename);
+                    if (f.exists())
+                        f.delete();
+                    StatsDelegate reporter = new StatsDelegate<String>() {
+                        @Override
+                        public void delegate(String input) {
+                            trackerCount.incrementAndGet();
+                        }
+                    };
+                    LogTracker tracker = builder.build().getLogTracker();
+                    tracker.start();
+                    while (System.currentTimeMillis() < endTime + 10L) {
+                        tracker.fastMove(reporter);
+                    }
+                    trackerLatch.countDown();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        writer.start();
+        reader.start();
+        writerLatch.await();
+        trackerLatch.await();
+        Assert.assertEquals(writerCount.get(), trackerCount.get());
+    }
+
+    @Test
+    public void testAnalyzerPerformanceWhenLogRotating() throws Exception {
+        final String logRotateFilename = "log-rotate-access.log";
+        final String logRotateTrackingFilename = "log-rotate-tracker.log";
+        File f = new File(logRotateFilename);
+        if (f.exists())
+            f.delete();
+        f = new File(logRotateTrackingFilename);
+        if (f.exists())
+            f.delete();
+
+        final long endTime = System.currentTimeMillis() + 60 * 1000L;
+        final AtomicInteger writerCount = new AtomicInteger();
+        final AtomicInteger readerCount = new AtomicInteger();
+        final CountDownLatch writerLatch = new CountDownLatch(1);
+        final CountDownLatch readerLatch = new CountDownLatch(1);
+
+        Thread writer = new Thread() {
+            @Override
+            public void run() {
+                TestLogWriter writer = new TestLogWriter(logRotateFilename, 10 * 1000L);
+                try {
+                    writer.run(endTime);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                writerCount.set(writer.getCount());
+                writerLatch.countDown();
+            }
+        };
+
+        Thread reader = new Thread() {
+            @Override
+            public void run() {
+                final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder;
+                try {
+                    builder = new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                            .setLogFormat(AccessLogFormat)
+                            .setLogFilename(logRotateFilename)
+                            .setTrackerReadSize(TrackerReadSize)
+                            .allowTracking(logRotateTrackingFilename);
+                    File f = new File(logRotateTrackingFilename);
+                    if (f.exists())
+                        f.delete();
+                    StatsDelegate reporter = new StatsDelegate<String>() {
+                        @Override
+                        public void delegate(String input) {
+                            readerCount.incrementAndGet();
+                        }
+                    };
+                    LogStatsAnalyzer analyzer = new AccessLogStatsAnalyzer(builder.build());
+                    analyzer.start();
+                    while (System.currentTimeMillis() < endTime + 100L) {
+                        analyzer.analyze(reporter);
+                    }
+                    readerLatch.countDown();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        writer.start();
+        reader.start();
+        writerLatch.await();
+        readerLatch.await();
+        System.out.println("writer count: " + writerCount.get());
+        System.out.println("reader count: " + readerCount.get());
+        Assert.assertTrue((readerCount.get() / 60) > 20000);
     }
 }
