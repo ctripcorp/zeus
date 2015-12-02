@@ -51,7 +51,10 @@ public class AccessLogRecord {
         for (char c : value.toCharArray()) {
             switch (c) {
                 case '{':
-                    grammarChecker.push("{");
+                    if (grammarChecker.empty())
+                        grammarChecker.push("{");
+                    else
+                        sb.append(c);
                     break;
                 case '"':
                     if (grammarChecker.peek().equals("\"")) {

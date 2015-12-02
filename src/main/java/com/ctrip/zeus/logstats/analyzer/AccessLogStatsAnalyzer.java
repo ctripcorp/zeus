@@ -57,6 +57,11 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     }
 
     @Override
+    public boolean reachFileEnd() throws IOException {
+        return logTracker.reachFileEnd();
+    }
+
+    @Override
     public String analyze() throws IOException {
         String raw = logTracker.move();
         return JsonStringWriter.write(logParser.parse(raw));
@@ -105,7 +110,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             format.setFormat(logFormat);
             File f = new File(logFilename);
             if (f.exists() && f.isFile()) {
-                String rootDir = f.getParentFile().getAbsolutePath();
+                String rootDir = f.getAbsoluteFile().getParentFile().getAbsolutePath();
                 LogTrackerStrategy strategy = new LogTrackerStrategy()
                         .setAllowLogRotate(true)
                         .setAllowTrackerMemo(allowTracking)
