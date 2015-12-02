@@ -71,6 +71,14 @@ public interface ActivateService extends Repository {
      * @throws Exception
      */
     public Map<Long,Boolean> isGroupsActivated(Long[] groupIds,Long vsId) throws Exception;
+
+    /**
+     * group is activated
+     * @param vsId the Group vsId
+     * @return
+     * @throws Exception
+     */
+    public boolean isVSActivated(Long vsId) throws  Exception;
     /**
      * group is activated
      * @param vsId the  vsId

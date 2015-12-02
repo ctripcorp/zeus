@@ -153,6 +153,12 @@ public class ActivateServiceImpl implements ActivateService {
     }
 
     @Override
+    public boolean isVSActivated(Long vsId) throws Exception {
+        List<ConfSlbVirtualServerActiveDo> confSlbVirtualServerActiveDo = confSlbVirtualServerActiveDao.findBySlbVirtualServerId(vsId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        return confSlbVirtualServerActiveDo!=null && confSlbVirtualServerActiveDo.size()>0;
+    }
+
+    @Override
     public boolean isVsActivated(Long vsId, Long slbId) throws Exception {
         List<ConfSlbVirtualServerActiveDo> c = confSlbVirtualServerActiveDao.findBySlbIdAndSlbVirtualServerIds(new Long[]{vsId},slbId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
         return !(c == null || c.size() == 0 );
