@@ -41,7 +41,6 @@
         <property name="startDelay" value="1000"/>
         <property name="repeatInterval" value="3600000"/>
     </bean>
-
     <bean id="taskCleanDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
         <property name="jobClass" value="com.ctrip.zeus.service.task.TaskCleanJob"/>
         <property name="jobDataMap">

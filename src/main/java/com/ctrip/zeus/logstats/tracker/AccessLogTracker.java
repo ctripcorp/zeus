@@ -13,13 +13,16 @@ import java.util.Scanner;
  * Created by zhoumy on 2015/11/13.
  */
 public class AccessLogTracker implements LogTracker {
+    private final int TrackLatch = 10;
     private final LogTrackerStrategy strategy;
     private final String logFilename;
     private final int size;
     private final ByteBuffer buffer;
     private RandomAccessFile raf;
     private FileChannel fileChannel;
-    private int offset;
+    private long offset;
+    private String offsetValue = "";
+    private int rollingLogCounter;
     private File trackingFile;
     private boolean allowTracking;
 
@@ -59,6 +62,11 @@ public class AccessLogTracker implements LogTracker {
     }
 
     @Override
+    public boolean reachFileEnd() throws IOException {
+        return offset == fileChannel.size();
+    }
+
+    @Override
     public void start() throws IOException {
         raf = new RandomAccessFile(getLogFilename(), "r");
         fileChannel = raf.getChannel();
@@ -74,7 +82,7 @@ public class AccessLogTracker implements LogTracker {
                 offset = 0;
             else {
                 // check if log rotate has been done
-                fileChannel.position(curr.rOffset - curr.rValue.getBytes().length - 1);
+                fileChannel.position(curr.rOffset - curr.rValue.getBytes().length - 2);
                 String rafline = raf.readLine();
                 if (rafline.equals(curr.rValue))
                     offset = curr.rOffset;
@@ -85,6 +93,8 @@ public class AccessLogTracker implements LogTracker {
 
     @Override
     public void stop() throws IOException {
+        rollingLogCounter = TrackLatch;
+        tryLog();
         if (fileChannel != null)
             fileChannel.close();
         if (raf != null)
@@ -100,62 +110,79 @@ public class AccessLogTracker implements LogTracker {
 
     @Override
     public void fastMove(final StatsDelegate<String> delegator) throws IOException {
-        if (offset > fileChannel.position()) {
-            offset = 0;
-        }
-        buffer.clear();
         try {
-            if (fileChannel.read(buffer) == -1)
-                return;
-        } catch (IOException ex) {
-            stop();
-        }
-        buffer.flip();
-        boolean eol = false;
-        int colOffset = 0;
-        byte[] line = new byte[size];
-        String fresh = "";
+            if (offset > fileChannel.size()) {
+                offset = 0;
+                fileChannel.position(offset);
+            }
+            buffer.clear();
+            try {
+                if (fileChannel.read(buffer) == -1)
+                    return;
+            } catch (IOException ex) {
+                stop();
+            }
+            buffer.flip();
+            boolean eol = false;
+            int colOffset = 0;
+            byte[] line = new byte[size];
 
-        while (buffer.hasRemaining()) {
-            while (!eol && buffer.hasRemaining()) {
-                byte b;
-                switch (b = buffer.get()) {
-                    case -1:
-                    case '\n':
-                        eol = true;
-                        fresh = new String(line, 0, colOffset);
-                        delegator.delegate(fresh);
-                        offset += ++colOffset;
-                        break;
-                    case '\r':
-                        eol = true;
-                        if ((buffer.get()) != '\n')
-                            buffer.position(colOffset);
-                        else
-                            colOffset++;
-                        fresh = new String(line, 0, colOffset);
-                        delegator.delegate(fresh);
-                        offset += ++colOffset;
-                        break;
-                    default:
-                        line[colOffset] = b;
-                        ++colOffset;
-                        break;
-                } // end of switch
-            }// end of while !eol
-            colOffset = 0;
-            eol = false;
+            while (buffer.hasRemaining()) {
+                while (!eol && buffer.hasRemaining()) {
+                    byte b;
+                    switch (b = buffer.get()) {
+                        case -1:
+                        case '\n':
+                            eol = true;
+                            offsetValue = new String(line, 0, colOffset);
+                            delegator.delegate(offsetValue);
+                            offset += ++colOffset;
+                            break;
+                        case '\r':
+                            eol = true;
+                            offsetValue = new String(line, 0, colOffset);
+                            if ((buffer.get()) != '\n')
+                                buffer.position(colOffset);
+                            else
+                                colOffset++;
+                            delegator.delegate(offsetValue);
+                            offset += ++colOffset;
+                            break;
+                        default:
+                            line[colOffset] = b;
+                            ++colOffset;
+                            break;
+                    } // end of switch
+                }// end of while !eol
+                colOffset = 0;
+                eol = false;
+            }
+            fileChannel.position(offset);
+            tryLog();
+        } catch (IOException ex) {
+            logger.error("Some error occurred when tracking access.log.", ex);
+            hotfix();
         }
-        fileChannel.position(offset);
-        tryLog(offset, fresh);
     }
 
-    private void tryLog(Integer offset, String value) {
-        if (allowTracking) {
+    private void hotfix() throws IOException {
+        if (fileChannel != null)
+            fileChannel.close();
+        if (raf != null)
+            raf.close();
+        fileChannel = null;
+        raf = null;
+        start();
+        fileChannel.position(offset);
+    }
+
+    private void tryLog() {
+        rollingLogCounter++;
+        if (allowTracking && (TrackLatch <= rollingLogCounter)) {
             OutputStream os = null;
             try {
                 os = new FileOutputStream(trackingFile);
-                String output = offset.toString() + "\n" + value;
+                String output = Long.valueOf(offset).toString() + "\n" + offsetValue;
                 os.write(output.getBytes());
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -169,6 +196,7 @@ public class AccessLogTracker implements LogTracker {
                         e.printStackTrace();
                     }
             }
+            rollingLogCounter = 0;
         }
     }
 
@@ -195,7 +223,7 @@ public class AccessLogTracker implements LogTracker {
     }
 
     private class RecordOffset {
-        int rOffset;
+        long rOffset;
         String rValue;
     }
 }
