@@ -13,11 +13,13 @@ public class AccessLogRecord {
     private final String costKey = "request_time";
     private final String statusKey = "status";
     private final String upCostKey = "upstream_response_time";
+    private final Long slbId;
     private final Set<String> keys = ImmutableSet.of("host", "uri", "server_port", statusKey, costKey,
-            upCostKey, "upstream_addr", "upstream_status");
+            upCostKey, "upstream_addr", "upstream_status", "proxy_host");
     private final StatsKey statsKey;
 
-    public AccessLogRecord(String value) {
+    public AccessLogRecord(Long slbId, String value) {
+        this.slbId = slbId;
         this.statsKey = parse(value);
     }
 
@@ -39,6 +41,7 @@ public class AccessLogRecord {
 
     private StatsKey parse(String value) {
         StatsKey result = new StatsKey("slb.request")
+                .addTag("slbId", slbId.toString())
                 .reportCount(false)
                 .reportStatus(false)
                 .reportRequestSize(false)
@@ -69,7 +72,10 @@ public class AccessLogRecord {
                         String k = grammarChecker.pop();
                         if (keys.contains(k)) {
                             if (k.equals(costKey) || k.equals(upCostKey)) {
-                                result.addTag(k, Double.valueOf(Double.parseDouble(v) * 1000.0).toString());
+                                if (v.equals("-"))
+                                    result.addTag(k, "0");
+                                else
+                                    result.addTag(k, Double.valueOf(Double.parseDouble(v) * 1000.0).toString());
                             } else {
                                 result.addTag(k, v);
                             }
