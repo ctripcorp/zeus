@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.netflix.config.DynamicPropertyFactory;
@@ -22,6 +23,8 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
 
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private ActivateService activateService;
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
 
@@ -51,6 +54,9 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     public void removable(VirtualServer virtualServer) throws Exception {
         if (groupCriteriaQuery.queryByVsId(virtualServer.getId()).size() > 0)
             throw new ValidationException("Virtual server with id " + virtualServer.getId() + " cannot be deleted. Dependencies exist.");
+        if (activateService.isVSActivated(virtualServer.getId())) {
+            throw new ValidationException("Vs need to be deactivated before delete!");
+        }
     }
 
     private Set<String> getPortWhiteList() {
