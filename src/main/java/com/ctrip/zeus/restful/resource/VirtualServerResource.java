@@ -11,8 +11,10 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
+import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
@@ -50,6 +52,10 @@ public class VirtualServerResource {
     private PropertyService propertyService;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private ActivateService activateService;
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
 
     @GET
     @Path("/vses")
@@ -171,6 +177,13 @@ public class VirtualServerResource {
         Slb slb = slbRepository.getById(slbCriteriaQuery.queryByVs(vsId));
         if (slb == null) {
             throw new ValidationException("Cannot find slb with vsId " + vsId + ".");
+        }
+        if (activateService.isVSActivated(vsId)){
+            throw new ValidationException("Vs need to be deactivated before delete!");
+        }
+        Set<Long> groupIds = groupCriteriaQuery.queryByVsId(vsId);
+        if ( groupIds!=null && groupIds.size() > 0 ){
+            throw new ValidationException("Has groups related to Vs["+vsId+"]; GroupIds:"+groupIds.toString() );
         }
         virtualServerRepository.deleteVirtualServer(vsId);
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());

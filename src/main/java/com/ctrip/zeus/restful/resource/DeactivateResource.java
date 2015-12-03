@@ -28,10 +28,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by fanqq on 2015/6/11.
@@ -112,6 +109,11 @@ public class DeactivateResource {
                                           @Context HttpHeaders hh,
                                           @QueryParam("vsId") Long vsId,
                                           @QueryParam("slbId") Long slbId)throws Exception {
+        Map<Long,List<Group>> groups = activateService.getActivatedGroupsByVses(new Long[]{vsId});
+        if (groups !=null && groups.containsKey(vsId) && groups.get(vsId).size() > 0){
+            throw new ValidationException("Has Activated Groups Related to Vs["+vsId+"]");
+        }
+
         List<VirtualServer> vses = activateService.getActivatedVirtualServer(vsId);
         Long taskId = null;
         if (vses.size() == 0 ){

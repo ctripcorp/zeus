@@ -115,7 +115,7 @@ public class ActivateResource {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
-        return responseHandler.handle(resultList,hh.getMediaType());
+        return responseHandler.handle(resultList, hh.getMediaType());
     }
 
     @GET
@@ -142,22 +142,23 @@ public class ActivateResource {
         }
         List<OpsTask> tasks = new ArrayList<>();
         for (Long id : _groupIds) {
-            Archive archive = archiveService.getLatestGroupArchive(id);
-            Group group = DefaultSaxParser.parseEntity(Group.class, archive.getContent());
-            AssertUtils.assertNotNull(group,"Archive Group Parser Failed! GroupId:");
-            List<GroupVirtualServer> virtualServers = group.getGroupVirtualServers();
-
-            Set<Long> slbIds = new HashSet<>();
-            for (GroupVirtualServer virtualServer : virtualServers){
-                slbIds.add(virtualServer.getVirtualServer().getSlbId());
+            Group group = groupRepository.getById(id);
+            AssertUtils.assertNotNull(group,"Group Not Found! GroupId:"+id);
+            AssertUtils.assertNotNull(group.getGroupVirtualServers(),"Group Virtual Servers Not Found! GroupId:"+id);
+            for (GroupVirtualServer gv : group.getGroupVirtualServers()){
+                if (!activateService.isVSActivated(gv.getVirtualServer().getId())){
+                    throw new ValidationException("Related VS has not been activated.VS: "+gv.getVirtualServer().getId());
+                }
             }
+
+            Set<Long> slbIds = slbCriteriaQuery.queryByGroups(new Long[]{id});
             slbIds.addAll(activeConfService.getSlbIdsByGroupId(id));
             for (Long slbId : slbIds){
                 OpsTask task = new OpsTask();
                 task.setGroupId(id);
                 task.setOpsType(TaskOpsType.ACTIVATE_GROUP);
                 task.setTargetSlbId(slbId);
-                task.setVersion(archive.getVersion());
+                task.setVersion(group.getVersion());
                 tasks.add(task);
             }
         }
