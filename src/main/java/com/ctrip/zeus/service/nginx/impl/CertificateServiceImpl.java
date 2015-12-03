@@ -36,14 +36,9 @@ public class CertificateServiceImpl implements CertificateService {
             domainValue = searchRange[0];
             value = certificateDao.findMaxByDomainAndState(domainValue, state, CertificateEntity.READSET_FULL);
         } else {
-            List<CertificateDo> check = certificateDao.grossByDomainAndState(domains, state, CertificateEntity.READSET_FULL);
+            List<CertificateDo> check = certificateDao.grossByDomainAndState(searchRange, state, CertificateEntity.READSET_FULL);
             if (check.isEmpty())
                 throw new ValidationException("Cannot find corresponding certificate.");
-            Iterator<CertificateDo> iter = check.iterator();
-            while (iter.hasNext()) {
-                if (!searchRange[0].equals(iter.next().getDomain()))
-                    iter.remove();
-            }
             if (check.size() > 1) {
                 throw new ValidationException("Multiple certificates found referring the domain list.");
             }
@@ -150,11 +145,12 @@ public class CertificateServiceImpl implements CertificateService {
             return domains;
         else {
             Arrays.sort(domains);
-            String[] values = new String[domains.length + 1];
+//            String[] values = new String[domains.length + 1];
+            String[] values = new String[1];
             values[0] = Joiner.on("|").join(domains);
-            for (int i = 1; i < values.length; i++) {
-                values[i] = domains[i - 1];
-            }
+//            for (int i = 1; i < values.length; i++) {
+//                values[i] = domains[i - 1];
+//            }
             return values;
         }
     }
