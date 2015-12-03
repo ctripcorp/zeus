@@ -133,7 +133,7 @@ public class GroupMemberResource {
             try {
                 gsl = DefaultJsonParser.parse(GroupServerList.class, groupServerList);
             } catch (Exception e) {
-                throw new Exception("Group cannot be parsed.");
+                throw new Exception("Group member list cannot be parsed.");
             }
         }
         return gsl;

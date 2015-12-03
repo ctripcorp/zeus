@@ -44,7 +44,7 @@ public class AutoFiller {
         for (GroupServer groupServer : group.getGroupServers()) {
             groupServer.setWeight(groupServer.getWeight() == null ? 5 : groupServer.getWeight())
                     .setFailTimeout(groupServer.getFailTimeout() == null ? 30 : groupServer.getFailTimeout())
-                    .setFailTimeout(groupServer.getMaxFails() == null ? 0 : groupServer.getMaxFails());
+                    .setMaxFails(groupServer.getMaxFails() == null ? 0 : groupServer.getMaxFails());
         }
     }
 
