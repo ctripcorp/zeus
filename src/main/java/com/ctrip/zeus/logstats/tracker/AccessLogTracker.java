@@ -160,12 +160,12 @@ public class AccessLogTracker implements LogTracker {
             fileChannel.position(offset);
             tryLog();
         } catch (IOException ex) {
-            ex.printStackTrace();
-            hotfixReset();
+            logger.error("Some error occurred when tracking access.log.", ex);
+            hotfix();
         }
     }
 
-    private void hotfixReset() throws IOException {
+    private void hotfix() throws IOException {
         if (fileChannel != null)
             fileChannel.close();
         if (raf != null)
