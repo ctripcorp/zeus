@@ -189,11 +189,6 @@
             <artifactId>logback-access</artifactId>
             <version>${logback.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.ctrip.framework.clogging</groupId>
-            <artifactId>clogging-agent</artifactId>
-            <version>3.3.2</version>
-        </dependency>
         <!-- Log End -->
 
         <!-- Jetty -->
