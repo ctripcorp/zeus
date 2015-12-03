@@ -101,22 +101,23 @@ public class AnalyzerTest {
             if (s != null)
                 s.close();
         }
-        Assert.assertEquals(14, count.get());
 
+        f = new File(trackingFilename);
         if (f.exists())
             f.delete();
+        Assert.assertEquals(14, count.get());
     }
 
     @Test
     public void testTrackerWhenLogRotating() throws Exception {
         final String logRotateFilename = "log-rotate-access.log";
         final String logRotateTrackingFilename = "log-rotate-tracker.log";
-        File lf = new File(logRotateFilename);
-        if (lf.exists())
-            lf.delete();
-        File trf = new File(logRotateTrackingFilename);
-        if (trf.exists())
-            trf.delete();
+        File f = new File(logRotateFilename);
+        if (f.exists())
+            f.delete();
+        f = new File(logRotateTrackingFilename);
+        if (f.exists())
+            f.delete();
 
         final long endTime = System.currentTimeMillis() + 60 * 1000L;
         final AtomicInteger writerCount = new AtomicInteger();
@@ -176,24 +177,26 @@ public class AnalyzerTest {
         reader.start();
         writerLatch.await();
         trackerLatch.await();
-        Assert.assertEquals(writerCount.get(), trackerCount.get());
 
-        if (lf.exists())
-            lf.delete();
-        if (trf.exists())
-            trf.delete();
+        f = new File(logRotateFilename);
+        if (f.exists())
+            f.delete();
+        f = new File(logRotateTrackingFilename);
+        if (f.exists())
+            f.delete();
+        Assert.assertEquals(writerCount.get(), trackerCount.get());
     }
 
     @Test
     public void testAnalyzerPerformanceWhenLogRotating() throws Exception {
         final String logRotateFilename = "log-rotate-perf-access.log";
         final String logRotateTrackingFilename = "log-rotate-perf-tracker.log";
-        File lf = new File(logRotateFilename);
-        if (lf.exists())
-            lf.delete();
-        File trf = new File(logRotateTrackingFilename);
-        if (trf.exists())
-            trf.delete();
+        File f = new File(logRotateFilename);
+        if (f.exists())
+            f.delete();
+        f = new File(logRotateTrackingFilename);
+        if (f.exists())
+            f.delete();
 
         final long endTime = System.currentTimeMillis() + 60 * 1000L;
         final AtomicInteger writerCount = new AtomicInteger();
@@ -250,13 +253,15 @@ public class AnalyzerTest {
         reader.start();
         writerLatch.await();
         readerLatch.await();
+
+        f = new File(logRotateFilename);
+        if (f.exists())
+            f.delete();
+        f = new File(logRotateTrackingFilename);
+        if (f.exists())
+            f.delete();
         System.out.println("writer count: " + writerCount.get());
         System.out.println("reader count: " + readerCount.get());
         Assert.assertTrue((readerCount.get() / 60) > 20000);
-
-        if (lf.exists())
-            lf.delete();
-        if (trf.exists())
-            trf.delete();
     }
 }
