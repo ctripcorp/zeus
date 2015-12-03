@@ -15,6 +15,7 @@ import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.validate.SlbValidator;
 import com.ctrip.zeus.tag.TagBox;
@@ -69,6 +70,10 @@ public class ActivateResource {
     private ConfSlbVirtualServerActiveDao confSlbVirtualServerActiveDao;
     @Resource
     private ConfGroupActiveDao confGroupActiveDao;
+    @Resource
+    private SlbRepository slbRepository;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
@@ -99,6 +104,7 @@ public class ActivateResource {
         }
         List<OpsTask> tasks = new ArrayList<>();
         for (Long id : _slbIds) {
+
             OpsTask task = new OpsTask();
             task.setSlbId(id);
             task.setOpsType(TaskOpsType.ACTIVATE_SLB);
@@ -106,7 +112,21 @@ public class ActivateResource {
             Archive archive = archiveService.getLatestSlbArchive(id);
             task.setVersion(archive.getVersion());
             tasks.add(task);
+
+            Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(id);
+            for (Long vsId : vsIds){
+                task = new OpsTask();
+                task.setSlbVirtualServerId(vsId);
+                task.setOpsType(TaskOpsType.ACTIVATE_VS);
+                task.setTargetSlbId(id);
+                archive = archiveService.getLatestVsArchive(vsId);
+                task.setVersion(archive.getVersion());
+                task.setCreateTime(new Date());
+                tasks.add(task);
+            }
+
         }
+
         List<Long> taskIds = taskManager.addTask(tasks);
         List<TaskResult> results = taskManager.getResult(taskIds,30000L);
 
