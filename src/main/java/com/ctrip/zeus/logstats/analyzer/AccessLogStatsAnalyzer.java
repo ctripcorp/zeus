@@ -9,6 +9,9 @@ import com.ctrip.zeus.logstats.parser.LogParser;
 import com.ctrip.zeus.logstats.tracker.AccessLogTracker;
 import com.ctrip.zeus.logstats.tracker.LogTracker;
 import com.ctrip.zeus.logstats.tracker.LogTrackerStrategy;
+import com.ctrip.zeus.service.build.conf.LogFormat;
+import com.netflix.config.DynamicIntProperty;
+import com.netflix.config.DynamicPropertyFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,12 +20,8 @@ import java.io.IOException;
  * Created by zhoumy on 2015/11/16.
  */
 public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
-    private static final String AccessLogFormat =
-            "[$time_local] $host $hostname $server_addr $request_method $uri " +
-                    "\"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for " +
-                    "$server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" " +
-                    "$host $status $body_bytes_sent $request_time $upstream_response_time ";
-    private static final int TrackerReadSize = 2048;
+    private static final String AccessLogFormat = LogFormat.getMainCompactString();
+    private static final DynamicIntProperty TrackerReadSize = DynamicPropertyFactory.getInstance().getIntProperty("accesslog.tracker.readsize", 1024 * 5);
     private final LogStatsAnalyzerConfig config;
     private final LogTracker logTracker;
     private final LogParser logParser;
@@ -30,9 +29,9 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     public AccessLogStatsAnalyzer() throws IOException {
         this(new LogStatsAnalyzerConfigBuilder()
                 .setLogFormat(AccessLogFormat)
-                .setLogFilename("/opt/app/nginx/access.log")
-                .setTrackerReadSize(TrackerReadSize)
-                .allowTracking("access-foot-print.log")
+                .setLogFilename("/opt/logs/nginx/access.log")
+                .setTrackerReadSize(TrackerReadSize.get())
+                .allowTracking("access-track.log")
                 .build());
     }
 

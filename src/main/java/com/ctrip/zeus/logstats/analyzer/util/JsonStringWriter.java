@@ -23,7 +23,8 @@ public class JsonStringWriter {
                         .append(",");
             }
         }
-        sb.deleteCharAt(sb.length() - 1);
+        if (keyValues.size() > 0)
+            sb.deleteCharAt(sb.length() - 1);
         sb.append("}");
         return sb.toString();
     }

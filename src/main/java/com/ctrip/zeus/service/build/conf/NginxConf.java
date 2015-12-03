@@ -19,15 +19,6 @@ public class NginxConf {
     private static DynamicIntProperty checkShmSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.checkShmSize", 32);
     private static DynamicStringProperty logLevel = DynamicPropertyFactory.getInstance().getStringProperty("slb.nginx.logLevel", "");
 
-    private static DynamicStringProperty logFormat = DynamicPropertyFactory.getInstance().getStringProperty("slb.nginx.log-format",
-            "log_format main '[$time_local] $host $hostname $server_addr $request_method $uri '\n" +
-                    "'\"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for '\n" +
-                    "'$server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" '\n" +
-                    "'$host $status $body_bytes_sent $request_time $upstream_response_time '\n" +
-                    "'$upstream_addr $upstream_status $proxy_host';\n"
-    );
-
-
     private static DynamicIntProperty dyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
 
     public static String generate(Slb slb) {
@@ -54,7 +45,7 @@ public class NginxConf {
         b.append("default_type    application/octet-stream;\n");
         b.append("keepalive_timeout    65;\n");
 
-        b.append(logFormat.get());
+        b.append("log_format main " + LogFormat.getMain() + ";\n");
         b.append("access_log /opt/logs/nginx/access.log main;\n");
         b.append("server_names_hash_max_size ").append(serverNamesHashMaxSize.get()).append(";\n");
         b.append("server_names_hash_bucket_size ").append(serverNamesHashBucketSize.get()).append(";\n");
