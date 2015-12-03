@@ -1,7 +1,9 @@
 package com.ctrip.zeus.logstats.common;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -12,6 +14,15 @@ public class AccessLogLineFormat implements LineFormat {
     private String patternString;
     private Pattern pattern;
     private String[] keys;
+    private final Map<String, String> patternRegistry = new HashMap<>();
+
+    public AccessLogLineFormat() {
+    }
+
+    public AccessLogLineFormat(String format) {
+        setFormat(format);
+        registerPatternForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))");
+    }
 
     @Override
     public String getFormat() {
@@ -34,12 +45,24 @@ public class AccessLogLineFormat implements LineFormat {
     }
 
     @Override
-    public void setFormat(String format) {
+    public LineFormat setFormat(String format) {
         this.format = format;
-        parsePattern(format);
+        return this;
     }
 
-    protected void parsePattern(String format) {
+    @Override
+    public LineFormat registerPatternForKey(String key, String pattern) {
+        patternRegistry.put(key, pattern);
+        return this;
+    }
+
+    @Override
+    public LineFormat generate() {
+        parsePattern();
+        return this;
+    }
+
+    protected void parsePattern() {
         List<String> keyList = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         char[] formatChars = format.toCharArray();
@@ -48,10 +71,14 @@ public class AccessLogLineFormat implements LineFormat {
             if (formatChars[i] == '$') {
                 int start = i;
                 // word characters
-                sb.append(depth % 2 == 0 ? "(\\S+)" : "(.+)");
                 while (++i < formatChars.length && (Character.isLetterOrDigit(formatChars[i]) || formatChars[i] == '_')) {
                 }
-                keyList.add(i - start == 0 ? "key" + i : new String(formatChars, start + 1, i - start - 1));
+                String k = i - start == 0 ? "key" + i : new String(formatChars, start + 1, i - start - 1);
+                keyList.add(k);
+                if (patternRegistry.containsKey(k))
+                    sb.append(patternRegistry.get(k));
+                else
+                    sb.append(depth % 2 == 0 ? "(\\S+)" : "(.*)");
             }
             if (i >= formatChars.length)
                 break;

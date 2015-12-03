@@ -15,6 +15,7 @@ import com.netflix.config.DynamicPropertyFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Created by zhoumy on 2015/11/16.
@@ -28,7 +29,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
 
     public AccessLogStatsAnalyzer() throws IOException {
         this(new LogStatsAnalyzerConfigBuilder()
-                .setLogFormat(AccessLogFormat)
+                .setLogFormat(new AccessLogLineFormat(AccessLogFormat).generate())
                 .setLogFilename("/opt/logs/nginx/access.log")
                 .setTrackerReadSize(TrackerReadSize.get())
                 .allowTracking("access-track.log")
@@ -78,7 +79,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     }
 
     public static class LogStatsAnalyzerConfigBuilder {
-        private String logFormat;
+        private LineFormat logFormat;
         private String logFilename;
         private String trackingFilename;
         private boolean allowTracking;
@@ -89,7 +90,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             return this;
         }
 
-        public LogStatsAnalyzerConfigBuilder setLogFormat(String logFormat) {
+        public LogStatsAnalyzerConfigBuilder setLogFormat(LineFormat logFormat) {
             this.logFormat = logFormat;
             return this;
         }
@@ -106,8 +107,6 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
         }
 
         public LogStatsAnalyzerConfig build() throws IOException {
-            LineFormat format = new AccessLogLineFormat();
-            format.setFormat(logFormat);
             File f = new File(logFilename);
             if (f.exists() && f.isFile()) {
                 String rootDir = f.getAbsoluteFile().getParentFile().getAbsolutePath();
@@ -119,7 +118,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
                         .setLogFilename(logFilename)
                         .setReadSize(trackerReadSize);
                 return new LogStatsAnalyzerConfig()
-                        .addFormat(format)
+                        .addFormat(logFormat)
                         .setLogTracker(new AccessLogTracker(strategy));
             } else {
                 throw new IOException(logFilename + " is not a file or does not exist.");

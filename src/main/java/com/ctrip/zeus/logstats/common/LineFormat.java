@@ -20,5 +20,9 @@ public interface LineFormat {
 
     String[] getKeys();
 
-    void setFormat(String format);
+    LineFormat setFormat(String format);
+
+    LineFormat registerPatternForKey(String key, String pattern);
+
+    LineFormat generate();
 }

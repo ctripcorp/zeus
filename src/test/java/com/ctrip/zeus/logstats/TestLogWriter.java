@@ -3,7 +3,6 @@ package com.ctrip.zeus.logstats;
 import com.google.common.base.Joiner;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -12,7 +11,6 @@ import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by zhoumy on 2015/11/30.
@@ -89,6 +87,13 @@ public class TestLogWriter {
                 }
             }
         }
+    }
+
+    public void stop() throws IOException {
+        fileChannel.close();
+        raf.close();
+        fileChannel = null;
+        raf = null;
     }
 
     public int getCount() {

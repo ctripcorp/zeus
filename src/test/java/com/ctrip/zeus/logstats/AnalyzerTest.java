@@ -3,6 +3,8 @@ package com.ctrip.zeus.logstats;
 import com.ctrip.zeus.logstats.analyzer.AccessLogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzerConfig;
+import com.ctrip.zeus.logstats.common.AccessLogLineFormat;
+import com.ctrip.zeus.logstats.common.LineFormat;
 import com.ctrip.zeus.logstats.tracker.LogTracker;
 import org.junit.Assert;
 import org.junit.Test;
@@ -19,12 +21,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class AnalyzerTest {
 
-    private static final String AccessLogFormat =
+    private static final String AccessLogFormatString =
             "[$time_local] $host $hostname $server_addr $request_method $uri " +
                     "\"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for " +
                     "$server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" " +
                     "$host $status $body_bytes_sent $request_time $upstream_response_time " +
                     "$upstream_addr $upstream_status";
+    private static final LineFormat AccessLogFormat = new AccessLogLineFormat(AccessLogFormatString).generate();
     private static final int TrackerReadSize = 2048;
     private final URL accessLogUrl = this.getClass().getClassLoader().getResource("com.ctrip.zeus.service/access.log");
 
@@ -124,6 +127,7 @@ public class AnalyzerTest {
                 TestLogWriter writer = new TestLogWriter(logRotateFilename, 10 * 1000L);
                 try {
                     writer.run(endTime);
+                    writer.stop();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -137,6 +141,7 @@ public class AnalyzerTest {
             public void run() {
                 final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder;
                 try {
+                    Thread.sleep(30L);
                     builder = new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
                             .setLogFormat(AccessLogFormat)
                             .setLogFilename(logRotateFilename)
@@ -153,11 +158,13 @@ public class AnalyzerTest {
                     };
                     LogTracker tracker = builder.build().getLogTracker();
                     tracker.start();
-                    while (System.currentTimeMillis() < endTime + 10L) {
+                    while (System.currentTimeMillis() < endTime + 30L) {
                         tracker.fastMove(reporter);
                     }
                     trackerLatch.countDown();
                 } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -171,8 +178,8 @@ public class AnalyzerTest {
 
     @Test
     public void testAnalyzerPerformanceWhenLogRotating() throws Exception {
-        final String logRotateFilename = "log-rotate-access.log";
-        final String logRotateTrackingFilename = "log-rotate-tracker.log";
+        final String logRotateFilename = "log-rotate-perf-access.log";
+        final String logRotateTrackingFilename = "log-rotate-perf-tracker.log";
         File f = new File(logRotateFilename);
         if (f.exists())
             f.delete();
@@ -192,6 +199,7 @@ public class AnalyzerTest {
                 TestLogWriter writer = new TestLogWriter(logRotateFilename, 10 * 1000L);
                 try {
                     writer.run(endTime);
+                    writer.stop();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
