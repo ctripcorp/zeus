@@ -102,18 +102,21 @@ public class AnalyzerTest {
                 s.close();
         }
         Assert.assertEquals(14, count.get());
+
+        if (f.exists())
+            f.delete();
     }
 
     @Test
     public void testTrackerWhenLogRotating() throws Exception {
         final String logRotateFilename = "log-rotate-access.log";
         final String logRotateTrackingFilename = "log-rotate-tracker.log";
-        File f = new File(logRotateFilename);
-        if (f.exists())
-            f.delete();
-        f = new File(logRotateTrackingFilename);
-        if (f.exists())
-            f.delete();
+        File lf = new File(logRotateFilename);
+        if (lf.exists())
+            lf.delete();
+        File trf = new File(logRotateTrackingFilename);
+        if (trf.exists())
+            trf.delete();
 
         final long endTime = System.currentTimeMillis() + 60 * 1000L;
         final AtomicInteger writerCount = new AtomicInteger();
@@ -174,18 +177,23 @@ public class AnalyzerTest {
         writerLatch.await();
         trackerLatch.await();
         Assert.assertEquals(writerCount.get(), trackerCount.get());
+
+        if (lf.exists())
+            lf.delete();
+        if (trf.exists())
+            trf.delete();
     }
 
     @Test
     public void testAnalyzerPerformanceWhenLogRotating() throws Exception {
         final String logRotateFilename = "log-rotate-perf-access.log";
         final String logRotateTrackingFilename = "log-rotate-perf-tracker.log";
-        File f = new File(logRotateFilename);
-        if (f.exists())
-            f.delete();
-        f = new File(logRotateTrackingFilename);
-        if (f.exists())
-            f.delete();
+        File lf = new File(logRotateFilename);
+        if (lf.exists())
+            lf.delete();
+        File trf = new File(logRotateTrackingFilename);
+        if (trf.exists())
+            trf.delete();
 
         final long endTime = System.currentTimeMillis() + 60 * 1000L;
         final AtomicInteger writerCount = new AtomicInteger();
@@ -245,5 +253,10 @@ public class AnalyzerTest {
         System.out.println("writer count: " + writerCount.get());
         System.out.println("reader count: " + readerCount.get());
         Assert.assertTrue((readerCount.get() / 60) > 20000);
+
+        if (lf.exists())
+            lf.delete();
+        if (trf.exists())
+            trf.delete();
     }
 }
