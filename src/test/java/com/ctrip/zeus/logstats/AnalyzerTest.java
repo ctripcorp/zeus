@@ -13,6 +13,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -78,24 +83,39 @@ public class AnalyzerTest {
         if (f.exists())
             f.delete();
 
-        final AtomicInteger count = new AtomicInteger();
+        final DateFormat dateFormat = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.ENGLISH);
+        final Date lastRecord = new Date(0, 1, 1);
+
+        final AtomicInteger successCount = new AtomicInteger();
+        final AtomicInteger errorCount = new AtomicInteger();
         StatsDelegate reporter = new StatsDelegate<String>() {
             @Override
             public void delegate(String input) {
                 Assert.assertNotNull(input);
-                count.incrementAndGet();
+                try {
+                    Date d = dateFormat.parse(getTimeLocal(input));
+                    Assert.assertTrue(d.getTime() >= lastRecord.getTime());
+                    successCount.incrementAndGet();
+                    lastRecord.setTime(d.getTime());
+                } catch (ParseException e) {
+                    errorCount.incrementAndGet();
+                }
                 System.out.println(input);
             }
         };
         InputStream s = null;
         try {
             s = accessLogUrl.openStream();
-            int total = s.available();
-            for (int i = 0; i < total / TrackerReadSize + 1; i++) {
+            while (true) {
                 LogStatsAnalyzer analyzer = new AccessLogStatsAnalyzer(builder.build());
                 analyzer.start();
-                analyzer.analyze(reporter);
-                analyzer.stop();
+                if (!analyzer.reachFileEnd()) {
+                    analyzer.analyze(reporter);
+                    analyzer.stop();
+                } else {
+                    analyzer.stop();
+                    break;
+                }
             }
         } finally {
             if (s != null)
@@ -105,7 +125,8 @@ public class AnalyzerTest {
         f = new File(trackingFilename);
         if (f.exists())
             f.delete();
-        Assert.assertEquals(14, count.get());
+        Assert.assertEquals(14, successCount.get());
+        Assert.assertEquals(0, errorCount.get());
     }
 
     @Test
@@ -263,5 +284,9 @@ public class AnalyzerTest {
         System.out.println("writer count: " + writerCount.get());
         System.out.println("reader count: " + readerCount.get());
         Assert.assertTrue((readerCount.get() / 60) > 20000);
+    }
+
+    private static String getTimeLocal(String value) {
+        return value.substring(15, 41);
     }
 }

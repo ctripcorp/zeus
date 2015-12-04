@@ -21,6 +21,7 @@ public class AccessLogTracker implements LogTracker {
     private RandomAccessFile raf;
     private FileChannel fileChannel;
     private long offset;
+    private long previousOffset;
     private String offsetValue = "";
     private int rollingLogCounter;
     private File trackingFile;
@@ -74,18 +75,21 @@ public class AccessLogTracker implements LogTracker {
             // init state
             RecordOffset curr = getRecordOffset();
             if (curr.rOffset == 0) {
-                offset = 0;
+                previousOffset = offset = 0;
                 return;
             }
             // log rotate must be done
             if (fileChannel.size() < curr.rOffset)
-                offset = 0;
+                previousOffset = offset = 0;
             else {
                 // check if log rotate has been done
-                fileChannel.position(curr.rOffset - curr.rValue.getBytes().length - 2);
+                fileChannel.position(curr.rOffset);
                 String rafline = raf.readLine();
-                if (rafline.equals(curr.rValue))
-                    offset = curr.rOffset;
+                if (rafline.equals(curr.rValue)) {
+                    previousOffset = curr.rOffset;
+                    offset = fileChannel.position();
+                    return;
+                }
             }
             fileChannel.position(offset);
         }
@@ -112,7 +116,7 @@ public class AccessLogTracker implements LogTracker {
     public void fastMove(final StatsDelegate<String> delegator) throws IOException {
         try {
             if (offset > fileChannel.size()) {
-                offset = 0;
+                previousOffset = offset = 0;
                 fileChannel.position(offset);
             }
             buffer.clear();
@@ -136,6 +140,7 @@ public class AccessLogTracker implements LogTracker {
                             eol = true;
                             offsetValue = new String(line, 0, colOffset);
                             delegator.delegate(offsetValue);
+                            previousOffset = offset;
                             offset += ++colOffset;
                             break;
                         case '\r':
@@ -146,6 +151,7 @@ public class AccessLogTracker implements LogTracker {
                             else
                                 colOffset++;
                             delegator.delegate(offsetValue);
+                            previousOffset = offset;
                             offset += ++colOffset;
                             break;
                         default:
@@ -182,7 +188,7 @@ public class AccessLogTracker implements LogTracker {
             OutputStream os = null;
             try {
                 os = new FileOutputStream(trackingFile);
-                String output = Long.valueOf(offset).toString() + "\n" + offsetValue;
+                String output = Long.valueOf(previousOffset).toString() + "\n" + offsetValue;
                 os.write(output.getBytes());
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
