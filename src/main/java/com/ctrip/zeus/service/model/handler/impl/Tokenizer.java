@@ -1,6 +1,6 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
-import com.ctrip.framework.clogging.agent.util.Bytes;
+import com.ctrip.zeus.util.BytesUtils;
 
 /**
  * Created by zhoumy on 2015/6/23.
@@ -32,7 +32,7 @@ public class Tokenizer {
                         return "";
                     }
                     currentState.moveToNext();
-                    return Bytes.toString(data, offset, index - offset);
+                    return BytesUtils.toString(data, offset, index - offset);
                 }
                 case ';': {
                     if (depth > 0) {
@@ -41,11 +41,11 @@ public class Tokenizer {
                     }
                     if (endOfBytes(index + 1)) {
                         currentState.moveToNext();
-                        return Bytes.toString(data, offset, index - offset);
+                        return BytesUtils.toString(data, offset, index - offset);
                     }
                     if (data[index + 1] == '\"') {
                         currentState.moveToNext();
-                        return Bytes.toString(data, offset, index - offset);
+                        return BytesUtils.toString(data, offset, index - offset);
                     }
                     index++;
                     break;
@@ -59,7 +59,7 @@ public class Tokenizer {
             }
         }
         currentState.moveToNext();
-        return Bytes.toString(data, offset, index - offset);
+        return BytesUtils.toString(data, offset, index - offset);
     }
 
     public Token getToken() {
