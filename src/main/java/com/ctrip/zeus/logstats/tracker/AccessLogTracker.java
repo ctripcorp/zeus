@@ -69,6 +69,9 @@ public class AccessLogTracker implements LogTracker {
 
     @Override
     public void start() throws IOException {
+        if (!new File(getLogFilename()).exists()) {
+            throw new IOException(logFilename + " is not a file or does not exist.");
+        }
         raf = new RandomAccessFile(getLogFilename(), "r");
         fileChannel = raf.getChannel();
         if (allowTracking) {

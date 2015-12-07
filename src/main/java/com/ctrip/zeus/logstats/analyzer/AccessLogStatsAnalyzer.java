@@ -26,7 +26,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     private final LogTracker logTracker;
     private final LogParser logParser;
 
-    public AccessLogStatsAnalyzer() throws IOException {
+    public AccessLogStatsAnalyzer() {
         this(new LogStatsAnalyzerConfigBuilder()
                 .setLogFormat(new AccessLogLineFormat(AccessLogFormat).generate())
                 .setLogFilename("/opt/logs/nginx/access.log")
@@ -84,7 +84,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
         private boolean allowTracking;
         private int trackerReadSize;
 
-        public LogStatsAnalyzerConfigBuilder setLogFilename(String logFilename) throws IOException {
+        public LogStatsAnalyzerConfigBuilder setLogFilename(String logFilename) {
             this.logFilename = logFilename;
             return this;
         }
@@ -105,23 +105,19 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             return this;
         }
 
-        public LogStatsAnalyzerConfig build() throws IOException {
+        public LogStatsAnalyzerConfig build() {
             File f = new File(logFilename);
-            if (f.exists() && f.isFile()) {
-                String rootDir = f.getAbsoluteFile().getParentFile().getAbsolutePath();
-                LogTrackerStrategy strategy = new LogTrackerStrategy()
-                        .setAllowLogRotate(true)
-                        .setAllowTrackerMemo(allowTracking)
-                        .setDoAsRoot(true)
-                        .setTrackerMemoFilename(allowTracking ? rootDir + "/" + trackingFilename : null)
-                        .setLogFilename(logFilename)
-                        .setReadSize(trackerReadSize);
-                return new LogStatsAnalyzerConfig()
-                        .addFormat(logFormat)
-                        .setLogTracker(new AccessLogTracker(strategy));
-            } else {
-                throw new IOException(logFilename + " is not a file or does not exist.");
-            }
+            String rootDir = f.getAbsoluteFile().getParentFile().getAbsolutePath();
+            LogTrackerStrategy strategy = new LogTrackerStrategy()
+                    .setAllowLogRotate(true)
+                    .setAllowTrackerMemo(allowTracking)
+                    .setDoAsRoot(true)
+                    .setTrackerMemoFilename(allowTracking ? rootDir + "/" + trackingFilename : null)
+                    .setLogFilename(logFilename)
+                    .setReadSize(trackerReadSize);
+            return new LogStatsAnalyzerConfig()
+                    .addFormat(logFormat)
+                    .setLogTracker(new AccessLogTracker(strategy));
         }
     }
 }
