@@ -15,7 +15,6 @@ import com.netflix.config.DynamicPropertyFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 
 /**
  * Created by zhoumy on 2015/11/16.

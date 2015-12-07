@@ -6,7 +6,11 @@ package com.ctrip.zeus.task;
  */
 public interface Task {
 
-    public void run();
+    public void run() throws Exception;
+
     public String getName();
+
     public long getInterval();
+
+    public void shutDown() throws Exception;
 }

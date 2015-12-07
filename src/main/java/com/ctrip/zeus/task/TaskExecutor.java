@@ -6,23 +6,27 @@ import com.netflix.config.DynamicPropertyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * @author:xingchaowang
  * @date: 12/7/2015.
  */
-public class TaskExecutor extends Thread{
+public class TaskExecutor extends Thread {
     private Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
     private DynamicBooleanProperty taskEnabled = null;
     private DynamicLongProperty taskInterval = null;
 
     private Task task;
+    private final AtomicBoolean isRunning;
 
     public TaskExecutor(Task task) {
         this.task = task;
+        isRunning = new AtomicBoolean(true);
 
-        taskEnabled = DynamicPropertyFactory.getInstance().getBooleanProperty("task."+task.getName()+".enabled", true);
-        taskInterval = DynamicPropertyFactory.getInstance().getLongProperty("task."+task.getName()+".interval", task.getInterval());
+        taskEnabled = DynamicPropertyFactory.getInstance().getBooleanProperty("task." + task.getName() + ".enabled", true);
+        taskInterval = DynamicPropertyFactory.getInstance().getLongProperty("task." + task.getName() + ".interval", task.getInterval());
 
         setName("Task-Executor-" + task.getName());
         setDaemon(true);
@@ -30,7 +34,7 @@ public class TaskExecutor extends Thread{
 
     @Override
     public void run() {
-        while (true) {
+        while (isRunning.get()) {
             try {
                 if (!taskEnabled.get()) continue;
                 task.run();
@@ -44,5 +48,9 @@ public class TaskExecutor extends Thread{
                 }
             }
         }
+    }
+
+    public void shutDown() {
+        isRunning.set(false);
     }
 }

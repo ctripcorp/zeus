@@ -2,6 +2,7 @@ package com.ctrip.zeus.task;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.io.IOException;
 
 /**
  * @author:xingchaowang
@@ -14,7 +15,10 @@ public abstract class AbstractTask implements Task {
     @PostConstruct
     private void init() {
         taskManager2.add(this);
+        start();
     }
+
+    public abstract void start();
 
     @Override
     public String getName() {
@@ -26,5 +30,14 @@ public abstract class AbstractTask implements Task {
         return 60000;
     }
 
-    public abstract void run();
+    public abstract void run() throws Exception;
+
+    @Override
+    public void shutDown() {
+        stop();
+        taskManager2.remove(this);
+        taskManager2 = null;
+    }
+
+    public abstract void stop();
 }

@@ -8,8 +8,13 @@ import org.springframework.stereotype.Component;
  * @date: 12/7/2015.
  */
 @Component("logAnalyzeTask")
-public class LogAnalyzeTask extends AbstractTask{
+public class LogAnalyzeTask extends AbstractTask {
     private int i = 0;
+
+    @Override
+    public void start() {
+
+    }
 
     @Override
     public long getInterval() {
@@ -19,5 +24,10 @@ public class LogAnalyzeTask extends AbstractTask{
     @Override
     public void run() {
         System.out.println("########################################" + i++);
+    }
+
+    @Override
+    public void stop() {
+
     }
 }
