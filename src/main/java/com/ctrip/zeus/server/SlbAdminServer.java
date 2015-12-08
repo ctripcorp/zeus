@@ -124,8 +124,7 @@ public class SlbAdminServer extends AbstractServer {
         statsHandler.setHandler(handler);
 
         //Request Log
-        RequestLogHandler requestLogHandler = new RequestLogHandler();
-        requestLogHandler.setRequestLog(new SlbRequestLog());
+        SlbRequestLogHandler requestLogHandler = new SlbRequestLogHandler();
         requestLogHandler.setHandler(statsHandler);
 
         //Create Jetty Server
