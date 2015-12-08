@@ -17,6 +17,12 @@ public class AutoFiller {
     public void autofill(Group group) throws Exception {
         for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
             gvs.setVirtualServer(virtualServerRepository.getById(gvs.getVirtualServer().getId()));
+        }
+        autofillEmptyFields(group);
+    }
+
+    public void autofillEmptyFields(Group group) {
+        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
             if (gvs.getPriority() == null) {
                 if (gvs.getPath().endsWith(RegexRootPath))
                     gvs.setPriority(Integer.MIN_VALUE);

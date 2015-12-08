@@ -7,9 +7,13 @@ import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VGroupValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.status.StatusService;
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import org.springframework.stereotype.Repository;
 
+import javax.annotation.Nullable;
 import javax.annotation.Resource;
 import java.util.*;
 
@@ -33,12 +37,27 @@ public class GroupRepositoryImpl implements GroupRepository {
     private VGroupValidator vGroupValidator;
     @Resource
     private StatusService statusService;
+    @Resource
+    private VirtualServerRepository virtualServerRepository;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
+        Set<Long> vsIds = virtualServerCriteriaQuery.queryByGroupIds(ids);
+        Map<Long, VirtualServer> dic = Maps.uniqueIndex(virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()])), new Function<VirtualServer, Long>() {
+            @Nullable
+            @Override
+            public Long apply(VirtualServer virtualServer) {
+                return virtualServer.getId();
+            }
+        });
         List<Group> result = archiveService.getLatestGroups(ids);
         for (Group group : result) {
-            autoFiller.autofill(group);
+            for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
+                groupVirtualServer.setVirtualServer(dic.get(groupVirtualServer.getVirtualServer().getId()));
+            }
+            autoFiller.autofillEmptyFields(group);
             hideVirtualValue(group);
         }
         return result;
