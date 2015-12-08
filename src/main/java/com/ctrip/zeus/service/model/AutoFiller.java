@@ -16,13 +16,7 @@ public class AutoFiller {
 
     public void autofill(Group group) throws Exception {
         for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
-            VirtualServer tvs = gvs.getVirtualServer();
-            VirtualServer vs = virtualServerRepository.getById(gvs.getVirtualServer().getId());
-            tvs.setName(vs.getName()).setSlbId(vs.getSlbId()).setPort(vs.getPort()).setSsl(vs.getSsl());
-            tvs.getDomains().clear();
-            for (Domain domain : vs.getDomains()) {
-                tvs.getDomains().add(domain);
-            }
+            gvs.setVirtualServer(virtualServerRepository.getById(gvs.getVirtualServer().getId()));
             if (gvs.getPriority() == null) {
                 if (gvs.getPath().endsWith(RegexRootPath))
                     gvs.setPriority(Integer.MIN_VALUE);

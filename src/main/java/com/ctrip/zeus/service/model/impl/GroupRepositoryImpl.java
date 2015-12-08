@@ -28,8 +28,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private ArchiveService archiveService;
     @Resource
-    private VirtualServerRepository virtualServerRepository;
-    @Resource
     private GroupValidator groupModelValidator;
     @Resource
     private VGroupValidator vGroupValidator;
@@ -40,10 +38,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     public List<Group> list(Long[] ids) throws Exception {
         List<Group> result = archiveService.getLatestGroups(ids);
         for (Group group : result) {
-            for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
-                groupVirtualServer.setVirtualServer(
-                        virtualServerRepository.getById(groupVirtualServer.getVirtualServer().getId()));
-            }
             autoFiller.autofill(group);
             hideVirtualValue(group);
         }
@@ -54,10 +48,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     public Group getById(Long id) throws Exception {
         if (groupModelValidator.exists(id) || vGroupValidator.exists(id)) {
             Group result = archiveService.getLatestGroup(id);
-            for (GroupVirtualServer groupVirtualServer : result.getGroupVirtualServers()) {
-                groupVirtualServer.setVirtualServer(
-                        virtualServerRepository.getById(groupVirtualServer.getVirtualServer().getId()));
-            }
             autoFiller.autofill(result);
             hideVirtualValue(result);
             return result;
