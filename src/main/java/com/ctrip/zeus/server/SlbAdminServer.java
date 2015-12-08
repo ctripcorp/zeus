@@ -10,6 +10,7 @@ import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -122,9 +123,14 @@ public class SlbAdminServer extends AbstractServer {
         StatisticsHandler statsHandler = new StatisticsHandler();
         statsHandler.setHandler(handler);
 
+        //Request Log
+        RequestLogHandler requestLogHandler = new RequestLogHandler();
+        requestLogHandler.setRequestLog(new SlbRequestLog());
+        requestLogHandler.setHandler(statsHandler);
+
         //Create Jetty Server
         server = new Server(serverPort.get());
-        server.setHandler(statsHandler);
+        server.setHandler(requestLogHandler);
         server.setStopTimeout(30000L);
     }
 
