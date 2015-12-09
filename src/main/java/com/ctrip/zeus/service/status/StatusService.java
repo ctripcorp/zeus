@@ -52,7 +52,7 @@ public interface StatusService extends Repository {
      * @param status  status enable = true , disable = false
      * @throws Exception
      */
-    void updateStatus(Long slbId ,Long groupId, List<String> ips , int offset , boolean status)throws Exception;
+    void updateStatus(Long slbId ,Long vsId , Long groupId, List<String> ips , int offset , boolean status)throws Exception;
 
     /**
      * get server status by server ip

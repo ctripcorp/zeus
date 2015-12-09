@@ -29,7 +29,15 @@ public interface ActivateService extends Repository {
      * @throws Exception
      */
     public void activeGroup(long groupId ,int version , Long vsId , Long slbId) throws Exception;
-
+    /**
+     * activate group
+     * @param groupId the Group id
+     * @param group the group obj
+     * @param vsId the vsId
+     * @param slbId the slbId
+     * @throws Exception
+     */
+    public void activeGroup(long groupId ,Group group ,int version, Long vsId , Long slbId) throws Exception;
     /**
      * activate group
      * @param version the version
@@ -37,7 +45,7 @@ public interface ActivateService extends Repository {
      * @param slbId the slbId
      * @throws Exception
      */
-    public void activeVirtualServer(long vsId ,int version , Long slbId) throws Exception;
+    public void activeVirtualServer(long vsId ,VirtualServer vs , int version , Long slbId) throws Exception;
 
 
     /**
@@ -105,6 +113,14 @@ public interface ActivateService extends Repository {
 
     public Group getActivatingGroup(Long groupId, int version);
     /**
+     * get activating groups
+     * @param groupIds , the Group id
+     * @param versions , Version
+     * @return groups
+     */
+
+    public List<Group> getActivatingGroups(Long[] groupIds, Integer[] versions);
+    /**
      * get activating slb
      * @param vsId the slb ID
      * @param version the version
@@ -112,6 +128,14 @@ public interface ActivateService extends Repository {
      */
 
     public VirtualServer getActivatingVirtualServer(Long vsId,int version);
+    /**
+     * get activating slb
+     * @param vsIds the slb ID
+     * @param versions the version
+     * @return vses
+     */
+
+    public List<VirtualServer> getActivatingVirtualServers(Long[] vsIds,Integer[] versions);
 
     /**
      * get activating slb

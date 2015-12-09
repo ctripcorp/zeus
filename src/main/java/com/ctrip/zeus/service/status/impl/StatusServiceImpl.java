@@ -88,41 +88,24 @@ public class StatusServiceImpl implements StatusService {
     }
 
     @Override
-    public void updateStatus(Long slbId, Long groupId, List<String> ips, int offset, boolean status) throws Exception {
+    public void updateStatus(Long slbId,Long vsId ,  Long groupId, List<String> ips, int offset, boolean status) throws Exception {
         if (offset > 30 || offset < 0){
             throw new Exception("offset of status should be [0-30]");
         }
-        Group group;
-        if(activateService.isGroupActivated(groupId,slbId)){
-            group = activateService.getActivatedGroup(groupId,slbId);
-        }else {
-            group = groupRepository.getById(groupId);
-        }
-        if (group == null){
-            return;
-        }
-
-        List<GroupVirtualServer> groupVirtualServers = group.getGroupVirtualServers();
-        for (GroupVirtualServer groupVirtualServer : groupVirtualServers){
-            if (!groupVirtualServer.getVirtualServer().getSlbId().equals(slbId)){
+        for (String ip : ips) {
+            if (ip==null||ip.isEmpty())
+            {
                 continue;
             }
-            for (String ip : ips) {
-                if (ip==null||ip.isEmpty())
-                {
-                    continue;
-                }
-                StatusGroupServerDo data = new StatusGroupServerDo();
-                data.setSlbVirtualServerId(groupVirtualServer.getVirtualServer().getId())
-                        .setGroupId(groupId)
-                        .setIp(ip)
-                        .setCreatedTime(new Date());
-                int reset = ~(1 << offset);
-                int updatestatus = (status?0:1)<<offset;
-                data.setReset(reset).setStatus(updatestatus);
-                statusGroupServerDao.updateStatus(data);
-            }
-            logger.info("[update status]: VirtualServer:"+groupVirtualServer.toString()+"ips:"+ips.toString());
+            StatusGroupServerDo data = new StatusGroupServerDo();
+            data.setSlbVirtualServerId(vsId)
+                    .setGroupId(groupId)
+                    .setIp(ip)
+                    .setCreatedTime(new Date());
+            int reset = ~(1 << offset);
+            int updatestatus = (status?0:1)<<offset;
+            data.setReset(reset).setStatus(updatestatus);
+            statusGroupServerDao.updateStatus(data);
         }
     }
 

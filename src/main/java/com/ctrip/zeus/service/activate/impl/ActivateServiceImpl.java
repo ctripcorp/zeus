@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.activate.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.activate.ActivateService;
@@ -85,11 +86,38 @@ public class ActivateServiceImpl implements ActivateService {
     }
 
     @Override
-    public void activeVirtualServer(long vsId, int version, Long slbId) throws Exception {
-        Archive archive = archiveService.getVsArchive(vsId, version);
-        AssertUtils.assertNotNull(archive, "[activate]get Virtual Server Archive return Null! VsId: " + vsId);
+    public void activeGroup(long groupId, Group group,int version, Long vsId, Long slbId) throws Exception {
+
+        //while Group updated VsId, both vsIds belong to same slb, we need to delete the old version group active conf.
+        ConfGroupActiveDo confGroupActiveDo = confGroupActiveDao.findByGroupIdAndVirtualServerId(groupId,vsId,ConfGroupActiveEntity.READSET_FULL);
+        if (confGroupActiveDo == null){
+            List<ConfGroupActiveDo> groups = confGroupActiveDao.findAllByGroupIds(new Long[]{groupId},ConfGroupActiveEntity.READSET_FULL);
+            if (groups!=null && groups.size() > 0){
+                List<Long> gvsIds = new ArrayList<>();
+                for (ConfGroupActiveDo groupActiveDo : groups){
+                    gvsIds.add(groupActiveDo.getSlbVirtualServerId());
+                }
+                List<ConfSlbVirtualServerActiveDo> vses = confSlbVirtualServerActiveDao.findBySlbIdAndSlbVirtualServerIds(gvsIds.toArray(new Long[]{}),slbId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
+                for (ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo : vses){
+                    confGroupActiveDao.deleteByGroupIdAndSlbVirtualServerId(new ConfGroupActiveDo().setGroupId(groupId).setSlbVirtualServerId(confSlbVirtualServerActiveDo.getSlbVirtualServerId()));
+                }
+            }
+        }
+
+        String content = String.format(Group.XML, group);
+        ConfGroupActiveDo c = new ConfGroupActiveDo().setCreatedTime(new Date());
+        c.setGroupId(groupId).setContent(content).setVersion(version).setSlbVirtualServerId(vsId).setSlbId(slbId);
+        confGroupActiveDao.insert(c);
+        logger.info("Conf Group Active Inserted: [GroupId: " + c.getId() + ",Content: " + c.getContent() + ",Version: " + c.getVersion() + "]");
+    }
+
+    @Override
+    public void activeVirtualServer(long vsId, VirtualServer vs ,int version, Long slbId) throws Exception {
+        if (vs == null){
+            throw new ValidationException("Virtual Server is Null! vsId:"+vsId);
+        }
         ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo = new ConfSlbVirtualServerActiveDo();
-        confSlbVirtualServerActiveDo.setContent(archive.getContent())
+        confSlbVirtualServerActiveDo.setContent(String.format(VirtualServer.XML,vs))
                 .setSlbId(slbId).setVersion(version)
                 .setSlbVirtualServerId(vsId)
                 .setCreatedTime(new Date());
@@ -160,7 +188,7 @@ public class ActivateServiceImpl implements ActivateService {
 
     @Override
     public boolean isVsActivated(Long vsId, Long slbId) throws Exception {
-        List<ConfSlbVirtualServerActiveDo> c = confSlbVirtualServerActiveDao.findBySlbIdAndSlbVirtualServerIds(new Long[]{vsId},slbId,ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        List<ConfSlbVirtualServerActiveDo> c = confSlbVirtualServerActiveDao.findBySlbIdAndSlbVirtualServerIds(new Long[]{vsId}, slbId, ConfSlbVirtualServerActiveEntity.READSET_FULL);
         return !(c == null || c.size() == 0 );
     }
 
@@ -190,6 +218,28 @@ public class ActivateServiceImpl implements ActivateService {
     }
 
     @Override
+    public List<Group>  getActivatingGroups(Long[] groupIds, Integer[] versions) {
+        List<Group>  result = new ArrayList<>();
+        try {
+            List<Archive> list = archiveService.getGroupArchives(groupIds, versions);
+            if (list == null || list.size() == 0){
+                return result;
+            }
+            for (Archive archive : list){
+                String content = archive.getContent();
+                Group group = DefaultSaxParser.parseEntity(Group.class, content);
+                if (group != null){
+                    autoFiller.autofill(group);
+                    result.add(group);
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Archive Parser Fail ! GroupId:"+Arrays.asList(groupIds).toString()+" Version:"+Arrays.asList(versions).toString());
+        }
+        return result;
+    }
+
+    @Override
     public VirtualServer getActivatingVirtualServer(Long vsId, int version) {
         try {
             Archive archive = archiveService.getVsArchive(vsId, version);
@@ -202,6 +252,27 @@ public class ActivateServiceImpl implements ActivateService {
             logger.warn("[getActivatingVirtualServer] Archive Parser Fail ! VsId:"+vsId+" Version:"+version,e);
         }
         return null;
+    }
+
+    @Override
+    public List<VirtualServer> getActivatingVirtualServers(Long[] vsIds, Integer[] versions) {
+        List<VirtualServer> result = new ArrayList<>();
+        try {
+            List<Archive> archives = archiveService.getVsArchives(vsIds, versions);
+            if (archives == null || archives.size() == 0){
+                return result;
+            }
+            for (Archive archive : archives){
+                String content = archive.getContent();
+                VirtualServer tmp = DefaultSaxParser.parseEntity(VirtualServer.class, content);
+                if (tmp != null){
+                    result.add(tmp);
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("[getActivatingVirtualServer] Archive Parser Fail ! VsId:"+Arrays.asList(vsIds).toString()+" Version:"+Arrays.asList(versions).toString(),e);
+        }
+        return result;
     }
 
     @Override
