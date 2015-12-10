@@ -283,9 +283,15 @@ public class GroupResource {
     @Path("/group/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "deleteGroup")
-    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("groupId") Long groupId) throws Exception {
-        if (groupId == null)
-            throw new Exception("Missing parameter.");
+    public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                           @QueryParam("groupId") Long groupId,
+                           @QueryParam("groupName") String groupName) throws Exception {
+        if (groupId == null) {
+            if (groupName != null && !groupName.isEmpty())
+                groupId = groupCriteriaQuery.queryByName(groupName);
+        }
+        if (groupId == null || groupId == 0L)
+            throw new ValidationException("groupId is not given or does not exist.");
         groupRepository.delete(groupId);
         return responseHandler.handle("Group is deleted.", hh.getMediaType());
     }
