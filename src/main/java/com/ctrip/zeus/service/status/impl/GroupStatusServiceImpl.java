@@ -197,6 +197,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         Set<String> allPullInGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsId.toArray(new Long[]{}), StatusOffset.PULL_OPS, true);
         Map<String,Boolean> healthCheck = healthCheckStatusService.getHealthCheckStatusBySlbId(slbId);
         Set<String> allDownServers = statusService.findAllDownServers();
+        Set<Long> activated = groupCriteriaQuery.queryBySlbId(slbId);
 
         for (Group group : groups)
         {
@@ -207,7 +208,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             status.setSlbId(slbId);
             status.setGroupName(group.getName());
             status.setSlbName(slb.getName());
-            status.setActivated(true);
+            status.setActivated(activated.contains(groupId));
 
             List<GroupServer> groupServerList = group.getGroupServers();//groupRepository.listGroupServersByGroup(groupId);
             Long gvsId = null;
