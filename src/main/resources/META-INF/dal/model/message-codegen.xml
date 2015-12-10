@@ -2,11 +2,15 @@
 <model>
   <entity name="model" root="true">
     <entity-ref name="error-message" />
+    <entity-ref name="success-message" />
   </entity>
   <entity name="error-message">
     <element name="code" value-type="String" />
     <element name="message" value-type="String" />
     <element name="stack-trace" value-type="String" />
+  </entity>
+  <entity name="success-message">
+    <element name="message" value-type="String" />
   </entity>
 </model>
 

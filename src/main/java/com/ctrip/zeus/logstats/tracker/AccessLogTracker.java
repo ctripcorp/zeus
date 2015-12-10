@@ -1,5 +1,6 @@
 package com.ctrip.zeus.logstats.tracker;
 
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.logstats.StatsDelegate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ public class AccessLogTracker implements LogTracker {
     private int rollingLogCounter;
     private File trackingFile;
     private boolean allowTracking;
+    private int startMode;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -34,6 +36,7 @@ public class AccessLogTracker implements LogTracker {
         logFilename = strategy.getLogFilename();
         size = strategy.getReadSize();
         allowTracking = strategy.isAllowTrackerMemo();
+        startMode = strategy.getStartMode();
         if (allowTracking) {
             trackingFile = new File(strategy.getTrackerMemoFilename());
             if (!trackingFile.exists())
@@ -74,16 +77,25 @@ public class AccessLogTracker implements LogTracker {
         }
         raf = new RandomAccessFile(getLogFilename(), "r");
         fileChannel = raf.getChannel();
+        if (startMode == LogTrackerStrategy.START_FROM_CURRENT) {
+            try {
+                offset = fileChannel.size();
+            } catch (IOException e) {
+                offset = 0;
+            }
+        } else {
+            offset = 0;
+        }
         if (allowTracking) {
             // init state
             RecordOffset curr = getRecordOffset();
             if (curr.rOffset == 0) {
-                previousOffset = offset = 0;
+                previousOffset = offset;
                 return;
             }
             // log rotate must be done
             if (fileChannel.size() < curr.rOffset)
-                previousOffset = offset = 0;
+                previousOffset = offset;
             else {
                 // check if log rotate has been done
                 fileChannel.position(curr.rOffset);
@@ -94,8 +106,8 @@ public class AccessLogTracker implements LogTracker {
                     return;
                 }
             }
-            fileChannel.position(offset);
         }
+        fileChannel.position(offset);
     }
 
     @Override
@@ -211,7 +223,6 @@ public class AccessLogTracker implements LogTracker {
 
     private RecordOffset getRecordOffset() {
         RecordOffset result = new RecordOffset();
-        result.rOffset = offset;
         if (allowTracking) {
             Scanner scanner = null;
             try {

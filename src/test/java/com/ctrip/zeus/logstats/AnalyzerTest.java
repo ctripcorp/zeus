@@ -40,6 +40,7 @@ public class AnalyzerTest {
     public void testInMemoryAnalyzer() throws IOException {
         final LogStatsAnalyzerConfig config =
                 new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                        .isStartFromHead(true)
                         .setLogFormat(AccessLogFormat)
                         .setLogFilename(accessLogUrl.getFile())
                         .setTrackerReadSize(TrackerReadSize)
@@ -74,6 +75,7 @@ public class AnalyzerTest {
     public void testFileTrackingAnalyzer() throws IOException {
         final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder =
                 new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                        .isStartFromHead(true)
                         .setLogFormat(AccessLogFormat)
                         .setLogFilename(accessLogUrl.getFile())
                         .setTrackerReadSize(TrackerReadSize)
@@ -130,7 +132,45 @@ public class AnalyzerTest {
     }
 
     @Test
+    public void testTrackerStartModeCurrent() throws IOException {
+        final LogStatsAnalyzerConfig config =
+                new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                        .isStartFromHead(false)
+                        .setLogFormat(AccessLogFormat)
+                        .setLogFilename(accessLogUrl.getFile())
+                        .setTrackerReadSize(TrackerReadSize)
+                        .build();
+        final AtomicInteger count = new AtomicInteger();
+        LogStatsAnalyzer analyzer = new AccessLogStatsAnalyzer(config);
+        StatsDelegate reporter = new StatsDelegate<String>() {
+            @Override
+            public void delegate(String input) {
+                Assert.assertNotNull(input);
+                count.incrementAndGet();
+                System.out.println(input);
+            }
+        };
+        InputStream s = null;
+        try {
+            s = accessLogUrl.openStream();
+            int total = s.available();
+            analyzer.start();
+            analyzer.analyze(reporter);
+            for (int i = 0; i < total / TrackerReadSize + 1; i++) {
+                analyzer.analyze(reporter);
+            }
+            Assert.assertTrue(analyzer.reachFileEnd());
+            analyzer.stop();
+        } finally {
+            if (s != null)
+                s.close();
+        }
+        Assert.assertEquals(0, count.get());
+    }
+
+    @Test
     public void testTrackerWhenLogRotating() throws Exception {
+        System.out.println("------------ testTrackerWhenLogRotating starts ------------");
         final String logRotateFilename = "log-rotate-access.log";
         final String logRotateTrackingFilename = "log-rotate-tracker.log";
         File f = new File(logRotateFilename);
@@ -150,9 +190,11 @@ public class AnalyzerTest {
             @Override
             public void run() {
                 TestLogWriter writer = new TestLogWriter(logRotateFilename, 10 * 1000L);
+                long now = System.currentTimeMillis();
                 try {
                     writer.run(endTime);
                     writer.stop();
+                    System.out.println("writer takes " + (System.currentTimeMillis() - now) + " ms.");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -168,6 +210,7 @@ public class AnalyzerTest {
                 try {
                     Thread.sleep(30L);
                     builder = new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                            .isStartFromHead(true)
                             .setLogFormat(AccessLogFormat)
                             .setLogFilename(logRotateFilename)
                             .setTrackerReadSize(TrackerReadSize)
@@ -182,10 +225,12 @@ public class AnalyzerTest {
                         }
                     };
                     LogTracker tracker = builder.build().getLogTracker();
+                    long now = System.currentTimeMillis();
                     tracker.start();
                     while (System.currentTimeMillis() < endTime + 30L) {
                         tracker.fastMove(reporter);
                     }
+                    System.out.println("reader takes " + (System.currentTimeMillis() - now) + " ms.");
                     trackerLatch.countDown();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -205,11 +250,13 @@ public class AnalyzerTest {
         f = new File(logRotateTrackingFilename);
         if (f.exists())
             f.delete();
+        System.out.println("------------ testTrackerWhenLogRotating ends ------------");
         Assert.assertEquals(writerCount.get(), trackerCount.get());
     }
 
     @Test
     public void testAnalyzerPerformanceWhenLogRotating() throws Exception {
+        System.out.println("------------ testAnalyzerPerformanceWhenLogRotating starts ------------");
         final String logRotateFilename = "log-rotate-perf-access.log";
         final String logRotateTrackingFilename = "log-rotate-perf-tracker.log";
         File f = new File(logRotateFilename);
@@ -229,9 +276,11 @@ public class AnalyzerTest {
             @Override
             public void run() {
                 TestLogWriter writer = new TestLogWriter(logRotateFilename, 10 * 1000L);
+                long now = System.currentTimeMillis();
                 try {
                     writer.run(endTime);
                     writer.stop();
+                    System.out.println("writer takes " + (System.currentTimeMillis() - now) + " ms.");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -246,6 +295,7 @@ public class AnalyzerTest {
                 final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder;
                 try {
                     builder = new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                            .isStartFromHead(true)
                             .setLogFormat(AccessLogFormat)
                             .setLogFilename(logRotateFilename)
                             .setTrackerReadSize(TrackerReadSize)
@@ -260,10 +310,12 @@ public class AnalyzerTest {
                         }
                     };
                     LogStatsAnalyzer analyzer = new AccessLogStatsAnalyzer(builder.build());
+                    long now = System.currentTimeMillis();
                     analyzer.start();
                     while (System.currentTimeMillis() < endTime + 100L) {
                         analyzer.analyze(reporter);
                     }
+                    System.out.println("reader takes " + (System.currentTimeMillis() - now) + " ms.");
                     readerLatch.countDown();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -283,6 +335,7 @@ public class AnalyzerTest {
             f.delete();
         System.out.println("writer count: " + writerCount.get());
         System.out.println("reader count: " + readerCount.get());
+        System.out.println("------------ testAnalyzerPerformanceWhenLogRotating ends ------------");
         Assert.assertTrue((readerCount.get() / 60) > 20000);
     }
 

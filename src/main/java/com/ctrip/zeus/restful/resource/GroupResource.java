@@ -19,7 +19,6 @@ import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
-import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +30,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -289,7 +287,7 @@ public class GroupResource {
         if (groupId == null)
             throw new Exception("Missing parameter.");
         groupRepository.delete(groupId);
-        return Response.ok().build();
+        return responseHandler.handle("Group is deleted.", hh.getMediaType());
     }
 
     @GET
@@ -300,7 +298,7 @@ public class GroupResource {
         if (groupId == null)
             throw new Exception("Missing parameter.");
         groupRepository.deleteVGroup(groupId);
-        return Response.ok().build();
+        return responseHandler.handle("Virtual group is deleted.", hh.getMediaType());
     }
 
     @GET

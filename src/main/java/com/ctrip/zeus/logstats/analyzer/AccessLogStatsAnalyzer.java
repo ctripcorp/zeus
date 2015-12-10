@@ -28,10 +28,10 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
 
     public AccessLogStatsAnalyzer() {
         this(new LogStatsAnalyzerConfigBuilder()
+                .isStartFromHead(false)
                 .setLogFormat(new AccessLogLineFormat(AccessLogFormat).generate())
                 .setLogFilename("/opt/logs/nginx/access.log")
                 .setTrackerReadSize(TrackerReadSize.get())
-                .allowTracking("access-track.log")
                 .build());
     }
 
@@ -83,6 +83,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
         private String trackingFilename;
         private boolean allowTracking;
         private int trackerReadSize;
+        private boolean startFromHead;
 
         public LogStatsAnalyzerConfigBuilder setLogFilename(String logFilename) {
             this.logFilename = logFilename;
@@ -105,6 +106,11 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             return this;
         }
 
+        public LogStatsAnalyzerConfigBuilder isStartFromHead(boolean startFromHead) {
+            this.startFromHead = startFromHead;
+            return this;
+        }
+
         public LogStatsAnalyzerConfig build() {
             File f = new File(logFilename);
             String rootDir = f.getAbsoluteFile().getParentFile().getAbsolutePath();
@@ -112,6 +118,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
                     .setAllowLogRotate(true)
                     .setAllowTrackerMemo(allowTracking)
                     .setDoAsRoot(true)
+                    .setStartMode(startFromHead ? LogTrackerStrategy.START_FROM_HEAD : LogTrackerStrategy.START_FROM_CURRENT)
                     .setTrackerMemoFilename(allowTracking ? rootDir + "/" + trackingFilename : null)
                     .setLogFilename(logFilename)
                     .setReadSize(trackerReadSize);

@@ -88,7 +88,23 @@
     </entity>
     <entity name="archive-group" table="archive_group" alias="ag" do-class="ArchiveGroupDo">
         <var name="ids" value-type="Long[]"/>
+        <var name="pairs" value-type="String[]"/>
+        <readsets>
+            <readset name="IDONLY">
+                <member name="id"/>
+            </readset>
+        </readsets>
         <query-defs>
+            <query name="find-all-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-group" type="DELETE">
                 <param name="group-id"/>
                 <statement>
@@ -141,6 +157,19 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-group-and-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="pairs"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM (
+                        SELECT id, concat(group_id, ',', version) as g_v FROM archive_group
+                        WHERE group_id in <IN>${ids}</IN> ) ag
+                    WHERE ag.g_v in <IN>${pairs}</IN>
                     ]]>
                 </statement>
             </query>

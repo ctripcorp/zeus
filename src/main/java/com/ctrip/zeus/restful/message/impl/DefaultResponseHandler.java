@@ -3,6 +3,7 @@ package com.ctrip.zeus.restful.message.impl;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.restful.message.Message;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.restful.response.entity.SuccessMessage;
 import com.ctrip.zeus.support.GenericSerializer;
 import org.springframework.stereotype.Component;
 
@@ -17,13 +18,16 @@ import java.util.Set;
  */
 @Component("responseHandler")
 public class DefaultResponseHandler implements ResponseHandler {
-    private static final Set<MediaType> acceptedMediaTypes  = getDefault();
+    private static final Set<MediaType> acceptedMediaTypes = getDefault();
     private static final MediaType defaultMediaType = MediaType.APPLICATION_JSON_TYPE;
 
     public Message generateMessage(Object object, String type) throws Exception {
         ZeusResponse zr = new ZeusResponse();
         if (object == null)
             return zr;
+        if (object instanceof String) {
+            object = new SuccessMessage().setMessage((String) object);
+        }
         if (type.equals(MediaType.APPLICATION_XML)) {
             zr.setResponse(GenericSerializer.writeXml(object));
         } else {
