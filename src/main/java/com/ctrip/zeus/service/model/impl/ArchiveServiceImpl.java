@@ -141,4 +141,42 @@ public class ArchiveServiceImpl implements ArchiveService {
         MetaVsArchiveDo d = archiveVsDao.findMaxVersionByVs(vsId, ArchiveVsEntity.READSET_FULL);
         return new Archive().setId(d.getVsId()).setContent(d.getContent()).setVersion(d.getVersion());
     }
+
+    @Override
+    public List<Archive> getVsArchives(Long[] vsIds, Integer[] versions) throws Exception {
+        String[] pairs = new String[vsIds.length];
+        for (int i = 0; i < pairs.length; i++) {
+            pairs[i] = vsIds[i] + "," + versions[i];
+        }
+        List<MetaVsArchiveDo> list = archiveVsDao.findAllByVsAndVersion(vsIds, pairs, ArchiveVsEntity.READSET_IDONLY);
+        Long[] ids = new Long[list.size()];
+        for (int i = 0; i < ids.length; i++) {
+            ids[i] = list.get(i).getId();
+        }
+        list = archiveVsDao.findAllByIds(ids, ArchiveVsEntity.READSET_FULL);
+        List<Archive> result = new ArrayList<>(list.size());
+        for (MetaVsArchiveDo d : list) {
+            result.add(new Archive().setId(d.getVsId()).setContent(d.getContent()).setVersion(d.getVersion()));
+        }
+        return result;
+    }
+
+    @Override
+    public List<Archive> getGroupArchives(Long[] groupIds, Integer[] versions) throws Exception {
+        String[] pairs = new String[groupIds.length];
+        for (int i = 0; i < pairs.length; i++) {
+            pairs[i] = groupIds[i] + "," + versions[i];
+        }
+        List<ArchiveGroupDo> list = archiveGroupDao.findAllByGroupAndVersion(groupIds, pairs, ArchiveGroupEntity.READSET_IDONLY);
+        Long[] ids = new Long[list.size()];
+        for (int i = 0; i < ids.length; i++) {
+            ids[i] = list.get(i).getId();
+        }
+        list = archiveGroupDao.findAllByIds(ids, ArchiveGroupEntity.READSET_FULL);
+        List<Archive> result = new ArrayList<>(list.size());
+        for (ArchiveGroupDo d : list) {
+            result.add(C.toGroupArchive(d));
+        }
+        return result;
+    }
 }

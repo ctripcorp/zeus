@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Slb;
+
 import java.util.List;
 
 /**
@@ -42,4 +43,8 @@ public interface ArchiveService {
     Archive getVsArchive(Long vsId, int version) throws Exception;
 
     Archive getLatestVsArchive(Long vsId) throws Exception;
+
+    List<Archive> getVsArchives(Long[] vsIds, Integer[] versions) throws Exception;
+
+    List<Archive> getGroupArchives(Long[] groupIds, Integer[] versions) throws Exception;
 }
