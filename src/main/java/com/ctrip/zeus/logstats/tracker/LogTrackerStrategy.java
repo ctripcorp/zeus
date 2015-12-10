@@ -4,8 +4,12 @@ package com.ctrip.zeus.logstats.tracker;
  * Created by mengyizhou on 10/18/15.
  */
 public class LogTrackerStrategy {
+    public static final int START_FROM_HEAD = 0;
+    public static final int START_FROM_CURRENT = 1;
+
     private boolean allowLogRotate;
     private boolean allowTrackerMemo;
+    private int startMode = START_FROM_CURRENT;
     private String trackerMemoFilename;
     private String logFilename;
     private boolean doAsRoot;
@@ -62,6 +66,15 @@ public class LogTrackerStrategy {
 
     public LogTrackerStrategy setReadSize(int readSize) {
         this.readSize = readSize;
+        return this;
+    }
+
+    public int getStartMode() {
+        return startMode;
+    }
+
+    public LogTrackerStrategy setStartMode(int startMode) {
+        this.startMode = startMode;
         return this;
     }
 }
