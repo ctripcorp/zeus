@@ -4,4 +4,7 @@
         <message>Unsupported content type:</message>
         <stack-trace>java.lang.RuntimeException - com.netflix.HystrixException</stack-trace>
     </error-message>
+    <success-message>
+        <message>Success</message>
+    </success-message>
 </model>
