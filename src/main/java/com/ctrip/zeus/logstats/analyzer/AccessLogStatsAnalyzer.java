@@ -28,10 +28,10 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
 
     public AccessLogStatsAnalyzer() {
         this(new LogStatsAnalyzerConfigBuilder()
+                .isStartFromHead(false)
                 .setLogFormat(new AccessLogLineFormat(AccessLogFormat).generate())
                 .setLogFilename("/opt/logs/nginx/access.log")
                 .setTrackerReadSize(TrackerReadSize.get())
-                .allowTracking("access-track.log")
                 .build());
     }
 
