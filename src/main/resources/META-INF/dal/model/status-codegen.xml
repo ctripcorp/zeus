@@ -6,6 +6,7 @@
     <entity-ref name="server-status" />
     <entity-ref name="op-server-status-req" />
     <entity-ref name="op-member-status-req" />
+    <entity-ref name="update-status-item" />
   </entity>
   <entity name="group-status">
     <element name="group-name" value-type="String" />
@@ -47,6 +48,14 @@
   <entity name="ip-groupname">
     <element name="member-ip" value-type="String" />
     <element name="member-groupname" value-type="String" />
+  </entity>
+  <entity name="update-status-item">
+    <element name="slb-id" value-type="long" />
+    <element name="vs-id" value-type="long" />
+    <element name="group-id" value-type="long" />
+    <element name="ips" value-type="String" type="list" names="ipses" />
+    <element name="offset" value-type="int" />
+    <element name="up" value-type="boolean" />
   </entity>
 </model>
 

@@ -40,6 +40,19 @@
                     ]]>
                 </statement>
             </query>
+            <query name="batch-update-status" type="INSERT" batch="true">
+                <param name="reset"/>
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        status = status & ${reset} | values(status),
+                        <FIELD name="up"/> = 1 ,
+                        <FIELD name="data-change-last-time"/> = NOW()
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-group-id" type="SELECT" multiple="true">
                 <param name="group-id"/>
                 <statement>

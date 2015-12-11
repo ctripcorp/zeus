@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.status;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.service.Repository;
+import com.ctrip.zeus.status.entity.UpdateStatusItem;
 
 import java.util.List;
 import java.util.Set;
@@ -53,6 +54,13 @@ public interface StatusService extends Repository {
      * @throws Exception
      */
     void updateStatus(Long slbId ,Long vsId , Long groupId, List<String> ips , int offset , boolean status)throws Exception;
+
+    /**
+     * update status by group server ip and slbId and group id
+     * @param item the update item
+     * @throws Exception
+     */
+    void updateStatus(List<UpdateStatusItem> item)throws Exception;
 
     /**
      * get server status by server ip

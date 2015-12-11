@@ -9,6 +9,7 @@ import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.status.entity.UpdateStatusItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -107,6 +108,32 @@ public class StatusServiceImpl implements StatusService {
             data.setReset(reset).setStatus(updatestatus);
             statusGroupServerDao.updateStatus(data);
         }
+    }
+
+    @Override
+    public void updateStatus(List<UpdateStatusItem> items) throws Exception {
+        List<StatusGroupServerDo> updateDatas = new ArrayList<>();
+        for (UpdateStatusItem item : items){
+            if (item.getOffset() > 30 || item.getOffset() < 0){
+                throw new Exception("offset of status should be [0-30]");
+            }
+            for (String ip : item.getIpses()) {
+                if (ip==null||ip.isEmpty())
+                {
+                    continue;
+                }
+                StatusGroupServerDo data = new StatusGroupServerDo();
+                data.setSlbVirtualServerId(item.getVsId())
+                        .setGroupId(item.getGroupId())
+                        .setIp(ip)
+                        .setCreatedTime(new Date());
+                int reset = ~(1 << item.getOffset());
+                int updatestatus = (item.isUp()?0:1)<<item.getOffset();
+                data.setReset(reset).setStatus(updatestatus);
+                updateDatas.add(data);
+            }
+        }
+        statusGroupServerDao.batchUpdateStatus(updateDatas.toArray(new StatusGroupServerDo[]{}));
     }
 
 
