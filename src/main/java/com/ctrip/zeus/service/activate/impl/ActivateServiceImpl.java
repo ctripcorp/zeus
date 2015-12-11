@@ -331,7 +331,7 @@ public class ActivateServiceImpl implements ActivateService {
         for (ConfGroupActiveDo c : groupActiveDos){
             Group group = DefaultSaxParser.parseEntity(Group.class, c.getContent());
             if (group != null){
-//                autoFiller.autofill(group);
+                autoFiller.autofillEmptyFields(group);
                 groups.add(group);
             }
         }
@@ -348,7 +348,7 @@ public class ActivateServiceImpl implements ActivateService {
         for (ConfGroupActiveDo c : list ){
             Group group = DefaultSaxParser.parseEntity(Group.class, c.getContent());
             if (group != null){
-//                autoFiller.autofill(group);
+                autoFiller.autofillEmptyFields(group);
                 List<Group> groupList = result.get(c.getSlbVirtualServerId());
                 if (groupList == null){
                     groupList = new ArrayList<>();
