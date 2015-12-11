@@ -62,4 +62,13 @@
         </ip-groupname>
         <operation>upmember</operation>
     </op-member-status-req>
+    <update-status-item>
+        <slb-id>12345678901</slb-id>
+        <vs-id>12345678901</vs-id>
+        <group-id>12345678901</group-id>
+        <ips>string</ips>
+        <ips>string</ips>
+        <offset>1</offset>
+        <up>true</up>
+    </update-status-item>
 </status>

@@ -15,6 +15,7 @@ import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.service.task.TaskService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.task.constant.TaskStatus;
+import com.ctrip.zeus.status.entity.UpdateStatusItem;
 import com.ctrip.zeus.task.entity.OpsTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -344,6 +345,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                     statusService.downServer(task.getIpList());
                 }
             }
+            List<UpdateStatusItem> memberUpdates = new ArrayList<>();
             for (List<OpsTask> taskList :memberOps.values()){
                 for (OpsTask task : taskList){
                     if (!task.getStatus().equals(TaskStatus.DOING)){
@@ -352,9 +354,16 @@ public class TaskExecutorImpl implements TaskExecutor {
                     String [] ips = task.getIpList().split(";");
                     List<String>ipList = Arrays.asList(ips);
                     Long vsId = groupVs.get(task.getGroupId());
-                    statusService.updateStatus(slbId,vsId,task.getGroupId(),ipList,StatusOffset.MEMBER_OPS,task.getUp());
+                    UpdateStatusItem item = new UpdateStatusItem();
+                    item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId).setOffset(StatusOffset.MEMBER_OPS).setUp(task.getUp());
+                    item.getIpses().addAll(ipList);
+                    memberUpdates.add(item);
+//                    statusService.updateStatus(slbId,vsId,task.getGroupId(),ipList,StatusOffset.MEMBER_OPS,task.getUp());
                 }
             }
+            statusService.updateStatus(memberUpdates);
+
+            List<UpdateStatusItem> pullUpdates = new ArrayList<>();
             for (List<OpsTask> taskList :pullMemberOps.values()){
                 for (OpsTask task : taskList){
                     if (!task.getStatus().equals(TaskStatus.DOING)){
@@ -363,9 +372,14 @@ public class TaskExecutorImpl implements TaskExecutor {
                     String [] ips = task.getIpList().split(";");
                     List<String>ipList = Arrays.asList(ips);
                     Long vsId = groupVs.get(task.getGroupId());
-                    statusService.updateStatus(slbId,vsId,task.getGroupId(),ipList,StatusOffset.PULL_OPS,task.getUp());
+                    UpdateStatusItem item = new UpdateStatusItem();
+                    item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId).setOffset(StatusOffset.MEMBER_OPS).setUp(task.getUp());
+                    item.getIpses().addAll(ipList);
+                    pullUpdates.add(item);
+//                    statusService.updateStatus(slbId,vsId,task.getGroupId(),ipList,StatusOffset.PULL_OPS,task.getUp());
                 }
             }
+            statusService.updateStatus(pullUpdates);
         }catch (Exception e){
             throw new Exception("Perform Tasks Fail! TargetSlbId:"+tasks.get(0).getTargetSlbId(),e);
         }
