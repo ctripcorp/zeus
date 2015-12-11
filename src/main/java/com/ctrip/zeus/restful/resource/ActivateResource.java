@@ -114,17 +114,20 @@ public class ActivateResource {
             tasks.add(task);
 
             Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(id);
-            for (Long vsId : vsIds){
-                task = new OpsTask();
-                task.setSlbVirtualServerId(vsId);
-                task.setOpsType(TaskOpsType.ACTIVATE_VS);
-                task.setTargetSlbId(id);
-                archive = archiveService.getLatestVsArchive(vsId);
-                task.setVersion(archive.getVersion());
-                task.setCreateTime(new Date());
-                tasks.add(task);
+            Map<Long,VirtualServer> activatedVses = activateService.getActivatedVirtualServerBySlb(id);
+            List<Archive> list = archiveService.getLastestVsArchives(vsIds.toArray(new Long[]{}));
+            for (Archive a : list){
+                if (activatedVses.containsKey(a.getId()) && !activatedVses.get(a.getId()).getVersion().equals(a.getVersion())
+                        || !activatedVses.containsKey(a.getId())){
+                    task = new OpsTask();
+                    task.setSlbVirtualServerId(a.getId());
+                    task.setOpsType(TaskOpsType.ACTIVATE_VS);
+                    task.setTargetSlbId(id);
+                    task.setVersion(a.getVersion());
+                    task.setCreateTime(new Date());
+                    tasks.add(task);
+                }
             }
-
         }
 
         List<Long> taskIds = taskManager.addTask(tasks);
