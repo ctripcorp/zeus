@@ -36,6 +36,10 @@ public interface ArchiveService {
 
     Archive getLatestGroupArchive(Long groupId) throws Exception;
 
+    List<Archive> getLastestGroupArchives(Long[] groupIds) throws Exception;
+
+    List<Archive> getLastestVsArchives(Long[] vsIds) throws Exception;
+
     Archive getSlbArchive(Long slbId, int version) throws Exception;
 
     Archive getGroupArchive(Long groupId, int version) throws Exception;
