@@ -373,7 +373,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                     List<String>ipList = Arrays.asList(ips);
                     Long vsId = groupVs.get(task.getGroupId());
                     UpdateStatusItem item = new UpdateStatusItem();
-                    item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId).setOffset(StatusOffset.MEMBER_OPS).setUp(task.getUp());
+                    item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId).setOffset(StatusOffset.PULL_OPS).setUp(task.getUp());
                     item.getIpses().addAll(ipList);
                     pullUpdates.add(item);
 //                    statusService.updateStatus(slbId,vsId,task.getGroupId(),ipList,StatusOffset.PULL_OPS,task.getUp());
