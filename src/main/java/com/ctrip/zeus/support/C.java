@@ -92,7 +92,11 @@ public class C {
                 .setVersion(d.getVersion());
     }
 
-    public static Role toRole(AuthRoleDo roleDo){
+    public static Archive toVsArchive(MetaVsArchiveDo d) {
+        return new Archive().setId(d.getVsId()).setContent(d.getContent()).setVersion(d.getVersion());
+    }
+
+    public static Role toRole(AuthRoleDo roleDo) {
         return new Role()
                 .setId(roleDo.getId())
                 .setRoleName(roleDo.getRoleName())
