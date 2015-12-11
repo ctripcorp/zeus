@@ -254,14 +254,16 @@ CREATE TABLE IF NOT EXISTS `conf_slb_active` (
 
 -- Dumping structure for table dist_lock
 DROP TABLE IF EXISTS `dist_lock`;
-CREATE TABLE IF NOT EXISTS `dist_lock` (
-  `lock_key` varchar(255) NOT NULL DEFAULT 'UNKNOWN' COMMENT 'lock key',
-  `owner` bigint(20) DEFAULT '0' COMMENT 'thread id',
-  `server` varchar(50) DEFAULT '0' COMMENT 'server ip',
-  `created_time` bigint(20) DEFAULT NULL COMMENT 'create time',
-  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update time',
-  PRIMARY KEY (`lock_key`),
-  KEY `idx_DataChange_LastTime` (`DataChange_LastTime`)
+CREATE TABLE `dist_lock` (
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+	`lock_key` VARCHAR(255) NOT NULL DEFAULT 'UNKNOWN' COMMENT 'lock key',
+	`owner` BIGINT(20) NULL DEFAULT '0' COMMENT 'thread id',
+	`server` VARCHAR(50) NULL DEFAULT '0' COMMENT 'server ip',
+	`created_time` BIGINT(20) NULL DEFAULT NULL COMMENT 'create time',
+	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update time',
+	PRIMARY KEY (`id`),
+	UNIQUE INDEX `lock_key` (`lock_key`),
+	INDEX `idx_DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='distribution lock';
 
 -- Data exporting was unselected.
