@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.status;
 
 import com.ctrip.zeus.dal.core.TaskDao;
 import com.ctrip.zeus.util.S;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 /**
  * Created by fanqq on 2015/11/12.
  */
+@DisallowConcurrentExecution
 public class HealthCheckFetchJob extends QuartzJobBean {
     private HealthCheckStatusService healthCheckStatusService ;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
