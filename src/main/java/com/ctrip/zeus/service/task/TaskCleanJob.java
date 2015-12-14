@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.OperationLogDao;
 import com.ctrip.zeus.dal.core.OperationLogDo;
 import com.ctrip.zeus.dal.core.TaskDao;
 import com.ctrip.zeus.dal.core.TaskDo;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import java.util.Date;
 /**
  * Created by fanqq on 2015/8/24.
  */
+@DisallowConcurrentExecution
 public class TaskCleanJob extends QuartzJobBean {
 
     private TaskDao taskDao ;

@@ -2,6 +2,7 @@ package com.ctrip.zeus.nginx;
 
 import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by zhoumy on 2015/6/3.
  */
+@DisallowConcurrentExecution
 public class NginxStatusFetcher extends QuartzJobBean {
 
     private RollingTrafficStatus rollingTrafficStatus;

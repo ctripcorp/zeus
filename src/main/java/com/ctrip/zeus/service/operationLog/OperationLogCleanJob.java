@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.OperationLogDao;
 import com.ctrip.zeus.dal.core.OperationLogDo;
 import com.ctrip.zeus.dal.core.OperationLogEntity;
 import com.ctrip.zeus.nginx.RollingTrafficStatus;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import java.util.Date;
 /**
  * Created by fanqq on 2015/7/21.
  */
+@DisallowConcurrentExecution
 public class OperationLogCleanJob extends QuartzJobBean {
     private OperationLogDao operationLogDao ;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
