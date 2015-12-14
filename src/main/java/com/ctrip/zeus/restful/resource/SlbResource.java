@@ -47,6 +47,7 @@ public class SlbResource {
     private TagService tagService;
     @Resource
     private PropertyService propertyService;
+    private final int TIMEOUT = 1000;
 
     @GET
     @Path("/slbs")
@@ -134,8 +135,8 @@ public class SlbResource {
     public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
         Slb s = parseSlb(hh.getMediaType(), slb);
         DistLock lock = dbLockFactory.newLock(s.getName() + "_updateSlb");
+        lock.lock(TIMEOUT);
         try {
-            lock.lock();
             s = slbRepository.update(s);
         } finally {
             lock.unlock();

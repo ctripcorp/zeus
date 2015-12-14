@@ -56,6 +56,7 @@ public class GroupResource {
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    private final int TIMEOUT = 1000;
 
     @GET
     @Path("/groups")
@@ -254,8 +255,8 @@ public class GroupResource {
     public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
         Group g = parseGroup(hh.getMediaType(), group);
         DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
+        lock.lock(TIMEOUT);
         try {
-            lock.lock();
             g = groupRepository.update(g);
         } finally {
             lock.unlock();
@@ -270,8 +271,8 @@ public class GroupResource {
     public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
         Group g = parseGroup(hh.getMediaType(), group);
         DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
+        lock.lock(TIMEOUT);
         try {
-            lock.lock();
             g = groupRepository.updateVGroup(g);
         } finally {
             lock.unlock();
