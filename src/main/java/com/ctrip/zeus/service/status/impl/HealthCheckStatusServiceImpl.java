@@ -27,42 +27,56 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
     private StatusHealthCheckDao statusHealthCheckDao;
     @Resource
     private ActivateService activateService;
+
     @Override
     public void freshHealthCheckStatus() throws Exception {
         String hostIp = S.getIp();
-        statusHealthCheckDao.deleteBySlbServerIp(new StatusHealthCheckDo().setSlbServerIp(hostIp));
+
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
+
+        if (upstreamStatus == null || upstreamStatus.getServers() == null || upstreamStatus.getServers().getServer() == null) {
+            return;
+        }
+
         List<Item> servers = upstreamStatus.getServers().getServer();
-        for (Item item : servers){
-            statusHealthCheckDao.insert(new StatusHealthCheckDo()
+
+        StatusHealthCheckDo[] dos = new StatusHealthCheckDo[servers.size()];
+
+        for (int i = 0; i < servers.size(); i++) {
+            Item item  = servers.get(i);
+            dos[i] = new StatusHealthCheckDo()
                     .setSlbServerIp(hostIp)
                     .setFall(item.getFall())
                     .setMemberIpPort(item.getName())
                     .setRise(item.getRise())
                     .setUpstreamName(item.getUpstream())
                     .setType(item.getType())
-                    .setStatus(item.getStatus()));
+                    .setStatus(item.getStatus());
+        }
+        if (dos.length > 0 ){
+            statusHealthCheckDao.deleteBySlbServerIp(new StatusHealthCheckDo().setSlbServerIp(hostIp));
+            statusHealthCheckDao.insert(dos);
         }
     }
 
     @Override
     public Map<String, Boolean> getHealthCheckStatusBySlbId(Long slbId) throws Exception {
-        Map<String,Boolean> result = new HashMap<>();
+        Map<String, Boolean> result = new HashMap<>();
         Slb slb = activateService.getActivatedSlb(slbId);
         List<SlbServer> servers = slb.getSlbServers();
-        for (SlbServer slbServer : servers){
-            List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIp(slbServer.getIp(),StatusHealthCheckEntity.READSET_FULL);
-            for (StatusHealthCheckDo statusHealthCheckDo : list ){
+        for (SlbServer slbServer : servers) {
+            List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIp(slbServer.getIp(), StatusHealthCheckEntity.READSET_FULL);
+            for (StatusHealthCheckDo statusHealthCheckDo : list) {
                 String upstream = statusHealthCheckDo.getUpstreamName();
                 String ipPort = statusHealthCheckDo.getMemberIpPort();
-                if (upstream == null || ipPort == null){
+                if (upstream == null || ipPort == null) {
                     continue;
                 }
                 String[] tmp = upstream.split("_");
                 String[] iptmp = ipPort.split(":");
-                String key = tmp[tmp.length-1]+iptmp[0];
-                if ( result.get(key)==null || result.get(key )){
-                    result.put(key,statusHealthCheckDo.getStatus().equals("up"));
+                String key = tmp[tmp.length - 1] + iptmp[0];
+                if (result.get(key) == null || result.get(key)) {
+                    result.put(key, statusHealthCheckDo.getStatus().equals("up"));
                 }
             }
         }
@@ -71,19 +85,19 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
 
     @Override
     public Map<String, Boolean> getHealthCheckStatusBySlbServer(String serverIp) throws Exception {
-        Map<String,Boolean> result = new HashMap<>();
-        List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIp(serverIp,StatusHealthCheckEntity.READSET_FULL);
-        for (StatusHealthCheckDo statusHealthCheckDo : list ){
+        Map<String, Boolean> result = new HashMap<>();
+        List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIp(serverIp, StatusHealthCheckEntity.READSET_FULL);
+        for (StatusHealthCheckDo statusHealthCheckDo : list) {
             String upstream = statusHealthCheckDo.getUpstreamName();
             String ipPort = statusHealthCheckDo.getMemberIpPort();
-            if (upstream == null || ipPort == null){
+            if (upstream == null || ipPort == null) {
                 continue;
             }
             String[] tmp = upstream.split("_");
             String[] iptmp = ipPort.split(":");
-            String key = tmp[tmp.length-1]+iptmp[0];
-            if ( result.get(key)==null || result.get(key )){
-                result.put(key,statusHealthCheckDo.getStatus().equals("up"));
+            String key = tmp[tmp.length - 1] + iptmp[0];
+            if (result.get(key) == null || result.get(key)) {
+                result.put(key, statusHealthCheckDo.getStatus().equals("up"));
             }
         }
         return result;
