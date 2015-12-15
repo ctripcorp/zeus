@@ -8,6 +8,7 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.StringFormat;
 import com.netflix.config.DynamicBooleanProperty;
+import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.slf4j.Logger;
@@ -25,6 +26,12 @@ public class ServerConf {
     private static DynamicStringProperty errorPage_404 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.404.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/404.htm");
     private static DynamicStringProperty errorPage_500 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.500.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty errorPageEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicStringProperty proxyBufferSizeWhiteList = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffer.size.white-list", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicBooleanProperty proxyBufferSizeEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("proxy.buffer.size.enableAll", false);
+    private static DynamicStringProperty proxyBufferSize = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffer.size","8k");
+    private static DynamicStringProperty proxyBuffers = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffers","8 8k");
+    private static DynamicStringProperty busyProxyBuffer = DynamicPropertyFactory.getInstance().getStringProperty("proxy.busy.buffers.size","8k");
+
     public static final String SSL_PATH = "/data/nginx/ssl/";
 
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
@@ -41,6 +48,7 @@ public class ServerConf {
         b.append("server_name    ").append(getServerNames(vs)).append(";\n");
         b.append("ignore_invalid_headers off;\n");
         b.append("proxy_http_version 1.1;\n");
+        addProxyBufferSize(b,vs.getId());
 
         if (vs.getSsl())
         {
@@ -64,6 +72,27 @@ public class ServerConf {
         b.append("}").append("\n");
 
         return StringFormat.format(b.toString());
+    }
+
+    private static void addProxyBufferSize(StringBuilder b, Long id) {
+        boolean needAdd = false;
+        if (proxyBufferSizeEnableAll.get()){
+            needAdd = true;
+        }else if (proxyBufferSizeWhiteList.get()!=null){
+            String[] vsids = proxyBufferSizeWhiteList.get().split(";");
+            for (String vsId : vsids){
+                if (vsId.equals(String.valueOf(b))){
+                    needAdd = true;
+                }
+            }
+        }else {
+            return;
+        }
+        if (needAdd){
+            b.append("proxy_buffer_size ").append(proxyBufferSize.get()).append(";\n");
+            b.append("proxy_buffers ").append(proxyBuffers.get()).append(";\n");
+            b.append("proxy_busy_buffers_size ").append(busyProxyBuffer.get()).append(";\n");
+        }
     }
 
     private static String getServerNames(VirtualServer vs) throws Exception{
