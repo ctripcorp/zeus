@@ -81,7 +81,7 @@ public class ServerConf {
         }else if (proxyBufferSizeWhiteList.get()!=null){
             String[] vsids = proxyBufferSizeWhiteList.get().split(";");
             for (String vsId : vsids){
-                if (String.valueOf(b).equals(vsId.trim())){
+                if (String.valueOf(id).equals(vsId.trim())){
                     needAdd = true;
                 }
             }
