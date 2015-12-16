@@ -8,4 +8,6 @@ import java.util.List;
 public interface LogParser {
 
     List<KeyValue> parse(String line);
+
+    String parseToJsonString(String line);
 }

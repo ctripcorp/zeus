@@ -1,6 +1,6 @@
 package com.ctrip.zeus.logstats;
 
-import com.ctrip.zeus.logstats.analyzer.util.JsonStringWriter;
+import com.ctrip.zeus.logstats.common.JsonStringWriter;
 import com.ctrip.zeus.logstats.common.AccessLogLineFormat;
 import com.ctrip.zeus.logstats.common.LineFormat;
 import com.ctrip.zeus.logstats.parser.AccessLogParser;
@@ -103,6 +103,6 @@ public class LogParsingTest {
         List<LineFormat> formats = new ArrayList<>();
         formats.add(lineFormat);
         final LogParser parser = new AccessLogParser(formats);
-        Assert.assertEquals(expectedJsonValue, JsonStringWriter.write(parser.parse(log)));
+        Assert.assertEquals(expectedJsonValue, new JsonStringWriter().write(parser.parse(log)));
     }
 }

@@ -1,7 +1,7 @@
 package com.ctrip.zeus.logstats.analyzer;
 
 import com.ctrip.zeus.logstats.StatsDelegate;
-import com.ctrip.zeus.logstats.analyzer.util.JsonStringWriter;
+import com.ctrip.zeus.logstats.common.JsonStringWriter;
 import com.ctrip.zeus.logstats.common.AccessLogLineFormat;
 import com.ctrip.zeus.logstats.common.LineFormat;
 import com.ctrip.zeus.logstats.parser.AccessLogParser;
@@ -64,7 +64,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     @Override
     public String analyze() throws IOException {
         String raw = logTracker.move();
-        return JsonStringWriter.write(logParser.parse(raw));
+        return logParser.parseToJsonString(raw);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
         logTracker.fastMove(new StatsDelegate<String>() {
             @Override
             public void delegate(String input) {
-                delegator.delegate(JsonStringWriter.write(logParser.parse(input)));
+                delegator.delegate(logParser.parseToJsonString(input));
             }
         });
     }

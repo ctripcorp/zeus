@@ -1,4 +1,4 @@
-package com.ctrip.zeus.logstats.analyzer.util;
+package com.ctrip.zeus.logstats.common;
 
 import com.ctrip.zeus.logstats.parser.KeyValue;
 
@@ -10,10 +10,33 @@ import java.util.Set;
  * Created by mengyizhou on 10/18/15.
  */
 public class JsonStringWriter {
+    private final StringBuilder sb;
 
-    public static String write(List<KeyValue> keyValues) {
+    public JsonStringWriter() {
+        sb = new StringBuilder();
+    }
+
+    public void start() {
+        sb.append("{");
+    }
+
+    public void writeNode(String key, String value) {
+        sb.append("\"" + key + "\"")
+                .append(":")
+                .append("\"" + value + "\"")
+                .append(",");
+    }
+
+    public void end() {
+        sb.append("}");
+    }
+
+    public String get() {
+        return sb.toString();
+    }
+
+    public String write(List<KeyValue> keyValues) {
         Set<String> key = new HashSet<>();
-        StringBuilder sb = new StringBuilder();
         sb.append("{");
         for (KeyValue keyValue : keyValues) {
             if (key.add(keyValue.getKey())) {

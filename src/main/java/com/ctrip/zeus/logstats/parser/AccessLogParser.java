@@ -1,5 +1,6 @@
 package com.ctrip.zeus.logstats.parser;
 
+import com.ctrip.zeus.logstats.common.JsonStringWriter;
 import com.ctrip.zeus.logstats.common.LineFormat;
 
 import java.util.ArrayList;
@@ -32,5 +33,20 @@ public class AccessLogParser implements LogParser {
             }
         }
         return kvs;
+    }
+
+    @Override
+    public String parseToJsonString(String line) {
+        JsonStringWriter writer = new JsonStringWriter();
+        writer.start();
+        Matcher matcher;
+        if ((matcher = pattern.matcher(line)).matches()) {
+            String[] keys = mainLogFormat.getKeys();
+            for (int i = 0; i < keys.length; i++) {
+                writer.writeNode(keys[i], matcher.group(i + 1));
+            }
+        }
+        writer.end();
+        return writer.get();
     }
 }
