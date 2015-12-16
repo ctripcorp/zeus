@@ -174,7 +174,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
-                groupServerStatus.setUp(healthCheck.containsKey(key)?healthCheck.get(key):memberUp&&serverUp&&pullIn);
+                boolean up = healthCheck.containsKey(key)&&(memberUp&&serverUp&&pullIn)?healthCheck.get(key):memberUp&&serverUp&&pullIn;
+                groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
             }
             res.add(status);
@@ -229,7 +230,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
-                groupServerStatus.setUp(healthCheck.containsKey(key)?healthCheck.get(key):memberUp&&serverUp&&pullIn);
+                boolean up = healthCheck.containsKey(key)&&(memberUp&&serverUp&&pullIn)?healthCheck.get(key):memberUp&&serverUp&&pullIn;
+                groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
             }
             res.add(status);

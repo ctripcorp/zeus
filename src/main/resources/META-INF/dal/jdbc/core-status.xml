@@ -151,7 +151,6 @@
         </query-defs>
     </entity>
     <entity name="status-health-check" table="status_health_check" alias="sas" do-class="StatusHealthCheckDo">
-        <var name="slb-server-ips" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
@@ -161,6 +160,8 @@
                     ON DUPLICATE KEY UPDATE
                         rise = values(rise),
                         fall = values(fall),
+                        status = values(status),
+                        type = values(type)
                         <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>

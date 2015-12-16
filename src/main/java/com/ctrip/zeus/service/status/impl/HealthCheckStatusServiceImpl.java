@@ -11,6 +11,8 @@ import com.ctrip.zeus.nginx.entity.UpstreamStatus;
 import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.status.HealthCheckStatusService;
 import com.ctrip.zeus.util.S;
+import com.netflix.config.DynamicIntProperty;
+import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -27,11 +29,17 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
     private StatusHealthCheckDao statusHealthCheckDao;
     @Resource
     private ActivateService activateService;
+    private  static int count = 0 ;
+    private static DynamicIntProperty maxCountToDelete = DynamicPropertyFactory.getInstance().getIntProperty("health.check.max.count.to.delete", 100);
 
     @Override
     public void freshHealthCheckStatus() throws Exception {
         String hostIp = S.getIp();
-
+        if (count >= maxCountToDelete.get()) {
+            statusHealthCheckDao.deleteBySlbServerIp(new StatusHealthCheckDo().setSlbServerIp(hostIp));
+            count = 0;
+        }
+        count ++;
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
 
         if (upstreamStatus == null || upstreamStatus.getServers() == null || upstreamStatus.getServers().getServer() == null) {
@@ -54,7 +62,6 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                     .setStatus(item.getStatus());
         }
         if (dos.length > 0 ){
-            statusHealthCheckDao.deleteBySlbServerIp(new StatusHealthCheckDo().setSlbServerIp(hostIp));
             statusHealthCheckDao.insert(dos);
         }
     }
