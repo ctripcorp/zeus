@@ -568,6 +568,48 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="conf-slb-virtual-server-active" table="conf_slb_virtual_server_active" alias="csvsa">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" nullable="false" />
+    <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
+    <member name="content" field="content" value-type="String" length="16777215" />
+    <member name="version" field="version" value-type="int" length="10" />
+    <member name="created-time" field="created_time" value-type="Date" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="slb_virtual_server_id_slb_id" unique="true" members="slb_virtual_server_id ASC, slb_id ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="dist-lock" table="dist_lock" alias="dl">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="lock-key" field="lock_key" value-type="String" length="255" nullable="false" />
@@ -606,6 +648,46 @@
         <param name="key-id" />
         <statement><![CDATA[DELETE FROM <TABLE/>
         WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="global-job" table="global_job" alias="gj">
+    <member name="job-key" field="job_key" value-type="String" length="254" nullable="false" key="true" />
+    <member name="owner" field="owner" value-type="String" length="256" nullable="false" />
+    <member name="status" field="status" value-type="String" length="256" />
+    <member name="start-time" field="start_time" value-type="Date" nullable="false" />
+    <member name="finish-time" field="finish_time" value-type="Date" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-job-key" value-type="String" key-member="job-key" />
+    <primary-key name="PRIMARY" members="job_key" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-job-key" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='job-key'/> = ${key-job-key}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-job-key" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='job-key'/> = ${key-job-key}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-job-key" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='job-key'/> = ${key-job-key}]]></statement>
       </query>
     </query-defs>
   </entity>
@@ -1858,6 +1940,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="idx_slb_server_ip_member_ip_port_upstream_name" unique="true" members="slb_server_ip ASC, member_ip_port ASC, upstream_name ASC" />
     <index name="slb_server_ip" members="slb_server_ip ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>

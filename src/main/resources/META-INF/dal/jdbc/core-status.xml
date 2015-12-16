@@ -161,7 +161,7 @@
                         rise = values(rise),
                         fall = values(fall),
                         status = values(status),
-                        type = values(type)
+                        type = values(type),
                         <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
