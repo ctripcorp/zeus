@@ -28,6 +28,9 @@ public class JsonStringWriter {
     }
 
     public void end() {
+        if (sb.charAt(sb.length() - 1) == ',') {
+            sb.deleteCharAt(sb.length() - 1);
+        }
         sb.append("}");
     }
 
