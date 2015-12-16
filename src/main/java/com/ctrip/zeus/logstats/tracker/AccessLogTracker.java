@@ -28,6 +28,7 @@ public class AccessLogTracker implements LogTracker {
     private File trackingFile;
     private boolean allowTracking;
     private int startMode;
+    private byte[] line;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -48,6 +49,7 @@ public class AccessLogTracker implements LogTracker {
                 }
         }
         buffer = ByteBuffer.allocate(size);
+        line = new byte[size];
     }
 
     @Override
@@ -144,7 +146,6 @@ public class AccessLogTracker implements LogTracker {
             buffer.flip();
             boolean eol = false;
             int colOffset = 0;
-            byte[] line = new byte[size];
 
             while (buffer.hasRemaining()) {
                 while (!eol && buffer.hasRemaining()) {
