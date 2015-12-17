@@ -54,6 +54,9 @@ public class NginxServiceImpl implements NginxService {
     private RollingTrafficStatus rollingTrafficStatus;
     @Resource
     private ActivateService activateService;
+    @Resource
+    private NginxOperator nginxOperator;
+
 
 
     private Logger logger = LoggerFactory.getLogger(NginxServiceImpl.class);
@@ -70,16 +73,16 @@ public class NginxServiceImpl implements NginxService {
         AssertUtils.assertNotNull(slb,"Can't found slbId when writing config to disk!");
         int version = nginxConfService.getCurrentVersion(slbId);
 
-        NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
-        rollbackConfBackUp(nginxOperator);
+        NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
+        rollbackConfBackUp(operator);
         List<VirtualServer> list = slb.getVirtualServers();
         List<Long> vsIds = new ArrayList<>();
         for (VirtualServer vs : list){
             vsIds.add(vs.getId());
         }
-        writeConfToDisk(slbId, version, vsIds, nginxOperator);
+        writeConfToDisk(slbId, version, vsIds, operator);
 
-        NginxResponse response = nginxOperator.reloadConfTest();
+        NginxResponse response = operator.reloadConfTest();
         response.setServerIp(ip);
         if(response.getSucceed()){
             NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
@@ -127,8 +130,8 @@ public class NginxServiceImpl implements NginxService {
 
         return sucess;
     }
-    private void rollbackConfBackUp(NginxOperator nginxOperator) throws Exception{
-        NginxResponse response = nginxOperator.rollbackBackupConf();
+    private void rollbackConfBackUp(NginxOperator operator) throws Exception{
+        NginxResponse response = operator.rollbackBackupConf();
     }
     @Override
     public NginxResponse writeToDisk(List<Long> vsIds , Long slbId ,Integer slbVersion) throws Exception {
@@ -150,12 +153,12 @@ public class NginxServiceImpl implements NginxService {
             return res;
         }
 
-        NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
+        NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
 
-        cleanConfOnDisk(slbId, version, nginxOperator);
-        writeConfToDisk(slbId, version, vsIds, nginxOperator);
+        cleanConfOnDisk(slbId, version, operator);
+        writeConfToDisk(slbId, version, vsIds, operator);
 
-        NginxResponse response = nginxOperator.reloadConfTest();
+        NginxResponse response = operator.reloadConfTest();
         response.setServerIp(ip);
         if(response.getSucceed()){
             NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
@@ -237,10 +240,10 @@ public class NginxServiceImpl implements NginxService {
             slb = activateService.getActivatedSlb(slbId);
         }
 
-        NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
+        NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
 
         // reload configuration
-        NginxResponse response = nginxOperator.reloadConf();
+        NginxResponse response = operator.reloadConf();
         response.setServerIp(ip);
         return response;
     }
@@ -285,7 +288,7 @@ public class NginxServiceImpl implements NginxService {
 
     @Override
     public NginxResponse dyopsLocal(String upsName, String upsCommands) throws Exception {
-        return new NginxOperator().dyupsLocal(upsName, upsCommands);
+        return nginxOperator.dyupsLocal(upsName, upsCommands);
     }
 
     @Override
@@ -313,8 +316,8 @@ public class NginxServiceImpl implements NginxService {
     public NginxServerStatus getStatus() throws Exception {
         String ip = S.getIp();
         Slb slb = slbRepository.getBySlbServer(ip);
-        NginxOperator nginxOperator = new NginxOperator(slb.getNginxConf(), slb.getNginxBin());
-        return nginxOperator.getRuntimeStatus();
+        NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
+        return operator.getRuntimeStatus();
     }
 
     @Override
@@ -457,53 +460,53 @@ public class NginxServiceImpl implements NginxService {
         return result;
     }
 
-    private void writeConfToDisk(Long slbId, int version, List<Long> vsIds ,NginxOperator nginxOperator) throws Exception {
+    private void writeConfToDisk(Long slbId, int version, List<Long> vsIds ,NginxOperator operator) throws Exception {
         LOGGER.info("Start writing nginx configuration.");
         // write nginx conf
-        writeNginxConf(slbId, version, nginxOperator);
+        writeNginxConf(slbId, version, operator);
         // write server conf
-        writeServerConf(slbId, version,vsIds, nginxOperator);
+        writeServerConf(slbId, version,vsIds, operator);
         // write upstream conf
-        writeUpstreamConf(slbId, version,vsIds, nginxOperator);
+        writeUpstreamConf(slbId, version,vsIds, operator);
     }
 
     private static String buildRemoteUrl(String ip) {
         return "http://" + ip + ":" + adminServerPort.get();
     }
 
-    private void writeNginxConf(Long slbId, int version, NginxOperator nginxOperator) throws Exception {
+    private void writeNginxConf(Long slbId, int version, NginxOperator operator) throws Exception {
         String nginxConf = nginxConfService.getNginxConf(slbId, version);
         if (nginxConf == null || nginxConf.isEmpty()) {
             throw new IllegalStateException("the nginx conf must not be empty!");
         }
-        nginxOperator.writeNginxConf(nginxConf);
+        operator.writeNginxConf(nginxConf);
     }
 
-    private void writeServerConf(Long slbId, int version,List<Long> vsIds , NginxOperator nginxOperator) throws Exception {
+    private void writeServerConf(Long slbId, int version,List<Long> vsIds , NginxOperator operator) throws Exception {
         List<NginxConfServerData> nginxConfServerDataList = nginxConfService.getNginxConfServer(slbId, version);
         for (NginxConfServerData d : nginxConfServerDataList) {
             if (vsIds.contains(d.getVsId()))
             {
-                nginxOperator.writeServerConf(d.getVsId(), d.getContent());
+                operator.writeServerConf(d.getVsId(), d.getContent());
             }
         }
     }
 
-    private void writeUpstreamConf(Long slbId, int version,List<Long> vsIds , NginxOperator nginxOperator) throws Exception {
+    private void writeUpstreamConf(Long slbId, int version,List<Long> vsIds , NginxOperator operator) throws Exception {
         List<NginxConfUpstreamData> nginxConfUpstreamList = nginxConfService.getNginxConfUpstream(slbId, version);
         for (NginxConfUpstreamData d : nginxConfUpstreamList) {
             if (vsIds.contains(d.getVsId())){
-                nginxOperator.writeUpstreamsConf(d.getVsId(), d.getContent());
+                operator.writeUpstreamsConf(d.getVsId(), d.getContent());
             }
         }
     }
 
-    private void cleanConfOnDisk(Long slbId, int version, NginxOperator nginxOperator) throws Exception {
+    private void cleanConfOnDisk(Long slbId, int version, NginxOperator operator) throws Exception {
         List<NginxConfServerData> nginxConfServerDataList = nginxConfService.getNginxConfServer(slbId, version);
         List<Long> vslist = new ArrayList<>();
         for (NginxConfServerData d : nginxConfServerDataList) {
             vslist.add(d.getVsId());
         }
-        nginxOperator.cleanConf(vslist);
+        operator.cleanConf(vslist);
     }
 }

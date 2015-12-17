@@ -9,6 +9,7 @@ import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -16,14 +17,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Component("nginxOperator")
 public class NginxOperator {
     private static final Logger LOGGER = LoggerFactory.getLogger(NginxOperator.class);
 
     private static final String DEF_NGINX_CONF = "nginx.conf";
     private static final String CONF_SUFFIX = ".conf";
+    private static final String DEFAULT_CONF_DIR = "/opt/app/nginx/conf";
+    private static final String DEFAULT_BIN_DIR = "/opt/app/nginx/sbin";
     private String nginxConfDir;
     private String nginxBinDir;
-
 
 
     public NginxOperator(String nginxConfDir, String nginxBinDir){
@@ -32,10 +35,15 @@ public class NginxOperator {
     }
     public NginxOperator()
     {
-        this.nginxConfDir = null;
-        this.nginxBinDir = null;
+        this.nginxConfDir = DEFAULT_CONF_DIR;
+        this.nginxBinDir = DEFAULT_BIN_DIR;
     }
 
+    public NginxOperator init(String nginxConfDir, String nginxBinDir){
+        this.nginxConfDir = nginxConfDir;
+        this.nginxBinDir = nginxBinDir;
+        return this;
+    }
     public void writeNginxConf(String conf) throws IOException {
         doWriteConf(nginxConfDir, DEF_NGINX_CONF,conf);
     }
