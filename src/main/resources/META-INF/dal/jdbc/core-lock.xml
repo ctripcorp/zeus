@@ -30,6 +30,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="require-by-key" type="UPDATE">
+                <param name="lock-key"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELDS/>
+                    WHERE <FIELD name='lock-key'/> = ${lock-key}
+                        AND owner = 0 AND server = ''
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-key" type="DELETE">
                 <param name="lock-key"/>
                 <statement>

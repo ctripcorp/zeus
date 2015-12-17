@@ -118,8 +118,7 @@ public class MysqlDistLock implements DistLock {
                     return true;
                 }
                 if (isFree(check)) {
-                    distLockDao.updateByKey(d, DistLockEntity.UPDATESET_FULL);
-                    return true;
+                    return distLockDao.requireByKey(d, DistLockEntity.UPDATESET_FULL) == 1;
                 }
             } catch (DalException ex) {
                 compareAndSetState(true, false);
