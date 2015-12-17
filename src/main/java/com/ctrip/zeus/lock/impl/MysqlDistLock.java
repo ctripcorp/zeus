@@ -3,7 +3,6 @@ package com.ctrip.zeus.lock.impl;
 import com.ctrip.zeus.dal.core.DistLockDao;
 import com.ctrip.zeus.dal.core.DistLockDo;
 import com.ctrip.zeus.dal.core.DistLockEntity;
-import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.util.S;
 import org.slf4j.Logger;
@@ -106,11 +105,20 @@ public class MysqlDistLock implements DistLock {
         logger.warn("Abnormal unlock tries. Fail to unlock the lock " + key + ".");
     }
 
+    public static boolean isFree(DistLockDo d) {
+        return d == null || ("".equals(d.getServer()) && d.getOwner() == 0L);
+    }
+
     private boolean tryAddLock(DistLockDo d) throws DalException {
         if (compareAndSetState(false, true)) {
             try {
-                if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null) {
+                DistLockDo check = distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL);
+                if (check == null) {
                     distLockDao.insert(d);
+                    return true;
+                }
+                if (isFree(check)) {
+                    distLockDao.updateByKey(d, DistLockEntity.UPDATESET_FULL);
                     return true;
                 }
             } catch (DalException ex) {
@@ -123,9 +131,10 @@ public class MysqlDistLock implements DistLock {
     }
 
     private boolean unlock(DistLockDo d) throws DalException {
+        d.setServer("").setOwner(0L).setCreatedTime(System.currentTimeMillis());
         if (compareAndSetState(true, false)) {
             try {
-                int count = distLockDao.deleteByKey(d);
+                int count = distLockDao.updateByKey(d, DistLockEntity.UPDATESET_FULL);
                 if (count == 1)
                     return true;
                 if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null)

@@ -25,7 +25,7 @@
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='created-time'/> = ${created-time}
+                    SET <FIELDS/>
                     WHERE <FIELD name='lock-key'/> = ${lock-key}
                     ]]>
                 </statement>

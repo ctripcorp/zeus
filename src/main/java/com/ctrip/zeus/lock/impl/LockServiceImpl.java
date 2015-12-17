@@ -25,6 +25,8 @@ public class LockServiceImpl implements LockService {
     public List<LockStatus> getLockStatus() throws DalException {
         List<LockStatus> list = new ArrayList<>();
         for (DistLockDo d : distLockDao.findAll(DistLockEntity.READSET_FULL)) {
+            if (MysqlDistLock.isFree(d))
+                continue;
             list.add(toLockStatus(d));
         }
         return list;
@@ -32,7 +34,7 @@ public class LockServiceImpl implements LockService {
 
     @Override
     public void forceUnlock(String key) throws DalException {
-        distLockDao.deleteByKey(new DistLockDo().setLockKey(key));
+        distLockDao.updateByKey(new DistLockDo().setLockKey(key), DistLockEntity.UPDATESET_FULL);
     }
 
     private static LockStatus toLockStatus(DistLockDo d) {

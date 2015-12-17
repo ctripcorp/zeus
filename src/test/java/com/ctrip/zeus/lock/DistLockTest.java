@@ -37,6 +37,21 @@ public class DistLockTest extends AbstractSpringTest {
     }
 
     @Test
+    public void testBasic() {
+        DistLock lock = dbLockFactory.newLock("testBasic");
+        lock.lock();
+        lock.unlock();
+        try {
+            lock.lock(500);
+        } catch (Exception e) {
+            Assert.assertTrue(false);
+        }
+        lock.unlock();
+        Assert.assertTrue(lock.tryLock());
+        lock.unlock();
+    }
+
+    @Test
     public void testFunctions() throws InterruptedException {
         final List<Boolean> report = new ArrayList<>();
         final CountDownLatch latch = new CountDownLatch(4);
