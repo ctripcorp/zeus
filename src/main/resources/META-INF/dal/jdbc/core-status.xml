@@ -185,6 +185,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-last-change-time" type="INSERT">
+                <param name="data-change-last-time"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='data-change-last-time'/> < ${data-change-last-time}
+                    LIMIT 1000
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
 </entities>

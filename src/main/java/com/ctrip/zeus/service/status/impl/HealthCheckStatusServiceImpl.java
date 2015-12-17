@@ -16,6 +16,7 @@ import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,16 +31,11 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
     @Resource
     private ActivateService activateService;
     private  static int count = 0 ;
-    private static DynamicIntProperty maxCountToDelete = DynamicPropertyFactory.getInstance().getIntProperty("health.check.max.count.to.delete", 100);
+    private static DynamicIntProperty invalidInterval = DynamicPropertyFactory.getInstance().getIntProperty("health.check.status.invalid.interval", 300000);
 
     @Override
     public void freshHealthCheckStatus() throws Exception {
         String hostIp = S.getIp();
-        if (count >= maxCountToDelete.get()) {
-            statusHealthCheckDao.deleteBySlbServerIp(new StatusHealthCheckDo().setSlbServerIp(hostIp));
-            count = 0;
-        }
-        count ++;
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
 
         if (upstreamStatus == null || upstreamStatus.getServers() == null || upstreamStatus.getServers().getServer() == null) {
@@ -74,6 +70,11 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
         for (SlbServer slbServer : servers) {
             List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIp(slbServer.getIp(), StatusHealthCheckEntity.READSET_FULL);
             for (StatusHealthCheckDo statusHealthCheckDo : list) {
+                long now = System.currentTimeMillis();
+                long lastUpdate = statusHealthCheckDo.getDataChangeLastTime().getTime();
+                if (now - lastUpdate > invalidInterval.get()){
+                    continue;
+                }
                 String upstream = statusHealthCheckDo.getUpstreamName();
                 String ipPort = statusHealthCheckDo.getMemberIpPort();
                 if (upstream == null || ipPort == null) {
@@ -95,6 +96,11 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
         Map<String, Boolean> result = new HashMap<>();
         List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIp(serverIp, StatusHealthCheckEntity.READSET_FULL);
         for (StatusHealthCheckDo statusHealthCheckDo : list) {
+            long now = System.currentTimeMillis();
+            long lastUpdate = statusHealthCheckDo.getDataChangeLastTime().getTime();
+            if (now - lastUpdate > invalidInterval.get()){
+                continue;
+            }
             String upstream = statusHealthCheckDo.getUpstreamName();
             String ipPort = statusHealthCheckDo.getMemberIpPort();
             if (upstream == null || ipPort == null) {
