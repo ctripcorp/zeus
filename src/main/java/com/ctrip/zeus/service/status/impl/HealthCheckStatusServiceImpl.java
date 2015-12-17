@@ -82,7 +82,7 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                 }
                 String[] tmp = upstream.split("_");
                 String[] iptmp = ipPort.split(":");
-                String key = tmp[tmp.length - 1] + iptmp[0];
+                String key = tmp[tmp.length - 1] + "_" + iptmp[0];
                 if (result.get(key) == null || result.get(key)) {
                     result.put(key, statusHealthCheckDo.getStatus().equals("up"));
                 }

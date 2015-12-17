@@ -167,13 +167,14 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 GroupServerStatus groupServerStatus = new GroupServerStatus();
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
-                String key = gvsId + "_" + groupId +"_"+gs.getIp();
+                String key =gvsId + "_" + groupId +"_"+ gs.getIp();
                 boolean memberUp = allUpGroupServerInSlb.contains(key);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = allPullInGroupServerInSlb.contains(key);
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
+                key = groupId +"_"+ gs.getIp();
                 boolean up = healthCheck.containsKey(key)&&(memberUp&&serverUp&&pullIn)?healthCheck.get(key):memberUp&&serverUp&&pullIn;
                 groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
@@ -187,7 +188,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     {
         Slb slb = slbRepository.getById(slbId);
         AssertUtils.assertNotNull(slb, "slbId not found!");
-        AssertUtils.assertNotEquals(0, slb.getSlbServers().size(), "Slb doesn't have any slb server!");
+         AssertUtils.assertNotEquals(0, slb.getSlbServers().size(), "Slb doesn't have any slb server!");
 
         List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
         Set<Long> vsId = virtualServerCriteriaQuery.queryBySlbId(slbId);
@@ -223,13 +224,14 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 GroupServerStatus groupServerStatus = new GroupServerStatus();
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
-                String key = gvsId + "_" + groupId +"_"+gs.getIp();
+                String key =gvsId + "_" + groupId +"_"+ gs.getIp();
                 boolean memberUp = allUpGroupServerInSlb.contains(key);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = allPullInGroupServerInSlb.contains(key);
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
+                key = groupId +"_"+ gs.getIp();
                 boolean up = healthCheck.containsKey(key)&&(memberUp&&serverUp&&pullIn)?healthCheck.get(key):memberUp&&serverUp&&pullIn;
                 groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
