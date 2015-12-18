@@ -21,7 +21,7 @@ import java.io.IOException;
  */
 public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     private static final String AccessLogFormat = LogFormat.getMainCompactString();
-    private static final DynamicIntProperty TrackerReadSize = DynamicPropertyFactory.getInstance().getIntProperty("accesslog.tracker.readsize", 1024 * 5);
+    private static final DynamicIntProperty TrackerReadSize = DynamicPropertyFactory.getInstance().getIntProperty("accesslog.tracker.readsize", 1024 * 3);
     private final LogStatsAnalyzerConfig config;
     private final LogTracker logTracker;
     private final LogParser logParser;

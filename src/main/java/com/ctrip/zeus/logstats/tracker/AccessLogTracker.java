@@ -1,6 +1,5 @@
 package com.ctrip.zeus.logstats.tracker;
 
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.logstats.StatsDelegate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +143,9 @@ public class AccessLogTracker implements LogTracker {
                 stop();
             }
             buffer.flip();
+            StringBuilder valueBuilder = new StringBuilder();
             boolean eol = false;
+            int row = 0;
             int colOffset = 0;
 
             while (buffer.hasRemaining()) {
@@ -154,14 +155,17 @@ public class AccessLogTracker implements LogTracker {
                         case -1:
                         case '\n':
                             eol = true;
-                            offsetValue = new String(line, 0, colOffset);
+                            offsetValue = valueBuilder.append(new String(line, 0, colOffset)).toString();
+                            valueBuilder.setLength(0);
                             delegator.delegate(offsetValue);
                             previousOffset = offset;
                             offset += ++colOffset;
+                            row++;
                             break;
                         case '\r':
                             eol = true;
-                            offsetValue = new String(line, 0, colOffset);
+                            offsetValue = valueBuilder.append(new String(line, 0, colOffset)).toString();
+                            valueBuilder.setLength(0);
                             if ((buffer.get()) != '\n')
                                 buffer.position(colOffset);
                             else
@@ -169,13 +173,29 @@ public class AccessLogTracker implements LogTracker {
                             delegator.delegate(offsetValue);
                             previousOffset = offset;
                             offset += ++colOffset;
+                            row++;
                             break;
                         default:
                             line[colOffset] = b;
                             ++colOffset;
                             break;
                     } // end of switch
-                }// end of while !eol
+                }// end of while !eol && buffer.hasRemaining
+                // the cursor hasn't reached the end of a line, read one more buffer.
+                if (row == 0) {
+                    buffer.clear();
+                    try {
+                        if (fileChannel.read(buffer) == -1) {
+                            fileChannel.position(offset);
+                            tryLog();
+                            return;
+                        }
+                    } catch (IOException ex) {
+                        stop();
+                    }
+                    buffer.flip();
+                    valueBuilder.append(new String(line, 0, colOffset));
+                }
                 colOffset = 0;
                 eol = false;
             }
