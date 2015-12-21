@@ -105,6 +105,18 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-max-version-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM (SELECT * from archive_group
+                        WHERE group_id in <IN>${ids}</IN>
+                        ORDER BY version DESC) ag
+                    GROUP BY group_id
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-group" type="DELETE">
                 <param name="group-id"/>
                 <statement>
@@ -114,29 +126,44 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-max-version-by-group" type="SELECT">
-                <param name="group-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE  <FIELD name='group-id'/> = ${group-id}
-                    ORDER BY <FIELD name='id'/> DESC LIMIT 1
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-max-version-by-groups" type="SELECT" multiple="true">
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE (<FIELD name='group-id'/>, <FIELD name='version'/>) IN
-                        (SELECT group_id, MAX(version)
-                        FROM archive_group
-                        WHERE group_id IN <IN>${ids}</IN>
-                        GROUP BY group_id)
-                    ORDER BY <FIELD name='group-id'/>
+                    WHERE (group_id, version) IN
+                        (SELECT group_id, offline_version
+                        FROM r_group_status
+                        WHERE group_id in <IN>${ids}</IN>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-offline-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE (group_id, version) IN
+                        (SELECT group_id, offline_version
+                        FROM r_group_status
+                        WHERE group_id in <IN>${ids}</IN>
+                            AND offline_version != online_version)
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-online-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE (group_id, version) IN
+                        (SELECT group_id, online_version
+                        FROM r_group_status
+                        WHERE group_id in <IN>${ids}</IN>
+                            AND online_version > 0)
                     ]]>
                 </statement>
             </query>
@@ -147,8 +174,18 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='group-id'/> = ${group-id}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
                         AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>

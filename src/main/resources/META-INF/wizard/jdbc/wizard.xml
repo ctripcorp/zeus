@@ -57,6 +57,10 @@
          <table name="r_certificate_slb_server"/>
          <table name="r_group_vg"/>
          <table name="archive_vs"/>
+         <table name="conf_slb_virtual_server_active"/>
+         <table name="status_health_check"/>
+         <table name="global_job"/>
+         <table name="r_group_status"/>
       </group>
    </jdbc>
 </wizard>
