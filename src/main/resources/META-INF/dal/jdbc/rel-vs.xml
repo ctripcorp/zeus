@@ -13,7 +13,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-slb-by-vs" type="SELECT">
+            <query name="find-slb-by-vs" type="SELECT" multiple="true">
                 <param name="vs-id"/>
                 <statement>
                     <![CDATA[
@@ -41,6 +41,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="update" type="UPDATE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELDS/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-all-by-slb" type="DELETE">
                 <param name="slb-id"/>
                 <statement>
@@ -59,18 +69,27 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete" type="DELETE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="r-vs-domain" table="r_vs_domain" alias="rvd" do-class="RelVsDomainDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
-            <query name="find-all-domains-by-vses" type="SELECT" multiple="true">
-                <param name="ids"/>
+            <query name="find-all-domains-by-vs" type="SELECT" multiple="true">
+                <param name="vs-id"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='vs-id'/> in <IN>${ids}</IN>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
                     ]]>
                 </statement>
             </query>
@@ -84,6 +103,33 @@
                     ]]>
                 </statement>
             </query>
+            <query name="insert" type="INSERT" batch="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="update" type="UPDATE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELDS/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete" type="DELETE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
             <query name="delete-by-vs-and-domain" type="DELETE">
                 <param name="vs-id"/>
                 <param name="domain"/>
@@ -92,6 +138,65 @@
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='domain'/> = ${domain}
                         AND <FIELD name='vs-id'/> = ${vs-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-all-by-vs" type="DELETE" batch="true">
+                <param name="vs-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="r-vs-status" table="r_vs_status" alias="rvs2" do-class="RelVsStatusDo">
+        <var name="ids" value-type="Long[]"/>
+        <updatesets>
+            <updateset name="UPDATE_ONLINE_STATUS">
+                <member name="online-version"/>
+            </updateset>
+        </updatesets>
+        <query-defs>
+            <query name="find-by-vses" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-vs" type="SELECT">
+                <param name="vs-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert-or-update" type="INSERT" batch="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        offline_version = values(offline_version)
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-online-version-by-vs" type="UPDATE" batch="true">
+                <param name="vs-id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='online-version'/> = ${online-version}
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
                     ]]>
                 </statement>
             </query>

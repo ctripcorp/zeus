@@ -61,6 +61,8 @@
          <table name="status_health_check"/>
          <table name="global_job"/>
          <table name="r_group_status"/>
+         <table name="r_slb_status"/>
+         <table name="r_vs_status"/>
       </group>
    </jdbc>
 </wizard>
