@@ -20,64 +20,32 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
     }
 
     @Override
-    public void relUpdate(X object, Class<T> clazz, List<W> input) throws Exception {
-        // current version in use
+    public void relUpdateOffline(X object, Class<T> clazz, List<W> input) throws Exception {
         Long targetId = getTargetId(object);
-        if (currentRetained(targetId)) {
-            relAdd(object, clazz, input);
-            return;
-        }
-        List<T> check = getAll(targetId);
-        Iterator<T> iter = check.iterator();
-        int currentVersion = getCurrentVersion(object);
-        while (iter.hasNext()) {
-            if (getTargetVersion(iter.next()) != (currentVersion - 1)) iter.remove();
-        }
-        int i;
-        for (i = 0; i < check.size(); i++) {
-            reassign(object, check.get(i), input.get(i));
-        }
-        // update existing records, if size(new) > size(old), insert the rest new records.
-        if (input.size() >= check.size()) {
-            updateByPrimaryKey(check.toArray((T[]) Array.newInstance(clazz, check.size())));
-            if (input.size() > check.size()) {
-                T[] dos = (T[]) Array.newInstance(clazz, input.size() - i);
-                for (int j = i; j < input.size(); j++) {
-                    dos[j - i] = getDo(object, input.get(j));
-                }
-                insert(dos);
-            }
-        } else {
-            // size(new) < size(old), delete the rest old records.
-            deleteByPrimaryKey(check.subList(i - 1, check.size()).toArray((T[]) Array.newInstance(clazz, check.size() - i + 1)));
-        }
+        relUpdate(object, clazz, input, targetId, getOnlineVersion(targetId));
     }
 
     @Override
-    public void relPort(X object, Class<T> clazz, List<W> input) throws Exception {
-        // current version in use
+    public void relUpdateOnline(X object, Class<T> clazz, List<W> input) throws Exception {
         Long targetId = getTargetId(object);
-        if (currentRetained(targetId)) {
-            relAdd(object, clazz, input);
-            return;
-        }
-        List<T> check = getAll(targetId);
-        Iterator<T> iter = check.iterator();
-        int currentVersion = getCurrentVersion(object);
+        relUpdate(object, clazz, input, targetId, getOfflineVersion(targetId));
+    }
+
+    private void relUpdate(X object, Class<T> clazz, List<W> input, Long targetId, int retainedVersion) throws Exception {
+        List<T> cycle = getAll(targetId);
+        Iterator<T> iter = cycle.iterator();
         while (iter.hasNext()) {
-            int targetVersion = getTargetVersion(iter.next());
-            if (targetVersion != 0
-                    && targetVersion != currentVersion
-                    && targetVersion != (currentVersion - 1)) iter.remove();
+            if (getTargetVersion(iter.next()) == retainedVersion) iter.remove();
         }
+
         int i;
-        for (i = 0; i < check.size() && i < input.size(); i++) {
-            reassign(object, check.get(i), input.get(i));
+        for (i = 0; i < cycle.size(); i++) {
+            reassign(object, cycle.get(i), input.get(i));
         }
         // update existing records, if size(new) > size(old), insert the rest new records.
-        if (input.size() >= check.size()) {
-            updateByPrimaryKey(check.toArray((T[]) Array.newInstance(clazz, check.size())));
-            if (input.size() > check.size()) {
+        if (input.size() >= cycle.size()) {
+            updateByPrimaryKey(cycle.toArray((T[]) Array.newInstance(clazz, cycle.size())));
+            if (input.size() > cycle.size()) {
                 T[] dos = (T[]) Array.newInstance(clazz, input.size() - i);
                 for (int j = i; j < input.size(); j++) {
                     dos[j - i] = getDo(object, input.get(j));
@@ -86,15 +54,21 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
             }
         } else {
             // size(new) < size(old), delete the rest old records.
-            deleteByPrimaryKey(check.subList(i - 1, check.size()).toArray((T[]) Array.newInstance(clazz, check.size() - i + 1)));
+            deleteByPrimaryKey(cycle.subList(i - 1, cycle.size()).toArray((T[]) Array.newInstance(clazz, cycle.size() - i + 1)));
         }
     }
 
     protected abstract List<T> getAll(Long id) throws Exception;
 
-    protected abstract int getCurrentVersion(X object);
+    protected abstract Long getTargetId(X object) throws Exception;
 
     protected abstract int getTargetVersion(T target) throws Exception;
+
+    protected abstract int getOnlineVersion(Long id) throws Exception;
+
+    protected abstract int getOfflineVersion(Long id) throws Exception;
+
+    protected abstract T getDo(X object, W value) throws Exception;
 
     protected abstract void updateByPrimaryKey(T[] values) throws Exception;
 
@@ -102,11 +76,5 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
 
     protected abstract void deleteByPrimaryKey(T[] values) throws Exception;
 
-    protected abstract Long getTargetId(X object) throws Exception;
-
-    protected abstract T getDo(X object, W value) throws Exception;
-
     protected abstract void reassign(X object, T output, W input) throws Exception;
-
-    protected abstract boolean currentRetained(Long id) throws Exception;
 }

@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import org.springframework.stereotype.Component;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -24,13 +25,20 @@ public class GroupGsRelMaintainer extends AbstractMultiRelMaintainer<RelGroupGsD
     }
 
     @Override
-    public int getCurrentVersion(Group object) {
-        return object.getVersion();
+    public int getTargetVersion(RelGroupGsDo target) throws Exception {
+        return target.getGroupVersion();
     }
 
     @Override
-    public int getTargetVersion(RelGroupGsDo target) throws Exception {
-        return target.getGroupVersion();
+    protected int getOnlineVersion(Long id) throws Exception {
+        RelGroupStatusDo check = rGroupStatusDao.findByGroup(id, RGroupStatusEntity.READSET_FULL);
+        return check == null ? 0 : check.getOnlineVersion();
+    }
+
+    @Override
+    protected int getOfflineVersion(Long id) throws Exception {
+        RelGroupStatusDo check = rGroupStatusDao.findByGroup(id, RGroupStatusEntity.READSET_FULL);
+        return check == null ? 0 : check.getOfflineVersion();
     }
 
     @Override
@@ -66,13 +74,12 @@ public class GroupGsRelMaintainer extends AbstractMultiRelMaintainer<RelGroupGsD
     }
 
     @Override
-    public boolean currentRetained(Long id) throws Exception {
-        RelGroupStatusDo check = rGroupStatusDao.findByGroup(id, RGroupStatusEntity.READSET_FULL);
-        return check == null ? false : check.getOfflineVersion() == check.getOnlineVersion();
+    public void relDelete(Long objectId) throws Exception {
+        rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(objectId));
     }
 
     @Override
-    public void relDelete(Long objectId) throws Exception {
-        rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(objectId));
+    public void relBatchDelete(Long[] objectIds) throws Exception {
+        throw new NotImplementedException();
     }
 }

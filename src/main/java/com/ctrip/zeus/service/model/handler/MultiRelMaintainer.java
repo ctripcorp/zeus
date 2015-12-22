@@ -9,10 +9,11 @@ public interface MultiRelMaintainer<T, W, X> {
 
     void relAdd(X object, Class<T> clazz, List<W> input) throws Exception;
 
-    void relUpdate(X object, Class<T> clazz, List<W> input) throws Exception;
+    void relUpdateOffline(X object, Class<T> clazz, List<W> input) throws Exception;
+
+    void relUpdateOnline(X object, Class<T> clazz, List<W> input) throws Exception;
 
     void relDelete(Long objectId) throws Exception;
 
-    @Deprecated
-    void relPort(X object, Class<T> clazz, List<W> input) throws Exception;
+    void relBatchDelete(Long[] objectIds) throws Exception;
 }
