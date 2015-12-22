@@ -245,7 +245,7 @@
                 </statement>
             </query>
             <query name="update-online-version-by-group" type="UPDATE" batch="true">
-                <param name="ip"/>
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
@@ -254,7 +254,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-all-by-group" type="DELETE" batch="true">
+            <query name="delete-all-by-group" type="DELETE">
                 <param name="group-id"/>
                 <statement>
                     <![CDATA[
