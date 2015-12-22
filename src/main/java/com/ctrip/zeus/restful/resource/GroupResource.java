@@ -15,6 +15,7 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.GroupRepository;
+import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -74,7 +75,8 @@ public class GroupResource {
                          @TrimmedQueryParam("type") String type,
                          @TrimmedQueryParam("tag") final String tag,
                          @TrimmedQueryParam("pname") final String pname,
-                         @TrimmedQueryParam("pvalue") final String pvalue) throws Exception {
+                         @TrimmedQueryParam("pvalue") final String pvalue,
+                         @TrimmedQueryParam("mode") final String mode) throws Exception {
         GroupList groupList = new GroupList();
         QueryExecuter executer = new QueryExecuter.Builder()
                 .addFilterId(new FilterSet<Long>() {
@@ -143,7 +145,7 @@ public class GroupResource {
                     }
                 })
                 .build();
-        for (Group group : groupRepository.list(executer.run())) {
+        for (Group group : groupRepository.list(executer.run(), ModelMode.getMode(mode))) {
             groupList.addGroup(getGroupByType(group, type));
         }
         groupList.setTotal(groupList.getGroups().size());
@@ -161,7 +163,8 @@ public class GroupResource {
                                 @TrimmedQueryParam("type") String type,
                                 @TrimmedQueryParam("tag") final String tag,
                                 @TrimmedQueryParam("pname") final String pname,
-                                @TrimmedQueryParam("pvalue") final String pvalue) throws Exception {
+                                @TrimmedQueryParam("pvalue") final String pvalue,
+                                @TrimmedQueryParam("mode") final String mode) throws Exception {
         GroupList groupList = new GroupList();
         QueryExecuter executer = new QueryExecuter.Builder()
                 .addFilterId(new FilterSet<Long>() {
@@ -202,7 +205,7 @@ public class GroupResource {
                     }
                 })
                 .build();
-        for (Group group : groupRepository.list(executer.run())) {
+        for (Group group : groupRepository.list(executer.run(), ModelMode.getMode(mode))) {
             groupList.addGroup(getGroupByType(group, type));
         }
         groupList.setTotal(groupList.getGroups().size());
@@ -212,11 +215,12 @@ public class GroupResource {
     @GET
     @Path("/group")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Authorize(name = "getGroup")
+    @Authorize(name = "getGroupByStatus")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
                         @QueryParam("groupId") Long groupId,
                         @TrimmedQueryParam("groupName") String groupName,
-                        @TrimmedQueryParam("type") String type) throws Exception {
+                        @TrimmedQueryParam("type") String type,
+                        @TrimmedQueryParam("mode") final String mode) throws Exception {
         Group group = null;
         if (groupId == null && groupName == null) {
             throw new ValidationException("Missing parameters.");
@@ -225,7 +229,7 @@ public class GroupResource {
             groupId = groupCriteriaQuery.queryByName(groupName);
         }
         if (groupId != null) {
-            group = groupRepository.getById(groupId);
+            group = groupRepository.getById(groupId, ModelMode.getMode(mode));
         }
         if (group == null) {
             throw new ValidationException("Group cannot be found.");
@@ -316,7 +320,19 @@ public class GroupResource {
     }
 
     @GET
-    @Path("/archive/upgrade")
+    @Path("/group/upgradeAll")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeAll(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
+        Set<Long> list = groupCriteriaQuery.queryAll();
+        Set<Long> result = groupRepository.port(list.toArray(new Long[list.size()]));
+        if (result.size() == 0)
+            return responseHandler.handle("Upgrade all successfully.", hh.getMediaType());
+        else
+            return responseHandler.handle("Upgrade fail on ids: " + Joiner.on(",").join(result), hh.getMediaType());
+    }
+
+    @GET
+    @Path("/group/syncStatus")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response upgrade(@Context HttpHeaders hh,
                             @Context HttpServletRequest request,

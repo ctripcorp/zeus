@@ -37,7 +37,7 @@ public class ArchiveCleanFilter implements CleanFilter{
         }
 
         Set<Long> groupIds = groupCriteriaQuery.queryAll();
-        List<ArchiveGroupDo> groups = archiveGroupDao.findMaxVersionByGroups(groupIds.toArray(new Long[]{}),ArchiveGroupEntity.READSET_FULL);
+        List<ArchiveGroupDo> groups = archiveGroupDao.findAllByGroups(groupIds.toArray(new Long[]{}),ArchiveGroupEntity.READSET_FULL);
         for (ArchiveGroupDo archiveGroupDo : groups){
             archiveGroupDao.deleteByGroupIdLessThanVersion(new ArchiveGroupDo().setGroupId(archiveGroupDo.getGroupId()).setVersion(archiveGroupDo.getVersion()-archiveSaveCounts.get()));
         }

@@ -2,7 +2,7 @@ package com.ctrip.zeus.service.model.handler;
 
 import com.ctrip.zeus.model.entity.Group;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -16,13 +16,10 @@ public interface GroupSync {
 
     void update(Group group) throws Exception;
 
-    void updateVersion(Long[] groupIds) throws Exception;
+    void updateStatus(Group[] groups) throws Exception;
 
     int delete(Long groupId) throws Exception;
 
     @Deprecated
-    List<Long> port(Group[] groups) throws Exception;
-
-    @Deprecated
-    void port(Group group) throws Exception;
+    Set<Long> port(Long[] groupIds) throws Exception;
 }

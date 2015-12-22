@@ -21,11 +21,11 @@ public interface ArchiveService {
 
     Slb getLatestSlb(Long slbId) throws Exception;
 
-    Group getLatestGroup(Long groupId) throws Exception;
+    Group getGroupByMode(Long groupId, ModelMode mode) throws Exception;
 
     List<Slb> getLatestSlbs(Long[] slbIds) throws Exception;
 
-    List<Group> getLatestGroups(Long[] groupIds) throws Exception;
+    List<Group> getGroupsByMode(Long[] groupIds, ModelMode mode) throws Exception;
 
     Archive getLatestSlbArchive(Long slbId) throws Exception;
 

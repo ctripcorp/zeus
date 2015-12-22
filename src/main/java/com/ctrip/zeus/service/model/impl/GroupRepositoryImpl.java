@@ -44,6 +44,11 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
+        return list(ids, ModelMode.MODEL_MODE_MERGE);
+    }
+
+    @Override
+    public List<Group> list(Long[] ids, ModelMode mode) throws Exception {
         Set<Long> vsIds = virtualServerCriteriaQuery.queryByGroupIds(ids);
         Map<Long, VirtualServer> dic = Maps.uniqueIndex(virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()])), new Function<VirtualServer, Long>() {
             @Nullable
@@ -52,7 +57,7 @@ public class GroupRepositoryImpl implements GroupRepository {
                 return virtualServer.getId();
             }
         });
-        List<Group> result = archiveService.getLatestGroups(ids);
+        List<Group> result = archiveService.getGroupsByMode(ids, mode);
         for (Group group : result) {
             for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
                 groupVirtualServer.setVirtualServer(dic.get(groupVirtualServer.getVirtualServer().getId()));
@@ -65,8 +70,13 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group getById(Long id) throws Exception {
+        return getById(id, ModelMode.MODEL_MODE_MERGE);
+    }
+
+    @Override
+    public Group getById(Long id, ModelMode mode) throws Exception {
         if (groupModelValidator.exists(id) || vGroupValidator.exists(id)) {
-            Group result = archiveService.getLatestGroup(id);
+            Group result = archiveService.getGroupByMode(id, mode);
             autoFiller.autofill(result);
             hideVirtualValue(result);
             return result;
@@ -119,6 +129,11 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
+    public void activateGroupVersion(Group[] groups) throws Exception {
+        groupEntityManager.updateStatus(groups);
+    }
+
+    @Override
     public int delete(Long groupId) throws Exception {
         groupModelValidator.removable(groupId);
         statusService.cleanGroupServerStatus(groupId);
@@ -132,9 +147,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception {
-        Set<Long> groupIds = groupCriteriaQuery.queryByGroupServerIp(groupServerIp);
-        return list(groupIds.toArray(new Long[groupIds.size()]));
+    public Set<Long> port(Long[] groupIds) throws Exception {
+        return groupEntityManager.port(groupIds);
     }
 
     @Override
