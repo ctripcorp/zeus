@@ -154,19 +154,6 @@ public class SlbRepositoryImpl implements SlbRepository {
         return slbEntityManager.port(slbs.toArray(new Slb[slbs.size()]));
     }
 
-    @Override
-    public void portSlbRel(Long slbId) throws Exception {
-        Slb slb = getById(slbId);
-        slbEntityManager.port(slb);
-    }
-
-    private Slb fresh(Long slbId) throws Exception {
-        Slb slb = getById(slbId);
-        autoFiller.autofill(slb);
-        freshVirtualServers(slb);
-        return slb;
-    }
-
     private void freshVirtualServers(Slb slb) throws Exception {
         slb.getVirtualServers().clear();
         Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slb.getId());

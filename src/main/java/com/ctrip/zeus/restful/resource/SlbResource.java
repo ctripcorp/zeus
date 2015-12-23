@@ -170,16 +170,6 @@ public class SlbResource {
             return responseHandler.handle("Error occurs when porting slb relations on id " + Joiner.on(',').join(slbIds) + ".", hh.getMediaType());
     }
 
-    @GET
-    @Path("/slb/upgrade")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeSingle(@Context HttpHeaders hh,
-                                  @Context HttpServletRequest request,
-                                  @QueryParam("slbId") Long slbId) throws Exception {
-        slbRepository.portSlbRel(slbId);
-        return responseHandler.handle("Successfully ported slb relations.", hh.getMediaType());
-    }
-
     private Slb parseSlb(MediaType mediaType, String slb) throws Exception {
         Slb s;
         if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {

@@ -14,13 +14,10 @@ public interface SlbSync {
 
     void update(Slb slb) throws Exception;
 
-    void updateVersion(Long slbId) throws Exception;
+    void updateStatus(Slb[] slbs) throws Exception;
 
     int delete(Long slbId) throws Exception;
 
     @Deprecated
     List<Long> port(Slb[] slbs) throws Exception;
-
-    @Deprecated
-    void port(Slb slb) throws Exception;
 }

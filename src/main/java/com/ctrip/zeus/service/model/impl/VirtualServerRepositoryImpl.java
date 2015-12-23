@@ -62,7 +62,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         List<VirtualServer> check = listAll(checkIds.toArray(new Long[checkIds.size()]));
         check.add(virtualServer);
         virtualServerModelValidator.validateVirtualServers(check);
-        virtualServerEntityManager.addVirtualServer(virtualServer);
+        virtualServerEntityManager.add(virtualServer);
         if (virtualServer.getSsl().booleanValue()) {
             installCertificate(virtualServer);
         }
@@ -89,7 +89,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         }
         check.put(virtualServer.getId(), virtualServer);
         virtualServerModelValidator.validateVirtualServers(new ArrayList<>(check.values()));
-        virtualServerEntityManager.updateVirtualServer(virtualServer);
+        virtualServerEntityManager.update(virtualServer);
         if (virtualServer.getSsl().booleanValue()) {
             installCertificate(virtualServer);
         }
@@ -98,7 +98,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Override
     public void deleteVirtualServer(Long virtualServerId) throws Exception {
         virtualServerModelValidator.removable(getById(virtualServerId));
-        virtualServerEntityManager.deleteVirtualServer(virtualServerId);
+        virtualServerEntityManager.delete(virtualServerId);
     }
 
     @Override
@@ -121,6 +121,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void portVirtualServerArchive(Long vsId) throws Exception {
-        virtualServerEntityManager.port(vsId);
+//        virtualServerEntityManager.port(vsId);
     }
 }

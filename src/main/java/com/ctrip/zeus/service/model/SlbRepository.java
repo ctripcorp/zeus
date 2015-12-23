@@ -25,9 +25,6 @@ public interface SlbRepository extends Repository {
     List<Long> portSlbRel() throws Exception;
 
     @Deprecated
-    void portSlbRel(Long slbId) throws Exception;
-
-    @Deprecated
     List<Slb> list() throws Exception;
 
     @Deprecated
