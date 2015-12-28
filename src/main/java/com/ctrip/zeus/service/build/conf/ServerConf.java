@@ -28,39 +28,32 @@ public class ServerConf {
     private static DynamicBooleanProperty errorPageEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicStringProperty proxyBufferSizeWhiteList = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffer.size.white-list", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty proxyBufferSizeEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("proxy.buffer.size.enableAll", false);
-    private static DynamicStringProperty proxyBufferSize = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffer.size","8k");
-    private static DynamicStringProperty proxyBuffers = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffers","8 8k");
-    private static DynamicStringProperty busyProxyBuffer = DynamicPropertyFactory.getInstance().getStringProperty("proxy.busy.buffers.size","8k");
+    private static DynamicStringProperty proxyBufferSize = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffer.size", "8k");
+    private static DynamicStringProperty proxyBuffers = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffers", "8 8k");
+    private static DynamicStringProperty busyProxyBuffer = DynamicPropertyFactory.getInstance().getStringProperty("proxy.busy.buffers.size", "8k");
 
     public static final String SSL_PATH = "/data/nginx/ssl/";
 
-    public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception{
+    public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception {
         StringBuilder b = new StringBuilder(1024);
 
         AssertUtils.assertNotNull(vs.getPort(), "virtual server [" + vs.getId() + "] port is null! Please check the configuration!");
-        try{
+        try {
             Integer.parseInt(vs.getPort());
-        }catch (Exception e){
-            throw new ValidationException("virtual server ["+vs.getId()+"] port is illegal!");
+        } catch (Exception e) {
+            throw new ValidationException("virtual server [" + vs.getId() + "] port is illegal!");
         }
         b.append("server {").append("\n");
         b.append("listen    ").append(vs.getPort()).append(";\n");
         b.append("server_name    ").append(getServerNames(vs)).append(";\n");
         b.append("ignore_invalid_headers off;\n");
         b.append("proxy_http_version 1.1;\n");
-        addProxyBufferSize(b,vs.getId());
+        addProxyBufferSize(b, vs.getId());
 
-        if (vs.getSsl())
-        {
-            String []sslList = allowSSL.get().split(";");
-            for (String vsid : sslList)
-            {
-                if(String.valueOf(vs.getId()).equals(vsid.trim())){
-                    b.append("ssl on;\n")
-                     .append("ssl_certificate ").append(SSL_PATH).append(vs.getId()).append("/ssl.crt;\n")
-                     .append("ssl_certificate_key ").append(SSL_PATH).append(vs.getId()).append("/ssl.key;\n");
-                }
-            }
+        if (vs.getSsl()) {
+            b.append("ssl on;\n")
+                    .append("ssl_certificate ").append(SSL_PATH).append(vs.getId()).append("/ssl.crt;\n")
+                    .append("ssl_certificate_key ").append(SSL_PATH).append(vs.getId()).append("/ssl.key;\n");
         }
         addErrorPage(b);
         NginxConf.appendServerCommand(b);
@@ -76,35 +69,36 @@ public class ServerConf {
 
     private static void addProxyBufferSize(StringBuilder b, Long id) {
         boolean needAdd = false;
-        if (proxyBufferSizeEnableAll.get()){
+        if (proxyBufferSizeEnableAll.get()) {
             needAdd = true;
-        }else if (proxyBufferSizeWhiteList.get()!=null){
+        } else if (proxyBufferSizeWhiteList.get() != null) {
             String[] vsids = proxyBufferSizeWhiteList.get().split(";");
-            for (String vsId : vsids){
-                if (String.valueOf(id).equals(vsId.trim())){
+            for (String vsId : vsids) {
+                if (String.valueOf(id).equals(vsId.trim())) {
                     needAdd = true;
                 }
             }
         }
-        if (needAdd){
+        if (needAdd) {
             b.append("proxy_buffer_size ").append(proxyBufferSize.get()).append(";\n");
             b.append("proxy_buffers ").append(proxyBuffers.get()).append(";\n");
             b.append("proxy_busy_buffers_size ").append(busyProxyBuffer.get()).append(";\n");
         }
     }
 
-    private static String getServerNames(VirtualServer vs) throws Exception{
+    private static String getServerNames(VirtualServer vs) throws Exception {
         StringBuilder b = new StringBuilder(128);
         for (Domain domain : vs.getDomains()) {
             b.append(" ").append(domain.getName());
         }
-        String res =  b.toString();
+        String res = b.toString();
 
         AssertUtils.assertNotEquals("", res.trim(), "virtual server [" + vs.getId() + "] domain is null or illegal!");
         return res;
     }
-    private static void addErrorPage(StringBuilder sb){
-        if (!errorPageEnable.get()||errorPage_404.get()==null || errorPage_500.get() == null){
+
+    private static void addErrorPage(StringBuilder sb) {
+        if (!errorPageEnable.get() || errorPage_404.get() == null || errorPage_500.get() == null) {
             return;
         }
         sb.append("error_page 400 404 = /404page;\n");
