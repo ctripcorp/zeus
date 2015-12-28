@@ -105,7 +105,7 @@ public class ServerConf {
             DynamicStringProperty errorPageConfig = DynamicPropertyFactory.getInstance().getStringProperty("errorPage."+i+".url",null);
             if (null != errorPageConfig.get()){
                 String path = "/"+ i + "page";
-                sb.append("error_page ").append(i).append(" = ").append(path).append(";\n");
+                sb.append("error_page ").append(i).append(" = ").append(i).append(" ").append(path).append(";\n");
                 sb.append("location = ").append(path).append(" {\n");
                 sb.append("internal;\n");
                 sb.append("proxy_pass ").append(errorPageConfig.get()).append(";\n}\n");
