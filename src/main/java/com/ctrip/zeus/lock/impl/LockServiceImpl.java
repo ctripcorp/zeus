@@ -34,7 +34,7 @@ public class LockServiceImpl implements LockService {
 
     @Override
     public void forceUnlock(String key) throws DalException {
-        distLockDao.updateByKey(new DistLockDo().setLockKey(key), DistLockEntity.UPDATESET_FULL);
+        distLockDao.updateByKey(new DistLockDo().setLockKey(key).setServer("").setOwner(0L).setCreatedTime(System.currentTimeMillis()), DistLockEntity.UPDATESET_FULL);
     }
 
     private static LockStatus toLockStatus(DistLockDo d) {
