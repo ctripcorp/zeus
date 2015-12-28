@@ -97,17 +97,29 @@ public class ServerConf {
         return res;
     }
 
-    private static void addErrorPage(StringBuilder sb) {
-        if (!errorPageEnable.get() || errorPage_404.get() == null || errorPage_500.get() == null) {
+    private static void addErrorPage(StringBuilder sb){
+        if (!errorPageEnable.get()){
             return;
         }
-        sb.append("error_page 400 404 = /404page;\n");
-        sb.append("error_page 500 = /500page;\n");
-        sb.append("location /404page {\n");
-        sb.append("internal;\n");
-        sb.append("proxy_pass ").append(errorPage_404.get()).append(";\n}\n");
-        sb.append("location /500page {\n");
-        sb.append("internal;\n");
-        sb.append("proxy_pass ").append(errorPage_500.get()).append(";\n}\n");
+        for (int i = 400 ; i <= 425 ; i ++ ){
+            DynamicStringProperty errorPageConfig = DynamicPropertyFactory.getInstance().getStringProperty("errorPage."+i+".url",null);
+            if (null != errorPageConfig.get()){
+                String path = "/"+ i + "page";
+                sb.append("error_page ").append(i).append(" = ").append(path).append(";\n");
+                sb.append("location = ").append(path).append(" {\n");
+                sb.append("internal;\n");
+                sb.append("proxy_pass ").append(errorPageConfig.get()).append(";\n}\n");
+            }
+        }
+        for (int i = 500 ; i <= 510 ; i ++ ){
+            DynamicStringProperty errorPageConfig = DynamicPropertyFactory.getInstance().getStringProperty("errorPage."+i+".url",null);
+            if (null != errorPageConfig.get()){
+                String path = "/"+ i + "page";
+                sb.append("error_page ").append(i).append(" = ").append(path).append(";\n");
+                sb.append("location = ").append(path).append(" {\n");
+                sb.append("internal;\n");
+                sb.append("proxy_pass ").append(errorPageConfig.get()).append(";\n}\n");
+            }
+        }
     }
 }
