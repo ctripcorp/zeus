@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.report;
+package com.ctrip.zeus.service.report.meta;
 
 /**
  * Created by zhoumy on 2015/7/10.

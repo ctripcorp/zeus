@@ -1,11 +1,11 @@
-package com.ctrip.zeus.service.report;
+package com.ctrip.zeus.service.report.meta;
 
 /**
  * Created by zhoumy on 2015/7/10.
  */
 public interface ReportSyncService {
 
-    void sync() throws Exception;
+    void sync(Long slbId) throws Exception;
 
     String syncGroup(Long groupId) throws Exception;
 

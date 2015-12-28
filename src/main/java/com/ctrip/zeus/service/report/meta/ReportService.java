@@ -1,6 +1,7 @@
-package com.ctrip.zeus.service.report;
+package com.ctrip.zeus.service.report.meta;
 
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.report.entity.ReportGroup;
 
 import java.util.List;
@@ -11,6 +12,8 @@ import java.util.List;
 public interface ReportService {
 
     void reportGroup(Group group) throws Exception;
+
+    void reportByVs(VirtualServer virtualServer) throws Exception;
 
     void reportDeletion(Long groupId) throws Exception;
 

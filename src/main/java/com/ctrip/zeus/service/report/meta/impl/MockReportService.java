@@ -1,8 +1,9 @@
-package com.ctrip.zeus.service.report.impl;
+package com.ctrip.zeus.service.report.meta.impl;
 
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.report.entity.ReportGroup;
-import com.ctrip.zeus.service.report.ReportService;
+import com.ctrip.zeus.service.report.meta.ReportService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -14,6 +15,11 @@ import java.util.List;
 public class MockReportService implements ReportService {
     @Override
     public void reportGroup(Group group) throws Exception {
+
+    }
+
+    @Override
+    public void reportByVs(VirtualServer virtualServer) throws Exception {
 
     }
 
