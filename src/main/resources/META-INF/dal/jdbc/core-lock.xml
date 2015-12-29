@@ -16,7 +16,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='lock-key'/> = ${lock-key}
+                    WHERE <FIELD name='lock-key'/> = ${lock-key} FOR UPDATE
                     ]]>
                 </statement>
             </query>
