@@ -1,6 +1,6 @@
 package com.ctrip.zeus.restful.filter;
 
-import com.ctrip.zeus.service.query.IdVersion;
+import com.ctrip.zeus.service.model.IdVersion;
 
 import java.util.HashSet;
 import java.util.LinkedList;

@@ -16,7 +16,7 @@ import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
-import com.ctrip.zeus.service.query.IdVersion;
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;

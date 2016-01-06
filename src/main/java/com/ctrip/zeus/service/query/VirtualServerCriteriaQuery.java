@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.query;
 
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.ModelMode;
 
 import java.util.Set;

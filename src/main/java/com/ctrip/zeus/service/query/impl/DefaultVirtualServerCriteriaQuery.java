@@ -2,7 +2,7 @@ package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.model.ModelMode;
-import com.ctrip.zeus.service.query.IdVersion;
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VersionUtils;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;

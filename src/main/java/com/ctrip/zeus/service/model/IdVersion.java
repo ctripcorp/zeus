@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.query;
+package com.ctrip.zeus.service.model;
 
 /**
  * Created by zhoumy on 2015/12/23.
