@@ -3,17 +3,14 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.handler.VirtualServerSync;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/9/22.
@@ -30,6 +27,8 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     private ArchiveVsDao archiveVsDao;
     @Resource
     private RVsStatusDao rVsStatusDao;
+    @Resource
+    private ConfSlbVirtualServerActiveDao confSlbVirtualServerActiveDao;
 
     @Override
     public void add(VirtualServer virtualServer) throws Exception {
@@ -94,28 +93,8 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         archiveVsDao.deleteAllByVs(new MetaVsArchiveDo().setVsId(vsId));
     }
 
-    @Override
-    public void batchDelete(Long[] vsIds) throws Exception {
-        int size = vsIds.length;
-        RelVsSlbDo[] relSlbs = new RelVsSlbDo[size];
-        RelVsStatusDo[] relStatus = new RelVsStatusDo[size];
-        SlbVirtualServerDo[] vses = new SlbVirtualServerDo[size];
-        MetaVsArchiveDo[] archs = new MetaVsArchiveDo[size];
-        for (int i = 0; i < size; i++) {
-            relSlbs[i] = new RelVsSlbDo().setVsId(vsIds[i]);
-            relStatus[i] = new RelVsStatusDo().setVsId(vsIds[i]);
-            vses[i] = new SlbVirtualServerDo().setId(vsIds[i]);
-            archs[i] = new MetaVsArchiveDo().setVsId(vsIds[i]);
-        }
-        rVsSlbDao.deleteByVs(relSlbs);
-        vsDomainRelMaintainer.relBatchDelete(vsIds);
-        rVsStatusDao.deleteAllByVs(relStatus);
-        slbVirtualServerDao.deleteById(vses);
-        archiveVsDao.deleteAllByVs(archs);
-    }
-
     private void relUpdate(VirtualServer virtualServer, int retainedVersion) throws DalException {
-        List<RelVsSlbDo> orig = rVsSlbDao.findSlbByVs(virtualServer.getId(), RVsSlbEntity.READSET_FULL);
+        List<RelVsSlbDo> orig = rVsSlbDao.findByVs(virtualServer.getId(), RVsSlbEntity.READSET_FULL);
         Iterator<RelVsSlbDo> iter = orig.iterator();
         while (iter.hasNext()) {
             RelVsSlbDo rel = iter.next();
@@ -136,15 +115,39 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     }
 
     @Override
-    public List<Long> port(Long[] vsIds) {
-        List<Long> fails = new ArrayList<>();
-        for (Long vsId : vsIds) {
+    public Set<Long> port(Long[] vsIds) throws Exception {
+        List<VirtualServer> toUpdate = new ArrayList<>();
+        Set<Long> failed = new HashSet<>();
+        for (MetaVsArchiveDo metaVsArchiveDo : archiveVsDao.findMaxVersionByVses(vsIds, ArchiveVsEntity.READSET_FULL)) {
             try {
-//                port(vsId);
+                toUpdate.add(DefaultSaxParser.parseEntity(VirtualServer.class, metaVsArchiveDo.getContent()));
             } catch (Exception ex) {
-                fails.add(vsId);
+                failed.add(metaVsArchiveDo.getVsId());
             }
         }
-        return fails;
+        RelVsStatusDo[] dos = new RelVsStatusDo[toUpdate.size()];
+        for (int i = 0; i < dos.length; i++) {
+            dos[i] = new RelVsStatusDo().setVsId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
+        }
+        rVsStatusDao.insertOrUpdate(dos);
+        for (VirtualServer virtualServer : toUpdate) {
+            vsDomainRelMaintainer.relUpdateOffline(virtualServer, RelVsDomainDo.class, virtualServer.getDomains());
+        }
+        vsIds = new Long[toUpdate.size()];
+        for (int i = 0; i < vsIds.length; i++) {
+            vsIds[i] = toUpdate.get(i).getId();
+        }
+        List<ConfSlbVirtualServerActiveDo> ref = confSlbVirtualServerActiveDao.findBySlbVirtualServerIds(vsIds, ConfSlbVirtualServerActiveEntity.READSET_FULL);
+        toUpdate.clear();
+
+        for (ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo : ref) {
+            try {
+                toUpdate.add(DefaultSaxParser.parseEntity(VirtualServer.class, confSlbVirtualServerActiveDo.getContent()));
+            } catch (Exception ex) {
+                failed.add(confSlbVirtualServerActiveDo.getSlbVirtualServerId());
+            }
+        }
+        updateStatus(toUpdate.toArray(new VirtualServer[toUpdate.size()]));
+        return failed;
     }
 }

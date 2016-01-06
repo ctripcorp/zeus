@@ -2,7 +2,7 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="r-slb-slb-server" table="r_slb_slb_server" alias="rsss" do-class="RelSlbSlbServerDo">
         <query-defs>
-            <query name="find-all-ips-by-slb" type="SELECT" multiple="true">
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
                 <param name="slb-id"/>
                 <statement>
                     <![CDATA[
@@ -12,7 +12,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-slb-by-ip" type="SELECT">
+            <query name="find-by-ip" type="SELECT" multiple="true">
                 <param name="ip"/>
                 <statement>
                     <![CDATA[

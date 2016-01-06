@@ -11,19 +11,17 @@ public interface VirtualServerRepository {
 
     List<VirtualServer> listAll(Long[] vsIds) throws Exception;
 
-    VirtualServer getById(Long virtualServerId) throws Exception;
+    List<VirtualServer> listAll(Long[] vsIds, ModelMode mode) throws Exception;
 
-    VirtualServer addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception;
+    VirtualServer getById(Long vsId) throws Exception;
 
-    void updateVirtualServer(VirtualServer virtualServer) throws Exception;
+    VirtualServer getById(Long vsId, ModelMode mode) throws Exception;
 
-    void deleteVirtualServer(Long virtualServerId) throws Exception;
+    VirtualServer add(Long slbId, VirtualServer virtualServer) throws Exception;
+
+    void update(VirtualServer virtualServer) throws Exception;
+
+    void delete(Long virtualServerId) throws Exception;
 
     void installCertificate(VirtualServer virtualServer) throws Exception;
-
-    @Deprecated
-    List<Long> portVirtualServerArchives() throws Exception;
-
-    @Deprecated
-    void portVirtualServerArchive(Long vsId) throws Exception;
 }

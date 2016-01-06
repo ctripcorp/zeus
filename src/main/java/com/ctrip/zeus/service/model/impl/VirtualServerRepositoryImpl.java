@@ -1,16 +1,17 @@
 package com.ctrip.zeus.service.model.impl;
 
-import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.model.ArchiveService;
+import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
-import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
 import com.ctrip.zeus.service.nginx.CertificateService;
+import com.ctrip.zeus.service.query.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +28,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Resource
     private VirtualServerEntityManager virtualServerEntityManager;
     @Resource
-    private ArchiveVsDao archiveVsDao;
+    private ArchiveService archiveService;
     @Resource
     private VirtualServerValidator virtualServerModelValidator;
     @Resource
@@ -39,30 +40,39 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
-        List<VirtualServer> result = new ArrayList<>();
-        for (MetaVsArchiveDo metaVsArchiveDo : archiveVsDao.findMaxVersionByVses(vsIds, ArchiveVsEntity.READSET_FULL)) {
-            result.add(ContentReaders.readVirtualServerContent(metaVsArchiveDo.getContent()));
-        }
-        return result;
+        return listAll(vsIds, ModelMode.MODEL_MODE_MERGE);
     }
 
     @Override
-    public VirtualServer getById(Long virtualServerId) throws Exception {
-        MetaVsArchiveDo d = archiveVsDao.findMaxVersionByVs(virtualServerId, ArchiveVsEntity.READSET_FULL);
-        return d == null ? null : ContentReaders.readVirtualServerContent(d.getContent());
+    public List<VirtualServer> listAll(Long[] vsIds, ModelMode mode) throws Exception {
+        return archiveService.getVirtualServersByMode(vsIds, mode);
     }
 
     @Override
-    public VirtualServer addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception {
+    public VirtualServer getById(Long vsId) throws Exception {
+        return getById(vsId, ModelMode.MODEL_MODE_MERGE);
+    }
+
+    @Override
+    public VirtualServer getById(Long vsId, ModelMode mode) throws Exception {
+        return archiveService.getVirtualServerByMode(vsId, mode);
+    }
+
+    @Override
+    public VirtualServer add(Long slbId, VirtualServer virtualServer) throws Exception {
         virtualServer.setSlbId(slbId);
         for (Domain domain : virtualServer.getDomains()) {
             domain.setName(domain.getName().toLowerCase());
         }
-        Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
-        List<VirtualServer> check = listAll(checkIds.toArray(new Long[checkIds.size()]));
+        Set<Long> retained = new HashSet<>();
+        for (IdVersion idVersion : virtualServerCriteriaQuery.queryBySlbId(slbId)) {
+            retained.add(idVersion.getId());
+        }
+        List<VirtualServer> check = listAll(retained.toArray(new Long[retained.size()]), ModelMode.MODEL_MODE_REDUNDANT);
         check.add(virtualServer);
         virtualServerModelValidator.validateVirtualServers(check);
         virtualServerEntityManager.add(virtualServer);
+
         if (virtualServer.getSsl().booleanValue()) {
             installCertificate(virtualServer);
         }
@@ -70,33 +80,41 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public void updateVirtualServer(VirtualServer virtualServer) throws Exception {
-        VirtualServer origin = getById(virtualServer.getId());
-        if (origin == null)
+    public void update(VirtualServer virtualServer) throws Exception {
+        if (!virtualServerModelValidator.exists(virtualServer.getId()))
             throw new ValidationException("Virtual server with id " + virtualServer.getId() + " does not exist.");
         for (Domain domain : virtualServer.getDomains()) {
             domain.setName(domain.getName().toLowerCase());
         }
-        Set<Long> checkIds = virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId());
-        Map<Long, VirtualServer> check = new HashMap<>();
-        for (VirtualServer vs : listAll(checkIds.toArray(new Long[checkIds.size()]))) {
-            check.put(vs.getId(), vs);
+        Set<Long> retained = new HashSet<>();
+        for (IdVersion idVersion : virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId())) {
+            retained.add(idVersion.getId());
         }
-        if (!check.containsKey(virtualServer.getId())) {
+        if (retained.size() == 0) {
             if (!slbModelValidator.exists(virtualServer.getSlbId())) {
                 throw new ValidationException("Slb with id " + virtualServer.getSlbId() + " does not exist.");
             }
         }
-        check.put(virtualServer.getId(), virtualServer);
-        virtualServerModelValidator.validateVirtualServers(new ArrayList<>(check.values()));
+        List<VirtualServer> check = listAll(retained.toArray(new Long[retained.size()]), ModelMode.MODEL_MODE_REDUNDANT);
+        Iterator<VirtualServer> iter = check.iterator();
+        while (iter.hasNext()) {
+            VirtualServer c = iter.next();
+            if (c.getId().equals(virtualServer.getId()) && c.getVersion().equals(virtualServer.getVersion())) {
+                iter.remove();
+                break;
+            }
+        }
+        check.add(virtualServer);
+        virtualServerModelValidator.validateVirtualServers(check);
         virtualServerEntityManager.update(virtualServer);
+
         if (virtualServer.getSsl().booleanValue()) {
             installCertificate(virtualServer);
         }
     }
 
     @Override
-    public void deleteVirtualServer(Long virtualServerId) throws Exception {
+    public void delete(Long virtualServerId) throws Exception {
         virtualServerModelValidator.removable(getById(virtualServerId));
         virtualServerEntityManager.delete(virtualServerId);
     }
@@ -111,16 +129,5 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         }
         Long certId = certificateService.getCertificateOnBoard(domains);
         certificateService.install(virtualServer.getId(), ips, certId);
-    }
-
-    @Override
-    public List<Long> portVirtualServerArchives() throws Exception {
-        Set<Long> all = virtualServerCriteriaQuery.queryAll();
-        return virtualServerEntityManager.port(all.toArray(new Long[all.size()]));
-    }
-
-    @Override
-    public void portVirtualServerArchive(Long vsId) throws Exception {
-//        virtualServerEntityManager.port(vsId);
     }
 }

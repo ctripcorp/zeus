@@ -7,7 +7,6 @@ import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VGroupValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
-import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.status.StatusService;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -39,8 +38,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     private StatusService statusService;
     @Resource
     private VirtualServerRepository virtualServerRepository;
-    @Resource
-    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
@@ -49,18 +46,25 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(Long[] ids, ModelMode mode) throws Exception {
-        Set<Long> vsIds = virtualServerCriteriaQuery.queryByGroupIds(ids);
-        Map<Long, VirtualServer> dic = Maps.uniqueIndex(virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()])), new Function<VirtualServer, Long>() {
-            @Nullable
-            @Override
-            public Long apply(VirtualServer virtualServer) {
-                return virtualServer.getId();
-            }
-        });
         List<Group> result = archiveService.getGroupsByMode(ids, mode);
+        Set<Long> vsIds = new HashSet<>();
         for (Group group : result) {
             for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
-                groupVirtualServer.setVirtualServer(dic.get(groupVirtualServer.getVirtualServer().getId()));
+                vsIds.add(groupVirtualServer.getVirtualServer().getId());
+            }
+        }
+        Map<Long, VirtualServer> map = Maps.uniqueIndex(
+                virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()]), mode),
+                new Function<VirtualServer, Long>() {
+                    @Nullable
+                    @Override
+                    public Long apply(@Nullable VirtualServer virtualServer) {
+                        return virtualServer.getId();
+                    }
+                });
+        for (Group group : result) {
+            for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
+                groupVirtualServer.setVirtualServer(map.get(groupVirtualServer.getVirtualServer().getId()));
             }
             autoFiller.autofillEmptyFields(group);
             hideVirtualValue(group);
@@ -129,11 +133,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public void activateGroupVersion(Group[] groups) throws Exception {
-        groupEntityManager.updateStatus(groups);
-    }
-
-    @Override
     public int delete(Long groupId) throws Exception {
         groupModelValidator.removable(groupId);
         statusService.cleanGroupServerStatus(groupId);
@@ -151,15 +150,16 @@ public class GroupRepositoryImpl implements GroupRepository {
         return groupEntityManager.port(groupIds);
     }
 
-    @Override
-    public void syncMemberStatus(Group group) throws Exception {
-        Long[] vsIds = new Long[group.getGroupVirtualServers().size()];
+    private void syncMemberStatus(Group group) throws Exception {
+        List<GroupVirtualServer> virtualServers = group.getGroupVirtualServers();
+        Long[] vsIds = new Long[virtualServers.size()];
         for (int i = 0; i < vsIds.length; i++) {
-            vsIds[i] = group.getGroupVirtualServers().get(i).getVirtualServer().getId();
+            vsIds[i] = virtualServers.get(i).getVirtualServer().getId();
         }
-        String[] ips = new String[group.getGroupServers().size()];
+        List<GroupServer> groupServers = group.getGroupServers();
+        String[] ips = new String[groupServers.size()];
         for (int i = 0; i < ips.length; i++) {
-            ips[i] = group.getGroupServers().get(i).getIp();
+            ips[i] = groupServers.get(i).getIp();
         }
         statusService.groupServerStatusInit(group.getId(), vsIds, ips);
     }
@@ -167,12 +167,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public Group get(String groupName) throws Exception {
         return getById(groupCriteriaQuery.queryByName(groupName));
-    }
-
-    @Override
-    public List<Group> list(Long slbId) throws Exception {
-        Set<Long> groupIds = groupCriteriaQuery.queryBySlbId(slbId);
-        return list(groupIds.toArray(new Long[groupIds.size()]));
     }
 
     private void hideVirtualValue(Group group) {

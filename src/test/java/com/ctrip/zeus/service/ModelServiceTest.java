@@ -136,7 +136,7 @@ public class ModelServiceTest extends AbstractServerTest {
             Assert.assertTrue("valid update action throws exception.", false);
         }
         targetSlb.getVirtualServers().remove(0);
-        virtualServerRepository.deleteVirtualServer(targetSlb.getVirtualServers().get(0).getId());
+        virtualServerRepository.delete(targetSlb.getVirtualServers().get(0).getId());
     }
 
     private void addSlb() throws Exception {
@@ -326,7 +326,7 @@ public class ModelServiceTest extends AbstractServerTest {
         virtualServers.get(0).setName("www.nihao.com.cn");
         virtualServers.get(1).setName("www.hello.com.cn");
         for (VirtualServer virtualServer : virtualServers) {
-            virtualServerRepository.updateVirtualServer(virtualServer);
+            virtualServerRepository.update(virtualServer);
         }
         Slb updated = slbRepository.getById(created.getId());
         Group updatedGroup = groupRepository.get(group.getName());
@@ -343,8 +343,8 @@ public class ModelServiceTest extends AbstractServerTest {
         Assert.assertTrue(domainChecks.contains(virtualServers.get(0).getName()));
 
         groupRepository.delete(updatedGroup.getId());
-        virtualServerRepository.deleteVirtualServer(virtualServers.get(0).getId());
-        virtualServerRepository.deleteVirtualServer(virtualServers.get(1).getId());
+        virtualServerRepository.delete(virtualServers.get(0).getId());
+        virtualServerRepository.delete(virtualServers.get(1).getId());
 
         vsIds = virtualServerCriteriaQuery.queryBySlbId(created.getId());
         virtualServers = virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()]));

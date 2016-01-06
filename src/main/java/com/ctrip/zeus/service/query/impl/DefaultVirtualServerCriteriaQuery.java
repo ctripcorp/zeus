@@ -1,6 +1,9 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.query.IdVersion;
+import com.ctrip.zeus.service.query.VersionUtils;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +24,8 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     private RVsDomainDao rVsDomainDao;
     @Resource
     private RGroupVsDao rGroupVsDao;
+    @Resource
+    private RVsStatusDao rVsStatusDao;
 
     @Override
     public Set<Long> queryAll() throws Exception {
@@ -32,28 +37,40 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
-    public Set<Long> queryBySlbId(Long slbId) throws Exception {
-        Set<Long> result = new HashSet<>();
-        for (RelVsSlbDo relVsSlbDo : rVsSlbDao.findAllVsesBySlb(slbId, RVsSlbEntity.READSET_FULL)) {
-            result.add(relVsSlbDo.getVsId());
+    public Set<IdVersion> queryAll(ModelMode mode) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        Set<Long> vsIds = queryAll();
+        for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds.toArray(new Long[vsIds.size()]), RVsStatusEntity.READSET_FULL)) {
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                result.add(new IdVersion(d.getVsId(), v));
+            }
         }
         return result;
     }
 
     @Override
-    public Set<Long> queryByGroupIds(Long[] groupIds) throws Exception {
-        Set<Long> result = new HashSet<>();
-        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllVsesByGroups(groupIds, RGroupVsEntity.READSET_FULL)) {
-            result.add(relGroupVsDo.getVsId());
+    public Set<IdVersion> queryBySlbId(Long slbId) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelVsSlbDo d : rVsSlbDao.findAllBySlb(slbId, RVsSlbEntity.READSET_FULL)) {
+            result.add(new IdVersion(d.getVsId(), d.getVsVersion()));
         }
         return result;
     }
 
     @Override
-    public Set<Long> queryByDomain(String domain) throws Exception {
-        Set<Long> result = new HashSet<>();
-        for (RelVsDomainDo relVsDomainDo : rVsDomainDao.findAllVsesByDomain(domain.toLowerCase(), RVsDomainEntity.READSET_FULL)) {
-            result.add(relVsDomainDo.getVsId());
+    public Set<IdVersion> queryByGroupIds(Long[] groupIds) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelGroupVsDo d : rGroupVsDao.findAllVsesByGroups(groupIds, RGroupVsEntity.READSET_FULL)) {
+            result.add(new IdVersion(d.getGroupId(), d.getGroupVersion()));
+        }
+        return result;
+    }
+
+    @Override
+    public Set<IdVersion> queryByDomain(String domain) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelVsDomainDo d : rVsDomainDao.findAllByDomain(domain.toLowerCase(), RVsDomainEntity.READSET_FULL)) {
+            result.add(new IdVersion(d.getVsId(), d.getVsVersion()));
         }
         return result;
     }

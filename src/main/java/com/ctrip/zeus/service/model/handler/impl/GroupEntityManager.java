@@ -95,7 +95,7 @@ public class GroupEntityManager implements GroupSync {
     public int delete(Long groupId) throws Exception {
         groupVsRelMaintainer.relDelete(groupId);
         groupGsRelMaintainer.relDelete(groupId);
-        rGroupVgDao.deleteByPK(new RelGroupVgDo().setGroupId(groupId));
+        rGroupVgDao.deleteByGroup(new RelGroupVgDo().setGroupId(groupId));
         rGroupStatusDao.deleteAllByGroup(new RelGroupStatusDo().setGroupId(groupId));
         int count = groupDao.deleteById(new GroupDo().setId(groupId));
         archiveGroupDao.deleteByGroup(new ArchiveGroupDo().setGroupId(groupId));

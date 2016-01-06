@@ -5,7 +5,6 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.handler.SlbSync;
-import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/9/29.
@@ -25,10 +23,6 @@ public class SlbEntityManager implements SlbSync {
     private SlbDao slbDao;
     @Resource
     private ArchiveSlbDao archiveSlbDao;
-    @Resource
-    private RSlbSlbServerDao rSlbSlbServerDao;
-    @Resource
-    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
     private VirtualServerEntityManager virtualServerEntityManager;
     @Resource
@@ -87,9 +81,7 @@ public class SlbEntityManager implements SlbSync {
 
     @Override
     public int delete(Long slbId) throws Exception {
-        Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slbId);
-        virtualServerEntityManager.batchDelete(vsIds.toArray(new Long[vsIds.size()]));
-        rSlbSlbServerDao.deleteAllBySlb(new RelSlbSlbServerDo().setSlbId(slbId));
+        slbServerRelMaintainer.relDelete(slbId);
         int count = slbDao.deleteByPK(new SlbDo().setId(slbId));
         archiveSlbDao.deleteBySlb(new ArchiveSlbDo().setSlbId(slbId));
         return count;

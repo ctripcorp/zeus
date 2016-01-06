@@ -1,5 +1,7 @@
 package com.ctrip.zeus.service.query;
 
+import com.ctrip.zeus.service.model.ModelMode;
+
 import java.util.Set;
 
 /**
@@ -7,13 +9,15 @@ import java.util.Set;
  */
 public interface SlbCriteriaQuery {
 
+    Set<Long> queryAll() throws Exception;
+
+    Set<IdVersion> queryAll(ModelMode mode) throws Exception;
+
     Long queryByName(String name) throws Exception;
 
-    Long queryBySlbServerIp(String ip) throws Exception;
+    Set<Long> queryByVs(IdVersion vsIdVersion) throws Exception;
 
-    Long queryByVs(Long vsId) throws Exception;
+    Set<Long> queryByVses(IdVersion[] vsIdVersions) throws Exception;
 
-    Set<Long> queryByGroups(Long[] groupIds) throws Exception;
-
-    Set<Long> queryAll() throws Exception;
+    Set<IdVersion> queryBySlbServerIp(String ip) throws Exception;
 }

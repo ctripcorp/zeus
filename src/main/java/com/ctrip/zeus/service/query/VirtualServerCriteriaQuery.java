@@ -1,5 +1,7 @@
 package com.ctrip.zeus.service.query;
 
+import com.ctrip.zeus.service.model.ModelMode;
+
 import java.util.Set;
 
 /**
@@ -9,9 +11,11 @@ public interface VirtualServerCriteriaQuery {
 
     Set<Long> queryAll() throws Exception;
 
-    Set<Long> queryBySlbId(Long slbId) throws Exception;
+    Set<IdVersion> queryAll(ModelMode mode) throws Exception;
 
-    Set<Long> queryByGroupIds(Long[] groupIds) throws Exception;
+    Set<IdVersion> queryBySlbId(Long slbId) throws Exception;
 
-    Set<Long> queryByDomain(String domain) throws Exception;
+    Set<IdVersion> queryByGroupIds(Long[] groupIds) throws Exception;
+
+    Set<IdVersion> queryByDomain(String domain) throws Exception;
 }

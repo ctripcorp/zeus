@@ -111,7 +111,7 @@ public class ValidationTest extends AbstractSpringTest {
         group = groupRepository.getById(group.getId());
         Assert.assertEquals(slb.getVirtualServers().get(0).getId(), group.getGroupVirtualServers().get(0).getVirtualServer().getId());
         try {
-            virtualServerRepository.deleteVirtualServer(slb.getVirtualServers().get(0).getId());
+            virtualServerRepository.delete(slb.getVirtualServers().get(0).getId());
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);

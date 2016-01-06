@@ -20,12 +20,21 @@
                 ]]>
                 </statement>
             </query>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="r-group-vs" table="r_group_vs" alias="rgv2" do-class="RelGroupVsDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
-            <query name="find-all-groups-by-vs" type="SELECT" multiple="true">
+            <query name="find-all-by-vs" type="SELECT" multiple="true">
                 <param name="vs-id"/>
                 <statement>
                     <![CDATA[
@@ -47,7 +56,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-groups-by-vses" type="SELECT" multiple="true">
+            <query name="find-all-by-vses" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
                     <![CDATA[

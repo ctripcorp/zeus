@@ -3,7 +3,7 @@
     <entity name="r-vs-slb" table="r_vs_slb" alias="rvs" do-class="RelVsSlbDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
-            <query name="find-all-vses-by-slb" type="SELECT" multiple="true">
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
                 <param name="slb-id"/>
                 <statement>
                     <![CDATA[
@@ -13,7 +13,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-slb-by-vs" type="SELECT" multiple="true">
+            <query name="find-by-vs" type="SELECT" multiple="true">
                 <param name="vs-id"/>
                 <statement>
                     <![CDATA[
@@ -23,7 +23,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-slbs-by-vses" type="SELECT" multiple="true">
+            <query name="find-by-vses" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
                     <![CDATA[
@@ -83,7 +83,7 @@
     <entity name="r-vs-domain" table="r_vs_domain" alias="rvd" do-class="RelVsDomainDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
-            <query name="find-all-domains-by-vs" type="SELECT" multiple="true">
+            <query name="find-all-by-vs" type="SELECT" multiple="true">
                 <param name="vs-id"/>
                 <statement>
                     <![CDATA[
@@ -93,7 +93,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-vses-by-domain" type="SELECT" multiple="true">
+            <query name="find-all-by-domain" type="SELECT" multiple="true">
                 <param name="domain"/>
                 <statement>
                     <![CDATA[

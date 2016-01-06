@@ -9,6 +9,7 @@ import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Repository;
@@ -44,62 +45,36 @@ public class SlbRepositoryImpl implements SlbRepository {
     private AutoFiller autoFiller;
 
     @Override
-    public List<Slb> list() throws Exception {
-        Set<Long> slbIds = slbCriteriaQuery.queryAll();
-        return list(slbIds.toArray(new Long[slbIds.size()]));
+    public List<Slb> list(Long[] slbIds) throws Exception {
+        return list(slbIds, ModelMode.MODEL_MODE_MERGE);
     }
 
     @Override
-    public List<Slb> list(Long[] slbIds) throws Exception {
-        List<Slb> result = archiveService.getLatestSlbs(slbIds);
-        for (Slb slb : result) {
-            slb.getVirtualServers().clear();
-            Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
-            slb.getVirtualServers().addAll(virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()])));
-        }
-        return result;
+    public List<Slb> list(Long[] slbIds, ModelMode mode) throws Exception {
+        return archiveService.getSlbsByMode(slbIds, mode);
     }
 
     @Override
     public Slb getById(Long slbId) throws Exception {
+        return getById(slbId, ModelMode.MODEL_MODE_MERGE);
+    }
+
+    @Override
+    public Slb getById(Long slbId, ModelMode mode) throws Exception {
         if (slbModelValidator.exists(slbId)) {
             Slb result = archiveService.getLatestSlb(slbId);
             result.getVirtualServers().clear();
-            Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slbId);
-            result.getVirtualServers().addAll(virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()])));
-            return result;
+            Set<IdVersion> check = virtualServerCriteriaQuery.queryBySlbId(slbId);
+            check.retainAll(virtualServerCriteriaQuery.queryAll(mode));
+            Long[] vsIds = new Long[check.size()];
+            int i = 0;
+            for (IdVersion idVersion : check) {
+                vsIds[i] = idVersion.getId();
+                ++i;
+            }
+            result.getVirtualServers().addAll(virtualServerRepository.listAll(vsIds));
         }
         return null;
-    }
-
-    @Override
-    public Slb get(String slbName) throws Exception {
-        return getById(slbCriteriaQuery.queryByName(slbName));
-    }
-
-    @Override
-    public Slb getBySlbServer(String slbServerIp) throws Exception {
-        return getById(slbCriteriaQuery.queryBySlbServerIp(slbServerIp));
-    }
-
-    @Override
-    public Slb getByVirtualServer(Long virtualServerId) throws Exception {
-        VirtualServer vs = virtualServerRepository.getById(virtualServerId);
-        return getById(vs.getSlbId());
-    }
-
-    @Override
-    public List<Slb> listByGroupServer(String groupServerIp) throws Exception {
-        Set<Long> groupIds = groupCriteriaQuery.queryByGroupServerIp(groupServerIp);
-        if (groupIds.size() == 0)
-            return new ArrayList<>();
-        return listByGroups(groupIds.toArray(new Long[groupIds.size()]));
-    }
-
-    @Override
-    public List<Slb> listByGroups(Long[] groupIds) throws Exception {
-        Set<Long> slbIds = slbCriteriaQuery.queryByGroups(groupIds);
-        return list(slbIds.toArray(new Long[slbIds.size()]));
     }
 
     @Override
@@ -145,13 +120,6 @@ public class SlbRepositoryImpl implements SlbRepository {
     public int delete(Long slbId) throws Exception {
         slbModelValidator.removable(slbId);
         return slbEntityManager.delete(slbId);
-    }
-
-    @Override
-    public List<Long> portSlbRel() throws Exception {
-        Set<Long> slbIds = slbCriteriaQuery.queryAll();
-        List<Slb> slbs = list(slbIds.toArray(new Long[slbIds.size()]));
-        return slbEntityManager.port(slbs.toArray(new Slb[slbs.size()]));
     }
 
     private void freshVirtualServers(Slb slb) throws Exception {
