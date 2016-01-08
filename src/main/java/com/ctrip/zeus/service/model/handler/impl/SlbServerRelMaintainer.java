@@ -13,7 +13,7 @@ import java.util.List;
  * Created by zhoumy on 2015/12/22.
  */
 @Component("slbServerRelMaintainer")
-public class SlbServerRelMaintainer extends AbstractMultiRelMaintainer<RelSlbSlbServerDo, SlbServer, Slb> {
+public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServerDo, SlbServer, Slb> {
     @Resource
     private RSlbSlbServerDao rSlbSlbServerDao;
     @Resource
@@ -21,7 +21,7 @@ public class SlbServerRelMaintainer extends AbstractMultiRelMaintainer<RelSlbSlb
 
     @Override
     protected List<RelSlbSlbServerDo> getAll(Long id) throws Exception {
-        return rSlbSlbServerDao.findAllIpsBySlb(id, RSlbSlbServerEntity.READSET_FULL);
+        return rSlbSlbServerDao.findAllBySlb(id, RSlbSlbServerEntity.READSET_FULL);
     }
 
     @Override
@@ -38,12 +38,6 @@ public class SlbServerRelMaintainer extends AbstractMultiRelMaintainer<RelSlbSlb
     protected int getOnlineVersion(Long id) throws Exception {
         RelSlbStatusDo check = rSlbStatusDao.findBySlb(id, RSlbStatusEntity.READSET_FULL);
         return check.getOnlineVersion();
-    }
-
-    @Override
-    protected int getOfflineVersion(Long id) throws Exception {
-        RelSlbStatusDo check = rSlbStatusDao.findBySlb(id, RSlbStatusEntity.READSET_FULL);
-        return check.getOfflineVersion();
     }
 
     @Override
@@ -74,12 +68,12 @@ public class SlbServerRelMaintainer extends AbstractMultiRelMaintainer<RelSlbSlb
     }
 
     @Override
-    public void relDelete(Long objectId) throws Exception {
+    public void deleteRel(Long objectId) throws Exception {
         rSlbSlbServerDao.deleteAllBySlb(new RelSlbSlbServerDo().setSlbId(objectId));
     }
 
     @Override
-    public void relBatchDelete(Long[] objectIds) throws Exception {
+    public void batchDeleteRel(Long[] objectIds) throws Exception {
         throw new NotImplementedException();
     }
 }

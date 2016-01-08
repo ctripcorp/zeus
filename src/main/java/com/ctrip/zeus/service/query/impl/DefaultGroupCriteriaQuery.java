@@ -2,9 +2,9 @@ package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.query.VersionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -58,6 +58,17 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
             groupIds.add(relGroupVgDo.getGroupId());
         }
         return groupIds;
+    }
+
+    @Override
+    public Set<IdVersion> queryByIdsAndMode(Long[] groupIds, ModelMode mode) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL)) {
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                result.add(new IdVersion(d.getGroupId(), v));
+            }
+        }
+        return result;
     }
 
     @Override

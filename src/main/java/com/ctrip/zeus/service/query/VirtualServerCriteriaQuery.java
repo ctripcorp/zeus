@@ -14,6 +14,8 @@ public interface VirtualServerCriteriaQuery {
 
     Set<IdVersion> queryAll(ModelMode mode) throws Exception;
 
+    Set<IdVersion> queryByIdsAndMode(Long[] vsIds, ModelMode mode) throws Exception;
+
     Set<IdVersion> queryBySlbId(Long slbId) throws Exception;
 
     Set<IdVersion> queryByGroupIds(Long[] groupIds) throws Exception;

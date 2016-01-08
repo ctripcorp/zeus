@@ -40,12 +40,13 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
-        return listAll(vsIds, ModelMode.MODEL_MODE_MERGE);
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, ModelMode.MODEL_MODE_MERGE);
+        return listAll(keys.toArray(new IdVersion[keys.size()]));
     }
 
     @Override
-    public List<VirtualServer> listAll(Long[] vsIds, ModelMode mode) throws Exception {
-        return archiveService.getVirtualServersByMode(vsIds, mode);
+    public List<VirtualServer> listAll(IdVersion[] keys) throws Exception {
+        return archiveService.listVirtualServers(keys);
     }
 
     @Override
@@ -68,7 +69,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         for (IdVersion idVersion : virtualServerCriteriaQuery.queryBySlbId(slbId)) {
             retained.add(idVersion.getId());
         }
-        List<VirtualServer> check = listAll(retained.toArray(new Long[retained.size()]), ModelMode.MODEL_MODE_REDUNDANT);
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(retained.toArray(new Long[retained.size()]), ModelMode.MODEL_MODE_REDUNDANT);
+        List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
         check.add(virtualServer);
         virtualServerModelValidator.validateVirtualServers(check);
         virtualServerEntityManager.add(virtualServer);
@@ -95,7 +97,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
                 throw new ValidationException("Slb with id " + virtualServer.getSlbId() + " does not exist.");
             }
         }
-        List<VirtualServer> check = listAll(retained.toArray(new Long[retained.size()]), ModelMode.MODEL_MODE_REDUNDANT);
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(retained.toArray(new Long[retained.size()]), ModelMode.MODEL_MODE_REDUNDANT);
+        List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
         Iterator<VirtualServer> iter = check.iterator();
         while (iter.hasNext()) {
             VirtualServer c = iter.next();

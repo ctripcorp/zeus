@@ -18,6 +18,8 @@ public interface GroupCriteriaQuery {
 
     Set<Long> queryAllVGroups() throws Exception;
 
+    Set<IdVersion> queryByIdsAndMode(Long[] groupIds, ModelMode mode) throws Exception;
+
     Set<IdVersion> queryAll(ModelMode mode) throws Exception;
 
     Set<IdVersion> queryAllVGroups(ModelMode mode) throws Exception;

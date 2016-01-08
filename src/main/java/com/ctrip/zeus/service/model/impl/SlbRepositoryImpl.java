@@ -8,7 +8,6 @@ import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
-import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -30,8 +29,6 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
-    private GroupCriteriaQuery groupCriteriaQuery;
-    @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
@@ -46,12 +43,20 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public List<Slb> list(Long[] slbIds) throws Exception {
-        return list(slbIds, ModelMode.MODEL_MODE_MERGE);
+        Set<IdVersion> keys = slbCriteriaQuery.queryByIdsAndMode(slbIds, ModelMode.MODEL_MODE_MERGE);
+        return list(keys.toArray(new IdVersion[keys.size()]));
     }
 
     @Override
-    public List<Slb> list(Long[] slbIds, ModelMode mode) throws Exception {
-        return archiveService.getSlbsByMode(slbIds, mode);
+    public List<Slb> list(IdVersion[] keys) throws Exception {
+        List<Slb> result = archiveService.listSlbs(keys);
+        for (Slb slb : result) {
+            slb.getVirtualServers().clear();
+            Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
+            range.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE));
+            slb.getVirtualServers().addAll(virtualServerRepository.listAll(range.toArray(new IdVersion[range.size()])));
+        }
+        return result;
     }
 
     @Override
@@ -124,7 +129,7 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     private void freshVirtualServers(Slb slb) throws Exception {
         slb.getVirtualServers().clear();
-        Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
+        Set<Long> vsIds = null;// virtualServerCriteriaQuery.queryBySlbId(slb.getId());
         for (VirtualServer virtualServer : virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()]))) {
             slb.getVirtualServers().add(virtualServer);
         }

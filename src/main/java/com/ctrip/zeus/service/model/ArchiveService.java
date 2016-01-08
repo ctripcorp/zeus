@@ -31,9 +31,15 @@ public interface ArchiveService {
 
     List<Group> getGroupsByMode(Long[] groupIds, ModelMode mode) throws Exception;
 
+    List<Group> listGroups(IdVersion[] keys) throws Exception;
+
     List<VirtualServer> getVirtualServersByMode(Long[] vsIds, ModelMode mode) throws Exception;
 
+    List<VirtualServer> listVirtualServers(IdVersion[] keys) throws Exception;
+
     List<Slb> getSlbsByMode(Long[] slbIds, ModelMode mode) throws Exception;
+
+    List<Slb> listSlbs(IdVersion[] keys) throws Exception;
 
     Archive getLatestSlbArchive(Long slbId) throws Exception;
 

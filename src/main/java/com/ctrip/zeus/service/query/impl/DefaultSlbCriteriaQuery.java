@@ -3,8 +3,8 @@ package com.ctrip.zeus.service.query.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
-import com.ctrip.zeus.service.query.VersionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,6 +28,17 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     public Long queryByName(String name) throws Exception {
         SlbDo s = slbDao.findByName(name, SlbEntity.READSET_FULL);
         return s == null ? 0L : s.getId();
+    }
+
+    @Override
+    public Set<IdVersion> queryByIdsAndMode(Long[] slbIds, ModelMode mode) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelSlbStatusDo d : rSlbStatusDao.findBySlbs(slbIds, RSlbStatusEntity.READSET_FULL)) {
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                result.add(new IdVersion(d.getSlbId(), v));
+            }
+        }
+        return result;
     }
 
     @Override

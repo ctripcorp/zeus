@@ -11,7 +11,7 @@ public interface VirtualServerRepository {
 
     List<VirtualServer> listAll(Long[] vsIds) throws Exception;
 
-    List<VirtualServer> listAll(Long[] vsIds, ModelMode mode) throws Exception;
+    List<VirtualServer> listAll(IdVersion[] keys) throws Exception;
 
     VirtualServer getById(Long vsId) throws Exception;
 

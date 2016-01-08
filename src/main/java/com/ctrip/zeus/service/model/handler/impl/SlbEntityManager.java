@@ -10,9 +10,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by zhoumy on 2015/9/29.
@@ -42,7 +40,7 @@ public class SlbEntityManager implements SlbSync {
         }
         archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion()).setContent(ContentWriters.writeSlbContent(slb)));
         rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setId(slb.getId()).setOfflineVersion(slb.getVersion()));
-        slbServerRelMaintainer.relAdd(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
+        slbServerRelMaintainer.addRel(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
     }
 
     @Override
@@ -56,7 +54,7 @@ public class SlbEntityManager implements SlbSync {
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
         archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion()).setContent(ContentWriters.writeSlbContent(slb)));
         rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setId(slb.getId()).setOfflineVersion(slb.getVersion()));
-        slbServerRelMaintainer.relUpdateOffline(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
+        slbServerRelMaintainer.updateRel(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
     }
 
     @Override
@@ -66,22 +64,11 @@ public class SlbEntityManager implements SlbSync {
             dos[i] = new RelSlbStatusDo().setSlbId(slbs[i].getId()).setOnlineVersion(slbs[i].getVersion());
         }
         rSlbStatusDao.updateOnlineVersionBySlb(dos, RSlbStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
-        Map<Long, Slb> ref = new HashMap<>();
-        for (Slb slb : slbs) {
-            ref.put(slb.getId(), slb);
-        }
-        List<RelSlbStatusDo> check = rSlbStatusDao.findBySlbs(ref.keySet().toArray(new Long[ref.size()]), RSlbStatusEntity.READSET_FULL);
-        for (RelSlbStatusDo relSlbStatusDo : check) {
-            if (relSlbStatusDo.getOnlineVersion() != relSlbStatusDo.getOfflineVersion()) {
-                Slb slb = ref.get(relSlbStatusDo.getSlbId());
-                slbServerRelMaintainer.relUpdateOnline(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
-            }
-        }
     }
 
     @Override
     public int delete(Long slbId) throws Exception {
-        slbServerRelMaintainer.relDelete(slbId);
+        slbServerRelMaintainer.deleteRel(slbId);
         int count = slbDao.deleteByPK(new SlbDo().setId(slbId));
         archiveSlbDao.deleteBySlb(new ArchiveSlbDo().setSlbId(slbId));
         return count;

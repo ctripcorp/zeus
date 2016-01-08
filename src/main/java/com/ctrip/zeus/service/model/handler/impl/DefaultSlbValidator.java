@@ -5,8 +5,8 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
-import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -17,9 +17,9 @@ import javax.annotation.Resource;
 @Component("slbModelValidator")
 public class DefaultSlbValidator implements SlbValidator {
     @Resource
-    private GroupCriteriaQuery groupCriteriaQuery;
-    @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
     private SlbDao slbDao;
 
@@ -48,7 +48,7 @@ public class DefaultSlbValidator implements SlbValidator {
             ips[i] = slb.getSlbServers().get(i).getIp();
         }
         for (SlbServer slbServer : slb.getSlbServers()) {
-            Long slbId = slbCriteriaQuery.queryBySlbServerIp(slbServer.getIp());
+            Long slbId = null;//slbCriteriaQuery.queryBySlbServerIp(slbServer.getIp());
             if (!slbId.equals(0L) && !slbId.equals(slb.getId())) {
                 throw new ValidationException("Slb server " + slbServer.getIp() + " is added to slb " + slbId + ". Unique server ip is required.");
             }
@@ -66,7 +66,7 @@ public class DefaultSlbValidator implements SlbValidator {
 
     @Override
     public void removable(Long slbId) throws Exception {
-        if (groupCriteriaQuery.queryBySlbId(slbId).size() > 0)
+        if (virtualServerCriteriaQuery.queryBySlbId(slbId).size() > 0)
             throw new ValidationException("Slb with id " + slbId + " cannot be deleted. Dependencies exist.");
     }
 }

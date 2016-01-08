@@ -63,19 +63,19 @@ public class SlbResource {
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
         final SlbList slbList = new SlbList();
         final ModelMode modelMode = ModelMode.getMode(mode);
-        QueryExecuter executer = new QueryExecuter.Builder()
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
+        final Long[] slbIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return true;
                     }
 
                     @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return slbCriteriaQuery.queryAll(modelMode);
+                    public Set<Long> filter() throws Exception {
+                        return slbCriteriaQuery.queryAll();
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return tag != null;
@@ -86,7 +86,7 @@ public class SlbResource {
                         return new HashSet<>(tagService.query(tag, "slb"));
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return pname != null;
@@ -99,8 +99,22 @@ public class SlbResource {
                         else
                             return new HashSet<>(propertyService.query(pname, "slb"));
                     }
-                }).build();
-        for (Slb slb : slbRepository.list(executer.run(), modelMode)) {
+                }).build(Long.class).run();
+
+        QueryExecuter<IdVersion> executer = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return true;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return slbIds.length == 0 ? new HashSet<IdVersion>() : slbCriteriaQuery.queryByIdsAndMode(slbIds, modelMode);
+                    }
+                })
+                .build(IdVersion.class);
+        for (Slb slb : slbRepository.list(executer.run())) {
             slbList.addSlb(getSlbByType(slb, type));
         }
         slbList.setTotal(slbList.getSlbs().size());

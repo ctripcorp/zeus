@@ -14,7 +14,7 @@ public interface GroupRepository extends Repository {
 
     List<Group> list(Long[] ids) throws Exception;
 
-    List<Group> list(Long[] ids, ModelMode mode) throws Exception;
+    List<Group> list(IdVersion[] keys) throws Exception;
 
     Group getById(Long id) throws Exception;
 

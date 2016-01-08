@@ -44,8 +44,8 @@ public class GroupEntityManager implements GroupSync {
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion())
                 .setContent(ContentWriters.writeGroupContent(group)));
         rGroupStatusDao.insertOrUpdate(new RelGroupStatusDo().setGroupId(group.getId()).setOfflineVersion(group.getVersion()));
-        groupVsRelMaintainer.relAdd(group, RelGroupVsDo.class, group.getGroupVirtualServers());
-        groupGsRelMaintainer.relAdd(group, RelGroupGsDo.class, group.getGroupServers());
+        groupVsRelMaintainer.addRel(group, RelGroupVsDo.class, group.getGroupVirtualServers());
+        groupGsRelMaintainer.addRel(group, RelGroupGsDo.class, group.getGroupServers());
     }
 
     @Override
@@ -66,8 +66,8 @@ public class GroupEntityManager implements GroupSync {
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion())
                 .setContent(ContentWriters.writeGroupContent(group)));
         rGroupStatusDao.insertOrUpdate(new RelGroupStatusDo().setGroupId(group.getId()).setOfflineVersion(group.getVersion()));
-        groupVsRelMaintainer.relUpdateOffline(group, RelGroupVsDo.class, group.getGroupVirtualServers());
-        groupGsRelMaintainer.relUpdateOffline(group, RelGroupGsDo.class, group.getGroupServers());
+        groupVsRelMaintainer.updateRel(group, RelGroupVsDo.class, group.getGroupVirtualServers());
+        groupGsRelMaintainer.updateRel(group, RelGroupGsDo.class, group.getGroupServers());
     }
 
     @Override
@@ -77,24 +77,12 @@ public class GroupEntityManager implements GroupSync {
             dos[i] = new RelGroupStatusDo().setGroupId(groups[i].getId()).setOnlineVersion(groups[i].getVersion());
         }
         rGroupStatusDao.updateOnlineVersionByGroup(dos, RGroupStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
-        Map<Long, Group> ref = new HashMap<>();
-        for (Group group : groups) {
-            ref.put(group.getId(), group);
-        }
-        List<RelGroupStatusDo> check = rGroupStatusDao.findByGroups(ref.keySet().toArray(new Long[ref.size()]), RGroupStatusEntity.READSET_FULL);
-        for (RelGroupStatusDo relGroupStatusDo : check) {
-            if (relGroupStatusDo.getOnlineVersion() != relGroupStatusDo.getOfflineVersion()) {
-                Group group = ref.get(relGroupStatusDo.getGroupId());
-                groupVsRelMaintainer.relUpdateOnline(group, RelGroupVsDo.class, group.getGroupVirtualServers());
-                groupGsRelMaintainer.relUpdateOnline(group, RelGroupGsDo.class, group.getGroupServers());
-            }
-        }
     }
 
     @Override
     public int delete(Long groupId) throws Exception {
-        groupVsRelMaintainer.relDelete(groupId);
-        groupGsRelMaintainer.relDelete(groupId);
+        groupVsRelMaintainer.deleteRel(groupId);
+        groupGsRelMaintainer.deleteRel(groupId);
         rGroupVgDao.deleteByGroup(new RelGroupVgDo().setGroupId(groupId));
         rGroupStatusDao.deleteAllByGroup(new RelGroupStatusDo().setGroupId(groupId));
         int count = groupDao.deleteById(new GroupDo().setId(groupId));
@@ -119,8 +107,8 @@ public class GroupEntityManager implements GroupSync {
         }
         rGroupStatusDao.insertOrUpdate(dos);
         for (Group group : toUpdate) {
-            groupVsRelMaintainer.relUpdateOffline(group, RelGroupVsDo.class, group.getGroupVirtualServers());
-            groupGsRelMaintainer.relUpdateOffline(group, RelGroupGsDo.class, group.getGroupServers());
+            groupVsRelMaintainer.port(group, RelGroupVsDo.class, group.getGroupVirtualServers());
+            groupGsRelMaintainer.port(group, RelGroupGsDo.class, group.getGroupServers());
         }
         groupIds = new Long[toUpdate.size()];
         for (int i = 0; i < groupIds.length; i++) {

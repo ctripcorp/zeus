@@ -13,7 +13,7 @@ public interface SlbRepository extends Repository {
 
     List<Slb> list(Long[] slbIds) throws Exception;
 
-    List<Slb> list(Long[] slbIds, ModelMode mode) throws Exception;
+    List<Slb> list(IdVersion[] keys) throws Exception;
 
     Slb getById(Long slbId) throws Exception;
 

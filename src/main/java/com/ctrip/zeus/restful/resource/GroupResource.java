@@ -2,6 +2,7 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.Group;
@@ -22,6 +23,7 @@ import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Maps;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -77,19 +79,8 @@ public class GroupResource {
         GroupList groupList = new GroupList();
         final ModelMode modelMode = ModelMode.getMode(mode);
 
-        final Long[] vsIds = new QueryExecuter.Builder()
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return true;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryAll(modelMode);
-                    }
-                })
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
+        final IdVersion[] vsRange = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return slbId != null || slbName != null;
@@ -107,7 +98,7 @@ public class GroupResource {
                         return new HashSet<>();
                     }
                 })
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
+                .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return domain != null;
@@ -117,20 +108,28 @@ public class GroupResource {
                     public Set<IdVersion> filter() throws Exception {
                         return virtualServerCriteriaQuery.queryByDomain(domain);
                     }
-                }).build().run();
-        QueryExecuter executer = new QueryExecuter.Builder()
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
+                })
+                .setResultHandler(new ResultHandler<IdVersion>() {
+                    @Override
+                    public void handle(Set<IdVersion> result) throws Exception {
+                        if (result == null || result.size() == 0) return;
+                        result.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE));
+                    }
+                }).build(IdVersion.class).run();
+
+        final Long[] groupIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return true;
                     }
 
                     @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return groupCriteriaQuery.queryAll(modelMode);
+                    public Set<Long> filter() throws Exception {
+                        return groupCriteriaQuery.queryAll();
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return appId != null;
@@ -141,7 +140,7 @@ public class GroupResource {
                         return groupCriteriaQuery.queryByAppId(appId);
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return tag != null;
@@ -152,7 +151,7 @@ public class GroupResource {
                         return new HashSet<>(tagService.query(tag, "group"));
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return pname != null;
@@ -165,27 +164,42 @@ public class GroupResource {
                         else
                             return new HashSet<>(propertyService.query(pname, "group"));
                     }
-                })
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
+                }).build(Long.class).run();
+
+        QueryExecuter<IdVersion> executer = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return vsIds.length != 0;
+                        return true;
                     }
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
+                        return groupIds.length == 0 ? new HashSet<IdVersion>() : groupCriteriaQuery.queryByIdsAndMode(groupIds, modelMode);
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsRange != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Long[] vsIds = new Long[vsRange.length];
+                        for (int i = 0; i < vsIds.length; i++) {
+                            vsIds[i] = vsRange[i].getId();
+                        }
                         return groupCriteriaQuery.queryByVsIds(vsIds);
                     }
-                }).build();
-
-        executer.setResultHandler(new QueryExecuter.ResultHandler() {
-            @Override
-            public void handle(Set<Long> result) throws Exception {
-                result.removeAll(groupCriteriaQuery.queryAllVGroups());
-            }
-        });
-
-        for (Group group : groupRepository.list(executer.run(), modelMode)) {
+                })
+                .setResultHandler(new ResultHandler<IdVersion>() {
+                    @Override
+                    public void handle(Set result) throws Exception {
+                        result.removeAll(groupCriteriaQuery.queryAllVGroups());
+                    }
+                }).build(IdVersion.class);
+        for (Group group : groupRepository.list(executer.run())) {
             groupList.addGroup(getGroupByType(group, type));
         }
         groupList.setTotal(groupList.getGroups().size());
@@ -207,19 +221,8 @@ public class GroupResource {
                                 @TrimmedQueryParam("mode") final String mode) throws Exception {
         GroupList groupList = new GroupList();
         final ModelMode modelMode = ModelMode.getMode(mode);
-        final Long[] vsIds = new QueryExecuter.Builder()
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return true;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryAll(modelMode);
-                    }
-                })
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
+        final IdVersion[] vsRange = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return slbId != null;
@@ -230,7 +233,7 @@ public class GroupResource {
                         return virtualServerCriteriaQuery.queryBySlbId(slbId);
                     }
                 })
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
+                .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return domain != null;
@@ -240,9 +243,17 @@ public class GroupResource {
                     public Set<IdVersion> filter() throws Exception {
                         return virtualServerCriteriaQuery.queryByDomain(domain);
                     }
-                }).build().run();
-        QueryExecuter executer = new QueryExecuter.Builder()
-                .addFilterId(new FilterSet<Long>() {
+                })
+                .setResultHandler(new ResultHandler<IdVersion>() {
+                    @Override
+                    public void handle(Set<IdVersion> result) throws Exception {
+                        if (result == null || result.size() == 0) return;
+                        result.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE));
+                    }
+                }).build(IdVersion.class).run();
+
+        final Long[] groupIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return true;
@@ -253,7 +264,7 @@ public class GroupResource {
                         return groupCriteriaQuery.queryAllVGroups();
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return tag != null;
@@ -264,7 +275,7 @@ public class GroupResource {
                         return new HashSet<>(tagService.query(tag, "group"));
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
                         return pname != null;
@@ -277,19 +288,36 @@ public class GroupResource {
                         else
                             return new HashSet<>(propertyService.query(pname, "group"));
                     }
-                })
-                .addFilterIdVersion(new FilterSet<IdVersion>() {
+                }).build(Long.class).run();
+
+        QueryExecuter<IdVersion> executer = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return vsIds.length != 0;
+                        return true;
                     }
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
+                        return groupIds.length == 0 ? new HashSet<IdVersion>() : groupCriteriaQuery.queryByIdsAndMode(groupIds, modelMode);
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsRange != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Long[] vsIds = new Long[vsRange.length];
+                        for (int i = 0; i < vsIds.length; i++) {
+                            vsIds[i] = vsRange[i].getId();
+                        }
                         return groupCriteriaQuery.queryByVsIds(vsIds);
                     }
-                }).build();
-        for (Group group : groupRepository.list(executer.run(), ModelMode.getMode(mode))) {
+                }).build(IdVersion.class);
+        for (Group group : groupRepository.list(executer.run())) {
             groupList.addGroup(getGroupByType(group, type));
         }
         groupList.setTotal(groupList.getGroups().size());

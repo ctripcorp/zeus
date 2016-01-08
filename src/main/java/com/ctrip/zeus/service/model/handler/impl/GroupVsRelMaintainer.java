@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
+import com.ctrip.zeus.service.model.VersionUtils;
 import org.springframework.stereotype.Component;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -13,7 +14,7 @@ import java.util.List;
  * Created by zhoumy on 2015/12/22.
  */
 @Component("groupVsRelMaintainer")
-public class GroupVsRelMaintainer extends AbstractMultiRelMaintainer<RelGroupVsDo, GroupVirtualServer, Group> {
+public class GroupVsRelMaintainer extends MultiRelMaintainerEx<RelGroupVsDo, GroupVirtualServer, Group> {
     @Resource
     private RGroupVsDao rGroupVsDao;
     @Resource
@@ -33,12 +34,6 @@ public class GroupVsRelMaintainer extends AbstractMultiRelMaintainer<RelGroupVsD
     protected int getOnlineVersion(Long id) throws Exception {
         RelGroupStatusDo check = rGroupStatusDao.findByGroup(id, RGroupStatusEntity.READSET_FULL);
         return check == null ? 0 : check.getOnlineVersion();
-    }
-
-    @Override
-    protected int getOfflineVersion(Long id) throws Exception {
-        RelGroupStatusDo check = rGroupStatusDao.findByGroup(id, RGroupStatusEntity.READSET_FULL);
-        return check == null ? 0 : check.getOfflineVersion();
     }
 
     @Override
@@ -66,7 +61,8 @@ public class GroupVsRelMaintainer extends AbstractMultiRelMaintainer<RelGroupVsD
         return new RelGroupVsDo().setGroupId(object.getId())
                 .setVsId(value.getVirtualServer().getId())
                 .setPath(value.getPath())
-                .setGroupVersion(object.getVersion());
+                .setGroupVersion(object.getVersion())
+                .setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
     }
 
     @Override
@@ -77,12 +73,12 @@ public class GroupVsRelMaintainer extends AbstractMultiRelMaintainer<RelGroupVsD
     }
 
     @Override
-    public void relDelete(Long objectId) throws Exception {
+    public void deleteRel(Long objectId) throws Exception {
         rGroupVsDao.deleteAllByGroup(new RelGroupVsDo().setGroupId(objectId));
     }
 
     @Override
-    public void relBatchDelete(Long[] objectIds) throws Exception {
+    public void batchDeleteRel(Long[] objectIds) throws Exception {
         throw new NotImplementedException();
     }
 }

@@ -41,12 +41,13 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
-        return list(ids, ModelMode.MODEL_MODE_MERGE);
+        Set<IdVersion> keys = groupCriteriaQuery.queryByIdsAndMode(ids, ModelMode.MODEL_MODE_MERGE);
+        return list(keys.toArray(new IdVersion[keys.size()]));
     }
 
     @Override
-    public List<Group> list(Long[] ids, ModelMode mode) throws Exception {
-        List<Group> result = archiveService.getGroupsByMode(ids, mode);
+    public List<Group> list(IdVersion[] keys) throws Exception {
+        List<Group> result = archiveService.listGroups(keys);
         Set<Long> vsIds = new HashSet<>();
         for (Group group : result) {
             for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
@@ -54,7 +55,7 @@ public class GroupRepositoryImpl implements GroupRepository {
             }
         }
         Map<Long, VirtualServer> map = Maps.uniqueIndex(
-                virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()]), mode),
+                virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()]), ModelMode.MODEL_MODE_ONLINE),
                 new Function<VirtualServer, Long>() {
                     @Nullable
                     @Override

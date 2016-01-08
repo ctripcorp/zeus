@@ -22,7 +22,7 @@ public class SlbQueryImpl implements SlbQuery {
     @Override
     public List<String> getSlbIps(Long slbId) throws Exception {
         List<String> result = new ArrayList<>();
-        for (RelSlbSlbServerDo relSlbSlbServerDo : rSlbSlbServerDao.findAllIpsBySlb(slbId, RSlbSlbServerEntity.READSET_FULL)) {
+        for (RelSlbSlbServerDo relSlbSlbServerDo : rSlbSlbServerDao.findAllBySlb(slbId, RSlbSlbServerEntity.READSET_FULL)) {
             result.add(relSlbSlbServerDo.getIp());
         }
         return result;

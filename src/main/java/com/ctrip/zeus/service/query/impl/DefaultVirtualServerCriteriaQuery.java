@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.query.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.query.VersionUtils;
+import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +41,17 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
         Set<IdVersion> result = new HashSet<>();
         Set<Long> vsIds = queryAll();
         for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds.toArray(new Long[vsIds.size()]), RVsStatusEntity.READSET_FULL)) {
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                result.add(new IdVersion(d.getVsId(), v));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Set<IdVersion> queryByIdsAndMode(Long[] vsIds, ModelMode mode) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds, RVsStatusEntity.READSET_FULL)) {
             for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
                 result.add(new IdVersion(d.getVsId(), v));
             }

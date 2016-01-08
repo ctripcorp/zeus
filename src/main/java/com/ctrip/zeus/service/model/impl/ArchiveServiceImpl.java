@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.ArchiveService;
 
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
@@ -95,6 +96,16 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     @Override
+    public VirtualServer getVirtualServerByMode(Long vsId, ModelMode mode) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Slb getSlbByMode(Long slbId, ModelMode mode) throws Exception {
+        return null;
+    }
+
+    @Override
     public List<Slb> getLatestSlbs(Long[] slbIds) throws Exception {
         List<Slb> slbs = new ArrayList<>();
         for (ArchiveSlbDo archiveSlbDo : archiveSlbDao.findMaxVersionBySlbs(slbIds, ArchiveSlbEntity.READSET_FULL)) {
@@ -140,6 +151,35 @@ public class ArchiveServiceImpl implements ArchiveService {
             }
         }
         return groups;
+    }
+
+    @Override
+    public List<Group> listGroups(IdVersion[] keys) throws Exception {
+        List<Group> groups = new ArrayList<>();
+        Integer[] hashes = new Integer[keys.length];
+        for (int i = 0; i < hashes.length; i++) {
+            hashes[i] = keys[i].hashCode();
+        }
+        for (ArchiveGroupDo d : archiveGroupDao.findAllByIdVersion(hashes, keys, ArchiveGroupEntity.READSET_FULL)) {
+            Group group = DefaultSaxParser.parseEntity(Group.class, d.getContent());
+            groups.add(group);
+        }
+        return groups;
+    }
+
+    @Override
+    public List<VirtualServer> getVirtualServersByMode(Long[] vsIds, ModelMode mode) throws Exception {
+        return null;
+    }
+
+    @Override
+    public List<VirtualServer> listVirtualServers(IdVersion[] keys) throws Exception {
+        return null;
+    }
+
+    @Override
+    public List<Slb> getSlbsByMode(Long[] slbIds, ModelMode mode) throws Exception {
+        return null;
     }
 
     @Override

@@ -12,7 +12,7 @@ import java.util.List;
  * Created by zhoumy on 2015/12/22.
  */
 @Component("vsDomainRelMaintainer")
-public class VsDomainRelMaintainer extends AbstractMultiRelMaintainer<RelVsDomainDo, Domain, VirtualServer> {
+public class VsDomainRelMaintainer extends MultiRelMaintainerEx<RelVsDomainDo, Domain, VirtualServer> {
     @Resource
     private RVsDomainDao rVsDomainDao;
     @Resource
@@ -20,7 +20,7 @@ public class VsDomainRelMaintainer extends AbstractMultiRelMaintainer<RelVsDomai
 
     @Override
     protected List<RelVsDomainDo> getAll(Long id) throws Exception {
-        return rVsDomainDao.findAllDomainsByVs(id, RVsDomainEntity.READSET_FULL);
+        return rVsDomainDao.findAllByVs(id, RVsDomainEntity.READSET_FULL);
     }
 
     @Override
@@ -32,12 +32,6 @@ public class VsDomainRelMaintainer extends AbstractMultiRelMaintainer<RelVsDomai
     protected int getOnlineVersion(Long id) throws Exception {
         RelVsStatusDo check = rVsStatusDao.findByVs(id, RVsStatusEntity.READSET_FULL);
         return check.getOnlineVersion();
-    }
-
-    @Override
-    protected int getOfflineVersion(Long id) throws Exception {
-        RelVsStatusDo check = rVsStatusDao.findByVs(id, RVsStatusEntity.READSET_FULL);
-        return check.getOfflineVersion();
     }
 
     @Override
@@ -73,12 +67,12 @@ public class VsDomainRelMaintainer extends AbstractMultiRelMaintainer<RelVsDomai
     }
 
     @Override
-    public void relDelete(Long objectId) throws Exception {
+    public void deleteRel(Long objectId) throws Exception {
         rVsDomainDao.deleteAllByVs(new RelVsDomainDo().setVsId(objectId));
     }
 
     @Override
-    public void relBatchDelete(Long[] objectIds) throws Exception {
+    public void batchDeleteRel(Long[] objectIds) throws Exception {
         RelVsDomainDo[] dos = new RelVsDomainDo[objectIds.length];
         for (int i = 0; i < dos.length; i++) {
             dos[i] = new RelVsDomainDo().setVsId(objectIds[i]);

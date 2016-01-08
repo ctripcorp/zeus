@@ -7,13 +7,14 @@ import java.util.List;
  */
 public interface MultiRelMaintainer<T, W, X> {
 
-    void relAdd(X object, Class<T> clazz, List<W> input) throws Exception;
+    void addRel(X object, Class<T> clazz, List<W> input) throws Exception;
 
-    void relUpdateOffline(X object, Class<T> clazz, List<W> input) throws Exception;
+    void updateRel(X object, Class<T> clazz, List<W> input) throws Exception;
 
-    void relUpdateOnline(X object, Class<T> clazz, List<W> input) throws Exception;
+    void deleteRel(Long objectId) throws Exception;
 
-    void relDelete(Long objectId) throws Exception;
+    void batchDeleteRel(Long[] objectIds) throws Exception;
 
-    void relBatchDelete(Long[] objectIds) throws Exception;
+    @Deprecated
+    void port(X object, Class<T> clazz, List<W> input) throws Exception;
 }
