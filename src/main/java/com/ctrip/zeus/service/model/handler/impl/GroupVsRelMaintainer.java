@@ -67,9 +67,7 @@ public class GroupVsRelMaintainer extends MultiRelMaintainerEx<RelGroupVsDo, Gro
 
     @Override
     protected void reassign(Group object, RelGroupVsDo output, GroupVirtualServer input) throws Exception {
-        output.setVsId(input.getVirtualServer().getId())
-                .setPath(input.getPath())
-                .setGroupVersion(object.getVersion());
+        output.setVsId(input.getVirtualServer().getId()).setPath(input.getPath()).setGroupVersion(object.getVersion()).setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
     }
 
     @Override

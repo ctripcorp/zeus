@@ -60,6 +60,17 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
+    public IdVersion[] queryByIdAndMode(Long vsId, ModelMode mode) throws Exception {
+        IdVersion[] result = new IdVersion[2];
+        RelVsStatusDo d = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
+        int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
+        for (int i = 0; i < result.length && i < v.length; i++) {
+            result[i] = new IdVersion(vsId, v[i]);
+        }
+        return result;
+    }
+
+    @Override
     public Set<IdVersion> queryBySlbId(Long slbId) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         for (RelVsSlbDo d : rVsSlbDao.findAllBySlb(slbId, RVsSlbEntity.READSET_FULL)) {

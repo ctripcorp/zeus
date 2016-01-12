@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.model.VersionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -58,12 +59,13 @@ public class VsDomainRelMaintainer extends MultiRelMaintainerEx<RelVsDomainDo, D
     protected RelVsDomainDo getDo(VirtualServer object, Domain value) throws Exception {
         return new RelVsDomainDo().setVsId(object.getId())
                 .setDomain(value.getName())
-                .setVsVersion(object.getVersion());
+                .setVsVersion(object.getVersion())
+                .setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
     }
 
     @Override
     protected void reassign(VirtualServer object, RelVsDomainDo output, Domain input) throws Exception {
-        output.setDomain(input.getName()).setVsVersion(object.getVersion());
+        output.setDomain(input.getName()).setVsVersion(object.getVersion()).setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
     }
 
     @Override

@@ -18,6 +18,8 @@ public interface SlbCriteriaQuery {
 
     Set<IdVersion> queryByIdsAndMode(Long[] slbIds, ModelMode mode) throws Exception;
 
+    IdVersion[] queryByIdAndMode(Long slbId, ModelMode mode) throws Exception;
+
     Set<Long> queryByVs(IdVersion vsIdVersion) throws Exception;
 
     Set<Long> queryByVses(IdVersion[] vsIdVersions) throws Exception;

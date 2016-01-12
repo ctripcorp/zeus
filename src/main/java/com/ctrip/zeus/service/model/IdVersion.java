@@ -51,6 +51,6 @@ public class IdVersion implements Comparable<IdVersion> {
 
     @Override
     public String toString() {
-        return "IdVersion {" + "id=" + id + ", version=" + version + " }";
+        return id + "," + version;
     }
 }

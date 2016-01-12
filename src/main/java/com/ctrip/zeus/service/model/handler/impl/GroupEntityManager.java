@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.MultiRelMaintainer;
 import com.ctrip.zeus.support.C;
@@ -42,7 +43,8 @@ public class GroupEntityManager implements GroupSync {
         groupDao.insert(d);
         group.setId(d.getId());
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion())
-                .setContent(ContentWriters.writeGroupContent(group)));
+                .setContent(ContentWriters.writeGroupContent(group))
+                .setHash(VersionUtils.getHash(group.getId(), group.getVersion())));
         rGroupStatusDao.insertOrUpdate(new RelGroupStatusDo().setGroupId(group.getId()).setOfflineVersion(group.getVersion()));
         groupVsRelMaintainer.addRel(group, RelGroupVsDo.class, group.getGroupVirtualServers());
         groupGsRelMaintainer.addRel(group, RelGroupGsDo.class, group.getGroupServers());
@@ -64,7 +66,8 @@ public class GroupEntityManager implements GroupSync {
         GroupDo d = C.toGroupDo(group.getId(), group).setAppId("VirtualGroup");
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion())
-                .setContent(ContentWriters.writeGroupContent(group)));
+                .setContent(ContentWriters.writeGroupContent(group))
+                .setHash(VersionUtils.getHash(group.getId(), group.getVersion())));
         rGroupStatusDao.insertOrUpdate(new RelGroupStatusDo().setGroupId(group.getId()).setOfflineVersion(group.getVersion()));
         groupVsRelMaintainer.updateRel(group, RelGroupVsDo.class, group.getGroupVirtualServers());
         groupGsRelMaintainer.updateRel(group, RelGroupGsDo.class, group.getGroupServers());

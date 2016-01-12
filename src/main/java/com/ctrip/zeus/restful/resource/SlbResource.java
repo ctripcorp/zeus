@@ -17,6 +17,7 @@ import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -182,6 +183,18 @@ public class SlbResource {
         int count = slbRepository.delete(slbId);
         String message = count == 1 ? "Delete slb successfully." : "No deletion is needed.";
         return responseHandler.handle(message, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/slb/upgradeAll")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeAll(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
+        Set<Long> list = slbCriteriaQuery.queryAll();
+        Set<Long> result = slbRepository.port(list.toArray(new Long[list.size()]));
+        if (result.size() == 0)
+            return responseHandler.handle("Upgrade all successfully.", hh.getMediaType());
+        else
+            return responseHandler.handle("Upgrade fail on ids: " + Joiner.on(",").join(result), hh.getMediaType());
     }
 
     private Slb parseSlb(MediaType mediaType, String slb) throws Exception {

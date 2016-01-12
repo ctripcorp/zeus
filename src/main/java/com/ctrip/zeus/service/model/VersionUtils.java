@@ -13,11 +13,16 @@ public class VersionUtils {
             case MODEL_MODE_ONLINE: {
                 return online == 0 ? new int[0] : new int[]{online};
             }
+            case MODEL_MODE_OFFLINE: {
+                return online == offline ? new int[0] : new int[]{offline};
+            }
             case MODEL_MODE_REDUNDANT: {
                 return online == 0 ? new int[]{offline} : new int[]{offline, online};
             }
-            case MODEL_MODE_OFFLINE:
-            case MODEL_MODE_MERGE:
+            case MODEL_MODE_MERGE_ONLINE: {
+                return online == 0 ? new int[]{offline} : new int[]{online};
+            }
+            case MODEL_MODE_MERGE_OFFLINE:
             default: {
                 return new int[]{offline};
             }

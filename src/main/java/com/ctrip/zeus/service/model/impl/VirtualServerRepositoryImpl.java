@@ -40,7 +40,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
-        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, ModelMode.MODEL_MODE_MERGE);
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, ModelMode.MODEL_MODE_MERGE_OFFLINE);
         return listAll(keys.toArray(new IdVersion[keys.size()]));
     }
 
@@ -51,12 +51,13 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer getById(Long vsId) throws Exception {
-        return getById(vsId, ModelMode.MODEL_MODE_MERGE);
+        IdVersion[] key = virtualServerCriteriaQuery.queryByIdAndMode(vsId, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        return getByKey(key[0]);
     }
 
     @Override
-    public VirtualServer getById(Long vsId, ModelMode mode) throws Exception {
-        return archiveService.getVirtualServerByMode(vsId, mode);
+    public VirtualServer getByKey(IdVersion key) throws Exception {
+        return archiveService.getVirtualServer(key.getId(), key.getVersion());
     }
 
     @Override
@@ -132,5 +133,10 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         }
         Long certId = certificateService.getCertificateOnBoard(domains);
         certificateService.install(virtualServer.getId(), ips, certId);
+    }
+
+    @Override
+    public Set<Long> port(Long[] vsIds) throws Exception {
+        return virtualServerEntityManager.port(vsIds);
     }
 }

@@ -2,7 +2,8 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="archive-vs" table="archive_vs" alias="av" do-class="MetaVsArchiveDo">
         <var name="ids" value-type="Long[]"/>
-        <var name="pairs" value-type="String[]"/>
+        <var name="hashes" value-type="Integer[]"/>
+        <var name="id-version-array" value-type="String[]"/>
         <readsets>
             <readset name="IDONLY">
                 <member name="id"/>
@@ -16,6 +17,18 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-id-version" type="SELECT" multiple="true">
+                <param name="hashes"/>
+                <param name="id-version-array"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='hash'/> in <IN>${hashes}</IN>
+                    HAVING CONCAT(vs_id, ',', version) in <IN>${id-version-array}</IN>
                     ]]>
                 </statement>
             </query>
@@ -49,19 +62,6 @@
                     FROM <TABLE/>
                     WHERE <FIELD name='vs-id'/> = ${vs-id}
                         AND <FIELD name='version'/> = ${version}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-vs-and-version" type="SELECT" multiple="true">
-                <param name="ids"/>
-                <param name="pairs"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM (
-                        SELECT id, concat(vs_id, ',', version) as vs_v FROM archive_vs
-                        WHERE vs_id in <IN>${ids}</IN> ) av
-                    WHERE av.vs_v in <IN>${pairs}</IN>
                     ]]>
                 </statement>
             </query>

@@ -6,13 +6,11 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.ArchiveService;
 
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -27,24 +25,6 @@ public class ArchiveServiceImpl implements ArchiveService {
     private ArchiveGroupDao archiveGroupDao;
     @Resource
     private ArchiveVsDao archiveVsDao;
-    @Resource
-    private RGroupStatusDao rGroupStatusDao;
-
-    @Override
-    public int archiveSlb(Slb slb) throws Exception {
-        String content = String.format(Slb.XML, slb);
-        ArchiveSlbDo d = new ArchiveSlbDo().setSlbId(slb.getId()).setContent(content).setVersion(slb.getVersion()).setCreatedTime(new Date()).setDataChangeLastTime(new Date());
-        archiveSlbDao.insert(d);
-        return d.getVersion();
-    }
-
-    @Override
-    public int archiveGroup(Group group) throws Exception {
-        String content = String.format(Group.XML, group);
-        ArchiveGroupDo d = new ArchiveGroupDo().setGroupId(group.getId()).setContent(content).setVersion(group.getVersion()).setCreatedTime(new Date()).setDataChangeLastTime(new Date());
-        archiveGroupDao.insert(d);
-        return d.getVersion();
-    }
 
     @Override
     public int deleteSlbArchive(Long slbId) throws Exception {
@@ -56,6 +36,12 @@ public class ArchiveServiceImpl implements ArchiveService {
     public int deleteGroupArchive(Long groupId) throws Exception {
         ArchiveGroupDo d = new ArchiveGroupDo().setGroupId(groupId);
         return archiveGroupDao.deleteByGroup(d);
+    }
+
+    @Override
+    public int deleteVsArchive(Long vsId) throws Exception {
+        MetaVsArchiveDo d = new MetaVsArchiveDo().setVsId(vsId);
+        return archiveVsDao.deleteByVs(d);
     }
 
     @Override
@@ -71,138 +57,64 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     @Override
-    public Slb getLatestSlb(Long slbId) throws Exception {
-        ArchiveSlbDo d = archiveSlbDao.findMaxVersionBySlb(slbId, ArchiveSlbEntity.READSET_FULL);
-        return d == null ? null : DefaultSaxParser.parseEntity(Slb.class, d.getContent());
+    public VirtualServer getVirtualServer(Long vsId, int version) throws Exception {
+        MetaVsArchiveDo d = archiveVsDao.findByVsAndVersion(vsId, version, ArchiveVsEntity.READSET_FULL);
+        return d == null ? null : DefaultSaxParser.parseEntity(VirtualServer.class, d.getContent());
     }
 
-    @Override
-    public Group getGroupByMode(Long groupId, ModelMode mode) throws Exception {
-        RelGroupStatusDo check = rGroupStatusDao.findByGroup(groupId, RGroupStatusEntity.READSET_FULL);
-        if (check == null) return null;
-        ArchiveGroupDo d;
-        switch (mode) {
-            case MODEL_MODE_ONLINE: {
-                d = archiveGroupDao.findByGroupAndVersion(groupId, check.getOnlineVersion(), ArchiveGroupEntity.READSET_FULL);
-                break;
-            }
-            case MODEL_MODE_OFFLINE:
-            default: {
-                d = archiveGroupDao.findByGroupAndVersion(groupId, check.getOfflineVersion(), ArchiveGroupEntity.READSET_FULL);
-                break;
-            }
-        }
-        return d == null ? null : DefaultSaxParser.parseEntity(Group.class, d.getContent());
-    }
-
-    @Override
-    public VirtualServer getVirtualServerByMode(Long vsId, ModelMode mode) throws Exception {
-        return null;
-    }
-
-    @Override
-    public Slb getSlbByMode(Long slbId, ModelMode mode) throws Exception {
-        return null;
-    }
-
-    @Override
-    public List<Slb> getLatestSlbs(Long[] slbIds) throws Exception {
-        List<Slb> slbs = new ArrayList<>();
-        for (ArchiveSlbDo archiveSlbDo : archiveSlbDao.findMaxVersionBySlbs(slbIds, ArchiveSlbEntity.READSET_FULL)) {
-            try {
-                Slb slb = DefaultSaxParser.parseEntity(Slb.class, archiveSlbDo.getContent());
-                slbs.add(slb);
-            } catch (Exception ex) {
-                slbs.add(new Slb().setId(archiveSlbDo.getId()));
-            }
-        }
-        return slbs;
-    }
-
-    @Override
-    public List<Group> getGroupsByMode(Long[] groupIds, ModelMode mode) throws Exception {
-        List<Group> groups = new ArrayList<>();
-        List<ArchiveGroupDo> dos;
-        switch (mode) {
-            case MODEL_MODE_OFFLINE: {
-                dos = archiveGroupDao.findAllOfflineByGroups(groupIds, ArchiveGroupEntity.READSET_FULL);
-                break;
-            }
-            case MODEL_MODE_ONLINE: {
-                dos = archiveGroupDao.findAllOnlineByGroups(groupIds, ArchiveGroupEntity.READSET_FULL);
-                break;
-            }
-            case MODEL_MODE_REDUNDANT: {
-                dos = new ArrayList<>();
-                dos.addAll(archiveGroupDao.findAllOfflineByGroups(groupIds, ArchiveGroupEntity.READSET_FULL));
-                dos.addAll(archiveGroupDao.findAllOnlineByGroups(groupIds, ArchiveGroupEntity.READSET_FULL));
-            }
-            case MODEL_MODE_MERGE:
-            default: {
-                dos = archiveGroupDao.findAllByGroups(groupIds, ArchiveGroupEntity.READSET_FULL);
-            }
-        }
-        for (ArchiveGroupDo archiveGroupDo : dos) {
-            try {
-                Group group = DefaultSaxParser.parseEntity(Group.class, archiveGroupDo.getContent());
-                groups.add(group);
-            } catch (Exception ex) {
-                groups.add(new Group().setId(archiveGroupDo.getId()));
-            }
-        }
-        return groups;
-    }
 
     @Override
     public List<Group> listGroups(IdVersion[] keys) throws Exception {
-        List<Group> groups = new ArrayList<>();
+        List<Group> result = new ArrayList<>();
         Integer[] hashes = new Integer[keys.length];
+        String[] values = new String[keys.length];
         for (int i = 0; i < hashes.length; i++) {
             hashes[i] = keys[i].hashCode();
+            values[i] = keys[i].toString();
         }
-        for (ArchiveGroupDo d : archiveGroupDao.findAllByIdVersion(hashes, keys, ArchiveGroupEntity.READSET_FULL)) {
+        for (ArchiveGroupDo d : archiveGroupDao.findAllByIdVersion(hashes, values, ArchiveGroupEntity.READSET_FULL)) {
             Group group = DefaultSaxParser.parseEntity(Group.class, d.getContent());
-            groups.add(group);
+            result.add(group);
         }
-        return groups;
-    }
-
-    @Override
-    public List<VirtualServer> getVirtualServersByMode(Long[] vsIds, ModelMode mode) throws Exception {
-        return null;
+        return result;
     }
 
     @Override
     public List<VirtualServer> listVirtualServers(IdVersion[] keys) throws Exception {
-        return null;
+        List<VirtualServer> result = new ArrayList<>();
+        Integer[] hashes = new Integer[keys.length];
+        String[] values = new String[keys.length];
+        for (int i = 0; i < hashes.length; i++) {
+            hashes[i] = keys[i].hashCode();
+            values[i] = keys[i].toString();
+        }
+        for (MetaVsArchiveDo d : archiveVsDao.findAllByIdVersion(hashes, values, ArchiveVsEntity.READSET_FULL)) {
+            VirtualServer vs = DefaultSaxParser.parseEntity(VirtualServer.class, d.getContent());
+            result.add(vs);
+        }
+        return result;
     }
 
     @Override
-    public List<Slb> getSlbsByMode(Long[] slbIds, ModelMode mode) throws Exception {
-        return null;
+    public List<Slb> listSlbs(IdVersion[] keys) throws Exception {
+        List<Slb> result = new ArrayList<>();
+        Integer[] hashes = new Integer[keys.length];
+        String[] values = new String[keys.length];
+        for (int i = 0; i < hashes.length; i++) {
+            hashes[i] = keys[i].hashCode();
+            values[i] = keys[i].toString();
+        }
+        for (ArchiveSlbDo d : archiveSlbDao.findAllByIdVersion(hashes, values, ArchiveSlbEntity.READSET_FULL)) {
+            Slb slb = DefaultSaxParser.parseEntity(Slb.class, d.getContent());
+            result.add(slb);
+        }
+        return result;
     }
 
     @Override
     public Archive getLatestSlbArchive(Long slbId) throws Exception {
         ArchiveSlbDo asd = archiveSlbDao.findMaxVersionBySlb(slbId, ArchiveSlbEntity.READSET_FULL);
         return C.toSlbArchive(asd);
-    }
-
-    @Override
-    public Archive getLatestGroupArchive(Long groupId) throws Exception {
-        RelGroupStatusDo check = rGroupStatusDao.findByGroup(groupId, RGroupStatusEntity.READSET_FULL);
-        if (check == null) return null;
-        ArchiveGroupDo d = archiveGroupDao.findByGroupAndVersion(groupId, check.getOfflineVersion(), ArchiveGroupEntity.READSET_FULL);
-        return C.toGroupArchive(d);
-    }
-
-    @Override
-    public List<Archive> getLastestGroupArchives(Long[] groupIds) throws Exception {
-        List<Archive> result = new ArrayList<>();
-        for (ArchiveGroupDo archiveGroupDo : archiveGroupDao.findAllByGroups(groupIds, ArchiveGroupEntity.READSET_FULL)) {
-            result.add(C.toGroupArchive(archiveGroupDo));
-        }
-        return result;
     }
 
     @Override
@@ -239,39 +151,32 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     @Override
-    public List<Archive> getVsArchives(Long[] vsIds, Integer[] versions) throws Exception {
-        String[] pairs = new String[vsIds.length];
-        for (int i = 0; i < pairs.length; i++) {
-            pairs[i] = vsIds[i] + "," + versions[i];
+    public List<Archive> getVsArchives(IdVersion[] keys) throws Exception {
+        List<Archive> result = new ArrayList<>();
+        Integer[] hashes = new Integer[keys.length];
+        String[] values = new String[keys.length];
+        for (int i = 0; i < hashes.length; i++) {
+            hashes[i] = keys[i].hashCode();
+            values[i] = keys[i].toString();
         }
-        List<MetaVsArchiveDo> list = archiveVsDao.findAllByVsAndVersion(vsIds, pairs, ArchiveVsEntity.READSET_IDONLY);
-        Long[] ids = new Long[list.size()];
-        for (int i = 0; i < ids.length; i++) {
-            ids[i] = list.get(i).getId();
-        }
-        list = archiveVsDao.findAllByIds(ids, ArchiveVsEntity.READSET_FULL);
-        List<Archive> result = new ArrayList<>(list.size());
-        for (MetaVsArchiveDo d : list) {
+        for (MetaVsArchiveDo d : archiveVsDao.findAllByIdVersion(hashes, values, ArchiveVsEntity.READSET_FULL)) {
             result.add(new Archive().setId(d.getVsId()).setContent(d.getContent()).setVersion(d.getVersion()));
         }
         return result;
+
     }
 
     @Override
-    public List<Archive> getGroupArchives(Long[] groupIds, Integer[] versions) throws Exception {
-        String[] pairs = new String[groupIds.length];
-        for (int i = 0; i < pairs.length; i++) {
-            pairs[i] = groupIds[i] + "," + versions[i];
+    public List<Archive> getGroupArchives(IdVersion[] keys) throws Exception {
+        List<Archive> result = new ArrayList<>();
+        Integer[] hashes = new Integer[keys.length];
+        String[] values = new String[keys.length];
+        for (int i = 0; i < hashes.length; i++) {
+            hashes[i] = keys[i].hashCode();
+            values[i] = keys[i].toString();
         }
-        List<ArchiveGroupDo> list = archiveGroupDao.findAllByGroupAndVersion(groupIds, pairs, ArchiveGroupEntity.READSET_IDONLY);
-        Long[] ids = new Long[list.size()];
-        for (int i = 0; i < ids.length; i++) {
-            ids[i] = list.get(i).getId();
-        }
-        list = archiveGroupDao.findAllByIds(ids, ArchiveGroupEntity.READSET_FULL);
-        List<Archive> result = new ArrayList<>(list.size());
-        for (ArchiveGroupDo d : list) {
-            result.add(C.toGroupArchive(d));
+        for (ArchiveGroupDo d : archiveGroupDao.findAllByIdVersion(hashes, values, ArchiveGroupEntity.READSET_FULL)) {
+            result.add(new Archive().setId(d.getGroupId()).setContent(d.getContent()).setVersion(d.getVersion()));
         }
         return result;
     }

@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
+import com.ctrip.zeus.service.model.VersionUtils;
 import org.springframework.stereotype.Component;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -44,7 +45,8 @@ public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServer
     protected RelSlbSlbServerDo getDo(Slb object, SlbServer value) throws Exception {
         return new RelSlbSlbServerDo().setSlbId(object.getId())
                 .setIp(value.getIp())
-                .setSlbVersion(object.getVersion());
+                .setSlbVersion(object.getVersion())
+                .setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
     }
 
     @Override
@@ -64,7 +66,7 @@ public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServer
 
     @Override
     protected void reassign(Slb object, RelSlbSlbServerDo output, SlbServer input) throws Exception {
-        output.setIp(input.getIp()).setSlbVersion(object.getVersion());
+        output.setIp(input.getIp()).setSlbVersion(object.getVersion()).setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
     }
 
     @Override

@@ -43,7 +43,7 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public List<Slb> list(Long[] slbIds) throws Exception {
-        Set<IdVersion> keys = slbCriteriaQuery.queryByIdsAndMode(slbIds, ModelMode.MODEL_MODE_MERGE);
+        Set<IdVersion> keys = slbCriteriaQuery.queryByIdsAndMode(slbIds, ModelMode.MODEL_MODE_MERGE_OFFLINE);
         return list(keys.toArray(new IdVersion[keys.size()]));
     }
 
@@ -51,35 +51,24 @@ public class SlbRepositoryImpl implements SlbRepository {
     public List<Slb> list(IdVersion[] keys) throws Exception {
         List<Slb> result = archiveService.listSlbs(keys);
         for (Slb slb : result) {
-            slb.getVirtualServers().clear();
-            Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
-            range.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE));
-            slb.getVirtualServers().addAll(virtualServerRepository.listAll(range.toArray(new IdVersion[range.size()])));
+            freshVirtualServers(slb);
         }
         return result;
     }
 
     @Override
     public Slb getById(Long slbId) throws Exception {
-        return getById(slbId, ModelMode.MODEL_MODE_MERGE);
+        IdVersion[] key = slbCriteriaQuery.queryByIdAndMode(slbId, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        if (key.length == 0)
+            return null;
+        return getByKey(key[0]);
     }
 
     @Override
-    public Slb getById(Long slbId, ModelMode mode) throws Exception {
-        if (slbModelValidator.exists(slbId)) {
-            Slb result = archiveService.getLatestSlb(slbId);
-            result.getVirtualServers().clear();
-            Set<IdVersion> check = virtualServerCriteriaQuery.queryBySlbId(slbId);
-            check.retainAll(virtualServerCriteriaQuery.queryAll(mode));
-            Long[] vsIds = new Long[check.size()];
-            int i = 0;
-            for (IdVersion idVersion : check) {
-                vsIds[i] = idVersion.getId();
-                ++i;
-            }
-            result.getVirtualServers().addAll(virtualServerRepository.listAll(vsIds));
-        }
-        return null;
+    public Slb getByKey(IdVersion key) throws Exception {
+        Slb result = archiveService.getSlb(key.getId(), key.getVersion());
+        freshVirtualServers(result);
+        return result;
     }
 
     @Override
@@ -127,12 +116,15 @@ public class SlbRepositoryImpl implements SlbRepository {
         return slbEntityManager.delete(slbId);
     }
 
-    private void freshVirtualServers(Slb slb) throws Exception {
-        slb.getVirtualServers().clear();
-        Set<Long> vsIds = null;// virtualServerCriteriaQuery.queryBySlbId(slb.getId());
-        for (VirtualServer virtualServer : virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()]))) {
-            slb.getVirtualServers().add(virtualServer);
-        }
+    @Override
+    public Set<Long> port(Long[] slbId) throws Exception {
+        return slbEntityManager.port(slbId);
     }
 
+    private void freshVirtualServers(Slb slb) throws Exception {
+        slb.getVirtualServers().clear();
+        Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
+        range.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_MERGE_ONLINE));
+        slb.getVirtualServers().addAll(virtualServerRepository.listAll(range.toArray(new IdVersion[range.size()])));
+    }
 }

@@ -23,7 +23,6 @@ import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Maps;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -34,6 +33,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -333,20 +333,26 @@ public class GroupResource {
                         @TrimmedQueryParam("groupName") String groupName,
                         @TrimmedQueryParam("type") String type,
                         @TrimmedQueryParam("mode") final String mode) throws Exception {
-        Group group = null;
         if (groupId == null && groupName == null) {
             throw new ValidationException("Missing parameters.");
         }
         if (groupId == null) {
             groupId = groupCriteriaQuery.queryByName(groupName);
         }
-        if (groupId != null) {
-            group = groupRepository.getById(groupId, ModelMode.getMode(mode));
-        }
-        if (group == null) {
+        if (groupId == null) {
             throw new ValidationException("Group cannot be found.");
         }
-        return responseHandler.handle(getGroupByType(group, type), hh.getMediaType());
+
+        IdVersion[] keys = groupCriteriaQuery.queryByIdAndMode(groupId, ModelMode.getMode(mode));
+        List<Group> result = groupRepository.list(keys);
+        if (result.size() == 0) throw new ValidationException("Group cannot be found.");
+        if (result.size() == 1)
+            return responseHandler.handle(getGroupByType(result.get(0), type), hh.getMediaType());
+        GroupList groupList = new GroupList().setTotal(result.size());
+        for (Group r : result) {
+            groupList.addGroup(getGroupByType(r, type));
+        }
+        return responseHandler.handle(groupList, hh.getMediaType());
     }
 
     @POST

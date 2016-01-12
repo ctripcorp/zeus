@@ -208,15 +208,6 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
-			<role-hint>m-vs-content</role-hint>
-			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
-			<configuration>
-				<physical-table-name>m_vs_content</physical-table-name>
-				<data-source-name>zeus</data-source-name>
-			</configuration>
-		</component>
-		<component>
-			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>nginx-conf</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -695,15 +686,6 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.GroupSlbDao</role>
 			<implementation>com.ctrip.zeus.dal.core.GroupSlbDao</implementation>
-			<requirements>
-				<requirement>
-					<role>org.unidal.dal.jdbc.QueryEngine</role>
-				</requirement>
-			</requirements>
-		</component>
-		<component>
-			<role>com.ctrip.zeus.dal.core.MVsContentDao</role>
-			<implementation>com.ctrip.zeus.dal.core.MVsContentDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

@@ -4,13 +4,16 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/9/29.
@@ -27,6 +30,8 @@ public class SlbEntityManager implements SlbSync {
     private SlbServerRelMaintainer slbServerRelMaintainer;
     @Resource
     private RSlbStatusDao rSlbStatusDao;
+    @Resource
+    private ConfSlbActiveDao confSlbActiveDao;
 
     @Override
     public void add(Slb slb) throws Exception {
@@ -75,15 +80,38 @@ public class SlbEntityManager implements SlbSync {
     }
 
     @Override
-    public List<Long> port(Slb[] slbs) throws Exception {
-        List<Long> fails = new ArrayList<>();
-        for (Slb slb : slbs) {
+    public Set<Long> port(Long[] slbIds) throws Exception {
+        List<Slb> toUpdate = new ArrayList<>();
+        Set<Long> failed = new HashSet<>();
+        for (ArchiveSlbDo archiveSlbDo : archiveSlbDao.findMaxVersionBySlbs(slbIds, ArchiveSlbEntity.READSET_FULL))
             try {
-//                relSyncSlbServer(slb, false);
+                toUpdate.add(DefaultSaxParser.parseEntity(Slb.class, archiveSlbDo.getContent()));
             } catch (Exception ex) {
-                fails.add(slb.getId());
+                failed.add(archiveSlbDo.getId());
+        }
+        RelSlbStatusDo[] dos = new RelSlbStatusDo[toUpdate.size()];
+        for (int i = 0; i < dos.length; i++) {
+            dos[i] = new RelSlbStatusDo().setSlbId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
+        }
+        rSlbStatusDao.insertOrUpdate(dos);
+        for (Slb slb : toUpdate) {
+            slbServerRelMaintainer.port(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
+        }
+        slbIds = new Long[toUpdate.size()];
+        for (int i = 0; i < slbIds.length; i++) {
+            slbIds[i] = toUpdate.get(i).getId();
+        }
+        List<ConfSlbActiveDo> ref = confSlbActiveDao.findAllBySlbIds(slbIds, ConfSlbActiveEntity.READSET_FULL);
+        toUpdate.clear();
+
+        for (ConfSlbActiveDo confSlbActiveDo : ref) {
+            try {
+                toUpdate.add(DefaultSaxParser.parseEntity(Slb.class, confSlbActiveDo.getContent()));
+            } catch (Exception ex) {
+                failed.add(confSlbActiveDo.getSlbId());
             }
         }
-        return fails;
+        updateStatus(toUpdate.toArray(new Slb[toUpdate.size()]));
+        return failed;
     }
 }

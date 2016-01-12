@@ -81,6 +81,8 @@
     <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <var name="ids" value-type="Long[]"/>
+        <var name="hashes" value-type="Integer[]"/>
+        <var name="id-version-array" value-type="String[]"/>
         <query-defs>
             <query name="delete-by-slb" type="DELETE">
                 <param name="slb-id"/>
@@ -99,6 +101,18 @@
                     FROM <TABLE/>
                     WHERE  <FIELD name='slb-id'/> = ${slb-id}
                     ORDER BY <FIELD name='id'/> DESC LIMIT 1
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-id-version" type="SELECT" multiple="true">
+                <param name="hashes"/>
+                <param name="id-version-array"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='hash'/> in <IN>${hashes}</IN>
+                    HAVING CONCAT(slb_id, ',', version) in <IN>${id-version-array}</IN>
                     ]]>
                 </statement>
             </query>

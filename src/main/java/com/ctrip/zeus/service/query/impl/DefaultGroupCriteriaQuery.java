@@ -72,6 +72,17 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
+    public IdVersion[] queryByIdAndMode(Long groupId, ModelMode mode) throws Exception {
+        IdVersion[] result = new IdVersion[2];
+        RelGroupStatusDo d = rGroupStatusDao.findByGroup(groupId, RGroupStatusEntity.READSET_FULL);
+        int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
+        for (int i = 0; i < result.length && i < v.length; i++) {
+            result[i] = new IdVersion(groupId, v[i]);
+        }
+        return result;
+    }
+
+    @Override
     public Set<IdVersion> queryAll(ModelMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         Set<Long> groupIds = queryAll();

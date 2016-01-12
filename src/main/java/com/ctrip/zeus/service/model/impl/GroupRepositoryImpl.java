@@ -7,6 +7,7 @@ import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VGroupValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.status.StatusService;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
@@ -27,6 +28,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
     private AutoFiller autoFiller;
     @Resource
     private ArchiveService archiveService;
@@ -41,7 +44,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
-        Set<IdVersion> keys = groupCriteriaQuery.queryByIdsAndMode(ids, ModelMode.MODEL_MODE_MERGE);
+        Set<IdVersion> keys = groupCriteriaQuery.queryByIdsAndMode(ids, ModelMode.MODEL_MODE_MERGE_OFFLINE);
         return list(keys.toArray(new IdVersion[keys.size()]));
     }
 
@@ -54,8 +57,9 @@ public class GroupRepositoryImpl implements GroupRepository {
                 vsIds.add(groupVirtualServer.getVirtualServer().getId());
             }
         }
+        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), ModelMode.MODEL_MODE_MERGE_ONLINE);
         Map<Long, VirtualServer> map = Maps.uniqueIndex(
-                virtualServerRepository.listAll(vsIds.toArray(new Long[vsIds.size()]), ModelMode.MODEL_MODE_ONLINE),
+                virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()])),
                 new Function<VirtualServer, Long>() {
                     @Nullable
                     @Override
@@ -75,13 +79,20 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group getById(Long id) throws Exception {
-        return getById(id, ModelMode.MODEL_MODE_MERGE);
+        IdVersion[] key = groupCriteriaQuery.queryByIdAndMode(id, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        if (key.length == 0)
+            return null;
+        return getByKey(key[0]);
     }
 
     @Override
-    public Group getById(Long id, ModelMode mode) throws Exception {
-        if (groupModelValidator.exists(id) || vGroupValidator.exists(id)) {
-            Group result = archiveService.getGroupByMode(id, mode);
+    public Group getByKey(IdVersion key) throws Exception {
+        if (groupModelValidator.exists(key.getId()) || vGroupValidator.exists(key.getId())) {
+            Group result = archiveService.getGroup(key.getId(), key.getVersion());
+            for (GroupVirtualServer groupVirtualServer : result.getGroupVirtualServers()) {
+                IdVersion[] vsKey = virtualServerCriteriaQuery.queryByIdAndMode(groupVirtualServer.getVirtualServer().getId(), ModelMode.MODEL_MODE_MERGE_ONLINE);
+                groupVirtualServer.setVirtualServer(virtualServerRepository.getByKey(vsKey[0]));
+            }
             autoFiller.autofill(result);
             hideVirtualValue(result);
             return result;

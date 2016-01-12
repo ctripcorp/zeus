@@ -2,7 +2,7 @@ package com.ctrip.zeus.service.model.handler;
 
 import com.ctrip.zeus.model.entity.Slb;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -19,5 +19,5 @@ public interface SlbSync {
     int delete(Long slbId) throws Exception;
 
     @Deprecated
-    List<Long> port(Slb[] slbs) throws Exception;
+    Set<Long> port(Long[] slbIds) throws Exception;
 }

@@ -18,7 +18,7 @@ public interface GroupRepository extends Repository {
 
     Group getById(Long id) throws Exception;
 
-    Group getById(Long id, ModelMode mode) throws Exception;
+    Group getByKey(IdVersion key) throws Exception;
 
     Group add(Group group) throws Exception;
 

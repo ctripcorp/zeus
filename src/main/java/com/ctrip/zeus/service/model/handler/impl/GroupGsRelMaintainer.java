@@ -66,7 +66,7 @@ public class GroupGsRelMaintainer extends MultiRelMaintainerEx<RelGroupGsDo, Gro
 
     @Override
     protected void reassign(Group object, RelGroupGsDo output, GroupServer input) throws Exception {
-        output.setIp(input.getIp()).setGroupVersion(object.getVersion());
+        output.setIp(input.getIp()).setGroupVersion(object.getVersion()).setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
     }
 
     @Override
