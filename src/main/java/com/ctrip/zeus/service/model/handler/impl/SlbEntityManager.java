@@ -5,6 +5,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
@@ -43,7 +44,9 @@ public class SlbEntityManager implements SlbSync {
             virtualServer.setSlbId(slb.getId());
             virtualServerEntityManager.add(virtualServer);
         }
-        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion()).setContent(ContentWriters.writeSlbContent(slb)));
+        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion())
+                .setContent(ContentWriters.writeSlbContent(slb))
+                .setHash(VersionUtils.getHash(slb.getId(), slb.getVersion())));
         rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setId(slb.getId()).setOfflineVersion(slb.getVersion()));
         slbServerRelMaintainer.addRel(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
     }

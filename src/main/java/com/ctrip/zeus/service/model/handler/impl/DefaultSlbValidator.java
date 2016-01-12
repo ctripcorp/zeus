@@ -4,12 +4,18 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
+import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/6/30.
@@ -47,10 +53,25 @@ public class DefaultSlbValidator implements SlbValidator {
         for (int i = 0; i < ips.length; i++) {
             ips[i] = slb.getSlbServers().get(i).getIp();
         }
+
+        // check if any other slb version who has the server ip is still in effect.
         for (SlbServer slbServer : slb.getSlbServers()) {
-            Long slbId = null;//slbCriteriaQuery.queryBySlbServerIp(slbServer.getIp());
-            if (!slbId.equals(0L) && !slbId.equals(slb.getId())) {
-                throw new ValidationException("Slb server " + slbServer.getIp() + " is added to slb " + slbId + ". Unique server ip is required.");
+            Set<IdVersion> range = slbCriteriaQuery.queryBySlbServerIp(slbServer.getIp());
+            Set<Long> check = new HashSet<>();
+            Iterator<IdVersion> iter = range.iterator();
+            while (iter.hasNext()) {
+                Long e = iter.next().getId();
+                if (e.equals(slb.getId())) {
+                    iter.remove();
+                } else {
+                    check.add(e);
+                }
+            }
+            if (check.size() == 0)
+                return;
+            range.retainAll(slbCriteriaQuery.queryByIdsAndMode(check.toArray(new Long[check.size()]), ModelMode.MODEL_MODE_REDUNDANT));
+            if (range.size() > 1) {
+                throw new ValidationException("Slb server " + slbServer.getIp() + " is added to (slb,version) " + Joiner.on("; ").join(range) + ". Unique server ip is required.");
             }
         }
     }

@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.VirtualServerSync;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
@@ -36,10 +37,12 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         slbVirtualServerDao.insert(d);
         Long vsId = d.getId();
         virtualServer.setId(vsId);
-        archiveVsDao.insert(new MetaVsArchiveDo().setVsId(vsId).setContent(ContentWriters.writeVirtualServerContent(virtualServer)).setVersion(virtualServer.getVersion()));
+        archiveVsDao.insert(new MetaVsArchiveDo().setVsId(vsId).setVersion(virtualServer.getVersion())
+                .setContent(ContentWriters.writeVirtualServerContent(virtualServer))
+                .setHash(VersionUtils.getHash(virtualServer.getId(), virtualServer.getVersion())));
 
         rVsStatusDao.insert(new RelVsStatusDo().setVsId(vsId).setOfflineVersion(virtualServer.getVersion()));
-        rVsSlbDao.insert(new RelVsSlbDo().setVsId(vsId).setSlbId(virtualServer.getSlbId()));
+        rVsSlbDao.insert(new RelVsSlbDo().setVsId(vsId).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion()));
         vsDomainRelMaintainer.addRel(virtualServer, RelVsDomainDo.class, virtualServer.getDomains());
     }
 
