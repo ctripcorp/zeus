@@ -93,21 +93,21 @@
     </bean>
 
     <!-- Scheduler factory bean to glue together jobDetails and triggers to Configure Quartz Scheduler -->
-    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
-        <property name="waitForJobsToCompleteOnShutdown" value="true"/>
-        <property name="jobDetails">
-            <list>
-                <ref bean="taskWorkerDetail"/>
-                <ref bean="cleanManagerDetail"/>
-                <ref bean="healthCheckFetchDetail"/>
-            </list>
-        </property>
-        <property name="triggers">
-            <list>
-                <ref bean="taskWorkerTrigger"/>
-                <ref bean="cleanManagerTrigger"/>
-                <ref bean="healthCheckFetchTrigger"/>
-            </list>
-        </property>
-    </bean>
+    <!--<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">-->
+        <!--<property name="waitForJobsToCompleteOnShutdown" value="true"/>-->
+        <!--<property name="jobDetails">-->
+            <!--<list>-->
+                <!--<ref bean="taskWorkerDetail"/>-->
+                <!--<ref bean="cleanManagerDetail"/>-->
+                <!--<ref bean="healthCheckFetchDetail"/>-->
+            <!--</list>-->
+        <!--</property>-->
+        <!--<property name="triggers">-->
+            <!--<list>-->
+                <!--<ref bean="taskWorkerTrigger"/>-->
+                <!--<ref bean="cleanManagerTrigger"/>-->
+                <!--<ref bean="healthCheckFetchTrigger"/>-->
+            <!--</list>-->
+        <!--</property>-->
+    <!--</bean>-->
 </beans>
