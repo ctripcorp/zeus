@@ -57,6 +57,7 @@ public class SlbAdminServer extends AbstractServer {
         DynamicStringProperty casServerLoginUrl = DynamicPropertyFactory.getInstance().getStringProperty("server.sso.casServer.login.url", "");
         DynamicStringProperty casServerUrlPrefix = DynamicPropertyFactory.getInstance().getStringProperty("server.sso.casServer.url.prefix", "");
         DynamicStringProperty serverName = DynamicPropertyFactory.getInstance().getStringProperty("server.sso.server.name", "");
+        DynamicIntProperty sessionTimeout = DynamicPropertyFactory.getInstance().getIntProperty("server.session.timeout", 60*5);
 
 
         //Config Jersey
@@ -66,7 +67,9 @@ public class SlbAdminServer extends AbstractServer {
         //Create and Config Jetty Request Handler
         ServletContextHandler handler = new ServletContextHandler();
         handler.setContextPath("/");
-        handler.setSessionHandler(new SessionHandler());
+        SessionHandler sessionHandler = new SessionHandler();
+        sessionHandler.getSessionManager().setMaxInactiveInterval(sessionTimeout.get());
+        handler.setSessionHandler(sessionHandler);
 
         //Add Default Servlet
         handler.setResourceBase(wwwBaseDir.get());
