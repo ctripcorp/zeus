@@ -100,6 +100,7 @@ public class NginxServiceImpl implements NginxService {
                     return response;
                 }
             });
+            threadPoolExecutor.execute(futureTask);
             futureTasks.add(futureTask);
         }
 
@@ -225,12 +226,6 @@ public class NginxServiceImpl implements NginxService {
         }
     }
 
-    @Override
-    public List<NginxResponse> writeALLToDiskListResult(Long slbId,Integer slbVersion ,List<Long> vsIds ) throws Exception {
-        List<NginxResponse> result = new ArrayList<>();
-        writeALLToDisk(slbId, slbVersion ,vsIds, result);
-        return result;
-    }
 
     public boolean writeALLToDisk(Long slbId,Integer slbVersion , List<Long> vsIds , List<NginxResponse> responses) throws Exception {
         List<NginxResponse> result = null;
@@ -344,22 +339,6 @@ public class NginxServiceImpl implements NginxService {
 
     }
 
-    @Override
-    public List<NginxResponse> writeAllAndLoadAll(Long slbId,Integer slbVersion,List<Long> vsIds) throws Exception {
-        List<NginxResponse> result = new ArrayList<>();
-        if (!writeALLToDisk(slbId,slbVersion,vsIds, result)) {
-            LOGGER.error("Write All To Disk Failed!");
-            StringBuilder sb = new StringBuilder(128);
-            sb.append("[");
-            for (NginxResponse res : result) {
-                sb.append(String.format(NginxResponse.JSON, res)).append(",\n");
-            }
-            sb.append("]");
-            throw new Exception("Write All To Disk Failed!\nDetail:\n" + sb.toString());
-        }
-        result = loadAll(slbId , slbVersion);
-        return result;
-    }
 
     @Override
     public NginxResponse dyopsLocal(String upsName, String upsCommands) throws Exception {
