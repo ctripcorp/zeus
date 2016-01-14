@@ -164,6 +164,11 @@ public class GroupEntityManager implements GroupSync {
                 rGroupVsDao.deleteByVsAndGroup(originVses.get(0));
                 GroupVirtualServer gvs = group.getGroupVirtualServers().get(0);
                 rGroupVsDao.insertOrUpdate(new RelGroupVsDo().setGroupId(group.getId()).setVsId(gvs.getVirtualServer().getId()).setPath(gvs.getPath()));
+            } else {
+                GroupVirtualServer gvs = group.getGroupVirtualServers().get(0);
+                RelGroupVsDo d = rGroupVsDao.findByGroupAndVs(group.getId(), gvs.getVirtualServer().getId(), RGroupVsEntity.READSET_FULL);
+                d.setPath(gvs.getPath());
+                rGroupVsDao.updateByPK(d, RGroupVsEntity.UPDATESET_FULL);
             }
         } else {
             relUpdateVsMultiple(originVses, group);
