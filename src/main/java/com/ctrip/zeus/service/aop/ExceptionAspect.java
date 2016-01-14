@@ -36,15 +36,13 @@ public class ExceptionAspect implements Ordered {
         try {
             return point.proceed();
         } catch (Throwable throwable) {
-            logger.error(objectName + " throws an error when calling " + methodName + ".");
+            logger.error(objectName + " throws an error when calling " + methodName + ".", throwable);
             Throwable cause = (throwable instanceof InvocationTargetException) ? ((InvocationTargetException) throwable).getTargetException() : throwable;
             try {
                 StringBuilder builder = new StringBuilder();
                 for (StackTraceElement ste : cause.getStackTrace()) {
                     builder.append(ste.toString() + "\n");
                 }
-                logger.error(builder.toString());
-
                 MediaType mediaType = null;
                 boolean printStackTrace = PrintStackTrace.get();
                 for (Object arg : point.getArgs()) {
@@ -60,12 +58,9 @@ public class ExceptionAspect implements Ordered {
                         break;
                     }
                 }
-                if (mediaType == null) {
-                    logger.warn("Request media type cannot be found - use json by default.");
-                }
                 return errorResponseHandler.handle(cause, mediaType, printStackTrace);
             } catch (Exception e) {
-                logger.error("Error response handler doesn't work.");
+                logger.error("Error response handler doesn't work.", e);
                 return null;
             }
         }

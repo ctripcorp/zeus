@@ -13,7 +13,7 @@ public class ZeusResponse implements Message {
 
     @Override
     public int getStatus() {
-        return Response.Status.ACCEPTED.getStatusCode();
+        return Response.Status.OK.getStatusCode();
     }
 
     @Override
