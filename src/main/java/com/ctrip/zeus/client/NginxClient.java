@@ -132,4 +132,19 @@ public class NginxClient extends AbstractRestClient {
         //TODO
         return new NginxServerStatus();
     }
+
+    public NginxResponse confTest(Long slbId, Integer version) {
+        WebTarget webTarget = getTarget().path("/api/nginx/testConf").queryParam("slbId",slbId);
+        if (version!=null){
+            webTarget = webTarget.queryParam("version",version);
+        }
+        String responseStr = webTarget.request().headers(getDefaultHeaders()).get(String.class);
+        try{
+            return DefaultJsonParser.parse(NginxResponse.class, responseStr);
+        }catch (Exception e){
+            NginxResponse response = new NginxResponse();
+            response.setSucceed(false).setErrMsg(e.getMessage()).setOutMsg(responseStr);
+            return response;
+        }
+    }
 }

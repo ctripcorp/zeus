@@ -29,7 +29,7 @@ import javax.annotation.Resource;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 /**
  * @author:xingchaowang
@@ -40,6 +40,7 @@ public class NginxServiceImpl implements NginxService {
     private static final Logger LOGGER = LoggerFactory.getLogger(NginxServiceImpl.class);
     private static DynamicIntProperty adminServerPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
     private static DynamicIntProperty dyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
+    private static DynamicIntProperty nginxFutureTimeout = DynamicPropertyFactory.getInstance().getIntProperty("nginx.client.future.timeout", 3000);
 
     private final DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmm");
     @Resource
@@ -57,9 +58,57 @@ public class NginxServiceImpl implements NginxService {
     @Resource
     private NginxOperator nginxOperator;
 
+    private ThreadPoolExecutor threadPoolExecutor;
 
+    NginxServiceImpl(){
+        threadPoolExecutor = new ThreadPoolExecutor(10,20,300, TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
+    }
 
     private Logger logger = LoggerFactory.getLogger(NginxServiceImpl.class);
+
+
+    @Override
+    public List<SlbServer> getCurrentSlbServers(Long slbId, Integer slbVersion) throws Exception {
+        Slb slb ;
+        if (slbVersion!=null&&slbVersion!=0){
+            slb = activateService.getActivatingSlb(slbId,slbVersion);
+        }else {
+            slb =activateService.getActivatedSlb(slbId);
+        }
+        return slb.getSlbServers();
+    }
+
+    @Override
+    public List<NginxResponse> pushConf(List<SlbServer> slbServers, Long slbId, Integer slbVersion, List<Long> vsIds, boolean needReload) throws Exception {
+        List<FutureTask<NginxResponse>> futureTasks = new ArrayList<>();
+        final List<Long> vs = vsIds;
+        final Long id = slbId;
+        final Integer version = slbVersion;
+        final boolean reload = needReload;
+        for (SlbServer slbServer : slbServers){
+            final NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
+            FutureTask<NginxResponse> futureTask = new FutureTask<>(new Callable<NginxResponse>() {
+                @Override
+                public NginxResponse call() throws Exception {
+                    NginxResponse response;
+                    nginxClient.write(vs,id,version);
+                    if (reload){
+                        response = nginxClient.load(id,version);
+                    }else {
+                        response = nginxClient.confTest(id,version);
+                    }
+                    return response;
+                }
+            });
+            futureTasks.add(futureTask);
+        }
+
+        List<NginxResponse> result = new ArrayList<>();
+        for (FutureTask<NginxResponse> futureTask : futureTasks){
+            result.add(futureTask.get(nginxFutureTimeout.get(),TimeUnit.MILLISECONDS));
+        }
+        return result;
+    }
 
     @Override
     public NginxResponse localRollbackConf(Long slbId, Integer slbVersion) throws Exception {
@@ -158,17 +207,7 @@ public class NginxServiceImpl implements NginxService {
         cleanConfOnDisk(slbId, version, operator);
         writeConfToDisk(slbId, version, vsIds, operator);
 
-        NginxResponse response = operator.reloadConfTest();
-        response.setServerIp(ip);
-        if(response.getSucceed()){
-            NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
-            if (nginxServer == null)
-            {
-                nginxServer = new NginxServerDo().setIp(ip).setVersion(version);
-            }
-            nginxServerDao.updateByPK(nginxServer.setVersion(version), NginxServerEntity.UPDATESET_FULL);
-        }
-        return response;
+        return new NginxResponse().setSucceed(true);
     }
 
     @Override
@@ -245,6 +284,42 @@ public class NginxServiceImpl implements NginxService {
         // reload configuration
         NginxResponse response = operator.reloadConf();
         response.setServerIp(ip);
+        if(response.getSucceed()){
+            int confVersion = nginxConfService.getCurrentBuildingVersion(slbId);
+            NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
+            if (nginxServer == null)
+            {
+                nginxServer = new NginxServerDo().setIp(ip).setVersion(confVersion);
+            }
+            nginxServerDao.updateByPK(nginxServer.setVersion(confVersion), NginxServerEntity.UPDATESET_FULL);
+        }
+        return response;
+    }
+
+    @Override
+    public NginxResponse confTest(Long slbId, Integer version) throws Exception {
+        String ip = S.getIp();
+        Slb slb ;
+        if (version!=null&&version!=0){
+            slb = activateService.getActivatingSlb(slbId,version);
+        }else {
+            slb = activateService.getActivatedSlb(slbId);
+        }
+
+        NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
+
+        // test configuration
+        NginxResponse response = operator.reloadConfTest();
+        response.setServerIp(ip);
+        if(response.getSucceed()){
+            int confVersion = nginxConfService.getCurrentBuildingVersion(slbId);
+            NginxServerDo nginxServer = nginxServerDao.findByIp(ip, NginxServerEntity.READSET_FULL);
+            if (nginxServer == null)
+            {
+                nginxServer = new NginxServerDo().setIp(ip).setVersion(confVersion);
+            }
+            nginxServerDao.updateByPK(nginxServer.setVersion(confVersion), NginxServerEntity.UPDATESET_FULL);
+        }
         return response;
     }
 

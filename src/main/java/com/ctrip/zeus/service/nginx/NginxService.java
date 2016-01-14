@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.nginx;
 
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
@@ -16,75 +17,95 @@ import java.util.List;
 public interface NginxService {
 
     /**
-     * Local rollback  Conf
-     * @return the result of "ngnix -t"
+     * get current slb servers
+     *
+     * @return list of slb servers
      * @throws Exception
      */
-    NginxResponse localRollbackConf( Long slbId , Integer slbVersion) throws Exception;
+    List<SlbServer> getCurrentSlbServers(Long slbId, Integer slbVersion) throws Exception;
+
     /**
-     *  Rollback  All  Conf
+     * push config to slb servers , reload if needed.
+     *
+     * @return List of nginx Response
+     * @throws Exception
+     */
+    List<NginxResponse> pushConf(List<SlbServer> slbServers, Long slbId, Integer slbVersion, List<Long> vsIds ,boolean needReload) throws Exception;
+
+    /**
+     * Local rollback  Conf
+     *
      * @return the result of "ngnix -t"
      * @throws Exception
      */
-    boolean rollbackAllConf( Long slbId , Integer slbVersion) throws Exception;
+    NginxResponse localRollbackConf(Long slbId, Integer slbVersion) throws Exception;
+
+    /**
+     * Rollback  All  Conf
+     *
+     * @return the result of "ngnix -t"
+     * @throws Exception
+     */
+    boolean rollbackAllConf(Long slbId, Integer slbVersion) throws Exception;
 
     /**
      * write conf to disk
+     *
      * @return the result of "ngnix -t"
      * @throws Exception
      */
-    NginxResponse writeToDisk(List<Long> vsIds, Long slbId,Integer slbVersion) throws Exception;
+    NginxResponse writeToDisk(List<Long> vsIds, Long slbId, Integer slbVersion) throws Exception;
 
     /**
      * write all server conf of nginx server conf in the slb
+     *
      * @return is all success
      * @throws Exception
      */
-    boolean writeALLToDisk(Long slbId,Integer slbVersion ,  List<Long> vsIds) throws Exception;
-    /**
-     * write all server conf of nginx server conf in the slb
-     * @return list the results
-     * @throws Exception
-     */
-    List<NginxResponse> writeALLToDiskListResult(Long slbId,Integer slbVersion, List<Long> vsIds) throws Exception;
+    boolean writeALLToDisk(Long slbId, Integer slbVersion, List<Long> vsIds) throws Exception;
 
     /**
      * load the colocated nginx server conf from disk
+     *
      * @return result of "ngnix -s reload"
      * @throws Exception
      */
-    NginxResponse load(Long slbId , Integer version) throws Exception;
+    NginxResponse load(Long slbId, Integer version) throws Exception;
+    /**
+     * test the colocated nginx server conf from disk
+     *
+     * @return result of "ngnix -t"
+     * @throws Exception
+     */
+    NginxResponse confTest(Long slbId, Integer version) throws Exception;
 
     /**
      * load all nginx server conf in the slb from disk
+     *
      * @param slbId slbname
      * @return all response
      * @throws Exception
      */
-    List<NginxResponse> loadAll(Long slbId , Integer version) throws Exception;
-
+    List<NginxResponse> loadAll(Long slbId, Integer version) throws Exception;
     /**
-     *write all and then load all , throw Exception while write failed
-     * @param slbId
-     * @return List<NginxResponse>
-     */
-    List<NginxResponse> writeAllAndLoadAll(Long slbId,Integer slbVersion ,List<Long> vsIds) throws Exception;
-
-    /**
-     *dy upstream ops api
-     * @param upsName dy upstream name
+     * dy upstream ops api
+     *
+     * @param upsName     dy upstream name
      * @param upsCommands dy upstream commands
      */
-    NginxResponse dyopsLocal(String upsName,String upsCommands)throws Exception;
+    NginxResponse dyopsLocal(String upsName, String upsCommands) throws Exception;
+
     /**
-     *dy upstream ops api
+     * dy upstream ops api
+     *
      * @param slbId slbname
      * @param dyups dy upstream info
      */
-    List<NginxResponse> dyops(Long slbId,List<DyUpstreamOpsData> dyups)throws Exception;
+    List<NginxResponse> dyops(Long slbId, List<DyUpstreamOpsData> dyups) throws Exception;
 
     /**
      * fetch the status of colocated nginx server status
+     *
      * @return
      * @throws Exception
      */
@@ -92,6 +113,7 @@ public interface NginxService {
 
     /**
      * fetch the status of all nginx server in the slb
+     *
      * @return
      * @throws Exception
      */
@@ -99,6 +121,7 @@ public interface NginxService {
 
     /**
      * get traffic status of nginx server cluster.
+     *
      * @param slbId the slb name
      * @return the traffic statuses
      */
@@ -109,6 +132,7 @@ public interface NginxService {
 
     /**
      * get traffic status of local nginx server.
+     *
      * @return the traffic status
      */
     List<ReqStatus> getLocalTrafficStatus(Date time, int count);

@@ -56,6 +56,18 @@ public class NginxResource {
     }
 
     @GET
+    @Path("/testConf")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response testConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") Long slbId, @QueryParam("version") Integer version) throws Exception{
+        NginxResponse result = nginxService.confTest(slbId,version);
+        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
+            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
+        } else {
+            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
+        }
+    }
+
+    @GET
     @Path("/conf")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getVsConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("vs") Long vsid ,@QueryParam("version") Integer versionNum) throws Exception{

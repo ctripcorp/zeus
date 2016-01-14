@@ -160,16 +160,23 @@ public class TaskExecutorImpl implements TaskExecutor {
                 vsIds.add(vs.getId());
             }
             Integer slbVersion = getSlbVersion(slbId);
-            nginxService.writeALLToDisk(slbId,slbVersion,vsIds);
+            List<SlbServer> slbServers = nginxService.getCurrentSlbServers(slbId,slbVersion);
+
+            boolean needReload = true;
             if (activatingSlb!=null||activatingGroups.size()>0||deactivateGroupOps.size()>0
                     ||activatingVses.size()>0 || deactivateVsOps.size()>0){
-                List<NginxResponse> responses = nginxService.loadAll(slbId,slbVersion);
-                for (NginxResponse response : responses){
-                    if (!response.getSucceed()){
-                        throw new Exception("LoadAll Fail.Fail Response:"+ String.format(NginxResponse.JSON,response));
-                    }
+                needReload = false;
+            }
+
+            List<NginxResponse> responses = nginxService.pushConf(slbServers,slbId,slbVersion,vsIds,needReload);
+            nginxService.writeALLToDisk(slbId,slbVersion,vsIds);
+            for (NginxResponse response : responses){
+                if (!response.getSucceed()){
+                    throw new Exception("Push config Fail.Fail Response:"+ String.format(NginxResponse.JSON,response));
                 }
-            }else {
+            }
+
+            if (!needReload) {
                 //dyups
                 boolean isFail = false;
                 for (Long groupId : groupList){
@@ -179,8 +186,8 @@ public class TaskExecutorImpl implements TaskExecutor {
                         continue;
                     }
                     List<DyUpstreamOpsData> dyUpstreamOpsDataList = buildService.buildUpstream(slbId,buildVirtualServer,allDownServers,allUpGroupServers,group);
-                    List<NginxResponse> responses = nginxService.dyops(slbId,dyUpstreamOpsDataList);
-                    for (NginxResponse response : responses){
+                    List<NginxResponse> dyopsResponses = nginxService.dyops(slbId,dyUpstreamOpsDataList);
+                    for (NginxResponse response : dyopsResponses){
                         if (!response.getSucceed()){
                             isFail = true;
                             break;
