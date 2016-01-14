@@ -97,9 +97,8 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE  <FIELD name='slb-id'/> = ${slb-id}
-                        ORDER BY <FIELD name='version'/> DESC
-                        LIMIT 1
+                    WHERE  <FIELD name='slb-id'/> = ${slb-id}
+                    ORDER BY <FIELD name='id'/> DESC LIMIT 1
                     ]]>
                 </statement>
             </query>
@@ -108,10 +107,13 @@
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
-                    FROM (SELECT * from archive_slb
-                        WHERE slb_id in <IN>${ids}</IN>
-                        ORDER BY version DESC) as3
-                    GROUP BY slb_id
+                    FROM <TABLE/>
+                    WHERE (<FIELD name='group-id'/>, <FIELD name='version'/>) IN
+                        (SELECT slb_id, MAX(version)
+                        FROM archive_slb
+                        WHERE slb_id IN <IN>${ids}</IN>
+                        GROUP BY slb_id)
+                    ORDER BY <FIELD name='slb-id'/>
                     ]]>
                 </statement>
             </query>

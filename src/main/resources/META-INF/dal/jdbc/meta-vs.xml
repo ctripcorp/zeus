@@ -62,8 +62,7 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='vs-id'/> = ${vs-id}
-                    ORDER BY version DESC
-                    LIMIT 1
+                    ORDER BY <FIELD name='id'/> DESC LIMIT 1
                     ]]>
                 </statement>
             </query>
@@ -97,10 +96,13 @@
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
-                    FROM (SELECT * from archive_vs
-                            WHERE vs_id in <IN>${ids}</IN>
-                            ORDER BY version DESC) av
-                    GROUP BY vs_id
+                    FROM <TABLE/>
+                    WHERE (<FIELD name='vs-id'/>, <FIELD name='version'/>) IN
+                        (SELECT vs_id, MAX(version)
+                        FROM archive_vs
+                        WHERE vs_id IN <IN>${ids}</IN>
+                        GROUP BY vs_id)
+                    ORDER BY <FIELD name='vs-id'/>
                     ]]>
                 </statement>
             </query>

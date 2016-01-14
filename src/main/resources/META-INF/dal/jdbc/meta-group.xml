@@ -120,9 +120,8 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE  <FIELD name='group-id'/> = ${group-id}
-                        ORDER BY <FIELD name='version'/> DESC
-                        LIMIT 1
+                    WHERE  <FIELD name='group-id'/> = ${group-id}
+                    ORDER BY <FIELD name='id'/> DESC LIMIT 1
                     ]]>
                 </statement>
             </query>
@@ -131,10 +130,13 @@
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
-                    FROM (SELECT * from archive_group
-                        WHERE group_id in <IN>${ids}</IN>
-                        ORDER BY version DESC) ag
-                    GROUP BY group_id
+                    FROM <TABLE/>
+                    WHERE (<FIELD name='group-id'/>, <FIELD name='version'/>) IN
+                        (SELECT group_id, MAX(version)
+                        FROM archive_group
+                        WHERE group_id IN <IN>${ids}</IN>
+                        GROUP BY group_id)
+                    ORDER BY <FIELD name='group-id'/>
                     ]]>
                 </statement>
             </query>
@@ -147,16 +149,6 @@
                     FROM <TABLE/>
                         WHERE <FIELD name='group-id'/> = ${group-id}
                         AND <FIELD name='version'/> = ${version}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-group" type="SELECT" multiple="true">
-                <param name="group-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
