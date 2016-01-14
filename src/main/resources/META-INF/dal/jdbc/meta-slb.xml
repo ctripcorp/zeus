@@ -108,7 +108,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE (<FIELD name='group-id'/>, <FIELD name='version'/>) IN
+                    WHERE (<FIELD name='slb-id'/>, <FIELD name='version'/>) IN
                         (SELECT slb_id, MAX(version)
                         FROM archive_slb
                         WHERE slb_id IN <IN>${ids}</IN>
