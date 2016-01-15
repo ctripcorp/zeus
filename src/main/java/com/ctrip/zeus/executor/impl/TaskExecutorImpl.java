@@ -169,7 +169,6 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
 
             List<NginxResponse> responses = nginxService.pushConf(slbServers,slbId,slbVersion,vsIds,needReload);
-            nginxService.writeALLToDisk(slbId,slbVersion,vsIds);
             for (NginxResponse response : responses){
                 if (!response.getSucceed()){
                     throw new Exception("Push config Fail.Fail Response:"+ String.format(NginxResponse.JSON,response));
