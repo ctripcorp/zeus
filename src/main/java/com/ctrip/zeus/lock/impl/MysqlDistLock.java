@@ -128,7 +128,7 @@ public class MysqlDistLock implements DistLock {
                             transactionManager.commitTransaction();
                             return true;
                         } else if (isFree(check)) {
-                            boolean result = distLockDao.obtainByKey(d, DistLockEntity.UPDATESET_FULL) == 1;
+                            boolean result = distLockDao.obtainByKey(d, DistLockEntity.UPDATESET_UPDATE_OWNER) == 1;
                             transactionManager.commitTransaction();
                             return result;
                         } else {
@@ -153,7 +153,7 @@ public class MysqlDistLock implements DistLock {
         d.setServer("").setOwner(0L).setCreatedTime(System.currentTimeMillis());
         if (compareAndSetState(true, false)) {
             try {
-                int count = distLockDao.updateByKey(d, DistLockEntity.UPDATESET_FULL);
+                int count = distLockDao.updateByKey(d, DistLockEntity.UPDATESET_UPDATE_OWNER);
                 if (count == 1) return true;
                 DistLockDo check = distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL);
                 if (check == null || isFree(check)) return true;
