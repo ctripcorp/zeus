@@ -16,7 +16,17 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='lock-key'/> = ${lock-key} FOR UPDATE
+                    WHERE <FIELD name='lock-key'/> = ${lock-key}
+                    ]]>
+                </statement>
+            </query>
+            <query name="get-by-key-in-share-mode" type="SELECT">
+                <param name="lock-key"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='lock-key'/> = ${lock-key} LOCK IN SHARE MODE
                     ]]>
                 </statement>
             </query>
@@ -30,7 +40,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="require-by-key" type="UPDATE">
+            <query name="obtain-by-key" type="UPDATE">
                 <param name="lock-key"/>
                 <statement>
                     <![CDATA[

@@ -1,20 +1,11 @@
 package com.ctrip.zeus.lock;
 
-import com.ctrip.zeus.util.S;
-import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.junit.AfterClass;
+import com.ctrip.zeus.AbstractServerTest;
+
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.unidal.dal.jdbc.datasource.DataSourceManager;
-import org.unidal.dal.jdbc.transaction.TransactionManager;
-import org.unidal.lookup.ContainerLoader;
-import support.AbstractSpringTest;
-import support.MysqlDbServer;
 
 import javax.annotation.Resource;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -23,18 +14,10 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Created by zhoumy on 2015/4/14.
  */
-public class DistLockTest extends AbstractSpringTest {
-    private static MysqlDbServer mysqlDbServer;
+public class DistLockTest extends AbstractServerTest {
 
     @Resource
     private DbLockFactory dbLockFactory;
-
-    @BeforeClass
-    public static void setUpDb() throws ComponentLookupException, ComponentLifecycleException {
-        S.setPropertyDefaultValue("CONF_DIR", new File("").getAbsolutePath() + "/conf/test");
-        mysqlDbServer = new MysqlDbServer();
-        mysqlDbServer.start();
-    }
 
     @Test
     public void testBasic() {
@@ -164,15 +147,5 @@ public class DistLockTest extends AbstractSpringTest {
         lock.unlock();
         Assert.assertTrue(anotherLock.tryLock());
         anotherLock.unlock();
-    }
-
-    @AfterClass
-    public static void tearDownDb() throws InterruptedException, ComponentLookupException, ComponentLifecycleException {
-        mysqlDbServer.stop();
-
-        DataSourceManager ds = ContainerLoader.getDefaultContainer().lookup(DataSourceManager.class);
-        ContainerLoader.getDefaultContainer().release(ds);
-        TransactionManager ts = ContainerLoader.getDefaultContainer().lookup(TransactionManager.class);
-        ContainerLoader.getDefaultContainer().release(ts);
     }
 }

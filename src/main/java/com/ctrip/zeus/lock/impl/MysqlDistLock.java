@@ -3,11 +3,13 @@ package com.ctrip.zeus.lock.impl;
 import com.ctrip.zeus.dal.core.DistLockDao;
 import com.ctrip.zeus.dal.core.DistLockDo;
 import com.ctrip.zeus.dal.core.DistLockEntity;
+import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.util.S;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unidal.dal.jdbc.DalException;
+import org.unidal.dal.jdbc.transaction.TransactionManager;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -19,15 +21,19 @@ public class MysqlDistLock implements DistLock {
     private static final long SLEEP_INTERVAL = 500L;
 
     private final String key;
-    private AtomicBoolean state = new AtomicBoolean(false);
+    private final DistLockDao distLockDao;
+    private final TransactionManager transactionManager;
+    private final String resourceName;
 
-    private DistLockDao distLockDao;// = DbLockFactory.getDao();
+    private AtomicBoolean state = new AtomicBoolean(false);
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public MysqlDistLock(String key, DistLockDao distLockDao) {
+    public MysqlDistLock(String key, DbLockFactory dbLockFactory) {
         this.key = key;
         this.state.set(false);
-        this.distLockDao = distLockDao;
+        this.distLockDao = dbLockFactory.getDao();
+        this.transactionManager = dbLockFactory.getTransactionManager();
+        this.resourceName = dbLockFactory.getResourceName();
     }
 
     @Override
@@ -113,12 +119,26 @@ public class MysqlDistLock implements DistLock {
         if (compareAndSetState(false, true)) {
             try {
                 DistLockDo check = distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL);
-                if (check == null) {
-                    distLockDao.insert(d);
-                    return true;
-                }
-                if (isFree(check)) {
-                    return distLockDao.requireByKey(d, DistLockEntity.UPDATESET_FULL) == 1;
+                if (check == null || isFree(check)) {
+                    transactionManager.startTransaction(resourceName);
+                    try {
+                        check = distLockDao.getByKeyInShareMode(d.getLockKey(), DistLockEntity.READSET_FULL);
+                        if (check == null) {
+                            distLockDao.insert(d);
+                            transactionManager.commitTransaction();
+                            return true;
+                        } else if (isFree(check)) {
+                            boolean result = distLockDao.obtainByKey(d, DistLockEntity.UPDATESET_FULL) == 1;
+                            transactionManager.commitTransaction();
+                            return result;
+                        } else {
+                            transactionManager.commitTransaction();
+                            return false;
+                        }
+                    } catch (Throwable throwable) {
+                        transactionManager.rollbackTransaction();
+                        throw new DalException("Rollback tryAddLock transaction.", throwable);
+                    }
                 }
             } catch (DalException ex) {
                 compareAndSetState(true, false);
@@ -134,10 +154,9 @@ public class MysqlDistLock implements DistLock {
         if (compareAndSetState(true, false)) {
             try {
                 int count = distLockDao.updateByKey(d, DistLockEntity.UPDATESET_FULL);
-                if (count == 1)
-                    return true;
-                if (distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL) == null)
-                    return true;
+                if (count == 1) return true;
+                DistLockDo check = distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL);
+                if (check == null || isFree(check)) return true;
             } catch (DalException ex) {
                 compareAndSetState(false, true);
                 throw ex;
