@@ -20,7 +20,7 @@ public interface VirtualServerCriteriaQuery {
 
     Set<IdVersion> queryBySlbId(Long slbId) throws Exception;
 
-    Set<IdVersion> queryByGroupIds(Long[] groupIds) throws Exception;
+    Set<IdVersion> queryByGroupIds(IdVersion[] groupKeys) throws Exception;
 
     Set<IdVersion> queryByDomain(String domain) throws Exception;
 }

@@ -1,0 +1,204 @@
+package com.ctrip.zeus.service.model;
+
+import com.ctrip.zeus.AbstractServerTest;
+import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * Created by zhoumy on 2016/1/14.
+ */
+public class QueryTest extends AbstractServerTest {
+    @Resource
+    private GroupRepository groupRepository;
+    @Resource
+    private SlbRepository slbRepository;
+    @Resource
+    private VirtualServerRepository virtualServerRepository;
+
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+
+    private static AtomicInteger Counter = new AtomicInteger(3);
+
+    @Before
+    public void fillDb() throws Exception {
+        if (Counter.get() == 3) {
+            addSlbsAndVses();
+            addGroups();
+        }
+    }
+
+    @After
+    public void clearDb() throws Exception {
+        if (Counter.get() == 0) {
+            for (Long i = 1L; i <= 7L; i++) {
+                groupRepository.delete(i);
+            }
+            for (Long i = 1L; i <= 2L; i++) {
+                virtualServerRepository.delete(i);
+            }
+            slbRepository.delete(1L);
+        }
+    }
+
+    @Test
+    public void testGroupQuery() throws Exception {
+        Counter.decrementAndGet();
+
+        Set<Long> gIds = groupCriteriaQuery.queryAll();
+        Assert.assertEquals(7, gIds.size());
+        Assert.assertArrayEquals(new Long[]{1L, 2L, 3L, 4L, 5L, 6L, 7L}, gIds.toArray(new Long[7]));
+
+        gIds = groupCriteriaQuery.queryByAppId("000000");
+        Assert.assertEquals(7, gIds.size());
+        Assert.assertArrayEquals(new Long[]{1L, 2L, 3L, 4L, 5L, 6L, 7L}, gIds.toArray(new Long[7]));
+
+        Assert.assertEquals(1, groupCriteriaQuery.queryByName("testGroupOnVs1").longValue());
+
+        Set<IdVersion> gKeys = groupCriteriaQuery.queryByGroupServerIp("10.2.6.201");
+        Assert.assertEquals(7, gKeys.size());
+        Long[] values = new Long[7];
+        int i = 0;
+        for (IdVersion e : gKeys) {
+            values[i] = e.getId();
+            Assert.assertEquals(1, e.getVersion().intValue());
+            i++;
+        }
+        Arrays.sort(values);
+        Assert.assertArrayEquals(new Long[]{1L, 2L, 3L, 4L, 5L, 6L, 7L}, values);
+
+        IdVersion[] gKeyArray = groupCriteriaQuery.queryByIdAndMode(1L, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        Assert.assertEquals(new IdVersion(1L, 1), gKeyArray[0]);
+        Assert.assertNull(gKeyArray[1]);
+    }
+
+    @Test
+    public void testVsQuery() throws Exception {
+        Counter.decrementAndGet();
+
+        Set<Long> vsIds = virtualServerCriteriaQuery.queryAll();
+        Assert.assertEquals(3, vsIds.size());
+        Assert.assertArrayEquals(new Long[]{1L, 2L, 3L}, vsIds.toArray(new Long[3]));
+
+        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByDomain("defaultSlbVs3.ctrip.com");
+        Assert.assertEquals(1, vsKeys.size());
+        Assert.assertEquals(3L, vsKeys.iterator().next().getId().longValue());
+
+
+        vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(new Long[]{1L, 2L, 3L}, ModelMode.MODEL_MODE_OFFLINE);
+        Assert.assertEquals(3, vsKeys.size());
+        Long[] values = new Long[3];
+        int i = 0;
+        for (IdVersion e : vsKeys) {
+            values[i] = e.getId();
+            Assert.assertEquals(1, e.getVersion().intValue());
+            i++;
+        }
+        Arrays.sort(values);
+        Assert.assertArrayEquals(new Long[]{1L, 2L, 3L}, values);
+
+        IdVersion[] vsKeyArray = virtualServerCriteriaQuery.queryByIdAndMode(2L, ModelMode.MODEL_MODE_OFFLINE);
+        Assert.assertEquals(new IdVersion(2L, 1), vsKeyArray[0]);
+        Assert.assertNull(vsKeyArray[1]);
+
+        vsKeys = virtualServerCriteriaQuery.queryByGroupIds(new IdVersion[]{new IdVersion(1L, 1), new IdVersion(2L, 1), new IdVersion(3L, 1)});
+        Assert.assertEquals(2, vsKeys.size());
+        values = new Long[2];
+        i = 0;
+        for (IdVersion e : vsKeys) {
+            values[i] = e.getId();
+            Assert.assertEquals(1, e.getVersion().intValue());
+            i++;
+        }
+        Arrays.sort(values);
+        Assert.assertArrayEquals(new Long[]{1L, 2L}, values);
+    }
+
+    @Test
+    public void testSlbQuery() throws Exception {
+        Counter.decrementAndGet();
+
+        Set<Long> slbIds = slbCriteriaQuery.queryAll();
+        Assert.assertEquals(2, slbIds.size());
+        Assert.assertArrayEquals(new Long[]{1L, 2L}, slbIds.toArray(new Long[2]));
+
+        slbIds = slbCriteriaQuery.queryByVs(new IdVersion(2L, 1));
+        Assert.assertEquals(1, slbIds.size());
+        Assert.assertArrayEquals(new Long[]{1L}, slbIds.toArray(new Long[1]));
+
+        slbIds = slbCriteriaQuery.queryByVses(new IdVersion[]{new IdVersion(2L, 1), new IdVersion(3L, 1)});
+        Assert.assertEquals(2, slbIds.size());
+        Assert.assertArrayEquals(new Long[]{1L, 2L}, slbIds.toArray(new Long[2]));
+
+        Assert.assertEquals(1L, slbCriteriaQuery.queryByName("default1").longValue());
+
+        Set<IdVersion> sKeys = slbCriteriaQuery.queryBySlbServerIp("127.0.0.1");
+        Assert.assertEquals(1, sKeys.size());
+        Long[] values = new Long[1];
+        int i = 0;
+        for (IdVersion e : sKeys) {
+            values[i] = e.getId();
+            Assert.assertEquals(1, e.getVersion().intValue());
+            i++;
+        }
+        Arrays.sort(values);
+        Assert.assertEquals(1, sKeys.size());
+        Assert.assertArrayEquals(new Long[]{2L}, values);
+
+        IdVersion[] sKeyArray = slbCriteriaQuery.queryByIdAndMode(1L, ModelMode.MODEL_MODE_OFFLINE);
+        Assert.assertEquals(new IdVersion(1L, 1), sKeyArray[0]);
+        Assert.assertNull(sKeyArray[1]);
+    }
+
+    private void addSlbsAndVses() throws Exception {
+        Slb default1 = new Slb().setName("default1").setStatus("TEST")
+                .addVip(new Vip().setIp("10.2.25.93"))
+                .addSlbServer(new SlbServer().setIp("10.2.25.93").setHostName("uat0358"))
+                .addSlbServer(new SlbServer().setIp("10.2.25.94").setHostName("uat0359"))
+                .addVirtualServer(new VirtualServer().setName("defaultSlbVs1").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("defaultSlbVs1.ctrip.com")))
+                .addVirtualServer(new VirtualServer().setName("defaultSlbVs2").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("defaultSlbVs2.ctrip.com")));
+        slbRepository.add(default1);
+
+        Slb default2 = new Slb().setName("default2").setStatus("TEST")
+                .addVip(new Vip().setIp("127.0.0.1"))
+                .addSlbServer(new SlbServer().setIp("127.0.0.1").setHostName("localhost"))
+                .addVirtualServer(new VirtualServer().setName("defaultSlbVs3").setSsl(false).setPort("80")
+                        .addDomain(new Domain().setName("defaultSlbVs3.ctrip.com")));
+        slbRepository.add(default2);
+    }
+
+    private void addGroups() throws Exception {
+        Group testGroupOnVs1 = generateGroup("testGroupOnVs1", 1L);
+        groupRepository.add(testGroupOnVs1);
+        for (int i = 0; i < 6; i++) {
+            Group group = generateGroup("testGroupOnVs2_" + i, 2L);
+            groupRepository.add(group);
+        }
+    }
+
+    private Group generateGroup(String groupName, Long vsId) {
+        return new Group().setName(groupName).setAppId("000000").setSsl(false)
+                .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
+                .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/" + groupName).setVirtualServer(new VirtualServer().setId(vsId)))
+                .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.201"))
+                .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
+    }
+}

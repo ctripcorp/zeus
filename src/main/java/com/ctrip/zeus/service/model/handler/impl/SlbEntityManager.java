@@ -47,7 +47,7 @@ public class SlbEntityManager implements SlbSync {
         archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion())
                 .setContent(ContentWriters.writeSlbContent(slb))
                 .setHash(VersionUtils.getHash(slb.getId(), slb.getVersion())));
-        rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setId(slb.getId()).setOfflineVersion(slb.getVersion()));
+        rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setSlbId(slb.getId()).setOfflineVersion(slb.getVersion()));
         slbServerRelMaintainer.addRel(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
     }
 
