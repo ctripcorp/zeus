@@ -87,7 +87,7 @@
             <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
-                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    INSERT IGNORE INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ]]>
                 </statement>
