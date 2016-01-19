@@ -175,54 +175,52 @@ public class BuildServiceImpl implements BuildService {
     }
 
     @Override
-    public void build(Long slbId,
-                      Slb activatingSlb,
-                      Map<Long,VirtualServer>buildVirtualServer,
+    public void build(Slb onlineSlb,
+                      Map<Long,VirtualServer> onlineVses,
+                      Set<Long> needBuildVses,
                       Set<Long> deactivateVses,
-                      Map<Long,List<Group>>groupsMap,
-                      Set<String>allDownServers,
+                      Map<Long,List<Group>> vsGroups,
+                      Set<String> allDownServers,
                       Set<String>allUpGroupServers
-                      )throws Exception{
-        int version = buildInfoService.getTicket(slbId);
-        int currentVersion = buildInfoService.getCurrentTicket(slbId);
-        Slb slb = null;
-        if (activatingSlb != null){
-            slb = activatingSlb;
-        }else{
-            slb = activateService.getActivatedSlb(slbId);
-        }
+    )throws Exception{
+        int version = buildInfoService.getTicket(onlineSlb.getId());
+        int currentVersion = buildInfoService.getCurrentTicket(onlineSlb.getId());
 
-        String conf = nginxConfigBuilder.generateNginxConf(slb);
+        String conf = nginxConfigBuilder.generateNginxConf(onlineSlb);
         nginxConfDao.insert(new NginxConfDo().setCreatedTime(new Date())
-                .setSlbId(slb.getId())
+                .setSlbId(onlineSlb.getId())
                 .setContent(conf)
                 .setVersion(version));
-        logger.debug("Nginx Conf build sucess! slbName: "+slb+",version: "+version);
+        logger.debug("Nginx Conf build sucess! slbId: "+onlineSlb.getId()+",version: "+version);
 
 
-        List<NginxConfServerDo> nginxConfServerDoList = nginxConfServerDao.findAllBySlbIdAndVersion(slbId,currentVersion,NginxConfServerEntity.READSET_FULL);
-        List<NginxConfUpstreamDo> nginxConfUpstreamDoList = nginxConfUpstreamDao.findAllBySlbIdAndVersion(slbId,currentVersion,NginxConfUpstreamEntity.READSET_FULL);
+        List<NginxConfServerDo> nginxConfServerDoList = nginxConfServerDao.findAllBySlbIdAndVersion(onlineSlb.getId(),currentVersion,NginxConfServerEntity.READSET_FULL);
+        List<NginxConfUpstreamDo> nginxConfUpstreamDoList = nginxConfUpstreamDao.findAllBySlbIdAndVersion(onlineSlb.getId(),currentVersion,NginxConfUpstreamEntity.READSET_FULL);
         Map <Long , NginxConfServerDo> nginxConfServerDoMap = new HashMap<>();
         Map<Long,NginxConfUpstreamDo> nginxConfUpstreamDoMap = new HashMap<>();
 
-        for (VirtualServer vs : buildVirtualServer.values()) {
-            List<Group> groups = groupsMap.get(vs.getId());
+        for (Long vsId : needBuildVses) {
+            if(deactivateVses.contains(vsId)){
+                continue;
+            }
+            VirtualServer virtualServer = onlineVses.get(vsId);
+            List<Group> groups = vsGroups.get(vsId);
             if (groups == null) {
                 groups = new ArrayList<>();
             }
 
-            String serverConf = nginxConfigBuilder.generateServerConf(slb, vs, groups);
-            String upstreamConf = nginxConfigBuilder.generateUpstreamsConf(slb, vs, groups, allDownServers, allUpGroupServers);
+            String serverConf = nginxConfigBuilder.generateServerConf(onlineSlb, virtualServer, groups);
+            String upstreamConf = nginxConfigBuilder.generateUpstreamsConf(onlineSlb, virtualServer, groups, allDownServers, allUpGroupServers);
 
-            nginxConfServerDoMap.put(vs.getId(), new NginxConfServerDo().setCreatedTime(new Date())
-                    .setSlbId(slb.getId())
-                    .setSlbVirtualServerId(vs.getId())
+            nginxConfServerDoMap.put(vsId, new NginxConfServerDo().setCreatedTime(new Date())
+                    .setSlbId(onlineSlb.getId())
+                    .setSlbVirtualServerId(vsId)
                     .setContent(serverConf)
                     .setVersion(version));
 
-            nginxConfUpstreamDoMap.put(vs.getId(),new NginxConfUpstreamDo().setCreatedTime(new Date())
-                    .setSlbId(slb.getId())
-                    .setSlbVirtualServerId(vs.getId())
+            nginxConfUpstreamDoMap.put(vsId,new NginxConfUpstreamDo().setCreatedTime(new Date())
+                    .setSlbId(onlineSlb.getId())
+                    .setSlbVirtualServerId(vsId)
                     .setContent(upstreamConf)
                     .setVersion(version));
         }

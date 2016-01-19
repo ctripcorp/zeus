@@ -30,11 +30,11 @@ public interface BuildService extends Repository {
                                                 Map<Long,VirtualServer> buildVirtualServer,
                                                 Set<Long> deactivateGroup)throws Exception;
 
-    void build(Long slbId,
-                 Slb activatedSlb,
-                 Map<Long,VirtualServer>buildVirtualServer,
+    void build(Slb onlineSlb,
+                 Map<Long,VirtualServer> onlineVses,
+                 Set<Long> needBuildVses,
                  Set<Long> deactivateVses,
-                 Map<Long,List<Group>>groupsMap,
+                 Map<Long,List<Group>> vsGroups,
                  Set<String> allDownServers,
                  Set<String>allUpGroupServers
     )throws Exception;

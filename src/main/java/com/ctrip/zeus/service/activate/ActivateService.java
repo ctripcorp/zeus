@@ -4,6 +4,8 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.Repository;
+import com.ctrip.zeus.service.model.IdVersion;
+
 import java.util.List;
 import java.util.Map;
 
@@ -114,12 +116,11 @@ public interface ActivateService extends Repository {
     public Group getActivatingGroup(Long groupId, int version);
     /**
      * get activating groups
-     * @param groupIds , the Group id
-     * @param versions , Version
+     * @param idVersions , the Group id version
      * @return groups
      */
 
-    public List<Group> getActivatingGroups(Long[] groupIds, Integer[] versions);
+    public List<Group> getActivatingGroups(IdVersion[] idVersions);
     /**
      * get activating slb
      * @param vsId the slb ID
@@ -130,12 +131,11 @@ public interface ActivateService extends Repository {
     public VirtualServer getActivatingVirtualServer(Long vsId,int version);
     /**
      * get activating slb
-     * @param vsIds the slb ID
-     * @param versions the version
+     * @param idVersions vsId version
      * @return vses
      */
 
-    public List<VirtualServer> getActivatingVirtualServers(Long[] vsIds,Integer[] versions);
+    public List<VirtualServer> getActivatingVirtualServers(IdVersion[] idVersions);
 
     /**
      * get activating slb
