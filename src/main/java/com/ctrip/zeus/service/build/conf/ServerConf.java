@@ -31,7 +31,8 @@ public class ServerConf {
     private static DynamicStringProperty proxyBufferSize = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffer.size", "8k");
     private static DynamicStringProperty proxyBuffers = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffers", "8 8k");
     private static DynamicStringProperty busyProxyBuffer = DynamicPropertyFactory.getInstance().getStringProperty("proxy.busy.buffers.size", "8k");
-
+    private static DynamicStringProperty errorPageAccept = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.accept", "text/html");
+    
     public static final String SSL_PATH = "/data/nginx/ssl/";
 
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception {
@@ -105,9 +106,10 @@ public class ServerConf {
             DynamicStringProperty errorPageConfig = DynamicPropertyFactory.getInstance().getStringProperty("errorPage."+i+".url",null);
             if (null != errorPageConfig.get()){
                 String path = "/"+ i + "page";
-                sb.append("error_page ").append(i).append(" = ").append(path).append(";\n");
+                sb.append("error_page ").append(i).append(" ").append(path).append(";\n");
                 sb.append("location = ").append(path).append(" {\n");
                 sb.append("internal;\n");
+                sb.append("proxy_set_header Accept ").append(errorPageAccept.get()).append(";\n");
                 sb.append("proxy_pass ").append(errorPageConfig.get()).append(";\n}\n");
             }
         }
@@ -115,9 +117,10 @@ public class ServerConf {
             DynamicStringProperty errorPageConfig = DynamicPropertyFactory.getInstance().getStringProperty("errorPage."+i+".url",null);
             if (null != errorPageConfig.get()){
                 String path = "/"+ i + "page";
-                sb.append("error_page ").append(i).append(" = ").append(path).append(";\n");
+                sb.append("error_page ").append(i).append(" ").append(path).append(";\n");
                 sb.append("location = ").append(path).append(" {\n");
                 sb.append("internal;\n");
+                sb.append("proxy_set_header Accept ").append(errorPageAccept.get()).append(";\n");
                 sb.append("proxy_pass ").append(errorPageConfig.get()).append(";\n}\n");
             }
         }
