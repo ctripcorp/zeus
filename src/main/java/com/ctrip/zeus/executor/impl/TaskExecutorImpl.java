@@ -162,10 +162,10 @@ public class TaskExecutorImpl implements TaskExecutor {
             Integer slbVersion = getSlbVersion(slbId);
             List<SlbServer> slbServers = nginxService.getCurrentSlbServers(slbId,slbVersion);
 
-            boolean needReload = true;
+            boolean needReload = false;
             if (activatingSlb!=null||activatingGroups.size()>0||deactivateGroupOps.size()>0
                     ||activatingVses.size()>0 || deactivateVsOps.size()>0){
-                needReload = false;
+                needReload = true;
             }
 
             List<NginxResponse> responses = nginxService.pushConf(slbServers,slbId,slbVersion,vsIds,needReload);
