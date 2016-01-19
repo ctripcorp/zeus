@@ -175,7 +175,18 @@ public class ActivateResource {
             }
 
             Set<Long> slbIds = slbCriteriaQuery.queryByGroups(new Long[]{id});
-            slbIds.addAll(activeConfService.getSlbIdsByGroupId(id));
+            Set<Long> activatedSlbId = activeConfService.getSlbIdsByGroupId(id);
+            activatedSlbId.removeAll(slbIds);
+
+            for (Long slbId : activatedSlbId){
+                OpsTask task = new OpsTask();
+                task.setGroupId(id);
+                task.setOpsType(TaskOpsType.DEACTIVATE_GROUP);
+                task.setTargetSlbId(slbId);
+                task.setVersion(group.getVersion());
+                tasks.add(task);
+            }
+
             for (Long slbId : slbIds){
                 OpsTask task = new OpsTask();
                 task.setGroupId(id);

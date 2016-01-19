@@ -125,11 +125,12 @@ public class NginxServiceImpl implements NginxService {
 
         NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
         rollbackConfBackUp(operator);
-        List<VirtualServer> list = slb.getVirtualServers();
+        Map<Long,VirtualServer> vses = activateService.getActivatedVirtualServerBySlb(slbId);
         List<Long> vsIds = new ArrayList<>();
-        for (VirtualServer vs : list){
+        for (VirtualServer vs : vses.values()){
             vsIds.add(vs.getId());
         }
+        cleanConfOnDisk(slbId,version,operator);
         writeConfToDisk(slbId, version, vsIds, operator);
 
         NginxResponse response = operator.reloadConfTest();
@@ -534,25 +535,32 @@ public class NginxServiceImpl implements NginxService {
             throw new IllegalStateException("the nginx conf must not be empty!");
         }
         operator.writeNginxConf(nginxConf);
+        logger.info("Write Nginx Conf Suc");
     }
 
     private void writeServerConf(Long slbId, int version,List<Long> vsIds , NginxOperator operator) throws Exception {
         List<NginxConfServerData> nginxConfServerDataList = nginxConfService.getNginxConfServer(slbId, version);
+        List<Long> vsId = new ArrayList<>();
         for (NginxConfServerData d : nginxConfServerDataList) {
             if (vsIds.contains(d.getVsId()))
             {
                 operator.writeServerConf(d.getVsId(), d.getContent());
+                vsId.add(d.getVsId());
             }
         }
+        logger.info("[Write Vhosts Conf] Total:"+vsId.size() + "Ids: "+ vsId.toString());
     }
 
     private void writeUpstreamConf(Long slbId, int version,List<Long> vsIds , NginxOperator operator) throws Exception {
         List<NginxConfUpstreamData> nginxConfUpstreamList = nginxConfService.getNginxConfUpstream(slbId, version);
+        List<Long> vsId = new ArrayList<>();
         for (NginxConfUpstreamData d : nginxConfUpstreamList) {
             if (vsIds.contains(d.getVsId())){
                 operator.writeUpstreamsConf(d.getVsId(), d.getContent());
+                vsId.add(d.getVsId());
             }
         }
+        logger.info("[Write Upstream Conf] Total:"+vsId.size() + "Ids: "+ vsId.toString());
     }
 
     private void cleanConfOnDisk(Long slbId, int version, NginxOperator operator) throws Exception {

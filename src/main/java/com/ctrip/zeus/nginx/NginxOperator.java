@@ -96,8 +96,8 @@ public class NginxOperator {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
             String rollbackConfDir  = nginxConfDir + "/Rollbacks/" + sdf.format(new Date());
             makeSurePathExist(rollbackConfDir);
-            String mvVhostCommand = " mv "+nginxConfDir+"/vhosts " + rollbackConfDir + "/ ";
-            String mvUpstreamCommand = " mv "+nginxConfDir+"/upstreams "+ rollbackConfDir + "/ ";
+            String mvVhostCommand = " cp -r "+nginxConfDir+"/vhosts " + rollbackConfDir + "/ ";
+            String mvUpstreamCommand = " cp -r "+nginxConfDir+"/upstreams "+ rollbackConfDir + "/ ";
             String mvNginxConfCommand = " cp "+nginxConfDir+"/nginx.conf " + rollbackConfDir + "/ ";
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
@@ -154,94 +154,59 @@ public class NginxOperator {
     }
     public NginxResponse cleanConf(List<Long> vsid) throws IOException{
         try {
+            NginxResponse response = new NginxResponse();
+            String msg = "";
             List<String> confFileList = new ArrayList<>();
             for (Long vs : vsid)
             {
                 confFileList.add(vs+CONF_SUFFIX);
             }
-            String cleanVhostCommand = " ls "+nginxConfDir+"/vhosts";
-            String cleanUpstreamCommand = " ls "+nginxConfDir+"/upstreams";
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
-            CommandLine commandline = CommandLine.parse(cleanVhostCommand);
-            DefaultExecutor exec = new DefaultExecutor();
-            exec.setExitValues(null);
-            PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream,errorStream);
-            exec.setStreamHandler(streamHandler);
-
-            //vhost ls command
-            int exitVal = exec.execute(commandline);
-            String out = outputStream.toString("UTF-8");
-            String error = errorStream.toString("UTF-8");
-            NginxResponse response = new NginxResponse();
-            response.setOutMsg(out);
-            response.setErrMsg(error);
-            response.setSucceed(0==exitVal);
-
-            //vhost rm command
-            if (response.getSucceed())
-            {
-                String[] lsObj = out.split("\n");
-                StringBuilder sb = new StringBuilder(128);
-                sb.append("rm ");
-                for (String rm : lsObj)
-                {
-                    if (!confFileList.contains(rm.trim()))
-                    {
-                        sb.append(nginxConfDir).append("/vhosts/").append(rm).append(" ");
+            String vhostDir = nginxConfDir + "/vhosts";
+            String upstreamDir = nginxConfDir + "/upstreams";
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+            File vhostFile = new File(vhostDir);
+            File [] serverFiles = vhostFile.listFiles();
+            if (serverFiles != null){
+                msg = "Clean Vhost File:";
+                for (File file : serverFiles){
+                    if (file.getName().contains(".bak.")){
+                        continue;
                     }
-                }
-                if (!sb.toString().trim().equals("rm")){
-                    commandline = CommandLine.parse(sb.toString());
-                    exitVal = exec.execute(commandline);
-                    out = outputStream.toString("UTF-8");
-                    error = errorStream.toString("UTF-8");
-                    response.setOutMsg(out);
-                    response.setErrMsg(error);
-                    response.setSucceed(0==exitVal);
+                    if (!confFileList.contains(file.getName())){
+                        File renameTo = new File(file.getAbsolutePath()+".bak."+sdf.format(new Date()));
+                        file.renameTo(renameTo);
+                        msg += " " + file.getName();
+                    }
                 }
             }
 
-            //upstream ls command
-            commandline = CommandLine.parse(cleanUpstreamCommand);
-            exitVal = exec.execute(commandline);
-            out = outputStream.toString("UTF-8");
-            error = errorStream.toString("UTF-8");
-            NginxResponse upstreamResponse = new NginxResponse();
-            upstreamResponse.setOutMsg(out);
-            upstreamResponse.setErrMsg(error);
-            upstreamResponse.setSucceed(0==exitVal);
-            //upstream rm command
-            if (upstreamResponse.getSucceed())
-            {
-                String[] lsObj = out.split("\n");
-                StringBuilder sb = new StringBuilder(128);
-                sb.append("rm ");
-                for (String rm : lsObj)
-                {
-                    if (!confFileList.contains(rm.trim()))
-                    {
-                        sb.append(nginxConfDir).append("/upstreams/").append(rm).append(" ");
+            File upstreamFile = new File(upstreamDir);
+
+            File [] upstreamFiles = upstreamFile.listFiles();
+            if (upstreamFiles != null){
+                msg += "\nClean Upstream File:";
+                for (File file : upstreamFiles){
+                    if (file.getName().contains(".bak.")){
+                        continue;
+                    }
+                    if (!confFileList.contains(file.getName())){
+                        File renameTo = new File(file.getAbsolutePath()+".bak."+sdf.format(new Date()));
+                        file.renameTo(renameTo);
+                        msg += " " + file.getName();
                     }
                 }
-                if (!sb.toString().trim().equals("rm")){
-                    commandline = CommandLine.parse(sb.toString());
-                    exitVal = exec.execute(commandline);
-                    out = outputStream.toString("UTF-8");
-                    error = errorStream.toString("UTF-8");
-                    upstreamResponse.setOutMsg(out);
-                    upstreamResponse.setErrMsg(error);
-                    upstreamResponse.setSucceed(0==exitVal);
-                }
             }
-            LOGGER.info(response.toString());
-            LOGGER.info(upstreamResponse.toString());
+
+            response.setSucceed(true);
+            response.setOutMsg(msg);
+            LOGGER.info("Clean Conf Response:"+response.toString());
             return response;
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Fail to clean conf",e);
             throw e;
         }
     }
+
     public NginxResponse reloadConf() throws IOException{
         try {
             String command = nginxBinDir + "/nginx -s reload";
