@@ -51,9 +51,16 @@ public class QueryTest extends AbstractServerTest {
     @After
     public void clearDb() throws Exception {
         if (Counter.get() == 0) {
+            Group[] groups = new Group[7];
+            for (int i = 0; i < 7; i++) {
+                groups[i] = new Group().setId(new Long(i)).setVersion(0);
+            }
+            groupRepository.updateStatus(groups);
             for (Long i = 1L; i <= 7L; i++) {
                 groupRepository.delete(i);
             }
+            virtualServerRepository.updateStatus(new VirtualServer[]{
+                    new VirtualServer().setId(1L).setVersion(0), new VirtualServer().setId(2L).setVersion(0)});
             for (Long i = 1L; i <= 2L; i++) {
                 virtualServerRepository.delete(i);
             }

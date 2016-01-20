@@ -42,7 +42,8 @@ public class VirtualServerEntityManager implements VirtualServerSync {
                 .setHash(VersionUtils.getHash(virtualServer.getId(), virtualServer.getVersion())));
 
         rVsStatusDao.insert(new RelVsStatusDo().setVsId(vsId).setOfflineVersion(virtualServer.getVersion()));
-        rVsSlbDao.insert(new RelVsSlbDo().setVsId(vsId).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion()));
+        rVsSlbDao.insert(new RelVsSlbDo().setVsId(vsId).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion())
+                .setHash(VersionUtils.getHash(virtualServer.getId(), virtualServer.getVersion())));
         vsDomainRelMaintainer.addRel(virtualServer, RelVsDomainDo.class, virtualServer.getDomains());
     }
 
@@ -56,10 +57,13 @@ public class VirtualServerEntityManager implements VirtualServerSync {
 
         SlbVirtualServerDo d = C.toSlbVirtualServerDo(vsId, virtualServer.getSlbId(), virtualServer);
         slbVirtualServerDao.updateByPK(d, SlbVirtualServerEntity.UPDATESET_FULL);
-        archiveVsDao.insert(new MetaVsArchiveDo().setVsId(vsId).setContent(ContentWriters.writeVirtualServerContent(virtualServer)).setVersion(virtualServer.getVersion()));
+        archiveVsDao.insert(new MetaVsArchiveDo().setVsId(vsId).setContent(ContentWriters.writeVirtualServerContent(virtualServer))
+                .setVersion(virtualServer.getVersion())
+                .setHash(VersionUtils.getHash(virtualServer.getId(), virtualServer.getVersion())));
 
         rVsStatusDao.insertOrUpdate(new RelVsStatusDo().setVsId(vsId).setOfflineVersion(virtualServer.getVersion()));
-        rVsSlbDao.insert(new RelVsSlbDo().setVsId(virtualServer.getId()).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion()));
+        rVsSlbDao.insert(new RelVsSlbDo().setVsId(virtualServer.getId()).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion())
+                .setHash(VersionUtils.getHash(virtualServer.getId(), virtualServer.getVersion())));
         vsDomainRelMaintainer.updateRel(virtualServer, RelVsDomainDo.class, virtualServer.getDomains());
     }
 
@@ -83,23 +87,32 @@ public class VirtualServerEntityManager implements VirtualServerSync {
 
     @Override
     public Set<Long> port(Long[] vsIds) throws Exception {
-        List<VirtualServer> toUpdate = new ArrayList<>();
+        Map<Long, VirtualServer> toUpdate = new HashMap<>();
         Set<Long> failed = new HashSet<>();
         for (MetaVsArchiveDo metaVsArchiveDo : archiveVsDao.findMaxVersionByVses(vsIds, ArchiveVsEntity.READSET_FULL)) {
             try {
-                toUpdate.add(DefaultSaxParser.parseEntity(VirtualServer.class, metaVsArchiveDo.getContent()));
+                VirtualServer vs = DefaultSaxParser.parseEntity(VirtualServer.class, metaVsArchiveDo.getContent());
+                toUpdate.put(vs.getId(), vs);
             } catch (Exception ex) {
                 failed.add(metaVsArchiveDo.getVsId());
             }
         }
-        RelVsStatusDo[] dos = new RelVsStatusDo[toUpdate.size()];
-        for (int i = 0; i < dos.length; i++) {
-            dos[i] = new RelVsStatusDo().setVsId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
+        RelVsStatusDo[] rel1 = new RelVsStatusDo[toUpdate.size()];
+        for (int i = 0; i < rel1.length; i++) {
+            rel1[i] = new RelVsStatusDo().setVsId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
         }
-        rVsStatusDao.insertOrUpdate(dos);
-        for (VirtualServer virtualServer : toUpdate) {
+        rVsStatusDao.insertOrUpdate(rel1);
+
+        List<RelVsSlbDo> rel2 = rVsSlbDao.findByVses(vsIds, RVsSlbEntity.READSET_FULL);
+        for (RelVsSlbDo d : rel2) {
+            d.setHash(VersionUtils.getHash(d.getVsId(), toUpdate.get(d.getVsId()).getVersion()));
+        }
+        rVsSlbDao.update(rel2.toArray(new RelVsSlbDo[rel2.size()]), RVsSlbEntity.UPDATESET_FULL);
+
+        for (VirtualServer virtualServer : toUpdate.values()) {
             vsDomainRelMaintainer.port(virtualServer, RelVsDomainDo.class, virtualServer.getDomains());
         }
+
         vsIds = new Long[toUpdate.size()];
         for (int i = 0; i < vsIds.length; i++) {
             vsIds[i] = toUpdate.get(i).getId();
@@ -109,12 +122,13 @@ public class VirtualServerEntityManager implements VirtualServerSync {
 
         for (ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo : ref) {
             try {
-                toUpdate.add(DefaultSaxParser.parseEntity(VirtualServer.class, confSlbVirtualServerActiveDo.getContent()));
+                VirtualServer vs = DefaultSaxParser.parseEntity(VirtualServer.class, confSlbVirtualServerActiveDo.getContent());
+                toUpdate.put(vs.getId(), vs);
             } catch (Exception ex) {
                 failed.add(confSlbVirtualServerActiveDo.getSlbVirtualServerId());
             }
         }
-        updateStatus(toUpdate.toArray(new VirtualServer[toUpdate.size()]));
+        updateStatus(toUpdate.values().toArray(new VirtualServer[toUpdate.size()]));
         return failed;
     }
 }
