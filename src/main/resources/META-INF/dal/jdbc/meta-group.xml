@@ -96,6 +96,23 @@
             </readset>
         </readsets>
         <query-defs>
+            <!--This query is particularly designed for batch selection required task executors-->
+            <query name="find-all-by-vs-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN (SELECT rgv.group_id, rgv.group_version
+                        FROM r_group_vs rgv
+                        INNER JOIN r_group_status rgs
+                            ON rgv.group_id = rgs.group_id
+                            AND (rgv.group_version = rgs.online_version OR rgv.group_version = rgs.offline_version)
+                        WHERE rgv.vs_id IN <IN>${ids}</IN>) AS tmp
+                    ON ag.group_id = tmp.group_id AND ag.version = tmp.group_version
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>

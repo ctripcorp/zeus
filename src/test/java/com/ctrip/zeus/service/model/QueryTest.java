@@ -11,7 +11,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -33,11 +35,14 @@ public class QueryTest extends AbstractServerTest {
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
-    private static AtomicInteger Counter = new AtomicInteger(3);
+    @Resource
+    private MappingFactory mappingFactory;
+
+    private static AtomicInteger Counter = new AtomicInteger(5);
 
     @Before
     public void fillDb() throws Exception {
-        if (Counter.get() == 3) {
+        if (Counter.get() == 5) {
             addSlbsAndVses();
             addGroups();
         }
@@ -70,17 +75,12 @@ public class QueryTest extends AbstractServerTest {
 
         Assert.assertEquals(1, groupCriteriaQuery.queryByName("testGroupOnVs1").longValue());
 
-        Set<IdVersion> gKeys = groupCriteriaQuery.queryByGroupServerIp("10.2.6.201");
-        Assert.assertEquals(7, gKeys.size());
-        Long[] values = new Long[7];
-        int i = 0;
-        for (IdVersion e : gKeys) {
-            values[i] = e.getId();
-            Assert.assertEquals(1, e.getVersion().intValue());
-            i++;
-        }
+        Set<Long> gKeys = groupCriteriaQuery.queryByGroupServerIp("10.2.6.201");
+        Assert.assertEquals(4, gKeys.size());
+        Long[] values = gKeys.toArray(new Long[gKeys.size()]);
+
         Arrays.sort(values);
-        Assert.assertArrayEquals(new Long[]{1L, 2L, 3L, 4L, 5L, 6L, 7L}, values);
+        Assert.assertArrayEquals(new Long[]{1L, 2L, 4L, 6L}, values);
 
         IdVersion[] gKeyArray = groupCriteriaQuery.queryByIdAndMode(1L, ModelMode.MODEL_MODE_MERGE_OFFLINE);
         Assert.assertEquals(new IdVersion(1L, 1), gKeyArray[0]);
@@ -100,7 +100,7 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertEquals(3L, vsKeys.iterator().next().getId().longValue());
 
 
-        vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(new Long[]{1L, 2L, 3L}, ModelMode.MODEL_MODE_OFFLINE);
+        vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(new Long[]{1L, 2L, 3L}, ModelMode.MODEL_MODE_MERGE_OFFLINE);
         Assert.assertEquals(3, vsKeys.size());
         Long[] values = new Long[3];
         int i = 0;
@@ -112,7 +112,7 @@ public class QueryTest extends AbstractServerTest {
         Arrays.sort(values);
         Assert.assertArrayEquals(new Long[]{1L, 2L, 3L}, values);
 
-        IdVersion[] vsKeyArray = virtualServerCriteriaQuery.queryByIdAndMode(2L, ModelMode.MODEL_MODE_OFFLINE);
+        IdVersion[] vsKeyArray = virtualServerCriteriaQuery.queryByIdAndMode(2L, ModelMode.MODEL_MODE_ONLINE);
         Assert.assertEquals(new IdVersion(2L, 1), vsKeyArray[0]);
         Assert.assertNull(vsKeyArray[1]);
 
@@ -160,9 +160,23 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertEquals(1, sKeys.size());
         Assert.assertArrayEquals(new Long[]{2L}, values);
 
-        IdVersion[] sKeyArray = slbCriteriaQuery.queryByIdAndMode(1L, ModelMode.MODEL_MODE_OFFLINE);
+        IdVersion[] sKeyArray = slbCriteriaQuery.queryByIdAndMode(1L, ModelMode.MODEL_MODE_ONLINE);
         Assert.assertEquals(new IdVersion(1L, 1), sKeyArray[0]);
         Assert.assertNull(sKeyArray[1]);
+    }
+
+    @Test
+    public void testMappingFactoryGetByVsIds() throws Exception {
+        ModelStatusMapping<Group> mapping = mappingFactory.getByVsIds(new Long[]{1L, 2L, 3L});
+        Assert.assertEquals(3, mapping.getOfflineMapping().size());
+        Assert.assertEquals(4, mapping.getOnlineMapping().size());
+    }
+
+    @Test
+    public void testMappingFactoryGetBySlbId() throws Exception {
+        ModelStatusMapping<VirtualServer> mapping = mappingFactory.getBySlbIds(1L);
+        Assert.assertEquals(0, mapping.getOfflineMapping().size());
+        Assert.assertEquals(2, mapping.getOnlineMapping().size());
     }
 
     private void addSlbsAndVses() throws Exception {
@@ -175,6 +189,8 @@ public class QueryTest extends AbstractServerTest {
                 .addVirtualServer(new VirtualServer().setName("defaultSlbVs2").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("defaultSlbVs2.ctrip.com")));
         slbRepository.add(default1);
+        virtualServerRepository.updateStatus(default1.getVirtualServers().toArray(new VirtualServer[2]));
+        slbRepository.updateStatus(new Slb[]{default1});
 
         Slb default2 = new Slb().setName("default2").setStatus("TEST")
                 .addVip(new Vip().setIp("127.0.0.1"))
@@ -185,12 +201,18 @@ public class QueryTest extends AbstractServerTest {
     }
 
     private void addGroups() throws Exception {
+        List<Group> activated = new ArrayList<>();
         Group testGroupOnVs1 = generateGroup("testGroupOnVs1", 1L);
         groupRepository.add(testGroupOnVs1);
+        activated.add(testGroupOnVs1);
         for (int i = 0; i < 6; i++) {
             Group group = generateGroup("testGroupOnVs2_" + i, 2L);
             groupRepository.add(group);
+            if (i % 2 == 0) {
+                activated.add(group);
+            }
         }
+        groupRepository.updateStatus(activated.toArray(new Group[activated.size()]));
     }
 
     private Group generateGroup(String groupName, Long vsId) {

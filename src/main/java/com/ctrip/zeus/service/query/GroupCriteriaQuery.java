@@ -18,6 +18,8 @@ public interface GroupCriteriaQuery {
 
     Set<Long> queryAllVGroups() throws Exception;
 
+    Set<Long> queryByGroupServerIp(String ip) throws Exception;
+
     Set<IdVersion> queryByIdsAndMode(Long[] groupIds, ModelMode mode) throws Exception;
 
     IdVersion[] queryByIdAndMode(Long groupId, ModelMode mode) throws Exception;
@@ -29,6 +31,4 @@ public interface GroupCriteriaQuery {
     Set<IdVersion> queryByVsId(Long vsId) throws Exception;
 
     Set<IdVersion> queryByVsIds(Long[] vsIds) throws Exception;
-
-    Set<IdVersion> queryByGroupServerIp(String ip) throws Exception;
 }

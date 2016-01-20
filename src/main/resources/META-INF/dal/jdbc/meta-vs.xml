@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="archive-vs" table="archive_vs" alias="av" do-class="MetaVsArchiveDo">
+        <var name="rel-id" value-type="Long"/>
         <var name="ids" value-type="Long[]"/>
         <var name="hashes" value-type="Integer[]"/>
         <var name="id-version-array" value-type="String[]"/>
@@ -10,6 +11,23 @@
             </readset>
         </readsets>
         <query-defs>
+            <!--This query is particularly designed for batch selection required task executors-->
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="rel-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN (SELECT rvs.vs_id, rvs.vs_version
+                        FROM r_vs_slb rvs
+                        INNER JOIN r_vs_status rvss
+                            ON rvs.vs_id = rvss.vs_id
+                            AND rvs.slb_id = ${rel-id}
+                            AND (rvs.vs_version = rvss.online_version OR rvs.vs_version = rvss.offline_version)) AS tmp
+                    ON av.vs_id = tmp.vs_id AND av.version = tmp.vs_version
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>

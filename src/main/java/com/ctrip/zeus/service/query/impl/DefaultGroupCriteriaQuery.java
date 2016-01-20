@@ -61,6 +61,22 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
+    public Set<Long> queryByGroupServerIp(String ip) throws Exception {
+        Set<Long> result = new HashSet<>();
+        Set<String> range = new HashSet<>();
+        for (RelGroupGsDo d : rGroupGsDao.findAllByIp(ip, RGroupGsEntity.READSET_FULL)) {
+            result.add(d.getGroupId());
+            range.add(d.getGroupId() + "," + d.getGroupVersion());
+        }
+        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(result.toArray(new Long[result.size()]), RGroupStatusEntity.READSET_FULL)) {
+            if (d.getOnlineVersion() == 0 || !range.contains(d.getGroupId() + "," + d.getOnlineVersion())) {
+                result.remove(d.getGroupId());
+            }
+        }
+        return result;
+    }
+
+    @Override
     public Set<IdVersion> queryByIdsAndMode(Long[] groupIds, ModelMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL)) {
@@ -120,15 +136,6 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
         Set<IdVersion> result = new HashSet<>();
         for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllByVses(vsIds, RGroupVsEntity.READSET_FULL)) {
             result.add(new IdVersion(relGroupVsDo.getGroupId(), relGroupVsDo.getGroupVersion()));
-        }
-        return result;
-    }
-
-    @Override
-    public Set<IdVersion> queryByGroupServerIp(String ip) throws Exception {
-        Set<IdVersion> result = new HashSet<>();
-        for (RelGroupGsDo relGroupGsDo : rGroupGsDao.findAllByIp(ip, RGroupGsEntity.READSET_FULL)) {
-            result.add(new IdVersion(relGroupGsDo.getGroupId(), relGroupGsDo.getGroupVersion()));
         }
         return result;
     }

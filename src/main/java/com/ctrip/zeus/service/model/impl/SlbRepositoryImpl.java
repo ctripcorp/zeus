@@ -117,6 +117,11 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
+    public void updateStatus(Slb[] slbs) throws Exception {
+        slbEntityManager.updateStatus(slbs);
+    }
+
+    @Override
     public Set<Long> port(Long[] slbId) throws Exception {
         return slbEntityManager.port(slbId);
     }

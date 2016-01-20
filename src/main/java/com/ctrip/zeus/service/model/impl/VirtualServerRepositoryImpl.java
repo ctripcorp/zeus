@@ -136,6 +136,11 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
+    public void updateStatus(VirtualServer[] vses) throws Exception {
+        virtualServerEntityManager.updateStatus(vses);
+    }
+
+    @Override
     public Set<Long> port(Long[] vsIds) throws Exception {
         return virtualServerEntityManager.port(vsIds);
     }

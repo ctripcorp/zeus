@@ -158,6 +158,11 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
+    public void updateStatus(Group[] groups) throws Exception {
+        groupEntityManager.updateStatus(groups);
+    }
+
+    @Override
     public Set<Long> port(Long[] groupIds) throws Exception {
         return groupEntityManager.port(groupIds);
     }
