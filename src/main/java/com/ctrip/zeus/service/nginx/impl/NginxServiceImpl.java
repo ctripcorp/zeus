@@ -64,7 +64,7 @@ public class NginxServiceImpl implements NginxService {
         threadPoolExecutor = new ThreadPoolExecutor(10,20,300, TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
     }
 
-    private Logger logger = LoggerFactory.getLogger(NginxServiceImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(NginxServiceImpl.class);
 
 
     @Override
@@ -86,28 +86,32 @@ public class NginxServiceImpl implements NginxService {
         final Integer version = slbVersion;
         final boolean reload = needReload;
         for (SlbServer slbServer : slbServers){
+            final String ip = slbServer.getIp();
             final NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             FutureTask<NginxResponse> futureTask = new FutureTask<>(new Callable<NginxResponse>() {
                 @Override
                 public NginxResponse call() throws Exception {
                     NginxResponse response;
+                    logger.info("[Push Conf]start push conf.IP:"+ip);
                     nginxClient.write(vs,id,version);
                     if (reload){
                         response = nginxClient.load(id,version);
                     }else {
                         response = nginxClient.confTest(id,version);
                     }
+                    logger.info("[Push Conf]finish push conf.IP:"+ip);
                     return response;
                 }
             });
             threadPoolExecutor.execute(futureTask);
             futureTasks.add(futureTask);
         }
-
+        logger.info("[Push Conf]start get push conf result.");
         List<NginxResponse> result = new ArrayList<>();
         for (FutureTask<NginxResponse> futureTask : futureTasks){
             result.add(futureTask.get(nginxFutureTimeout.get(),TimeUnit.MILLISECONDS));
         }
+        logger.info("[Push Conf]finish get push conf result.");
         return result;
     }
 
