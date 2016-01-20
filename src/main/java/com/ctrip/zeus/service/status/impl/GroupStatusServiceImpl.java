@@ -1,13 +1,9 @@
 package com.ctrip.zeus.service.status.impl;
 
-import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.dal.core.ConfSlbActiveDao;
 import com.ctrip.zeus.dal.core.ConfSlbActiveDo;
 import com.ctrip.zeus.dal.core.ConfSlbActiveEntity;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.nginx.entity.UpstreamStatus;
-import com.ctrip.zeus.service.activate.ActivateService;
-import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
@@ -19,7 +15,6 @@ import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
-import com.ctrip.zeus.status.entity.GroupStatusList;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -55,10 +50,6 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     StatusService statusService;
     @Resource
     ConfSlbActiveDao confSlbActiveDao;
-    @Resource
-    private ActivateService activateService;
-    @Resource
-    private ActiveConfService activeConfService;
     @Resource
     private HealthCheckStatusService healthCheckStatusService;
 

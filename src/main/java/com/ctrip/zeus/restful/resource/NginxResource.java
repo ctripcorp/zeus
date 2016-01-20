@@ -132,19 +132,6 @@ public class NginxResource {
         }
     }
 
-
-    @GET
-    @Path("/status")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response status(@Context HttpServletRequest request,@Context HttpHeaders hh) throws Exception {
-        NginxServerStatus status = nginxService.getStatus();
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(NginxServerStatus.XML, status)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(NginxServerStatus.JSON, status)).type(MediaType.APPLICATION_JSON).build();
-        }
-    }
-
     @GET
     @Path("/trafficStatus")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -191,22 +178,6 @@ public class NginxResource {
             return Response.status(200).entity(String.format(NginxResponseList.XML, result)).type(MediaType.APPLICATION_XML).build();
         } else {
             return Response.status(200).entity(String.format(NginxResponseList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-        }
-    }
-
-    @GET
-    @Path("/allStatus/slb/{slbId:[0-9]+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response allStatus(@Context HttpServletRequest request,@Context HttpHeaders hh, @PathParam("slbId") Long slbId) throws Exception {
-        List<NginxServerStatus> nginxServerStatusList = nginxService.getStatusAll(slbId);
-        NginxServerStatusList result = new NginxServerStatusList();
-        for (NginxServerStatus nginxServerStatus : nginxServerStatusList) {
-            result.addNginxServerStatus(nginxServerStatus);
-        }
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(NginxServerStatusList.XML, result)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(NginxServerStatusList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
         }
     }
 }

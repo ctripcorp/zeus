@@ -1,10 +1,6 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupServer;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.StatusOffset;
@@ -25,8 +21,6 @@ import java.util.*;
 public class StatusServiceImpl implements StatusService {
     @Resource
     private SlbRepository slbRepository;
-    @Resource
-    private ActivateService activateService;
     @Resource
     private GroupRepository groupRepository;
     @Resource
@@ -67,6 +61,26 @@ public class StatusServiceImpl implements StatusService {
             if (status == offsetStatus){
                 result.add(statusGroupServerDo.getSlbVirtualServerId() + "_" + statusGroupServerDo.getGroupId() + "_" + statusGroupServerDo.getIp());
             }
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String,List<Boolean>> fetchGroupServersByVsIds(Long[] vsIds) throws Exception {
+        Map<String,List<Boolean>> result = new HashMap<>();
+        List<StatusGroupServerDo> statusGroupServerDos= statusGroupServerDao.findAllBySlbVirtualServerIds(vsIds, StatusGroupServerEntity.READSET_FULL);
+        int tmp = 1;
+        for (StatusGroupServerDo statusGroupServerDo : statusGroupServerDos){
+            int tmpStatus = statusGroupServerDo.getStatus();
+            /*
+            * offset == 0 is true ; offset == 1 is false.
+            * */
+            List<Boolean> offset = new ArrayList<>();
+            for (int i = 0; i < 30; i++) {
+                offset.set( i , 0 == (tmpStatus & tmp));
+                tmpStatus = tmpStatus >> 1;
+            }
+            result.put(statusGroupServerDo.getSlbVirtualServerId() + "_" + statusGroupServerDo.getGroupId() + "_" + statusGroupServerDo.getIp(),offset);
         }
         return result;
     }

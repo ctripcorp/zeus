@@ -1,19 +1,14 @@
 package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.model.SlbRepository;
-import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -26,8 +21,6 @@ public class BuildInfoServiceImpl implements BuildInfoService {
 
     @Resource
     private SlbRepository slbRepository;
-    @Resource
-    private ActiveConfService activeConfService;
 
 
     private Logger logger= LoggerFactory.getLogger(BuildInfoServiceImpl.class);
@@ -84,7 +77,7 @@ public class BuildInfoServiceImpl implements BuildInfoService {
     }
 
     @Override
-    public int getPaddingTicket(Long slbId)throws Exception{
+         public int getPaddingTicket(Long slbId)throws Exception{
         BuildInfoDo d = buildInfoDao.findBySlbId(slbId, BuildInfoEntity.READSET_FULL);
         return d.getPendingTicket();
     }
