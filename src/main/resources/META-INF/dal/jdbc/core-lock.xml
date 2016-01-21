@@ -27,13 +27,13 @@
                     ]]>
                 </statement>
             </query>
-            <query name="get-by-key-in-share-mode" type="SELECT">
+            <query name="get-by-key-for-update" type="SELECT">
                 <param name="lock-key"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='lock-key'/> = ${lock-key} LOCK IN SHARE MODE
+                    WHERE <FIELD name='lock-key'/> = ${lock-key} FOR UPDATE
                     ]]>
                 </statement>
             </query>
