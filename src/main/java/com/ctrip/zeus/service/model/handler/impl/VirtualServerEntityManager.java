@@ -30,11 +30,6 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     @Resource
     private ArchiveVsDao archiveVsDao;
 
-    // TODO remove m_vs_content table
-    @Resource
-    private MVsContentDao mVsContentDao;
-
-
     @Override
     public void addVirtualServer(VirtualServer virtualServer) throws Exception {
         virtualServer.setVersion(1);
@@ -108,13 +103,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
 
     @Override
     public void port(Long vsId) throws Exception {
-        MetaVsContentDo orig = mVsContentDao.findById(vsId, MVsContentEntity.READSET_FULL);
-        if (orig == null)
-            throw new ValidationException("No previous content has found.");
-        VirtualServer vs = ContentReaders.readVirtualServerContent(orig.getContent());
-        vs.setVersion(1);
-        MetaVsArchiveDo arch = new MetaVsArchiveDo().setVsId(orig.getVsId()).setContent(ContentWriters.writeVirtualServerContent(vs)).setVersion(1);
-        archiveVsDao.insertOrUpdate(arch);
+
     }
 
     private void relSyncDomain(Long vsId, List<Domain> domains) throws DalException {

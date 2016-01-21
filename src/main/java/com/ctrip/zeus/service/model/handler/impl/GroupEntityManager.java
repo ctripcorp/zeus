@@ -150,7 +150,7 @@ public class GroupEntityManager implements GroupSync {
         if (isnew) {
             for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
                 VirtualServer vs = groupVirtualServer.getVirtualServer();
-                rGroupVsDao.insertOrUpdate(new RelGroupVsDo().setGroupId(group.getId()).setVsId(vs.getId()).setPath(groupVirtualServer.getPath()));
+                rGroupVsDao.insert(new RelGroupVsDo().setGroupId(group.getId()).setVsId(vs.getId()).setPath(groupVirtualServer.getPath()));
             }
             return;
         }
@@ -160,16 +160,10 @@ public class GroupEntityManager implements GroupSync {
         }
         // most common case
         if (group.getGroupVirtualServers().size() == 1 && originVses.size() == 1) {
-            if (!group.getGroupVirtualServers().get(0).getVirtualServer().getId().equals(originVses.get(0).getVsId())) {
-                rGroupVsDao.deleteByVsAndGroup(originVses.get(0));
-                GroupVirtualServer gvs = group.getGroupVirtualServers().get(0);
-                rGroupVsDao.insertOrUpdate(new RelGroupVsDo().setGroupId(group.getId()).setVsId(gvs.getVirtualServer().getId()).setPath(gvs.getPath()));
-            } else {
-                GroupVirtualServer gvs = group.getGroupVirtualServers().get(0);
-                RelGroupVsDo d = rGroupVsDao.findByGroupAndVs(group.getId(), gvs.getVirtualServer().getId(), RGroupVsEntity.READSET_FULL);
-                d.setPath(gvs.getPath());
-                rGroupVsDao.updateByPK(d, RGroupVsEntity.UPDATESET_FULL);
-            }
+            GroupVirtualServer gvs = group.getGroupVirtualServers().get(0);
+            RelGroupVsDo d = rGroupVsDao.findByGroupAndVs(group.getId(), gvs.getVirtualServer().getId(), RGroupVsEntity.READSET_FULL);
+            d.setPath(gvs.getPath()).setVsId(gvs.getVirtualServer().getId());
+            rGroupVsDao.updateById(d, RGroupVsEntity.UPDATESET_FULL);
         } else {
             relUpdateVsMultiple(originVses, group);
         }
@@ -177,25 +171,16 @@ public class GroupEntityManager implements GroupSync {
 
     private void relUpdateVsMultiple(List<RelGroupVsDo> originVses, Group group) throws DalException {
         List<GroupVirtualServer> newVses = group.getGroupVirtualServers();
-        // O(n)
-        long[] originVsIds = new long[originVses.size()];
-        long[] newVsIds = new long[newVses.size()];
-        for (int i = 0; i < originVsIds.length; i++) {
-            originVsIds[i] = originVses.get(i).getVsId();
+        int i;
+        for (i = 0; i < originVses.size() && i < newVses.size(); i++) {
+            originVses.get(i).setVsId(newVses.get(i).getVirtualServer().getId()).setPath(newVses.get(i).getPath());
         }
-        for (int i = 0; i < newVsIds.length; i++) {
-            newVsIds[i] = newVses.get(i).getVirtualServer().getId();
+        rGroupVsDao.updateById(originVses.subList(0, i).toArray(new RelGroupVsDo[i]), RGroupVsEntity.UPDATESET_FULL);
+        if (originVses.size() > i) {
+            rGroupVsDao.deleteById(originVses.subList(i, originVses.size()).toArray(new RelGroupVsDo[originVses.size() - i]));
         }
-
-        List<Long> removing = new ArrayList<>();
-        ArraysUniquePicker.pick(originVsIds, newVsIds, removing, new ArrayList<Long>());
-
-        for (Long rId : removing) {
-            rGroupVsDao.deleteByVsAndGroup(new RelGroupVsDo().setVsId(rId).setGroupId(group.getId()));
-        }
-        for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
-            VirtualServer vs = groupVirtualServer.getVirtualServer();
-            rGroupVsDao.insertOrUpdate(new RelGroupVsDo().setGroupId(group.getId()).setVsId(vs.getId()).setPath(groupVirtualServer.getPath()));
+        for (; i < newVses.size(); i++) {
+            rGroupVsDao.insert(new RelGroupVsDo().setGroupId(group.getId()).setVsId(newVses.get(i).getVirtualServer().getId()).setPath(newVses.get(i).getPath()));
         }
     }
 }

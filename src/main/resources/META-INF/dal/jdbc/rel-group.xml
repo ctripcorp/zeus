@@ -77,13 +77,21 @@
                     ]]>
                 </statement>
             </query>
-            <query name="insert-or-update" type="INSERT">
+            <query name="insert" type="INSERT">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
-                    ON DUPLICATE KEY UPDATE
-                        path = values(path)
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-id" type="UPDATE" batch="true">
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='vs-id'/> = ${vs-id},
+                        <FIELD name='path'/> = ${path}
+                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>
@@ -93,6 +101,15 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-id" type="DELETE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>

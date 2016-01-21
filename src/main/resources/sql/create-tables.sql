@@ -252,6 +252,24 @@ CREATE TABLE IF NOT EXISTS `conf_slb_active` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table fxslbdb.conf_slb_virtual_server_active
+DROP TABLE IF EXISTS `conf_slb_virtual_server_active`;
+CREATE TABLE IF NOT EXISTS `conf_slb_virtual_server_active` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `slb_virtual_server_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb_virtual_server_id',
+  `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'null',
+  `content` mediumtext COMMENT 'null',
+  `version` int(11) DEFAULT NULL COMMENT 'null',
+  `created_time` timestamp NULL DEFAULT NULL COMMENT 'null',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'null',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slb_virtual_server_id_slb_id` (`slb_virtual_server_id`,`slb_id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='conf_slb_virtual_server_active';
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table dist_lock
 DROP TABLE IF EXISTS `dist_lock`;
 CREATE TABLE `dist_lock` (
