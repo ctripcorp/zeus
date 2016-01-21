@@ -27,24 +27,6 @@ public class ArchiveServiceImpl implements ArchiveService {
     private ArchiveVsDao archiveVsDao;
 
     @Override
-    public int deleteSlbArchive(Long slbId) throws Exception {
-        ArchiveSlbDo d = new ArchiveSlbDo().setSlbId(slbId);
-        return archiveSlbDao.deleteBySlb(d);
-    }
-
-    @Override
-    public int deleteGroupArchive(Long groupId) throws Exception {
-        ArchiveGroupDo d = new ArchiveGroupDo().setGroupId(groupId);
-        return archiveGroupDao.deleteByGroup(d);
-    }
-
-    @Override
-    public int deleteVsArchive(Long vsId) throws Exception {
-        MetaVsArchiveDo d = new MetaVsArchiveDo().setVsId(vsId);
-        return archiveVsDao.deleteByVs(d);
-    }
-
-    @Override
     public Slb getSlb(Long slbId, int version) throws Exception {
         ArchiveSlbDo d = archiveSlbDao.findBySlbAndVersion(slbId, version, ArchiveSlbEntity.READSET_FULL);
         return d == null ? null : DefaultSaxParser.parseEntity(Slb.class, d.getContent());
@@ -112,21 +94,6 @@ public class ArchiveServiceImpl implements ArchiveService {
     }
 
     @Override
-    public Archive getLatestSlbArchive(Long slbId) throws Exception {
-        ArchiveSlbDo asd = archiveSlbDao.findMaxVersionBySlb(slbId, ArchiveSlbEntity.READSET_FULL);
-        return C.toSlbArchive(asd);
-    }
-
-    @Override
-    public List<Archive> getLastestVsArchives(Long[] vsIds) throws Exception {
-        List<Archive> result = new ArrayList<>();
-        for (MetaVsArchiveDo metaVsArchiveDo : archiveVsDao.findMaxVersionByVses(vsIds, ArchiveVsEntity.READSET_FULL)) {
-            result.add(C.toVsArchive(metaVsArchiveDo));
-        }
-        return result;
-    }
-
-    @Override
     public Archive getSlbArchive(Long slbId, int version) throws Exception {
         ArchiveSlbDo archive = archiveSlbDao.findBySlbAndVersion(slbId, version, ArchiveSlbEntity.READSET_FULL);
         return C.toSlbArchive(archive);
@@ -142,42 +109,5 @@ public class ArchiveServiceImpl implements ArchiveService {
     public Archive getVsArchive(Long vsId, int version) throws Exception {
         MetaVsArchiveDo d = archiveVsDao.findByVsAndVersion(vsId, version, ArchiveVsEntity.READSET_FULL);
         return C.toVsArchive(d);
-    }
-
-    @Override
-    public Archive getLatestVsArchive(Long vsId) throws Exception {
-        MetaVsArchiveDo d = archiveVsDao.findMaxVersionByVs(vsId, ArchiveVsEntity.READSET_FULL);
-        return C.toVsArchive(d);
-    }
-
-    @Override
-    public List<Archive> getVsArchives(IdVersion[] keys) throws Exception {
-        List<Archive> result = new ArrayList<>();
-        Integer[] hashes = new Integer[keys.length];
-        String[] values = new String[keys.length];
-        for (int i = 0; i < hashes.length; i++) {
-            hashes[i] = keys[i].hashCode();
-            values[i] = keys[i].toString();
-        }
-        for (MetaVsArchiveDo d : archiveVsDao.findAllByIdVersion(hashes, values, ArchiveVsEntity.READSET_FULL)) {
-            result.add(new Archive().setId(d.getVsId()).setContent(d.getContent()).setVersion(d.getVersion()));
-        }
-        return result;
-
-    }
-
-    @Override
-    public List<Archive> getGroupArchives(IdVersion[] keys) throws Exception {
-        List<Archive> result = new ArrayList<>();
-        Integer[] hashes = new Integer[keys.length];
-        String[] values = new String[keys.length];
-        for (int i = 0; i < hashes.length; i++) {
-            hashes[i] = keys[i].hashCode();
-            values[i] = keys[i].toString();
-        }
-        for (ArchiveGroupDo d : archiveGroupDao.findAllByIdVersion(hashes, values, ArchiveGroupEntity.READSET_FULL)) {
-            result.add(new Archive().setId(d.getGroupId()).setContent(d.getContent()).setVersion(d.getVersion()));
-        }
-        return result;
     }
 }

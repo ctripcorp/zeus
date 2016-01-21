@@ -33,14 +33,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="insert-all" type="INSERT" batch="true">
-                <statement>
-                    <![CDATA[
-                    INSERT INTO <TABLE/>(<FIELDS/>)
-                    VALUES(<VALUES/>)
-                    ]]>
-                </statement>
-            </query>
             <query name="update" type="UPDATE" batch="true">
                 <param name="id"/>
                 <statement>
@@ -51,16 +43,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-all-by-slb" type="DELETE">
-                <param name="slb-id"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='slb-id'/> = ${slb-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="delete-by-vs" type="DELETE" batch="true">
+            <query name="delete-by-vs" type="DELETE">
                 <param name="vs-id"/>
                 <statement>
                     <![CDATA[
@@ -127,17 +110,6 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='id'/> = ${id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="delete-by-vs-and-domain" type="DELETE">
-                <param name="vs-id"/>
-                <param name="domain"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='domain'/> = ${domain}
-                        AND <FIELD name='vs-id'/> = ${vs-id}
                     ]]>
                 </statement>
             </query>

@@ -88,7 +88,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
             hashes[i] = groupKeys[i].hashCode();
             values[i] = groupKeys[i].toString();
         }
-        for (RelGroupVsDo d : rGroupVsDao.findAllByGroups(hashes, values, RGroupVsEntity.READSET_FULL)) {
+        for (RelGroupVsDo d : rGroupVsDao.findAllByGroupAndVersion(hashes, values, RGroupVsEntity.READSET_FULL)) {
             result.add(new IdVersion(d.getVsId(), d.getGroupVersion()));
         }
         return result;

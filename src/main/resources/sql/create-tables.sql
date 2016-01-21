@@ -604,7 +604,9 @@ CREATE TABLE IF NOT EXISTS `r_group_gs` (
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`),
-  KEY `hash` (`hash`)
+  KEY `ip` (`ip`),
+  KEY `hash` (`hash`),
+  KEY `group_id` (`group_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of group and group server ip';
 
 -- Data exporting was unselected.
@@ -655,7 +657,8 @@ CREATE TABLE IF NOT EXISTS `r_group_vs` (
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`),
   KEY `idx_vs_id` (`vs_id`),
-  KEY `hash` (`hash`)
+  KEY `hash` (`hash`),
+  KEY `group_id` (`group_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of group and vs';
 
 -- Data exporting was unselected.
@@ -672,7 +675,9 @@ CREATE TABLE IF NOT EXISTS `r_slb_slb_server` (
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`),
-  KEY `hash` (`hash`)
+  KEY `hash` (`hash`),
+  KEY `slb_id` (`slb_id`),
+  KEY `ip` (`ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of slb and slb server';
 
 -- Data exporting was unselected.
@@ -707,8 +712,9 @@ CREATE TABLE IF NOT EXISTS `r_vs_domain` (
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`),
-  KEY `vs_id_domain` (`vs_id`,`domain`),
-  KEY `hash` (`hash`)
+  KEY `hash` (`hash`),
+  KEY `vs_id` (`vs_id`),
+  KEY `domain` (`domain`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of vs and domain';
 
 -- Data exporting was unselected.
@@ -849,7 +855,6 @@ CREATE TABLE IF NOT EXISTS `slb_virtual_server` (
   `version` int(11) NOT NULL DEFAULT '0' COMMENT 'version',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `slb_id_name` (`slb_id`,`name`),
   KEY `idx_DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

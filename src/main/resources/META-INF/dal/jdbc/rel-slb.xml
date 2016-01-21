@@ -39,17 +39,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-slb-and-ip" type="DELETE" batch="true">
-                <param name="slb-id"/>
-                <param name="ip"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='slb-id'/> = ${slb-id}
-                      AND <FIELD name='ip'/> = ${ip}
-                    ]]>
-                </statement>
-            </query>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[

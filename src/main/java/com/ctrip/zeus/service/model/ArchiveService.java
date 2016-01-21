@@ -13,13 +13,6 @@ import java.util.List;
  */
 public interface ArchiveService {
 
-    int deleteSlbArchive(Long slbId) throws Exception;
-
-    int deleteGroupArchive(Long groupId) throws Exception;
-
-    int deleteVsArchive(Long vsId) throws Exception;
-
-
     Slb getSlb(Long slbId, int version) throws Exception;
 
     Group getGroup(Long groupId, int version) throws Exception;
@@ -39,15 +32,4 @@ public interface ArchiveService {
     Archive getGroupArchive(Long groupId, int version) throws Exception;
 
     Archive getVsArchive(Long vsId, int version) throws Exception;
-
-    Archive getLatestSlbArchive(Long slbId) throws Exception;
-
-    Archive getLatestVsArchive(Long vsId) throws Exception;
-
-
-    List<Archive> getLastestVsArchives(Long[] vsIds) throws Exception;
-
-    List<Archive> getVsArchives(IdVersion[] keys) throws Exception;
-
-    List<Archive> getGroupArchives(IdVersion[] keys) throws Exception;
 }

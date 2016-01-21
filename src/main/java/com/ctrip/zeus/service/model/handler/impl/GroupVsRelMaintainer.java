@@ -22,7 +22,7 @@ public class GroupVsRelMaintainer extends MultiRelMaintainerEx<RelGroupVsDo, Gro
 
     @Override
     public List<RelGroupVsDo> getAll(Long id) throws Exception {
-        return rGroupVsDao.findAllVsesByGroup(id, RGroupVsEntity.READSET_FULL);
+        return rGroupVsDao.findAllByGroup(id, RGroupVsEntity.READSET_FULL);
     }
 
     @Override

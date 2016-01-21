@@ -50,8 +50,8 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     @Override
     public void update(VirtualServer virtualServer) throws Exception {
         Long vsId = virtualServer.getId();
-        MetaVsArchiveDo check = archiveVsDao.findMaxVersionByVs(vsId, ArchiveVsEntity.READSET_FULL);
-        if (check.getVersion() > virtualServer.getVersion())
+        RelVsStatusDo check = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
+        if (check.getOfflineVersion() > virtualServer.getVersion())
             throw new ValidationException("Newer virtual server version is detected.");
         virtualServer.setVersion(virtualServer.getVersion() + 1);
 
@@ -81,8 +81,8 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         rVsSlbDao.deleteByVs(new RelVsSlbDo().setVsId(vsId));
         vsDomainRelMaintainer.deleteRel(vsId);
         rVsStatusDao.deleteAllByVs(new RelVsStatusDo().setVsId(vsId));
-        slbVirtualServerDao.deleteByPK(new SlbVirtualServerDo().setId(vsId));
-        archiveVsDao.deleteAllByVs(new MetaVsArchiveDo().setVsId(vsId));
+        slbVirtualServerDao.deleteById(new SlbVirtualServerDo().setId(vsId));
+        archiveVsDao.deleteByVs(new MetaVsArchiveDo().setVsId(vsId));
     }
 
     @Override

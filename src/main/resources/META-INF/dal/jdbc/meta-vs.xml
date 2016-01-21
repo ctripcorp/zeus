@@ -60,17 +60,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-max-version-by-vs" type="SELECT">
-                <param name="vs-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='vs-id'/> = ${vs-id}
-                    ORDER BY <FIELD name='id'/> DESC LIMIT 1
-                    ]]>
-                </statement>
-            </query>
             <query name="find-by-vs-and-version" type="SELECT">
                 <param name="vs-id"/>
                 <param name="version"/>
@@ -98,15 +87,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-all-by-vs" type="DELETE" batch="true">
-                <param name="vs-id"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='vs-id'/> = ${vs-id}
-                    ]]>
-                </statement>
-            </query>
             <!-- for cleansing job -->
             <query name="delete-by-vs-id-less-than-version" type="DELETE">
                 <param name="vs-id"/>
@@ -119,7 +99,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-vs" type="DELETE" batch="true">
+            <query name="delete-by-vs" type="DELETE">
                 <param name="vs-id"/>
                 <statement>
                     <![CDATA[
@@ -166,7 +146,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-id" type="DELETE" batch="true">
+            <query name="delete-by-id" type="DELETE">
                 <param name="id"/>
                 <statement>
                     <![CDATA[
@@ -190,28 +170,6 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='id'/> in <IN>${ids}</IN>
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-slb" type="SELECT" multiple="true">
-                <param name="slb-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='slb-id'/> = ${slb-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-by-slb-and-name" type="SELECT">
-                <param name="slb-id"/>
-                <param name="name"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='slb-id'/> = ${slb-id}
-                        AND <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>

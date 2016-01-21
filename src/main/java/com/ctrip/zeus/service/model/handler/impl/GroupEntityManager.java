@@ -58,8 +58,8 @@ public class GroupEntityManager implements GroupSync {
 
     @Override
     public void update(Group group) throws Exception {
-        GroupDo check = groupDao.findById(group.getId(), GroupEntity.READSET_FULL);
-        if (check.getVersion() > group.getVersion())
+        RelGroupStatusDo check = rGroupStatusDao.findByGroup(group.getId(), RGroupStatusEntity.READSET_FULL);
+        if (check.getOfflineVersion() > group.getVersion())
             throw new ValidationException("Newer Group version is detected.");
         group.setVersion(group.getVersion() + 1);
 

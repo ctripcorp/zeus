@@ -53,8 +53,8 @@ public class SlbEntityManager implements SlbSync {
 
     @Override
     public void update(Slb slb) throws Exception {
-        SlbDo check = slbDao.findById(slb.getId(), SlbEntity.READSET_FULL);
-        if (check.getVersion() > slb.getVersion())
+        RelSlbStatusDo check = rSlbStatusDao.findBySlb(slb.getId(), RSlbStatusEntity.READSET_FULL);
+        if (check.getOfflineVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
         slb.setVersion(slb.getVersion() + 1);
 

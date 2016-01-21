@@ -36,16 +36,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-names" type="SELECT" multiple="true">
-                <param name="names"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='name'/> in <IN>${names}</IN>
-                    ]]>
-                </statement>
-            </query>
             <query name="find-all-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
@@ -90,17 +80,6 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='slb-id'/> = ${slb-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-max-version-by-slb" type="SELECT">
-                <param name="slb-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE  <FIELD name='slb-id'/> = ${slb-id}
-                    ORDER BY <FIELD name='id'/> DESC LIMIT 1
                     ]]>
                 </statement>
             </query>

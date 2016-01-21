@@ -46,18 +46,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-group-and-vs" type="SELECT">
-                <param name="group-id"/>
-                <param name="vs-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='group-id'/> = ${group-id}
-                        AND <FIELD name='vs-id'/> = ${vs-id}
-                    ]]>
-                </statement>
-            </query>
             <query name="find-all-by-vses" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
@@ -68,7 +56,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-groups" type="SELECT" multiple="true">
+            <query name="find-all-by-group-and-version" type="SELECT" multiple="true">
                 <param name="hashes"/>
                 <param name="id-version-array"/>
                 <statement>
@@ -80,7 +68,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-vses-by-group" type="SELECT" multiple="true">
+            <query name="find-all-by-group" type="SELECT" multiple="true">
                 <param name="group-id"/>
                 <statement>
                     <![CDATA[
@@ -132,17 +120,6 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='id'/> = ${id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="delete-by-vs-and-group" type="DELETE">
-                <param name="vs-id"/>
-                <param name="group-id"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='vs-id'/> = ${vs-id}
-                        AND <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
             </query>
@@ -203,17 +180,6 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='id'/> = ${id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="delete-by-group-and-ip" type="DELETE" batch="true">
-                <param name="group-id"/>
-                <param name="ip"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='group-id'/> = ${group-id}
-                      AND <FIELD name='ip'/> = ${ip}
                     ]]>
                 </statement>
             </query>
