@@ -13,6 +13,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-slbs" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> IN <IN>${slb-id}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-vs" type="SELECT" multiple="true">
                 <param name="vs-id"/>
                 <statement>
@@ -29,7 +39,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='vs-id'/> in <IN>${ids}</IN>
+                    WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>

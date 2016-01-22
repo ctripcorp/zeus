@@ -1,7 +1,11 @@
 package com.ctrip.zeus.service.model.impl;
 
+import com.ctrip.zeus.dal.core.ArchiveGroupDao;
+import com.ctrip.zeus.dal.core.ArchiveGroupDo;
+import com.ctrip.zeus.dal.core.ArchiveGroupEntity;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
@@ -32,8 +36,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Resource
     private AutoFiller autoFiller;
     @Resource
-    private ArchiveService archiveService;
-    @Resource
     private GroupValidator groupModelValidator;
     @Resource
     private VGroupValidator vGroupValidator;
@@ -41,6 +43,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     private StatusService statusService;
     @Resource
     private VirtualServerRepository virtualServerRepository;
+    @Resource
+    private ArchiveGroupDao archiveGroupDao;
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
@@ -50,7 +54,18 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(IdVersion[] keys) throws Exception {
-        List<Group> result = archiveService.listGroups(keys);
+        List<Group> result = new ArrayList<>();
+        Integer[] hashes = new Integer[keys.length];
+        String[] values = new String[keys.length];
+        for (int i = 0; i < hashes.length; i++) {
+            hashes[i] = keys[i].hashCode();
+            values[i] = keys[i].toString();
+        }
+        for (ArchiveGroupDo d : archiveGroupDao.findAllByIdVersion(hashes, values, ArchiveGroupEntity.READSET_FULL)) {
+            Group group = DefaultSaxParser.parseEntity(Group.class, d.getContent());
+            result.add(group);
+        }
+
         Set<Long> vsIds = new HashSet<>();
         for (Group group : result) {
             for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
@@ -67,6 +82,7 @@ public class GroupRepositoryImpl implements GroupRepository {
                         return virtualServer.getId();
                     }
                 });
+
         for (Group group : result) {
             for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
                 groupVirtualServer.setVirtualServer(map.get(groupVirtualServer.getVirtualServer().getId()));
@@ -88,7 +104,9 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public Group getByKey(IdVersion key) throws Exception {
         if (groupModelValidator.exists(key.getId()) || vGroupValidator.exists(key.getId())) {
-            Group result = archiveService.getGroup(key.getId(), key.getVersion());
+            ArchiveGroupDo d = archiveGroupDao.findByGroupAndVersion(key.getId(), key.getVersion(), ArchiveGroupEntity.READSET_FULL);
+            if (d == null) return null;
+            Group result = DefaultSaxParser.parseEntity(Group.class, d.getContent());
             for (GroupVirtualServer groupVirtualServer : result.getGroupVirtualServers()) {
                 IdVersion[] vsKey = virtualServerCriteriaQuery.queryByIdAndMode(groupVirtualServer.getVirtualServer().getId(), ModelMode.MODEL_MODE_MERGE_ONLINE);
                 groupVirtualServer.setVirtualServer(virtualServerRepository.getByKey(vsKey[0]));

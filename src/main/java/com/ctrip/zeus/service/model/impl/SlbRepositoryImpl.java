@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
@@ -33,13 +34,13 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
-    private ArchiveService archiveService;
-    @Resource
     private SlbValidator slbModelValidator;
     @Resource
     private VirtualServerValidator virtualServerModelValidator;
     @Resource
     private AutoFiller autoFiller;
+    @Resource
+    private ArchiveSlbDao archiveSlbDao;
 
     @Override
     public List<Slb> list(Long[] slbIds) throws Exception {
@@ -49,9 +50,37 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public List<Slb> list(IdVersion[] keys) throws Exception {
-        List<Slb> result = archiveService.listSlbs(keys);
+        List<Slb> result = new ArrayList<>();
+        Long[] slbIds = new Long[keys.length];
+        Integer[] hashes = new Integer[keys.length];
+        String[] values = new String[keys.length];
+        for (int i = 0; i < hashes.length; i++) {
+            hashes[i] = keys[i].hashCode();
+            values[i] = keys[i].toString();
+            slbIds[i] = keys[i].getId();
+        }
+        for (ArchiveSlbDo d : archiveSlbDao.findAllByIdVersion(hashes, values, ArchiveSlbEntity.READSET_FULL)) {
+            Slb slb = DefaultSaxParser.parseEntity(Slb.class, d.getContent());
+            slb.getVirtualServers().clear();
+            result.add(slb);
+        }
+
+        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryBySlbIds(slbIds);
+        vsKeys.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE));
+        Map<Long, List<VirtualServer>> map = new HashMap<>();
+        for (VirtualServer vs : virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()]))) {
+            List<VirtualServer> l = map.get(vs.getSlbId());
+            if (l == null) {
+                l = new ArrayList<>();
+                map.put(vs.getSlbId(), l);
+            }
+            l.add(vs);
+        }
         for (Slb slb : result) {
-            freshVirtualServers(slb);
+            List<VirtualServer> l = map.get(slb.getId());
+            if (l != null) {
+                slb.getVirtualServers().addAll(l);
+            }
         }
         return result;
     }
@@ -66,8 +95,10 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public Slb getByKey(IdVersion key) throws Exception {
-        Slb result = archiveService.getSlb(key.getId(), key.getVersion());
-        freshVirtualServers(result);
+        ArchiveSlbDo d = archiveSlbDao.findBySlbAndVersion(key.getId(), key.getVersion(), ArchiveSlbEntity.READSET_FULL);
+        if (d == null) return null;
+        Slb result = DefaultSaxParser.parseEntity(Slb.class, d.getContent());
+        refreshVirtualServer(result);
         return result;
     }
 
@@ -97,7 +128,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     public Slb update(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
         autoFiller.autofill(slb);
-        freshVirtualServers(slb);
+        refreshVirtualServer(slb);
         slbEntityManager.update(slb);
 
         for (SlbServer slbServer : slb.getSlbServers()) {
@@ -126,7 +157,7 @@ public class SlbRepositoryImpl implements SlbRepository {
         return slbEntityManager.port(slbId);
     }
 
-    private void freshVirtualServers(Slb slb) throws Exception {
+    private void refreshVirtualServer(Slb slb) throws Exception {
         slb.getVirtualServers().clear();
         Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
         range.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_MERGE_ONLINE));

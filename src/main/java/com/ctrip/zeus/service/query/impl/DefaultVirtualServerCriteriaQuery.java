@@ -80,6 +80,15 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
+    public Set<IdVersion> queryBySlbIds(Long[] slbIds) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelVsSlbDo d : rVsSlbDao.findAllBySlbs(slbIds, RVsSlbEntity.READSET_FULL)) {
+            result.add(new IdVersion(d.getVsId(), d.getVsVersion()));
+        }
+        return result;
+    }
+
+    @Override
     public Set<IdVersion> queryByGroupIds(IdVersion[] groupKeys) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         Integer[] hashes = new Integer[groupKeys.length];

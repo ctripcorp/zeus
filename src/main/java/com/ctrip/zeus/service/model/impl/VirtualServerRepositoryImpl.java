@@ -1,8 +1,12 @@
 package com.ctrip.zeus.service.model.impl;
 
+import com.ctrip.zeus.dal.core.ArchiveVsDao;
+import com.ctrip.zeus.dal.core.ArchiveVsEntity;
+import com.ctrip.zeus.dal.core.MetaVsArchiveDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
@@ -28,8 +32,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Resource
     private VirtualServerEntityManager virtualServerEntityManager;
     @Resource
-    private ArchiveService archiveService;
-    @Resource
     private VirtualServerValidator virtualServerModelValidator;
     @Resource
     private SlbValidator slbModelValidator;
@@ -37,6 +39,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     private SlbQuery slbQuery;
     @Resource
     private CertificateService certificateService;
+    @Resource
+    private ArchiveVsDao archiveVsDao;
 
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
@@ -46,7 +50,18 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public List<VirtualServer> listAll(IdVersion[] keys) throws Exception {
-        return archiveService.listVirtualServers(keys);
+        List<VirtualServer> result = new ArrayList<>();
+        Integer[] hashes = new Integer[keys.length];
+        String[] values = new String[keys.length];
+        for (int i = 0; i < hashes.length; i++) {
+            hashes[i] = keys[i].hashCode();
+            values[i] = keys[i].toString();
+        }
+        for (MetaVsArchiveDo d : archiveVsDao.findAllByIdVersion(hashes, values, ArchiveVsEntity.READSET_FULL)) {
+            VirtualServer vs = DefaultSaxParser.parseEntity(VirtualServer.class, d.getContent());
+            result.add(vs);
+        }
+        return result;
     }
 
     @Override
@@ -57,7 +72,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer getByKey(IdVersion key) throws Exception {
-        return archiveService.getVirtualServer(key.getId(), key.getVersion());
+        MetaVsArchiveDo d = archiveVsDao.findByVsAndVersion(key.getId(), key.getVersion(), ArchiveVsEntity.READSET_FULL);
+        return d == null ? null : DefaultSaxParser.parseEntity(VirtualServer.class, d.getContent());
     }
 
     @Override
