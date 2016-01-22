@@ -4,8 +4,7 @@ import com.ctrip.zeus.dal.core.ConfSlbActiveDao;
 import com.ctrip.zeus.dal.core.ConfSlbActiveDo;
 import com.ctrip.zeus.dal.core.ConfSlbActiveEntity;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * User: mag
@@ -51,6 +49,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Resource
     ConfSlbActiveDao confSlbActiveDao;
     @Resource
+    MappingFactory mappingFactory;
+    @Resource
     private HealthCheckStatusService healthCheckStatusService;
 
     private Logger LOGGER = LoggerFactory.getLogger(GroupStatusServiceImpl.class);
@@ -58,9 +58,9 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getAllOnlineGroupsStatus() throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        List<ConfSlbActiveDo> slbList = confSlbActiveDao.findAll(ConfSlbActiveEntity.READSET_FULL);
-        for (ConfSlbActiveDo slb : slbList) {
-            result.addAll(getOnlineGroupsStatusBySlbId(slb.getSlbId()));
+        Set<IdVersion> slbIds = slbCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE);
+        for (IdVersion slb : slbIds) {
+            result.addAll(getOnlineGroupsStatusBySlbId(slb));
         }
         return result;
     }
@@ -74,14 +74,15 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         return result;
     }
     @Override
-    public List<GroupStatus> getOnlineGroupsStatusBySlbId(Long slbId) throws Exception {
+    public List<GroupStatus> getOnlineGroupsStatusBySlbId(IdVersion slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        Set<Long> activated = activeConfService.getGroupIdsBySlbId(slbId);
-        if (activated == null || activated.size() == 0 )
+        ModelStatusMapping<VirtualServer> vses = mappingFactory.getBySlbIds(slbId.getId());
+        ModelStatusMapping<Group> groups = mappingFactory.getByVsIds(vses.getOnlineMapping().keySet().toArray(new Long[]{}));
+        if (groups.getOnlineMapping() == null || groups.getOnlineMapping().size() == 0 )
         {
             return result;
         }
-        result = getOnlineGroupsStatus(activated, slbId);
+        result = getOnlineGroupsStatus(groups.getOnlineMapping(),vses.getOnlineMapping().keySet(), slbId);
         return result;
     }
     @Override
@@ -119,37 +120,32 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         return result;
     }
     @Override
-    public List<GroupStatus> getOnlineGroupsStatus(Set<Long> groupIds , Long slbId) throws Exception
+    public List<GroupStatus> getOnlineGroupsStatus(Map<Long,Group> groups ,Set<Long> vsIds ,  IdVersion slbId) throws Exception
     {
-        Slb slb = activateService.getActivatedSlb(slbId);
+        Slb slb = slbRepository.getByKey(slbId);
         AssertUtils.assertNotNull(slb, "slbId not found!");
         AssertUtils.assertNotEquals(0, slb.getSlbServers().size(), "Slb doesn't have any slb server!");
-        List<Group> groups = activateService.getActivatedGroups(groupIds.toArray(new Long[]{}), slbId);
-        Set<Long> vsId = activeConfService.getVsIdsBySlbId(slbId);
         List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
 
-        Set<String> allUpGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsId.toArray(new Long[]{}), StatusOffset.MEMBER_OPS, true);
-        Set<String> allPullInGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsId.toArray(new Long[]{}), StatusOffset.PULL_OPS, true);
-        Map<String,Boolean> healthCheck = healthCheckStatusService.getHealthCheckStatusBySlbId(slbId);
+        Map<String,List<Boolean>> memberStatus = statusService.fetchGroupServersByVsIds(vsIds.toArray(new Long[]{}));
+        Map<String,Boolean> healthCheck = healthCheckStatusService.getHealthCheckStatusBySlbId(slbId.getId());
         Set<String> allDownServers = statusService.findAllDownServers();
-        Map <Long,Boolean> activated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}),null);
-
-        for (Group group : groups)
+        for (Group group : groups.values())
         {
             Long groupId = group.getId();
 
             status = new GroupStatus();
             status.setGroupId(groupId);
-            status.setSlbId(slbId);
+            status.setSlbId(slbId.getId());
             status.setGroupName(group.getName());
             status.setSlbName(slb.getName());
-            status.setActivated(activated.get(groupId));
+            status.setActivated(true);
 
             List<GroupServer> groupServerList = group.getGroupServers();//groupRepository.listGroupServersByGroup(groupId);
             Long gvsId = null;
             for (GroupVirtualServer gv : group.getGroupVirtualServers()){
-                if (vsId.contains(gv.getVirtualServer().getId())){
+                if (vsIds.contains(gv.getVirtualServer().getId())){
                     gvsId = gv.getVirtualServer().getId();
                     break;
                 }
@@ -159,9 +155,9 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
                 String key =gvsId + "_" + groupId +"_"+ gs.getIp();
-                boolean memberUp = allUpGroupServerInSlb.contains(key);
+                boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
-                boolean pullIn = allPullInGroupServerInSlb.contains(key);
+                boolean pullIn =  memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);

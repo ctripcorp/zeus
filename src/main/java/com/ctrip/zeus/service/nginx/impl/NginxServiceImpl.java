@@ -114,7 +114,7 @@ public class NginxServiceImpl implements NginxService {
 
         NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
         rollbackConfBackUp(operator);
-        virtualServerCriteriaQuery.queryby
+        virtualServerCriteriaQuery.q
         Map<Long,VirtualServer> vses = activateService.getActivatedVirtualServerBySlb(slbId);
         List<Long> vsIds = new ArrayList<>();
         for (VirtualServer vs : vses.values()){
@@ -190,38 +190,6 @@ public class NginxServiceImpl implements NginxService {
         writeConfToDisk(slbId, version, vsIds, operator);
 
         return new NginxResponse().setSucceed(true);
-    }
-
-    public boolean writeALLToDisk(Long slbId,Integer slbVersion , List<Long> vsIds , List<NginxResponse> responses) throws Exception {
-        List<NginxResponse> result = null;
-        boolean sucess = true;
-        if (responses != null) {
-            result = responses;
-        } else {
-            result = new ArrayList<>();
-        }
-
-        Slb slb = slbRepository.getByKey(new IdVersion(slbId,slbVersion));
-        AssertUtils.assertNotNull(slb,"Can't found slbId when writing config to disk!");
-        List<SlbServer> slbServers = slb.getSlbServers();
-        for (SlbServer slbServer : slbServers) {
-            logger.info("[ writeAllToDisk ]: start write to server : " + slbServer.getIp());
-            NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
-            NginxResponse response = nginxClient.write(vsIds,slbId,slbVersion);
-            result.add(response);
-
-            logger.info("[ writeAllToDisk ]: write to server finished : " + slbServer.getIp());
-        }
-
-        if (result.size() == 0) {
-            sucess = false;
-        }
-
-        for (NginxResponse res : result) {
-            sucess = sucess && res.getSucceed();
-        }
-
-        return sucess;
     }
 
     @Override
