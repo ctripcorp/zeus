@@ -36,7 +36,7 @@ public class QueryTest extends AbstractServerTest {
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     @Resource
-    private MappingFactory mappingFactory;
+    private EntityFactory mappingFactory;
 
     private static AtomicInteger Counter = new AtomicInteger(5);
 
