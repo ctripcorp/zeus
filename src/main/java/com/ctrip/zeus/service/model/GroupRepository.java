@@ -32,7 +32,9 @@ public interface GroupRepository extends Repository {
 
     int deleteVGroup(Long groupId) throws Exception;
 
-    void updateStatus(Group[] groups) throws Exception;
+    void updateStatus(IdVersion[] groups, ModelMode state) throws Exception;
+
+    void updateStatus(IdVersion[] groups) throws Exception;
 
     @Deprecated
     Set<Long> port(Long[] groupIds) throws Exception;

@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.handler;
 
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.service.model.IdVersion;
 
 import java.util.Set;
 
@@ -14,7 +15,7 @@ public interface SlbSync {
 
     void update(Slb slb) throws Exception;
 
-    void updateStatus(Slb[] slbs) throws Exception;
+    void updateStatus(IdVersion[] slbs) throws Exception;
 
     int delete(Long slbId) throws Exception;
 

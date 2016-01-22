@@ -26,7 +26,9 @@ public interface VirtualServerRepository {
 
     void installCertificate(VirtualServer virtualServer) throws Exception;
 
-    void updateStatus(VirtualServer[] vses) throws Exception;
+    void updateStatus(IdVersion[] vses, ModelMode state) throws Exception;
+
+    void updateStatus(IdVersion[] vses) throws Exception;
 
     @Deprecated
     Set<Long> port(Long[] vsIds) throws Exception;

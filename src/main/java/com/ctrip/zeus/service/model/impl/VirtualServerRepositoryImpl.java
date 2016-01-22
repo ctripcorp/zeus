@@ -18,6 +18,7 @@ import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -152,8 +153,19 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public void updateStatus(VirtualServer[] vses) throws Exception {
-        virtualServerEntityManager.updateStatus(vses);
+    public void updateStatus(IdVersion[] vses, ModelMode state) throws Exception {
+        switch (state) {
+            case MODEL_MODE_ONLINE:
+                virtualServerEntityManager.updateStatus(vses);
+                return;
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    @Override
+    public void updateStatus(IdVersion[] vses) throws Exception {
+        updateStatus(vses);
     }
 
     @Override

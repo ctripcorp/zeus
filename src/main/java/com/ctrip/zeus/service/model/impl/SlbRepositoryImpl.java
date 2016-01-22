@@ -13,6 +13,7 @@ import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Repository;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -148,8 +149,19 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public void updateStatus(Slb[] slbs) throws Exception {
-        slbEntityManager.updateStatus(slbs);
+    public void updateStatus(IdVersion[] slbs, ModelMode state) throws Exception {
+        switch (state) {
+            case MODEL_MODE_ONLINE:
+                slbEntityManager.updateStatus(slbs);
+                return;
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    @Override
+    public void updateStatus(IdVersion[] slbs) throws Exception {
+        updateStatus(slbs, ModelMode.MODEL_MODE_ONLINE);
     }
 
     @Override

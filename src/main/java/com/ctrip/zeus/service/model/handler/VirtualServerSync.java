@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.handler;
 
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.model.IdVersion;
 
 import java.util.Set;
 
@@ -13,7 +14,7 @@ public interface VirtualServerSync {
 
     void update(VirtualServer virtualServer) throws Exception;
 
-    void updateStatus(VirtualServer[] virtualServers) throws Exception;
+    void updateStatus(IdVersion[] virtualServers) throws Exception;
 
     void delete(Long vsId) throws Exception;
 

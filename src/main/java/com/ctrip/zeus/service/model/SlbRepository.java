@@ -26,7 +26,9 @@ public interface SlbRepository extends Repository {
 
     int delete(Long slbId) throws Exception;
 
-    void updateStatus(Slb[] slbs) throws Exception;
+    void updateStatus(IdVersion[] slbs, ModelMode state) throws Exception;
+
+    void updateStatus(IdVersion[] slbs) throws Exception;
 
     @Deprecated
     Set<Long> port(Long[] slbId) throws Exception;

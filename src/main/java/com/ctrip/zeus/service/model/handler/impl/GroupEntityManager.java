@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.MultiRelMaintainer;
@@ -74,7 +75,7 @@ public class GroupEntityManager implements GroupSync {
     }
 
     @Override
-    public void updateStatus(Group[] groups) throws Exception {
+    public void updateStatus(IdVersion[] groups) throws Exception {
         RelGroupStatusDo[] dos = new RelGroupStatusDo[groups.length];
         for (int i = 0; i < dos.length; i++) {
             dos[i] = new RelGroupStatusDo().setGroupId(groups[i].getId()).setOnlineVersion(groups[i].getVersion());
@@ -108,18 +109,19 @@ public class GroupEntityManager implements GroupSync {
         for (int i = 0; i < dos.length; i++) {
             dos[i] = new RelGroupStatusDo().setGroupId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
         }
+
         rGroupStatusDao.insertOrUpdate(dos);
         for (Group group : toUpdate) {
             groupVsRelMaintainer.port(group, RelGroupVsDo.class, group.getGroupVirtualServers());
             groupGsRelMaintainer.port(group, RelGroupGsDo.class, group.getGroupServers());
         }
+
         groupIds = new Long[toUpdate.size()];
         for (int i = 0; i < groupIds.length; i++) {
             groupIds[i] = toUpdate.get(i).getId();
         }
         List<ConfGroupActiveDo> ref = confGroupActiveDao.findAllByGroupIds(groupIds, ConfGroupActiveEntity.READSET_FULL);
         toUpdate.clear();
-
         for (ConfGroupActiveDo confGroupActiveDo : ref) {
             try {
                 toUpdate.add(DefaultSaxParser.parseEntity(Group.class, confGroupActiveDo.getContent()));
@@ -127,7 +129,13 @@ public class GroupEntityManager implements GroupSync {
                 failed.add(confGroupActiveDo.getGroupId());
             }
         }
-        updateStatus(toUpdate.toArray(new Group[toUpdate.size()]));
+        IdVersion[] keys = new IdVersion[toUpdate.size()];
+        for (int i = 0; i < keys.length; i++) {
+            keys[i] = new IdVersion(toUpdate.get(i).getId(), toUpdate.get(i).getVersion());
+        }
+
+        updateStatus(keys);
+        
         return failed;
     }
 

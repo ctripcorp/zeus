@@ -16,6 +16,7 @@ import com.ctrip.zeus.service.status.StatusService;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import org.springframework.stereotype.Repository;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Nullable;
 import javax.annotation.Resource;
@@ -176,8 +177,19 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public void updateStatus(Group[] groups) throws Exception {
-        groupEntityManager.updateStatus(groups);
+    public void updateStatus(IdVersion[] groups, ModelMode state) throws Exception {
+        switch (state) {
+            case MODEL_MODE_ONLINE:
+                groupEntityManager.updateStatus(groups);
+                return;
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    @Override
+    public void updateStatus(IdVersion[] groups) throws Exception {
+        updateStatus(groups, ModelMode.MODEL_MODE_ONLINE);
     }
 
     @Override

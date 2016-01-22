@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.handler;
 
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.service.model.IdVersion;
 
 import java.util.Set;
 
@@ -16,7 +17,7 @@ public interface GroupSync {
 
     void update(Group group) throws Exception;
 
-    void updateStatus(Group[] groups) throws Exception;
+    void updateStatus(IdVersion[] groups) throws Exception;
 
     int delete(Long groupId) throws Exception;
 

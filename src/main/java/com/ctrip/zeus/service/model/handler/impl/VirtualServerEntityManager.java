@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.VirtualServerSync;
 import com.ctrip.zeus.support.C;
@@ -68,7 +69,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     }
 
     @Override
-    public void updateStatus(VirtualServer[] virtualServers) throws Exception {
+    public void updateStatus(IdVersion[] virtualServers) throws Exception {
         RelVsStatusDo[] dos = new RelVsStatusDo[virtualServers.length];
         for (int i = 0; i < dos.length; i++) {
             dos[i] = new RelVsStatusDo().setVsId(virtualServers[i].getId()).setOnlineVersion(virtualServers[i].getVersion());
@@ -101,14 +102,15 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         for (int i = 0; i < rel1.length; i++) {
             rel1[i] = new RelVsStatusDo().setVsId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
         }
+
         rVsStatusDao.insertOrUpdate(rel1);
 
         List<RelVsSlbDo> rel2 = rVsSlbDao.findByVses(vsIds, RVsSlbEntity.READSET_FULL);
         for (RelVsSlbDo d : rel2) {
             d.setHash(VersionUtils.getHash(d.getVsId(), toUpdate.get(d.getVsId()).getVersion()));
         }
-        rVsSlbDao.update(rel2.toArray(new RelVsSlbDo[rel2.size()]), RVsSlbEntity.UPDATESET_FULL);
 
+        rVsSlbDao.update(rel2.toArray(new RelVsSlbDo[rel2.size()]), RVsSlbEntity.UPDATESET_FULL);
         for (VirtualServer virtualServer : toUpdate.values()) {
             vsDomainRelMaintainer.port(virtualServer, RelVsDomainDo.class, virtualServer.getDomains());
         }
@@ -119,7 +121,6 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         }
         List<ConfSlbVirtualServerActiveDo> ref = confSlbVirtualServerActiveDao.findBySlbVirtualServerIds(vsIds, ConfSlbVirtualServerActiveEntity.READSET_FULL);
         toUpdate.clear();
-
         for (ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo : ref) {
             try {
                 VirtualServer vs = DefaultSaxParser.parseEntity(VirtualServer.class, confSlbVirtualServerActiveDo.getContent());
@@ -128,7 +129,13 @@ public class VirtualServerEntityManager implements VirtualServerSync {
                 failed.add(confSlbVirtualServerActiveDo.getSlbVirtualServerId());
             }
         }
-        updateStatus(toUpdate.values().toArray(new VirtualServer[toUpdate.size()]));
+        IdVersion[] keys = new IdVersion[toUpdate.size()];
+        for (int i = 0; i < keys.length; i++) {
+            keys[i] = new IdVersion(toUpdate.get(i).getId(), toUpdate.get(i).getVersion());
+        }
+
+        updateStatus(keys);
+
         return failed;
     }
 }
