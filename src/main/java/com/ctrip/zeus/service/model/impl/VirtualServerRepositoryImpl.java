@@ -165,7 +165,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void updateStatus(IdVersion[] vses) throws Exception {
-        updateStatus(vses);
+        updateStatus(vses, ModelMode.MODEL_MODE_ONLINE);
     }
 
     @Override

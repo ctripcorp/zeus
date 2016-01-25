@@ -51,16 +51,16 @@ public class QueryTest extends AbstractServerTest {
     @After
     public void clearDb() throws Exception {
         if (Counter.get() == 0) {
-            Group[] groups = new Group[7];
+            IdVersion[] groups = new IdVersion[7];
             for (int i = 0; i < 7; i++) {
-                groups[i] = new Group().setId(new Long(i)).setVersion(0);
+                groups[i] = new IdVersion(new Long(i), 0);
             }
             groupRepository.updateStatus(groups);
             for (Long i = 1L; i <= 7L; i++) {
                 groupRepository.delete(i);
             }
-            virtualServerRepository.updateStatus(new VirtualServer[]{
-                    new VirtualServer().setId(1L).setVersion(0), new VirtualServer().setId(2L).setVersion(0)});
+            virtualServerRepository.updateStatus(new IdVersion[]{
+                    new IdVersion(1L, 0), new IdVersion(2L, 0)});
             for (Long i = 1L; i <= 2L; i++) {
                 virtualServerRepository.delete(i);
             }
@@ -196,8 +196,13 @@ public class QueryTest extends AbstractServerTest {
                 .addVirtualServer(new VirtualServer().setName("defaultSlbVs2").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("defaultSlbVs2.ctrip.com")));
         slbRepository.add(default1);
-        virtualServerRepository.updateStatus(default1.getVirtualServers().toArray(new VirtualServer[2]));
-        slbRepository.updateStatus(new Slb[]{default1});
+        IdVersion[] vses = new IdVersion[2];
+        for (int i = 0; i < 2; i++) {
+            VirtualServer t = default1.getVirtualServers().get(i);
+            vses[i] = new IdVersion(t.getId(), t.getVersion());
+        }
+        virtualServerRepository.updateStatus(vses);
+        slbRepository.updateStatus(new IdVersion[]{new IdVersion(default1.getId(), default1.getVersion())});
 
         Slb default2 = new Slb().setName("default2").setStatus("TEST")
                 .addVip(new Vip().setIp("127.0.0.1"))
@@ -219,7 +224,11 @@ public class QueryTest extends AbstractServerTest {
                 activated.add(group);
             }
         }
-        groupRepository.updateStatus(activated.toArray(new Group[activated.size()]));
+        IdVersion[] groups = new IdVersion[activated.size()];
+        for (int i = 0; i < groups.length; i++) {
+            groups[i] = new IdVersion(activated.get(i).getId(), activated.get(i).getVersion());
+        }
+        groupRepository.updateStatus(groups);
     }
 
     private Group generateGroup(String groupName, Long vsId) {
