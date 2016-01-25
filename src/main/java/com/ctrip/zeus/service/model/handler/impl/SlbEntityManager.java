@@ -4,9 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.support.C;
@@ -88,11 +86,11 @@ public class SlbEntityManager implements SlbSync {
     public Set<Long> port(Long[] slbIds) throws Exception {
         List<Slb> toUpdate = new ArrayList<>();
         Set<Long> failed = new HashSet<>();
-        for (ArchiveSlbDo archiveSlbDo : archiveSlbDao.findMaxVersionBySlbs(slbIds, ArchiveSlbEntity.READSET_FULL)) {
+        for (ArchiveSlbDo d : archiveSlbDao.findMaxVersionBySlbs(slbIds, ArchiveSlbEntity.READSET_FULL)) {
             try {
-                toUpdate.add(DefaultSaxParser.parseEntity(Slb.class, archiveSlbDo.getContent()));
+                toUpdate.add(ContentReaders.readSlbContent(d.getContent()));
             } catch (Exception ex) {
-                failed.add(archiveSlbDo.getId());
+                failed.add(d.getId());
             }
         }
         RelSlbStatusDo[] dos = new RelSlbStatusDo[toUpdate.size()];
@@ -112,11 +110,11 @@ public class SlbEntityManager implements SlbSync {
         }
         List<ConfSlbActiveDo> ref = confSlbActiveDao.findAllBySlbIds(slbIds, ConfSlbActiveEntity.READSET_FULL);
         toUpdate.clear();
-        for (ConfSlbActiveDo confSlbActiveDo : ref) {
+        for (ConfSlbActiveDo d : ref) {
             try {
-                toUpdate.add(DefaultSaxParser.parseEntity(Slb.class, confSlbActiveDo.getContent()));
+                toUpdate.add(ContentReaders.readSlbContent(d.getContent()));
             } catch (Exception ex) {
-                failed.add(confSlbActiveDo.getSlbId());
+                failed.add(d.getSlbId());
             }
         }
         IdVersion[] keys = new IdVersion[toUpdate.size()];

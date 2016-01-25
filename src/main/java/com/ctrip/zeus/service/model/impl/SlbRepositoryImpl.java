@@ -4,12 +4,12 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Repository;
@@ -61,7 +61,7 @@ public class SlbRepositoryImpl implements SlbRepository {
             slbIds[i] = keys[i].getId();
         }
         for (ArchiveSlbDo d : archiveSlbDao.findAllByIdVersion(hashes, values, ArchiveSlbEntity.READSET_FULL)) {
-            Slb slb = DefaultSaxParser.parseEntity(Slb.class, d.getContent());
+            Slb slb = ContentReaders.readSlbContent(d.getContent());
             slb.getVirtualServers().clear();
             result.add(slb);
         }
@@ -98,7 +98,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     public Slb getByKey(IdVersion key) throws Exception {
         ArchiveSlbDo d = archiveSlbDao.findBySlbAndVersion(key.getId(), key.getVersion(), ArchiveSlbEntity.READSET_FULL);
         if (d == null) return null;
-        Slb result = DefaultSaxParser.parseEntity(Slb.class, d.getContent());
+        Slb result = ContentReaders.readSlbContent(d.getContent());
         refreshVirtualServer(result);
         return result;
     }

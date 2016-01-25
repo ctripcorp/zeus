@@ -5,11 +5,11 @@ import com.ctrip.zeus.dal.core.ArchiveGroupDo;
 import com.ctrip.zeus.dal.core.ArchiveGroupEntity;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VGroupValidator;
+import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.status.StatusService;
@@ -63,7 +63,7 @@ public class GroupRepositoryImpl implements GroupRepository {
             values[i] = keys[i].toString();
         }
         for (ArchiveGroupDo d : archiveGroupDao.findAllByIdVersion(hashes, values, ArchiveGroupEntity.READSET_FULL)) {
-            Group group = DefaultSaxParser.parseEntity(Group.class, d.getContent());
+            Group group = ContentReaders.readGroupContent(d.getContent());
             result.add(group);
         }
 
@@ -107,7 +107,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         if (groupModelValidator.exists(key.getId()) || vGroupValidator.exists(key.getId())) {
             ArchiveGroupDo d = archiveGroupDao.findByGroupAndVersion(key.getId(), key.getVersion(), ArchiveGroupEntity.READSET_FULL);
             if (d == null) return null;
-            Group result = DefaultSaxParser.parseEntity(Group.class, d.getContent());
+            Group result = ContentReaders.readGroupContent(d.getContent());
             for (GroupVirtualServer groupVirtualServer : result.getGroupVirtualServers()) {
                 IdVersion[] vsKey = virtualServerCriteriaQuery.queryByIdAndMode(groupVirtualServer.getVirtualServer().getId(), ModelMode.MODEL_MODE_MERGE_ONLINE);
                 groupVirtualServer.setVirtualServer(virtualServerRepository.getByKey(vsKey[0]));

@@ -6,13 +6,12 @@ import com.ctrip.zeus.dal.core.MetaVsArchiveDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
-import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
+import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.model.IdVersion;
@@ -59,7 +58,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             values[i] = keys[i].toString();
         }
         for (MetaVsArchiveDo d : archiveVsDao.findAllByIdVersion(hashes, values, ArchiveVsEntity.READSET_FULL)) {
-            VirtualServer vs = DefaultSaxParser.parseEntity(VirtualServer.class, d.getContent());
+            VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
             result.add(vs);
         }
         return result;
@@ -74,7 +73,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Override
     public VirtualServer getByKey(IdVersion key) throws Exception {
         MetaVsArchiveDo d = archiveVsDao.findByVsAndVersion(key.getId(), key.getVersion(), ArchiveVsEntity.READSET_FULL);
-        return d == null ? null : DefaultSaxParser.parseEntity(VirtualServer.class, d.getContent());
+        return d == null ? null : ContentReaders.readVirtualServerContent(d.getContent());
     }
 
     @Override

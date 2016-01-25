@@ -3,7 +3,6 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.GroupSync;
@@ -100,7 +99,7 @@ public class GroupEntityManager implements GroupSync {
         Set<Long> failed = new HashSet<>();
         for (ArchiveGroupDo archiveGroupDo : archiveGroupDao.findMaxVersionByGroups(groupIds, ArchiveGroupEntity.READSET_FULL)) {
             try {
-                toUpdate.add(DefaultSaxParser.parseEntity(Group.class, archiveGroupDo.getContent()));
+                toUpdate.add(ContentReaders.readGroupContent(archiveGroupDo.getContent()));
             } catch (Exception ex) {
                 failed.add(archiveGroupDo.getGroupId());
             }
@@ -124,7 +123,7 @@ public class GroupEntityManager implements GroupSync {
         toUpdate.clear();
         for (ConfGroupActiveDo confGroupActiveDo : ref) {
             try {
-                toUpdate.add(DefaultSaxParser.parseEntity(Group.class, confGroupActiveDo.getContent()));
+                toUpdate.add(ContentReaders.readGroupContent(confGroupActiveDo.getContent()));
             } catch (Exception ex) {
                 failed.add(confGroupActiveDo.getGroupId());
             }

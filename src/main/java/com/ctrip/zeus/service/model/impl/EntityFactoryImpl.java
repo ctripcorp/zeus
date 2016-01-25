@@ -4,13 +4,13 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.ModelMode;
 import com.ctrip.zeus.service.model.ModelStatusMapping;
+import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -50,7 +50,7 @@ public class EntityFactoryImpl implements EntityFactory {
         Map<String, Group> mapping = new HashMap<>();
         for (ArchiveGroupDo d : archiveGroupDao.findAllByVsIds(vsIds, ArchiveGroupEntity.READSET_FULL)) {
             groupIds.add(d.getGroupId());
-            Group g = DefaultSaxParser.parseEntity(Group.class, d.getContent());
+            Group g = ContentReaders.readGroupContent(d.getContent());
             for (GroupVirtualServer e : g.getGroupVirtualServers()) {
                 e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
             }
@@ -75,8 +75,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
         for (MetaVsArchiveDo d : archiveVsDao.findAllBySlbId(slbId, ArchiveVsEntity.READSET_FULL)) {
             vsIds.add(d.getVsId());
-            VirtualServer vs = DefaultSaxParser.parseEntity(VirtualServer.class, d.getContent());
-            mapping.put(vs.getId() + "," + d.getVersion(), DefaultSaxParser.parseEntity(VirtualServer.class, d.getContent()));
+            VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
+            mapping.put(vs.getId() + "," + d.getVersion(), vs);
         }
         for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds.toArray(new Long[vsIds.size()]), RVsStatusEntity.READSET_FULL)) {
             if (d.getOnlineVersion() == 0 || d.getOnlineVersion() != d.getOfflineVersion()) {
@@ -198,7 +198,7 @@ public class EntityFactoryImpl implements EntityFactory {
                         return virtualServerCriteriaQuery.queryByIdsAndMode(groupIds.toArray(new Long[groupIds.size()]), m);
                     }
                 }).build(IdVersion.class).run();
-        
+
         Set<Long> result = new HashSet<>();
         for (IdVersion key : keys) {
             result.add(key.getId());

@@ -3,7 +3,6 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.VirtualServerSync;
@@ -90,12 +89,12 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     public Set<Long> port(Long[] vsIds) throws Exception {
         Map<Long, VirtualServer> toUpdate = new HashMap<>();
         Set<Long> failed = new HashSet<>();
-        for (MetaVsArchiveDo metaVsArchiveDo : archiveVsDao.findMaxVersionByVses(vsIds, ArchiveVsEntity.READSET_FULL)) {
+        for (MetaVsArchiveDo d : archiveVsDao.findMaxVersionByVses(vsIds, ArchiveVsEntity.READSET_FULL)) {
             try {
-                VirtualServer vs = DefaultSaxParser.parseEntity(VirtualServer.class, metaVsArchiveDo.getContent());
+                VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
                 toUpdate.put(vs.getId(), vs);
             } catch (Exception ex) {
-                failed.add(metaVsArchiveDo.getVsId());
+                failed.add(d.getVsId());
             }
         }
         RelVsStatusDo[] rel1 = new RelVsStatusDo[toUpdate.size()];
@@ -121,12 +120,12 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         }
         List<ConfSlbVirtualServerActiveDo> ref = confSlbVirtualServerActiveDao.findBySlbVirtualServerIds(vsIds, ConfSlbVirtualServerActiveEntity.READSET_FULL);
         toUpdate.clear();
-        for (ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo : ref) {
+        for (ConfSlbVirtualServerActiveDo d : ref) {
             try {
-                VirtualServer vs = DefaultSaxParser.parseEntity(VirtualServer.class, confSlbVirtualServerActiveDo.getContent());
+                VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
                 toUpdate.put(vs.getId(), vs);
             } catch (Exception ex) {
-                failed.add(confSlbVirtualServerActiveDo.getSlbVirtualServerId());
+                failed.add(d.getSlbVirtualServerId());
             }
         }
         IdVersion[] keys = new IdVersion[toUpdate.size()];
