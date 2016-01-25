@@ -37,30 +37,26 @@ public class ActivateServiceImpl implements ActivateService {
 
     @Override
     public void activeSlb(long slbId , int version) throws Exception {
-
-        Archive archive = archiveService.getSlbArchive(slbId, version);
-        if (archive==null)
-        {
+        Slb slb = archiveService.getSlb(slbId, version);
+        if (slb == null) {
             logger.info("getLatestSlbArchive return Null! SlbID: "+slbId);
-            AssertUtils.assertNotNull(archive, "[activate]getLatestSlbArchive return Null! SlbID: " + slbId);
+            AssertUtils.assertNotNull(slb, "[activate]getLatestSlbArchive return Null! SlbID: " + slbId);
             return;
         }
         ConfSlbActiveDo c = new ConfSlbActiveDo().setCreatedTime(new Date());
-        c.setSlbId(archive.getId()).setContent(archive.getContent()).setVersion(archive.getVersion());
+        c.setSlbId(slb.getId()).setContent(ContentWriters.writeSlbContent(slb)).setVersion(slb.getVersion());
         confSlbActiveDao.insert(c);
         logger.info("Conf Slb Active Inserted: [SlbID: " + c.getSlbId() + ",Content: " + c.getContent() + ",Version: " + c.getVersion() + "]");
     }
 
     @Override
     public void activeGroup(long groupId , int version , Long vsId , Long slbId) throws Exception {
-        Archive archive = archiveService.getGroupArchive(groupId, version);
-        if (archive==null)
-        {
+        Group group = archiveService.getGroup(groupId, version);
+        if (group == null) {
             logger.info("getLatestAppArchive return Null! GroupID: "+groupId);
-            AssertUtils.assertNotNull(archive, "[activate]getLatestAppArchive return Null! GroupID: " + groupId);
+            AssertUtils.assertNotNull(ContentWriters.writeGroupContent(group), "[activate]getLatestAppArchive return Null! GroupID: " + groupId);
             return;
         }
-        Group group =  DefaultSaxParser.parseEntity(Group.class, archive.getContent());
         AssertUtils.assertNotNull(group, "group.content XML is illegal!");
 
         //while Group updated VsId, both vsIds belong to same slb, we need to delete the old version group active conf.
@@ -80,7 +76,7 @@ public class ActivateServiceImpl implements ActivateService {
         }
 
         ConfGroupActiveDo c = new ConfGroupActiveDo().setCreatedTime(new Date());
-        c.setGroupId(archive.getId()).setContent(archive.getContent()).setVersion(archive.getVersion()).setSlbVirtualServerId(vsId).setSlbId(slbId);
+        c.setGroupId(group.getId()).setContent(ContentWriters.writeGroupContent(group)).setVersion(group.getVersion()).setSlbVirtualServerId(vsId).setSlbId(slbId);
         confGroupActiveDao.insert(c);
         logger.info("Conf Group Active Inserted: [GroupId: " + c.getId() + ",Content: " + c.getContent() + ",Version: " + c.getVersion() + "]");
     }
@@ -104,7 +100,7 @@ public class ActivateServiceImpl implements ActivateService {
             }
         }
 
-        String content = String.format(Group.XML, group);
+        String content = ContentWriters.writeGroupContent(group);
         ConfGroupActiveDo c = new ConfGroupActiveDo().setCreatedTime(new Date());
         c.setGroupId(groupId).setContent(content).setVersion(version).setSlbVirtualServerId(vsId).setSlbId(slbId);
         confGroupActiveDao.insert(c);
@@ -117,7 +113,7 @@ public class ActivateServiceImpl implements ActivateService {
             throw new ValidationException("Virtual Server is Null! vsId:"+vsId);
         }
         ConfSlbVirtualServerActiveDo confSlbVirtualServerActiveDo = new ConfSlbVirtualServerActiveDo();
-        confSlbVirtualServerActiveDo.setContent(String.format(VirtualServer.XML,vs))
+        confSlbVirtualServerActiveDo.setContent(ContentWriters.writeVirtualServerContent(vs))
                 .setSlbId(slbId).setVersion(version)
                 .setSlbVirtualServerId(vsId)
                 .setCreatedTime(new Date());
@@ -201,12 +197,10 @@ public class ActivateServiceImpl implements ActivateService {
     @Override
     public Group getActivatingGroup(Long groupId, int version) {
         try {
-            Archive archive = archiveService.getGroupArchive(groupId,version);
-            if (archive == null ){
+            Group group = archiveService.getGroup(groupId, version);
+            if (group == null) {
                 return null;
             }
-            String content = archive.getContent();
-            Group group = DefaultSaxParser.parseEntity(Group.class, content);
             if (group != null){
                 autoFiller.autofill(group);
                 return group;
@@ -218,36 +212,25 @@ public class ActivateServiceImpl implements ActivateService {
     }
 
     @Override
-    public List<Group>  getActivatingGroups(Long[] groupIds, Integer[] versions) {
-        List<Group>  result = new ArrayList<>();
+    public List<Group> getActivatingGroups(Long[] groupIds, Integer[] versions) {
         try {
-            List<Archive> list = archiveService.getGroupArchives(groupIds, versions);
-            if (list == null || list.size() == 0){
-                return result;
-            }
-            for (Archive archive : list){
-                String content = archive.getContent();
-                Group group = DefaultSaxParser.parseEntity(Group.class, content);
+            List<Group> list = archiveService.getGroupsByIdAndVersion(groupIds, versions);
+            for (Group group : list){
                 if (group != null){
                     autoFiller.autofill(group);
-                    result.add(group);
                 }
             }
+            return list;
         } catch (Exception e) {
             logger.warn("Archive Parser Fail ! GroupId:"+Arrays.asList(groupIds).toString()+" Version:"+Arrays.asList(versions).toString());
         }
-        return result;
+        return new ArrayList<>();
     }
 
     @Override
     public VirtualServer getActivatingVirtualServer(Long vsId, int version) {
         try {
-            Archive archive = archiveService.getVsArchive(vsId, version);
-            if (archive == null ){
-                return null;
-            }
-            String content = archive.getContent();
-            return DefaultSaxParser.parseEntity(VirtualServer.class, content);
+            return archiveService.getVirtualServer(vsId, version);
         } catch (Exception e) {
             logger.warn("[getActivatingVirtualServer] Archive Parser Fail ! VsId:"+vsId+" Version:"+version,e);
         }
@@ -256,37 +239,21 @@ public class ActivateServiceImpl implements ActivateService {
 
     @Override
     public List<VirtualServer> getActivatingVirtualServers(Long[] vsIds, Integer[] versions) {
-        List<VirtualServer> result = new ArrayList<>();
         try {
-            List<Archive> archives = archiveService.getVsArchives(vsIds, versions);
-            if (archives == null || archives.size() == 0){
-                return result;
-            }
-            for (Archive archive : archives){
-                String content = archive.getContent();
-                VirtualServer tmp = DefaultSaxParser.parseEntity(VirtualServer.class, content);
-                if (tmp != null){
-                    result.add(tmp);
-                }
-            }
+            return archiveService.getVirtualServersByIdAndVersion(vsIds, versions);
         } catch (Exception e) {
             logger.warn("[getActivatingVirtualServer] Archive Parser Fail ! VsId:"+Arrays.asList(vsIds).toString()+" Version:"+Arrays.asList(versions).toString(),e);
         }
-        return result;
+        return new ArrayList<>();
     }
 
     @Override
     public Slb getActivatingSlb(Long slbId , int version) {
         try {
-            Archive archive = archiveService.getSlbArchive(slbId, version);
-            if (archive == null ){
+            Slb slb = archiveService.getSlb(slbId, version);
+            if (slb == null ){
                 logger.warn("Archive Not Found ! SlbId:"+slbId+" Version:"+version);
                 return null;
-            }
-            String content = archive.getContent();
-            Slb slb = DefaultSaxParser.parseEntity(Slb.class, content);
-            if (slb == null){
-                logger.warn("Archive Parser Fail ! SlbId:"+slbId+" Version:"+version);
             }
             autoFiller.autofill(slb);
             return slb;
@@ -388,7 +355,7 @@ public class ActivateServiceImpl implements ActivateService {
         ConfSlbActiveDo slbActiveDo = confSlbActiveDao.findBySlbId(slbId,ConfSlbActiveEntity.READSET_FULL);
         if (slbActiveDo!=null){
             String content = slbActiveDo.getContent();
-            Slb slb = DefaultSaxParser.parseEntity(Slb.class,content);
+            Slb slb = DefaultSaxParser.parseEntity(Slb.class, content);
             if (slb == null){
                 return null;
             }

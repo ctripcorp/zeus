@@ -433,12 +433,6 @@ public class ModelServiceTest extends AbstractServerTest {
      */
 
     @Test
-    public void testGetLatestGroupArchive() throws Exception {
-        Archive archive = archiveService.getLatestGroupArchive(testGroup.getId());
-        Assert.assertTrue(archive.getVersion() > 0);
-    }
-
-    @Test
     public void testGetLatestSlbArchive() throws Exception {
         Archive archive = archiveService.getLatestSlbArchive(defaultSlb.getId());
         Assert.assertTrue(archive.getVersion() > 0);

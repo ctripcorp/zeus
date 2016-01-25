@@ -110,6 +110,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="update-content-by-id" type="UPDATE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='content'/> = ${content}
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="slb-virtual-server" table="slb_virtual_server" alias="svs" do-class="SlbVirtualServerDo">

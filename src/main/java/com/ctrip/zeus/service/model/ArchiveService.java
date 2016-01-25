@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.VirtualServer;
 
 import java.util.List;
 
@@ -12,17 +13,11 @@ import java.util.List;
  */
 public interface ArchiveService {
 
-    int archiveSlb(Slb slb) throws Exception;
-
-    int archiveGroup(Group app) throws Exception;
-
-    int deleteSlbArchive(Long slbId) throws Exception;
-
-    int deleteGroupArchive(Long groupId) throws Exception;
-
     Slb getSlb(Long slbId, int version) throws Exception;
 
     Group getGroup(Long groupId, int version) throws Exception;
+
+    VirtualServer getVirtualServer(Long vsId, int version) throws Exception;
 
     Slb getLatestSlb(Long slbId) throws Exception;
 
@@ -34,21 +29,13 @@ public interface ArchiveService {
 
     Archive getLatestSlbArchive(Long slbId) throws Exception;
 
-    Archive getLatestGroupArchive(Long groupId) throws Exception;
-
-    List<Archive> getLastestGroupArchives(Long[] groupIds) throws Exception;
-
     List<Archive> getLastestVsArchives(Long[] vsIds) throws Exception;
-
-    Archive getSlbArchive(Long slbId, int version) throws Exception;
-
-    Archive getGroupArchive(Long groupId, int version) throws Exception;
-
-    Archive getVsArchive(Long vsId, int version) throws Exception;
 
     Archive getLatestVsArchive(Long vsId) throws Exception;
 
-    List<Archive> getVsArchives(Long[] vsIds, Integer[] versions) throws Exception;
+    List<Group> getGroupsByIdAndVersion(Long[] groupIds, Integer[] versions) throws Exception;
 
-    List<Archive> getGroupArchives(Long[] groupIds, Integer[] versions) throws Exception;
+    List<VirtualServer> getVirtualServersByIdAndVersion(Long[] vsIds, Integer[] versions) throws Exception;
+
+    String upgradeArchives(Long[] slbIds, Long[] groupIds, Long[] vsIds) throws Exception;
 }

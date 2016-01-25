@@ -13,6 +13,7 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
+import com.ctrip.zeus.service.model.ArchiveService;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -56,6 +57,8 @@ public class GroupResource {
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
+    private ArchiveService archiveService;
     private final int TIMEOUT = 1000;
 
     @GET
@@ -309,28 +312,29 @@ public class GroupResource {
     }
 
     @GET
-    @Path("/group/syncStatus")
+    @Path("/archive/upgrade")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeAll(@Context HttpHeaders hh,
-                               @Context HttpServletRequest request,
-                               @QueryParam("groupId") Long groupId) throws Exception {
-        if (groupId != null) {
-            groupRepository.syncMemberStatus(groupRepository.getById(groupId));
-            return responseHandler.handle("Successfully synced group status.", hh.getMediaType());
+    public Response upgrade(@Context HttpHeaders hh,
+                            @Context HttpServletRequest request,
+                            @QueryParam("slbId") List<Long> slbId,
+                            @QueryParam("groupId") List<Long> groupId,
+                            @QueryParam("vsId") List<Long> vsId) throws Exception {
+        if (slbId != null || groupId != null || vsId != null) {
+            slbId = (slbId == null) ? new ArrayList<Long>() : slbId;
+            groupId = (groupId == null) ? new ArrayList<Long>() : groupId;
+            vsId = (vsId == null) ? new ArrayList<Long>() : vsId;
         }
-        List<Long> failedIds = new ArrayList<>();
-        Set<Long> groupIds = groupCriteriaQuery.queryAll();
-        for (Group group : groupRepository.list(groupIds.toArray(new Long[groupIds.size()]))) {
-            try {
-                groupRepository.syncMemberStatus(group);
-            } catch (Exception ex) {
-                failedIds.add(group.getId());
-            }
+        if (slbId == null || slbId.size() == 0) {
+            slbId = new ArrayList<>(slbCriteriaQuery.queryAll());
         }
-        if (failedIds.size() == 0)
-            return responseHandler.handle("Successfully synced all group statuses.", hh.getMediaType());
-        else
-            return responseHandler.handle("Error occurs when syncing group statuses on id " + Joiner.on(',').join(groupIds) + ".", hh.getMediaType());
+        if (groupId == null || groupId.size() == 0) {
+            groupId = new ArrayList<>(groupCriteriaQuery.queryAll());
+        }
+        if (vsId == null || vsId.size() == 0) {
+            vsId = new ArrayList<>(virtualServerCriteriaQuery.queryAll());
+        }
+        String val = archiveService.upgradeArchives(slbId.toArray(new Long[slbId.size()]), groupId.toArray(new Long[groupId.size()]), vsId.toArray(new Long[vsId.size()]));
+        return responseHandler.handle(val, hh.getMediaType());
     }
 
 
