@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.validate;
 
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbValidateResponse;
 
 /**
@@ -7,5 +8,5 @@ import com.ctrip.zeus.model.entity.SlbValidateResponse;
  */
 public interface SlbValidator {
 
-    SlbValidateResponse validate(Long slbId) throws Exception;
+    SlbValidateResponse validate(Slb slbId) throws Exception;
 }

@@ -29,7 +29,7 @@ public interface GroupStatusService {
       * @return status list
       * @throws Exception
       */
-     List<GroupStatus> getOnlineGroupsStatusBySlbId(IdVersion slbId) throws Exception;
+     List<GroupStatus> getOnlineGroupsStatusBySlbId(Long slbId) throws Exception;
 
     /**
      * Find online group status by groupId
@@ -39,16 +39,15 @@ public interface GroupStatusService {
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOnlineGroupsStatus(Map<Long,Group> groups ,Set<Long> vsIds ,  IdVersion slbId) throws Exception
+    List<GroupStatus> getOnlineGroupsStatus(Map<Long,Group> groups ,List<Long> vsIds ,  Long slbId) throws Exception;
 
     /**
      * Find all online group status by groupIds and slb id
-     * @param groupIds groupIds
-     * @param slbId slbId
+     * @param groupId groupId
      * @return status list
      * @throws Exception
      */
-     List<GroupStatus> getOnlineGroupsStatus(Set<Long> groupIds,Long slbId) throws Exception;
+     List<GroupStatus> getOnlineGroupStatus(Long groupId) throws Exception;
 
     /**
      * Find all online groups status
@@ -74,11 +73,19 @@ public interface GroupStatusService {
     List<GroupStatus> getOfflineGroupStatus(Long groupId) throws Exception;
 
     /**
-     * Find all online group status by groupIds and slb id
-     * @param groupIds groupIds
+     * Find online group status by groupId
+     * @param groupId groupId
      * @param slbId slbId
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOfflineGroupsStatus(Set<Long> groupIds,Long slbId) throws Exception;
+    List<GroupStatus> getOfflineGroupStatus(Long groupId,Long slbId) throws Exception;
+
+    /**
+     * Find all online group status by groupIds and slb id
+     * @param slbId slbId
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getOfflineGroupsStatus(Map<Long,Group> groups ,Map<Long,Group> onlineGroups ,List<Long> vsIds , Long slbId) throws Exception;
 }

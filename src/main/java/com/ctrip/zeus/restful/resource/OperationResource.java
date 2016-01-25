@@ -2,15 +2,11 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.dal.core.StatusGroupServerDao;
-import com.ctrip.zeus.dal.core.StatusGroupServerDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.activate.ActivateService;
-import com.ctrip.zeus.service.activate.ActiveConfService;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateInstaller;
 import com.ctrip.zeus.service.nginx.CertificateService;
@@ -25,7 +21,6 @@ import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.ServerStatus;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
-import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Joiner;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.stereotype.Component;
@@ -59,8 +54,6 @@ public class OperationResource {
     @Resource
     private TaskManager taskManager;
     @Resource
-    private ActiveConfService activeConfService;
-    @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
@@ -75,7 +68,8 @@ public class OperationResource {
     @Resource
     private CertificateInstaller certificateInstaller;
     @Resource
-    private ActivateService activateService;
+    private EntityFactory entityFactory;
+
 
 
     @GET
@@ -93,12 +87,9 @@ public class OperationResource {
     }
 
     private Response serverOps(HttpHeaders hh, String serverip, boolean up) throws Exception {
-        //get slb by serverip
-        Set<Long> groupIds = statusService.findGroupIdByIp(serverip);
-        Set<Long> slbIds = activeConfService.getSlbIdsByGroupIds(groupIds.toArray(new Long[]{}));
-        Set<Long> slbIdsOffLine = slbCriteriaQuery.queryByGroups(groupIds.toArray(new Long[]{}));
-        slbIds.addAll(slbIdsOffLine);
-        if (slbIds == null || slbIds.size() == 0 ){
+        Long [] slbIds = entityFactory.getSlbIdsByIp(serverip, ModelMode.MODEL_MODE_ONLINE);
+
+        if (slbIds == null || slbIds.length == 0 ){
             throw new ValidationException("Not found Server Ip.");
         }
         List<OpsTask> tasks = new ArrayList<>();
@@ -124,10 +115,13 @@ public class OperationResource {
             throw new Exception(failCause);
         }
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
-        List<Group> groupList = groupRepository.list(groupIds.toArray(new Long[]{}));
 
-        if (groupList != null) {
-            for (Group group : groupList) {
+        Set<Long> groupIds = groupCriteriaQuery.queryByGroupServerIp(serverip);
+
+        List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
+
+        if (groups != null) {
+            for (Group group : groups) {
                 ss.addGroupName(group.getName());
             }
         }
@@ -148,26 +142,25 @@ public class OperationResource {
                              @QueryParam("groupName") String groupName,
                              @QueryParam("ip") List<String> ips,
                              @QueryParam("batch") Boolean batch) throws Exception {
-        Long _groupId = null;
         List<String> _ips = new ArrayList<>();
-        if (groupId != null) {
-            _groupId = groupId;
-        } else if (groupName != null) {
-            _groupId = groupCriteriaQuery.queryByName(groupName);
+        if (groupId == null) {
+            if (groupName == null){
+                throw new ValidationException("Group Id or Name not found!");
+            }else {
+                groupId = groupCriteriaQuery.queryByName(groupName);
+            }
         }
-        if (null == _groupId) {
-            throw new ValidationException("Group Id or Name not found!");
-        }
+
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(_groupId);
+            Group gp = groupRepository.getById(groupId);
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips.addAll(ips);
+            _ips = ips;
         }
-        return memberOps(hh, _groupId, _ips, true, TaskOpsType.MEMBER_OPS);
+        return memberOps(hh, groupId, _ips, true, TaskOpsType.MEMBER_OPS);
     }
 
     @GET
@@ -179,28 +172,26 @@ public class OperationResource {
                                @QueryParam("groupName") String groupName,
                                @QueryParam("ip") List<String> ips,
                                @QueryParam("batch") Boolean batch) throws Exception {
-        Long _groupId = null;
         List<String> _ips = new ArrayList<>();
+        if (groupId == null) {
+            if (groupName == null){
+                throw new ValidationException("Group Id or Name not found!");
+            }else {
+                groupId = groupCriteriaQuery.queryByName(groupName);
+            }
+        }
 
-        if (groupId != null) {
-            _groupId = groupId;
-        } else if (groupName != null) {
-            _groupId = groupCriteriaQuery.queryByName(groupName);
-        }
-        if (null == _groupId) {
-            throw new ValidationException("Group Id or Name not found!");
-        }
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(_groupId);
+            Group gp = groupRepository.getById(groupId);
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips.addAll(ips);
+            _ips = ips;
         }
 
-        return memberOps(hh, _groupId, _ips, false, TaskOpsType.MEMBER_OPS);
+        return memberOps(hh, groupId, _ips, false, TaskOpsType.MEMBER_OPS);
     }
 
 
@@ -213,26 +204,25 @@ public class OperationResource {
                            @QueryParam("groupName") String groupName,
                            @QueryParam("ip") List<String> ips,
                            @QueryParam("batch") Boolean batch) throws Exception {
-        Long _groupId = null;
         List<String> _ips = new ArrayList<>();
-        if (groupId != null) {
-            _groupId = groupId;
-        } else if (groupName != null) {
-            _groupId = groupCriteriaQuery.queryByName(groupName);
+        if (groupId == null) {
+            if (groupName == null){
+                throw new ValidationException("Group Id or Name not found!");
+            }else {
+                groupId = groupCriteriaQuery.queryByName(groupName);
+            }
         }
-        if (null == _groupId) {
-            throw new ValidationException("Group Id or Name not found!");
-        }
+
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(_groupId);
+            Group gp = groupRepository.getById(groupId);
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips.addAll(ips);
+            _ips = ips;
         }
-        return memberOps(hh, _groupId, _ips, true, TaskOpsType.PULL_MEMBER_OPS);
+        return memberOps(hh, groupId, _ips, true, TaskOpsType.PULL_MEMBER_OPS);
     }
 
     @GET
@@ -244,28 +234,25 @@ public class OperationResource {
                             @QueryParam("groupName") String groupName,
                             @QueryParam("ip") List<String> ips,
                             @QueryParam("batch") Boolean batch) throws Exception {
-        Long _groupId = null;
         List<String> _ips = new ArrayList<>();
+        if (groupId == null) {
+            if (groupName == null){
+                throw new ValidationException("Group Id or Name not found!");
+            }else {
+                groupId = groupCriteriaQuery.queryByName(groupName);
+            }
+        }
 
-        if (groupId != null) {
-            _groupId = groupId;
-        } else if (groupName != null) {
-            _groupId = groupCriteriaQuery.queryByName(groupName);
-        }
-        if (null == _groupId) {
-            throw new ValidationException("Group Id or Name not found!");
-        }
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(_groupId);
+            Group gp = groupRepository.getById(groupId);
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips.addAll(ips);
+            _ips = ips;
         }
-
-        return memberOps(hh, _groupId, _ips, false, TaskOpsType.PULL_MEMBER_OPS);
+        return memberOps(hh, groupId, _ips, false, TaskOpsType.PULL_MEMBER_OPS);
     }
 
     @POST
@@ -385,9 +372,33 @@ public class OperationResource {
         for (String ip : ips) {
             sb.append(ip).append(";");
         }
-        Set<Long> slbIds = activeConfService.getSlbIdsByGroupId(groupId);
-        Set<Long> slbs = slbCriteriaQuery.queryByGroups(new Long[]{groupId});
-        slbIds.addAll(slbs);
+        ModelStatusMapping<Group> mapping = entityFactory.getGroupById(new Long[]{groupId});
+        if (mapping.getOfflineMapping() == null || mapping.getOfflineMapping().size()==0){
+            throw new ValidationException("Not Found Group By Id.");
+        }
+        Group onlineGroup = mapping.getOnlineMapping().get(groupId);
+        Group offlineGroup = mapping.getOfflineMapping().get(groupId);
+        Set<Long> vsIds = new HashSet<>();
+        Set<Long> slbIds = new HashSet<>();
+        if (onlineGroup != null){
+            for (GroupVirtualServer gvs : onlineGroup.getGroupVirtualServers()){
+                vsIds.add(gvs.getVirtualServer().getId());
+            }
+        }
+        for (GroupVirtualServer gvs : offlineGroup.getGroupVirtualServers()){
+            vsIds.add(gvs.getVirtualServer().getId());
+        }
+
+        ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsByVsIds(vsIds.toArray(new Long[]{}));
+
+        VirtualServer tmp;
+        for (Long vsId : vsIds){
+            tmp = vsMaping.getOnlineMapping().get(vsId);
+            if (tmp == null){
+                tmp = vsMaping.getOfflineMapping().get(vsId);
+            }
+            slbIds.add(tmp.getSlbId());
+        }
 
         List<OpsTask> tasks = new ArrayList<>();
         for (Long slbId : slbIds) {
@@ -408,7 +419,6 @@ public class OperationResource {
         }
 
         List<GroupStatus> statuses = groupStatusService.getOfflineGroupStatus(groupId);
-        //ToDo set group name and slb name
         GroupStatus groupStatusList = new GroupStatus().setGroupId(groupId).setSlbName("");
         for (GroupStatus groupStatus : statuses) {
             groupStatusList.setSlbName(groupStatusList.getSlbName() + " " + groupStatus.getSlbName())

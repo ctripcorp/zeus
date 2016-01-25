@@ -41,7 +41,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
-    private MappingFactory mappingFactory;
+    private EntityFactory entityFactory;
     @Resource
     private TaskService taskService;
     @Resource
@@ -129,18 +129,19 @@ public class TaskExecutorImpl implements TaskExecutor {
         try {
             //1. get needed data from database
             //1.1 slb data
-            onlineSlb = slbRepository.getById(slbId);
-            offlineSlb = slbRepository.getById(slbId, MODE);
+            ModelStatusMapping<Slb> slbMap = entityFactory.getSlbById(new Long[]{slbId});
+            onlineSlb = slbMap.getOnlineMapping().get(slbId);
+            offlineSlb = slbMap.getOfflineMapping().get(slbId);
 
             //1.2 virtual server data
-            ModelStatusMapping<VirtualServer> vsMap = mappingFactory.getBySlbIds(slbId);
+            ModelStatusMapping<VirtualServer> vsMap = entityFactory.getBySlbIds(slbId);
             offlineVses = vsMap.getOfflineMapping();
             onlineVses = vsMap.getOnlineMapping();
 
             //1.3 group data
             Set<Long> vsIds = new HashSet<>(onlineVses.keySet());
             vsIds.addAll(offlineVses.keySet());
-            ModelStatusMapping<Group> groupsMap = mappingFactory.getByVsIds(vsIds.toArray(new Long[]{}));
+            ModelStatusMapping<Group> groupsMap = entityFactory.getByVsIds(vsIds.toArray(new Long[]{}));
             onlineGroups = groupsMap.getOnlineMapping();
             offlineGroups = groupsMap.getOfflineMapping();
 
@@ -152,8 +153,8 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }
             }
             List<Group> groups = groupRepository.list(toFetch.toArray(new IdVersion[]{}));
-            for (Group group : groups){
-                offlineGroups.put(group.getId(),group);
+            for (Group group : groups) {
+                offlineGroups.put(group.getId(), group);
             }
 
             toFetch = new ArrayList<>();
@@ -163,11 +164,11 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }
             }
             List<VirtualServer> vses = virtualServerRepository.listAll(toFetch.toArray(new IdVersion[]{}));
-            for (VirtualServer vs : vses){
-                offlineVses.put(vs.getId(),vs);
+            for (VirtualServer vs : vses) {
+                offlineVses.put(vs.getId(), vs);
             }
 
-            if (activateSlbOps.size()>0){
+            if (activateSlbOps.size() > 0) {
                 OpsTask task = activateSlbOps.get(slbId);
                 if (!offlineGroups.get(task.getSlbId()).getVersion().equals(task.getVersion())) {
                     offlineSlb = slbRepository.getByKey(new IdVersion(task.getId(), task.getVersion()));
@@ -253,7 +254,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             //3.* in case of no need to update the config files.
             //only have operation for inactivated groups.
             if (needBuildVses.size() == 0 && activateSlbOps.size() == 0 && deactivateVsOps.size() == 0) {
-                performTasks(slbId);
+                performTasks(slbId, needBuildGroupVs, offlineGroups);
                 setTaskResult(slbId, true, null);
                 return;
             }
@@ -319,7 +320,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                     logger.info("[Dyups] upstreamName:" + dyUpstreamOpsData.getUpstreamName() + "\nStatus:" + isFail);
                 }
             }
-            performTasks(slbId);
+            performTasks(slbId, needBuildGroupVs, offlineGroups);
             updateVersion(slbId);
             setTaskResult(slbId, true, null);
         } catch (Exception e) {
@@ -329,7 +330,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             e.printStackTrace(printWriter);
             String failCause = e.getMessage() + out.getBuffer().toString();
             setTaskResult(slbId, false, failCause.length() > 1024 ? failCause.substring(0, 1024) : failCause);
-            rollBack(onlineSlb,buildSuc,needRollbackConf);
+            rollBack(onlineSlb, buildSuc, needRollbackConf);
             throw e;
         }
 
@@ -368,13 +369,13 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private void rollBack(Slb slb , boolean buildConf , boolean needRollbackConf) {
+    private void rollBack(Slb slb, boolean buildConf, boolean needRollbackConf) {
         try {
-            if (buildConf){
+            if (buildConf) {
                 int current = buildInfoService.getCurrentTicket(slb.getId());
                 buildService.rollBackConfig(slb.getId(), current);
             }
-            if (needRollbackConf){
+            if (needRollbackConf) {
                 if (!nginxService.rollbackAllConf(slb.getId(), slb.getVersion())) {
                     logger.error("[Rollback] Rollback config on disk fail. ");
                 }
@@ -385,7 +386,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private void performTasks(Long slbId, Map<Long, Long> groupVs, Map<Long, Group> activatingGroups, Map<Long, VirtualServer> activatingVses) throws Exception {
+    private void performTasks(Long slbId, Map<Long, Long> groupVs, Map<Long, Group> offlineGroups) throws Exception {
         try {
             for (OpsTask task : activateSlbOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
@@ -436,10 +437,26 @@ public class TaskExecutorImpl implements TaskExecutor {
                     String[] ips = task.getIpList().split(";");
                     List<String> ipList = Arrays.asList(ips);
                     Long vsId = groupVs.get(task.getGroupId());
-                    UpdateStatusItem item = new UpdateStatusItem();
-                    item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId).setOffset(StatusOffset.MEMBER_OPS).setUp(task.getUp());
-                    item.getIpses().addAll(ipList);
-                    memberUpdates.add(item);
+                    if (vsId == null) {
+                        Group group = offlineGroups.get(task.getGroupId());
+                        if (group == null || group.getGroupVirtualServers().size() == 0) {
+                            setTaskFail(task, "Not Found Group Id:" + task.getGroupId());
+                            continue;
+                        }
+                        for (GroupVirtualServer gvs : group.getGroupVirtualServers()){
+                            UpdateStatusItem item = new UpdateStatusItem();
+                            item.setGroupId(task.getGroupId()).setVsId(gvs.getVirtualServer().getId())
+                                    .setSlbId(slbId).setOffset(StatusOffset.MEMBER_OPS).setUp(task.getUp());
+                            item.getIpses().addAll(ipList);
+                            memberUpdates.add(item);
+                        }
+                    } else {
+                        UpdateStatusItem item = new UpdateStatusItem();
+                        item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId)
+                                .setOffset(StatusOffset.MEMBER_OPS).setUp(task.getUp());
+                        item.getIpses().addAll(ipList);
+                        memberUpdates.add(item);
+                    }
                 }
             }
             statusService.updateStatus(memberUpdates);
@@ -453,10 +470,27 @@ public class TaskExecutorImpl implements TaskExecutor {
                     String[] ips = task.getIpList().split(";");
                     List<String> ipList = Arrays.asList(ips);
                     Long vsId = groupVs.get(task.getGroupId());
-                    UpdateStatusItem item = new UpdateStatusItem();
-                    item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId).setOffset(StatusOffset.PULL_OPS).setUp(task.getUp());
-                    item.getIpses().addAll(ipList);
-                    pullUpdates.add(item);
+
+                    if (vsId == null) {
+                        Group group = offlineGroups.get(task.getGroupId());
+                        if (group == null || group.getGroupVirtualServers().size() == 0) {
+                            setTaskFail(task, "Not Found Group Id:" + task.getGroupId());
+                            continue;
+                        }
+                        for (GroupVirtualServer gvs : group.getGroupVirtualServers()){
+                            UpdateStatusItem item = new UpdateStatusItem();
+                            item.setGroupId(task.getGroupId()).setVsId(gvs.getVirtualServer().getId())
+                                    .setSlbId(slbId).setOffset(StatusOffset.PULL_OPS).setUp(task.getUp());
+                            item.getIpses().addAll(ipList);
+                            pullUpdates.add(item);
+                        }
+                    } else {
+                        UpdateStatusItem item = new UpdateStatusItem();
+                        item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId)
+                                .setOffset(StatusOffset.PULL_OPS).setUp(task.getUp());
+                        item.getIpses().addAll(ipList);
+                        pullUpdates.add(item);
+                    }
                 }
             }
             statusService.updateStatus(pullUpdates);
@@ -486,7 +520,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     }
 
     private Set<String> getAllUpGroupServers(Set<Long> vsIds, Map<Long, Group> groups) throws Exception {
-        Map<String,List<Boolean>> memberStatus = statusService.fetchGroupServersByVsIds(vsIds.toArray(new Long[]{}));
+        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServersByVsIds(vsIds.toArray(new Long[]{}));
         Set<Long> tmpid = memberOps.keySet();
         for (Long gid : tmpid) {
             Group groupTmp = groups.get(gid);
@@ -529,9 +563,9 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
 
         Set<String> result = new HashSet<>();
-        for (String key : memberStatus.keySet()){
+        for (String key : memberStatus.keySet()) {
             List<Boolean> status = memberStatus.get(key);
-            if (status.get(StatusOffset.PULL_OPS)&&status.get(StatusOffset.MEMBER_OPS)){
+            if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS)) {
                 result.add(key);
             }
         }
@@ -550,6 +584,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
         return allDownServers;
     }
+
     private void sortTaskData(Long slbId) {
         activateGroupOps.clear();
         activateSlbOps.clear();

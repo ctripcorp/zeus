@@ -12,9 +12,7 @@ import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.service.build.NginxConfService;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.nginx.RollingTrafficStatus;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -58,6 +56,8 @@ public class NginxServiceImpl implements NginxService {
     private NginxOperator nginxOperator;
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
+    private EntityFactory entityFactory;
 
     private ThreadPoolExecutor threadPoolExecutor;
 
@@ -114,12 +114,9 @@ public class NginxServiceImpl implements NginxService {
 
         NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
         rollbackConfBackUp(operator);
-        virtualServerCriteriaQuery.q
-        Map<Long,VirtualServer> vses = activateService.getActivatedVirtualServerBySlb(slbId);
-        List<Long> vsIds = new ArrayList<>();
-        for (VirtualServer vs : vses.values()){
-            vsIds.add(vs.getId());
-        }
+
+        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, ModelMode.MODEL_MODE_ONLINE);
+        List<Long> vsIds = Arrays.asList(vses);
         cleanConfOnDisk(slbId,version,operator);
         writeConfToDisk(slbId, version, vsIds, operator);
 
@@ -239,7 +236,7 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public List<NginxResponse> loadAll(Long slbId , Integer version) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
-        Slb slb = slbRepository.getByKey(new IdVersion(slbId,version));
+        Slb slb = slbRepository.getByKey(new IdVersion(slbId, version));
 
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {

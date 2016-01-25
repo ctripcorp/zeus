@@ -58,17 +58,16 @@ public class StatusResource {
     public Response allGroupStatusInSlb(@Context HttpServletRequest request, @Context HttpHeaders hh,
                                         @QueryParam("slbId") Long slbId,
                                         @QueryParam("slbName") String slbName) throws Exception {
-        Long _slbId = null; //slbRepository.get(slbName).getId();
         List<GroupStatus> statusList = null;
-        if (slbId != null) {
-            _slbId = slbId;
-        } else if (slbName != null) {
-            _slbId = slbCriteriaQuery.queryByName(slbName);
+        if (slbId == null) {
+            if (slbName !=null){
+                slbId = slbCriteriaQuery.queryByName(slbName);
+            }
         }
-        if (null == _slbId) {
+        if (null == slbId) {
             statusList = groupStatusService.getAllOfflineGroupsStatus();
         } else {
-            statusList = groupStatusService.getOfflineGroupsStatusBySlbId(_slbId);
+            statusList = groupStatusService.getOfflineGroupsStatusBySlbId(slbId);
         }
 
         GroupStatusList result = new GroupStatusList();
@@ -87,38 +86,34 @@ public class StatusResource {
                                 @QueryParam("groupName") String groupName,
                                 @QueryParam("slbId") Long slbId,
                                 @QueryParam("slbName") String slbName) throws Exception {
-        Long _groupId = null;
-        Long _slbId = null;
         GroupStatus statusResult = null;
 
-        if (groupId != null) {
-            _groupId = groupId;
-        } else if (groupName != null) {
-            _groupId = groupCriteriaQuery.queryByName(groupName);
+        if (groupId == null) {
+            if (groupName != null) {
+                groupId = groupCriteriaQuery.queryByName(groupName);
+            }
         }
-        if (null == _groupId) {
-            throw new Exception("Group Id or Name not found!");
+        if (null == groupId) {
+            throw new ValidationException("Group Id or Name not found!");
         }
-        if (slbId != null) {
-            _slbId = slbId;
-        } else if (slbName != null) {
-            _slbId = slbCriteriaQuery.queryByName(slbName);
+        if (slbId == null) {
+            if (slbName != null) {
+                slbId = slbCriteriaQuery.queryByName(slbName);
+            }
         }
-        if (null == _slbId) {
-            List<GroupStatus> statusList = groupStatusService.getOfflineGroupStatus(_groupId);
+        if (null == slbId) {
+            List<GroupStatus> statusList = groupStatusService.getOfflineGroupStatus(groupId);
             if (statusList != null && statusList.size() > 0) {
                 statusResult = statusList.get(0);
             } else {
                 throw new ValidationException("Not Found Group Status In Slb!");
             }
         } else {
-            Set<Long> groupIds = new HashSet<>();
-            groupIds.add(_groupId);
-            List<GroupStatus> res = groupStatusService.getOfflineGroupsStatus(groupIds, _slbId);
+            List<GroupStatus> res = groupStatusService.getOfflineGroupStatus(groupId, slbId);
             if (res!=null && res.size()>0){
                 statusResult = res.get(0);
             }else {
-                throw new Exception("Not Found Group Status!");
+                throw new ValidationException("Not Found Group Status!");
             }
         }
 

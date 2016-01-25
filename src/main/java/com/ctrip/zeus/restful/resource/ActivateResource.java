@@ -6,13 +6,9 @@ import com.ctrip.zeus.exceptions.SlbValidatorException;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.activate.ActivateService;
-import com.ctrip.zeus.service.activate.ActiveConfService;
-import com.ctrip.zeus.service.model.ArchiveService;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -57,15 +53,15 @@ public class ActivateResource {
     @Resource
     private SlbValidator slbValidator;
     @Resource
+    private EntityFactory entityFactory;
+    @Resource
     private TaskManager taskManager;
+    @Resource
+    private VirtualServerValidator virtualServerValidator;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
-    private ActiveConfService activeConfService;
-    @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
-    @Resource
-    private ActivateService activateService;
     @Resource
     private ConfSlbVirtualServerActiveDao confSlbVirtualServerActiveDao;
     @Resource
@@ -95,8 +91,15 @@ public class ActivateResource {
                 _slbIds.add(slbCriteriaQuery.queryByName(slbName));
             }
         }
+        ModelStatusMapping<Slb> slbModelStatusMapping = entityFactory.getSlbById(_slbIds.toArray(new Long[]{}));
+        if (slbModelStatusMapping.getOfflineMapping() == null || slbModelStatusMapping.getOfflineMapping().size()==0){
+            throw new ValidationException("Not Found Slb By Id.");
+        }
         for (Long id : _slbIds){
-            validateResponse=slbValidator.validate(id);
+            if (slbModelStatusMapping.getOfflineMapping().get(id) == null){
+                throw new ValidationException("Not Found Slb By Id."+id);
+            }
+            validateResponse=slbValidator.validate(slbModelStatusMapping.getOfflineMapping().get(id));
             if (!validateResponse.getSucceed()){
                 throw new SlbValidatorException("msg:"+validateResponse.getMsg()+"\nslbId:"+validateResponse.getSlbId()
                 +"\nip:"+validateResponse.getIp());
@@ -104,30 +107,13 @@ public class ActivateResource {
         }
         List<OpsTask> tasks = new ArrayList<>();
         for (Long id : _slbIds) {
-
+            Slb slb = slbModelStatusMapping.getOfflineMapping().get(id);
             OpsTask task = new OpsTask();
             task.setSlbId(id);
             task.setOpsType(TaskOpsType.ACTIVATE_SLB);
             task.setTargetSlbId(id);
-            Archive archive = archiveService.getLatestSlbArchive(id);
-            task.setVersion(archive.getVersion());
+            task.setVersion(slb.getVersion());
             tasks.add(task);
-
-            Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(id);
-            Map<Long,VirtualServer> activatedVses = activateService.getActivatedVirtualServerBySlb(id);
-            List<Archive> list = archiveService.getLastestVsArchives(vsIds.toArray(new Long[]{}));
-            for (Archive a : list){
-                if (activatedVses.containsKey(a.getId()) && !activatedVses.get(a.getId()).getVersion().equals(a.getVersion())
-                        || !activatedVses.containsKey(a.getId())){
-                    task = new OpsTask();
-                    task.setSlbVirtualServerId(a.getId());
-                    task.setOpsType(TaskOpsType.ACTIVATE_VS);
-                    task.setTargetSlbId(id);
-                    task.setVersion(a.getVersion());
-                    task.setCreateTime(new Date());
-                    tasks.add(task);
-                }
-            }
         }
 
         List<Long> taskIds = taskManager.addTask(tasks);
@@ -158,27 +144,37 @@ public class ActivateResource {
                 _groupIds.add(groupCriteriaQuery.queryByName(groupName));
             }
         }
-        for (Long id : _groupIds){
-            if (groupRepository.getById(id)==null){
-                throw new ValidationException("Group Id Not Found : "+id);
-            }
+
+        ModelStatusMapping<Group> mapping = entityFactory.getGroupById(_groupIds.toArray(new Long[]{}));
+        if (mapping.getOfflineMapping() == null || mapping.getOfflineMapping().size()==0){
+            throw new ValidationException("Not Found Group By Id.");
         }
         List<OpsTask> tasks = new ArrayList<>();
         for (Long id : _groupIds) {
-            Group group = groupRepository.getById(id);
+            Group group = mapping.getOfflineMapping().get(id);
             AssertUtils.assertNotNull(group,"Group Not Found! GroupId:"+id);
             AssertUtils.assertNotNull(group.getGroupVirtualServers(),"Group Virtual Servers Not Found! GroupId:"+id);
+            List<Long> vsIds = new ArrayList<>();
             for (GroupVirtualServer gv : group.getGroupVirtualServers()){
-                if (!activateService.isVSActivated(gv.getVirtualServer().getId())){
+                if (!virtualServerValidator.isActivated(gv.getVirtualServer().getId())){
                     throw new ValidationException("Related VS has not been activated.VS: "+gv.getVirtualServer().getId());
                 }
+                vsIds.add(gv.getVirtualServer().getId());
             }
 
-            Set<Long> slbIds = slbCriteriaQuery.queryByGroups(new Long[]{id});
-            Set<Long> activatedSlbId = activeConfService.getSlbIdsByGroupId(id);
-            activatedSlbId.removeAll(slbIds);
+            ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsByVsIds(vsIds.toArray(new Long[]{}));
 
-            for (Long slbId : activatedSlbId){
+            Set<Long> slbIdOnline = new HashSet<>();
+            Set<Long> slbIdOffline = new HashSet<>();
+
+            for (VirtualServer vs : vsMaping.getOfflineMapping().values()){
+                slbIdOffline.add(vs.getSlbId());
+            }
+            for (VirtualServer vs : vsMaping.getOnlineMapping().values()){
+                slbIdOnline.add(vs.getSlbId());
+            }
+            slbIdOnline.removeAll(slbIdOffline);
+            for (Long slbId : slbIdOnline){
                 OpsTask task = new OpsTask();
                 task.setGroupId(id);
                 task.setOpsType(TaskOpsType.DEACTIVATE_GROUP);
@@ -186,8 +182,7 @@ public class ActivateResource {
                 task.setVersion(group.getVersion());
                 tasks.add(task);
             }
-
-            for (Long slbId : slbIds){
+            for (Long slbId : slbIdOffline){
                 OpsTask task = new OpsTask();
                 task.setGroupId(id);
                 task.setOpsType(TaskOpsType.ACTIVATE_GROUP);
@@ -218,37 +213,25 @@ public class ActivateResource {
     public Response activateVirtualServer(@Context HttpServletRequest request,
                                           @Context HttpHeaders hh,
                                           @QueryParam("vsId") Long vsId)throws Exception {
-        Archive archive = archiveService.getLatestVsArchive(vsId);
-        Long slbId = slbCriteriaQuery.queryByVs(vsId);
-        List<VirtualServer> vses = activateService.getActivatedVirtualServer(vsId);
-        List<Long> taskIds = new ArrayList<>();
-        if ((vses.size()==1&&vses.get(0).getSlbId().equals(slbId))||vses.size() == 0){
-            OpsTask task = new OpsTask();
-            task.setSlbVirtualServerId(vsId);
-            task.setCreateTime(new Date());
-            task.setOpsType(TaskOpsType.ACTIVATE_VS);
-            task.setTargetSlbId(slbId);
-            task.setVersion(archive.getVersion());
-            taskIds.add(taskManager.addTask(task));
-        }else if (vses.size()==1 && !vses.get(0).getSlbId().equals(slbId)){
-            VirtualServer vs = vses.get(0);
-            OpsTask deactivateTask = new OpsTask();
-            deactivateTask.setSlbVirtualServerId(vsId);
-            deactivateTask.setCreateTime(new Date());
-            deactivateTask.setOpsType(TaskOpsType.DEACTIVATE_VS);
-            deactivateTask.setTargetSlbId(vs.getSlbId());
-            taskIds.add(taskManager.addTask(deactivateTask));
-
-            OpsTask activateTask = new OpsTask();
-            activateTask.setSlbVirtualServerId(vsId);
-            activateTask.setCreateTime(new Date());
-            activateTask.setOpsType(TaskOpsType.ACTIVATE_VS);
-            activateTask.setTargetSlbId(slbId);
-            activateTask.setResources(String.valueOf(vs.getSlbId()));
-            taskIds.add(taskManager.addTask(activateTask));
-        }else {
-            throw new ValidationException("Activated Date Of Virtual Server ["+vsId +"] Is Incorrect.");
+        ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsByVsIds(new Long[]{vsId});
+        VirtualServer offlineVs = vsMaping.getOfflineMapping().get(vsId);
+        VirtualServer onlineVs = vsMaping.getOnlineMapping().get(vsId);
+        if (offlineVs == null){
+            throw new ValidationException("Not Found Vs By ID");
         }
+        if (onlineVs!=null && !offlineVs.getSlbId().equals(onlineVs.getSlbId())){
+            throw new ValidationException("Has different slb id for online/offline vses.");
+        }
+        Long slbId = offlineVs.getSlbId();
+        OpsTask task = new OpsTask();
+        task.setSlbVirtualServerId(vsId);
+        task.setCreateTime(new Date());
+        task.setOpsType(TaskOpsType.ACTIVATE_VS);
+        task.setTargetSlbId(slbId);
+        task.setVersion(offlineVs.getVersion());
+        List<Long> taskIds = new ArrayList<>();
+        taskIds.add(taskManager.addTask(task));
+
         List<TaskResult> results = taskManager.getResult(taskIds,30000L);
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results){
