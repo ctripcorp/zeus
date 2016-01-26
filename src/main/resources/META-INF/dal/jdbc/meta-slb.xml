@@ -74,6 +74,21 @@
         <var name="hashes" value-type="Integer[]"/>
         <var name="id-version-array" value-type="String[]"/>
         <query-defs>
+            <!--These queries are particularly designed for batch selection required task executors-->
+            <query name="find-versionized-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN r_slb_status rss
+                    ON as3.slb_id = rss.slb_id
+                        AND (as3.version = rss.online_version OR as3.version = rss.offline_version)
+                    WHERE as3.slb_id IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <!--end-->
             <query name="delete-by-slb" type="DELETE">
                 <param name="slb-id"/>
                 <statement>

@@ -3,13 +3,11 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
-import com.ctrip.zeus.service.model.EntityFactory;
-import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.ModelMode;
-import com.ctrip.zeus.service.model.ModelStatusMapping;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -17,10 +15,7 @@ import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2016/1/19.
@@ -32,9 +27,13 @@ public class EntityFactoryImpl implements EntityFactory {
     @Resource
     private ArchiveVsDao archiveVsDao;
     @Resource
+    private ArchiveSlbDao archiveSlbDao;
+    @Resource
     private RGroupStatusDao rGroupStatusDao;
     @Resource
     private RVsStatusDao rVsStatusDao;
+    @Resource
+    private RSlbStatusDao rSlbStatusDao;
 
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
@@ -44,7 +43,7 @@ public class EntityFactoryImpl implements EntityFactory {
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     @Override
-    public ModelStatusMapping<Group> getByVsIds(Long[] vsIds) throws Exception {
+    public ModelStatusMapping<Group> getGroupsByVsIds(Long[] vsIds) throws Exception {
         ModelStatusMapping<Group> result = new ModelStatusMapping<>();
         Set<Long> groupIds = new HashSet<>();
         Map<String, Group> mapping = new HashMap<>();
@@ -68,7 +67,7 @@ public class EntityFactoryImpl implements EntityFactory {
     }
 
     @Override
-    public ModelStatusMapping<VirtualServer> getBySlbIds(Long slbId) throws Exception {
+    public ModelStatusMapping<VirtualServer> getVsesBySlbIds(Long slbId) throws Exception {
         ModelStatusMapping<VirtualServer> result = new ModelStatusMapping<>();
         Set<Long> vsIds = new HashSet<>();
         Map<String, VirtualServer> mapping = new HashMap<>();
@@ -84,6 +83,75 @@ public class EntityFactoryImpl implements EntityFactory {
             }
             if (d.getOnlineVersion() != 0) {
                 result.addOnline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOnlineVersion()));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public ModelStatusMapping<Slb> getSlbsByIds(Long[] slbIds) throws Exception {
+        ModelStatusMapping<Slb> result = new ModelStatusMapping<>();
+        List<RelSlbStatusDo> ref = rSlbStatusDao.findBySlbs(slbIds, RSlbStatusEntity.READSET_FULL);
+
+        Map<String, Slb> mapping = new HashMap<>();
+        for (ArchiveSlbDo d : archiveSlbDao.findVersionizedByIds(slbIds, ArchiveSlbEntity.READSET_FULL)) {
+            Slb slb = ContentReaders.readSlbContent(d.getContent());
+            slb.getVirtualServers().clear();
+            mapping.put(slb.getId() + "," + slb.getVersion(), slb);
+        }
+
+        for (RelSlbStatusDo d : ref) {
+            if (d.getOnlineVersion() == 0 || d.getOnlineVersion() != d.getOfflineVersion()) {
+                result.addOffline(d.getSlbId(), mapping.get(d.getSlbId() + "," + d.getOfflineVersion()));
+            }
+            if (d.getOnlineVersion() != 0) {
+                result.addOnline(d.getSlbId(), mapping.get(d.getSlbId() + "," + d.getOnlineVersion()));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public ModelStatusMapping<VirtualServer> getVsesByIds(Long[] vsIds) throws Exception {
+        ModelStatusMapping<VirtualServer> result = new ModelStatusMapping<>();
+        List<RelVsStatusDo> ref = rVsStatusDao.findByVses(vsIds, RVsStatusEntity.READSET_FULL);
+
+        Map<String, VirtualServer> mapping = new HashMap<>();
+        for (MetaVsArchiveDo d : archiveVsDao.findVersionizedByIds(vsIds, ArchiveVsEntity.READSET_FULL)) {
+            VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
+            mapping.put(vs.getId() + "," + d.getVersion(), vs);
+        }
+
+        for (RelVsStatusDo d : ref) {
+            if (d.getOnlineVersion() == 0 || d.getOnlineVersion() != d.getOfflineVersion()) {
+                result.addOffline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOfflineVersion()));
+            }
+            if (d.getOnlineVersion() != 0) {
+                result.addOnline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOnlineVersion()));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public ModelStatusMapping<Group> getGroupsByIds(Long[] groupIds) throws Exception {
+        ModelStatusMapping<Group> result = new ModelStatusMapping<>();
+        List<RelGroupStatusDo> ref = rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL);
+
+        Map<String, Group> mapping = new HashMap<>();
+        for (ArchiveGroupDo d : archiveGroupDao.findVersionizedByIds(groupIds, ArchiveGroupEntity.READSET_FULL)) {
+            Group g = ContentReaders.readGroupContent(d.getContent());
+            for (GroupVirtualServer e : g.getGroupVirtualServers()) {
+                e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
+            }
+            mapping.put(d.getGroupId() + "," + d.getVersion(), g);
+        }
+        for (RelGroupStatusDo d : ref) {
+            if (d.getOnlineVersion() == 0 || d.getOnlineVersion() != d.getOfflineVersion()) {
+                result.addOffline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOfflineVersion()));
+            }
+            if (d.getOnlineVersion() != 0) {
+                result.addOnline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOnlineVersion()));
             }
         }
         return result;

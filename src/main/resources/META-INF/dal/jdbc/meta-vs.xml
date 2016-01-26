@@ -11,7 +11,7 @@
             </readset>
         </readsets>
         <query-defs>
-            <!--This query is particularly designed for batch selection required task executors-->
+            <!--These queries are particularly designed for batch selection required task executors-->
             <query name="find-all-by-slb-id" type="SELECT" multiple="true">
                 <param name="rel-id"/>
                 <statement>
@@ -28,6 +28,20 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-versionized-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN r_vs_status rvs
+                    ON av.vs_id = rvs.vs_id
+                        AND (av.version = rvs.online_version OR av.version = rvs.offline_version)
+                    WHERE av.vs_id IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <!--end-->
             <query name="find-all-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
