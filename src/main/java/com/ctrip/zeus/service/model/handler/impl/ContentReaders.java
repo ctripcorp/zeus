@@ -15,7 +15,7 @@ import java.io.IOException;
 public class ContentReaders {
 
     public static Group readGroupContent(String content) throws IOException, SAXException {
-        if (content.indexOf(0) == '<')
+        if (content.charAt(0) == '<')
             return DefaultSaxParser.parseEntity(Group.class, content);
         try {
             return DefaultJsonParser.parse(Group.class, content);
@@ -25,7 +25,7 @@ public class ContentReaders {
     }
 
     public static Slb readSlbContent(String content) throws IOException, SAXException {
-        if (content.indexOf(0) == '<')
+        if (content.charAt(0) == '<')
             return DefaultSaxParser.parseEntity(Slb.class, content);
         try {
             return DefaultJsonParser.parse(Slb.class, content);
@@ -35,7 +35,7 @@ public class ContentReaders {
     }
 
     public static VirtualServer readVirtualServerContent(String content) throws IOException, SAXException {
-        if (content.indexOf(0) == '<')
+        if (content.charAt(0) == '<')
             return DefaultSaxParser.parseEntity(VirtualServer.class, content);
         try {
             return DefaultJsonParser.parse(VirtualServer.class, content);
