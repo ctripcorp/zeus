@@ -56,9 +56,7 @@ public class EntityFactoryImpl implements EntityFactory {
             mapping.put(d.getGroupId() + "," + d.getVersion(), g);
         }
         for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds.toArray(new Long[groupIds.size()]), RGroupStatusEntity.READSET_FULL)) {
-            if (d.getOnlineVersion() == 0 || d.getOnlineVersion() != d.getOfflineVersion()) {
-                result.addOffline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOfflineVersion()));
-            }
+            result.addOffline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
                 result.addOnline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOnlineVersion()));
             }
@@ -78,9 +76,7 @@ public class EntityFactoryImpl implements EntityFactory {
             mapping.put(vs.getId() + "," + d.getVersion(), vs);
         }
         for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds.toArray(new Long[vsIds.size()]), RVsStatusEntity.READSET_FULL)) {
-            if (d.getOnlineVersion() == 0 || d.getOnlineVersion() != d.getOfflineVersion()) {
-                result.addOffline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOfflineVersion()));
-            }
+            result.addOffline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
                 result.addOnline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOnlineVersion()));
             }
@@ -101,9 +97,7 @@ public class EntityFactoryImpl implements EntityFactory {
         }
 
         for (RelSlbStatusDo d : ref) {
-            if (d.getOnlineVersion() == 0 || d.getOnlineVersion() != d.getOfflineVersion()) {
-                result.addOffline(d.getSlbId(), mapping.get(d.getSlbId() + "," + d.getOfflineVersion()));
-            }
+            result.addOffline(d.getSlbId(), mapping.get(d.getSlbId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
                 result.addOnline(d.getSlbId(), mapping.get(d.getSlbId() + "," + d.getOnlineVersion()));
             }
@@ -123,9 +117,7 @@ public class EntityFactoryImpl implements EntityFactory {
         }
 
         for (RelVsStatusDo d : ref) {
-            if (d.getOnlineVersion() == 0 || d.getOnlineVersion() != d.getOfflineVersion()) {
-                result.addOffline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOfflineVersion()));
-            }
+            result.addOffline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
                 result.addOnline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOnlineVersion()));
             }
@@ -147,9 +139,7 @@ public class EntityFactoryImpl implements EntityFactory {
             mapping.put(d.getGroupId() + "," + d.getVersion(), g);
         }
         for (RelGroupStatusDo d : ref) {
-            if (d.getOnlineVersion() == 0 || d.getOnlineVersion() != d.getOfflineVersion()) {
-                result.addOffline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOfflineVersion()));
-            }
+            result.addOffline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
                 result.addOnline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOnlineVersion()));
             }

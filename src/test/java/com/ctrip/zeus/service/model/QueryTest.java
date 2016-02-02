@@ -36,13 +36,13 @@ public class QueryTest extends AbstractServerTest {
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     @Resource
-    private EntityFactory mappingFactory;
+    private EntityFactory entityFactory;
 
-    private static AtomicInteger Counter = new AtomicInteger(5);
+    private static AtomicInteger Counter = new AtomicInteger(6);
 
     @Before
     public void fillDb() throws Exception {
-        if (Counter.get() == 5) {
+        if (Counter.get() == 6) {
             addSlbsAndVses();
             addGroups();
         }
@@ -173,17 +173,50 @@ public class QueryTest extends AbstractServerTest {
     }
 
     @Test
-    public void testMappingFactoryGetByVsIds() throws Exception {
-        ModelStatusMapping<Group> mapping = mappingFactory.getByVsIds(new Long[]{1L, 2L, 3L});
-        Assert.assertEquals(3, mapping.getOfflineMapping().size());
+    public void testBatchGetGroupInfo() throws Exception {
+        Counter.decrementAndGet();
+
+        ModelStatusMapping<Group> mapping = entityFactory.getGroupsByVsIds(new Long[]{1L, 2L, 3L});
+        Assert.assertEquals(7, mapping.getOfflineMapping().size());
         Assert.assertEquals(4, mapping.getOnlineMapping().size());
+
+        mapping = entityFactory.getGroupsByIds(new Long[]{1L, 2L, 3L});
+        Assert.assertEquals(3, mapping.getOfflineMapping().size());
+        Assert.assertEquals(2, mapping.getOnlineMapping().size());
+
+        Long[] groupIds = entityFactory.getGroupIdsByVsIds(new Long[]{1L, 2L, 3L}, ModelMode.MODEL_MODE_MERGE_ONLINE);
+        Assert.assertEquals(3, groupIds.length);
     }
 
     @Test
-    public void testMappingFactoryGetBySlbId() throws Exception {
-        ModelStatusMapping<VirtualServer> mapping = mappingFactory.getBySlbIds(1L);
-        Assert.assertEquals(0, mapping.getOfflineMapping().size());
+    public void testBatchGetVsInfo() throws Exception {
+        Counter.decrementAndGet();
+
+        ModelStatusMapping<VirtualServer> mapping = entityFactory.getVsesByIds(new Long[]{1L, 2L});
+        Assert.assertEquals(2, mapping.getOfflineMapping().size());
         Assert.assertEquals(2, mapping.getOnlineMapping().size());
+
+        mapping = entityFactory.getVsesBySlbIds(1L);
+        Assert.assertEquals(2, mapping.getOfflineMapping().size());
+        Assert.assertEquals(2, mapping.getOnlineMapping().size());
+
+        Long[] vsIds = entityFactory.getVsIdsBySlbId(1L, ModelMode.MODEL_MODE_ONLINE);
+        Assert.assertEquals(2, vsIds.length);
+    }
+
+    @Test
+    public void testBatchGetSlbInfo() throws Exception {
+        Counter.decrementAndGet();
+
+        Long[] slbIds = entityFactory.getSlbIdsByIp("10.2.25.93", ModelMode.MODEL_MODE_OFFLINE);
+        Assert.assertEquals(0, slbIds.length);
+
+        slbIds = entityFactory.getSlbIdsByIp("10.2.25.93", ModelMode.MODEL_MODE_MERGE_ONLINE);
+        Assert.assertEquals(1, slbIds.length);
+
+        ModelStatusMapping<Slb> mapping = entityFactory.getSlbsByIds(new Long[]{1L, 2L});
+        Assert.assertEquals(2, mapping.getOfflineMapping().size());
+        Assert.assertEquals(1, mapping.getOnlineMapping().size());
     }
 
     private void addSlbsAndVses() throws Exception {
