@@ -77,7 +77,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     public List<GroupStatus> getOnlineGroupsStatusBySlbId(Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
         Long[] vses = entityFactory.getVsIdsBySlbId(slbId, ModelMode.MODEL_MODE_ONLINE);
-        ModelStatusMapping<Group> groups = entityFactory.getByVsIds(vses);
+        ModelStatusMapping<Group> groups = entityFactory.getGroupsByVsIds(vses);
         if (groups.getOnlineMapping() == null || groups.getOnlineMapping().size() == 0) {
             return result;
         }
@@ -89,7 +89,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     public List<GroupStatus> getOfflineGroupsStatusBySlbId(Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
         Long[] vses = entityFactory.getVsIdsBySlbId(slbId, ModelMode.MODEL_MODE_ONLINE);
-        ModelStatusMapping<Group> groups = entityFactory.getByVsIds(vses);
+        ModelStatusMapping<Group> groups = entityFactory.getGroupsByVsIds(vses);
         if (groups.getOfflineMapping() == null || groups.getOfflineMapping().size() == 0) {
             return result;
         }
@@ -100,7 +100,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getOnlineGroupStatus(Long groupId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        ModelStatusMapping<Group> map = entityFactory.getGroupById(new Long[]{groupId});
+        ModelStatusMapping<Group> map = entityFactory.getGroupsByIds(new Long[]{groupId});
         if (map.getOnlineMapping() == null || map.getOnlineMapping().size() == 0) {
             return result;
         }
@@ -108,7 +108,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         for (GroupVirtualServer gvs : map.getOnlineMapping().get(groupId).getGroupVirtualServers()) {
             vsId.add(gvs.getVirtualServer().getId());
         }
-        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsByVsIds(vsId.toArray(new Long[]{}));
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsId.toArray(new Long[]{}));
         if (vsMap.getOnlineMapping() == null || vsMap.getOnlineMapping().size() == 0) {
             return result;
         }
@@ -124,7 +124,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getOfflineGroupStatus(Long groupId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        ModelStatusMapping<Group> map = entityFactory.getGroupById(new Long[]{groupId});
+        ModelStatusMapping<Group> map = entityFactory.getGroupsByIds(new Long[]{groupId});
         if (map.getOfflineMapping() == null || map.getOfflineMapping().size() == 0) {
             return result;
         }
@@ -132,7 +132,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         for (GroupVirtualServer gvs : map.getOfflineMapping().get(groupId).getGroupVirtualServers()) {
             vsId.add(gvs.getVirtualServer().getId());
         }
-        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsByVsIds(vsId.toArray(new Long[]{}));
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsId.toArray(new Long[]{}));
         if (vsMap.getOfflineMapping() == null || vsMap.getOfflineMapping().size() == 0) {
             return result;
         }
@@ -148,7 +148,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getOfflineGroupStatus(Long groupId, Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        ModelStatusMapping<Group> map = entityFactory.getGroupById(new Long[]{groupId});
+        ModelStatusMapping<Group> map = entityFactory.getGroupsByIds(new Long[]{groupId});
         if (map.getOfflineMapping() == null || map.getOfflineMapping().size() == 0) {
             return result;
         }
@@ -156,7 +156,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         for (GroupVirtualServer gvs : map.getOfflineMapping().get(groupId).getGroupVirtualServers()) {
             vsId.add(gvs.getVirtualServer().getId());
         }
-        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsByVsIds(vsId.toArray(new Long[]{}));
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsId.toArray(new Long[]{}));
         if (vsMap.getOfflineMapping() == null || vsMap.getOfflineMapping().size() == 0) {
             return result;
         }

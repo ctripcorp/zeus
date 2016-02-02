@@ -372,7 +372,7 @@ public class OperationResource {
         for (String ip : ips) {
             sb.append(ip).append(";");
         }
-        ModelStatusMapping<Group> mapping = entityFactory.getGroupById(new Long[]{groupId});
+        ModelStatusMapping<Group> mapping = entityFactory.getGroupsByIds(new Long[]{groupId});
         if (mapping.getOfflineMapping() == null || mapping.getOfflineMapping().size()==0){
             throw new ValidationException("Not Found Group By Id.");
         }
@@ -389,7 +389,7 @@ public class OperationResource {
             vsIds.add(gvs.getVirtualServer().getId());
         }
 
-        ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsByVsIds(vsIds.toArray(new Long[]{}));
+        ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
 
         VirtualServer tmp;
         for (Long vsId : vsIds){

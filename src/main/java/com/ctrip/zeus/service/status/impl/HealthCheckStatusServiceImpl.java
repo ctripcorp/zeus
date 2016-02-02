@@ -4,11 +4,13 @@ import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.dal.core.StatusHealthCheckDao;
 import com.ctrip.zeus.dal.core.StatusHealthCheckDo;
 import com.ctrip.zeus.dal.core.StatusHealthCheckEntity;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.nginx.entity.Item;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
-import com.ctrip.zeus.service.activate.ActivateService;
+import com.ctrip.zeus.service.model.EntityFactory;
+import com.ctrip.zeus.service.model.ModelStatusMapping;
 import com.ctrip.zeus.service.status.HealthCheckStatusService;
 import com.ctrip.zeus.util.S;
 import com.netflix.config.DynamicIntProperty;
@@ -29,7 +31,7 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
     @Resource
     private StatusHealthCheckDao statusHealthCheckDao;
     @Resource
-    private ActivateService activateService;
+    private EntityFactory entityFactory;
     private  static int count = 0 ;
     private static DynamicIntProperty invalidInterval = DynamicPropertyFactory.getInstance().getIntProperty("health.check.status.invalid.interval", 300000);
 
@@ -65,7 +67,11 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
     @Override
     public Map<String, Boolean> getHealthCheckStatusBySlbId(Long slbId) throws Exception {
         Map<String, Boolean> result = new HashMap<>();
-        Slb slb = activateService.getActivatedSlb(slbId);
+        ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(new Long[]{slbId});
+        if (slbMap.getOnlineMapping().get(slbId) == null){
+            throw new ValidationException("Not Found Online Slb.");
+        }
+        Slb slb = slbMap.getOnlineMapping().get(slbId);
         List<SlbServer> servers = slb.getSlbServers();
         for (SlbServer slbServer : servers) {
             List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIp(slbServer.getIp(), StatusHealthCheckEntity.READSET_FULL);

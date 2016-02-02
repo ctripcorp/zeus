@@ -91,7 +91,7 @@ public class ActivateResource {
                 _slbIds.add(slbCriteriaQuery.queryByName(slbName));
             }
         }
-        ModelStatusMapping<Slb> slbModelStatusMapping = entityFactory.getSlbById(_slbIds.toArray(new Long[]{}));
+        ModelStatusMapping<Slb> slbModelStatusMapping = entityFactory.getSlbsByIds(_slbIds.toArray(new Long[]{}));
         if (slbModelStatusMapping.getOfflineMapping() == null || slbModelStatusMapping.getOfflineMapping().size()==0){
             throw new ValidationException("Not Found Slb By Id.");
         }
@@ -145,7 +145,7 @@ public class ActivateResource {
             }
         }
 
-        ModelStatusMapping<Group> mapping = entityFactory.getGroupById(_groupIds.toArray(new Long[]{}));
+        ModelStatusMapping<Group> mapping = entityFactory.getGroupsByIds(_groupIds.toArray(new Long[]{}));
         if (mapping.getOfflineMapping() == null || mapping.getOfflineMapping().size()==0){
             throw new ValidationException("Not Found Group By Id.");
         }
@@ -162,7 +162,7 @@ public class ActivateResource {
                 vsIds.add(gv.getVirtualServer().getId());
             }
 
-            ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsByVsIds(vsIds.toArray(new Long[]{}));
+            ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
 
             Set<Long> slbIdOnline = new HashSet<>();
             Set<Long> slbIdOffline = new HashSet<>();
@@ -213,7 +213,7 @@ public class ActivateResource {
     public Response activateVirtualServer(@Context HttpServletRequest request,
                                           @Context HttpHeaders hh,
                                           @QueryParam("vsId") Long vsId)throws Exception {
-        ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsByVsIds(new Long[]{vsId});
+        ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(new Long[]{vsId});
         VirtualServer offlineVs = vsMaping.getOfflineMapping().get(vsId);
         VirtualServer onlineVs = vsMaping.getOnlineMapping().get(vsId);
         if (offlineVs == null){

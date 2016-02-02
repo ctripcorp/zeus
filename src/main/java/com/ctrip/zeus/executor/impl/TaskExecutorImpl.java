@@ -129,19 +129,19 @@ public class TaskExecutorImpl implements TaskExecutor {
         try {
             //1. get needed data from database
             //1.1 slb data
-            ModelStatusMapping<Slb> slbMap = entityFactory.getSlbById(new Long[]{slbId});
+            ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(new Long[]{slbId});
             onlineSlb = slbMap.getOnlineMapping().get(slbId);
             offlineSlb = slbMap.getOfflineMapping().get(slbId);
 
             //1.2 virtual server data
-            ModelStatusMapping<VirtualServer> vsMap = entityFactory.getBySlbIds(slbId);
+            ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesBySlbIds(slbId);
             offlineVses = vsMap.getOfflineMapping();
             onlineVses = vsMap.getOnlineMapping();
 
             //1.3 group data
             Set<Long> vsIds = new HashSet<>(onlineVses.keySet());
             vsIds.addAll(offlineVses.keySet());
-            ModelStatusMapping<Group> groupsMap = entityFactory.getByVsIds(vsIds.toArray(new Long[]{}));
+            ModelStatusMapping<Group> groupsMap = entityFactory.getGroupsByVsIds(vsIds.toArray(new Long[]{}));
             onlineGroups = groupsMap.getOnlineMapping();
             offlineGroups = groupsMap.getOfflineMapping();
 
@@ -392,32 +392,45 @@ public class TaskExecutorImpl implements TaskExecutor {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                slbRepository.updateStatus(new IdVersion(task.getSlbId(), task.getVersion()));
+                IdVersion idVersion = new IdVersion(task.getSlbId(), task.getVersion());
+                slbRepository.updateStatus(new IdVersion[]{idVersion});
             }
+            List<IdVersion> vsIds = new ArrayList<>();
             for (OpsTask task : activateVsOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                virtualServerRepository.updateStatus(new IdVersion(task.getSlbVirtualServerId(), task.getVersion()));
+                vsIds.add(new IdVersion(task.getSlbVirtualServerId(), task.getVersion()));
             }
+            virtualServerRepository.updateStatus(vsIds.toArray(new IdVersion[]{}));
+
+            List<IdVersion> deactivateVsIds = new ArrayList<>();
             for (OpsTask task : deactivateVsOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                virtualServerRepository.updateStatus(new IdVersion(task.getSlbVirtualServerId(), 0));
+                deactivateVsIds.add(new IdVersion(task.getSlbVirtualServerId(), 0));
             }
+            virtualServerRepository.updateStatus(deactivateVsIds.toArray(new IdVersion[]{}));
+
+            List<IdVersion> activateGroups = new ArrayList<>();
             for (OpsTask task : activateGroupOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                groupRepository.updateStatus(new IdVersion(task.getGroupId(), task.getVersion()));
+                activateGroups.add(new IdVersion(task.getGroupId(), task.getVersion()));
             }
+            groupRepository.updateStatus(activateGroups.toArray(new IdVersion[]{}));
+
+            List<IdVersion> deactivateGroups = new ArrayList<>();
             for (OpsTask task : deactivateGroupOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                groupRepository.updateStatus(new IdVersion(task.getGroupId(), 0));
+                deactivateGroups.add(new IdVersion(task.getGroupId(), 0));
             }
+            groupRepository.updateStatus(deactivateGroups.toArray(new IdVersion[]{}));
+
             for (OpsTask task : serverOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;

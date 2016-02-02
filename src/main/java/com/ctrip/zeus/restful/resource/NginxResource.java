@@ -1,10 +1,14 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.service.model.EntityFactory;
+import com.ctrip.zeus.service.model.ModelStatusMapping;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -42,6 +46,8 @@ public class NginxResource {
     private SlbRepository slbRepository;
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
+    @Resource
+    private EntityFactory entityFactory;
 
     @GET
     @Path("/load")
@@ -70,9 +76,13 @@ public class NginxResource {
     @GET
     @Path("/conf")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getVsConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("vs") Long vsid ,@QueryParam("version") Integer versionNum) throws Exception{
+    public Response getVsConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("vsId") Long vsid ,@QueryParam("version") Integer versionNum) throws Exception{
         VirtualServerConfResponse response = new VirtualServerConfResponse();
-        Long slbId = slbCriteriaQuery.queryByVs(vsid);
+        ModelStatusMapping<VirtualServer> map =  entityFactory.getVsesByIds(new Long[]{vsid});
+        if (map.getOnlineMapping() == null || map.getOnlineMapping().get(vsid) == null){
+            throw new ValidationException("Not Found Vs by vsId.");
+        }
+        Long slbId = map.getOnlineMapping().get(vsid).getSlbId();
         int version;
         if (null == versionNum || versionNum <= 0)
         {
@@ -169,7 +179,7 @@ public class NginxResource {
     @Path("/loadAll/slb/{slbId:[0-9]+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response loadAll(@Context HttpServletRequest request,@Context HttpHeaders hh, @PathParam("slbId") Long slbId) throws Exception {
-        List<NginxResponse> nginxResponseList = nginxService.loadAll(slbId,null);
+        List<NginxResponse> nginxResponseList = nginxService.loadAll(slbId, null);
         NginxResponseList result = new NginxResponseList();
         for (NginxResponse nginxResponse : nginxResponseList) {
             result.addNginxResponse(nginxResponse);
