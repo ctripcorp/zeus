@@ -72,6 +72,10 @@ public class LogParsingTest {
         String log4 = "[02/Dec/2015:13:00:10 +0800] ws.schedule.ctripcorp.com vms09191 10.8.95.27 POST /UbtPushApi/UserActionReceiveHandler.ashx \"-\" 80 - 10.8.91.104 - HTTP/1.1 \"Java/THttpClient/HC\" \"-\" \"-\" ws.schedule.ctripcorp.com 200 24 0.007 0.007 10.8.168.238:80 200";
         LineFormat lineFormat = new AccessLogLineFormat()
                 .setFormat(AccessLogFormat)
+                .registerPatternForKey("request_time", "(-|\\d+\\.\\d+)")
+                .registerPatternForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)")
+                .registerPatternForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+)?))")
+                .registerPatternForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3})?))")
                 .registerPatternForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))")
                 .generate();
         List<LineFormat> formats = new ArrayList<>();
@@ -92,6 +96,35 @@ public class LogParsingTest {
         }
         for (KeyValue keyValue : parser.parse(log4)) {
             Assert.assertNotNull(keyValue.getValue());
+        }
+    }
+
+    @Test
+    public void testInternalRewriteParser() {
+        String log = "[02/Feb/2016:17:01:02 +0800] ws.connect.qiche.ctripcorp.com vms14669 10.8.208.22 GET /502page \"-\" 80 - 10.8.78.102 - HTTP/1.1 \"-\" \"-\" \"-\" ws.connect.qiche.ctripcorp.com 502 6003 0.015 - : 0.006 10.8.91.168:80 : 10.8.16.4:80 - : 200";
+        System.out.println(log);
+        LineFormat lineFormat = new AccessLogLineFormat().setFormat(AccessLogFormat)
+                .registerPatternForKey("request_time", "(-|\\d+\\.\\d+)")
+                .registerPatternForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)")
+                .registerPatternForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+)?))")
+                .registerPatternForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3})?))")
+                .generate();
+        List<LineFormat> formats = new ArrayList<>();
+        formats.add(lineFormat);
+        final LogParser parser = new AccessLogParser(formats);
+        Assert.assertTrue(parser.parse(log).size() > 0);
+        for (KeyValue keyValue : parser.parse(log)) {
+            switch (keyValue.getKey()) {
+                case "upstream_response_time":
+                    Assert.assertEquals("- : 0.006", keyValue.getValue());
+                    break;
+                case "upstream_addr":
+                    Assert.assertEquals("10.8.91.168:80 : 10.8.16.4:80", keyValue.getValue());
+                    break;
+                case "upstream_status":
+                    Assert.assertEquals("- : 200", keyValue.getValue());
+                    break;
+            }
         }
     }
 

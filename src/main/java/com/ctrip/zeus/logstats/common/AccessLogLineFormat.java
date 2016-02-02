@@ -22,6 +22,10 @@ public class AccessLogLineFormat implements LineFormat {
     public AccessLogLineFormat(String format) {
         setFormat(format);
         registerPatternForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))");
+        registerPatternForKey("request_time", "(-|\\d+\\.\\d+)");
+        registerPatternForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)");
+        registerPatternForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+)?))");
+        registerPatternForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3})?))");
     }
 
     @Override
