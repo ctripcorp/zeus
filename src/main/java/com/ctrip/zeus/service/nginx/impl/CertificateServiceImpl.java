@@ -13,6 +13,8 @@ import javax.annotation.Resource;
 import javax.ws.rs.core.Response;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by zhoumy on 2015/10/29.
@@ -77,67 +79,117 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
-    public void install(Long vsId, List<String> ips, Long certId) throws Exception {
+    public void install(final Long vsId, List<String> ips, final Long certId) throws Exception {
         List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
         Set<String> check = new HashSet<>();
         for (RelCertSlbServerDo d : dos) {
             check.add(d.getIp() + "#" + vsId + "#" + d.getCertId());
         }
-        boolean success = true;
-        String errMsg = "";
-        for (String ip : ips) {
-            if (check.contains(ip + "#" + vsId + "#" + certId))
-                continue;
-            CertSyncClient c = new CertSyncClient("http://" + ip + ":8099");
-            Response res = c.requestInstall(vsId, certId);
-            // retry
-            if (res.getStatus() / 100 > 2)
-                res = c.requestInstall(vsId, certId);
-            // still failed after retry
-            if (res.getStatus() / 100 > 2) {
-                success &= false;
-                try {
-                    errMsg += ip + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
-                } catch (IOException e) {
-                    errMsg += ip + ":" + "Unable to parse the response entity.\n";
-                }
+
+        final AtomicBoolean success = new AtomicBoolean(true);
+        List<FutureTask<String>> reqQueue = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(ips.size() < 6 ? ips.size() : 6);
+        try {
+            for (final String ip : ips) {
+                if (check.contains(ip + "#" + vsId + "#" + certId)) continue;
+
+                reqQueue.add(new FutureTask<>(new Callable<String>() {
+                    @Override
+                    public String call() {
+                        CertSyncClient c = new CertSyncClient("http://" + ip + ":8099");
+                        Response res;
+                        try {
+                            res = c.requestInstall(vsId, certId);
+                        } catch (Exception ex) {
+                            success.set(false);
+                            return ip + ":" + "Fail to get response. " + ex.getMessage();
+                        }
+                        if (res.getStatus() / 100 > 2)
+                            res = c.requestInstall(vsId, certId);
+                        if (res.getStatus() / 100 > 2) {
+                            success.set(false);
+                            try {
+                                return ip + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
+                            } catch (IOException e) {
+                                return ip + ":" + "Unable to parse the response entity.\n";
+                            }
+                        }
+                        return ip + ":" + "success.";
+                    }
+                }));
             }
-            if (!success)
-                throw new Exception(errMsg);
+            for (FutureTask futureTask : reqQueue) {
+                executor.execute(futureTask);
+            }
+
+            String message = "";
+            for (FutureTask futureTask : reqQueue) {
+                message += futureTask.get(3000, TimeUnit.MILLISECONDS);
+            }
+
+            if (!success.get()) {
+                throw new Exception(message);
+            }
+        } finally {
+            executor.shutdown();
         }
     }
 
     @Override
-    public void uninstallIfRecalled(Long vsId, List<String> ips) throws Exception {
+    public void uninstallIfRecalled(final Long vsId, List<String> ips) throws Exception {
         Map<String, RelCertSlbServerDo> abandoned = new HashMap<>();
         for (RelCertSlbServerDo d : rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL)) {
             if (ips.contains(d.getIp()))
                 abandoned.put(d.getIp(), d);
         }
-        boolean success = true;
-        String errMsg = "";
-        for (Map.Entry<String, RelCertSlbServerDo> entry : abandoned.entrySet()) {
-            boolean result = true;
-            CertSyncClient c = new CertSyncClient("http://" + entry.getKey() + ":8099");
-            Response res = c.requestUninstall(vsId);
-            // retry
-            if (res.getStatus() / 100 > 2)
-                res = c.requestUninstall(vsId);
-            // still failed after retry
-            if (res.getStatus() / 100 > 2) {
-                result &= false;
-                try {
-                    errMsg += entry.getKey() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
-                } catch (IOException e) {
-                    errMsg += entry.getKey() + ":" + "Unable to parse the response entity.\n";
+
+        final AtomicBoolean success = new AtomicBoolean(true);
+        List<FutureTask<String>> reqQueue = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(ips.size() < 6 ? ips.size() : 6);
+        try {
+            for (final Map.Entry<String, RelCertSlbServerDo> entry : abandoned.entrySet()) {
+                reqQueue.add(new FutureTask<>(new Callable<String>() {
+                    @Override
+                    public String call() {
+                        CertSyncClient c = new CertSyncClient("http://" + entry.getKey() + ":8099");
+                        Response res;
+                        try {
+                            res = c.requestUninstall(vsId);
+                        } catch (Exception ex) {
+                            success.set(false);
+                            return entry.getKey() + ":" + "Fail to get response. " + ex.getMessage();
+                        }
+                        if (res.getStatus() / 100 > 2)
+                            res = c.requestUninstall(vsId);
+                        if (res.getStatus() / 100 > 2) {
+                            success.set(false);
+                            try {
+                                return entry.getKey() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
+                            } catch (IOException e) {
+                                return entry.getKey() + ":" + "Unable to parse the response entity.\n";
+                            }
+                        }
+                        return entry.getKey() + ":" + "success";
+                    }
+                }));
+                for (FutureTask futureTask : reqQueue) {
+                    executor.execute(futureTask);
+                }
+
+                String message = "";
+                for (FutureTask futureTask : reqQueue) {
+                    message += futureTask.get(30000, TimeUnit.MILLISECONDS);
+                }
+
+                if (!success.get()) {
+                    throw new Exception(message);
+                } else {
+                    rCertificateSlbServerDao.deleteAllById(entry.getValue());
                 }
             }
-            if (result)
-                rCertificateSlbServerDao.deleteAllById(entry.getValue());
-            success &= result;
+        } finally {
+            executor.shutdown();
         }
-        if (!success)
-            throw new Exception(errMsg);
     }
 
     private String[] getDomainSearchRange(String[] domains) {
@@ -160,11 +212,11 @@ public class CertificateServiceImpl implements CertificateService {
             super(url);
         }
 
-        public Response requestInstall(Long vsId, Long certId) throws ValidationException {
+        public Response requestInstall(Long vsId, Long certId) {
             return getTarget().path("/api/op/installcerts").queryParam("vsId", vsId).queryParam("certId", certId).request().get();
         }
 
-        public Response requestUninstall(Long vsId) throws ValidationException {
+        public Response requestUninstall(Long vsId) {
             return getTarget().path("/api/op/uninstallcerts").queryParam("vsId", vsId).request().get();
         }
     }
