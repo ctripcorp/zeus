@@ -49,8 +49,6 @@ public class ActivateResource {
     @Resource
     private GroupRepository groupRepository;
     @Resource
-    private ArchiveService archiveService;
-    @Resource
     private SlbValidator slbValidator;
     @Resource
     private EntityFactory entityFactory;
