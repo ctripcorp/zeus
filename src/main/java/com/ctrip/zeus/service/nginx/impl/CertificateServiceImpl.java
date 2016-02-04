@@ -7,6 +7,8 @@ import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.util.IOUtils;
 import com.google.common.base.Joiner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -25,6 +27,8 @@ public class CertificateServiceImpl implements CertificateService {
     private CertificateDao certificateDao;
     @Resource
     private RCertificateSlbServerDao rCertificateSlbServerDao;
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     public Long getCertificateOnBoard(String[] domains) throws Exception {
@@ -102,15 +106,19 @@ public class CertificateServiceImpl implements CertificateService {
                             res = c.requestInstall(vsId, certId);
                         } catch (Exception ex) {
                             success.set(false);
-                            return ip + ":" + "Fail to get response. " + ex.getMessage();
+                            logger.error(ip + ":" + "Fail to get response. ", ex);
+                            return ip + ":" + "Fail to get response.\n";
                         }
                         if (res.getStatus() / 100 > 2)
                             res = c.requestInstall(vsId, certId);
                         if (res.getStatus() / 100 > 2) {
                             success.set(false);
                             try {
-                                return ip + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
+                                String error = ip + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity());
+                                logger.error(error);
+                                return error + "\n";
                             } catch (IOException e) {
+                                logger.error(ip + ":" + "Unable to parse the response entity.", e);
                                 return ip + ":" + "Unable to parse the response entity.\n";
                             }
                         }
@@ -157,15 +165,19 @@ public class CertificateServiceImpl implements CertificateService {
                             res = c.requestUninstall(vsId);
                         } catch (Exception ex) {
                             success.set(false);
-                            return entry.getKey() + ":" + "Fail to get response. " + ex.getMessage();
+                            logger.error(entry.getKey() + ":" + "Fail to get response. ", ex);
+                            return entry.getKey() + ":" + "Fail to get response.\n";
                         }
                         if (res.getStatus() / 100 > 2)
                             res = c.requestUninstall(vsId);
                         if (res.getStatus() / 100 > 2) {
                             success.set(false);
                             try {
-                                return entry.getKey() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity()) + "\n";
+                                String error = entry.getKey() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity());
+                                logger.error(error);
+                                return error + "\n";
                             } catch (IOException e) {
+                                logger.error(entry.getKey() + ":" + "Unable to parse the response entity.", e);
                                 return entry.getKey() + ":" + "Unable to parse the response entity.\n";
                             }
                         }
