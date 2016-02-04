@@ -22,6 +22,7 @@ import com.ctrip.zeus.status.entity.ServerStatus;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.stereotype.Component;
 
@@ -62,14 +63,11 @@ public class OperationResource {
     @Resource
     private ResponseHandler responseHandler;
     @Resource
-    private StatusGroupServerDao statusGroupServerDao;
-    @Resource
     private CertificateService certificateService;
     @Resource
     private CertificateInstaller certificateInstaller;
     @Resource
     private EntityFactory entityFactory;
-
 
 
     @GET
@@ -280,12 +278,12 @@ public class OperationResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Authorize(name = "upgradeCerts")
     public Response upgradeCerts(@Context HttpServletRequest request,
-                                @Context HttpHeaders hh,
-                                @FormDataParam("cert") InputStream cert,
-                                @FormDataParam("key") InputStream key,
-                                @QueryParam("domain") String domain,
-                                @QueryParam("vsId") Long vsId,
-                                @QueryParam("ip") List<String> ips) throws Exception {
+                                 @Context HttpHeaders hh,
+                                 @FormDataParam("cert") InputStream cert,
+                                 @FormDataParam("key") InputStream key,
+                                 @QueryParam("domain") String domain,
+                                 @QueryParam("vsId") Long vsId,
+                                 @QueryParam("ip") List<String> ips) throws Exception {
         if (domain == null || domain.isEmpty()) {
             throw new ValidationException("Domain info is required.");
         }
@@ -293,18 +291,18 @@ public class OperationResource {
             throw new ValidationException("vsId is required when updating certificate.");
         }
         // update certificate or run grayscale test
-        Set<Long> check = virtualServerCriteriaQuery.queryByDomain(domain);
-        if (!check.contains(vsId))
+        IdVersion[] check = virtualServerCriteriaQuery.queryByIdAndMode(vsId, ModelMode.MODEL_MODE_REDUNDANT);
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByDomain(domain);
+        keys.retainAll(Sets.newHashSet(check));
+        if (keys.size() == 0) {
             throw new ValidationException("VsId and domain mismatched.");
-        boolean grayscale = ips == null;
-        ips = configureIps(vsId, ips);
+        }
+        configureIps(keys.toArray(new IdVersion[keys.size()]), ips);
 
         String[] domainMembers = domain.split("\\|");
         Arrays.sort(domainMembers);
         domain = Joiner.on("|").join(domainMembers);
-
-        Long certId = certificateService.upgrade(cert, key, domain,
-                grayscale ? CertificateConfig.GRAYSCALE : CertificateConfig.ONBOARD);
+        Long certId = certificateService.upgrade(cert, key, domain, CertificateConfig.ONBOARD);
         return responseHandler.handle("Certificate uploaded. New cert-id is " + certId + ". Contact slb team with the given cert-id to install the new certificate.", hh.getMediaType());
 //        certificateService.command(vsId, ips, certId);
 //        certificateService.install(vsId);
@@ -315,9 +313,9 @@ public class OperationResource {
     @Path("/dropcerts")
     @Authorize(name = "dropCerts")
     public Response dropCerts(@Context HttpServletRequest request,
-                                @Context HttpHeaders hh,
-                                @QueryParam("vsId") Long vsId,
-                                @QueryParam("ip") List<String> ips) throws Exception {
+                              @Context HttpHeaders hh,
+                              @QueryParam("vsId") Long vsId,
+                              @QueryParam("ip") List<String> ips) throws Exception {
         return responseHandler.handle("dropcerts is not available at the moment.", hh.getMediaType());
 //        if (vsId == null && (ips == null || ips.size() == 0))
 //            throw new ValidationException("vsId and ip addresses are required.");
@@ -337,7 +335,8 @@ public class OperationResource {
         if (certId == null || ips == null || vsId == null) {
             throw new ValidationException("certId, vsId and ips are required.");
         }
-        ips = configureIps(vsId, ips);
+        IdVersion[] keys = virtualServerCriteriaQuery.queryByIdAndMode(vsId, ModelMode.MODEL_MODE_REDUNDANT);
+        ips = configureIps(keys, ips);
         certificateService.install(vsId, ips, certId);
         return responseHandler.handle("Certificates uploaded. Re-activate the virtual server to take effect.", hh.getMediaType());
     }
@@ -373,28 +372,28 @@ public class OperationResource {
             sb.append(ip).append(";");
         }
         ModelStatusMapping<Group> mapping = entityFactory.getGroupsByIds(new Long[]{groupId});
-        if (mapping.getOfflineMapping() == null || mapping.getOfflineMapping().size()==0){
+        if (mapping.getOfflineMapping() == null || mapping.getOfflineMapping().size() == 0) {
             throw new ValidationException("Not Found Group By Id.");
         }
         Group onlineGroup = mapping.getOnlineMapping().get(groupId);
         Group offlineGroup = mapping.getOfflineMapping().get(groupId);
         Set<Long> vsIds = new HashSet<>();
         Set<Long> slbIds = new HashSet<>();
-        if (onlineGroup != null){
-            for (GroupVirtualServer gvs : onlineGroup.getGroupVirtualServers()){
+        if (onlineGroup != null) {
+            for (GroupVirtualServer gvs : onlineGroup.getGroupVirtualServers()) {
                 vsIds.add(gvs.getVirtualServer().getId());
             }
         }
-        for (GroupVirtualServer gvs : offlineGroup.getGroupVirtualServers()){
+        for (GroupVirtualServer gvs : offlineGroup.getGroupVirtualServers()) {
             vsIds.add(gvs.getVirtualServer().getId());
         }
 
         ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
 
         VirtualServer tmp;
-        for (Long vsId : vsIds){
+        for (Long vsId : vsIds) {
             tmp = vsMaping.getOnlineMapping().get(vsId);
-            if (tmp == null){
+            if (tmp == null) {
                 tmp = vsMaping.getOfflineMapping().get(vsId);
             }
             slbIds.add(tmp.getSlbId());
@@ -436,22 +435,29 @@ public class OperationResource {
         }
     }
 
-    private List<String> configureIps(Long vsId, List<String> ips) throws Exception {
-        Long slbId = slbCriteriaQuery.queryByVs(vsId);
-        Slb slb = slbRepository.getById(slbId);
-        if (slb == null) {
+    private List<String> configureIps(IdVersion[] keys, List<String> ips) throws Exception {
+        Set<Long> slbId = slbCriteriaQuery.queryByVses(keys);
+        ModelStatusMapping<Slb> check = entityFactory.getSlbsByIds(slbId.toArray(new Long[slbId.size()]));
+        if (check.getOfflineMapping().size() == 0 && check.getOnlineMapping().size() == 0) {
             throw new ValidationException("Cannot find slb servers by the given vsId.");
         }
-        List<String> slbIps = new ArrayList<>();
-        for (SlbServer slbServer : slb.getSlbServers()) {
-            slbIps.add(slbServer.getIp());
+        Set<String> slbIps = new HashSet<>();
+        for (Slb slb : check.getOfflineMapping().values()) {
+            for (SlbServer server : slb.getSlbServers()) {
+                slbIps.add(server.getIp());
+            }
+        }
+        for (Slb slb : check.getOnlineMapping().values()) {
+            for (SlbServer slbServer : slb.getSlbServers()) {
+                slbIps.add(slbServer.getIp());
+            }
         }
         if (ips != null && ips.size() > 0) {
             if (!slbIps.containsAll(ips)) {
                 throw new ValidationException("Some ips do not belong to the current slb.");
             }
         } else {
-            ips = slbIps;
+            ips = new ArrayList<>(slbIps);
         }
         return ips;
     }
