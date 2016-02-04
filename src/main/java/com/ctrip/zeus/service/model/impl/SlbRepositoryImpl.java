@@ -108,9 +108,6 @@ public class SlbRepositoryImpl implements SlbRepository {
         virtualServerModelValidator.validateVirtualServers(slb.getVirtualServers());
         autoFiller.autofill(slb);
         slbEntityManager.add(slb);
-
-        slb = getById(slb.getId());
-
         for (VirtualServer virtualServer : slb.getVirtualServers()) {
             if (virtualServer.getSsl().booleanValue()) {
                 virtualServerRepository.installCertificate(virtualServer);
