@@ -67,7 +67,7 @@ public class SlbRepositoryImpl implements SlbRepository {
         }
 
         Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryBySlbIds(slbIds);
-        vsKeys.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE));
+        vsKeys.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_MERGE_OFFLINE));
         Map<Long, List<VirtualServer>> map = new HashMap<>();
         for (VirtualServer vs : virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()]))) {
             List<VirtualServer> l = map.get(vs.getSlbId());

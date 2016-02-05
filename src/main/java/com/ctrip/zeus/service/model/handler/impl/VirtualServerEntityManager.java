@@ -98,15 +98,20 @@ public class VirtualServerEntityManager implements VirtualServerSync {
             }
         }
         RelVsStatusDo[] rel1 = new RelVsStatusDo[toUpdate.size()];
-        for (int i = 0; i < rel1.length; i++) {
-            rel1[i] = new RelVsStatusDo().setVsId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
+        int i = 0;
+        for (VirtualServer vs : toUpdate.values()) {
+            rel1[i] = new RelVsStatusDo().setVsId(vs.getId()).setOfflineVersion(vs.getVersion());
+            i++;
         }
 
         rVsStatusDao.insertOrUpdate(rel1);
 
         List<RelVsSlbDo> rel2 = rVsSlbDao.findByVses(vsIds, RVsSlbEntity.READSET_FULL);
         for (RelVsSlbDo d : rel2) {
-            d.setHash(VersionUtils.getHash(d.getVsId(), toUpdate.get(d.getVsId()).getVersion()));
+            VirtualServer vs = toUpdate.get(d.getVsId());
+            if (vs != null) {
+                d.setHash(VersionUtils.getHash(d.getVsId(), vs.getVersion()));
+            }
         }
 
         rVsSlbDao.update(rel2.toArray(new RelVsSlbDo[rel2.size()]), RVsSlbEntity.UPDATESET_FULL);
@@ -115,8 +120,10 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         }
 
         vsIds = new Long[toUpdate.size()];
-        for (int i = 0; i < vsIds.length; i++) {
-            vsIds[i] = toUpdate.get(i).getId();
+        i = 0;
+        for (VirtualServer vs : toUpdate.values()) {
+            vsIds[i] = vs.getId();
+            i++;
         }
         List<ConfSlbVirtualServerActiveDo> ref = confSlbVirtualServerActiveDao.findBySlbVirtualServerIds(vsIds, ConfSlbVirtualServerActiveEntity.READSET_FULL);
         toUpdate.clear();
@@ -129,8 +136,10 @@ public class VirtualServerEntityManager implements VirtualServerSync {
             }
         }
         IdVersion[] keys = new IdVersion[toUpdate.size()];
-        for (int i = 0; i < keys.length; i++) {
-            keys[i] = new IdVersion(toUpdate.get(i).getId(), toUpdate.get(i).getVersion());
+        i = 0;
+        for (VirtualServer vs : toUpdate.values()) {
+            keys[i] = new IdVersion(vs.getId(), vs.getVersion());
+            i++;
         }
 
         updateStatus(keys);

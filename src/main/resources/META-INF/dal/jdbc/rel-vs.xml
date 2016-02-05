@@ -19,7 +19,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='slb-id'/> IN <IN>${slb-id}</IN>
+                    WHERE <FIELD name='slb-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>
@@ -48,7 +48,9 @@
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELDS/>
+                    SET <FIELD name='slb-id'/> = ${slb-id},
+                        <FIELD name='vs-version'/> = ${vs-version},
+                        <FIELD name='hash'/> = ${hash}
                     WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
@@ -74,7 +76,6 @@
         </query-defs>
     </entity>
     <entity name="r-vs-domain" table="r_vs_domain" alias="rvd" do-class="RelVsDomainDo">
-        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="find-all-by-vs" type="SELECT" multiple="true">
                 <param name="vs-id"/>
