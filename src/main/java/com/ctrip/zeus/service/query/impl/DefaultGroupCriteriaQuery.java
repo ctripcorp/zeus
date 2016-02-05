@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.model.IdVersion;
@@ -77,7 +77,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
-    public Set<IdVersion> queryByIdsAndMode(Long[] groupIds, ModelMode mode) throws Exception {
+    public Set<IdVersion> queryByIdsAndMode(Long[] groupIds, SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL)) {
             for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
@@ -88,7 +88,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
-    public IdVersion[] queryByIdAndMode(Long groupId, ModelMode mode) throws Exception {
+    public IdVersion[] queryByIdAndMode(Long groupId, SelectionMode mode) throws Exception {
         IdVersion[] result = new IdVersion[2];
         RelGroupStatusDo d = rGroupStatusDao.findByGroup(groupId, RGroupStatusEntity.READSET_FULL);
         int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
@@ -99,7 +99,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
-    public Set<IdVersion> queryAll(ModelMode mode) throws Exception {
+    public Set<IdVersion> queryAll(SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         Set<Long> groupIds = queryAll();
         for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds.toArray(new Long[groupIds.size()]), RGroupStatusEntity.READSET_FULL)) {
@@ -111,7 +111,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
-    public Set<IdVersion> queryAllVGroups(ModelMode mode) throws Exception {
+    public Set<IdVersion> queryAllVGroups(SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         Set<Long> groupIds = queryAllVGroups();
         for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds.toArray(new Long[groupIds.size()]), RGroupStatusEntity.READSET_FULL)) {

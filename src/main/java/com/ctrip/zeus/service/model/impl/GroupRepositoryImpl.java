@@ -49,7 +49,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(Long[] ids) throws Exception {
-        Set<IdVersion> keys = groupCriteriaQuery.queryByIdsAndMode(ids, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        Set<IdVersion> keys = groupCriteriaQuery.queryByIdsAndMode(ids, SelectionMode.OFFLINE_FIRST);
         return list(keys.toArray(new IdVersion[keys.size()]));
     }
 
@@ -73,7 +73,7 @@ public class GroupRepositoryImpl implements GroupRepository {
                 vsIds.add(groupVirtualServer.getVirtualServer().getId());
             }
         }
-        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), ModelMode.MODEL_MODE_MERGE_ONLINE);
+        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), SelectionMode.ONLINE_FIRST);
         Map<Long, VirtualServer> map = Maps.uniqueIndex(
                 virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()])),
                 new Function<VirtualServer, Long>() {
@@ -96,7 +96,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group getById(Long id) throws Exception {
-        IdVersion[] key = groupCriteriaQuery.queryByIdAndMode(id, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        IdVersion[] key = groupCriteriaQuery.queryByIdAndMode(id, SelectionMode.OFFLINE_FIRST);
         if (key.length == 0)
             return null;
         return getByKey(key[0]);
@@ -109,7 +109,7 @@ public class GroupRepositoryImpl implements GroupRepository {
             if (d == null) return null;
             Group result = ContentReaders.readGroupContent(d.getContent());
             for (GroupVirtualServer groupVirtualServer : result.getGroupVirtualServers()) {
-                IdVersion[] vsKey = virtualServerCriteriaQuery.queryByIdAndMode(groupVirtualServer.getVirtualServer().getId(), ModelMode.MODEL_MODE_MERGE_ONLINE);
+                IdVersion[] vsKey = virtualServerCriteriaQuery.queryByIdAndMode(groupVirtualServer.getVirtualServer().getId(), SelectionMode.ONLINE_FIRST);
                 groupVirtualServer.setVirtualServer(virtualServerRepository.getByKey(vsKey[0]));
             }
             autoFiller.autofill(result);
@@ -177,9 +177,9 @@ public class GroupRepositoryImpl implements GroupRepository {
     }
 
     @Override
-    public void updateStatus(IdVersion[] groups, ModelMode state) throws Exception {
+    public void updateStatus(IdVersion[] groups, SelectionMode state) throws Exception {
         switch (state) {
-            case MODEL_MODE_ONLINE:
+            case ONLINE_EXCLUSIVE:
                 groupEntityManager.updateStatus(groups);
                 return;
             default:
@@ -189,7 +189,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public void updateStatus(IdVersion[] groups) throws Exception {
-        updateStatus(groups, ModelMode.MODEL_MODE_ONLINE);
+        updateStatus(groups, SelectionMode.ONLINE_EXCLUSIVE);
     }
 
     @Override

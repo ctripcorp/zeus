@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -31,7 +31,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     }
 
     @Override
-    public Set<IdVersion> queryByIdsAndMode(Long[] slbIds, ModelMode mode) throws Exception {
+    public Set<IdVersion> queryByIdsAndMode(Long[] slbIds, SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         for (RelSlbStatusDo d : rSlbStatusDao.findBySlbs(slbIds, RSlbStatusEntity.READSET_FULL)) {
             for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
@@ -42,7 +42,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     }
 
     @Override
-    public IdVersion[] queryByIdAndMode(Long slbId, ModelMode mode) throws Exception {
+    public IdVersion[] queryByIdAndMode(Long slbId, SelectionMode mode) throws Exception {
         IdVersion[] result = new IdVersion[2];
         RelSlbStatusDo d = rSlbStatusDao.findBySlb(slbId, RSlbStatusEntity.READSET_FULL);
         int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
@@ -62,7 +62,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     }
 
     @Override
-    public Set<IdVersion> queryAll(ModelMode mode) throws Exception {
+    public Set<IdVersion> queryAll(SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         Set<Long> slbIds = queryAll();
         for (RelSlbStatusDo d : rSlbStatusDao.findBySlbs(slbIds.toArray(new Long[slbIds.size()]), RSlbStatusEntity.READSET_FULL)) {

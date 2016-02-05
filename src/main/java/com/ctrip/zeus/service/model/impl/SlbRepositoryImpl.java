@@ -45,7 +45,7 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public List<Slb> list(Long[] slbIds) throws Exception {
-        Set<IdVersion> keys = slbCriteriaQuery.queryByIdsAndMode(slbIds, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        Set<IdVersion> keys = slbCriteriaQuery.queryByIdsAndMode(slbIds, SelectionMode.OFFLINE_FIRST);
         return list(keys.toArray(new IdVersion[keys.size()]));
     }
 
@@ -67,7 +67,7 @@ public class SlbRepositoryImpl implements SlbRepository {
         }
 
         Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryBySlbIds(slbIds);
-        vsKeys.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_MERGE_OFFLINE));
+        vsKeys.retainAll(virtualServerCriteriaQuery.queryAll(SelectionMode.OFFLINE_FIRST));
         Map<Long, List<VirtualServer>> map = new HashMap<>();
         for (VirtualServer vs : virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()]))) {
             List<VirtualServer> l = map.get(vs.getSlbId());
@@ -88,7 +88,7 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public Slb getById(Long slbId) throws Exception {
-        IdVersion[] key = slbCriteriaQuery.queryByIdAndMode(slbId, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        IdVersion[] key = slbCriteriaQuery.queryByIdAndMode(slbId, SelectionMode.OFFLINE_FIRST);
         if (key.length == 0)
             return null;
         return getByKey(key[0]);
@@ -149,9 +149,9 @@ public class SlbRepositoryImpl implements SlbRepository {
     }
 
     @Override
-    public void updateStatus(IdVersion[] slbs, ModelMode state) throws Exception {
+    public void updateStatus(IdVersion[] slbs, SelectionMode state) throws Exception {
         switch (state) {
-            case MODEL_MODE_ONLINE:
+            case ONLINE_EXCLUSIVE:
                 slbEntityManager.updateStatus(slbs);
                 return;
             default:
@@ -161,7 +161,7 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public void updateStatus(IdVersion[] slbs) throws Exception {
-        updateStatus(slbs, ModelMode.MODEL_MODE_ONLINE);
+        updateStatus(slbs, SelectionMode.ONLINE_EXCLUSIVE);
     }
 
     @Override
@@ -172,7 +172,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     private void refreshVirtualServer(Slb slb) throws Exception {
         slb.getVirtualServers().clear();
         Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
-        range.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_MERGE_ONLINE));
+        range.retainAll(virtualServerCriteriaQuery.queryAll(SelectionMode.ONLINE_FIRST));
         slb.getVirtualServers().addAll(virtualServerRepository.listAll(range.toArray(new IdVersion[range.size()])));
     }
 }

@@ -85,7 +85,7 @@ public class OperationResource {
     }
 
     private Response serverOps(HttpHeaders hh, String serverip, boolean up) throws Exception {
-        Long [] slbIds = entityFactory.getSlbIdsByIp(serverip, ModelMode.MODEL_MODE_ONLINE);
+        Long [] slbIds = entityFactory.getSlbIdsByIp(serverip, SelectionMode.ONLINE_EXCLUSIVE);
 
         if (slbIds == null || slbIds.length == 0 ){
             throw new ValidationException("Not found Server Ip.");
@@ -291,7 +291,7 @@ public class OperationResource {
             throw new ValidationException("vsId is required when updating certificate.");
         }
         // update certificate or run grayscale test
-        IdVersion[] check = virtualServerCriteriaQuery.queryByIdAndMode(vsId, ModelMode.MODEL_MODE_REDUNDANT);
+        IdVersion[] check = virtualServerCriteriaQuery.queryByIdAndMode(vsId, SelectionMode.REDUNDANT);
         Set<IdVersion> keys = virtualServerCriteriaQuery.queryByDomain(domain);
         keys.retainAll(Sets.newHashSet(check));
         if (keys.size() == 0) {
@@ -335,7 +335,7 @@ public class OperationResource {
         if (certId == null || ips == null || vsId == null) {
             throw new ValidationException("certId, vsId and ips are required.");
         }
-        IdVersion[] keys = virtualServerCriteriaQuery.queryByIdAndMode(vsId, ModelMode.MODEL_MODE_REDUNDANT);
+        IdVersion[] keys = virtualServerCriteriaQuery.queryByIdAndMode(vsId, SelectionMode.REDUNDANT);
         ips = configureIps(keys, ips);
         certificateService.install(vsId, ips, certId);
         return responseHandler.handle("Certificates uploaded. Re-activate the virtual server to take effect.", hh.getMediaType());

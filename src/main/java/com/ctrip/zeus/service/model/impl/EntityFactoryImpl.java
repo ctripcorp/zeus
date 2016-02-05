@@ -148,9 +148,9 @@ public class EntityFactoryImpl implements EntityFactory {
     }
 
     @Override
-    public Long[] getSlbIdsByIp(String ip, ModelMode mode) throws Exception {
+    public Long[] getSlbIdsByIp(String ip, SelectionMode mode) throws Exception {
         final Set<IdVersion> range = slbCriteriaQuery.queryBySlbServerIp(ip);
-        final ModelMode m = mode;
+        final SelectionMode m = mode;
         IdVersion[] keys = new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
@@ -187,9 +187,9 @@ public class EntityFactoryImpl implements EntityFactory {
     }
 
     @Override
-    public Long[] getVsIdsBySlbId(Long slbId, ModelMode mode) throws Exception {
+    public Long[] getVsIdsBySlbId(Long slbId, SelectionMode mode) throws Exception {
         final Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slbId);
-        final ModelMode m = mode;
+        final SelectionMode m = mode;
         IdVersion[] keys = new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
@@ -226,9 +226,9 @@ public class EntityFactoryImpl implements EntityFactory {
     }
 
     @Override
-    public Long[] getGroupIdsByVsIds(Long[] vsIds, ModelMode mode) throws Exception {
+    public Long[] getGroupIdsByVsIds(Long[] vsIds, SelectionMode mode) throws Exception {
         final Set<IdVersion> range = groupCriteriaQuery.queryByVsIds(vsIds);
-        final ModelMode m = mode;
+        final SelectionMode m = mode;
         IdVersion[] keys = new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override

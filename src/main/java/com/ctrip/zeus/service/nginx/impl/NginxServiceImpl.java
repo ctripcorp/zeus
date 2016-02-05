@@ -115,7 +115,7 @@ public class NginxServiceImpl implements NginxService {
         NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
         rollbackConfBackUp(operator);
 
-        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, ModelMode.MODEL_MODE_ONLINE);
+        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, SelectionMode.ONLINE_EXCLUSIVE);
         List<Long> vsIds = Arrays.asList(vses);
         cleanConfOnDisk(slbId,version,operator);
         writeConfToDisk(slbId, version, vsIds, operator);

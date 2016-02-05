@@ -28,7 +28,7 @@ public class AutoFiller {
         for (GroupVirtualServer e : group.getGroupVirtualServers()) {
             vsIds.add(e.getVirtualServer().getId());
         }
-        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), ModelMode.MODEL_MODE_MERGE_ONLINE);
+        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), SelectionMode.ONLINE_FIRST);
         Map<Long, VirtualServer> map = Maps.uniqueIndex(
                 virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()])),
                 new Function<VirtualServer, Long>() {
@@ -77,7 +77,7 @@ public class AutoFiller {
         for (GroupVirtualServer e : group.getGroupVirtualServers()) {
             vsIds.add(e.getVirtualServer().getId());
         }
-        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), ModelMode.MODEL_MODE_MERGE_ONLINE);
+        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), SelectionMode.ONLINE_FIRST);
         Map<Long, VirtualServer> map = Maps.uniqueIndex(
                 virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()])),
                 new Function<VirtualServer, Long>() {

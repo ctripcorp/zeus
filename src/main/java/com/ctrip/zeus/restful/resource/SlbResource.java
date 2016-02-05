@@ -11,7 +11,7 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
-import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -63,7 +63,7 @@ public class SlbResource {
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
         final SlbList slbList = new SlbList();
-        final ModelMode modelMode = ModelMode.getMode(mode);
+        final SelectionMode selectionMode = SelectionMode.getMode(mode);
         final Long[] slbIds = new QueryExecuter.Builder<Long>()
                 .addFilter(new FilterSet<Long>() {
                     @Override
@@ -111,7 +111,7 @@ public class SlbResource {
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        return slbIds.length == 0 ? new HashSet<IdVersion>() : slbCriteriaQuery.queryByIdsAndMode(slbIds, modelMode);
+                        return slbIds.length == 0 ? new HashSet<IdVersion>() : slbCriteriaQuery.queryByIdsAndMode(slbIds, selectionMode);
                     }
                 })
                 .build(IdVersion.class);

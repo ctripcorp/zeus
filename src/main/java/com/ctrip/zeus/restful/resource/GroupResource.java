@@ -15,7 +15,7 @@ import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -77,7 +77,7 @@ public class GroupResource {
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
         GroupList groupList = new GroupList();
-        final ModelMode modelMode = ModelMode.getMode(mode);
+        final SelectionMode selectionMode = SelectionMode.getMode(mode);
 
         final IdVersion[] vsRange = new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {
@@ -113,7 +113,7 @@ public class GroupResource {
                     @Override
                     public void handle(Set<IdVersion> result) throws Exception {
                         if (result == null || result.size() == 0) return;
-                        result.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE));
+                        result.retainAll(virtualServerCriteriaQuery.queryAll(SelectionMode.ONLINE_EXCLUSIVE));
                     }
                 }).build(IdVersion.class).run();
 
@@ -175,7 +175,7 @@ public class GroupResource {
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        return groupIds.length == 0 ? new HashSet<IdVersion>() : groupCriteriaQuery.queryByIdsAndMode(groupIds, modelMode);
+                        return groupIds.length == 0 ? new HashSet<IdVersion>() : groupCriteriaQuery.queryByIdsAndMode(groupIds, selectionMode);
                     }
                 })
                 .addFilter(new FilterSet<IdVersion>() {
@@ -220,7 +220,7 @@ public class GroupResource {
                                 @TrimmedQueryParam("pvalue") final String pvalue,
                                 @TrimmedQueryParam("mode") final String mode) throws Exception {
         GroupList groupList = new GroupList();
-        final ModelMode modelMode = ModelMode.getMode(mode);
+        final SelectionMode selectionMode = SelectionMode.getMode(mode);
         final IdVersion[] vsRange = new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
@@ -248,7 +248,7 @@ public class GroupResource {
                     @Override
                     public void handle(Set<IdVersion> result) throws Exception {
                         if (result == null || result.size() == 0) return;
-                        result.retainAll(virtualServerCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE));
+                        result.retainAll(virtualServerCriteriaQuery.queryAll(SelectionMode.ONLINE_EXCLUSIVE));
                     }
                 }).build(IdVersion.class).run();
 
@@ -299,7 +299,7 @@ public class GroupResource {
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        return groupIds.length == 0 ? new HashSet<IdVersion>() : groupCriteriaQuery.queryByIdsAndMode(groupIds, modelMode);
+                        return groupIds.length == 0 ? new HashSet<IdVersion>() : groupCriteriaQuery.queryByIdsAndMode(groupIds, selectionMode);
                     }
                 })
                 .addFilter(new FilterSet<IdVersion>() {
@@ -343,7 +343,7 @@ public class GroupResource {
             throw new ValidationException("Group cannot be found.");
         }
 
-        IdVersion[] keys = groupCriteriaQuery.queryByIdAndMode(groupId, ModelMode.getMode(mode));
+        IdVersion[] keys = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.getMode(mode));
         List<Group> result = groupRepository.list(keys);
         if (result.size() == 0) throw new ValidationException("Group cannot be found.");
         if (result.size() == 1)

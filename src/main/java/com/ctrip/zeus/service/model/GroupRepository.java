@@ -32,7 +32,7 @@ public interface GroupRepository extends Repository {
 
     int deleteVGroup(Long groupId) throws Exception;
 
-    void updateStatus(IdVersion[] groups, ModelMode state) throws Exception;
+    void updateStatus(IdVersion[] groups, SelectionMode state) throws Exception;
 
     void updateStatus(IdVersion[] groups) throws Exception;
 

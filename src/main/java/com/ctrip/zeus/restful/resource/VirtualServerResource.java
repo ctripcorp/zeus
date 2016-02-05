@@ -10,7 +10,7 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
-import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -59,7 +59,7 @@ public class VirtualServerResource {
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
         VirtualServerList vslist = new VirtualServerList();
-        final ModelMode modelMode = ModelMode.getMode(mode);
+        final SelectionMode selectionMode = SelectionMode.getMode(mode);
         final Long[] vsIds = new QueryExecuter.Builder<Long>()
                 .addFilter(new FilterSet<Long>() {
                     @Override
@@ -107,7 +107,7 @@ public class VirtualServerResource {
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, modelMode);
+                        return virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, selectionMode);
                     }
                 })
                 .addFilter(new FilterSet<IdVersion>() {

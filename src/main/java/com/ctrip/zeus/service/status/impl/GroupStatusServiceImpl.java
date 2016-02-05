@@ -56,7 +56,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getAllOnlineGroupsStatus() throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        Set<IdVersion> slbIds = slbCriteriaQuery.queryAll(ModelMode.MODEL_MODE_ONLINE);
+        Set<IdVersion> slbIds = slbCriteriaQuery.queryAll(SelectionMode.ONLINE_EXCLUSIVE);
         for (IdVersion slb : slbIds) {
             result.addAll(getOnlineGroupsStatusBySlbId(slb.getId()));
         }
@@ -66,7 +66,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getAllOfflineGroupsStatus() throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        Set<IdVersion> slbIds = slbCriteriaQuery.queryAll(ModelMode.MODEL_MODE_OFFLINE);
+        Set<IdVersion> slbIds = slbCriteriaQuery.queryAll(SelectionMode.OFFLINE_EXCLUSIVE);
         for (IdVersion slb : slbIds) {
             result.addAll(getOfflineGroupsStatusBySlbId(slb.getId()));
         }
@@ -76,7 +76,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getOnlineGroupsStatusBySlbId(Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, ModelMode.MODEL_MODE_ONLINE);
+        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, SelectionMode.ONLINE_EXCLUSIVE);
         ModelStatusMapping<Group> groups = entityFactory.getGroupsByVsIds(vses);
         if (groups.getOnlineMapping() == null || groups.getOnlineMapping().size() == 0) {
             return result;
@@ -88,7 +88,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getOfflineGroupsStatusBySlbId(Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, ModelMode.MODEL_MODE_ONLINE);
+        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, SelectionMode.ONLINE_EXCLUSIVE);
         ModelStatusMapping<Group> groups = entityFactory.getGroupsByVsIds(vses);
         if (groups.getOfflineMapping() == null || groups.getOfflineMapping().size() == 0) {
             return result;

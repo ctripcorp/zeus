@@ -26,7 +26,7 @@ public interface VirtualServerRepository {
 
     void installCertificate(VirtualServer virtualServer) throws Exception;
 
-    void updateStatus(IdVersion[] vses, ModelMode state) throws Exception;
+    void updateStatus(IdVersion[] vses, SelectionMode state) throws Exception;
 
     void updateStatus(IdVersion[] vses) throws Exception;
 

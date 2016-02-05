@@ -89,7 +89,7 @@ public class QueryTest extends AbstractServerTest {
         Arrays.sort(values);
         Assert.assertArrayEquals(new Long[]{1L, 2L, 4L, 6L}, values);
 
-        IdVersion[] gKeyArray = groupCriteriaQuery.queryByIdAndMode(1L, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        IdVersion[] gKeyArray = groupCriteriaQuery.queryByIdAndMode(1L, SelectionMode.OFFLINE_FIRST);
         Assert.assertEquals(new IdVersion(1L, 1), gKeyArray[0]);
         Assert.assertNull(gKeyArray[1]);
     }
@@ -107,7 +107,7 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertEquals(3L, vsKeys.iterator().next().getId().longValue());
 
 
-        vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(new Long[]{1L, 2L, 3L}, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(new Long[]{1L, 2L, 3L}, SelectionMode.OFFLINE_FIRST);
         Assert.assertEquals(3, vsKeys.size());
         Long[] values = new Long[3];
         int i = 0;
@@ -119,7 +119,7 @@ public class QueryTest extends AbstractServerTest {
         Arrays.sort(values);
         Assert.assertArrayEquals(new Long[]{1L, 2L, 3L}, values);
 
-        IdVersion[] vsKeyArray = virtualServerCriteriaQuery.queryByIdAndMode(2L, ModelMode.MODEL_MODE_ONLINE);
+        IdVersion[] vsKeyArray = virtualServerCriteriaQuery.queryByIdAndMode(2L, SelectionMode.ONLINE_EXCLUSIVE);
         Assert.assertEquals(new IdVersion(2L, 1), vsKeyArray[0]);
         Assert.assertNull(vsKeyArray[1]);
 
@@ -167,7 +167,7 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertEquals(1, sKeys.size());
         Assert.assertArrayEquals(new Long[]{2L}, values);
 
-        IdVersion[] sKeyArray = slbCriteriaQuery.queryByIdAndMode(1L, ModelMode.MODEL_MODE_ONLINE);
+        IdVersion[] sKeyArray = slbCriteriaQuery.queryByIdAndMode(1L, SelectionMode.ONLINE_EXCLUSIVE);
         Assert.assertEquals(new IdVersion(1L, 1), sKeyArray[0]);
         Assert.assertNull(sKeyArray[1]);
     }
@@ -184,7 +184,7 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertEquals(3, mapping.getOfflineMapping().size());
         Assert.assertEquals(2, mapping.getOnlineMapping().size());
 
-        Long[] groupIds = entityFactory.getGroupIdsByVsIds(new Long[]{1L, 2L, 3L}, ModelMode.MODEL_MODE_MERGE_ONLINE);
+        Long[] groupIds = entityFactory.getGroupIdsByVsIds(new Long[]{1L, 2L, 3L}, SelectionMode.ONLINE_FIRST);
         Assert.assertEquals(3, groupIds.length);
     }
 
@@ -200,7 +200,7 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertEquals(2, mapping.getOfflineMapping().size());
         Assert.assertEquals(2, mapping.getOnlineMapping().size());
 
-        Long[] vsIds = entityFactory.getVsIdsBySlbId(1L, ModelMode.MODEL_MODE_ONLINE);
+        Long[] vsIds = entityFactory.getVsIdsBySlbId(1L, SelectionMode.ONLINE_EXCLUSIVE);
         Assert.assertEquals(2, vsIds.length);
     }
 
@@ -208,10 +208,10 @@ public class QueryTest extends AbstractServerTest {
     public void testBatchGetSlbInfo() throws Exception {
         Counter.decrementAndGet();
 
-        Long[] slbIds = entityFactory.getSlbIdsByIp("10.2.25.93", ModelMode.MODEL_MODE_OFFLINE);
+        Long[] slbIds = entityFactory.getSlbIdsByIp("10.2.25.93", SelectionMode.OFFLINE_EXCLUSIVE);
         Assert.assertEquals(0, slbIds.length);
 
-        slbIds = entityFactory.getSlbIdsByIp("10.2.25.93", ModelMode.MODEL_MODE_MERGE_ONLINE);
+        slbIds = entityFactory.getSlbIdsByIp("10.2.25.93", SelectionMode.ONLINE_FIRST);
         Assert.assertEquals(1, slbIds.length);
 
         ModelStatusMapping<Slb> mapping = entityFactory.getSlbsByIds(new Long[]{1L, 2L});

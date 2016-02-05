@@ -26,7 +26,7 @@ public interface SlbRepository extends Repository {
 
     int delete(Long slbId) throws Exception;
 
-    void updateStatus(IdVersion[] slbs, ModelMode state) throws Exception;
+    void updateStatus(IdVersion[] slbs, SelectionMode state) throws Exception;
 
     void updateStatus(IdVersion[] slbs) throws Exception;
 

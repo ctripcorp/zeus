@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -37,7 +37,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
-    public Set<IdVersion> queryAll(ModelMode mode) throws Exception {
+    public Set<IdVersion> queryAll(SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         Set<Long> vsIds = queryAll();
         for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds.toArray(new Long[vsIds.size()]), RVsStatusEntity.READSET_FULL)) {
@@ -49,7 +49,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
-    public Set<IdVersion> queryByIdsAndMode(Long[] vsIds, ModelMode mode) throws Exception {
+    public Set<IdVersion> queryByIdsAndMode(Long[] vsIds, SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds, RVsStatusEntity.READSET_FULL)) {
             for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
@@ -60,7 +60,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
-    public IdVersion[] queryByIdAndMode(Long vsId, ModelMode mode) throws Exception {
+    public IdVersion[] queryByIdAndMode(Long vsId, SelectionMode mode) throws Exception {
         IdVersion[] result = new IdVersion[2];
         RelVsStatusDo d = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
         int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());

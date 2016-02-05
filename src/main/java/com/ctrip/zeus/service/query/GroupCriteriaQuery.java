@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.query;
 
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.SelectionMode;
 
 import java.util.Set;
 
@@ -20,13 +20,13 @@ public interface GroupCriteriaQuery {
 
     Set<Long> queryByGroupServerIp(String ip) throws Exception;
 
-    Set<IdVersion> queryByIdsAndMode(Long[] groupIds, ModelMode mode) throws Exception;
+    Set<IdVersion> queryByIdsAndMode(Long[] groupIds, SelectionMode mode) throws Exception;
 
-    IdVersion[] queryByIdAndMode(Long groupId, ModelMode mode) throws Exception;
+    IdVersion[] queryByIdAndMode(Long groupId, SelectionMode mode) throws Exception;
 
-    Set<IdVersion> queryAll(ModelMode mode) throws Exception;
+    Set<IdVersion> queryAll(SelectionMode mode) throws Exception;
 
-    Set<IdVersion> queryAllVGroups(ModelMode mode) throws Exception;
+    Set<IdVersion> queryAllVGroups(SelectionMode mode) throws Exception;
 
     Set<IdVersion> queryByVsId(Long vsId) throws Exception;
 

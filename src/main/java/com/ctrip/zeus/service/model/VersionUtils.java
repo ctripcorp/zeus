@@ -8,21 +8,21 @@ public class VersionUtils {
         return id.hashCode() * 31 + version;
     }
 
-    public static int[] getVersionByMode(ModelMode mode, int offline, int online) {
+    public static int[] getVersionByMode(SelectionMode mode, int offline, int online) {
         switch (mode) {
-            case MODEL_MODE_ONLINE: {
+            case ONLINE_EXCLUSIVE: {
                 return online == 0 ? new int[0] : new int[]{online};
             }
-            case MODEL_MODE_OFFLINE: {
+            case OFFLINE_EXCLUSIVE: {
                 return online == offline ? new int[0] : new int[]{offline};
             }
-            case MODEL_MODE_REDUNDANT: {
+            case REDUNDANT: {
                 return online == 0 ? new int[]{offline} : new int[]{offline, online};
             }
-            case MODEL_MODE_MERGE_ONLINE: {
+            case ONLINE_FIRST: {
                 return online == 0 ? new int[]{offline} : new int[]{online};
             }
-            case MODEL_MODE_MERGE_OFFLINE:
+            case OFFLINE_FIRST:
             default: {
                 return new int[]{offline};
             }

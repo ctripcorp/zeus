@@ -6,7 +6,7 @@ import com.ctrip.zeus.dal.core.MetaVsArchiveDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
@@ -44,7 +44,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
-        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, SelectionMode.OFFLINE_FIRST);
         return listAll(keys.toArray(new IdVersion[keys.size()]));
     }
 
@@ -66,7 +66,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer getById(Long vsId) throws Exception {
-        IdVersion[] key = virtualServerCriteriaQuery.queryByIdAndMode(vsId, ModelMode.MODEL_MODE_MERGE_OFFLINE);
+        IdVersion[] key = virtualServerCriteriaQuery.queryByIdAndMode(vsId, SelectionMode.OFFLINE_FIRST);
         return getByKey(key[0]);
     }
 
@@ -86,7 +86,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         for (IdVersion idVersion : virtualServerCriteriaQuery.queryBySlbId(slbId)) {
             retained.add(idVersion.getId());
         }
-        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(retained.toArray(new Long[retained.size()]), ModelMode.MODEL_MODE_REDUNDANT);
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(retained.toArray(new Long[retained.size()]), SelectionMode.REDUNDANT);
         List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
         check.add(virtualServer);
         virtualServerModelValidator.validateVirtualServers(check);
@@ -114,7 +114,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
                 throw new ValidationException("Slb with id " + virtualServer.getSlbId() + " does not exist.");
             }
         }
-        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(retained.toArray(new Long[retained.size()]), ModelMode.MODEL_MODE_REDUNDANT);
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(retained.toArray(new Long[retained.size()]), SelectionMode.REDUNDANT);
         List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
         Iterator<VirtualServer> iter = check.iterator();
         while (iter.hasNext()) {
@@ -152,9 +152,9 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public void updateStatus(IdVersion[] vses, ModelMode state) throws Exception {
+    public void updateStatus(IdVersion[] vses, SelectionMode state) throws Exception {
         switch (state) {
-            case MODEL_MODE_ONLINE:
+            case ONLINE_EXCLUSIVE:
                 virtualServerEntityManager.updateStatus(vses);
                 return;
             default:
@@ -164,7 +164,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void updateStatus(IdVersion[] vses) throws Exception {
-        updateStatus(vses, ModelMode.MODEL_MODE_ONLINE);
+        updateStatus(vses, SelectionMode.ONLINE_EXCLUSIVE);
     }
 
     @Override

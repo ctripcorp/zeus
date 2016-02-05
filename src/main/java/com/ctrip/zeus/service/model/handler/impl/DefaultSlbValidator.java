@@ -5,7 +5,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.ModelMode;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -69,7 +69,7 @@ public class DefaultSlbValidator implements SlbValidator {
             }
             if (check.size() == 0)
                 return;
-            range.retainAll(slbCriteriaQuery.queryByIdsAndMode(check.toArray(new Long[check.size()]), ModelMode.MODEL_MODE_REDUNDANT));
+            range.retainAll(slbCriteriaQuery.queryByIdsAndMode(check.toArray(new Long[check.size()]), SelectionMode.REDUNDANT));
             if (range.size() > 1) {
                 throw new ValidationException("Slb server " + slbServer.getIp() + " is added to (slb,version) " + Joiner.on("; ").join(range) + ". Unique server ip is required.");
             }
