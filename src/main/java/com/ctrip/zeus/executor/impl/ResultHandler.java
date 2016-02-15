@@ -5,7 +5,7 @@ import java.util.Set;
 /**
  * Created by zhoumy on 2016/1/6.
  */
-public interface ResultHandler<T> {
+public interface ResultHandler<T, W> {
 
-    void handle(Set<T> result) throws Exception;
+    W[] handle(Set<T> result) throws Exception;
 }

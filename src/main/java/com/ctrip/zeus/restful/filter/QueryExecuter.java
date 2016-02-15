@@ -13,7 +13,6 @@ import java.util.Set;
 public class QueryExecuter<T extends Comparable> {
     private final Class<T> clazz;
     private final Queue<FilterSet> filterQueue;
-    private ResultHandler resultHandler;
 
     private QueryExecuter(Class<T> clazz) {
         this(clazz, new LinkedList<FilterSet>());
@@ -22,12 +21,6 @@ public class QueryExecuter<T extends Comparable> {
     private QueryExecuter(Class<T> clazz, Queue<FilterSet> filterIdVersionArray) {
         this.clazz = clazz;
         this.filterQueue = filterIdVersionArray;
-    }
-
-    private QueryExecuter(Class<T> clazz, Queue<FilterSet> filterIdVersionArray, ResultHandler resultHandler) {
-        this.clazz = clazz;
-        this.filterQueue = filterIdVersionArray;
-        this.resultHandler = resultHandler;
     }
 
     public T[] run() throws Exception {
@@ -41,32 +34,36 @@ public class QueryExecuter<T extends Comparable> {
             FilterSet filter = filterQueue.poll();
             if (filter.shouldFilter()) result.retainAll(filter.filter());
         }
-
-        if (resultHandler != null)
-            resultHandler.handle(result);
         return result == null ? null : result.toArray((T[]) Array.newInstance(clazz, result.size()));
     }
 
-    public void setResultHandler(ResultHandler resultHandler) {
-        this.resultHandler = resultHandler;
+    public <W> W[] run(ResultHandler<T, W> resultHandler) throws Exception {
+        Set<T> result = null;
+        while (!filterQueue.isEmpty() && result == null) {
+            FilterSet filter = filterQueue.poll();
+            if (filter.shouldFilter()) result = filter.filter();
+        }
+        while (!filterQueue.isEmpty()) {
+            if (result.isEmpty()) return (W[]) Array.newInstance(clazz, 0);
+            FilterSet filter = filterQueue.poll();
+            if (filter.shouldFilter()) result.retainAll(filter.filter());
+        }
+
+        if (resultHandler != null)
+            resultHandler.handle(result);
+        return result == null ? null : result.toArray((W[]) Array.newInstance(clazz, result.size()));
     }
 
     public static class Builder<T extends Comparable> {
         private Queue<FilterSet> filterQueue = new LinkedList<>();
-        private ResultHandler resultHandler;
 
         public Builder<T> addFilter(FilterSet<T> item) {
             filterQueue.add(item);
             return this;
         }
 
-        public Builder<T> setResultHandler(ResultHandler<T> resultHandler) {
-            this.resultHandler = resultHandler;
-            return this;
-        }
-
         public QueryExecuter<T> build(Class<T> clazz) {
-            return new QueryExecuter<>(clazz, filterQueue, resultHandler);
+            return new QueryExecuter<>(clazz, filterQueue);
         }
     }
 }

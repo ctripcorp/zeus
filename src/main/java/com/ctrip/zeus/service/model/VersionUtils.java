@@ -1,11 +1,24 @@
 package com.ctrip.zeus.service.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Created by zhoumy on 2015/12/23.
  */
 public class VersionUtils {
     public static int getHash(Long id, int version) {
         return id.hashCode() * 31 + version;
+    }
+
+    public static Long[] extractIds(Set<IdVersion> array) {
+        if (array == null) return null;
+        if (array.size() == 0) return new Long[0];
+        Set<Long> result = new HashSet<>();
+        for (IdVersion e : array) {
+            result.add(e.getId());
+        }
+        return result.toArray(new Long[result.size()]);
     }
 
     public static int[] getVersionByMode(SelectionMode mode, int offline, int online) {
