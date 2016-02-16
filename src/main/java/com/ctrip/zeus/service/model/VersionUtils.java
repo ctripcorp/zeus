@@ -11,7 +11,7 @@ public class VersionUtils {
         return id.hashCode() * 31 + version;
     }
 
-    public static Long[] extractIds(Set<IdVersion> array) {
+    public static Long[] extractUniqIds(Set<IdVersion> array) {
         if (array == null) return null;
         if (array.size() == 0) return new Long[0];
         Set<Long> result = new HashSet<>();

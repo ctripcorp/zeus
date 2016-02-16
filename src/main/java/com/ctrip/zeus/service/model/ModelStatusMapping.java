@@ -7,27 +7,31 @@ import java.util.Map;
  * Created by zhoumy on 2016/1/19.
  */
 public class ModelStatusMapping<T> {
-    private Map<Long, T> onlineMapping;
-    private Map<Long, T> offlineMapping;
+    private final Map<String, Map> data;
+    private Map<Long, T> online;
+    private Map<Long, T> offline;
 
     public ModelStatusMapping() {
-        onlineMapping = new HashMap<>();
-        offlineMapping = new HashMap<>();
+        data = new HashMap<>();
+        online = new HashMap<>();
+        offline = new HashMap<>();
+        data.put("offline_first", online);
+        data.put("online", offline);
     }
 
     public void addOnline(Long key, T value) {
-        onlineMapping.put(key, value);
+        online.put(key, value);
     }
 
     public void addOffline(Long key, T value) {
-        offlineMapping.put(key, value);
+        offline.put(key, value);
     }
 
     public Map<Long, T> getOnlineMapping() {
-        return onlineMapping;
+        return data.get("online");
     }
 
     public Map<Long, T> getOfflineMapping() {
-        return offlineMapping;
+        return data.get("offline_first");
     }
 }

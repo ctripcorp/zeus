@@ -62,7 +62,7 @@ public class SlbResource {
                          @TrimmedQueryParam("pname") final String pname,
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
-        final SlbList slbList = new SlbList();
+
         final SelectionMode selectionMode = SelectionMode.getMode(mode);
         final Long[] slbIds = new QueryExecuter.Builder<Long>()
                 .addFilter(new FilterSet<Long>() {
@@ -115,6 +115,8 @@ public class SlbResource {
                     }
                 })
                 .build(IdVersion.class);
+
+        final SlbList slbList = new SlbList();
         for (Slb slb : slbRepository.list(executer.run())) {
             slbList.addSlb(getSlbByType(slb, type));
         }

@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.Slb;
@@ -44,21 +45,23 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<Group> getGroupsByVsIds(Long[] vsIds) throws Exception {
-        ModelStatusMapping<Group> result = new ModelStatusMapping<>();
         Set<Long> groupIds = new HashSet<>();
-        Map<String, Group> mapping = new HashMap<>();
+        Map<String, Group> ref = new HashMap<>();
+
         for (ArchiveGroupDo d : archiveGroupDao.findAllByVsIds(vsIds, ArchiveGroupEntity.READSET_FULL)) {
             groupIds.add(d.getGroupId());
             Group g = ContentReaders.readGroupContent(d.getContent());
             for (GroupVirtualServer e : g.getGroupVirtualServers()) {
                 e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
             }
-            mapping.put(d.getGroupId() + "," + d.getVersion(), g);
+            ref.put(d.getGroupId() + "," + d.getVersion(), g);
         }
+
+        ModelStatusMapping<Group> result = new ModelStatusMapping<>();
         for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds.toArray(new Long[groupIds.size()]), RGroupStatusEntity.READSET_FULL)) {
-            result.addOffline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOfflineVersion()));
+            result.addOffline(d.getGroupId(), ref.get(d.getGroupId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
-                result.addOnline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOnlineVersion()));
+                result.addOnline(d.getGroupId(), ref.get(d.getGroupId() + "," + d.getOnlineVersion()));
             }
         }
         return result;
@@ -66,19 +69,20 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<VirtualServer> getVsesBySlbIds(Long slbId) throws Exception {
-        ModelStatusMapping<VirtualServer> result = new ModelStatusMapping<>();
         Set<Long> vsIds = new HashSet<>();
-        Map<String, VirtualServer> mapping = new HashMap<>();
+        Map<String, VirtualServer> ref = new HashMap<>();
 
         for (MetaVsArchiveDo d : archiveVsDao.findAllBySlbId(slbId, ArchiveVsEntity.READSET_FULL)) {
             vsIds.add(d.getVsId());
             VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
-            mapping.put(vs.getId() + "," + d.getVersion(), vs);
+            ref.put(vs.getId() + "," + d.getVersion(), vs);
         }
+
+        ModelStatusMapping<VirtualServer> result = new ModelStatusMapping<>();
         for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds.toArray(new Long[vsIds.size()]), RVsStatusEntity.READSET_FULL)) {
-            result.addOffline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOfflineVersion()));
+            result.addOffline(d.getVsId(), ref.get(d.getVsId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
-                result.addOnline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOnlineVersion()));
+                result.addOnline(d.getVsId(), ref.get(d.getVsId() + "," + d.getOnlineVersion()));
             }
         }
         return result;
@@ -86,20 +90,18 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<Slb> getSlbsByIds(Long[] slbIds) throws Exception {
-        ModelStatusMapping<Slb> result = new ModelStatusMapping<>();
-        List<RelSlbStatusDo> ref = rSlbStatusDao.findBySlbs(slbIds, RSlbStatusEntity.READSET_FULL);
-
-        Map<String, Slb> mapping = new HashMap<>();
+        Map<String, Slb> ref = new HashMap<>();
         for (ArchiveSlbDo d : archiveSlbDao.findVersionizedByIds(slbIds, ArchiveSlbEntity.READSET_FULL)) {
             Slb slb = ContentReaders.readSlbContent(d.getContent());
             slb.getVirtualServers().clear();
-            mapping.put(slb.getId() + "," + slb.getVersion(), slb);
+            ref.put(slb.getId() + "," + slb.getVersion(), slb);
         }
 
-        for (RelSlbStatusDo d : ref) {
-            result.addOffline(d.getSlbId(), mapping.get(d.getSlbId() + "," + d.getOfflineVersion()));
+        ModelStatusMapping<Slb> result = new ModelStatusMapping<>();
+        for (RelSlbStatusDo d : rSlbStatusDao.findBySlbs(slbIds, RSlbStatusEntity.READSET_FULL)) {
+            result.addOffline(d.getSlbId(), ref.get(d.getSlbId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
-                result.addOnline(d.getSlbId(), mapping.get(d.getSlbId() + "," + d.getOnlineVersion()));
+                result.addOnline(d.getSlbId(), ref.get(d.getSlbId() + "," + d.getOnlineVersion()));
             }
         }
         return result;
@@ -107,19 +109,17 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<VirtualServer> getVsesByIds(Long[] vsIds) throws Exception {
-        ModelStatusMapping<VirtualServer> result = new ModelStatusMapping<>();
-        List<RelVsStatusDo> ref = rVsStatusDao.findByVses(vsIds, RVsStatusEntity.READSET_FULL);
-
-        Map<String, VirtualServer> mapping = new HashMap<>();
+        Map<String, VirtualServer> ref = new HashMap<>();
         for (MetaVsArchiveDo d : archiveVsDao.findVersionizedByIds(vsIds, ArchiveVsEntity.READSET_FULL)) {
             VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
-            mapping.put(vs.getId() + "," + d.getVersion(), vs);
+            ref.put(vs.getId() + "," + d.getVersion(), vs);
         }
 
-        for (RelVsStatusDo d : ref) {
-            result.addOffline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOfflineVersion()));
+        ModelStatusMapping<VirtualServer> result = new ModelStatusMapping<>();
+        for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds, RVsStatusEntity.READSET_FULL)) {
+            result.addOffline(d.getVsId(), ref.get(d.getVsId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
-                result.addOnline(d.getVsId(), mapping.get(d.getVsId() + "," + d.getOnlineVersion()));
+                result.addOnline(d.getVsId(), ref.get(d.getVsId() + "," + d.getOnlineVersion()));
             }
         }
         return result;
@@ -127,21 +127,20 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<Group> getGroupsByIds(Long[] groupIds) throws Exception {
-        ModelStatusMapping<Group> result = new ModelStatusMapping<>();
-        List<RelGroupStatusDo> ref = rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL);
-
-        Map<String, Group> mapping = new HashMap<>();
+        Map<String, Group> ref = new HashMap<>();
         for (ArchiveGroupDo d : archiveGroupDao.findVersionizedByIds(groupIds, ArchiveGroupEntity.READSET_FULL)) {
             Group g = ContentReaders.readGroupContent(d.getContent());
             for (GroupVirtualServer e : g.getGroupVirtualServers()) {
                 e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
             }
-            mapping.put(d.getGroupId() + "," + d.getVersion(), g);
+            ref.put(d.getGroupId() + "," + d.getVersion(), g);
         }
-        for (RelGroupStatusDo d : ref) {
-            result.addOffline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOfflineVersion()));
+
+        ModelStatusMapping<Group> result = new ModelStatusMapping<>();
+        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL)) {
+            result.addOffline(d.getGroupId(), ref.get(d.getGroupId() + "," + d.getOfflineVersion()));
             if (d.getOnlineVersion() != 0) {
-                result.addOnline(d.getGroupId(), mapping.get(d.getGroupId() + "," + d.getOnlineVersion()));
+                result.addOnline(d.getGroupId(), ref.get(d.getGroupId() + "," + d.getOnlineVersion()));
             }
         }
         return result;
@@ -149,9 +148,9 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public Long[] getSlbIdsByIp(String ip, SelectionMode mode) throws Exception {
-        final Set<IdVersion> range = slbCriteriaQuery.queryBySlbServerIp(ip);
+        final Set<IdVersion> slbFilter = slbCriteriaQuery.queryBySlbServerIp(ip);
         final SelectionMode m = mode;
-        IdVersion[] keys = new QueryExecuter.Builder<IdVersion>()
+        return new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
@@ -160,37 +159,35 @@ public class EntityFactoryImpl implements EntityFactory {
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        return range;
+                        return slbFilter;
                     }
                 })
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return true;
+                        return slbFilter.size() != 0;
                     }
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        Set<Long> slbIds = new HashSet<>();
-                        for (IdVersion r : range) {
-                            slbIds.add(r.getId());
-                        }
-                        return slbCriteriaQuery.queryByIdsAndMode(slbIds.toArray(new Long[slbIds.size()]), m);
+                        return slbCriteriaQuery.queryByIdsAndMode(VersionUtils.extractUniqIds(slbFilter), m);
                     }
-                }).build(IdVersion.class).run();
-
-        Set<Long> result = new HashSet<>();
-        for (IdVersion key : keys) {
-            result.add(key.getId());
-        }
-        return result.toArray(new Long[result.size()]);
+                }).build(IdVersion.class)
+                .run(new ResultHandler<IdVersion, Long>() {
+                    @Override
+                    public Long[] handle(Set<IdVersion> result) throws Exception {
+                        if (result == null) return new Long[0];
+                        if (result.size() == 0) return new Long[0];
+                        return VersionUtils.extractUniqIds(result);
+                    }
+                });
     }
 
     @Override
     public Long[] getVsIdsBySlbId(Long slbId, SelectionMode mode) throws Exception {
-        final Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slbId);
+        final Set<IdVersion> vsFilter = virtualServerCriteriaQuery.queryBySlbId(slbId);
         final SelectionMode m = mode;
-        IdVersion[] keys = new QueryExecuter.Builder<IdVersion>()
+        return new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
@@ -199,37 +196,35 @@ public class EntityFactoryImpl implements EntityFactory {
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        return range;
+                        return vsFilter;
                     }
                 })
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return true;
+                        return vsFilter.size() != 0;
                     }
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        Set<Long> vsIds = new HashSet<>();
-                        for (IdVersion r : range) {
-                            vsIds.add(r.getId());
-                        }
-                        return virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), m);
+                        return virtualServerCriteriaQuery.queryByIdsAndMode(VersionUtils.extractUniqIds(vsFilter), m);
                     }
-                }).build(IdVersion.class).run();
-
-        Set<Long> result = new HashSet<>();
-        for (IdVersion key : keys) {
-            result.add(key.getId());
-        }
-        return result.toArray(new Long[result.size()]);
+                }).build(IdVersion.class)
+                .run(new ResultHandler<IdVersion, Long>() {
+                    @Override
+                    public Long[] handle(Set<IdVersion> result) throws Exception {
+                        if (result == null) return new Long[0];
+                        if (result.size() == 0) return new Long[0];
+                        return VersionUtils.extractUniqIds(result);
+                    }
+                });
     }
 
     @Override
     public Long[] getGroupIdsByVsIds(Long[] vsIds, SelectionMode mode) throws Exception {
-        final Set<IdVersion> range = groupCriteriaQuery.queryByVsIds(vsIds);
+        final Set<IdVersion> groupFilter = groupCriteriaQuery.queryByVsIds(vsIds);
         final SelectionMode m = mode;
-        IdVersion[] keys = new QueryExecuter.Builder<IdVersion>()
+        return new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
@@ -238,29 +233,27 @@ public class EntityFactoryImpl implements EntityFactory {
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        return range;
+                        return groupFilter;
                     }
                 })
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return true;
+                        return groupFilter.size() != 0;
                     }
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        Set<Long> groupIds = new HashSet<>();
-                        for (IdVersion r : range) {
-                            groupIds.add(r.getId());
-                        }
-                        return virtualServerCriteriaQuery.queryByIdsAndMode(groupIds.toArray(new Long[groupIds.size()]), m);
+                        return virtualServerCriteriaQuery.queryByIdsAndMode(VersionUtils.extractUniqIds(groupFilter), m);
                     }
-                }).build(IdVersion.class).run();
-
-        Set<Long> result = new HashSet<>();
-        for (IdVersion key : keys) {
-            result.add(key.getId());
-        }
-        return result.toArray(new Long[result.size()]);
+                }).build(IdVersion.class)
+                .run(new ResultHandler<IdVersion, Long>() {
+                    @Override
+                    public Long[] handle(Set<IdVersion> result) throws Exception {
+                        if (result == null) return new Long[0];
+                        if (result.size() == 0) return new Long[0];
+                        return VersionUtils.extractUniqIds(result);
+                    }
+                });
     }
 }

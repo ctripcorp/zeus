@@ -58,9 +58,48 @@ public class VirtualServerResource {
                          @TrimmedQueryParam("pname") final String pname,
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
-        VirtualServerList vslist = new VirtualServerList();
         final SelectionMode selectionMode = SelectionMode.getMode(mode);
+
+        final IdVersion[] vsFilter = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return slbId != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return virtualServerCriteriaQuery.queryBySlbId(slbId);
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return domain != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return virtualServerCriteriaQuery.queryByDomain(domain);
+                    }
+                }).build(IdVersion.class).run();
+
         final Long[] vsIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsFilter != null;
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<>();
+                        for (IdVersion e : vsFilter) {
+                            result.add(e.getId());
+                        }
+                        return result;
+                    }
+                })
                 .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
@@ -102,6 +141,21 @@ public class VirtualServerResource {
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
+                        return vsFilter != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Set<IdVersion> result = new HashSet<>();
+                        for (IdVersion e : vsFilter) {
+                            result.add(e);
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
                         return true;
                     }
 
@@ -109,29 +163,9 @@ public class VirtualServerResource {
                     public Set<IdVersion> filter() throws Exception {
                         return virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, selectionMode);
                     }
-                })
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return slbId != null;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryBySlbId(slbId);
-                    }
-                })
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return domain != null;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryByDomain(domain);
-                    }
                 }).build(IdVersion.class);
+
+        VirtualServerList vslist = new VirtualServerList();
         for (VirtualServer virtualServer : virtualServerRepository.listAll(executer.run())) {
             vslist.addVirtualServer(virtualServer);
         }
