@@ -238,7 +238,11 @@ public class GroupResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addGroup")
     public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
-        Group g = groupRepository.add(parseGroup(hh.getMediaType(), group));
+        Group g = parseGroup(hh.getMediaType(), group);
+        Long groupId = groupCriteriaQuery.queryByName(g.getName());
+        if (groupId > 0L) throw new ValidationException("Group name exists.");
+        
+        g = groupRepository.add(parseGroup(hh.getMediaType(), group));
         return responseHandler.handle(g, hh.getMediaType());
     }
 
