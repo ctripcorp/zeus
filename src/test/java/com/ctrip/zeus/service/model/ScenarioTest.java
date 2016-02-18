@@ -2,7 +2,6 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.AbstractServerTest;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.util.ModelAssert;
 import org.junit.After;
 import org.junit.Assert;
@@ -51,6 +50,7 @@ public class ScenarioTest extends AbstractServerTest {
             for (Long i = 1L; i <= 2L; i++) {
                 virtualServerRepository.delete(i);
             }
+            slbRepository.updateStatus(new IdVersion[]{new IdVersion(1L, 0)});
             slbRepository.delete(1L);
         }
     }

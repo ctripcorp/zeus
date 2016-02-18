@@ -53,7 +53,7 @@ public class QueryTest extends AbstractServerTest {
         if (Counter.get() == 0) {
             IdVersion[] groups = new IdVersion[7];
             for (int i = 0; i < 7; i++) {
-                groups[i] = new IdVersion(new Long(i), 0);
+                groups[i] = new IdVersion(new Long(i + 1), 0);
             }
             groupRepository.updateStatus(groups);
             for (Long i = 1L; i <= 7L; i++) {
@@ -64,6 +64,7 @@ public class QueryTest extends AbstractServerTest {
             for (Long i = 1L; i <= 2L; i++) {
                 virtualServerRepository.delete(i);
             }
+            slbRepository.updateStatus(new IdVersion[]{new IdVersion(1L, 0)});
             slbRepository.delete(1L);
         }
     }

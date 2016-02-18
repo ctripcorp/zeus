@@ -1,6 +1,8 @@
 package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.AbstractServerTest;
+import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.util.ModelAssert;
 import org.junit.*;
@@ -19,6 +21,13 @@ public class ServiceTest extends AbstractServerTest {
     private SlbRepository slbRepository;
     @Resource
     private VirtualServerRepository virtualServerRepository;
+
+    @Resource
+    private RSlbStatusDao rSlbStatusDao;
+    @Resource
+    private RVsStatusDao rVsStatusDao;
+    @Resource
+    private RGroupStatusDao rGroupStatusDao;
 
     private Map<String, Slb> slbTracker = new HashMap<>();
     private Map<String, Group> groupTracker = new HashMap<>();
@@ -151,6 +160,33 @@ public class ServiceTest extends AbstractServerTest {
             i++;
         }
         Assert.assertEquals(0, virtualServerRepository.listAll(vsIds).size());
+    }
+
+    @Test
+    public void testActivateAndDeactivate() throws Exception {
+        Slb slb = slbTracker.get("default");
+        slbRepository.updateStatus(new IdVersion[]{new IdVersion(slb.getId(), slb.getVersion())});
+        Assert.assertEquals(slb.getVersion().intValue(), rSlbStatusDao.findBySlb(slb.getId(), RSlbStatusEntity.READSET_FULL).getOnlineVersion());
+
+        VirtualServer vs = vsTracker.get("defaultSlbVs1");
+        virtualServerRepository.updateStatus(new IdVersion[]{new IdVersion(vs.getId(), vs.getVersion())});
+        Assert.assertEquals(vs.getVersion().intValue(), rVsStatusDao.findByVs(vs.getId(), RVsStatusEntity.READSET_FULL).getOnlineVersion());
+
+        Group group = groupTracker.get("testAdd");
+        groupRepository.updateStatus(new IdVersion[]{new IdVersion(group.getId(), group.getVersion())});
+        Assert.assertEquals(group.getVersion().intValue(), rGroupStatusDao.findByGroup(group.getId(), RGroupStatusEntity.READSET_FULL).getOnlineVersion());
+
+        group.addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("192.168.55.3"));
+        groupRepository.update(group);
+
+        groupRepository.updateStatus(new IdVersion[]{new IdVersion(group.getId(), 0)});
+        Assert.assertEquals(0, rGroupStatusDao.findByGroup(group.getId(), RGroupStatusEntity.READSET_FULL).getOnlineVersion());
+
+        virtualServerRepository.updateStatus(new IdVersion[]{new IdVersion(vs.getId(), 0)});
+        Assert.assertEquals(0, rVsStatusDao.findByVs(vs.getId(), RVsStatusEntity.READSET_FULL).getOnlineVersion());
+
+        slbRepository.updateStatus(new IdVersion[]{new IdVersion(slb.getId(), 0)});
+        Assert.assertEquals(0, rSlbStatusDao.findBySlb(slb.getId(), RSlbStatusEntity.READSET_FULL).getOnlineVersion());
     }
 
     private Group generateGroup(String groupName, Long vsId) {
