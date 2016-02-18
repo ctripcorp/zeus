@@ -33,8 +33,6 @@
     </entity>
     <entity name="r-group-vs" table="r_group_vs" alias="rgv2" do-class="RelGroupVsDo">
         <var name="ids" value-type="Long[]"/>
-        <var name="hashes" value-type="Integer[]"/>
-        <var name="id-version-array" value-type="String[]"/>
         <query-defs>
             <query name="find-all-by-vs" type="SELECT" multiple="true">
                 <param name="vs-id"/>
@@ -56,15 +54,13 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-group-and-version" type="SELECT" multiple="true">
-                <param name="hashes"/>
-                <param name="id-version-array"/>
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='hash'/> in <IN>${hashes}</IN>
-                    AND CONCAT(<FIELD name='group-id'/>, ',', <FIELD name='group-version'/>) in <IN>${id-version-array}</IN>
+                    WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>
@@ -126,6 +122,7 @@
         </query-defs>
     </entity>
     <entity name="r-group-gs" table="r_group_gs" alias="rgg" do-class="RelGroupGsDo">
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="find-all-by-ip" type="SELECT" multiple="true">
                 <param name="ip"/>
@@ -134,6 +131,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='ip'/> = ${ip}
+                ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
                 ]]>
                 </statement>
             </query>

@@ -18,9 +18,9 @@ public class QueryExecuter<T extends Comparable> {
         this(clazz, new LinkedList<FilterSet>());
     }
 
-    private QueryExecuter(Class<T> clazz, Queue<FilterSet> filterIdVersionArray) {
+    private QueryExecuter(Class<T> clazz, Queue<FilterSet> filterQueue) {
         this.clazz = clazz;
-        this.filterQueue = filterIdVersionArray;
+        this.filterQueue = filterQueue;
     }
 
     public T[] run() throws Exception {
@@ -48,10 +48,7 @@ public class QueryExecuter<T extends Comparable> {
             FilterSet filter = filterQueue.poll();
             if (filter.shouldFilter()) result.retainAll(filter.filter());
         }
-
-        if (resultHandler != null)
-            resultHandler.handle(result);
-        return result == null ? null : result.toArray((W[]) Array.newInstance(clazz, result.size()));
+        return resultHandler.handle(result);
     }
 
     public static class Builder<T extends Comparable> {

@@ -122,18 +122,6 @@ public class QueryTest extends AbstractServerTest {
         IdVersion[] vsKeyArray = virtualServerCriteriaQuery.queryByIdAndMode(2L, SelectionMode.ONLINE_EXCLUSIVE);
         Assert.assertEquals(new IdVersion(2L, 1), vsKeyArray[0]);
         Assert.assertNull(vsKeyArray[1]);
-
-        vsKeys = virtualServerCriteriaQuery.queryByGroupIds(new IdVersion[]{new IdVersion(1L, 1), new IdVersion(2L, 1), new IdVersion(3L, 1)});
-        Assert.assertEquals(2, vsKeys.size());
-        values = new Long[2];
-        i = 0;
-        for (IdVersion e : vsKeys) {
-            values[i] = e.getId();
-            Assert.assertEquals(1, e.getVersion().intValue());
-            i++;
-        }
-        Arrays.sort(values);
-        Assert.assertArrayEquals(new Long[]{1L, 2L}, values);
     }
 
     @Test

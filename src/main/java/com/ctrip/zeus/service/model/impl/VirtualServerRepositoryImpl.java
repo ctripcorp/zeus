@@ -155,7 +155,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     public void updateStatus(IdVersion[] vses, SelectionMode state) throws Exception {
         switch (state) {
             case ONLINE_EXCLUSIVE:
-                virtualServerEntityManager.updateStatus(vses);
+                virtualServerEntityManager.updateStatus(listAll(vses));
                 return;
             default:
                 throw new NotImplementedException();

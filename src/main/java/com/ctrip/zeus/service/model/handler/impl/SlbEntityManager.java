@@ -4,7 +4,6 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.support.C;
@@ -39,16 +38,21 @@ public class SlbEntityManager implements SlbSync {
         slb.setVersion(1);
         SlbDo d = C.toSlbDo(0L, slb);
         slbDao.insert(d);
-        slb.setId(d.getId());
+
+        Long slbId = d.getId();
+        slb.setId(slbId);
         for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            virtualServer.setSlbId(slb.getId());
+            virtualServer.setSlbId(slbId);
             virtualServerEntityManager.add(virtualServer);
         }
-        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion())
+
+        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slbId).setVersion(slb.getVersion())
                 .setContent(ContentWriters.writeSlbContent(slb))
                 .setHash(VersionUtils.getHash(slb.getId(), slb.getVersion())));
+
         rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setSlbId(slb.getId()).setOfflineVersion(slb.getVersion()));
-        slbServerRelMaintainer.addRel(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
+
+        slbServerRelMaintainer.addRel(slb);
     }
 
     @Override
@@ -56,22 +60,30 @@ public class SlbEntityManager implements SlbSync {
         RelSlbStatusDo check = rSlbStatusDao.findBySlb(slb.getId(), RSlbStatusEntity.READSET_FULL);
         if (check.getOfflineVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        slb.setVersion(slb.getVersion() + 1);
 
+        slb.setVersion(slb.getVersion() + 1);
         SlbDo d = C.toSlbDo(slb.getId(), slb);
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
-        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion()).setContent(ContentWriters.writeSlbContent(slb)));
+
+        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion())
+                .setContent(ContentWriters.writeSlbContent(slb))
+                .setHash(VersionUtils.getHash(slb.getId(), slb.getVersion())));
+
         rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setId(slb.getId()).setOfflineVersion(slb.getVersion()));
-        slbServerRelMaintainer.updateRel(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
+
+        slbServerRelMaintainer.updateRel(slb);
     }
 
     @Override
-    public void updateStatus(IdVersion[] slbs) throws Exception {
-        RelSlbStatusDo[] dos = new RelSlbStatusDo[slbs.length];
+    public void updateStatus(List<Slb> slbs) throws Exception {
+        RelSlbStatusDo[] dos = new RelSlbStatusDo[slbs.size()];
         for (int i = 0; i < dos.length; i++) {
-            dos[i] = new RelSlbStatusDo().setSlbId(slbs[i].getId()).setOnlineVersion(slbs[i].getVersion());
+            dos[i] = new RelSlbStatusDo().setSlbId(slbs.get(i).getId()).setOnlineVersion(slbs.get(i).getVersion());
         }
         rSlbStatusDao.updateOnlineVersionBySlb(dos, RSlbStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
+
+        Slb[] array = slbs.toArray(new Slb[slbs.size()]);
+        slbServerRelMaintainer.updateStatus(array);
     }
 
     @Override
@@ -101,7 +113,7 @@ public class SlbEntityManager implements SlbSync {
         rSlbStatusDao.insertOrUpdate(dos);
 
         for (Slb slb : toUpdate) {
-            slbServerRelMaintainer.port(slb, RelSlbSlbServerDo.class, slb.getSlbServers());
+            slbServerRelMaintainer.port(slb);
         }
 
         slbIds = new Long[toUpdate.size()];
@@ -117,13 +129,8 @@ public class SlbEntityManager implements SlbSync {
                 failed.add(d.getSlbId());
             }
         }
-        IdVersion[] keys = new IdVersion[toUpdate.size()];
-        for (int i = 0; i < keys.length; i++) {
-            keys[i] = new IdVersion(toUpdate.get(i).getId(), toUpdate.get(i).getVersion());
-        }
 
-        updateStatus(keys);
-
+        updateStatus(toUpdate);
         return failed;
     }
 }

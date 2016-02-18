@@ -3,12 +3,15 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
 import org.springframework.stereotype.Component;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zhoumy on 2015/12/22.
@@ -20,33 +23,50 @@ public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServer
     @Resource
     private RSlbStatusDao rSlbStatusDao;
 
+    public SlbServerRelMaintainer() {
+        super(RelSlbSlbServerDo.class, Slb.class);
+    }
+
     @Override
     protected List<RelSlbSlbServerDo> getAll(Long id) throws Exception {
         return rSlbSlbServerDao.findAllBySlb(id, RSlbSlbServerEntity.READSET_FULL);
     }
 
     @Override
-    protected Long getTargetId(Slb object) throws Exception {
-        return object.getId();
+    protected IdVersion getIdxKey(RelSlbSlbServerDo rel) throws Exception {
+        return new IdVersion(rel.getSlbId(), rel.getSlbVersion());
     }
 
     @Override
-    protected int getTargetVersion(RelSlbSlbServerDo target) throws Exception {
-        return target.getSlbVersion();
-    }
-
-    @Override
-    protected int getOnlineVersion(Long id) throws Exception {
-        RelSlbStatusDo check = rSlbStatusDao.findBySlb(id, RSlbStatusEntity.READSET_FULL);
-        return check.getOnlineVersion();
-    }
-
-    @Override
-    protected RelSlbSlbServerDo getDo(Slb object, SlbServer value) throws Exception {
-        return new RelSlbSlbServerDo().setSlbId(object.getId())
-                .setIp(value.getIp())
+    protected void setDo(Slb object, SlbServer value, RelSlbSlbServerDo target) {
+        target.setSlbId(object.getId()).setIp(value.getIp())
                 .setSlbVersion(object.getVersion())
                 .setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
+    }
+
+    @Override
+    protected List<RelSlbSlbServerDo> getRelsByObjectId(Slb object) throws Exception {
+        return rSlbSlbServerDao.findAllBySlb(object.getId(), RSlbSlbServerEntity.READSET_FULL);
+    }
+
+    @Override
+    protected List<RelSlbSlbServerDo> getRelsByObjectId(Long[] objectIds) throws Exception {
+        return rSlbSlbServerDao.findAllBySlbs(objectIds, RSlbSlbServerEntity.READSET_FULL);
+    }
+
+    @Override
+    protected Integer[] getStatusByObjectId(Slb object) throws Exception {
+        RelSlbStatusDo d = rSlbStatusDao.findBySlb(object.getId(), RSlbStatusEntity.READSET_FULL);
+        return new Integer[]{d.getOfflineVersion(), d.getOfflineVersion()};
+    }
+
+    @Override
+    protected Map<Long, Integer[]> getStatusByObjectId(Long[] objectIds) throws Exception {
+        Map<Long, Integer[]> result = new HashMap<>();
+        for (RelSlbStatusDo d : rSlbStatusDao.findBySlbs(objectIds, RSlbStatusEntity.READSET_FULL)) {
+            result.put(d.getSlbId(), new Integer[]{d.getOfflineVersion(), d.getOfflineVersion()});
+        }
+        return result;
     }
 
     @Override
@@ -65,11 +85,6 @@ public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServer
     }
 
     @Override
-    protected void reassign(Slb object, RelSlbSlbServerDo output, SlbServer input) throws Exception {
-        output.setIp(input.getIp()).setSlbVersion(object.getVersion()).setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
-    }
-
-    @Override
     public void deleteRel(Long objectId) throws Exception {
         rSlbSlbServerDao.deleteAllBySlb(new RelSlbSlbServerDo().setSlbId(objectId));
     }
@@ -77,5 +92,10 @@ public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServer
     @Override
     public void batchDeleteRel(Long[] objectIds) throws Exception {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public List<SlbServer> getRelations(Slb object) throws Exception {
+        return object.getSlbServers();
     }
 }

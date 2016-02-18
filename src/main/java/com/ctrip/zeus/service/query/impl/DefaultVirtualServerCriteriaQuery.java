@@ -89,21 +89,6 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
-    public Set<IdVersion> queryByGroupIds(IdVersion[] groupKeys) throws Exception {
-        Set<IdVersion> result = new HashSet<>();
-        Integer[] hashes = new Integer[groupKeys.length];
-        String[] values = new String[groupKeys.length];
-        for (int i = 0; i < groupKeys.length; i++) {
-            hashes[i] = groupKeys[i].hashCode();
-            values[i] = groupKeys[i].toString();
-        }
-        for (RelGroupVsDo d : rGroupVsDao.findAllByGroupAndVersion(hashes, values, RGroupVsEntity.READSET_FULL)) {
-            result.add(new IdVersion(d.getVsId(), d.getGroupVersion()));
-        }
-        return result;
-    }
-
-    @Override
     public Set<IdVersion> queryByDomain(String domain) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         for (RelVsDomainDo d : rVsDomainDao.findAllByDomain(domain.toLowerCase(), RVsDomainEntity.READSET_FULL)) {

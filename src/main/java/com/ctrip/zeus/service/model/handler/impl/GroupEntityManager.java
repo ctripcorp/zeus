@@ -3,7 +3,6 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.MultiRelMaintainer;
@@ -41,13 +40,16 @@ public class GroupEntityManager implements GroupSync {
         // if app id is null, it must be virtual group
         if (d.getAppId() == null) d.setAppId("VirtualGroup");
         groupDao.insert(d);
+
         group.setId(d.getId());
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion())
                 .setContent(ContentWriters.writeGroupContent(group))
                 .setHash(VersionUtils.getHash(group.getId(), group.getVersion())));
+
         rGroupStatusDao.insertOrUpdate(new RelGroupStatusDo().setGroupId(group.getId()).setOfflineVersion(group.getVersion()));
-        groupVsRelMaintainer.addRel(group, RelGroupVsDo.class, group.getGroupVirtualServers());
-        groupGsRelMaintainer.addRel(group, RelGroupGsDo.class, group.getGroupServers());
+
+        groupVsRelMaintainer.addRel(group);
+        groupGsRelMaintainer.addRel(group);
     }
 
     @Override
@@ -61,25 +63,32 @@ public class GroupEntityManager implements GroupSync {
         RelGroupStatusDo check = rGroupStatusDao.findByGroup(group.getId(), RGroupStatusEntity.READSET_FULL);
         if (check.getOfflineVersion() > group.getVersion())
             throw new ValidationException("Newer Group version is detected.");
-        group.setVersion(group.getVersion() + 1);
 
+        group.setVersion(group.getVersion() + 1);
         GroupDo d = C.toGroupDo(group.getId(), group).setAppId("VirtualGroup");
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
+
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion())
                 .setContent(ContentWriters.writeGroupContent(group))
                 .setHash(VersionUtils.getHash(group.getId(), group.getVersion())));
+
         rGroupStatusDao.insertOrUpdate(new RelGroupStatusDo().setGroupId(group.getId()).setOfflineVersion(group.getVersion()));
-        groupVsRelMaintainer.updateRel(group, RelGroupVsDo.class, group.getGroupVirtualServers());
-        groupGsRelMaintainer.updateRel(group, RelGroupGsDo.class, group.getGroupServers());
+
+        groupVsRelMaintainer.updateRel(group);
+        groupGsRelMaintainer.updateRel(group);
     }
 
     @Override
-    public void updateStatus(IdVersion[] groups) throws Exception {
-        RelGroupStatusDo[] dos = new RelGroupStatusDo[groups.length];
+    public void updateStatus(List<Group> groups) throws Exception {
+        RelGroupStatusDo[] dos = new RelGroupStatusDo[groups.size()];
         for (int i = 0; i < dos.length; i++) {
-            dos[i] = new RelGroupStatusDo().setGroupId(groups[i].getId()).setOnlineVersion(groups[i].getVersion());
+            dos[i] = new RelGroupStatusDo().setGroupId(groups.get(i).getId()).setOnlineVersion(groups.get(i).getVersion());
         }
         rGroupStatusDao.updateOnlineVersionByGroup(dos, RGroupStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
+
+        Group[] array = groups.toArray(new Group[groups.size()]);
+        groupVsRelMaintainer.updateStatus(array);
+        groupGsRelMaintainer.updateStatus(array);
     }
 
     @Override
@@ -111,8 +120,8 @@ public class GroupEntityManager implements GroupSync {
 
         rGroupStatusDao.insertOrUpdate(dos);
         for (Group group : toUpdate) {
-            groupVsRelMaintainer.port(group, RelGroupVsDo.class, group.getGroupVirtualServers());
-            groupGsRelMaintainer.port(group, RelGroupGsDo.class, group.getGroupServers());
+            groupVsRelMaintainer.port(group);
+            groupGsRelMaintainer.port(group);
         }
 
         groupIds = new Long[toUpdate.size()];
@@ -128,13 +137,8 @@ public class GroupEntityManager implements GroupSync {
                 failed.add(confGroupActiveDo.getGroupId());
             }
         }
-        IdVersion[] keys = new IdVersion[toUpdate.size()];
-        for (int i = 0; i < keys.length; i++) {
-            keys[i] = new IdVersion(toUpdate.get(i).getId(), toUpdate.get(i).getVersion());
-        }
 
-        updateStatus(keys);
-        
+        updateStatus(toUpdate);
         return failed;
     }
 

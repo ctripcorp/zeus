@@ -5,13 +5,13 @@ import java.util.List;
 /**
  * Created by zhoumy on 2015/12/22.
  */
-public interface MultiRelMaintainer<T, W, X> {
+public interface MultiRelMaintainer<W, X> {
 
-    void addRel(X object, Class<T> clazz) throws Exception;
+    void addRel(X object) throws Exception;
 
-    void updateRel(X object, Class<T> clazz) throws Exception;
+    void updateRel(X object) throws Exception;
 
-    void updateStatus(X[] object, Class<T> clazz) throws Exception;
+    void updateStatus(X[] object) throws Exception;
 
     void deleteRel(Long objectId) throws Exception;
 
@@ -20,5 +20,5 @@ public interface MultiRelMaintainer<T, W, X> {
     List<W> getRelations(X object) throws Exception;
 
     @Deprecated
-    void port(X object, Class<T> clazz, List<W> input) throws Exception;
+    void port(X object) throws Exception;
 }

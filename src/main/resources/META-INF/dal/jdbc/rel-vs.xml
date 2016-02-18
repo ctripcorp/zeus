@@ -76,6 +76,7 @@
         </query-defs>
     </entity>
     <entity name="r-vs-domain" table="r_vs_domain" alias="rvd" do-class="RelVsDomainDo">
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="find-all-by-vs" type="SELECT" multiple="true">
                 <param name="vs-id"/>
@@ -84,6 +85,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='vs-id'/> = ${vs-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-vses" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>

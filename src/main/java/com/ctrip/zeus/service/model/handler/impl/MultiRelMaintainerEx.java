@@ -1,6 +1,5 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
-import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.List;
 
@@ -9,43 +8,41 @@ import java.util.List;
  */
 public abstract class MultiRelMaintainerEx<T, W, X> extends AbstractMultiRelMaintainer<T, W, X> {
 
+    protected MultiRelMaintainerEx(Class<T> clazzT, Class<X> clazzX) {
+        super(clazzT, clazzX);
+    }
+
     @Override
-    public void port(X object, Class<T> clazz, List<W> input) throws Exception {
-        Long targetId = getTargetId(object);
-        int retainedVersion = getOnlineVersion(targetId);
-        List<T> cycle = getAll(targetId);
-        Iterator<T> iter = cycle.iterator();
+    public void port(X object) throws Exception {
+        Long objectId = getObjectId(object);
+        Integer[] statusVersion = getStatusByObjectId(object);
+        List<T> recycled = getAll(objectId);
+        Iterator<T> iter = recycled.iterator();
         while (iter.hasNext()) {
-            if (getTargetVersion(iter.next()) == retainedVersion) iter.remove();
+            if (getIdxKey(iter.next()).getVersion().intValue() == statusVersion[OFFSET_ONLINE].intValue()) iter.remove();
         }
 
+        List<W> rels = getRelations(object);
+
         int i;
-        for (i = 0; i < cycle.size(); i++) {
-            reassign(object, cycle.get(i), input.get(i));
+        for (i = 0; i < recycled.size(); i++) {
+            setDo(object, rels.get(i), recycled.get(i));
         }
-        // update existing records, if size(new) > size(old), insert the rest new records.
-        if (input.size() >= cycle.size()) {
-            updateByPrimaryKey(cycle.toArray((T[]) Array.newInstance(clazz, cycle.size())));
-            if (input.size() > cycle.size()) {
-                T[] dos = (T[]) Array.newInstance(clazz, input.size() - i);
-                for (int j = i; j < input.size(); j++) {
-                    dos[j - i] = getDo(object, input.get(j));
-                }
-                insert(dos);
-            }
-        } else {
-            // size(new) < size(old), delete the rest old records.
-            deleteByPrimaryKey(cycle.subList(i - 1, cycle.size()).toArray((T[]) Array.newInstance(clazz, cycle.size() - i + 1)));
-        }
+
+        groupByAction(object, rels, recycled, clazzT);
+//        if (rels.size() >= recycled.size()) {
+//            updateByPrimaryKey(recycled.toArray((T[]) Array.newInstance(clazz, recycled.size())));
+//            if (rels.size() > recycled.size()) {
+//                T[] dos = (T[]) Array.newInstance(clazz, rels.size() - i);
+//                for (int j = i; j < rels.size(); j++) {
+//                    dos[j - i] = getDo(object, rels.get(j));
+//                }
+//                insert(dos);
+//            }
+//        } else {
+//            deleteByPrimaryKey(recycled.subList(i - 1, recycled.size()).toArray((T[]) Array.newInstance(clazz, recycled.size() - i + 1)));
+//        }
     }
 
     protected abstract List<T> getAll(Long id) throws Exception;
-
-    protected abstract Long getTargetId(X object) throws Exception;
-
-    protected abstract int getTargetVersion(T target) throws Exception;
-
-    protected abstract int getOnlineVersion(Long id) throws Exception;
-
-    protected abstract void reassign(X object, T output, W input) throws Exception;
 }
