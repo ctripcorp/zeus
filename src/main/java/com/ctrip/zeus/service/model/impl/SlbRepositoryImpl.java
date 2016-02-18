@@ -152,7 +152,14 @@ public class SlbRepositoryImpl implements SlbRepository {
     public void updateStatus(IdVersion[] slbs, SelectionMode state) throws Exception {
         switch (state) {
             case ONLINE_EXCLUSIVE:
-                slbEntityManager.updateStatus(list(slbs));
+                List<Slb> result = new ArrayList<>();
+                for (int i = 0; i < slbs.length; i++) {
+                    if (slbs[i].getVersion() == 0) {
+                        result.add(new Slb().setId(slbs[i].getId()).setVersion(slbs[i].getVersion()));
+                    }
+                }
+                result.addAll(list(slbs));
+                slbEntityManager.updateStatus(result);
                 return;
             default:
                 throw new NotImplementedException();

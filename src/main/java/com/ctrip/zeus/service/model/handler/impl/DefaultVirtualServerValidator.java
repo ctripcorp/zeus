@@ -56,10 +56,10 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     }
 
     @Override
-    public void removable(VirtualServer virtualServer) throws Exception {
-        if (groupCriteriaQuery.queryByVsId(virtualServer.getId()).size() > 0)
-            throw new ValidationException("Virtual server with id " + virtualServer.getId() + " cannot be deleted. Dependencies exist.");
-        if (isActivated(virtualServer.getId())) {
+    public void removable(Long vsId) throws Exception {
+        if (groupCriteriaQuery.queryByVsId(vsId).size() > 0)
+            throw new ValidationException("Virtual server with id " + vsId + " cannot be deleted. Dependencies exist.");
+        if (isActivated(vsId)) {
             throw new ValidationException("Vs need to be deactivated before delete!");
         }
     }

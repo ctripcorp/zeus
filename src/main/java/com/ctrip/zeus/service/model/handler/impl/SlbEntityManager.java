@@ -80,10 +80,11 @@ public class SlbEntityManager implements SlbSync {
         for (int i = 0; i < dos.length; i++) {
             dos[i] = new RelSlbStatusDo().setSlbId(slbs.get(i).getId()).setOnlineVersion(slbs.get(i).getVersion());
         }
-        rSlbStatusDao.updateOnlineVersionBySlb(dos, RSlbStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
 
         Slb[] array = slbs.toArray(new Slb[slbs.size()]);
         slbServerRelMaintainer.updateStatus(array);
+
+        rSlbStatusDao.updateOnlineVersionBySlb(dos, RSlbStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
     }
 
     @Override

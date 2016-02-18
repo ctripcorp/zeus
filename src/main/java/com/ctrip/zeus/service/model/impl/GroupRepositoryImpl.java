@@ -180,7 +180,14 @@ public class GroupRepositoryImpl implements GroupRepository {
     public void updateStatus(IdVersion[] groups, SelectionMode state) throws Exception {
         switch (state) {
             case ONLINE_EXCLUSIVE:
-                groupEntityManager.updateStatus(list(groups));
+                List<Group> result = new ArrayList<>();
+                for (int i = 0; i < groups.length; i++) {
+                    if (groups[i].getVersion() == 0) {
+                        result.add(new Group().setId(groups[i].getId()).setVersion(groups[i].getVersion()));
+                    }
+                }
+                result.addAll(list(groups));
+                groupEntityManager.updateStatus(result);
                 return;
             default:
                 throw new NotImplementedException();

@@ -28,6 +28,8 @@ public class DefaultSlbValidator implements SlbValidator {
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
     private SlbDao slbDao;
+    @Resource
+    private RSlbStatusDao rSlbStatusDao;
 
     @Override
     public boolean exists(Long targetId) throws Exception {
@@ -87,7 +89,11 @@ public class DefaultSlbValidator implements SlbValidator {
 
     @Override
     public void removable(Long slbId) throws Exception {
-        if (virtualServerCriteriaQuery.queryBySlbId(slbId).size() > 0)
+        if (virtualServerCriteriaQuery.queryBySlbId(slbId).size() > 0) {
             throw new ValidationException("Slb with id " + slbId + " cannot be deleted. Dependencies exist.");
+        }
+        if (rSlbStatusDao.findBySlb(slbId, RSlbStatusEntity.READSET_FULL).getOnlineVersion() != 0) {
+            throw new ValidationException("Slb must be deactivated before deletion.");
+        }
     }
 }

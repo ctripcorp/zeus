@@ -135,7 +135,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public void delete(Long virtualServerId) throws Exception {
-        virtualServerModelValidator.removable(getById(virtualServerId));
+        virtualServerModelValidator.removable(virtualServerId);
         virtualServerEntityManager.delete(virtualServerId);
     }
 
@@ -155,7 +155,14 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     public void updateStatus(IdVersion[] vses, SelectionMode state) throws Exception {
         switch (state) {
             case ONLINE_EXCLUSIVE:
-                virtualServerEntityManager.updateStatus(listAll(vses));
+                List<VirtualServer> result = new ArrayList<>();
+                for (int i = 0; i < vses.length; i++) {
+                    if (vses[i].getVersion() == 0) {
+                        result.add(new VirtualServer().setId(vses[i].getId()).setVersion(vses[i].getVersion()));
+                    }
+                }
+                result.addAll(listAll(vses));
+                virtualServerEntityManager.updateStatus(result);
                 return;
             default:
                 throw new NotImplementedException();

@@ -15,8 +15,8 @@ public class ModelStatusMapping<T> {
         data = new HashMap<>();
         online = new HashMap<>();
         offline = new HashMap<>();
-        data.put("offline_first", online);
-        data.put("online", offline);
+        data.put("offline_first", offline);
+        data.put("online", online);
     }
 
     public void addOnline(Long key, T value) {

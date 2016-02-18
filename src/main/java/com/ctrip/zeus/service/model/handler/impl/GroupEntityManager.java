@@ -84,11 +84,12 @@ public class GroupEntityManager implements GroupSync {
         for (int i = 0; i < dos.length; i++) {
             dos[i] = new RelGroupStatusDo().setGroupId(groups.get(i).getId()).setOnlineVersion(groups.get(i).getVersion());
         }
-        rGroupStatusDao.updateOnlineVersionByGroup(dos, RGroupStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
 
         Group[] array = groups.toArray(new Group[groups.size()]);
         groupVsRelMaintainer.updateStatus(array);
         groupGsRelMaintainer.updateStatus(array);
+
+        rGroupStatusDao.updateOnlineVersionByGroup(dos, RGroupStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
     }
 
     @Override

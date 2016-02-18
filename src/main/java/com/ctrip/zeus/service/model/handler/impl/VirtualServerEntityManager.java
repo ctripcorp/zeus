@@ -76,11 +76,12 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         for (int i = 0; i < dos.length; i++) {
             dos[i] = new RelVsStatusDo().setVsId(virtualServers.get(i).getId()).setOnlineVersion(virtualServers.get(i).getVersion());
         }
-        rVsStatusDao.updateOnlineVersionByVs(dos, RVsStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
 
         VirtualServer[] array =virtualServers.toArray(new VirtualServer[virtualServers.size()]);
         updateRelVsSlbStatus(array);
         vsDomainRelMaintainer.updateStatus(array);
+
+        rVsStatusDao.updateOnlineVersionByVs(dos, RVsStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
     }
 
     @Override
