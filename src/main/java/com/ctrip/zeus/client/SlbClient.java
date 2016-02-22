@@ -4,6 +4,7 @@ package com.ctrip.zeus.client;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
+import com.ctrip.zeus.support.GenericSerializer;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -42,17 +43,13 @@ public class SlbClient extends AbstractRestClient {
     public Response add(Slb slb) {
         return getTarget().path("/api/slb/new").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
-                        String.format(Slb.JSON, slb),
-                        MediaType.APPLICATION_JSON
-                ));
+                        GenericSerializer.writeJson(slb), MediaType.APPLICATION_JSON));
     }
 
     public Response update(Slb slb) {
         return getTarget().path("/api/slb/update").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
-                        String.format(Slb.JSON, slb),
-                        MediaType.APPLICATION_JSON
-                ));
+                        GenericSerializer.writeJson(slb), MediaType.APPLICATION_JSON));
     }
 
     public Response delete(Long slbId) {

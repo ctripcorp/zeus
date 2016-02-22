@@ -4,6 +4,7 @@ package com.ctrip.zeus.client;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
+import com.ctrip.zeus.support.GenericSerializer;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -42,18 +43,14 @@ public class GroupClient extends AbstractRestClient {
     public Response add(Group group) {
         return getTarget().path("/api/group/new").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
-                        String.format(Group.JSON, group),
-                        MediaType.APPLICATION_JSON
-                ));
+                        GenericSerializer.writeJson(group), MediaType.APPLICATION_JSON));
 
     }
 
     public Response update(Group group) {
         return getTarget().path("/api/group/update").request().headers(getDefaultHeaders())
                 .post(Entity.entity(
-                        String.format(Group.JSON, group),
-                        MediaType.APPLICATION_JSON
-                ));
+                        GenericSerializer.writeJson(group), MediaType.APPLICATION_JSON));
 
     }
 

@@ -18,14 +18,14 @@ import javax.ws.rs.core.Response;
 public class ErrorResponseHandler implements ResponseHandler {
     private static final MediaType defaultMediaType = MediaType.APPLICATION_JSON_TYPE;
 
-    public Message generateMessage(Throwable object, String type, boolean printStackTrace) throws Exception {
+    public Message generateMessage(Throwable object, MediaType type, boolean printStackTrace) throws Exception {
         ErrorMessage em = ExceptionUtils.getErrorMessage(object, printStackTrace);
         ErrorResponse err = new ErrorResponse();
 
         if (type.equals(MediaType.APPLICATION_XML)) {
-            err.setResponse(GenericSerializer.writeXml(em));
+            err.setResponse(GenericSerializer.writeXml(em).replace("%", "%%"));
         } else {
-            err.setResponse(GenericSerializer.writeJson(em));
+            err.setResponse(GenericSerializer.writeJson(em).replace("%", "%%"));
         }
         if (object instanceof NotFoundException) {
             err.setStatus(Response.Status.NOT_FOUND.getStatusCode());
@@ -55,7 +55,7 @@ public class ErrorResponseHandler implements ResponseHandler {
         if (mediaType == null || !MediaType.APPLICATION_XML_TYPE.equals(mediaType)) {
             mediaType = defaultMediaType;
         }
-        Message message = generateMessage((Throwable) object, mediaType.toString(), printStackTrace);
+        Message message = generateMessage((Throwable) object, mediaType, printStackTrace);
         return Response.status(message.getStatus()).entity(message.getResponse())
                 .type(mediaType).build();
     }

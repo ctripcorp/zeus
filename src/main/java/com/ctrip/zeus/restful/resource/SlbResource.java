@@ -191,16 +191,16 @@ public class SlbResource {
                 throw new Exception("Slb cannot be parsed.");
             }
         }
-        s.setName(s.getName().trim());
+        s.setName(trimIfNotNull(s.getName()));
         for (VirtualServer virtualServer : s.getVirtualServers()) {
-            virtualServer.setName(virtualServer.getName().trim());
+            virtualServer.setName(trimIfNotNull(virtualServer.getName()));
             for (Domain domain : virtualServer.getDomains()) {
-                domain.setName(domain.getName().trim());
+                domain.setName(trimIfNotNull(domain.getName()));
             }
         }
         for (SlbServer slbServer : s.getSlbServers()) {
-            slbServer.setIp(slbServer.getIp().trim());
-            slbServer.setHostName(slbServer.getHostName().trim());
+            slbServer.setIp(trimIfNotNull(slbServer.getIp()));
+            slbServer.setHostName(trimIfNotNull(slbServer.getHostName()));
         }
         return s;
     }
@@ -211,14 +211,22 @@ public class SlbResource {
                     .setName(slb.getName());
         }
         if ("NORMAL".equalsIgnoreCase(type)) {
-            return new Slb().setId(slb.getId())
+            Slb result = new Slb().setId(slb.getId())
                     .setName(slb.getName())
                     .setNginxBin(slb.getNginxBin())
                     .setNginxConf(slb.getNginxConf())
                     .setNginxWorkerProcesses(slb.getNginxWorkerProcesses())
                     .setStatus(slb.getStatus())
                     .setVersion(slb.getVersion());
+            for (SlbServer slbServer : slb.getSlbServers()) {
+                result.addSlbServer(slbServer);
+            }
+            return result;
         }
         return slb;
+    }
+
+    private String trimIfNotNull(String value) {
+        return value != null ? value.trim() : value;
     }
 }
