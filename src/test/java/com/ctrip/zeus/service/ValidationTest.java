@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.util.S;
 import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -29,6 +30,8 @@ public class ValidationTest extends AbstractSpringTest {
 
     @Resource
     SlbRepository slbRepository;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     GroupRepository groupRepository;
     @Resource
@@ -229,7 +232,8 @@ public class ValidationTest extends AbstractSpringTest {
                     .addSlbServer(new SlbServer().setHostName("localslb.com").setIp("127.0.0.1"))
                     .addVirtualServer(new VirtualServer().setPort("8099").setName("VS_01").addDomain(new Domain().setName("localslb.com")));
             slbRepository.add(slb);
-            slb4Group = slbRepository.get(slb.getName());
+            Long slbId = slbCriteriaQuery.queryByName(slb.getName());
+            slb4Group = slbRepository.getById(slbId);
         }
         return slb4Group;
     }
