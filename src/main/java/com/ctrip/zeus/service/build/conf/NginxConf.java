@@ -51,7 +51,8 @@ public class NginxConf {
         b.append("server_names_hash_bucket_size ").append(serverNamesHashBucketSize.get()).append(";\n");
         b.append("check_shm_size ").append(checkShmSize.get()).append("M;\n");
         b.append("client_max_body_size 2m;\n");
-
+        b.append("ignore_invalid_headers off;\n");
+        
         appendHttpCommand(b);
 
         b.append(statusConf());
