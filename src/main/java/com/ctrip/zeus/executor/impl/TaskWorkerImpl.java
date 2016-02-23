@@ -2,6 +2,8 @@ package com.ctrip.zeus.executor.impl;
 
 import com.ctrip.zeus.executor.TaskWorker;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.service.model.EntityFactory;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.executor.TaskExecutor;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -22,6 +24,9 @@ public class TaskWorkerImpl implements TaskWorker {
     SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     TaskExecutor taskExecutor;
+    @Resource
+    EntityFactory entityFactory;
+
     Logger logger = LoggerFactory.getLogger(this.getClass());
     private static int initFailCount = 0;
     @Override
@@ -41,7 +46,12 @@ public class TaskWorkerImpl implements TaskWorker {
     }
 
     private void init()throws Exception{
-        Long slbId = slbCriteriaQuery.queryBySlbServerIp(S.getIp());
+        Long[] slbIds = entityFactory.getSlbIdsByIp(S.getIp(), SelectionMode.ONLINE_EXCLUSIVE);
+        if (slbIds == null || slbIds.length == 0){
+            logger.error("Can Not Found Slb by Local Ip. TaskExecutor is not working!Local Ip : "+S.getIp());
+            return;
+        }
+        Long slbId = slbIds[0];
         if (slbId != null && slbId > 0){
             workerSlbId = slbId;
             initFailCount = 0;

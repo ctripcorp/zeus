@@ -230,7 +230,9 @@ public class TaskExecutorImpl implements TaskExecutor {
                             groupList = new ArrayList<>();
                             vsGroups.put(gvs.getVirtualServer().getId(), groupList);
                         }
-                        groupList.add(group);
+                        if (!deactivateGroupOps.containsKey(gid)){
+                            groupList.add(group);
+                        }
                         vsGroupPriority.put("VS" + gvs.getVirtualServer().getId() + "_" + gid, gvs.getPriority());
                         hasRelatedVs = true;
                     }

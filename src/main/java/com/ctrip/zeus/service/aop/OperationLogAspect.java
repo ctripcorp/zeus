@@ -9,6 +9,8 @@ import com.ctrip.zeus.service.aop.OperationLog.OperationLogType;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.operationLog.OperationLogService;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.aspectj.lang.JoinPoint;
@@ -44,6 +46,10 @@ public class OperationLogAspect implements Ordered {
     private GroupRepository groupRepository;
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private OperationLogService operationLogService;
 
@@ -202,11 +208,11 @@ public class OperationLogAspect implements Ordered {
                 }
                 if (OperationLogConfig.getInstance().getType(key)==OperationLogType.GROUP&&name!=null)
                 {
-                    Group group =groupRepository.get(name);
-                    return group==null?name:String.valueOf(group.getId());
+                    Long groupId =groupCriteriaQuery.queryByName(name);
+                    return groupId==null?name:String.valueOf(groupId);
                 }else if (OperationLogConfig.getInstance().getType(key)==OperationLogType.SLB&&name!=null){
-                    Slb slb =slbRepository.get(name);
-                    return slb==null?name:String.valueOf(slb.getId());
+                    Long slbId =slbCriteriaQuery.queryByName(name);
+                    return slbId == null ? name : String.valueOf(slbId);
                 }else if (name!=null){
                     return name;
                 }

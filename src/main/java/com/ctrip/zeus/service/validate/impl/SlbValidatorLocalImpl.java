@@ -30,7 +30,7 @@ public class SlbValidatorLocalImpl implements SlbValidatorLocal {
     public SlbValidateResponse validate(Long slbId) throws Exception {
         SlbValidateResponse response = new SlbValidateResponse();
         response.setSlbId(slbId);
-        ModelStatusMapping<Slb> mapping = entityFactory.getSlbById(new Long[]{slbId});
+        ModelStatusMapping<Slb> mapping = entityFactory.getSlbsByIds(new Long[]{slbId});
         if (mapping == null || mapping.getOfflineMapping() == null || mapping.getOfflineMapping().get(slbId) == null)
         {
             response.setSucceed(false).setMsg("Not found Slb by slbId!");
