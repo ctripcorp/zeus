@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.StringFormat;
+import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
@@ -21,6 +22,9 @@ import java.util.Set;
 public class UpstreamsConf {
     private static DynamicStringProperty upstreamKeepAlive = DynamicPropertyFactory.getInstance().getStringProperty("upstream.keep-alive", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicIntProperty upstreamKeepAliveDefault = DynamicPropertyFactory.getInstance().getIntProperty("upstream.keep-alive.default", 100);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicIntProperty upstreamKeepAliveTimeout = DynamicPropertyFactory.getInstance().getIntProperty("upstream.keep-alive.timeout", 110);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicStringProperty upstreamKeepAliveTimeoutList = DynamicPropertyFactory.getInstance().getStringProperty("upstream.keep-alive.timeout.whitelist", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicBooleanProperty upstreamKeepAliveTimeoutEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("upstream.keep-alive.timeout.enableAll", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
 
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allUpGroupServers)throws Exception {
         StringBuilder b = new StringBuilder(10240);
@@ -89,10 +93,28 @@ public class UpstreamsConf {
                     .append(";\n");
         }
         addKeepAliveSetting(b,group.getId());
+        addKeepAliveTimeoutSetting(b, group.getId());
         //HealthCheck
         b.append(HealthCheckConf.generate(slb, vs, group));
 
         return b.toString();
+    }
+
+    private static void addKeepAliveTimeoutSetting(StringBuilder b, Long groupId) {
+        if (upstreamKeepAliveTimeoutEnableAll.get()){
+            b.append("keepalive_timeout ").append(upstreamKeepAliveTimeout.get()).append("s;\n");
+            return;
+        }
+        if (upstreamKeepAliveTimeoutList.get() == null){
+            return;
+        }
+        String[] whiteList = upstreamKeepAliveTimeoutList.get().split(";");
+        for (String w : whiteList){
+            if (w.trim().equals(String.valueOf(groupId))){
+                b.append("keepalive_timeout ").append(upstreamKeepAliveTimeout.get()).append("s;\n");
+                return;
+            }
+        }
     }
 
     private static void addKeepAliveSetting(StringBuilder b, Long gid) {
