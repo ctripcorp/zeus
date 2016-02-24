@@ -67,7 +67,7 @@ public class ReportAspect implements Ordered {
             return point.proceed();
         Object obj = point.proceed();
         try {
-            reportService.reportByVs((VirtualServer) obj);
+            reportService.reportByVs((VirtualServer) point.getArgs()[0]);
         } catch (Exception ex) {
             logger.error("Fail to push groups to queue by virtual server.", ex);
         }
