@@ -9,7 +9,6 @@ import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.NginxService;
-import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.service.task.TaskService;
@@ -52,8 +51,6 @@ public class TaskExecutorImpl implements TaskExecutor {
     NginxService nginxService;
     @Resource
     private BuildInfoService buildInfoService;
-    @Resource
-    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -203,7 +200,11 @@ public class TaskExecutorImpl implements TaskExecutor {
             Map<Long, Long> needBuildGroupVs = new HashMap<>();
             final Map<String, Integer> vsGroupPriority = new HashMap<>();
             needBuildVses.addAll(activateVsOps.keySet());
+            if (activateSlbOps.size() > 0 && activateSlbOps.get(slbId) != null) {
+                needBuildVses.addAll(onlineVses.keySet());
+            }
             boolean need = false;
+            boolean hasRelatedVs = false;
             for (Long gid : onlineGroups.keySet()) {
                 if (activateGroupOps.containsKey(gid) || pullMemberOps.containsKey(gid) || memberOps.containsKey(need)
                         || deactivateGroupOps.containsKey(gid)) {
@@ -218,7 +219,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                         }
                     }
                 }
-                boolean hasRelatedVs = false;
+                hasRelatedVs = false;
                 for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
                     if (onlineVses.containsKey(gvs.getVirtualServer().getId())) {
                         if (need) {
@@ -230,7 +231,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                             groupList = new ArrayList<>();
                             vsGroups.put(gvs.getVirtualServer().getId(), groupList);
                         }
-                        if (!deactivateGroupOps.containsKey(gid)){
+                        if (!deactivateGroupOps.containsKey(gid)) {
                             groupList.add(group);
                         }
                         vsGroupPriority.put("VS" + gvs.getVirtualServer().getId() + "_" + gid, gvs.getPriority());
@@ -306,7 +307,6 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
             //5.3 for dyups.
             if (!needReload) {
-                boolean isFail = false;
                 for (Long groupId : needBuildGroupVs.keySet()) {
                     //5.3.1 build upstream config for group
                     Group group = onlineGroups.get(groupId);
@@ -315,11 +315,11 @@ public class TaskExecutorImpl implements TaskExecutor {
                     List<NginxResponse> dyopsResponses = nginxService.dyops(onlineSlb.getSlbServers(), new DyUpstreamOpsData[]{dyUpstreamOpsData});
                     for (NginxResponse response : dyopsResponses) {
                         if (!response.getSucceed()) {
-                            isFail = true;
-                            break;
+                            logger.warn("[Dyups] upstreamName:" + dyUpstreamOpsData.getUpstreamName() + "\nStatus: Fail");
+                            throw new Exception("Dyups failed.GroupID:"+group.getId());
                         }
                     }
-                    logger.info("[Dyups] upstreamName:" + dyUpstreamOpsData.getUpstreamName() + "\nStatus:" + isFail);
+                    logger.info("[Dyups] upstreamName:" + dyUpstreamOpsData.getUpstreamName() + "\nStatus: Suc");
                 }
             }
             performTasks(slbId, needBuildGroupVs, offlineGroups);
@@ -458,7 +458,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                             setTaskFail(task, "Not Found Group Id:" + task.getGroupId());
                             continue;
                         }
-                        for (GroupVirtualServer gvs : group.getGroupVirtualServers()){
+                        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
                             UpdateStatusItem item = new UpdateStatusItem();
                             item.setGroupId(task.getGroupId()).setVsId(gvs.getVirtualServer().getId())
                                     .setSlbId(slbId).setOffset(StatusOffset.MEMBER_OPS).setUp(task.getUp());
@@ -492,7 +492,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                             setTaskFail(task, "Not Found Group Id:" + task.getGroupId());
                             continue;
                         }
-                        for (GroupVirtualServer gvs : group.getGroupVirtualServers()){
+                        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
                             UpdateStatusItem item = new UpdateStatusItem();
                             item.setGroupId(task.getGroupId()).setVsId(gvs.getVirtualServer().getId())
                                     .setSlbId(slbId).setOffset(StatusOffset.PULL_OPS).setUp(task.getUp());
@@ -662,11 +662,11 @@ public class TaskExecutorImpl implements TaskExecutor {
         logger.warn("[Task Fail] OpsTask: Type[" + task.getOpsType() + " TaskId:" + task.getId() + "],FailCause:" + failcause);
     }
 
-    public List<Long> getResources() {
+    public  List<Long> getResources() {
         List<Long> resources = new ArrayList<>();
         Set<Long> tmp = new HashSet<>();
-        for (OpsTask task : tasks) {
-            if (task.getResources() != null) {
+        for (OpsTask task : tasks){
+            if (task.getResources()!=null){
                 tmp.add(Long.parseLong(task.getResources()));
             }
             tmp.add(task.getTargetSlbId());
