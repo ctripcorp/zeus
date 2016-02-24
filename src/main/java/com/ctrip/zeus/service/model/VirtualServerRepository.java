@@ -20,7 +20,7 @@ public interface VirtualServerRepository {
 
     VirtualServer add(Long slbId, VirtualServer virtualServer) throws Exception;
 
-    void update(VirtualServer virtualServer) throws Exception;
+    VirtualServer update(VirtualServer virtualServer) throws Exception;
 
     void delete(Long virtualServerId) throws Exception;
 

@@ -61,7 +61,7 @@ public class ReportAspect implements Ordered {
         }
     }
 
-    @Around("execution(* com.ctrip.zeus.service.model.VirtualServerRepository.updateVirtualServer(*))")
+    @Around("execution(* com.ctrip.zeus.service.model.VirtualServerRepository.update(*))")
     public Object injectReportGroupsAction(ProceedingJoinPoint point) throws Throwable {
         if (!cmsSync.get())
             return point.proceed();

@@ -99,7 +99,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     }
 
     @Override
-    public void update(VirtualServer virtualServer) throws Exception {
+    public VirtualServer update(VirtualServer virtualServer) throws Exception {
         if (!virtualServerModelValidator.exists(virtualServer.getId()))
             throw new ValidationException("Virtual server with id " + virtualServer.getId() + " does not exist.");
         for (Domain domain : virtualServer.getDomains()) {
@@ -131,6 +131,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         if (virtualServer.getSsl().booleanValue()) {
             installCertificate(virtualServer);
         }
+        return virtualServer;
     }
 
     @Override
