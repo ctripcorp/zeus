@@ -46,8 +46,7 @@ public class GroupGsRelMaintainer extends MultiRelMaintainerEx<RelGroupGsDo, Gro
     protected void setDo(Group object, GroupServer value, RelGroupGsDo target) {
         target.setGroupId(object.getId())
                 .setGroupVersion(object.getVersion())
-                .setIp(value.getIp())
-                .setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
+                .setIp(value.getIp());
     }
 
     @Override
