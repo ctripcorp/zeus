@@ -128,8 +128,8 @@ public class StatusServiceImpl implements StatusService {
     public void updateStatus(List<UpdateStatusItem> items) throws Exception {
         List<StatusGroupServerDo> updateDatas = new ArrayList<>();
         for (UpdateStatusItem item : items) {
-            if (item.getOffset() > 30 || item.getOffset() < 0) {
-                throw new Exception("offset of status should be [0-30]");
+            if (item.getOffset() > OFFSET_LENGTH || item.getOffset() < 0) {
+                throw new Exception("offset of status should be [0-" + OFFSET_LENGTH + "]");
             }
             for (String ip : item.getIpses()) {
                 if (ip == null || ip.isEmpty()) {

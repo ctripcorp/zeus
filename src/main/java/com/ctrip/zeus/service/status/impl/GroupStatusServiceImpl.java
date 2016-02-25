@@ -88,12 +88,12 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getOfflineGroupsStatusBySlbId(Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, SelectionMode.ONLINE_EXCLUSIVE);
+        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, SelectionMode.OFFLINE_EXCLUSIVE);
         ModelStatusMapping<Group> groups = entityFactory.getGroupsByVsIds(vses);
         if (groups.getOfflineMapping() == null || groups.getOfflineMapping().size() == 0) {
             return result;
         }
-        result = getOfflineGroupsStatus(groups.getOnlineMapping(), groups.getOnlineMapping(), Arrays.asList(vses), slbId);
+        result = getOfflineGroupsStatus(groups.getOfflineMapping(), groups.getOnlineMapping(), Arrays.asList(vses), slbId);
         return result;
     }
 
@@ -139,7 +139,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         for (Long vid : vsMap.getOfflineMapping().keySet()) {
             List<Long> tmpVsId = new ArrayList<>();
             tmpVsId.add(vid);
-            result.addAll(getOnlineGroupsStatus(map.getOfflineMapping(), tmpVsId,
+            result.addAll(getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping(), tmpVsId,
                     vsMap.getOfflineMapping().get(vid).getSlbId()));
         }
         return result;
@@ -161,11 +161,13 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             return result;
         }
         for (Long vid : vsMap.getOfflineMapping().keySet()) {
-            if (vsMap.getOfflineMapping().get(vid).getSlbId().equals(slbId)) {
+            if (vsMap.getOfflineMapping().get(vid).getSlbId().equals(slbId)){
                 List<Long> tmpVsId = new ArrayList<>();
                 tmpVsId.add(vid);
-                result.addAll(getOnlineGroupsStatus(map.getOfflineMapping(), tmpVsId, slbId));
+                result.addAll(getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping(), tmpVsId,
+                        slbId));
             }
+
         }
         return result;
     }
@@ -176,7 +178,6 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         GroupStatus status = null;
 
         Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServersByVsIds(vsIds.toArray(new Long[]{}));
-        Map<String, Boolean> healthCheck = healthCheckStatusService.getHealthCheckStatusBySlbId(slbId);
         Set<String> allDownServers = statusService.findAllDownServers();
         for (Group group : groups.values()) {
             Long groupId = group.getId();
@@ -202,11 +203,10 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
+                boolean up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
-                key = groupId + "_" + gs.getIp();
-                boolean up = healthCheck.containsKey(key) && (memberUp && serverUp && pullIn) ? healthCheck.get(key) : memberUp && serverUp && pullIn;
                 groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
             }
@@ -221,7 +221,6 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         GroupStatus status = null;
 
         Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServersByVsIds(vsIds.toArray(new Long[]{}));
-        Map<String, Boolean> healthCheck = healthCheckStatusService.getHealthCheckStatusBySlbId(slbId);
         Set<String> allDownServers = statusService.findAllDownServers();
 
         for (Group group : groups.values()) {
@@ -248,11 +247,11 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
+                boolean up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
+
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
-                key = groupId + "_" + gs.getIp();
-                boolean up = healthCheck.containsKey(key) && (memberUp && serverUp && pullIn) ? healthCheck.get(key) : memberUp && serverUp && pullIn;
                 groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
             }

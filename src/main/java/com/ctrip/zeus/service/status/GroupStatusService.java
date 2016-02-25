@@ -71,11 +71,9 @@ public interface GroupStatusService {
      * @throws Exception
      */
     List<GroupStatus> getOfflineGroupStatus(Long groupId) throws Exception;
-
-    /**
+        /**
      * Find online group status by groupId
      * @param groupId groupId
-     * @param slbId slbId
      * @return status list
      * @throws Exception
      */
