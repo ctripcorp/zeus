@@ -40,8 +40,7 @@ public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServer
     @Override
     protected void setDo(Slb object, SlbServer value, RelSlbSlbServerDo target) {
         target.setSlbId(object.getId()).setIp(value.getIp())
-                .setSlbVersion(object.getVersion())
-                .setHash(VersionUtils.getHash(object.getId(), object.getVersion()));
+                .setSlbVersion(object.getVersion());
     }
 
     @Override

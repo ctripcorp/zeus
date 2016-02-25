@@ -55,8 +55,7 @@ public class VsDomainRelMaintainer extends MultiRelMaintainerEx<RelVsDomainDo, D
     protected void setDo(VirtualServer object, Domain value, RelVsDomainDo target) {
         target.setVsId(object.getId())
                 .setDomain(value.getName())
-                .setVsVersion(object.getVersion())
-                .setHash(VersionUtils.getHash(target.getVsId(), object.getVersion()));
+                .setVsVersion(object.getVersion());
     }
 
     @Override

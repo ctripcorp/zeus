@@ -1291,12 +1291,12 @@
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="ip" field="ip" value-type="String" length="200" nullable="false" />
     <member name="group-version" field="group_version" value-type="int" length="10" nullable="false" />
-    <member name="hash" field="hash" value-type="int" length="10" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
-    <index name="hash" members="hash ASC" />
+    <index name="ip" members="ip ASC" />
+    <index name="group_id" members="group_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1413,13 +1413,12 @@
     <member name="vs-id" field="vs_id" value-type="long" length="19" nullable="false" />
     <member name="path" field="path" value-type="String" length="4096" />
     <member name="group-version" field="group_version" value-type="int" length="10" nullable="false" />
-    <member name="hash" field="hash" value-type="int" length="10" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <index name="idx_vs_id" members="vs_id ASC" />
-    <index name="hash" members="hash ASC" />
+    <index name="group_id" members="group_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1455,12 +1454,12 @@
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
     <member name="ip" field="ip" value-type="String" length="200" nullable="false" />
     <member name="slb-version" field="slb_version" value-type="int" length="10" nullable="false" />
-    <member name="hash" field="hash" value-type="int" length="10" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
-    <index name="hash" members="hash ASC" />
+    <index name="slb_id" members="slb_id ASC" />
+    <index name="ip" members="ip ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1538,13 +1537,12 @@
     <member name="vs-id" field="vs_id" value-type="long" length="19" nullable="false" />
     <member name="domain" field="domain" value-type="String" length="200" nullable="false" />
     <member name="vs-version" field="vs_version" value-type="int" length="10" nullable="false" />
-    <member name="hash" field="hash" value-type="int" length="10" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
-    <index name="vs_id_domain" members="vs_id ASC, domain ASC" />
-    <index name="hash" members="hash ASC" />
+    <index name="vs_id" members="vs_id ASC" />
+    <index name="domain" members="domain ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1580,14 +1578,12 @@
     <member name="vs-id" field="vs_id" value-type="long" length="19" nullable="false" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
     <member name="vs-version" field="vs_version" value-type="int" length="10" nullable="false" />
-    <member name="hash" field="hash" value-type="int" length="10" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <index name="idx_vs_id" members="vs_id ASC" />
     <index name="slb_id" members="slb_id ASC" />
-    <index name="hash" members="hash ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

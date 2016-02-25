@@ -43,8 +43,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
 
         rVsStatusDao.insert(new RelVsStatusDo().setVsId(vsId).setOfflineVersion(virtualServer.getVersion()));
 
-        rVsSlbDao.insert(new RelVsSlbDo().setVsId(vsId).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion())
-                .setHash(VersionUtils.getHash(virtualServer.getId(), virtualServer.getVersion())));
+        rVsSlbDao.insert(new RelVsSlbDo().setVsId(vsId).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion()));
         vsDomainRelMaintainer.addRel(virtualServer);
     }
 
@@ -65,8 +64,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
 
         rVsStatusDao.insertOrUpdate(new RelVsStatusDo().setVsId(vsId).setOfflineVersion(virtualServer.getVersion()));
 
-        rVsSlbDao.insert(new RelVsSlbDo().setVsId(virtualServer.getId()).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion())
-                .setHash(VersionUtils.getHash(virtualServer.getId(), virtualServer.getVersion())));
+        rVsSlbDao.insert(new RelVsSlbDo().setVsId(virtualServer.getId()).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion()));
         vsDomainRelMaintainer.updateRel(virtualServer);
     }
 
@@ -152,9 +150,6 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         List<RelVsSlbDo> rel2 = rVsSlbDao.findByVses(vsIds, RVsSlbEntity.READSET_FULL);
         for (RelVsSlbDo d : rel2) {
             VirtualServer vs = toUpdate.get(d.getVsId());
-            if (vs != null) {
-                d.setHash(VersionUtils.getHash(d.getVsId(), vs.getVersion()));
-            }
         }
 
         rVsSlbDao.update(rel2.toArray(new RelVsSlbDo[rel2.size()]), RVsSlbEntity.UPDATESET_FULL);

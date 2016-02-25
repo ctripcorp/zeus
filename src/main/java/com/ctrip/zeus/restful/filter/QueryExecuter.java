@@ -3,6 +3,7 @@ package com.ctrip.zeus.restful.filter;
 import com.ctrip.zeus.executor.impl.ResultHandler;
 
 import java.lang.reflect.Array;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
@@ -44,7 +45,7 @@ public class QueryExecuter<T extends Comparable> {
             if (filter.shouldFilter()) result = filter.filter();
         }
         while (!filterQueue.isEmpty()) {
-            if (result.isEmpty()) return (W[]) Array.newInstance(clazz, 0);
+            if (result.isEmpty()) return resultHandler.handle(new HashSet<T>());
             FilterSet filter = filterQueue.poll();
             if (filter.shouldFilter()) result.retainAll(filter.filter());
         }

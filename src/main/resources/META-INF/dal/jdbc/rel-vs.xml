@@ -49,8 +49,7 @@
                     <![CDATA[
                     UPDATE <TABLE/>
                     SET <FIELD name='slb-id'/> = ${slb-id},
-                        <FIELD name='vs-version'/> = ${vs-version},
-                        <FIELD name='hash'/> = ${hash}
+                        <FIELD name='vs-version'/> = ${vs-version}
                     WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
