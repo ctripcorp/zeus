@@ -15,6 +15,7 @@ import com.netflix.config.DynamicPropertyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -45,39 +46,25 @@ public class HealthCheckFetchTask extends AbstractTask {
     @Override
     public void run() throws Exception {
         try {
+            String ip = S.getIp();
             Long[] slbIds = entityFactory.getSlbIdsByIp(S.getIp(), SelectionMode.ONLINE_EXCLUSIVE);
             if (slbIds == null || slbIds.length < 1) {
+                logger.warn("[HealthCheckFetchTask] Not belong to any slb.Task is skipped.ip:" + ip);
                 return;
             }
-            DistLock lock = dbLockFactory.newLock("HealthCheckFetch_" + slbIds[0]);
+            String key = "HealthCheckFetch_" + slbIds[0];
+            DistLock lock = dbLockFactory.newLock(key);
             boolean flag = false;
             try {
                 if (flag = lock.tryLock()) {
-                    String key = "HealthCheckFetch_" + slbIds[0];
-                    GlobalJobDo globalJobDo = globalJobDao.findByPK(key, GlobalJobEntity.READSET_FULL);
-                    boolean needFetch = false;
-                    if (globalJobDo == null) {
-                        globalJobDo = new GlobalJobDo().setJobKey(key).setStartTime(new Date()).setStatus("DOING")
-                                .setDataChangeLastTime(new Date()).setOwner(S.getIp());
-                        globalJobDao.updateByPK(globalJobDo, GlobalJobEntity.UPDATESET_FULL);
-                        needFetch = true;
-                    } else if (!globalJobDo.getStatus().equals("DOING")) {
-                        long last = globalJobDo.getFinishTime() == null ? 0 : globalJobDo.getFinishTime().getTime();
-                        long time = System.currentTimeMillis() - last;
-                        if (time > interval.get()) {
-                            globalJobDo.setStartTime(new Date()).setStatus("DOING")
-                                    .setDataChangeLastTime(new Date()).setOwner(S.getIp());
-                            globalJobDao.updateByPK(globalJobDo, GlobalJobEntity.UPDATESET_FULL);
-                            needFetch = true;
-                        }
-                    }
-                    if (needFetch) {
+
+                    if (getTicket(key, interval.get(), 3)) {
                         healthCheckStatusService.freshHealthCheckStatus();
-                        globalJobDo.setFinishTime(new Date()).setStatus("DONE")
-                                .setDataChangeLastTime(new Date()).setOwner(S.getIp());
-                        globalJobDao.updateByPK(globalJobDo, GlobalJobEntity.UPDATESET_FULL);
+                        commitTicket(key, 3);
                     }
                 }
+            } catch (Exception e) {
+                throw e;
             } finally {
                 if (flag) {
                     lock.unlock();
@@ -96,6 +83,62 @@ public class HealthCheckFetchTask extends AbstractTask {
     @Override
     public long getInterval() {
         return 5000;
+    }
+
+    private boolean getTicket(String key, int interval, int retry) {
+        if (retry <= 0) {
+            return false;
+        }
+        try {
+            GlobalJobDo globalJobDo = globalJobDao.findByPK(key, GlobalJobEntity.READSET_FULL);
+            if (globalJobDo == null) {
+                globalJobDo = new GlobalJobDo().setJobKey(key).setStartTime(new Date()).setStatus("DOING")
+                        .setDataChangeLastTime(new Date()).setFinishTime(new Date()).setOwner(S.getIp());
+                globalJobDao.updateByPK(globalJobDo, GlobalJobEntity.UPDATESET_FULL);
+                return true;
+            } else {
+                if (!globalJobDo.getStatus().equals("DOING")) {
+                    long last = globalJobDo.getFinishTime() == null ? 0 : globalJobDo.getFinishTime().getTime();
+                    long time = System.currentTimeMillis() - last;
+                    if (time >= interval) {
+                        globalJobDo.setStartTime(new Date()).setStatus("DOING")
+                                .setDataChangeLastTime(new Date()).setOwner(S.getIp());
+                        globalJobDao.updateByPK(globalJobDo, GlobalJobEntity.UPDATESET_FULL);
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    long last = globalJobDo.getFinishTime() == null ? 0 : globalJobDo.getFinishTime().getTime();
+                    long time = System.currentTimeMillis() - last;
+                    if (time >= 10 * interval) {
+                        globalJobDo.setStartTime(new Date()).setStatus("DOING")
+                                .setDataChangeLastTime(new Date()).setOwner(S.getIp());
+                        globalJobDao.updateByPK(globalJobDo, GlobalJobEntity.UPDATESET_FULL);
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            retry--;
+            logger.info("[HealthCheckFetchJob]getTicket retry.retry:" + retry, e);
+            return getTicket(key, interval, retry);
+        }
+    }
+
+    private void commitTicket(String key, int retry) {
+        GlobalJobDo globalJobDo = new GlobalJobDo().setJobKey(key).setFinishTime(new Date()).setStatus("DONE")
+                .setDataChangeLastTime(new Date()).setOwner(S.getIp());
+        try {
+            globalJobDao.updateByPK(globalJobDo, GlobalJobEntity.UPDATESET_FULL);
+        } catch (DalException e) {
+            retry--;
+            logger.info("[HealthCheckFetchJob]commitTicket retry.retry:" + retry, e);
+            commitTicket(key, retry);
+        }
     }
 
 }
