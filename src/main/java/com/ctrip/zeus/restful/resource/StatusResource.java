@@ -1,6 +1,8 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
+import com.ctrip.zeus.dal.core.GlobalJobDao;
+import com.ctrip.zeus.dal.core.GlobalJobDo;
 import com.ctrip.zeus.exceptions.*;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
@@ -49,6 +51,8 @@ public class StatusResource {
     private NginxService nginxService;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private GlobalJobDao globalJobDao;
 
 
     @GET
@@ -115,9 +119,9 @@ public class StatusResource {
             Set<Long> groupIds = new HashSet<>();
             groupIds.add(_groupId);
             List<GroupStatus> res = groupStatusService.getOfflineGroupsStatus(groupIds, _slbId);
-            if (res!=null && res.size()>0){
+            if (res != null && res.size() > 0) {
                 statusResult = res.get(0);
-            }else {
+            } else {
                 throw new Exception("Not Found Group Status!");
             }
         }
@@ -125,6 +129,14 @@ public class StatusResource {
         return responseHandler.handle(statusResult, hh.getMediaType());
     }
 
+    @GET
+    @Path("/job/unlock")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response jobUnlock(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                              @QueryParam("key") String key) throws Exception {
+        globalJobDao.deleteByPK(new GlobalJobDo().setJobKey(key));
+        return responseHandler.handle("success.", hh.getMediaType());
+    }
 
     @GET
     @Path("/traffic")
