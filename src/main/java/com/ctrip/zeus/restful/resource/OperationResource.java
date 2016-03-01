@@ -27,6 +27,8 @@ import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Joiner;
+import com.netflix.config.DynamicLongProperty;
+import com.netflix.config.DynamicPropertyFactory;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.stereotype.Component;
 
@@ -77,6 +79,8 @@ public class OperationResource {
     @Resource
     private ActivateService activateService;
 
+    private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
+
 
     @GET
     @Path("/upServer")
@@ -111,7 +115,7 @@ public class OperationResource {
             tasks.add(task);
         }
         List<Long> taskIds = taskManager.addTask(tasks);
-        List<TaskResult> results = taskManager.getResult(taskIds, 30000L);
+        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
         boolean isSuccess = true;
         String failCause = "";
         for (TaskResult taskResult : results) {
@@ -400,7 +404,7 @@ public class OperationResource {
             tasks.add(task);
         }
         List<Long> taskIds = taskManager.addTask(tasks);
-        List<TaskResult> results = taskManager.getResult(taskIds, 30000L);
+        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
         for (TaskResult taskResult : results) {
             if (!taskResult.isSuccess()) {
                 throw new Exception("Task Failed! Fail cause : " + taskResult.getFailCause());

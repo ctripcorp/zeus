@@ -25,6 +25,7 @@ import com.ctrip.zeus.task.entity.TaskResultList;
 import com.ctrip.zeus.util.AssertUtils;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
+import com.netflix.config.DynamicLongProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
 
@@ -76,6 +77,7 @@ public class ActivateResource {
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
+    private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
     private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
 
     @GET
@@ -131,7 +133,7 @@ public class ActivateResource {
         }
 
         List<Long> taskIds = taskManager.addTask(tasks);
-        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
+        List<TaskResult> results = taskManager.getResult(taskIds,apiTimeout.get());
 
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results){
@@ -197,7 +199,7 @@ public class ActivateResource {
             }
         }
         List<Long> taskIds = taskManager.addTask(tasks);
-        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
+        List<TaskResult> results = taskManager.getResult(taskIds,apiTimeout.get());
 
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results){
@@ -249,7 +251,7 @@ public class ActivateResource {
         }else {
             throw new ValidationException("Activated Date Of Virtual Server ["+vsId +"] Is Incorrect.");
         }
-        List<TaskResult> results = taskManager.getResult(taskIds,30000L);
+        List<TaskResult> results = taskManager.getResult(taskIds,apiTimeout.get());
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results){
             resultList.addTaskResult(t);

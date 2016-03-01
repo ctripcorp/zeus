@@ -17,6 +17,7 @@ import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.task.entity.TaskResultList;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
+import com.netflix.config.DynamicLongProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
 
@@ -53,6 +54,8 @@ public class DeactivateResource {
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
+    private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
+
 
     @GET
     @Path("/group")
@@ -86,7 +89,7 @@ public class DeactivateResource {
             }
         }
         List<Long> taskIds = taskManager.addTask(tasks);
-        List<TaskResult> results = taskManager.getResult(taskIds, 30000L);
+        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
 
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results) {
@@ -145,7 +148,7 @@ public class DeactivateResource {
         if (taskId == null){
             throw new ValidationException("Not Found Activated VsId "+vsId + "In Slb "+ slbId);
         }
-        TaskResult results = taskManager.getResult(taskId,30000L);
+        TaskResult results = taskManager.getResult(taskId,apiTimeout.get());
         return responseHandler.handle(results,hh.getMediaType());
     }
 }
