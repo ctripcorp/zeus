@@ -150,8 +150,8 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         List<RelVsSlbDo> rel2 = rVsSlbDao.findByVses(vsIds, RVsSlbEntity.READSET_FULL);
         for (RelVsSlbDo d : rel2) {
             VirtualServer vs = toUpdate.get(d.getVsId());
+            d.setVsVersion(vs.getVersion());
         }
-
         rVsSlbDao.update(rel2.toArray(new RelVsSlbDo[rel2.size()]), RVsSlbEntity.UPDATESET_FULL);
         for (VirtualServer virtualServer : toUpdate.values()) {
             vsDomainRelMaintainer.port(virtualServer);

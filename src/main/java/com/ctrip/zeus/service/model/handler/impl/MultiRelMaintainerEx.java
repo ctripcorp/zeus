@@ -1,7 +1,9 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
+import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zhoumy on 2016/1/8.
@@ -29,19 +31,16 @@ public abstract class MultiRelMaintainerEx<T, W, X> extends AbstractMultiRelMain
             setDo(object, rels.get(i), recycled.get(i));
         }
 
-        groupByAction(object, rels, recycled, clazzT);
-//        if (rels.size() >= recycled.size()) {
-//            updateByPrimaryKey(recycled.toArray((T[]) Array.newInstance(clazz, recycled.size())));
-//            if (rels.size() > recycled.size()) {
-//                T[] dos = (T[]) Array.newInstance(clazz, rels.size() - i);
-//                for (int j = i; j < rels.size(); j++) {
-//                    dos[j - i] = getDo(object, rels.get(j));
-//                }
-//                insert(dos);
-//            }
-//        } else {
-//            deleteByPrimaryKey(recycled.subList(i - 1, recycled.size()).toArray((T[]) Array.newInstance(clazz, recycled.size() - i + 1)));
-//        }
+        Map<String, List<T>> actionMap = groupByAction(object, rels, recycled, clazzT);
+
+        List<T> action = actionMap.get("update");
+        if (action != null) updateByPrimaryKey(action.toArray((T[]) Array.newInstance(clazzT, action.size())));
+
+        action = actionMap.get("delete");
+        if (action != null) deleteByPrimaryKey(action.toArray((T[]) Array.newInstance(clazzT, action.size())));
+
+        action = actionMap.get("insert");
+        if (action != null) insert(action.toArray((T[]) Array.newInstance(clazzT, action.size())));
     }
 
     protected abstract List<T> getAll(Long id) throws Exception;
