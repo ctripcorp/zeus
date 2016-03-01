@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.status;
 import com.ctrip.zeus.service.Repository;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by fanqq on 2015/11/11.
@@ -25,4 +26,6 @@ public interface HealthCheckStatusService extends Repository {
      *  @return {Map<String,Boolean>} key:{groupId}_{ip} value:{status}
      */
     public Map<String,Boolean> getHealthCheckStatusBySlbServer(String serverIp)throws Exception;
+
+    public Map<String, Boolean> getHealthCheckStatusBySlbId(Long slbId , Set<Long> groupId) throws Exception;
 }

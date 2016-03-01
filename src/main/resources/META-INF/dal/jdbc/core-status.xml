@@ -151,6 +151,7 @@
         </query-defs>
     </entity>
     <entity name="status-health-check" table="status_health_check" alias="sas" do-class="StatusHealthCheckDo">
+         <var name="names" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
@@ -173,6 +174,18 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='slb-server-ip'/> = ${slb-server-ip}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-server-ip-and-upstream-name" type="SELECT" multiple="true">
+                <param name="slb-server-ip"/>
+                <param name="names"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='slb-server-ip'/> = ${slb-server-ip}
+                        AND <FIELD name='upstream-name'/> in <IN> ${names} </IN>
                     ]]>
                 </statement>
             </query>

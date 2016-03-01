@@ -197,7 +197,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
         Set<String> allUpGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsId.toArray(new Long[]{}), StatusOffset.MEMBER_OPS, true);
         Set<String> allPullInGroupServerInSlb = statusService.fetchGroupServersByVsIdsAndStatusOffset(vsId.toArray(new Long[]{}), StatusOffset.PULL_OPS, true);
-        Map<String,Boolean> healthCheck = healthCheckStatusService.getHealthCheckStatusBySlbId(slbId);
+        Map<String,Boolean> healthCheck = null;
         Set<String> allDownServers = statusService.findAllDownServers();
         Map <Long,Boolean> activated = activateService.isGroupsActivated(groupIds.toArray(new Long[]{}),null);
 
@@ -232,7 +232,15 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
                 key = groupId +"_"+ gs.getIp();
-                boolean up = healthCheck.containsKey(key)&&(memberUp&&serverUp&&pullIn)?healthCheck.get(key):memberUp&&serverUp&&pullIn;
+                boolean up = false;
+                if (serverUp && memberUp && pullIn){
+                    if (healthCheck == null){
+                        healthCheck = healthCheckStatusService.getHealthCheckStatusBySlbId(slbId,groupIds);
+                    }
+                    up = healthCheck.containsKey(key)?healthCheck.get(key):false;
+                }else {
+                    up = false;
+                }
                 groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
             }
