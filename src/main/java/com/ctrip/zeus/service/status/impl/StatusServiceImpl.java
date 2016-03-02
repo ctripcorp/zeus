@@ -1,8 +1,6 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.status.entity.UpdateStatusItem;
@@ -19,10 +17,6 @@ import java.util.*;
  */
 @Service("statusService")
 public class StatusServiceImpl implements StatusService {
-    @Resource
-    private SlbRepository slbRepository;
-    @Resource
-    private GroupRepository groupRepository;
     @Resource
     private StatusGroupServerDao statusGroupServerDao;
     @Resource

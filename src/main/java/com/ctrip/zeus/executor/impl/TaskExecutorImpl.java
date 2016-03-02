@@ -1,5 +1,7 @@
 package com.ctrip.zeus.executor.impl;
 
+import com.ctrip.framework.clogging.agent.log.ILog;
+import com.ctrip.framework.clogging.agent.log.LogManager;
 import com.ctrip.zeus.executor.TaskExecutor;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
@@ -16,6 +18,8 @@ import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.task.constant.TaskStatus;
 import com.ctrip.zeus.status.entity.UpdateStatusItem;
 import com.ctrip.zeus.task.entity.OpsTask;
+import com.netflix.config.DynamicBooleanProperty;
+import com.netflix.config.DynamicPropertyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -34,9 +38,9 @@ public class TaskExecutorImpl implements TaskExecutor {
     @Resource
     private DbLockFactory dbLockFactory;
     @Resource
-    private SlbRepository slbRepository;
-    @Resource
     private GroupRepository groupRepository;
+    @Resource
+    private SlbRepository slbRepository;
     @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
@@ -53,6 +57,9 @@ public class TaskExecutorImpl implements TaskExecutor {
     private BuildInfoService buildInfoService;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
+    private ILog clog = LogManager.getLogger(this.getClass());
+    private static DynamicBooleanProperty writeEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("write.enable", true);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+
 
     private HashMap<String, OpsTask> serverOps = new HashMap<>();
     private HashMap<Long, OpsTask> activateGroupOps = new HashMap<>();
@@ -294,6 +301,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
             //5.2 push config to all slb servers. reload if needed.
             needBuildVses.removeAll(deactivateVsOps.keySet());
+            if (writeEnable.get()){
             try {
                 List<NginxResponse> responses = nginxService.pushConf(onlineSlb.getSlbServers(), slbId, slbVersion, needBuildVses, needReload);
                 for (NginxResponse response : responses) {
@@ -304,6 +312,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             } catch (Exception e) {
                 needRollbackConf = true;
                 throw e;
+            }
             }
             //5.3 for dyups.
             if (!needReload) {
@@ -665,11 +674,15 @@ public class TaskExecutorImpl implements TaskExecutor {
     public  List<Long> getResources() {
         List<Long> resources = new ArrayList<>();
         Set<Long> tmp = new HashSet<>();
+        Map<String,String> tags ;
         for (OpsTask task : tasks){
             if (task.getResources()!=null){
                 tmp.add(Long.parseLong(task.getResources()));
             }
             tmp.add(task.getTargetSlbId());
+            tags = new HashMap<>();
+            tags.put("taskId",task.getId().toString());
+            clog.info("TaskInfo","Tasks are executing, TaskID [" + task.getId() + "]",tags);
         }
         resources.addAll(tmp);
         Collections.sort(resources);
