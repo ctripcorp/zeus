@@ -221,6 +221,10 @@ public class ActivateResource {
             throw new ValidationException("Has different slb id for online/offline vses.");
         }
         Long slbId = offlineVs.getSlbId();
+        ModelStatusMapping<Slb>  slbMap = entityFactory.getSlbsByIds(new Long[]{slbId});
+        if (slbMap.getOnlineMapping().get(slbId) == null){
+            throw new ValidationException("Related Slb is not activated.");
+        }
         OpsTask task = new OpsTask();
         task.setSlbVirtualServerId(vsId);
         task.setCreateTime(new Date());

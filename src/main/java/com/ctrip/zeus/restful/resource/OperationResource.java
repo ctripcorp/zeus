@@ -85,11 +85,35 @@ public class OperationResource {
     }
 
     private Response serverOps(HttpHeaders hh, String serverip, boolean up) throws Exception {
-        Long [] slbIds = entityFactory.getSlbIdsByIp(serverip, SelectionMode.ONLINE_EXCLUSIVE);
+        Long[] groupIds = entityFactory.getGroupIdsByGroupServerIp(serverip, SelectionMode.REDUNDANT);
 
-        if (slbIds == null || slbIds.length == 0 ){
+        if (groupIds == null || groupIds.length == 0) {
             throw new ValidationException("Not found Server Ip.");
         }
+        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(groupIds);
+        Set<Long> vsIds = new HashSet<>();
+        for (Long id : groupIds) {
+            if (groupMap.getOnlineMapping().get(id) != null) {
+                Group group = groupMap.getOnlineMapping().get(id);
+                for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+                    vsIds.add(gvs.getVirtualServer().getId());
+                }
+            } else if (groupMap.getOfflineMapping().get(id) != null) {
+                Group group = groupMap.getOfflineMapping().get(id);
+                for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+                    vsIds.add(gvs.getVirtualServer().getId());
+                }
+            }
+        }
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
+        Set<Long> slbIds = new HashSet<>();
+        for (VirtualServer vs : vsMap.getOnlineMapping().values()) {
+            slbIds.add(vs.getSlbId());
+        }
+        for (VirtualServer vs : vsMap.getOfflineMapping().values()) {
+            slbIds.add(vs.getSlbId());
+        }
+
         List<OpsTask> tasks = new ArrayList<>();
         for (Long slbId : slbIds) {
             OpsTask task = new OpsTask();
@@ -114,9 +138,9 @@ public class OperationResource {
         }
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
 
-        Set<Long> groupIds = groupCriteriaQuery.queryByGroupServerIp(serverip);
+        Long[] gids = entityFactory.getGroupIdsByGroupServerIp(serverip, SelectionMode.ONLINE_EXCLUSIVE);
 
-        List<Group> groups = groupRepository.list(groupIds.toArray(new Long[]{}));
+        List<Group> groups = groupRepository.list(gids);
 
         if (groups != null) {
             for (Group group : groups) {
@@ -142,9 +166,9 @@ public class OperationResource {
                              @QueryParam("batch") Boolean batch) throws Exception {
         List<String> _ips = new ArrayList<>();
         if (groupId == null) {
-            if (groupName == null){
+            if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
-            }else {
+            } else {
                 groupId = groupCriteriaQuery.queryByName(groupName);
             }
         }
@@ -172,9 +196,9 @@ public class OperationResource {
                                @QueryParam("batch") Boolean batch) throws Exception {
         List<String> _ips = new ArrayList<>();
         if (groupId == null) {
-            if (groupName == null){
+            if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
-            }else {
+            } else {
                 groupId = groupCriteriaQuery.queryByName(groupName);
             }
         }
@@ -204,9 +228,9 @@ public class OperationResource {
                            @QueryParam("batch") Boolean batch) throws Exception {
         List<String> _ips = new ArrayList<>();
         if (groupId == null) {
-            if (groupName == null){
+            if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
-            }else {
+            } else {
                 groupId = groupCriteriaQuery.queryByName(groupName);
             }
         }
@@ -234,9 +258,9 @@ public class OperationResource {
                             @QueryParam("batch") Boolean batch) throws Exception {
         List<String> _ips = new ArrayList<>();
         if (groupId == null) {
-            if (groupName == null){
+            if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
-            }else {
+            } else {
                 groupId = groupCriteriaQuery.queryByName(groupName);
             }
         }
