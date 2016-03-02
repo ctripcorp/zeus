@@ -61,22 +61,6 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
-    public Set<Long> queryByGroupServerIp(String ip) throws Exception {
-        Set<Long> result = new HashSet<>();
-        Set<String> range = new HashSet<>();
-        for (RelGroupGsDo d : rGroupGsDao.findAllByIp(ip, RGroupGsEntity.READSET_FULL)) {
-            result.add(d.getGroupId());
-            range.add(d.getGroupId() + "," + d.getGroupVersion());
-        }
-        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(result.toArray(new Long[result.size()]), RGroupStatusEntity.READSET_FULL)) {
-            if (d.getOnlineVersion() == 0 || !range.contains(d.getGroupId() + "," + d.getOnlineVersion())) {
-                result.remove(d.getGroupId());
-            }
-        }
-        return result;
-    }
-
-    @Override
     public Set<IdVersion> queryByIdsAndMode(Long[] groupIds, SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL)) {
