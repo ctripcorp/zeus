@@ -19,6 +19,8 @@ public interface EntityFactory {
 
     ModelStatusMapping<Group> getGroupsByIds(Long[] groupIds) throws Exception;
 
+    Long[] getGroupIdsByGroupServerIp(String ip, SelectionMode mode) throws Exception;
+
     Long[] getSlbIdsByIp(String ip, SelectionMode mode) throws Exception;
 
     Long[] getVsIdsBySlbId(Long slbId, SelectionMode mode) throws Exception;

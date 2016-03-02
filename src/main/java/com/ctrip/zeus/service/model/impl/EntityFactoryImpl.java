@@ -32,6 +32,8 @@ public class EntityFactoryImpl implements EntityFactory {
     @Resource
     private RGroupStatusDao rGroupStatusDao;
     @Resource
+    private RGroupGsDao rGroupGsDao;
+    @Resource
     private RVsStatusDao rVsStatusDao;
     @Resource
     private RSlbStatusDao rSlbStatusDao;
@@ -144,6 +146,29 @@ public class EntityFactoryImpl implements EntityFactory {
             }
         }
         return result;
+    }
+
+    @Override
+    public Long[] getGroupIdsByGroupServerIp(String ip, SelectionMode mode) throws Exception {
+        Set<Long> result = new HashSet<>();
+        Set<String> range = new HashSet<>();
+        for (RelGroupGsDo d : rGroupGsDao.findAllByIp(ip, RGroupGsEntity.READSET_FULL)) {
+            result.add(d.getGroupId());
+            range.add(d.getGroupId() + "," + d.getGroupVersion());
+        }
+        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(result.toArray(new Long[result.size()]), RGroupStatusEntity.READSET_FULL)) {
+            boolean contains = false;
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                if (range.contains(d.getGroupId() + "," + v)) {
+                    contains = true;
+                    break;
+                }
+            }
+            if (!contains) {
+                result.remove(d.getGroupId());
+            }
+        }
+        return result.toArray(new Long[result.size()]);
     }
 
     @Override

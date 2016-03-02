@@ -83,13 +83,6 @@ public class QueryTest extends AbstractServerTest {
 
         Assert.assertEquals(1, groupCriteriaQuery.queryByName("testGroupOnVs1").longValue());
 
-        Set<Long> gKeys = groupCriteriaQuery.queryByGroupServerIp("10.2.6.201");
-        Assert.assertEquals(4, gKeys.size());
-        Long[] values = gKeys.toArray(new Long[gKeys.size()]);
-
-        Arrays.sort(values);
-        Assert.assertArrayEquals(new Long[]{1L, 2L, 4L, 6L}, values);
-
         IdVersion[] gKeyArray = groupCriteriaQuery.queryByIdAndMode(1L, SelectionMode.OFFLINE_FIRST);
         Assert.assertEquals(new IdVersion(1L, 1), gKeyArray[0]);
         Assert.assertNull(gKeyArray[1]);
@@ -175,6 +168,11 @@ public class QueryTest extends AbstractServerTest {
 
         Long[] groupIds = entityFactory.getGroupIdsByVsIds(new Long[]{1L, 2L, 3L}, SelectionMode.ONLINE_FIRST);
         Assert.assertEquals(3, groupIds.length);
+
+        groupIds = entityFactory.getGroupIdsByGroupServerIp("10.2.6.201", SelectionMode.ONLINE_EXCLUSIVE);
+        Assert.assertEquals(4, groupIds.length);
+        Arrays.sort(groupIds);
+        Assert.assertArrayEquals(new Long[]{1L, 2L, 4L, 6L}, groupIds);
     }
 
     @Test
