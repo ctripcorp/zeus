@@ -174,7 +174,7 @@ public class TaskExecutorImpl implements TaskExecutor {
 
             if (activateSlbOps.size() > 0) {
                 OpsTask task = activateSlbOps.get(slbId);
-                if (!offlineGroups.get(task.getSlbId()).getVersion().equals(task.getVersion())) {
+                if (!offlineSlb.getVersion().equals(task.getVersion())) {
                     offlineSlb = slbRepository.getByKey(new IdVersion(task.getId(), task.getVersion()));
                 }
             }
