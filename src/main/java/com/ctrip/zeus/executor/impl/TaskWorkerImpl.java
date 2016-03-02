@@ -46,7 +46,7 @@ public class TaskWorkerImpl implements TaskWorker {
     }
 
     private void init()throws Exception{
-        Long[] slbIds = entityFactory.getSlbIdsByIp(S.getIp(), SelectionMode.ONLINE_EXCLUSIVE);
+        Long[] slbIds = entityFactory.getSlbIdsByIp(S.getIp(), SelectionMode.ONLINE_FIRST);
         if (slbIds == null || slbIds.length == 0){
             logger.error("Can Not Found Slb by Local Ip. TaskExecutor is not working!Local Ip : "+S.getIp());
             return;

@@ -213,7 +213,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             boolean need = false;
             boolean hasRelatedVs = false;
             for (Long gid : onlineGroups.keySet()) {
-                if (activateGroupOps.containsKey(gid) || pullMemberOps.containsKey(gid) || memberOps.containsKey(need)
+                if (activateGroupOps.containsKey(gid) || pullMemberOps.containsKey(gid) || memberOps.containsKey(gid)
                         || deactivateGroupOps.containsKey(gid)) {
                     need = true;
                 }

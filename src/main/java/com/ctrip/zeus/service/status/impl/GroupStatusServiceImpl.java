@@ -203,7 +203,12 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
-                boolean up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
+                boolean up = false;
+                if (memberUp && serverUp && pullIn){
+                    up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
+                }else {
+                    up = false;
+                }
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
@@ -247,7 +252,12 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
-                boolean up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
+                boolean up = false;
+                if (memberUp && serverUp && pullIn){
+                    up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
+                }else {
+                    up = false;
+                }
 
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);

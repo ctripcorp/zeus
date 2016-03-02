@@ -70,9 +70,9 @@ public class StatusServiceImpl implements StatusService {
             /*
             * offset == 0 is true ; offset == 1 is false.
             * */
-            List<Boolean> offset = new ArrayList<>();
+            List<Boolean> offset = new ArrayList<>(OFFSET_LENGTH);
             for (int i = 0; i < OFFSET_LENGTH; i++) {
-                offset.set(i, 0 == (tmpStatus & tmp));
+                offset.add(offset.size(), 0 == (tmpStatus & tmp));
                 tmpStatus = tmpStatus >> 1;
             }
             result.put(statusGroupServerDo.getSlbVirtualServerId() + "_" + statusGroupServerDo.getGroupId() + "_" + statusGroupServerDo.getIp(), offset);
