@@ -7,9 +7,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.model.EntityFactory;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.ModelStatusMapping;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.tag.TagBox;
 import com.ctrip.zeus.task.entity.OpsTask;
@@ -41,6 +39,8 @@ public class DeactivateResource {
     private TagBox tagBox;
     @Resource
     private GroupRepository groupRepository;
+    @Resource
+    private SlbRepository slbRepository;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
@@ -145,5 +145,21 @@ public class DeactivateResource {
 
         TaskResult results = taskManager.getResult(taskId, 10000L);
         return responseHandler.handle(results, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/slb")
+    @Authorize(name = "activate")
+    public Response deactivateSlb(@Context HttpServletRequest request,
+                                  @Context HttpHeaders hh,
+                                  @QueryParam("slbId") Long slbId) throws Exception {
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesBySlbIds(slbId);
+        if (vsMap.getOnlineMapping() != null && vsMap.getOnlineMapping().size() > 0) {
+            throw new ValidationException("Has Activated Vses Related to Slb[" + slbId + "]");
+        }
+        IdVersion idVersion = new IdVersion(slbId, 0);
+        slbRepository.updateStatus(new IdVersion[]{idVersion});
+
+        return responseHandler.handle(slbRepository.getById(slbId), hh.getMediaType());
     }
 }
