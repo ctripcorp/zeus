@@ -94,7 +94,7 @@ public class HealthCheckFetchTask extends AbstractTask {
             if (globalJobDo == null) {
                 globalJobDo = new GlobalJobDo().setJobKey(key).setStartTime(new Date()).setStatus("DOING")
                         .setDataChangeLastTime(new Date()).setFinishTime(new Date()).setOwner(S.getIp());
-                globalJobDao.updateByPK(globalJobDo, GlobalJobEntity.UPDATESET_FULL);
+                globalJobDao.insert(globalJobDo);
                 return true;
             } else {
                 if (!globalJobDo.getStatus().equals("DOING")) {
@@ -130,6 +130,9 @@ public class HealthCheckFetchTask extends AbstractTask {
     }
 
     private void commitTicket(String key, int retry) {
+        if (retry < 0){
+            return;
+        }
         GlobalJobDo globalJobDo = new GlobalJobDo().setJobKey(key).setFinishTime(new Date()).setStatus("DONE")
                 .setDataChangeLastTime(new Date()).setOwner(S.getIp());
         try {
