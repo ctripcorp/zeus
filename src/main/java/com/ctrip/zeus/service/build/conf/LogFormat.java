@@ -8,7 +8,7 @@ import com.netflix.config.DynamicStringProperty;
  */
 public class LogFormat {
     private static DynamicStringProperty logFormat = DynamicPropertyFactory.getInstance().getStringProperty("slb.nginx.log-format",
-            "'[$time_local] $host $hostname $server_addr $request_method $request_url '\n" +
+            "'[$time_local] $host $hostname $server_addr $request_method $request_uri '\n" +
                     "'$server_port $remote_user $remote_addr $http_x_forwarded_for '\n" +
                     "'$server_protocol \"$http_user_agent\" \"$http_cookie\" \"$http_referer\" '\n" +
                     "'$status $request_length $bytes_sent $request_time $upstream_response_time '\n" +
