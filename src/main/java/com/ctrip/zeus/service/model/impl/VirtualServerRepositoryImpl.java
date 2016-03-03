@@ -78,6 +78,10 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer add(Long slbId, VirtualServer virtualServer) throws Exception {
+        if (!slbModelValidator.exists(slbId)) {
+            throw new ValidationException("Slb with id " + slbId + "does not exits.");
+        }
+
         virtualServer.setSlbId(slbId);
         for (Domain domain : virtualServer.getDomains()) {
             domain.setName(domain.getName().toLowerCase());
@@ -100,8 +104,13 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer update(VirtualServer virtualServer) throws Exception {
-        if (!virtualServerModelValidator.exists(virtualServer.getId()))
+        if (!virtualServerModelValidator.exists(virtualServer.getId())) {
             throw new ValidationException("Virtual server with id " + virtualServer.getId() + " does not exist.");
+        }
+        if (!slbModelValidator.exists(virtualServer.getSlbId())) {
+            throw new ValidationException("Slb with id " + virtualServer.getSlbId() + "does not exits.");
+        }
+
         for (Domain domain : virtualServer.getDomains()) {
             domain.setName(domain.getName().toLowerCase());
         }
