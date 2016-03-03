@@ -62,7 +62,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
                 .setVersion(virtualServer.getVersion())
                 .setHash(VersionUtils.getHash(virtualServer.getId(), virtualServer.getVersion())));
 
-        rVsStatusDao.insertOrUpdate(new RelVsStatusDo().setVsId(vsId).setOfflineVersion(virtualServer.getVersion()));
+        rVsStatusDao.insertOrUpdate(check.setOfflineVersion(virtualServer.getVersion()));
 
         rVsSlbDao.insert(new RelVsSlbDo().setVsId(virtualServer.getId()).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion()));
         vsDomainRelMaintainer.updateRel(virtualServer);

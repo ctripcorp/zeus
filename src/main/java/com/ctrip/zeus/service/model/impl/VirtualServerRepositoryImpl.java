@@ -128,7 +128,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         Iterator<VirtualServer> iter = check.iterator();
         while (iter.hasNext()) {
             VirtualServer c = iter.next();
-            if (c.getId().equals(virtualServer.getId()) && c.getVersion().equals(virtualServer.getVersion())) {
+            if (c.getId().equals(virtualServer.getId())) {
                 iter.remove();
                 break;
             }

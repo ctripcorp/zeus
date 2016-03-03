@@ -84,8 +84,8 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertEquals(1, groupCriteriaQuery.queryByName("testGroupOnVs1").longValue());
 
         IdVersion[] gKeyArray = groupCriteriaQuery.queryByIdAndMode(1L, SelectionMode.OFFLINE_FIRST);
+        Assert.assertEquals(1, gKeyArray.length);
         Assert.assertEquals(new IdVersion(1L, 1), gKeyArray[0]);
-        Assert.assertNull(gKeyArray[1]);
     }
 
     @Test
@@ -114,8 +114,8 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertArrayEquals(new Long[]{1L, 2L, 3L}, values);
 
         IdVersion[] vsKeyArray = virtualServerCriteriaQuery.queryByIdAndMode(2L, SelectionMode.ONLINE_EXCLUSIVE);
+        Assert.assertEquals(1, vsKeyArray.length);
         Assert.assertEquals(new IdVersion(2L, 1), vsKeyArray[0]);
-        Assert.assertNull(vsKeyArray[1]);
     }
 
     @Test
@@ -150,8 +150,8 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertArrayEquals(new Long[]{2L}, values);
 
         IdVersion[] sKeyArray = slbCriteriaQuery.queryByIdAndMode(1L, SelectionMode.ONLINE_EXCLUSIVE);
+        Assert.assertEquals(1, sKeyArray.length);
         Assert.assertEquals(new IdVersion(1L, 1), sKeyArray[0]);
-        Assert.assertNull(sKeyArray[1]);
     }
 
     @Test

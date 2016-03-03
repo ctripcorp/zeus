@@ -72,7 +72,7 @@ public class GroupEntityManager implements GroupSync {
                 .setContent(ContentWriters.writeGroupContent(group))
                 .setHash(VersionUtils.getHash(group.getId(), group.getVersion())));
 
-        rGroupStatusDao.insertOrUpdate(new RelGroupStatusDo().setGroupId(group.getId()).setOfflineVersion(group.getVersion()));
+        rGroupStatusDao.insertOrUpdate(check.setOfflineVersion(group.getVersion()));
 
         groupVsRelMaintainer.updateRel(group);
         groupGsRelMaintainer.updateRel(group);

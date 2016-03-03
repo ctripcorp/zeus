@@ -47,6 +47,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<Group> getGroupsByVsIds(Long[] vsIds) throws Exception {
+        if (vsIds == null || vsIds.length == 0) return new ModelStatusMapping<>();
+
         Set<Long> groupIds = new HashSet<>();
         Map<String, Group> ref = new HashMap<>();
 
@@ -71,6 +73,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<VirtualServer> getVsesBySlbIds(Long slbId) throws Exception {
+        if (slbId == null) return new ModelStatusMapping<>();
+
         Set<Long> vsIds = new HashSet<>();
         Map<String, VirtualServer> ref = new HashMap<>();
 
@@ -92,6 +96,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<Slb> getSlbsByIds(Long[] slbIds) throws Exception {
+        if (slbIds == null || slbIds.length == 0) return new ModelStatusMapping<>();
+
         Map<String, Slb> ref = new HashMap<>();
         for (ArchiveSlbDo d : archiveSlbDao.findVersionizedByIds(slbIds, ArchiveSlbEntity.READSET_FULL)) {
             Slb slb = ContentReaders.readSlbContent(d.getContent());
@@ -111,6 +117,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<VirtualServer> getVsesByIds(Long[] vsIds) throws Exception {
+        if (vsIds == null || vsIds.length == 0) return new ModelStatusMapping<>();
+
         Map<String, VirtualServer> ref = new HashMap<>();
         for (MetaVsArchiveDo d : archiveVsDao.findVersionizedByIds(vsIds, ArchiveVsEntity.READSET_FULL)) {
             VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
@@ -129,6 +137,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public ModelStatusMapping<Group> getGroupsByIds(Long[] groupIds) throws Exception {
+        if (groupIds == null || groupIds.length == 0) return new ModelStatusMapping<>();
+
         Map<String, Group> ref = new HashMap<>();
         for (ArchiveGroupDo d : archiveGroupDao.findVersionizedByIds(groupIds, ArchiveGroupEntity.READSET_FULL)) {
             Group g = ContentReaders.readGroupContent(d.getContent());
@@ -150,6 +160,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public Long[] getGroupIdsByGroupServerIp(String ip, SelectionMode mode) throws Exception {
+        if (ip == null || ip.isEmpty()) return new Long[0];
+
         Set<Long> result = new HashSet<>();
         Set<String> range = new HashSet<>();
         for (RelGroupGsDo d : rGroupGsDao.findAllByIp(ip, RGroupGsEntity.READSET_FULL)) {
@@ -173,6 +185,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public Long[] getSlbIdsByIp(String ip, SelectionMode mode) throws Exception {
+        if (ip == null || ip.isEmpty()) return new Long[0];
+
         final Set<IdVersion> slbFilter = slbCriteriaQuery.queryBySlbServerIp(ip);
         final SelectionMode m = mode;
         return new QueryExecuter.Builder<IdVersion>()
@@ -210,6 +224,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public Long[] getVsIdsBySlbId(Long slbId, SelectionMode mode) throws Exception {
+        if (slbId == null || slbId.longValue() == 0L) return new Long[0];
+
         final Set<IdVersion> vsFilter = virtualServerCriteriaQuery.queryBySlbId(slbId);
         final SelectionMode m = mode;
         return new QueryExecuter.Builder<IdVersion>()
@@ -247,6 +263,8 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Override
     public Long[] getGroupIdsByVsIds(Long[] vsIds, SelectionMode mode) throws Exception {
+        if (vsIds == null || vsIds.length == 0) return new Long[0];
+
         final Set<IdVersion> groupFilter = groupCriteriaQuery.queryByVsIds(vsIds);
         final SelectionMode m = mode;
         return new QueryExecuter.Builder<IdVersion>()

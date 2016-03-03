@@ -69,7 +69,7 @@ public class SlbEntityManager implements SlbSync {
                 .setContent(ContentWriters.writeSlbContent(slb))
                 .setHash(VersionUtils.getHash(slb.getId(), slb.getVersion())));
 
-        rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setId(slb.getId()).setOfflineVersion(slb.getVersion()));
+        rSlbStatusDao.insertOrUpdate(check.setOfflineVersion(slb.getVersion()));
 
         slbServerRelMaintainer.updateRel(slb);
     }
@@ -90,6 +90,7 @@ public class SlbEntityManager implements SlbSync {
     @Override
     public int delete(Long slbId) throws Exception {
         slbServerRelMaintainer.deleteRel(slbId);
+        rSlbStatusDao.deleteAllBySlb(new RelSlbStatusDo().setSlbId(slbId));
         int count = slbDao.deleteByPK(new SlbDo().setId(slbId));
         archiveSlbDao.deleteBySlb(new ArchiveSlbDo().setSlbId(slbId));
         return count;

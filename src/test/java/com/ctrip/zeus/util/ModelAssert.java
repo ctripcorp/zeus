@@ -21,6 +21,7 @@ public class ModelAssert {
         }
         Assert.assertEquals(expected.getHealthCheck().getUri(), actual.getHealthCheck().getUri());
         Assert.assertEquals(expected.getLoadBalancingMethod().getType(), actual.getLoadBalancingMethod().getType());
+        Assert.assertEquals(expected.getVersion(), actual.getVersion());
     }
 
     public static void assertGroupVsEquals(GroupVirtualServer expected, GroupVirtualServer actual) {
@@ -42,6 +43,7 @@ public class ModelAssert {
         for (int i = 0; i < expected.getDomains().size(); i++) {
             Assert.assertEquals(expected.getDomains().get(i), actual.getDomains().get(i));
         }
+        Assert.assertEquals(expected.getVersion(), actual.getVersion());
     }
 
     public static void assertGroupServerEquals(GroupServer expected, GroupServer actual) {
@@ -60,5 +62,6 @@ public class ModelAssert {
         Assert.assertEquals(expected.getSlbServers().size(), actual.getSlbServers().size());
         Assert.assertEquals(expected.getVips().size(), actual.getVips().size());
         Assert.assertEquals(expected.getVirtualServers().size(), actual.getVirtualServers().size());
+        Assert.assertEquals(expected.getVersion(), actual.getVersion());
     }
 }
