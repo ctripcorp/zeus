@@ -51,10 +51,10 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
             addRel(object);
             return;
         }
-        int offlineVersion = versions[OFFSET_OFFLINE];
+        int onlineVersion = versions[OFFSET_ONLINE];
         List<T> offline = new ArrayList<>();
         for (T t : getRelsByObjectId(object)) {
-            if (getIdxKey(t).getVersion().intValue() == offlineVersion) {
+            if (getIdxKey(t).getVersion().intValue() != onlineVersion) {
                 offline.add(t);
             }
         }
@@ -175,6 +175,7 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
                 setDo(object, rels.get(j), d);
                 dos.add(d);
             }
+            result.put("insert", dos);
         }
         return result;
     }

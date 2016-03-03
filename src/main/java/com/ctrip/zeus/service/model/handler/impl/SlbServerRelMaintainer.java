@@ -56,14 +56,14 @@ public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServer
     @Override
     protected Integer[] getStatusByObjectId(Slb object) throws Exception {
         RelSlbStatusDo d = rSlbStatusDao.findBySlb(object.getId(), RSlbStatusEntity.READSET_FULL);
-        return new Integer[]{d.getOfflineVersion(), d.getOfflineVersion()};
+        return new Integer[]{d.getOfflineVersion(), d.getOnlineVersion()};
     }
 
     @Override
     protected Map<Long, Integer[]> getStatusByObjectId(Long[] objectIds) throws Exception {
         Map<Long, Integer[]> result = new HashMap<>();
         for (RelSlbStatusDo d : rSlbStatusDao.findBySlbs(objectIds, RSlbStatusEntity.READSET_FULL)) {
-            result.put(d.getSlbId(), new Integer[]{d.getOfflineVersion(), d.getOfflineVersion()});
+            result.put(d.getSlbId(), new Integer[]{d.getOfflineVersion(), d.getOnlineVersion()});
         }
         return result;
     }

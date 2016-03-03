@@ -130,7 +130,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             VirtualServer c = iter.next();
             if (c.getId().equals(virtualServer.getId())) {
                 iter.remove();
-                break;
             }
         }
         check.add(virtualServer);

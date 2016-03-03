@@ -71,7 +71,7 @@ public class VsDomainRelMaintainer extends MultiRelMaintainerEx<RelVsDomainDo, D
     @Override
     protected Integer[] getStatusByObjectId(VirtualServer object) throws Exception {
         RelVsStatusDo d = rVsStatusDao.findByVs(object.getId(), RVsStatusEntity.READSET_FULL);
-        return new Integer[]{d.getOfflineVersion(), d.getOfflineVersion()};
+        return new Integer[]{d.getOfflineVersion(), d.getOnlineVersion()};
     }
 
     @Override

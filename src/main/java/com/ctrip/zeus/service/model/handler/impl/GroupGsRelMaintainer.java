@@ -62,7 +62,7 @@ public class GroupGsRelMaintainer extends MultiRelMaintainerEx<RelGroupGsDo, Gro
     @Override
     protected Integer[] getStatusByObjectId(Group object) throws Exception {
         RelGroupStatusDo d = rGroupStatusDao.findByGroup(object.getId(), RGroupStatusEntity.READSET_FULL);
-        return new Integer[]{d.getOfflineVersion(), d.getOfflineVersion()};
+        return new Integer[]{d.getOfflineVersion(), d.getOnlineVersion()};
     }
 
     @Override

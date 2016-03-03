@@ -64,7 +64,22 @@ public class VirtualServerEntityManager implements VirtualServerSync {
 
         rVsStatusDao.insertOrUpdate(check.setOfflineVersion(virtualServer.getVersion()));
 
-        rVsSlbDao.insert(new RelVsSlbDo().setVsId(virtualServer.getId()).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion()));
+        List<RelVsSlbDo> rel = rVsSlbDao.findByVs(vsId, RVsSlbEntity.READSET_FULL);
+        Iterator<RelVsSlbDo> iter = rel.iterator();
+        while (iter.hasNext()) {
+            RelVsSlbDo r = iter.next();
+            if (r.getVsVersion() == check.getOnlineVersion()) {
+                iter.remove();
+            }
+        }
+        if (rel.size() == 0) {
+            rVsSlbDao.insert(new RelVsSlbDo().setVsId(virtualServer.getId()).setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion()));
+        } else {
+            RelVsSlbDo r = rel.get(0);
+            r.setSlbId(virtualServer.getSlbId()).setVsVersion(virtualServer.getVersion());
+            rVsSlbDao.update(r, RVsSlbEntity.UPDATESET_FULL);
+            rVsSlbDao.delete(rel.subList(1, rel.size()).toArray(new RelVsSlbDo[rel.size() - 1]));
+        }
         vsDomainRelMaintainer.updateRel(virtualServer);
     }
 
