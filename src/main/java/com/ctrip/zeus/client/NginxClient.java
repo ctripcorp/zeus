@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -58,7 +59,7 @@ public class NginxClient extends AbstractRestClient {
         }
     }
 
-    public NginxResponse write(List<Long> vsIds , Long slbId,Integer slbVersion)throws IOException{
+    public NginxResponse write(Set<Long> vsIds , Long slbId,Integer slbVersion)throws IOException{
         WebTarget webTarget = getTarget().path("/api/nginx/write").queryParam("slbId",slbId);
         if (slbVersion!=null)
         {

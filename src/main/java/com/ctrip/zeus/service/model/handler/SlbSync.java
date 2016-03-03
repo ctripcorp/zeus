@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model.handler;
 import com.ctrip.zeus.model.entity.Slb;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -14,13 +15,10 @@ public interface SlbSync {
 
     void update(Slb slb) throws Exception;
 
-    void updateVersion(Long slbId) throws Exception;
+    void updateStatus(List<Slb> slbs) throws Exception;
 
     int delete(Long slbId) throws Exception;
 
     @Deprecated
-    List<Long> port(Slb[] slbs) throws Exception;
-
-    @Deprecated
-    void port(Slb slb) throws Exception;
+    Set<Long> port(Long[] slbIds) throws Exception;
 }

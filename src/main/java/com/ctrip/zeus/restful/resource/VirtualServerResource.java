@@ -2,7 +2,6 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServerList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
@@ -11,9 +10,9 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
-import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
-import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
@@ -27,7 +26,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -39,11 +38,7 @@ public class VirtualServerResource {
     @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
-    private SlbRepository slbRepository;
-    @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
-    @Resource
-    private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private TagService tagService;
     @Resource
@@ -61,55 +56,116 @@ public class VirtualServerResource {
                          @TrimmedQueryParam("domain") final String domain,
                          @TrimmedQueryParam("tag") final String tag,
                          @TrimmedQueryParam("pname") final String pname,
-                         @TrimmedQueryParam("pvalue") final String pvalue) throws Exception {
-        VirtualServerList vslist = new VirtualServerList();
-        QueryExecuter executer = new QueryExecuter.Builder()
-                .addFilterId(new FilterSet<Long>() {
+                         @TrimmedQueryParam("pvalue") final String pvalue,
+                         @TrimmedQueryParam("mode") final String mode) throws Exception {
+        final SelectionMode selectionMode = SelectionMode.getMode(mode);
+
+        final IdVersion[] vsFilter = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
                     @Override
-                    public Set<Long> filter(Set<Long> input) throws Exception {
+                    public boolean shouldFilter() throws Exception {
+                        return slbId != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return virtualServerCriteriaQuery.queryBySlbId(slbId);
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return domain != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return virtualServerCriteriaQuery.queryByDomain(domain);
+                    }
+                }).build(IdVersion.class).run();
+
+        final Long[] vsIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsFilter != null;
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<>();
+                        for (IdVersion e : vsFilter) {
+                            result.add(e.getId());
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return true;
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
                         return virtualServerCriteriaQuery.queryAll();
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
-                    public Set<Long> filter(Set<Long> input) throws Exception {
-                        if (slbId != null) {
-                            input.retainAll(virtualServerCriteriaQuery.queryBySlbId(slbId));
-                        }
-                        return input;
+                    public boolean shouldFilter() throws Exception {
+                        return tag != null;
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        return new HashSet<>(tagService.query(tag, "vs"));
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
-                    public Set<Long> filter(Set<Long> input) throws Exception {
-                        if (domain != null) {
-                            input.retainAll(virtualServerCriteriaQuery.queryByDomain(domain));
+                    public boolean shouldFilter() throws Exception {
+                        return pname != null;
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        if (pvalue != null)
+                            return new HashSet<>(propertyService.query(pname, pvalue, "vs"));
+                        else
+                            return new HashSet<>(propertyService.query(pname, "vs"));
+                    }
+                }).build(Long.class).run();
+
+        QueryExecuter<IdVersion> executer = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsFilter != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Set<IdVersion> result = new HashSet<>();
+                        for (IdVersion e : vsFilter) {
+                            result.add(e);
                         }
-                        return input;
+                        return result;
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<IdVersion>() {
                     @Override
-                    public Set<Long> filter(Set<Long> input) throws Exception {
-                        if (tag != null) {
-                            input.retainAll(tagService.query(tag, "vs"));
-                        }
-                        return input;
+                    public boolean shouldFilter() throws Exception {
+                        return true;
                     }
-                })
-                .addFilterId(new FilterSet<Long>() {
+
                     @Override
-                    public Set<Long> filter(Set<Long> input) throws Exception {
-                        if (pname != null) {
-                            if (pvalue != null)
-                                input.retainAll(propertyService.query(pname, pvalue, "vs"));
-                            else
-                                input.retainAll(propertyService.query(pname, "vs"));
-                        }
-                        return input;
+                    public Set<IdVersion> filter() throws Exception {
+                        return virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, selectionMode);
                     }
-                })
-                .build();
+                }).build(IdVersion.class);
+
+        VirtualServerList vslist = new VirtualServerList();
         for (VirtualServer virtualServer : virtualServerRepository.listAll(executer.run())) {
             vslist.addVirtualServer(virtualServer);
         }
@@ -139,7 +195,7 @@ public class VirtualServerResource {
         VirtualServer virtualServer = parseVirtualServer(hh.getMediaType(), vs);
         if (virtualServer.getSlbId() == null)
             throw new ValidationException("Slb id is not provided.");
-        virtualServer = virtualServerRepository.addVirtualServer(virtualServer.getSlbId(), virtualServer);
+        virtualServer = virtualServerRepository.add(virtualServer.getSlbId(), virtualServer);
         return responseHandler.handle(virtualServer, hh.getMediaType());
 
     }
@@ -155,7 +211,7 @@ public class VirtualServerResource {
             throw new ValidationException("Invalid virtual server id.");
         if (virtualServer.getSlbId() == null)
             throw new ValidationException("Slb id is not provided.");
-        virtualServerRepository.updateVirtualServer(virtualServer);
+        virtualServerRepository.update(virtualServer);
         return responseHandler.handle(virtualServer, hh.getMediaType());
     }
 
@@ -168,34 +224,8 @@ public class VirtualServerResource {
                                         @QueryParam("vsId") Long vsId) throws Exception {
         if (vsId == null)
             throw new ValidationException("vsId is required.");
-        Slb slb = slbRepository.getById(slbCriteriaQuery.queryByVs(vsId));
-        if (slb == null) {
-            throw new ValidationException("Cannot find slb with vsId " + vsId + ".");
-        }
-        virtualServerRepository.deleteVirtualServer(vsId);
+        virtualServerRepository.delete(vsId);
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
-    }
-
-    @GET
-    @Path("/vs/upgradeAll")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeAll(@Context HttpHeaders hh,
-                               @Context HttpServletRequest request) throws Exception {
-        List<Long> vsIds = virtualServerRepository.portVirtualServerArchives();
-        if (vsIds.size() == 0)
-            return responseHandler.handle("Successfully ported all virtual server relations.", hh.getMediaType());
-        else
-            return responseHandler.handle("Error occurs when porting virtual server relations on id " + Joiner.on(',').join(vsIds) + ".", hh.getMediaType());
-    }
-
-    @GET
-    @Path("/vs/upgrade")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeSingle(@Context HttpHeaders hh,
-                                  @Context HttpServletRequest request,
-                                  @QueryParam("vsId") Long vsId) throws Exception {
-        virtualServerRepository.portVirtualServerArchive(vsId);
-        return responseHandler.handle("Successfully ported virtual server relations.", hh.getMediaType());
     }
 
     private VirtualServer parseVirtualServer(MediaType mediaType, String virtualServer) throws Exception {
@@ -210,5 +240,17 @@ public class VirtualServerResource {
             }
         }
         return vs;
+    }
+
+    @GET
+    @Path("/vs/upgradeAll")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response upgradeAll(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
+        Set<Long> list = virtualServerCriteriaQuery.queryAll();
+        Set<Long> result = virtualServerRepository.port(list.toArray(new Long[list.size()]));
+        if (result.size() == 0)
+            return responseHandler.handle("Upgrade all successfully.", hh.getMediaType());
+        else
+            return responseHandler.handle("Upgrade fail on ids: " + Joiner.on(",").join(result), hh.getMediaType());
     }
 }

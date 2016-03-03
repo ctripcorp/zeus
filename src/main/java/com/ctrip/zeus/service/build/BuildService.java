@@ -19,28 +19,17 @@ import java.util.Set;
  */
 public interface BuildService extends Repository {
 
-    Map<Long,VirtualServer> getNeedBuildVirtualServers(Long slbId,
-                                                       Map<Long,VirtualServer> activatingVses,
-                                                       Map<Long,VirtualServer> activatedVses,
-                                                       HashMap<Long , Group> activatingGroups ,
-                                                       Set<Long>groupList)throws Exception;
-
-    Map<Long,List<Group>> getInfluencedVsGroups(Long slbId,
-                                                HashMap<Long,Group>activatingGroups,
-                                                Map<Long,VirtualServer> buildVirtualServer,
-                                                Set<Long> deactivateGroup)throws Exception;
-
-    void build(Long slbId,
-                 Slb activatedSlb,
-                 Map<Long,VirtualServer>buildVirtualServer,
+    boolean build(Slb onlineSlb,
+                 Map<Long,VirtualServer> onlineVses,
+                 Set<Long> needBuildVses,
                  Set<Long> deactivateVses,
-                 Map<Long,List<Group>>groupsMap,
+                 Map<Long,List<Group>> vsGroups,
                  Set<String> allDownServers,
                  Set<String>allUpGroupServers
     )throws Exception;
 
-    List<DyUpstreamOpsData> buildUpstream(Long slbId,
-                                          Map<Long,VirtualServer> buildVirtualServer,
+    DyUpstreamOpsData buildUpstream(Long slbId,
+                                          VirtualServer buildVirtualServer,
                                           Set<String>allDownServers ,
                                           Set<String> allUpGroupServers,
                                           Group group ) throws Exception;

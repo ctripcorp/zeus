@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.model;
 import com.ctrip.zeus.model.entity.VirtualServer;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/7/27.
@@ -11,19 +12,24 @@ public interface VirtualServerRepository {
 
     List<VirtualServer> listAll(Long[] vsIds) throws Exception;
 
-    VirtualServer getById(Long virtualServerId) throws Exception;
+    List<VirtualServer> listAll(IdVersion[] keys) throws Exception;
 
-    VirtualServer addVirtualServer(Long slbId, VirtualServer virtualServer) throws Exception;
+    VirtualServer getById(Long vsId) throws Exception;
 
-    void updateVirtualServer(VirtualServer virtualServer) throws Exception;
+    VirtualServer getByKey(IdVersion key) throws Exception;
 
-    void deleteVirtualServer(Long virtualServerId) throws Exception;
+    VirtualServer add(Long slbId, VirtualServer virtualServer) throws Exception;
+
+    VirtualServer update(VirtualServer virtualServer) throws Exception;
+
+    void delete(Long virtualServerId) throws Exception;
 
     void installCertificate(VirtualServer virtualServer) throws Exception;
 
-    @Deprecated
-    List<Long> portVirtualServerArchives() throws Exception;
+    void updateStatus(IdVersion[] vses, SelectionMode state) throws Exception;
+
+    void updateStatus(IdVersion[] vses) throws Exception;
 
     @Deprecated
-    void portVirtualServerArchive(Long vsId) throws Exception;
+    Set<Long> port(Long[] vsIds) throws Exception;
 }

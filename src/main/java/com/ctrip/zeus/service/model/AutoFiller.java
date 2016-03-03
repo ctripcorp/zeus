@@ -1,9 +1,16 @@
 package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nullable;
 import javax.annotation.Resource;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/10/29.
@@ -12,11 +19,28 @@ import javax.annotation.Resource;
 public class AutoFiller {
     @Resource
     private VirtualServerRepository virtualServerRepository;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     private static final String RegexRootPath = " /";
 
     public void autofill(Group group) throws Exception {
-        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
-            gvs.setVirtualServer(virtualServerRepository.getById(gvs.getVirtualServer().getId()));
+        Set<Long> vsIds = new HashSet<>();
+        for (GroupVirtualServer e : group.getGroupVirtualServers()) {
+            vsIds.add(e.getVirtualServer().getId());
+        }
+        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), SelectionMode.ONLINE_FIRST);
+        Map<Long, VirtualServer> map = Maps.uniqueIndex(
+                virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()])),
+                new Function<VirtualServer, Long>() {
+                    @Nullable
+                    @Override
+                    public Long apply(@Nullable VirtualServer virtualServer) {
+                        return virtualServer.getId();
+                    }
+                });
+
+        for (GroupVirtualServer e : group.getGroupVirtualServers()) {
+            e.setVirtualServer(map.get(e.getVirtualServer().getId()));
         }
         autofillEmptyFields(group);
     }
@@ -49,19 +73,31 @@ public class AutoFiller {
     }
 
     public void autofillVGroup(Group group) throws Exception {
-        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
-            VirtualServer tvs = gvs.getVirtualServer();
-            VirtualServer vs = virtualServerRepository.getById(gvs.getVirtualServer().getId());
-            tvs.setName(vs.getName()).setSlbId(vs.getSlbId()).setPort(vs.getPort()).setSsl(vs.getSsl());
-            tvs.getDomains().clear();
-            for (Domain domain : vs.getDomains()) {
-                tvs.getDomains().add(domain);
-            }
-            if (gvs.getPriority() == null) {
-                if (gvs.getPath().endsWith(RegexRootPath))
-                    gvs.setPriority(Integer.MIN_VALUE);
+        Set<Long> vsIds = new HashSet<>();
+        for (GroupVirtualServer e : group.getGroupVirtualServers()) {
+            vsIds.add(e.getVirtualServer().getId());
+        }
+        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), SelectionMode.ONLINE_FIRST);
+        Map<Long, VirtualServer> map = Maps.uniqueIndex(
+                virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()])),
+                new Function<VirtualServer, Long>() {
+                    @Nullable
+                    @Override
+                    public Long apply(@Nullable VirtualServer virtualServer) {
+                        return virtualServer.getId();
+                    }
+                });
+
+        for (GroupVirtualServer e : group.getGroupVirtualServers()) {
+            e.setVirtualServer(map.get(e.getVirtualServer().getId()));
+        }
+
+        for (GroupVirtualServer e : group.getGroupVirtualServers()) {
+            if (e.getPriority() == null) {
+                if (e.getPath().endsWith(RegexRootPath))
+                    e.setPriority(Integer.MIN_VALUE);
                 else
-                    gvs.setPriority(gvs.getRewrite() == null ? 1000 : -1000);
+                    e.setPriority(e.getRewrite() == null ? 1000 : -1000);
             }
         }
         group.setHealthCheck(null);

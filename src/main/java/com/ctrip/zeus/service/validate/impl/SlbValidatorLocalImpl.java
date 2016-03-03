@@ -6,6 +6,8 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.LocalValidate;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.service.build.conf.ServerConf;
+import com.ctrip.zeus.service.model.EntityFactory;
+import com.ctrip.zeus.service.model.ModelStatusMapping;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.validate.SlbValidatorLocal;
 import org.springframework.stereotype.Component;
@@ -20,18 +22,21 @@ public class SlbValidatorLocalImpl implements SlbValidatorLocal {
     @Resource
     SlbRepository slbRepository;
     @Resource
+    EntityFactory entityFactory;
+    @Resource
     LocalValidate localValidate;
 
     @Override
     public SlbValidateResponse validate(Long slbId) throws Exception {
         SlbValidateResponse response = new SlbValidateResponse();
         response.setSlbId(slbId);
-        Slb slb = slbRepository.getById(slbId);
-        if (slb == null)
+        ModelStatusMapping<Slb> mapping = entityFactory.getSlbsByIds(new Long[]{slbId});
+        if (mapping == null || mapping.getOfflineMapping() == null || mapping.getOfflineMapping().get(slbId) == null)
         {
             response.setSucceed(false).setMsg("Not found Slb by slbId!");
             return response;
         }
+        Slb slb = mapping.getOfflineMapping().get(slbId);
         if (!validateNginxBinAndConf(slb)){
             response.setSucceed(false).setMsg("slb conf path or bin path is not exist!");
             return response;

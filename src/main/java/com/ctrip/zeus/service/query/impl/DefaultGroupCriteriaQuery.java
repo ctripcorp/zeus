@@ -1,14 +1,14 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.service.model.SelectionMode;
+import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.model.IdVersion;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/8/7.
@@ -22,15 +22,16 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     @Resource
     private RGroupGsDao rGroupGsDao;
     @Resource
-    private RVsSlbDao rVsSlbDao;
-    @Resource
     private RGroupVgDao rGroupVgDao;
+    @Resource
+    private RGroupStatusDao rGroupStatusDao;
 
     @Override
     public Long queryByName(String name) throws Exception {
         GroupDo g = groupDao.findByName(name, GroupEntity.READSET_FULL);
         return g == null ? 0L : g.getId();
     }
+
 
     @Override
     public Set<Long> queryByAppId(String appId) throws Exception {
@@ -51,47 +52,76 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
-    public Set<Long> queryBySlbId(Long slbId) throws Exception {
-        List<Long> vsIds = new ArrayList<>();
-        for (RelVsSlbDo relVsSlbDo : rVsSlbDao.findAllVsesBySlb(slbId, RVsSlbEntity.READSET_FULL)) {
-            vsIds.add(relVsSlbDo.getVsId());
-        }
-        return queryByVsIds(vsIds.toArray(new Long[vsIds.size()]));
-    }
-
-    @Override
-    public Set<Long> queryByVsId(Long vsId) throws Exception {
-        Set<Long> groupIds = new HashSet<>();
-        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllGroupsByVs(vsId, RGroupVsEntity.READSET_FULL)) {
-            groupIds.add(relGroupVsDo.getGroupId());
-        }
-        return groupIds;
-    }
-
-    @Override
-    public Set<Long> queryByVsIds(Long[] vsIds) throws Exception {
-        Set<Long> groupIds = new HashSet<>();
-        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllGroupsByVses(vsIds, RGroupVsEntity.READSET_FULL)) {
-            groupIds.add(relGroupVsDo.getGroupId());
-        }
-        return groupIds;
-    }
-
-    @Override
-    public Set<Long> queryByGroupServerIp(String ip) throws Exception {
-        Set<Long> groupIds = new HashSet<>();
-        for (RelGroupGsDo relGroupGsDo : rGroupGsDao.findAllByIp(ip, RGroupGsEntity.READSET_FULL)) {
-            groupIds.add(relGroupGsDo.getGroupId());
-        }
-        return groupIds;
-    }
-
-    @Override
     public Set<Long> queryAllVGroups() throws Exception {
         Set<Long> groupIds = new HashSet<>();
         for (RelGroupVgDo relGroupVgDo : rGroupVgDao.findAll(RGroupVgEntity.READSET_FULL)) {
             groupIds.add(relGroupVgDo.getGroupId());
         }
         return groupIds;
+    }
+
+    @Override
+    public Set<IdVersion> queryByIdsAndMode(Long[] groupIds, SelectionMode mode) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL)) {
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                result.add(new IdVersion(d.getGroupId(), v));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public IdVersion[] queryByIdAndMode(Long groupId, SelectionMode mode) throws Exception {
+        RelGroupStatusDo d = rGroupStatusDao.findByGroup(groupId, RGroupStatusEntity.READSET_FULL);
+        int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
+
+        IdVersion[] result = new IdVersion[v.length];
+        for (int i = 0; i < result.length && i < v.length; i++) {
+            result[i] = new IdVersion(groupId, v[i]);
+        }
+        return result;
+    }
+
+    @Override
+    public Set<IdVersion> queryAll(SelectionMode mode) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        Set<Long> groupIds = queryAll();
+        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds.toArray(new Long[groupIds.size()]), RGroupStatusEntity.READSET_FULL)) {
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                result.add(new IdVersion(d.getGroupId(), v));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Set<IdVersion> queryAllVGroups(SelectionMode mode) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        Set<Long> groupIds = queryAllVGroups();
+        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds.toArray(new Long[groupIds.size()]), RGroupStatusEntity.READSET_FULL)) {
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                result.add(new IdVersion(d.getGroupId(), v));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Set<IdVersion> queryByVsId(Long vsId) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllByVs(vsId, RGroupVsEntity.READSET_FULL)) {
+            result.add(new IdVersion(relGroupVsDo.getGroupId(), relGroupVsDo.getGroupVersion()));
+        }
+        return result;
+    }
+
+    @Override
+    public Set<IdVersion> queryByVsIds(Long[] vsIds) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllByVses(vsIds, RGroupVsEntity.READSET_FULL)) {
+            result.add(new IdVersion(relGroupVsDo.getGroupId(), relGroupVsDo.getGroupVersion()));
+        }
+        return result;
     }
 }

@@ -1,14 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="archive-vs" table="archive_vs" alias="av" do-class="MetaVsArchiveDo">
+        <var name="rel-id" value-type="Long"/>
         <var name="ids" value-type="Long[]"/>
-        <var name="pairs" value-type="String[]"/>
+        <var name="hashes" value-type="Integer[]"/>
+        <var name="id-version-array" value-type="String[]"/>
         <readsets>
             <readset name="IDONLY">
                 <member name="id"/>
             </readset>
         </readsets>
         <query-defs>
+            <!--These queries are particularly designed for batch selection required task executors-->
+            <query name="find-all-by-slb-id" type="SELECT" multiple="true">
+                <param name="rel-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN (SELECT rvs.vs_id, rvs.vs_version
+                        FROM r_vs_slb rvs
+                        INNER JOIN r_vs_status rvss
+                            ON rvs.vs_id = rvss.vs_id
+                            AND rvs.slb_id = ${rel-id}
+                            AND (rvs.vs_version = rvss.online_version OR rvs.vs_version = rvss.offline_version)) AS tmp
+                    ON av.vs_id = tmp.vs_id AND av.version = tmp.vs_version
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-versionized-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN r_vs_status rvs
+                    ON av.vs_id = rvs.vs_id
+                        AND (av.version = rvs.online_version OR av.version = rvs.offline_version)
+                    WHERE av.vs_id IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <!--end-->
             <query name="find-all-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
@@ -16,6 +49,18 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-id-version" type="SELECT" multiple="true">
+                <param name="hashes"/>
+                <param name="id-version-array"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='hash'/> in <IN>${hashes}</IN>
+                    HAVING CONCAT(vs_id, ',', version) in <IN>${id-version-array}</IN>
                     ]]>
                 </statement>
             </query>
@@ -29,17 +74,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-max-version-by-vs" type="SELECT">
-                <param name="vs-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='vs-id'/> = ${vs-id}
-                    ORDER BY <FIELD name='id'/> DESC LIMIT 1
-                    ]]>
-                </statement>
-            </query>
             <query name="find-by-vs-and-version" type="SELECT">
                 <param name="vs-id"/>
                 <param name="version"/>
@@ -49,19 +83,6 @@
                     FROM <TABLE/>
                     WHERE <FIELD name='vs-id'/> = ${vs-id}
                         AND <FIELD name='version'/> = ${version}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-vs-and-version" type="SELECT" multiple="true">
-                <param name="ids"/>
-                <param name="pairs"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM (
-                        SELECT id, concat(vs_id, ',', version) as vs_v FROM archive_vs
-                        WHERE vs_id in <IN>${ids}</IN> ) av
-                    WHERE av.vs_v in <IN>${pairs}</IN>
                     ]]>
                 </statement>
             </query>
@@ -80,15 +101,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-all-by-vs" type="DELETE" batch="true">
-                <param name="vs-id"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='vs-id'/> = ${vs-id}
-                    ]]>
-                </statement>
-            </query>
             <!-- for cleansing job -->
             <query name="delete-by-vs-id-less-than-version" type="DELETE">
                 <param name="vs-id"/>
@@ -101,7 +113,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-vs" type="DELETE" batch="true">
+            <query name="delete-by-vs" type="DELETE">
                 <param name="vs-id"/>
                 <statement>
                     <![CDATA[
@@ -148,7 +160,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-id" type="DELETE" batch="true">
+            <query name="delete-by-id" type="DELETE">
                 <param name="id"/>
                 <statement>
                     <![CDATA[
@@ -172,28 +184,6 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='id'/> in <IN>${ids}</IN>
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-slb" type="SELECT" multiple="true">
-                <param name="slb-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='slb-id'/> = ${slb-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-by-slb-and-name" type="SELECT">
-                <param name="slb-id"/>
-                <param name="name"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='slb-id'/> = ${slb-id}
-                        AND <FIELD name='name'/> = ${name}
                     ]]>
                 </statement>
             </query>

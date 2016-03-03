@@ -1,11 +1,13 @@
 package com.ctrip.zeus.service.status;
 
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.GroupStatusList;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -31,20 +33,21 @@ public interface GroupStatusService {
 
     /**
      * Find online group status by groupId
+     * @param groups groupId
+     * @param vsIds vsids
+     * @param slbId slbId
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getOnlineGroupsStatus(Map<Long,Group> groups ,List<Long> vsIds ,  Long slbId) throws Exception;
+
+    /**
+     * Find all online group status by groupIds and slb id
      * @param groupId groupId
      * @return status list
      * @throws Exception
      */
      List<GroupStatus> getOnlineGroupStatus(Long groupId) throws Exception;
-
-    /**
-     * Find all online group status by groupIds and slb id
-     * @param groupIds groupIds
-     * @param slbId slbId
-     * @return status list
-     * @throws Exception
-     */
-     List<GroupStatus> getOnlineGroupsStatus(Set<Long> groupIds,Long slbId) throws Exception;
 
     /**
      * Find all online groups status
@@ -68,13 +71,19 @@ public interface GroupStatusService {
      * @throws Exception
      */
     List<GroupStatus> getOfflineGroupStatus(Long groupId) throws Exception;
+        /**
+     * Find online group status by groupId
+     * @param groupId groupId
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getOfflineGroupStatus(Long groupId,Long slbId) throws Exception;
 
     /**
      * Find all online group status by groupIds and slb id
-     * @param groupIds groupIds
      * @param slbId slbId
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOfflineGroupsStatus(Set<Long> groupIds,Long slbId) throws Exception;
+    List<GroupStatus> getOfflineGroupsStatus(Map<Long,Group> groups ,Map<Long,Group> onlineGroups ,List<Long> vsIds , Long slbId) throws Exception;
 }

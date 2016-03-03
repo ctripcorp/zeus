@@ -11,7 +11,9 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
@@ -25,7 +27,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -58,37 +60,63 @@ public class SlbResource {
                          @TrimmedQueryParam("type") final String type,
                          @TrimmedQueryParam("tag") final String tag,
                          @TrimmedQueryParam("pname") final String pname,
-                         @TrimmedQueryParam("pvalue") final String pvalue) throws Exception {
-        final SlbList slbList = new SlbList();
-        QueryExecuter executer = new QueryExecuter.Builder()
-                .addFilterId(new FilterSet<Long>() {
+                         @TrimmedQueryParam("pvalue") final String pvalue,
+                         @TrimmedQueryParam("mode") final String mode) throws Exception {
+
+        final SelectionMode selectionMode = SelectionMode.getMode(mode);
+        final Long[] slbIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
                     @Override
-                    public Set<Long> filter(Set<Long> input) throws Exception {
+                    public boolean shouldFilter() throws Exception {
+                        return true;
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
                         return slbCriteriaQuery.queryAll();
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
-                    public Set<Long> filter(Set<Long> input) throws Exception {
-                        if (tag != null) {
-                            input.retainAll(tagService.query(tag, "slb"));
-                        }
-                        return input;
+                    public boolean shouldFilter() throws Exception {
+                        return tag != null;
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        return new HashSet<>(tagService.query(tag, "slb"));
                     }
                 })
-                .addFilterId(new FilterSet<Long>() {
+                .addFilter(new FilterSet<Long>() {
                     @Override
-                    public Set<Long> filter(Set<Long> input) throws Exception {
-                        if (pname != null) {
-                            if (pvalue != null)
-                                input.retainAll(propertyService.query(pname, pvalue, "slb"));
-                            else
-                                input.retainAll(propertyService.query(pname, "slb"));
-                        }
-                        return input;
+                    public boolean shouldFilter() throws Exception {
+                        return pname != null;
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        if (pvalue != null)
+                            return new HashSet<>(propertyService.query(pname, pvalue, "slb"));
+                        else
+                            return new HashSet<>(propertyService.query(pname, "slb"));
+                    }
+                }).build(Long.class).run();
+
+        QueryExecuter<IdVersion> executer = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return true;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return slbIds.length == 0 ? new HashSet<IdVersion>() : slbCriteriaQuery.queryByIdsAndMode(slbIds, selectionMode);
                     }
                 })
-                .build();
+                .build(IdVersion.class);
+
+        final SlbList slbList = new SlbList();
         for (Slb slb : slbRepository.list(executer.run())) {
             slbList.addSlb(getSlbByType(slb, type));
         }
@@ -103,7 +131,9 @@ public class SlbResource {
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
                         @QueryParam("slbId") Long slbId,
                         @TrimmedQueryParam("slbName") String slbName,
-                        @TrimmedQueryParam("type") String type) throws Exception {
+                        @TrimmedQueryParam("server") String serverIp,
+                        @TrimmedQueryParam("type") String type,
+                        @TrimmedQueryParam("mode") final String mode) throws Exception {
         if (slbId == null && slbName == null) {
             throw new Exception("Missing parameter.");
         }
@@ -160,24 +190,13 @@ public class SlbResource {
     @GET
     @Path("/slb/upgradeAll")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeAll(@Context HttpHeaders hh,
-                               @Context HttpServletRequest request) throws Exception {
-
-        List<Long> slbIds = slbRepository.portSlbRel();
-        if (slbIds.size() == 0)
-            return responseHandler.handle("Successfully ported all slb relations.", hh.getMediaType());
+    public Response upgradeAll(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
+        Set<Long> list = slbCriteriaQuery.queryAll();
+        Set<Long> result = slbRepository.port(list.toArray(new Long[list.size()]));
+        if (result.size() == 0)
+            return responseHandler.handle("Upgrade all successfully.", hh.getMediaType());
         else
-            return responseHandler.handle("Error occurs when porting slb relations on id " + Joiner.on(',').join(slbIds) + ".", hh.getMediaType());
-    }
-
-    @GET
-    @Path("/slb/upgrade")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeSingle(@Context HttpHeaders hh,
-                                  @Context HttpServletRequest request,
-                                  @QueryParam("slbId") Long slbId) throws Exception {
-        slbRepository.portSlbRel(slbId);
-        return responseHandler.handle("Successfully ported slb relations.", hh.getMediaType());
+            return responseHandler.handle("Upgrade fail on ids: " + Joiner.on(",").join(result), hh.getMediaType());
     }
 
     private Slb parseSlb(MediaType mediaType, String slb) throws Exception {

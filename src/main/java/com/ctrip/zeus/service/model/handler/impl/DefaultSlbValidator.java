@@ -4,12 +4,18 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
+import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
-import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/6/30.
@@ -17,11 +23,13 @@ import javax.annotation.Resource;
 @Component("slbModelValidator")
 public class DefaultSlbValidator implements SlbValidator {
     @Resource
-    private GroupCriteriaQuery groupCriteriaQuery;
-    @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
     private SlbDao slbDao;
+    @Resource
+    private RSlbStatusDao rSlbStatusDao;
 
     @Override
     public boolean exists(Long targetId) throws Exception {
@@ -47,10 +55,25 @@ public class DefaultSlbValidator implements SlbValidator {
         for (int i = 0; i < ips.length; i++) {
             ips[i] = slb.getSlbServers().get(i).getIp();
         }
+
+        // check if any other slb version who has the server ip is still in effect.
         for (SlbServer slbServer : slb.getSlbServers()) {
-            Long slbId = slbCriteriaQuery.queryBySlbServerIp(slbServer.getIp());
-            if (!slbId.equals(0L) && !slbId.equals(slb.getId())) {
-                throw new ValidationException("Slb server " + slbServer.getIp() + " is added to slb " + slbId + ". Unique server ip is required.");
+            Set<IdVersion> range = slbCriteriaQuery.queryBySlbServerIp(slbServer.getIp());
+            Set<Long> check = new HashSet<>();
+            Iterator<IdVersion> iter = range.iterator();
+            while (iter.hasNext()) {
+                Long e = iter.next().getId();
+                if (e.equals(slb.getId())) {
+                    iter.remove();
+                } else {
+                    check.add(e);
+                }
+            }
+            if (check.size() == 0)
+                return;
+            range.retainAll(slbCriteriaQuery.queryByIdsAndMode(check.toArray(new Long[check.size()]), SelectionMode.REDUNDANT));
+            if (range.size() > 1) {
+                throw new ValidationException("Slb server " + slbServer.getIp() + " is added to (slb,version) " + Joiner.on("; ").join(range) + ". Unique server ip is required.");
             }
         }
     }
@@ -66,7 +89,11 @@ public class DefaultSlbValidator implements SlbValidator {
 
     @Override
     public void removable(Long slbId) throws Exception {
-        if (groupCriteriaQuery.queryBySlbId(slbId).size() > 0)
+        if (virtualServerCriteriaQuery.queryBySlbId(slbId).size() > 0) {
             throw new ValidationException("Slb with id " + slbId + " cannot be deleted. Dependencies exist.");
+        }
+        if (rSlbStatusDao.findBySlb(slbId, RSlbStatusEntity.READSET_FULL).getOnlineVersion() != 0) {
+            throw new ValidationException("Slb must be deactivated before deletion.");
+        }
     }
 }

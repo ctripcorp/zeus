@@ -9,6 +9,7 @@ import com.ctrip.zeus.nginx.entity.ReqStatus;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -17,20 +18,12 @@ import java.util.List;
 public interface NginxService {
 
     /**
-     * get current slb servers
-     *
-     * @return list of slb servers
-     * @throws Exception
-     */
-    List<SlbServer> getCurrentSlbServers(Long slbId, Integer slbVersion) throws Exception;
-
-    /**
      * push config to slb servers , reload if needed.
      *
      * @return List of nginx Response
      * @throws Exception
      */
-    List<NginxResponse> pushConf(List<SlbServer> slbServers, Long slbId, Integer slbVersion, List<Long> vsIds ,boolean needReload) throws Exception;
+    List<NginxResponse> pushConf(List<SlbServer> slbServers, Long slbId, Integer slbVersion, Set<Long> vsIds ,boolean needReload) throws Exception;
 
     /**
      * Local rollback  Conf
@@ -55,14 +48,6 @@ public interface NginxService {
      * @throws Exception
      */
     NginxResponse writeToDisk(List<Long> vsIds, Long slbId, Integer slbVersion) throws Exception;
-
-    /**
-     * write all server conf of nginx server conf in the slb
-     *
-     * @return is all success
-     * @throws Exception
-     */
-    boolean writeALLToDisk(Long slbId, Integer slbVersion, List<Long> vsIds) throws Exception;
 
     /**
      * load the colocated nginx server conf from disk
@@ -98,26 +83,10 @@ public interface NginxService {
     /**
      * dy upstream ops api
      *
-     * @param slbId slbname
+     * @param slbServers slbServers
      * @param dyups dy upstream info
      */
-    List<NginxResponse> dyops(Long slbId, List<DyUpstreamOpsData> dyups) throws Exception;
-
-    /**
-     * fetch the status of colocated nginx server status
-     *
-     * @return
-     * @throws Exception
-     */
-    NginxServerStatus getStatus() throws Exception;
-
-    /**
-     * fetch the status of all nginx server in the slb
-     *
-     * @return
-     * @throws Exception
-     */
-    List<NginxServerStatus> getStatusAll(Long slbId) throws Exception;
+    List<NginxResponse> dyops(List<SlbServer> slbServers, DyUpstreamOpsData[] dyups) throws Exception;
 
     /**
      * get traffic status of nginx server cluster.

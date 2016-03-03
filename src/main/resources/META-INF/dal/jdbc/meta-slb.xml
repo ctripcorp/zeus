@@ -36,16 +36,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-names" type="SELECT" multiple="true">
-                <param name="names"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                        WHERE <FIELD name='name'/> in <IN>${names}</IN>
-                    ]]>
-                </statement>
-            </query>
             <query name="find-all-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
@@ -81,7 +71,24 @@
     <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <var name="ids" value-type="Long[]"/>
+        <var name="hashes" value-type="Integer[]"/>
+        <var name="id-version-array" value-type="String[]"/>
         <query-defs>
+            <!--These queries are particularly designed for batch selection required task executors-->
+            <query name="find-versionized-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN r_slb_status rss
+                    ON as3.slb_id = rss.slb_id
+                        AND (as3.version = rss.online_version OR as3.version = rss.offline_version)
+                    WHERE as3.slb_id IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <!--end-->
             <query name="delete-by-slb" type="DELETE">
                 <param name="slb-id"/>
                 <statement>
@@ -91,14 +98,15 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-max-version-by-slb" type="SELECT">
-                <param name="slb-id"/>
+            <query name="find-all-by-id-version" type="SELECT" multiple="true">
+                <param name="hashes"/>
+                <param name="id-version-array"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE  <FIELD name='slb-id'/> = ${slb-id}
-                    ORDER BY <FIELD name='id'/> DESC LIMIT 1
+                    WHERE <FIELD name='hash'/> in <IN>${hashes}</IN>
+                    HAVING CONCAT(slb_id, ',', version) in <IN>${id-version-array}</IN>
                     ]]>
                 </statement>
             </query>

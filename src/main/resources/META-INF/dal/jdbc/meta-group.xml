@@ -14,7 +14,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="update-by-id" type="UPDATE" batch="true">
+            <query name="update-by-id" type="UPDATE">
                 <param name="id"/>
                 <statement>
                     <![CDATA[
@@ -88,13 +88,45 @@
     </entity>
     <entity name="archive-group" table="archive_group" alias="ag" do-class="ArchiveGroupDo">
         <var name="ids" value-type="Long[]"/>
-        <var name="pairs" value-type="String[]"/>
+        <var name="hashes" value-type="Integer[]"/>
+        <var name="id-version-array" value-type="String[]"/>
         <readsets>
             <readset name="IDONLY">
                 <member name="id"/>
             </readset>
         </readsets>
         <query-defs>
+            <!--These queries are particularly designed for batch selection required task executors-->
+            <query name="find-all-by-vs-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN (SELECT rgv.group_id, rgv.group_version
+                        FROM r_group_vs rgv
+                        INNER JOIN r_group_status rgs
+                        ON rgv.group_id = rgs.group_id
+                            AND (rgv.group_version = rgs.online_version OR rgv.group_version = rgs.offline_version)
+                        WHERE rgv.vs_id IN <IN>${ids}</IN>) AS tmp
+                    ON ag.group_id = tmp.group_id AND ag.version = tmp.group_version
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-versionized-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN r_group_status rgs
+                    ON ag.group_id = rgs.group_id
+                        AND (ag.version = rgs.online_version OR ag.version = rgs.offline_version)
+                    WHERE ag.group_id IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <!--end-->
             <query name="find-all-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
@@ -102,26 +134,6 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='id'/> in <IN>${ids}</IN>
-                    ]]>
-                </statement>
-            </query>
-            <query name="delete-by-group" type="DELETE">
-                <param name="group-id"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='group-id'/> = ${group-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-max-version-by-group" type="SELECT">
-                <param name="group-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE  <FIELD name='group-id'/> = ${group-id}
-                    ORDER BY <FIELD name='id'/> DESC LIMIT 1
                     ]]>
                 </statement>
             </query>
@@ -140,6 +152,37 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-id-version" type="SELECT" multiple="true">
+                <param name="hashes"/>
+                <param name="id-version-array"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='hash'/> in <IN>${hashes}</IN>
+                    AND CONCAT(<FIELD name='group-id'/>, ',', <FIELD name='version'/>) in <IN>${id-version-array}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-group-and-version" type="SELECT">
                 <param name="group-id"/>
                 <param name="version"/>
@@ -147,21 +190,8 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                        WHERE <FIELD name='group-id'/> = ${group-id}
-                        AND <FIELD name='version'/> = ${version}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-by-group-and-version" type="SELECT" multiple="true">
-                <param name="ids"/>
-                <param name="pairs"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM (
-                        SELECT id, concat(group_id, ',', version) as g_v FROM archive_group
-                        WHERE group_id in <IN>${ids}</IN> ) ag
-                    WHERE ag.g_v in <IN>${pairs}</IN>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    AND <FIELD name='version'/> = ${version}
                     ]]>
                 </statement>
             </query>

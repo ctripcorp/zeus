@@ -1,6 +1,9 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.service.model.SelectionMode;
+import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +24,8 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     private RVsDomainDao rVsDomainDao;
     @Resource
     private RGroupVsDao rGroupVsDao;
+    @Resource
+    private RVsStatusDao rVsStatusDao;
 
     @Override
     public Set<Long> queryAll() throws Exception {
@@ -32,28 +37,63 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
-    public Set<Long> queryBySlbId(Long slbId) throws Exception {
-        Set<Long> result = new HashSet<>();
-        for (RelVsSlbDo relVsSlbDo : rVsSlbDao.findAllVsesBySlb(slbId, RVsSlbEntity.READSET_FULL)) {
-            result.add(relVsSlbDo.getVsId());
+    public Set<IdVersion> queryAll(SelectionMode mode) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        Set<Long> vsIds = queryAll();
+        for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds.toArray(new Long[vsIds.size()]), RVsStatusEntity.READSET_FULL)) {
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                result.add(new IdVersion(d.getVsId(), v));
+            }
         }
         return result;
     }
 
     @Override
-    public Set<Long> queryByGroupIds(Long[] groupIds) throws Exception {
-        Set<Long> result = new HashSet<>();
-        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllVsesByGroups(groupIds, RGroupVsEntity.READSET_FULL)) {
-            result.add(relGroupVsDo.getVsId());
+    public Set<IdVersion> queryByIdsAndMode(Long[] vsIds, SelectionMode mode) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds, RVsStatusEntity.READSET_FULL)) {
+            for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
+                result.add(new IdVersion(d.getVsId(), v));
+            }
         }
         return result;
     }
 
     @Override
-    public Set<Long> queryByDomain(String domain) throws Exception {
-        Set<Long> result = new HashSet<>();
-        for (RelVsDomainDo relVsDomainDo : rVsDomainDao.findAllVsesByDomain(domain.toLowerCase(), RVsDomainEntity.READSET_FULL)) {
-            result.add(relVsDomainDo.getVsId());
+    public IdVersion[] queryByIdAndMode(Long vsId, SelectionMode mode) throws Exception {
+        RelVsStatusDo d = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
+        int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
+
+        IdVersion[] result = new IdVersion[v.length];
+        for (int i = 0; i < result.length && i < v.length; i++) {
+            result[i] = new IdVersion(vsId, v[i]);
+        }
+        return result;
+    }
+
+    @Override
+    public Set<IdVersion> queryBySlbId(Long slbId) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelVsSlbDo d : rVsSlbDao.findAllBySlb(slbId, RVsSlbEntity.READSET_FULL)) {
+            result.add(new IdVersion(d.getVsId(), d.getVsVersion()));
+        }
+        return result;
+    }
+
+    @Override
+    public Set<IdVersion> queryBySlbIds(Long[] slbIds) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelVsSlbDo d : rVsSlbDao.findAllBySlbs(slbIds, RVsSlbEntity.READSET_FULL)) {
+            result.add(new IdVersion(d.getVsId(), d.getVsVersion()));
+        }
+        return result;
+    }
+
+    @Override
+    public Set<IdVersion> queryByDomain(String domain) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelVsDomainDo d : rVsDomainDao.findAllByDomain(domain.toLowerCase(), RVsDomainEntity.READSET_FULL)) {
+            result.add(new IdVersion(d.getVsId(), d.getVsVersion()));
         }
         return result;
     }

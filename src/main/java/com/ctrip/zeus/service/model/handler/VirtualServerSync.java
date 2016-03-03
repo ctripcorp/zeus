@@ -3,23 +3,21 @@ package com.ctrip.zeus.service.model.handler;
 import com.ctrip.zeus.model.entity.VirtualServer;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/9/22.
  */
 public interface VirtualServerSync {
 
-    void addVirtualServer(VirtualServer virtualServer) throws Exception;
+    void add(VirtualServer virtualServer) throws Exception;
 
-    void updateVirtualServer(VirtualServer virtualServer) throws Exception;
+    void update(VirtualServer virtualServer) throws Exception;
 
-    void deleteVirtualServer(Long vsId) throws Exception;
+    void updateStatus(List<VirtualServer> virtualServers) throws Exception;
 
-    void deleteVirtualServers(Long[] vsIds) throws Exception;
-
-    @Deprecated
-    List<Long> port(Long[] vsIds) throws Exception;
+    void delete(Long vsId) throws Exception;
 
     @Deprecated
-    void port(Long vsId) throws Exception;
+    Set<Long> port(Long[] vsIds) throws Exception;
 }

@@ -4,6 +4,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.service.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -13,7 +14,11 @@ public interface GroupRepository extends Repository {
 
     List<Group> list(Long[] ids) throws Exception;
 
+    List<Group> list(IdVersion[] keys) throws Exception;
+
     Group getById(Long id) throws Exception;
+
+    Group getByKey(IdVersion key) throws Exception;
 
     Group add(Group group) throws Exception;
 
@@ -27,15 +32,13 @@ public interface GroupRepository extends Repository {
 
     int deleteVGroup(Long groupId) throws Exception;
 
-    @Deprecated
-    List<Group> listGroupsByGroupServer(String groupServerIp) throws Exception;
+    void updateStatus(IdVersion[] groups, SelectionMode state) throws Exception;
+
+    void updateStatus(IdVersion[] groups) throws Exception;
 
     @Deprecated
-    void syncMemberStatus(Group group) throws Exception;
+    Set<Long> port(Long[] groupIds) throws Exception;
 
     @Deprecated
     Group get(String groupName) throws Exception;
-
-    @Deprecated
-    List<Group> list(Long slbId) throws Exception;
 }

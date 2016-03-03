@@ -6,8 +6,6 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.activate.ActivateService;
-import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.handler.GroupServerValidator;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
@@ -25,8 +23,6 @@ import java.util.Set;
 @Component("groupModelValidator")
 public class DefaultGroupValidator implements GroupValidator {
     @Resource
-    private ActivateService activateService;
-    @Resource
     private VirtualServerValidator virtualServerModelValidator;
     @Resource
     private GroupServerValidator groupServerModelValidator;
@@ -34,6 +30,8 @@ public class DefaultGroupValidator implements GroupValidator {
     private RGroupVsDao rGroupVsDao;
     @Resource
     private RGroupVgDao rGroupVgDao;
+    @Resource
+    private RGroupStatusDao rGroupStatusDao;
     @Resource
     private GroupDao groupDao;
 
@@ -68,7 +66,8 @@ public class DefaultGroupValidator implements GroupValidator {
 
     @Override
     public void removable(Long targetId) throws Exception {
-        if(activateService.isGroupActivated(targetId,null)){
+        RelGroupStatusDo check = rGroupStatusDao.findByGroup(targetId, RGroupStatusEntity.READSET_FULL);
+        if (check.getOnlineVersion() != 0) {
             throw new ValidationException("Group must be deactivated before deletion.");
         }
     }
@@ -99,7 +98,7 @@ public class DefaultGroupValidator implements GroupValidator {
             else
                 groupPaths.add(vs.getId() + groupVirtualServer.getPath());
         }
-        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllGroupsByVses(virtualServerIds.toArray(new Long[virtualServerIds.size()]), RGroupVsEntity.READSET_FULL)) {
+        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllByVses(virtualServerIds.toArray(new Long[virtualServerIds.size()]), RGroupVsEntity.READSET_FULL)) {
             if (groupId.equals(relGroupVsDo.getGroupId()))
                 continue;
             if (groupPaths.contains(relGroupVsDo.getVsId() + relGroupVsDo.getPath()))

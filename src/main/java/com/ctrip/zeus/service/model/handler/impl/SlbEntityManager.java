@@ -3,16 +3,15 @@ package com.ctrip.zeus.service.model.handler.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.handler.SlbSync;
-import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -26,105 +25,113 @@ public class SlbEntityManager implements SlbSync {
     @Resource
     private ArchiveSlbDao archiveSlbDao;
     @Resource
-    private RSlbSlbServerDao rSlbSlbServerDao;
-    @Resource
-    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
-    @Resource
     private VirtualServerEntityManager virtualServerEntityManager;
+    @Resource
+    private SlbServerRelMaintainer slbServerRelMaintainer;
+    @Resource
+    private RSlbStatusDao rSlbStatusDao;
+    @Resource
+    private ConfSlbActiveDao confSlbActiveDao;
 
     @Override
     public void add(Slb slb) throws Exception {
         slb.setVersion(1);
         SlbDo d = C.toSlbDo(0L, slb);
         slbDao.insert(d);
-        slb.setId(d.getId());
+
+        Long slbId = d.getId();
+        slb.setId(slbId);
         for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            virtualServer.setSlbId(slb.getId());
-            virtualServerEntityManager.addVirtualServer(virtualServer);
+            virtualServer.setSlbId(slbId);
+            virtualServerEntityManager.add(virtualServer);
         }
-        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion()).setContent(ContentWriters.writeSlbContent(slb)));
-        relSyncSlbServer(slb, true);
+
+        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slbId).setVersion(slb.getVersion())
+                .setContent(ContentWriters.writeSlbContent(slb))
+                .setHash(VersionUtils.getHash(slb.getId(), slb.getVersion())));
+
+        rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setSlbId(slb.getId()).setOfflineVersion(slb.getVersion()));
+
+        slbServerRelMaintainer.addRel(slb);
     }
 
     @Override
     public void update(Slb slb) throws Exception {
-        SlbDo check = slbDao.findById(slb.getId(), SlbEntity.READSET_FULL);
-        if (check.getVersion() > slb.getVersion())
+        RelSlbStatusDo check = rSlbStatusDao.findBySlb(slb.getId(), RSlbStatusEntity.READSET_FULL);
+        if (check.getOfflineVersion() > slb.getVersion())
             throw new ValidationException("Newer Slb version is detected.");
-        slb.setVersion(slb.getVersion() + 1);
 
+        slb.setVersion(slb.getVersion() + 1);
         SlbDo d = C.toSlbDo(slb.getId(), slb);
         slbDao.updateById(d, SlbEntity.UPDATESET_FULL);
-        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion()).setContent(ContentWriters.writeSlbContent(slb)));
-        relSyncSlbServer(slb, false);
+
+        archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setVersion(slb.getVersion())
+                .setContent(ContentWriters.writeSlbContent(slb))
+                .setHash(VersionUtils.getHash(slb.getId(), slb.getVersion())));
+
+        rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setId(slb.getId()).setOfflineVersion(slb.getVersion()));
+
+        slbServerRelMaintainer.updateRel(slb);
     }
 
     @Override
-    public void updateVersion(Long slbId) throws Exception {
-        throw new NotImplementedException();
+    public void updateStatus(List<Slb> slbs) throws Exception {
+        RelSlbStatusDo[] dos = new RelSlbStatusDo[slbs.size()];
+        for (int i = 0; i < dos.length; i++) {
+            dos[i] = new RelSlbStatusDo().setSlbId(slbs.get(i).getId()).setOnlineVersion(slbs.get(i).getVersion());
+        }
+
+        Slb[] array = slbs.toArray(new Slb[slbs.size()]);
+        slbServerRelMaintainer.updateStatus(array);
+
+        rSlbStatusDao.updateOnlineVersionBySlb(dos, RSlbStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
     }
 
     @Override
     public int delete(Long slbId) throws Exception {
-        Set<Long> vsIds = virtualServerCriteriaQuery.queryBySlbId(slbId);
-        virtualServerEntityManager.deleteVirtualServers(vsIds.toArray(new Long[vsIds.size()]));
-        rSlbSlbServerDao.deleteAllBySlb(new RelSlbSlbServerDo().setSlbId(slbId));
+        slbServerRelMaintainer.deleteRel(slbId);
         int count = slbDao.deleteByPK(new SlbDo().setId(slbId));
         archiveSlbDao.deleteBySlb(new ArchiveSlbDo().setSlbId(slbId));
         return count;
     }
 
     @Override
-    public List<Long> port(Slb[] slbs) throws Exception {
-        List<Long> fails = new ArrayList<>();
-        for (Slb slb : slbs) {
+    public Set<Long> port(Long[] slbIds) throws Exception {
+        List<Slb> toUpdate = new ArrayList<>();
+        Set<Long> failed = new HashSet<>();
+        for (ArchiveSlbDo d : archiveSlbDao.findMaxVersionBySlbs(slbIds, ArchiveSlbEntity.READSET_FULL)) {
             try {
-                relSyncSlbServer(slb, false);
+                toUpdate.add(ContentReaders.readSlbContent(d.getContent()));
             } catch (Exception ex) {
-                fails.add(slb.getId());
+                failed.add(d.getId());
             }
         }
-        return fails;
-    }
+        RelSlbStatusDo[] dos = new RelSlbStatusDo[toUpdate.size()];
+        for (int i = 0; i < dos.length; i++) {
+            dos[i] = new RelSlbStatusDo().setSlbId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
+        }
 
-    @Override
-    public void port(Slb slb) throws Exception {
-        relSyncSlbServer(slb, false);
-    }
+        rSlbStatusDao.insertOrUpdate(dos);
 
-    private void relSyncSlbServer(Slb slb, boolean isnew) throws Exception {
-        if (isnew) {
-            RelSlbSlbServerDo[] dos = new RelSlbSlbServerDo[slb.getSlbServers().size()];
-            for (int i = 0; i < dos.length; i++) {
-                dos[i] = new RelSlbSlbServerDo().setSlbId(slb.getId()).setIp(slb.getSlbServers().get(i).getIp());
+        for (Slb slb : toUpdate) {
+            slbServerRelMaintainer.port(slb);
+        }
+
+        slbIds = new Long[toUpdate.size()];
+        for (int i = 0; i < slbIds.length; i++) {
+            slbIds[i] = toUpdate.get(i).getId();
+        }
+        List<ConfSlbActiveDo> ref = confSlbActiveDao.findAllBySlbIds(slbIds, ConfSlbActiveEntity.READSET_FULL);
+        toUpdate.clear();
+        for (ConfSlbActiveDo d : ref) {
+            try {
+                toUpdate.add(ContentReaders.readSlbContent(d.getContent()));
+            } catch (Exception ex) {
+                failed.add(d.getSlbId());
             }
-            rSlbSlbServerDao.insert(dos);
-            return;
         }
-        List<RelSlbSlbServerDo> originSses = rSlbSlbServerDao.findAllIpsBySlb(slb.getId(), RSlbSlbServerEntity.READSET_FULL);
-        List<SlbServer> newSses = slb.getSlbServers();
-        String[] originIps = new String[originSses.size()];
-        String[] newIps = new String[newSses.size()];
-        for (int i = 0; i < originIps.length; i++) {
-            originIps[i] = originSses.get(i).getIp();
-        }
-        for (int i = 0; i < newIps.length; i++) {
-            newIps[i] = newSses.get(i).getIp();
-        }
-        List<String> removing = new ArrayList<>();
-        List<String> adding = new ArrayList<>();
-        ArraysUniquePicker.pick(originIps, newIps, removing, adding);
 
-        RelSlbSlbServerDo[] dos = new RelSlbSlbServerDo[removing.size()];
-        for (int i = 0; i < dos.length; i++) {
-            dos[i] = new RelSlbSlbServerDo().setSlbId(slb.getId()).setIp(removing.get(i));
-        }
-        rSlbSlbServerDao.deleteBySlbAndIp(dos);
-
-        dos = new RelSlbSlbServerDo[adding.size()];
-        for (int i = 0; i < dos.length; i++) {
-            dos[i] = new RelSlbSlbServerDo().setSlbId(slb.getId()).setIp(adding.get(i));
-        }
-        rSlbSlbServerDao.insert(dos);
+        updateStatus(toUpdate);
+        return failed;
     }
 }

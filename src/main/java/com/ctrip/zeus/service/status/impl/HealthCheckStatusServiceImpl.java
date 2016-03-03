@@ -4,19 +4,28 @@ import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.dal.core.StatusHealthCheckDao;
 import com.ctrip.zeus.dal.core.StatusHealthCheckDo;
 import com.ctrip.zeus.dal.core.StatusHealthCheckEntity;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.SlbServer;
+import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.Item;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
-import com.ctrip.zeus.service.activate.ActivateService;
+import com.ctrip.zeus.service.model.EntityFactory;
+import com.ctrip.zeus.service.model.ModelStatusMapping;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.status.HealthCheckStatusService;
+import com.ctrip.zeus.service.status.StatusOffset;
+import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.status.entity.UpdateStatusItem;
 import com.ctrip.zeus.util.S;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by fanqq on 2015/11/11.
@@ -26,130 +35,109 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
     @Resource
     private StatusHealthCheckDao statusHealthCheckDao;
     @Resource
-    private ActivateService activateService;
+    private EntityFactory entityFactory;
+    @Resource
+    private StatusService statusService;
+
     private static int count = 0;
     private static DynamicIntProperty invalidInterval = DynamicPropertyFactory.getInstance().getIntProperty("health.check.status.invalid.interval", 300000);
+    private Logger logger = LoggerFactory.getLogger(StatusServiceImpl.class);
+    private final int RISE_FAIL_MIN = 10;
 
     @Override
     public void freshHealthCheckStatus() throws Exception {
         String hostIp = S.getIp();
+        Long[] slbIds = entityFactory.getSlbIdsByIp(hostIp, SelectionMode.ONLINE_EXCLUSIVE);
+        Long slbId = null;
+        if (slbIds != null && slbIds.length == 1) {
+            slbId = slbIds[0];
+        } else {
+            logger.warn("Not found relative online slb for host ip [" + hostIp + "].");
+        }
+
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
 
         if (upstreamStatus == null || upstreamStatus.getServers() == null || upstreamStatus.getServers().getServer() == null) {
+            logger.info("[HeathCheckFetch] Null status data for host ip [" + hostIp + "].");
             return;
         }
 
         List<Item> servers = upstreamStatus.getServers().getServer();
 
-        StatusHealthCheckDo[] dos = new StatusHealthCheckDo[servers.size()];
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesBySlbIds(slbId);
+        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByVsIds(vsMap.getOnlineMapping().keySet().toArray(new Long[]{}));
 
-        for (int i = 0; i < servers.size(); i++) {
-            Item item = servers.get(i);
-            dos[i] = new StatusHealthCheckDo()
-                    .setSlbServerIp(hostIp)
-                    .setFall(item.getFall())
-                    .setMemberIpPort(item.getName())
-                    .setRise(item.getRise())
-                    .setUpstreamName(item.getUpstream())
-                    .setType(item.getType())
-                    .setStatus(item.getStatus());
-        }
-        if (dos.length > 0) {
-            statusHealthCheckDao.insert(dos);
-        }
-    }
-
-    @Override
-    public Map<String, Boolean> getHealthCheckStatusBySlbId(Long slbId) throws Exception {
-        Map<String, Boolean> result = new HashMap<>();
-        Slb slb = activateService.getActivatedSlb(slbId);
-        List<SlbServer> servers = slb.getSlbServers();
-        for (SlbServer slbServer : servers) {
-            List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIp(slbServer.getIp(), StatusHealthCheckEntity.READSET_FULL);
-            for (StatusHealthCheckDo statusHealthCheckDo : list) {
-                long now = System.currentTimeMillis();
-                long lastUpdate = statusHealthCheckDo.getDataChangeLastTime().getTime();
-                if (now - lastUpdate > invalidInterval.get()) {
-                    continue;
+        List<UpdateStatusItem> updateStatusItems = new ArrayList<>();
+        for (Item item : servers) {
+            if (item.getStatus() == null) continue;
+            if (item.getStatus().trim().equals("up")) {
+                if (item.getRise() < RISE_FAIL_MIN) {
+                    //update
+                    String[] tmp = item.getUpstream().split("_");
+                    if (tmp.length != 2) {
+                        logger.warn("[FreshHealthCheckStatus] Skipped invalidate upstream name.");
+                        continue;
+                    }
+                    Long groupId = Long.parseLong(tmp[1]);
+                    Group group = groupMap.getOnlineMapping().get(groupId);
+                    if (group == null) {
+                        logger.warn("[FreshHealthCheckStatus] Skipped invalidate upstream name.");
+                        continue;
+                    }
+                    String [] ipPort = item.getName().split(":");
+                    if (ipPort.length != 2){
+                        logger.warn("[FreshHealthCheckStatus] Skipped invalidate ip port.");
+                        continue;
+                    }
+                    String ip = ipPort[1];
+                    for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+                        if (vsMap.getOnlineMapping().containsKey(gvs.getVirtualServer().getId())) {
+                            updateStatusItems.add(new UpdateStatusItem()
+                                    .setSlbId(slbId)
+                                    .setOffset(StatusOffset.HEALTH_CHECK)
+                                    .setGroupId(groupId)
+                                    .setUp(true)
+                                    .setVsId(gvs.getVirtualServer().getId())
+                                    .addIps(ip));
+                        }
+                    }
                 }
-                String upstream = statusHealthCheckDo.getUpstreamName();
-                String ipPort = statusHealthCheckDo.getMemberIpPort();
-                if (upstream == null || ipPort == null) {
-                    continue;
-                }
-                String[] tmp = upstream.split("_");
-                String[] iptmp = ipPort.split(":");
-                String key = tmp[tmp.length - 1] + "_" + iptmp[0];
-                if (result.get(key) == null || result.get(key)) {
-                    result.put(key, statusHealthCheckDo.getStatus().equals("up"));
-                }
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public Map<String, Boolean> getHealthCheckStatusBySlbId(Long slbId, Set<Long> groupId) throws Exception {
-        Map<String, Boolean> result = new HashMap<>();
-        Slb slb = activateService.getActivatedSlb(slbId);
-        List<SlbServer> servers = slb.getSlbServers();
-        List<String> upstreamName = new ArrayList<>();
-        for (Long gid : groupId) {
-            upstreamName.add("backend_" + gid);
-        }
-        for (SlbServer slbServer : servers) {
-            List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIpAndUpstreamName(slbServer.getIp(),
-                    upstreamName.toArray(new String[]{}), StatusHealthCheckEntity.READSET_FULL);
-            boolean flag = false;
-            for (StatusHealthCheckDo statusHealthCheckDo : list) {
-                long now = System.currentTimeMillis();
-                long lastUpdate = statusHealthCheckDo.getDataChangeLastTime().getTime();
-                if (now - lastUpdate > invalidInterval.get()) {
-                    flag = true;
-                    continue;
-                }
-                String upstream = statusHealthCheckDo.getUpstreamName();
-                String ipPort = statusHealthCheckDo.getMemberIpPort();
-                if (upstream == null || ipPort == null) {
-                    flag = true;
-                    continue;
-                }
-                String[] tmp = upstream.split("_");
-                String[] iptmp = ipPort.split(":");
-                String key = tmp[tmp.length - 1] + "_" + iptmp[0];
-                if (result.get(key) == null || result.get(key)) {
-                    result.put(key, statusHealthCheckDo.getStatus().equals("up"));
+            } else if (item.getStatus().trim().equals("down")) {
+                if (item.getFall() < RISE_FAIL_MIN) {
+                    //update
+                    String[] tmp = item.getUpstream().split("_");
+                    if (tmp.length != 2) {
+                        logger.warn("[FreshHealthCheckStatus] Skipped invalidate upstream name.");
+                        continue;
+                    }
+                    Long groupId = Long.parseLong(tmp[1]);
+                    Group group = groupMap.getOnlineMapping().get(groupId);
+                    if (group == null) {
+                        logger.warn("[FreshHealthCheckStatus] Skipped invalidate upstream name.GroupId:" + groupId + ";SlbId:" + slbId);
+                        continue;
+                    }
+                    String [] ipPort = item.getName().split(":");
+                    if (ipPort.length != 2){
+                        logger.warn("[FreshHealthCheckStatus] Skipped invalidate ip port.");
+                        continue;
+                    }
+                    String ip = ipPort[1];
+                    for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+                        if (vsMap.getOnlineMapping().containsKey(gvs.getVirtualServer().getId())) {
+                            updateStatusItems.add(new UpdateStatusItem()
+                                    .setSlbId(slbId)
+                                    .setOffset(StatusOffset.HEALTH_CHECK)
+                                    .setGroupId(groupId)
+                                    .setUp(false)
+                                    .setVsId(gvs.getVirtualServer().getId())
+                                    .addIps(ip));
+                        }
+                    }
                 }
             }
-            if (!flag){
-                break;
+            if (updateStatusItems.size() > 0) {
+                statusService.updateStatus(updateStatusItems);
             }
         }
-        return result;
-    }
-
-    @Override
-    public Map<String, Boolean> getHealthCheckStatusBySlbServer(String serverIp) throws Exception {
-        Map<String, Boolean> result = new HashMap<>();
-        List<StatusHealthCheckDo> list = statusHealthCheckDao.findBySlbServerIp(serverIp, StatusHealthCheckEntity.READSET_FULL);
-        for (StatusHealthCheckDo statusHealthCheckDo : list) {
-            long now = System.currentTimeMillis();
-            long lastUpdate = statusHealthCheckDo.getDataChangeLastTime().getTime();
-            if (now - lastUpdate > invalidInterval.get()) {
-                continue;
-            }
-            String upstream = statusHealthCheckDo.getUpstreamName();
-            String ipPort = statusHealthCheckDo.getMemberIpPort();
-            if (upstream == null || ipPort == null) {
-                continue;
-            }
-            String[] tmp = upstream.split("_");
-            String[] iptmp = ipPort.split(":");
-            String key = tmp[tmp.length - 1] + iptmp[0];
-            if (result.get(key) == null || result.get(key)) {
-                result.put(key, statusHealthCheckDo.getStatus().equals("up"));
-            }
-        }
-        return result;
     }
 }

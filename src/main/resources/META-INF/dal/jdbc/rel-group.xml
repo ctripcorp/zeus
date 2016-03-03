@@ -20,12 +20,21 @@
                 ]]>
                 </statement>
             </query>
+            <query name="delete-by-group" type="DELETE">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="r-group-vs" table="r_group_vs" alias="rgv2" do-class="RelGroupVsDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
-            <query name="find-all-groups-by-vs" type="SELECT" multiple="true">
+            <query name="find-all-by-vs" type="SELECT" multiple="true">
                 <param name="vs-id"/>
                 <statement>
                     <![CDATA[
@@ -35,19 +44,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-by-group-and-vs" type="SELECT">
-                <param name="group-id"/>
-                <param name="vs-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='group-id'/> = ${group-id}
-                        AND <FIELD name='vs-id'/> = ${vs-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-all-groups-by-vses" type="SELECT" multiple="true">
+            <query name="find-all-by-vses" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
                     <![CDATA[
@@ -57,7 +54,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-vses-by-groups" type="SELECT" multiple="true">
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
                     <![CDATA[
@@ -67,7 +64,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-vses-by-group" type="SELECT" multiple="true">
+            <query name="find-all-by-group" type="SELECT" multiple="true">
                 <param name="group-id"/>
                 <statement>
                     <![CDATA[
@@ -77,7 +74,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="insert" type="INSERT">
+            <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
@@ -85,12 +82,21 @@
                     ]]>
                 </statement>
             </query>
-            <query name="update-by-id" type="UPDATE" batch="true">
+            <query name="update" type="UPDATE" batch="true">
+                <param name="id"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='vs-id'/> = ${vs-id},
-                        <FIELD name='path'/> = ${path}
+                    SET <FIELDS/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete" type="DELETE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
                     WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
@@ -113,20 +119,10 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-vs-and-group" type="DELETE">
-                <param name="vs-id"/>
-                <param name="group-id"/>
-                <statement>
-                    <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='vs-id'/> = ${vs-id}
-                        AND <FIELD name='group-id'/> = ${group-id}
-                    ]]>
-                </statement>
-            </query>
         </query-defs>
     </entity>
     <entity name="r-group-gs" table="r_group_gs" alias="rgg" do-class="RelGroupGsDo">
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="find-all-by-ip" type="SELECT" multiple="true">
                 <param name="ip"/>
@@ -135,6 +131,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='ip'/> = ${ip}
+                ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
                 ]]>
                 </statement>
             </query>
@@ -165,14 +171,81 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-group-and-ip" type="DELETE" batch="true">
+            <query name="update" type="UPDATE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELDS/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete" type="DELETE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="r-group-status" table="r_group_status" alias="rgs" do-class="RelGroupStatusDo">
+        <var name="ids" value-type="Long[]"/>
+        <updatesets>
+            <updateset name="UPDATE_ONLINE_STATUS">
+                <member name="online-version"/>
+            </updateset>
+        </updatesets>
+        <query-defs>
+            <query name="find-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-group" type="SELECT">
                 <param name="group-id"/>
-                <param name="ip"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert-or-update" type="INSERT" batch="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        offline_version = values(offline_version)
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-online-version-by-group" type="UPDATE" batch="true">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='online-version'/> = ${online-version}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-all-by-group" type="DELETE">
+                <param name="group-id"/>
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
-                      AND <FIELD name='ip'/> = ${ip}
                     ]]>
                 </statement>
             </query>

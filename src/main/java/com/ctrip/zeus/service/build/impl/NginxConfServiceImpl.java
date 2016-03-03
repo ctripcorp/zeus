@@ -1,16 +1,11 @@
 package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.exceptions.NotFoundException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
-import com.ctrip.zeus.service.activate.ActiveConfService;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.NginxConfService;
-import com.ctrip.zeus.service.build.conf.UpstreamsConf;
 import com.ctrip.zeus.service.status.StatusService;
-import com.ctrip.zeus.util.AssertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -40,8 +35,6 @@ public class NginxConfServiceImpl implements NginxConfService {
 
     @Resource
     private BuildInfoService buildInfoService;
-    @Resource
-    private ActiveConfService activeConfService;
     @Resource
     ConfGroupSlbActiveDao confGroupSlbActiveDao;
 

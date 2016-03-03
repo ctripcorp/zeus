@@ -19,5 +19,4 @@
 
     <bean id="dbLockFactory" class="com.ctrip.zeus.lock.DbLockFactory"/>
     <import resource="dao-beans.xml"/>
-    <import resource="spring-context-quartz.xml"/>
 </beans>

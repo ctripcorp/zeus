@@ -11,12 +11,11 @@ import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
-import com.ctrip.zeus.service.activate.ActivateService;
 import com.ctrip.zeus.service.build.NginxConfService;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.nginx.RollingTrafficStatus;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.S;
 import com.netflix.config.DynamicIntProperty;
@@ -54,9 +53,11 @@ public class NginxServiceImpl implements NginxService {
     @Resource
     private RollingTrafficStatus rollingTrafficStatus;
     @Resource
-    private ActivateService activateService;
-    @Resource
     private NginxOperator nginxOperator;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
+    private EntityFactory entityFactory;
 
     private ThreadPoolExecutor threadPoolExecutor;
 
@@ -68,20 +69,9 @@ public class NginxServiceImpl implements NginxService {
 
 
     @Override
-    public List<SlbServer> getCurrentSlbServers(Long slbId, Integer slbVersion) throws Exception {
-        Slb slb ;
-        if (slbVersion!=null&&slbVersion!=0){
-            slb = activateService.getActivatingSlb(slbId,slbVersion);
-        }else {
-            slb =activateService.getActivatedSlb(slbId);
-        }
-        return slb.getSlbServers();
-    }
-
-    @Override
-    public List<NginxResponse> pushConf(List<SlbServer> slbServers, Long slbId, Integer slbVersion, List<Long> vsIds, boolean needReload) throws Exception {
+    public List<NginxResponse> pushConf(List<SlbServer> slbServers, Long slbId, Integer slbVersion, Set<Long> vsIds, boolean needReload) throws Exception {
         List<FutureTask<NginxResponse>> futureTasks = new ArrayList<>();
-        final List<Long> vs = vsIds;
+        final Set<Long> vs = vsIds;
         final Long id = slbId;
         final Integer version = slbVersion;
         final boolean reload = needReload;
@@ -93,7 +83,7 @@ public class NginxServiceImpl implements NginxService {
                 public NginxResponse call() throws Exception {
                     NginxResponse response;
                     logger.info("[Push Conf]start push conf.IP:"+ip);
-                    nginxClient.write(vs,id,version);
+                    nginxClient.write(vs, id, version);
                     if (reload){
                         response = nginxClient.load(id,version);
                     }else {
@@ -118,22 +108,15 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public NginxResponse localRollbackConf(Long slbId, Integer slbVersion) throws Exception {
         String ip = S.getIp();
-        Slb slb ;
-        if (slbVersion!=null&&slbVersion!=0){
-            slb = activateService.getActivatingSlb(slbId,slbVersion);
-        }else {
-            slb = activateService.getActivatedSlb(slbId);
-        }
+        Slb slb = slbRepository.getByKey(new IdVersion(slbId,slbVersion));
         AssertUtils.assertNotNull(slb,"Can't found slbId when writing config to disk!");
         int version = nginxConfService.getCurrentVersion(slbId);
 
         NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
         rollbackConfBackUp(operator);
-        Map<Long,VirtualServer> vses = activateService.getActivatedVirtualServerBySlb(slbId);
-        List<Long> vsIds = new ArrayList<>();
-        for (VirtualServer vs : vses.values()){
-            vsIds.add(vs.getId());
-        }
+
+        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, SelectionMode.ONLINE_EXCLUSIVE);
+        List<Long> vsIds = Arrays.asList(vses);
         cleanConfOnDisk(slbId,version,operator);
         writeConfToDisk(slbId, version, vsIds, operator);
 
@@ -155,12 +138,7 @@ public class NginxServiceImpl implements NginxService {
         List<NginxResponse> result = new ArrayList<>();
         boolean sucess = true;
 
-        Slb slb ;
-        if (slbVersion!=null&&slbVersion!=0){
-            slb = activateService.getActivatingSlb(slbId,slbVersion);
-        }else {
-            slb =activateService.getActivatedSlb(slbId);
-        }
+        Slb slb = slbRepository.getByKey(new IdVersion(slbId,slbVersion));
         AssertUtils.assertNotNull(slb,"Can't found slbId when rolling back configs!");
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
@@ -191,12 +169,7 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public NginxResponse writeToDisk(List<Long> vsIds , Long slbId ,Integer slbVersion) throws Exception {
         String ip = S.getIp();
-        Slb slb ;
-        if (slbVersion!=null&&slbVersion!=0){
-            slb = activateService.getActivatingSlb(slbId,slbVersion);
-        }else {
-            slb = activateService.getActivatedSlb(slbId);
-        }
+        Slb slb = slbRepository.getByKey(new IdVersion(slbId,slbVersion));
         AssertUtils.assertNotNull(slb,"Can't found slbId when writing config to disk!");
         int version = nginxConfService.getCurrentBuildingVersion(slbId);
 
@@ -217,67 +190,9 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public boolean writeALLToDisk(Long slbId, Integer slbVersion ,List<Long> vsIds) throws Exception {
-        List<NginxResponse> responses = new ArrayList<>();
-        if (!writeALLToDisk(slbId,slbVersion,vsIds, responses)){
-            for (NginxResponse response : responses){
-                if (!response.getSucceed()){
-                    throw new Exception("Write To Disk Failed! Detail: "+String.format(NginxResponse.JSON,response));
-                }
-            }
-            throw new Exception("Write To Disk Failed! Detail: None.");
-        }else{
-            return true;
-        }
-    }
-
-
-    public boolean writeALLToDisk(Long slbId,Integer slbVersion , List<Long> vsIds , List<NginxResponse> responses) throws Exception {
-        List<NginxResponse> result = null;
-        boolean sucess = true;
-        if (responses != null) {
-            result = responses;
-        } else {
-            result = new ArrayList<>();
-        }
-
-        Slb slb ;
-        if (slbVersion!=null&&slbVersion!=0){
-            slb = activateService.getActivatingSlb(slbId,slbVersion);
-        }else {
-            slb =activateService.getActivatedSlb(slbId);
-        }
-        AssertUtils.assertNotNull(slb,"Can't found slbId when writing config to disk!");
-        List<SlbServer> slbServers = slb.getSlbServers();
-        for (SlbServer slbServer : slbServers) {
-            logger.info("[ writeAllToDisk ]: start write to server : " + slbServer.getIp());
-            NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
-            NginxResponse response = nginxClient.write(vsIds,slbId,slbVersion);
-            result.add(response);
-
-            logger.info("[ writeAllToDisk ]: write to server finished : " + slbServer.getIp());
-        }
-
-        if (result.size() == 0) {
-            sucess = false;
-        }
-
-        for (NginxResponse res : result) {
-            sucess = sucess && res.getSucceed();
-        }
-
-        return sucess;
-    }
-
-    @Override
     public NginxResponse load(Long slbId , Integer version) throws Exception {
         String ip = S.getIp();
-        Slb slb ;
-        if (version!=null&&version!=0){
-            slb = activateService.getActivatingSlb(slbId,version);
-        }else {
-            slb = activateService.getActivatedSlb(slbId);
-        }
+        Slb slb = slbRepository.getByKey(new IdVersion(slbId,version));
 
         NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
 
@@ -299,13 +214,7 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public NginxResponse confTest(Long slbId, Integer version) throws Exception {
         String ip = S.getIp();
-        Slb slb ;
-        if (version!=null&&version!=0){
-            slb = activateService.getActivatingSlb(slbId,version);
-        }else {
-            slb = activateService.getActivatedSlb(slbId);
-        }
-
+        Slb slb = slbRepository.getByKey(new IdVersion(slbId,version));
         NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
 
         // test configuration
@@ -327,12 +236,7 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public List<NginxResponse> loadAll(Long slbId , Integer version) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
-        Slb slb;
-        if (version!=null&&version!=0){
-            slb = activateService.getActivatingSlb(slbId,version);
-        }else {
-            slb = activateService.getActivatedSlb(slbId);
-        }
+        Slb slb = slbRepository.getByKey(new IdVersion(slbId, version));
 
         List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
@@ -351,12 +255,9 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public List<NginxResponse> dyops(Long slbId, List<DyUpstreamOpsData> dyups) throws Exception {
+    public List<NginxResponse> dyops(List<SlbServer> slbServers, DyUpstreamOpsData[] dyups) throws Exception {
         List<NginxResponse> result = new ArrayList<>();
-        Slb slb = activateService.getActivatedSlb(slbId);
         boolean flag = false;
-
-        List<SlbServer> slbServers = slb.getSlbServers();
         for (SlbServer slbServer : slbServers) {
             flag = true;
             NginxClient nginxClient = NginxClient.getClient("http://" + slbServer.getIp() + ":" + adminServerPort.get());
@@ -366,33 +267,6 @@ public class NginxServiceImpl implements NginxService {
                 result.add(response);
                 flag = flag && response.getSucceed();
             }
-        }
-        return result;
-    }
-
-
-    @Override
-    public NginxServerStatus getStatus() throws Exception {
-        String ip = S.getIp();
-        Slb slb = slbRepository.getBySlbServer(ip);
-        NginxOperator operator = nginxOperator.init(slb.getNginxConf(), slb.getNginxBin());
-        return operator.getRuntimeStatus();
-    }
-
-    @Override
-    public List<NginxServerStatus> getStatusAll(Long slbId) throws Exception {
-        List<NginxServerStatus> result = new ArrayList<>();
-        String ip = S.getIp();
-
-        Slb slb = slbRepository.getById(slbId);
-        for (SlbServer slbServer : slb.getSlbServers()) {
-            if (ip.equals(slbServer.getIp())) {
-                result.add(getStatus());
-                continue;
-            }
-            NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
-            NginxServerStatus response = nginxClient.getNginxServerStatus();
-            result.add(response);
         }
         return result;
     }

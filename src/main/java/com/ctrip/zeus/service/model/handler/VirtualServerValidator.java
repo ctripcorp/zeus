@@ -11,7 +11,9 @@ public interface VirtualServerValidator {
 
     boolean exists(Long vsId) throws Exception;
 
+    boolean isActivated (Long vsId) throws Exception;
+
     void validateVirtualServers(List<VirtualServer> virtualServers) throws Exception;
 
-    void removable(VirtualServer virtualServer) throws Exception;
+    void removable(Long vsId) throws Exception;
 }

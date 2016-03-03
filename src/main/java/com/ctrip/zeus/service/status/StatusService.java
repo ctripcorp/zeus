@@ -6,6 +6,7 @@ import com.ctrip.zeus.service.Repository;
 import com.ctrip.zeus.status.entity.UpdateStatusItem;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -30,6 +31,14 @@ public interface StatusService extends Repository {
      * @throws Exception
      */
     Set<String> fetchGroupServersByVsIdsAndStatusOffset(Long[] vsIds , int offset , boolean status) throws Exception;
+
+    /**
+     * get group servers by slbId and status offset
+     * @param vsIds vsIds
+     * @return map of {vsId}_{groupId}_{ip} offsetList
+     * @throws Exception
+     */
+    Map<String,List<Boolean>> fetchGroupServersByVsIds(Long[] vsIds) throws Exception;
 
     /**
      * up server by group server ip

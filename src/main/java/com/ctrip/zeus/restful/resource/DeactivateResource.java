@@ -3,13 +3,11 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
-import com.ctrip.zeus.model.entity.Archive;
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.activate.ActivateService;
-import com.ctrip.zeus.service.activate.ActiveConfService;
-import com.ctrip.zeus.service.model.GroupRepository;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.tag.TagBox;
 import com.ctrip.zeus.task.entity.OpsTask;
@@ -43,13 +41,13 @@ public class DeactivateResource {
     @Resource
     private GroupRepository groupRepository;
     @Resource
-    private ResponseHandler responseHandler;
+    private SlbRepository slbRepository;
     @Resource
-    private ActiveConfService activeConfService;
+    private ResponseHandler responseHandler;
     @Resource
     private TaskManager taskManager;
     @Resource
-    private ActivateService activateService;
+    private EntityFactory entityFactory;
 
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
@@ -77,9 +75,30 @@ public class DeactivateResource {
             }
         }
 
+
+        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(_groupIds.toArray(new Long[]{}));
+        if (groupMap.getOnlineMapping() == null || groupMap.getOnlineMapping().size() == 0) {
+            throw new ValidationException("Group is not activated.");
+        }
+
         List<OpsTask> tasks = new ArrayList<>();
         for (Long id : _groupIds) {
-            Set<Long> slbIds = activeConfService.getSlbIdsByGroupId(id);
+            Group group = groupMap.getOnlineMapping().get(id);
+            if (group == null) {
+                throw new ValidationException("Group is not activated.GroupId:" + id);
+            }
+            Set<Long> vsIds = new HashSet<>();
+            for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+                vsIds.add(gvs.getVirtualServer().getId());
+            }
+            ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
+            if (vsMap.getOnlineMapping() == null || vsMap.getOnlineMapping().size() == 0) {
+                throw new ValidationException("Related Vs is not activated.");
+            }
+            Set<Long> slbIds = new HashSet<>();
+            for (Long vsId : vsMap.getOnlineMapping().keySet()) {
+                slbIds.add(vsMap.getOnlineMapping().get(vsId).getSlbId());
+            }
             for (Long slbId : slbIds) {
                 OpsTask task = new OpsTask();
                 task.setGroupId(id);
@@ -107,48 +126,43 @@ public class DeactivateResource {
 
     @GET
     @Path("/vs")
-    @Authorize(name="activate")
+    @Authorize(name = "activate")
     public Response deactivateVirtualServer(@Context HttpServletRequest request,
-                                          @Context HttpHeaders hh,
-                                          @QueryParam("vsId") Long vsId,
-                                          @QueryParam("slbId") Long slbId)throws Exception {
-        Map<Long,List<Group>> groups = activateService.getActivatedGroupsByVses(new Long[]{vsId});
-        if (groups !=null && groups.containsKey(vsId) && groups.get(vsId).size() > 0){
-            throw new ValidationException("Has Activated Groups Related to Vs["+vsId+"]");
+                                            @Context HttpHeaders hh,
+                                            @QueryParam("vsId") Long vsId) throws Exception {
+        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByVsIds(new Long[]{vsId});
+        if (groupMap.getOnlineMapping() != null && groupMap.getOnlineMapping().size() > 0) {
+            throw new ValidationException("Has Activated Groups Related to Vs[" + vsId + "]");
         }
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(new Long[]{vsId});
+        if (vsMap.getOnlineMapping() == null || vsMap.getOnlineMapping().get(vsId) == null) {
+            throw new ValidationException("Vs is not activated.VsId:" + vsId);
+        }
+        VirtualServer vs = vsMap.getOnlineMapping().get(vsId);
+        OpsTask deactivateTask = new OpsTask();
+        deactivateTask.setSlbVirtualServerId(vsId);
+        deactivateTask.setCreateTime(new Date());
+        deactivateTask.setOpsType(TaskOpsType.DEACTIVATE_VS);
+        deactivateTask.setTargetSlbId(vs.getSlbId());
+        Long taskId = taskManager.addTask(deactivateTask);
 
-        List<VirtualServer> vses = activateService.getActivatedVirtualServer(vsId);
-        Long taskId = null;
-        if (vses.size() == 0 ){
-            throw new ValidationException("Vs is not activated!");
-        }else if (slbId == null){
-            if (vses.size() == 1 ){
-                OpsTask activateTask = new OpsTask();
-                activateTask.setSlbVirtualServerId(vsId);
-                activateTask.setCreateTime(new Date());
-                activateTask.setOpsType(TaskOpsType.DEACTIVATE_VS);
-                activateTask.setTargetSlbId(vses.get(0).getSlbId());
-                taskId = taskManager.addTask(activateTask);
-            }else {
-                throw new ValidationException("Vs has activated in multiple slbs,please use slbId Param.");
-            }
-        }else {
-            for (VirtualServer vs : vses){
-                if (vs.getSlbId().equals(slbId)){
-                    OpsTask activateTask = new OpsTask();
-                    activateTask.setSlbVirtualServerId(vsId);
-                    activateTask.setCreateTime(new Date());
-                    activateTask.setOpsType(TaskOpsType.DEACTIVATE_VS);
-                    activateTask.setTargetSlbId(slbId);
-                    taskId = taskManager.addTask(activateTask);
-                }
-            }
-        }
+        TaskResult results = taskManager.getResult(taskId, 10000L);
+        return responseHandler.handle(results, hh.getMediaType());
+    }
 
-        if (taskId == null){
-            throw new ValidationException("Not Found Activated VsId "+vsId + "In Slb "+ slbId);
+    @GET
+    @Path("/slb")
+    @Authorize(name = "activate")
+    public Response deactivateSlb(@Context HttpServletRequest request,
+                                  @Context HttpHeaders hh,
+                                  @QueryParam("slbId") Long slbId) throws Exception {
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesBySlbIds(slbId);
+        if (vsMap.getOnlineMapping() != null && vsMap.getOnlineMapping().size() > 0) {
+            throw new ValidationException("Has Activated Vses Related to Slb[" + slbId + "]");
         }
-        TaskResult results = taskManager.getResult(taskId,apiTimeout.get());
-        return responseHandler.handle(results,hh.getMediaType());
+        IdVersion idVersion = new IdVersion(slbId, 0);
+        slbRepository.updateStatus(new IdVersion[]{idVersion});
+
+        return responseHandler.handle(slbRepository.getById(slbId), hh.getMediaType());
     }
 }
