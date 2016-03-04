@@ -45,7 +45,7 @@ public class IdVersion implements Comparable<IdVersion> {
     @Override
     public int compareTo(IdVersion o) {
         if (this.id < o.id) return -1;
-        if (this.id == o.id) return (this.version - o.version) < 0 ? -1 : ((this.version == o.version) ? 0 : 1);
+        if (this.id.longValue() == o.id.longValue()) return (this.version - o.version) < 0 ? -1 : ((this.version.intValue() == o.version.intValue()) ? 0 : 1);
         return 1;
     }
 

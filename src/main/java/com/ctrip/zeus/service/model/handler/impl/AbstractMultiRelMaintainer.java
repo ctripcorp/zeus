@@ -68,27 +68,6 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
 
         action = actionMap.get("insert");
         if (action != null) insert(action.toArray((T[]) Array.newInstance(clazzT, action.size())));
-//        int i = 0;
-//        Iterator<T> iter = update.iterator();
-//        while (iter.hasNext() && i < rels.size()) {
-//            setDo(object, rels.get(i), iter.next());
-//            i++;
-//        }
-//
-//        final int offset = i;
-//        if (offset > 0) {
-//            updateByPrimaryKey(update.subList(0, offset).toArray((T[]) Array.newInstance(clazzT, offset)));
-//        }
-//        if (offset < update.size()) {
-//            deleteByPrimaryKey(update.subList(offset, update.size()).toArray((T[]) Array.newInstance(clazzT, update.size() - offset + 1)));
-//        }
-//        if (offset < rels.size()) {
-//            T[] dos = (T[]) Array.newInstance(clazzT, rels.size() - offset + 1);
-//            for (int j = offset; j < dos.length; j++) {
-//                dos[j - offset] = getDo(object, rels.get(j));
-//            }
-//            insert(dos);
-//        }
     }
 
     @Override
@@ -138,7 +117,14 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
                     online.add(t);
                 }
             }
-            actionMap.putAll(groupByAction(object, rels, online, clazzT));
+            for (Map.Entry<String, List<T>> e : groupByAction(object, rels, online, clazzT).entrySet()) {
+                List<T> v = actionMap.get(e.getKey());
+                if (v == null) {
+                    actionMap.put(e.getKey(), e.getValue());
+                } else {
+                    v.addAll(e.getValue());
+                }
+            }
         }
 
         List<T> action = actionMap.get("update");

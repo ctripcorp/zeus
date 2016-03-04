@@ -33,6 +33,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -125,6 +126,8 @@ public class GroupResource {
                     @Override
                     public Long[] handle(Set<IdVersion> result) throws Exception {
                         if (vsId != null) {
+                            if (result == null) return new Long[]{vsId};
+
                             boolean flag = false;
                             for (IdVersion e : result) {
                                 if (e.getId().equals(vsId)) {
@@ -138,7 +141,8 @@ public class GroupResource {
                         return VersionUtils.extractUniqIds(result);
                     }
                 });
-        if (vsIdRange != null && vsIdRange.length == 0) throw new ValidationException("Could not find corresponding host virtual server.");
+        if (vsIdRange != null && vsIdRange.length == 0)
+            throw new ValidationException("Could not find corresponding host virtual server.");
 
         final Set<IdVersion> groupFilter = vsIdRange == null ? null : groupCriteriaQuery.queryByVsIds(vsIdRange);
         final Long[] groupIds = new QueryExecuter.Builder<Long>()
@@ -307,7 +311,8 @@ public class GroupResource {
                         return VersionUtils.extractUniqIds(result);
                     }
                 });
-        if (vsIdRange != null && vsIdRange.length == 0) throw new ValidationException("Could not find select condition on virtual server.");
+        if (vsIdRange != null && vsIdRange.length == 0)
+            throw new ValidationException("Could not find select condition on virtual server.");
 
         final Set<IdVersion> groupFilter = vsIdRange == null ? null : groupCriteriaQuery.queryByVsIds(vsIdRange);
         final Long[] groupIds = new QueryExecuter.Builder<Long>()
@@ -434,7 +439,7 @@ public class GroupResource {
         Group g = parseGroup(hh.getMediaType(), group);
         Long groupId = groupCriteriaQuery.queryByName(g.getName());
         if (groupId > 0L) throw new ValidationException("Group name exists.");
-        
+
         g = groupRepository.add(parseGroup(hh.getMediaType(), group));
         return responseHandler.handle(g, hh.getMediaType());
     }
@@ -511,8 +516,14 @@ public class GroupResource {
     @GET
     @Path("/group/upgradeAll")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeAll(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
-        Set<Long> list = groupCriteriaQuery.queryAll();
+    public Response upgradeAll(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                               @QueryParam("groupId") List<Long> groupId) throws Exception {
+        List<Long> list = null;
+        if (groupId != null && groupId.size() > 0) {
+            list = groupId;
+        } else {
+            list = new ArrayList<>(groupCriteriaQuery.queryAll());
+        }
         Set<Long> result = groupRepository.port(list.toArray(new Long[list.size()]));
         if (result.size() == 0)
             return responseHandler.handle("Upgrade all successfully.", hh.getMediaType());

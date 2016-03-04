@@ -17,13 +17,7 @@ public abstract class MultiRelMaintainerEx<T, W, X> extends AbstractMultiRelMain
     @Override
     public void port(X object) throws Exception {
         Long objectId = getObjectId(object);
-        Integer[] statusVersion = getStatusByObjectId(object);
         List<T> recycled = getAll(objectId);
-        Iterator<T> iter = recycled.iterator();
-        while (iter.hasNext()) {
-            if (getIdxKey(iter.next()).getVersion().intValue() == statusVersion[OFFSET_ONLINE].intValue()) iter.remove();
-        }
-
         List<W> rels = getRelations(object);
 
         Map<String, List<T>> actionMap = groupByAction(object, rels, recycled, clazzT);
