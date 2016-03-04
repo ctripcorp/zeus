@@ -51,8 +51,13 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     public void update(VirtualServer virtualServer) throws Exception {
         Long vsId = virtualServer.getId();
         RelVsStatusDo check = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
-        if (check.getOfflineVersion() > virtualServer.getVersion())
+        if (check.getOfflineVersion() > virtualServer.getVersion()) {
             throw new ValidationException("Newer virtual server version is detected.");
+        }
+        if (check.getOfflineVersion() != virtualServer.getVersion()) {
+            throw new ValidationException("Incompatible virtual server version.");
+        }
+
         virtualServer.setVersion(virtualServer.getVersion() + 1);
 
         SlbVirtualServerDo d = C.toSlbVirtualServerDo(vsId, virtualServer.getSlbId(), virtualServer);

@@ -61,8 +61,12 @@ public class GroupEntityManager implements GroupSync {
     @Override
     public void update(Group group) throws Exception {
         RelGroupStatusDo check = rGroupStatusDao.findByGroup(group.getId(), RGroupStatusEntity.READSET_FULL);
-        if (check.getOfflineVersion() > group.getVersion())
-            throw new ValidationException("Newer Group version is detected.");
+        if (check.getOfflineVersion() > group.getVersion()) {
+            throw new ValidationException("Newer group version is detected.");
+        }
+        if (check.getOfflineVersion() != group.getVersion()) {
+            throw new ValidationException("Incompatible group version.");
+        }
 
         group.setVersion(group.getVersion() + 1);
         GroupDo d = C.toGroupDo(group.getId(), group).setAppId("VirtualGroup");
