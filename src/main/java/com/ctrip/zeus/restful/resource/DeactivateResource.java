@@ -146,7 +146,7 @@ public class DeactivateResource {
         deactivateTask.setTargetSlbId(vs.getSlbId());
         Long taskId = taskManager.addTask(deactivateTask);
 
-        TaskResult results = taskManager.getResult(taskId, 10000L);
+        TaskResult results = taskManager.getResult(taskId, apiTimeout.get());
         return responseHandler.handle(results, hh.getMediaType());
     }
 
