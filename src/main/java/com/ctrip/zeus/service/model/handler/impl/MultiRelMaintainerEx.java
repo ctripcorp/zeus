@@ -26,11 +26,6 @@ public abstract class MultiRelMaintainerEx<T, W, X> extends AbstractMultiRelMain
 
         List<W> rels = getRelations(object);
 
-        int i;
-        for (i = 0; i < recycled.size(); i++) {
-            setDo(object, rels.get(i), recycled.get(i));
-        }
-
         Map<String, List<T>> actionMap = groupByAction(object, rels, recycled, clazzT);
 
         List<T> action = actionMap.get("update");

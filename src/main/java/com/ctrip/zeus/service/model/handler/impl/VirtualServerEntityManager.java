@@ -95,7 +95,7 @@ public class VirtualServerEntityManager implements VirtualServerSync {
             dos[i] = new RelVsStatusDo().setVsId(virtualServers.get(i).getId()).setOnlineVersion(virtualServers.get(i).getVersion());
         }
 
-        VirtualServer[] array =virtualServers.toArray(new VirtualServer[virtualServers.size()]);
+        VirtualServer[] array = virtualServers.toArray(new VirtualServer[virtualServers.size()]);
         updateRelVsSlbStatus(array);
         vsDomainRelMaintainer.updateStatus(array);
 
@@ -116,23 +116,25 @@ public class VirtualServerEntityManager implements VirtualServerSync {
         Map<Long, Integer> idx = new HashMap<>();
 
 
-        Integer[][] versionRef = new Integer[2][objects.length];
+        List<Integer[]> versionRef = new ArrayList<>(objects.length);
+        Integer[] initValue = new Integer[]{0, 0};
 
         for (int i = 0; i < objects.length; i++) {
             Long id = objects[i].getSlbId();
             idx.put(id, i);
             ids[i] = id;
+            versionRef.add(initValue);
         }
 
         for (RelVsStatusDo d : rVsStatusDao.findByVses(ids, RVsStatusEntity.READSET_FULL)) {
-            versionRef[idx.get(d.getVsId())] = new Integer[]{d.getOfflineVersion(), d.getOnlineVersion()};
+            versionRef.set(idx.get(d.getVsId()), new Integer[]{d.getOfflineVersion(), d.getOnlineVersion()});
         }
 
         List<RelVsSlbDo> add = new ArrayList<>();
         List<RelVsSlbDo> update = new ArrayList<>();
         for (RelVsSlbDo d : rVsSlbDao.findByVses(ids, RVsSlbEntity.READSET_FULL)) {
             Integer objIdx = idx.get(d.getVsId());
-            Integer[] versions = versionRef[objIdx];
+            Integer[] versions = versionRef.get(objIdx);
             if (versions[0].intValue() == versions[1].intValue() || versions[1].intValue() == 0) {
                 VirtualServer vs = objects[objIdx];
                 d.setSlbId(vs.getSlbId()).setVsVersion(vs.getVersion()).setVsVersion(VersionUtils.getHash(vs.getId(), vs.getVersion()));
