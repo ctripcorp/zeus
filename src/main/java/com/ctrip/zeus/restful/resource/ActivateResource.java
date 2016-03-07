@@ -151,44 +151,58 @@ public class ActivateResource {
         }
         List<OpsTask> tasks = new ArrayList<>();
         for (Long id : _groupIds) {
-            Group group = mapping.getOfflineMapping().get(id);
-            AssertUtils.assertNotNull(group,"Group Not Found! GroupId:"+id);
-            AssertUtils.assertNotNull(group.getGroupVirtualServers(),"Group Virtual Servers Not Found! GroupId:"+id);
-            List<Long> vsIds = new ArrayList<>();
-            for (GroupVirtualServer gv : group.getGroupVirtualServers()){
+            Group offGroup = mapping.getOfflineMapping().get(id);
+            Group onGroup = mapping.getOnlineMapping().get(id);
+
+            AssertUtils.assertNotNull(offGroup,"Group Not Found! GroupId:"+id);
+            AssertUtils.assertNotNull(offGroup.getGroupVirtualServers(),"Group Virtual Servers Not Found! GroupId:"+id);
+
+
+            Set<Long> onlineVsIds = new HashSet<>();
+            Set<Long> offlinevsIds = new HashSet<>();
+
+            for (GroupVirtualServer gv : offGroup.getGroupVirtualServers()){
                 if (!virtualServerValidator.isActivated(gv.getVirtualServer().getId())){
                     throw new ValidationException("Related VS has not been activated.VS: "+gv.getVirtualServer().getId());
                 }
-                vsIds.add(gv.getVirtualServer().getId());
+                offlinevsIds.add(gv.getVirtualServer().getId());
             }
 
-            ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
+            if (onGroup != null){
+                for (GroupVirtualServer gv : onGroup.getGroupVirtualServers()){
+                    onlineVsIds.add(gv.getVirtualServer().getId());
+                }
+            }
 
-            Set<Long> slbIdOnline = new HashSet<>();
-            Set<Long> slbIdOffline = new HashSet<>();
+            Set<Long> tmp = new HashSet<>();
+            tmp.addAll(onlineVsIds);
+            tmp.addAll(offlinevsIds);
 
-            for (VirtualServer vs : vsMaping.getOfflineMapping().values()){
-                slbIdOffline.add(vs.getSlbId());
-            }
-            for (VirtualServer vs : vsMaping.getOnlineMapping().values()){
-                slbIdOnline.add(vs.getSlbId());
-            }
-            slbIdOnline.removeAll(slbIdOffline);
-            for (Long slbId : slbIdOnline){
-                OpsTask task = new OpsTask();
-                task.setGroupId(id);
-                task.setOpsType(TaskOpsType.DEACTIVATE_GROUP);
-                task.setTargetSlbId(slbId);
-                task.setVersion(group.getVersion());
-                tasks.add(task);
-            }
-            for (Long slbId : slbIdOffline){
-                OpsTask task = new OpsTask();
-                task.setGroupId(id);
-                task.setOpsType(TaskOpsType.ACTIVATE_GROUP);
-                task.setTargetSlbId(slbId);
-                task.setVersion(group.getVersion());
-                tasks.add(task);
+            ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(tmp.toArray(new Long[]{}));
+
+            for (Long vsId : tmp){
+                VirtualServer vs = vsMaping.getOnlineMapping().get(vsId);
+                if (vs == null){
+                    throw new ValidationException("Vs is not activated. vsId:"+vsId);
+                }
+                if (onlineVsIds.contains(vsId) && !offlinevsIds.contains(vsId)){
+                    OpsTask task = new OpsTask();
+                    task.setCreateTime(new Date())
+                            .setGroupId(id)
+                            .setTargetSlbId(vs.getSlbId())
+                            .setSlbVirtualServerId(vsId)
+                            .setOpsType(TaskOpsType.SOFT_DEACTIVATE_GROUP)
+                            .setVersion(offGroup.getVersion());
+                    tasks.add(task);
+                } else {
+                    OpsTask task = new OpsTask();
+                    task.setCreateTime(new Date())
+                            .setGroupId(id)
+                            .setTargetSlbId(vs.getSlbId())
+                            .setOpsType(TaskOpsType.ACTIVATE_GROUP)
+                            .setVersion(offGroup.getVersion());
+                    tasks.add(task);
+                }
             }
         }
         List<Long> taskIds = taskManager.addTask(tasks);

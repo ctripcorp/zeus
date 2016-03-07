@@ -63,6 +63,7 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     private HashMap<String, OpsTask> serverOps = new HashMap<>();
     private HashMap<Long, OpsTask> activateGroupOps = new HashMap<>();
+    private HashMap<Long, OpsTask> softDeactivateGroupOps = new HashMap<>();
     private HashMap<Long, OpsTask> activateVsOps = new HashMap<>();
     private HashMap<Long, OpsTask> deactivateGroupOps = new HashMap<>();
     private HashMap<Long, OpsTask> deactivateVsOps = new HashMap<>();
@@ -152,6 +153,15 @@ public class TaskExecutorImpl implements TaskExecutor {
             //1.4 offline data check
             List<IdVersion> toFetch = new ArrayList<>();
             for (OpsTask task : activateGroupOps.values()) {
+                if (softDeactivateGroupOps.containsKey(task.getGroupId())){
+                    setTaskFail(task,"Activating Group while soft deactivating group ,groupId[" + task.getGroupId() + "]");
+                    continue;
+                }
+                if (!offlineGroups.get(task.getGroupId()).getVersion().equals(task.getVersion())) {
+                    toFetch.add(new IdVersion(task.getId(), task.getVersion()));
+                }
+            }
+            for (OpsTask task : softDeactivateGroupOps.values()){
                 if (!offlineGroups.get(task.getGroupId()).getVersion().equals(task.getVersion())) {
                     toFetch.add(new IdVersion(task.getId(), task.getVersion()));
                 }
@@ -209,6 +219,15 @@ public class TaskExecutorImpl implements TaskExecutor {
             needBuildVses.addAll(activateVsOps.keySet());
             if (activateSlbOps.size() > 0 && activateSlbOps.get(slbId) != null) {
                 needBuildVses.addAll(onlineVses.keySet());
+            }
+            if (softDeactivateGroupOps.size() > 0) {
+                for (OpsTask task : softDeactivateGroupOps.values()) {
+                    if (task.getSlbVirtualServerId() != null && onlineVses.containsKey(task.getSlbVirtualServerId())) {
+                        needBuildVses.add(task.getSlbVirtualServerId());
+                    } else {
+                        setTaskFail(task,"Not found online vs for soft deactivate group ops. vs="+task.getSlbVirtualServerId());
+                    }
+                }
             }
             boolean need = false;
             boolean hasRelatedVs = false;
@@ -297,23 +316,23 @@ public class TaskExecutorImpl implements TaskExecutor {
             Integer slbVersion = onlineSlb.getVersion();
             boolean needReload = false;
             if (activateSlbOps.size() > 0 || activateGroupOps.size() > 0 || deactivateGroupOps.size() > 0
-                    || activateVsOps.size() > 0 || deactivateVsOps.size() > 0) {
+                    || activateVsOps.size() > 0 || deactivateVsOps.size() > 0 || softDeactivateGroupOps.size() > 0) {
                 needReload = true;
             }
             //5.2 push config to all slb servers. reload if needed.
             needBuildVses.removeAll(deactivateVsOps.keySet());
-            if (writeEnable.get()){
-            try {
-                List<NginxResponse> responses = nginxService.pushConf(onlineSlb.getSlbServers(), slbId, slbVersion, needBuildVses, needReload);
-                for (NginxResponse response : responses) {
-                    if (!response.getSucceed()) {
-                        throw new Exception("Push config Fail.Fail Response:" + String.format(NginxResponse.JSON, response));
+            if (writeEnable.get()) {
+                try {
+                    List<NginxResponse> responses = nginxService.pushConf(onlineSlb.getSlbServers(), slbId, slbVersion, needBuildVses, needReload);
+                    for (NginxResponse response : responses) {
+                        if (!response.getSucceed()) {
+                            throw new Exception("Push config Fail.Fail Response:" + String.format(NginxResponse.JSON, response));
+                        }
                     }
+                } catch (Exception e) {
+                    needRollbackConf = true;
+                    throw e;
                 }
-            } catch (Exception e) {
-                needRollbackConf = true;
-                throw e;
-            }
             }
             //5.3 for dyups.
             if (!needReload) {
@@ -326,7 +345,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                     for (NginxResponse response : dyopsResponses) {
                         if (!response.getSucceed()) {
                             logger.warn("[Dyups] upstreamName:" + dyUpstreamOpsData.getUpstreamName() + "\nStatus: Fail");
-                            throw new Exception("Dyups failed.GroupID:"+group.getId());
+                            throw new Exception("Dyups failed.GroupID:" + group.getId());
                         }
                     }
                     logger.info("[Dyups] upstreamName:" + dyUpstreamOpsData.getUpstreamName() + "\nStatus: Suc");
@@ -619,6 +638,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         pullMemberOps.clear();
         activateVsOps.clear();
         deactivateVsOps.clear();
+        softDeactivateGroupOps.clear();
         for (OpsTask task : tasks) {
             task.setStatus(TaskStatus.DOING);
             //Activate group
@@ -655,6 +675,10 @@ public class TaskExecutorImpl implements TaskExecutor {
             if (task.getOpsType().equals(TaskOpsType.DEACTIVATE_GROUP)) {
                 deactivateGroupOps.put(task.getGroupId(), task);
             }
+            //soft deactivate
+            if (task.getOpsType().equals(TaskOpsType.SOFT_DEACTIVATE_GROUP)) {
+                softDeactivateGroupOps.put(task.getGroupId(), task);
+            }
             //deactivate vs
             if (task.getOpsType().equals(TaskOpsType.DEACTIVATE_VS)) {
                 deactivateVsOps.put(task.getSlbVirtualServerId(), task);
@@ -672,18 +696,18 @@ public class TaskExecutorImpl implements TaskExecutor {
         logger.warn("[Task Fail] OpsTask: Type[" + task.getOpsType() + " TaskId:" + task.getId() + "],FailCause:" + failcause);
     }
 
-    public  List<Long> getResources() {
+    public List<Long> getResources() {
         List<Long> resources = new ArrayList<>();
         Set<Long> tmp = new HashSet<>();
-        Map<String,String> tags ;
-        for (OpsTask task : tasks){
-            if (task.getResources()!=null){
+        Map<String, String> tags;
+        for (OpsTask task : tasks) {
+            if (task.getResources() != null) {
                 tmp.add(Long.parseLong(task.getResources()));
             }
             tmp.add(task.getTargetSlbId());
             tags = new HashMap<>();
-            tags.put("taskId",task.getId().toString());
-            clog.info("TaskInfo","Tasks are executing, TaskID [" + task.getId() + "]",tags);
+            tags.put("taskId", task.getId().toString());
+            clog.info("TaskInfo", "Tasks are executing, TaskID [" + task.getId() + "]", tags);
         }
         resources.addAll(tmp);
         Collections.sort(resources);
