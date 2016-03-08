@@ -161,7 +161,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             return result;
         }
         for (Long vid : vsMap.getOfflineMapping().keySet()) {
-            if (vsMap.getOfflineMapping().get(vid).getSlbId().equals(slbId)){
+            if (vsMap.getOfflineMapping().get(vid).getSlbId().equals(slbId)) {
                 List<Long> tmpVsId = new ArrayList<>();
                 tmpVsId.add(vid);
                 result.addAll(getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping(), tmpVsId,
@@ -200,13 +200,17 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
                 String key = gvsId + "_" + groupId + "_" + gs.getIp();
+                if (memberStatus.get(key) == null) {
+                    LOGGER.error("[StatusError]Group Member Status is missing. vsId:" + gvsId + "groupId:" + groupId + "ip:" + gs.getIp());
+                    continue;
+                }
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean up = false;
-                if (memberUp && serverUp && pullIn){
+                if (memberUp && serverUp && pullIn) {
                     up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
-                }else {
+                } else {
                     up = false;
                 }
                 groupServerStatus.setServer(serverUp);
@@ -249,13 +253,17 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
                 String key = gvsId + "_" + groupId + "_" + gs.getIp();
+                if (memberStatus.get(key) == null) {
+                    LOGGER.error("[StatusError]Group Member Status is missing. vsId:" + gvsId + "groupId:" + groupId + "ip:" + gs.getIp());
+                    continue;
+                }
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean up = false;
-                if (memberUp && serverUp && pullIn){
+                if (memberUp && serverUp && pullIn) {
                     up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
-                }else {
+                } else {
                     up = false;
                 }
 
