@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TaskExecutor extends Thread {
     private Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
+    private DynamicBooleanProperty disableAllTasks = null;
     private DynamicBooleanProperty taskEnabled = null;
     private DynamicLongProperty taskInterval = null;
 
@@ -25,6 +26,7 @@ public class TaskExecutor extends Thread {
         this.task = task;
         isRunning = new AtomicBoolean(true);
 
+        disableAllTasks = DynamicPropertyFactory.getInstance().getBooleanProperty("task.disable-all", false);
         taskEnabled = DynamicPropertyFactory.getInstance().getBooleanProperty("task." + task.getName() + ".enabled", true);
         taskInterval = DynamicPropertyFactory.getInstance().getLongProperty("task." + task.getName() + ".interval", task.getInterval());
 
@@ -36,6 +38,7 @@ public class TaskExecutor extends Thread {
     public void run() {
         while (isRunning.get()) {
             try {
+                if(disableAllTasks.get()) continue;
                 if (!taskEnabled.get()) continue;
                 task.run();
             } catch (Exception e) {

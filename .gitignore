@@ -15,3 +15,7 @@ conf/uat/*
 conf/fat/*
 conf/prod*/*
 conf/fws/*
+logback-prod*.xml
+logback-uat.xml
+*.log
+APP_HOME_IS_UNDEFINED
