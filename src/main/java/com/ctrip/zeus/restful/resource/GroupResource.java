@@ -415,7 +415,7 @@ public class GroupResource {
         if (groupId == null) {
             groupId = groupCriteriaQuery.queryByName(groupName);
         }
-        if (groupId == null) {
+        if (groupId == null || groupId.longValue() == 0L) {
             throw new ValidationException("Group cannot be found.");
         }
 

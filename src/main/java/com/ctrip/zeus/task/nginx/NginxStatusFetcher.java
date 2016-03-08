@@ -2,7 +2,12 @@ package com.ctrip.zeus.task.nginx;
 
 import com.ctrip.zeus.client.LocalClient;
 import com.ctrip.zeus.nginx.RollingTrafficStatus;
+import com.ctrip.zeus.service.model.EntityFactory;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.task.AbstractTask;
+import com.ctrip.zeus.util.S;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -13,8 +18,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Component("nginxStatusFetcher")
 public class NginxStatusFetcher extends AbstractTask {
+    Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Resource
     private RollingTrafficStatus rollingTrafficStatus;
+    @Resource
+    EntityFactory entityFactory;
+
     private AtomicInteger tick = new AtomicInteger();
 
     @Override
@@ -29,6 +39,13 @@ public class NginxStatusFetcher extends AbstractTask {
 
     @Override
     public void run() throws Exception {
+        String selfIp = S.getIp();
+        Long[] slbIds = entityFactory.getSlbIdsByIp(selfIp, SelectionMode.ONLINE_FIRST);
+        if (slbIds == null || slbIds.length == 0){
+            logger.warn("Can Not Found Slb by Local Ip. NginxStatusFetcher ignore task! Local Ip : " + selfIp);
+            return;
+        }
+
         if (tick.incrementAndGet() == 10) {
             clearDirtyRecords(System.currentTimeMillis());
             tick.set(0);

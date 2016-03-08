@@ -140,7 +140,7 @@ public class SlbResource {
         if (slbId == null && slbName != null) {
             slbId = slbCriteriaQuery.queryByName(slbName);
         }
-        if (slbId == null)
+        if (slbId == null || slbId.longValue() == 0L)
             throw new ValidationException("Slb id cannot be found.");
 
         Slb slb = slbRepository.getById(slbId);

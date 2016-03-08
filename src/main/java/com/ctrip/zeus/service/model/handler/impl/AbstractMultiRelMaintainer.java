@@ -2,6 +2,8 @@ package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.handler.MultiRelMaintainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -11,22 +13,37 @@ import java.util.*;
  * Created by zhoumy on 2015/12/22.
  */
 public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMaintainer<W, X> {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     protected static final int OFFSET_OFFLINE = 0;
     protected static final int OFFSET_ONLINE = 1;
-    private static final Map<Class, Method> MethodCache = new HashMap<>();
+    private static final Map<String, Method> MethodCache = new HashMap<>();
 
     protected final Class<T> clazzT;
+    protected final String clazzName;
 
     private Method m_getId;
+    private Method m_getVersion;
 
     protected AbstractMultiRelMaintainer(Class<T> clazzT, Class<X> clazzX) {
         this.clazzT = clazzT;
-        m_getId = MethodCache.get(clazzX);
+        clazzName = clazzX.getSimpleName();
+        m_getId = MethodCache.get(clazzName + "#getId");
+        m_getVersion = MethodCache.get(clazzName + "#getVersion");
         if (m_getId == null) {
             try {
                 m_getId = clazzX.getMethod("getId");
-                MethodCache.put(clazzX, m_getId);
+                MethodCache.put(clazzName + "#getId", m_getId);
             } catch (NoSuchMethodException e) {
+                logger.error("Cannot find getId() method from class " + clazzName + ".", e);
+            }
+        }
+        if (m_getVersion == null) {
+            try {
+                m_getVersion = clazzX.getMethod("getVersion");
+                MethodCache.put(clazzName + "#getVersion", m_getVersion);
+            } catch (NoSuchMethodException e) {
+                logger.error("Cannot find getVersion() method from class " + clazzName + ".", e);
             }
         }
     }
@@ -101,7 +118,8 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
             List<W> rels;
             X object = objects[i];
             Integer[] versions = versionRef.get(i);
-            if (versions[OFFSET_OFFLINE].intValue() == versions[OFFSET_ONLINE].intValue()) {
+            if (versions[OFFSET_OFFLINE].intValue() == versions[OFFSET_ONLINE].intValue() ||
+                    versions[OFFSET_OFFLINE].intValue() == getObjectVersion(object).intValue()) {
                 rels = new ArrayList<>();
             } else {
                 rels = getRelations(object);
@@ -168,9 +186,21 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
             try {
                 return (Long) m_getId.invoke(object);
             } catch (Exception e) {
+                logger.error("Error occurred when invoke getId() from " + clazzName + ".", e);
             }
         }
         return 0L;
+    }
+
+    protected Integer getObjectVersion(X object) {
+        if (m_getVersion != null) {
+            try {
+                return (Integer) m_getVersion.invoke(object);
+            } catch (Exception e) {
+                logger.error("Error occurred when invoke getVersion() from " + clazzName + ".", e);
+            }
+        }
+        return 0;
     }
 
     protected abstract IdVersion getIdxKey(T rel) throws Exception;
