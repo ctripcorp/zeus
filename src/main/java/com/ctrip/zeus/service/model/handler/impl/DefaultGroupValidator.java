@@ -93,10 +93,10 @@ public class DefaultGroupValidator implements GroupValidator {
                 else
                     virtualServerIds.add(vs.getId());
             }
-            if (groupPaths.contains(vs.getId() + groupVirtualServer.getPath()))
+            if (groupPaths.contains(vs.getId() + vs.getVersion() + groupVirtualServer.getPath()))
                 throw new ValidationException("Duplicate path \"" + groupVirtualServer.getPath() + "\" is found on virtual server " + vs.getId() + " from post entity.");
             else
-                groupPaths.add(vs.getId() + groupVirtualServer.getPath());
+                groupPaths.add(vs.getId() + vs.getVersion() + groupVirtualServer.getPath());
         }
         for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllByVses(virtualServerIds.toArray(new Long[virtualServerIds.size()]), RGroupVsEntity.READSET_FULL)) {
             if (groupId.equals(relGroupVsDo.getGroupId()))
