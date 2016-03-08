@@ -39,6 +39,8 @@ public class EntityFactoryImpl implements EntityFactory {
     private RSlbStatusDao rSlbStatusDao;
 
     @Resource
+    private AutoFiller autoFiller;
+    @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
@@ -58,6 +60,7 @@ public class EntityFactoryImpl implements EntityFactory {
             for (GroupVirtualServer e : g.getGroupVirtualServers()) {
                 e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
             }
+            autoFiller.autofillEmptyFields(g);
             ref.put(d.getGroupId() + "," + d.getVersion(), g);
         }
 
@@ -145,6 +148,7 @@ public class EntityFactoryImpl implements EntityFactory {
             for (GroupVirtualServer e : g.getGroupVirtualServers()) {
                 e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
             }
+            autoFiller.autofillEmptyFields(g);
             ref.put(d.getGroupId() + "," + d.getVersion(), g);
         }
 
