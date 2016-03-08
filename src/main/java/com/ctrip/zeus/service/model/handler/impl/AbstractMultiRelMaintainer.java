@@ -98,26 +98,23 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
         List<T> add = new ArrayList<>();
 
         for (int i = 0; i < objects.length; i++) {
+            List<W> rels;
             X object = objects[i];
-            List<W> rels = getRelations(object);
             Integer[] versions = versionRef.get(i);
             if (versions[OFFSET_OFFLINE].intValue() == versions[OFFSET_ONLINE].intValue()) {
-                for (W w : rels) {
-                    T d = clazzT.newInstance();
-                    setDo(object, w, d);
-                    if (getIdxKey(d).getVersion() != 0) add.add(d);
-                }
-                continue;
+                rels = new ArrayList<>();
+            } else {
+                rels = getRelations(object);
             }
 
-            int onlineVersion = versions[OFFSET_ONLINE];
-            List<T> online = new ArrayList<>();
+            int retainedVersion = versions[OFFSET_OFFLINE];
+            List<T> discard = new ArrayList<>();
             for (T t : dosRef[i]) {
-                if (getIdxKey(t).getVersion() == onlineVersion) {
-                    online.add(t);
+                if (getIdxKey(t).getVersion() != retainedVersion) {
+                    discard.add(t);
                 }
             }
-            for (Map.Entry<String, List<T>> e : groupByAction(object, rels, online, clazzT).entrySet()) {
+            for (Map.Entry<String, List<T>> e : groupByAction(object, rels, discard, clazzT).entrySet()) {
                 List<T> v = actionMap.get(e.getKey());
                 if (v == null) {
                     actionMap.put(e.getKey(), e.getValue());
