@@ -153,15 +153,11 @@ public class TaskExecutorImpl implements TaskExecutor {
             //1.4 offline data check
             List<IdVersion> toFetch = new ArrayList<>();
             for (OpsTask task : activateGroupOps.values()) {
-                if (softDeactivateGroupOps.containsKey(task.getGroupId())){
-                    setTaskFail(task,"Activating Group while soft deactivating group ,groupId[" + task.getGroupId() + "]");
+                if (softDeactivateGroupOps.containsKey(task.getGroupId())) {
+                    setTaskFail(task, "Activating Group while soft deactivating group ,groupId[" + task.getGroupId() + "]");
+                    activateGroupOps.remove(task.getGroupId());
                     continue;
                 }
-                if (!offlineGroups.get(task.getGroupId()).getVersion().equals(task.getVersion())) {
-                    toFetch.add(new IdVersion(task.getId(), task.getVersion()));
-                }
-            }
-            for (OpsTask task : softDeactivateGroupOps.values()){
                 if (!offlineGroups.get(task.getGroupId()).getVersion().equals(task.getVersion())) {
                     toFetch.add(new IdVersion(task.getId(), task.getVersion()));
                 }
@@ -194,6 +190,11 @@ public class TaskExecutorImpl implements TaskExecutor {
             for (Long gid : activateGroupOps.keySet()) {
                 onlineGroups.put(gid, offlineGroups.get(gid));
             }
+            for (Long gid : softDeactivateGroupOps.keySet()) {
+                if (onlineGroups.containsKey(gid)) {
+                    onlineGroups.remove(gid);
+                }
+            }
             //2.2 merge on/offline vses
             for (Long sid : activateVsOps.keySet()) {
                 onlineVses.put(sid, offlineVses.get(sid));
@@ -225,7 +226,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                     if (task.getSlbVirtualServerId() != null && onlineVses.containsKey(task.getSlbVirtualServerId())) {
                         needBuildVses.add(task.getSlbVirtualServerId());
                     } else {
-                        setTaskFail(task,"Not found online vs for soft deactivate group ops. vs="+task.getSlbVirtualServerId());
+                        setTaskFail(task, "Not found online vs for soft deactivate group ops. vs=" + task.getSlbVirtualServerId());
                     }
                 }
             }

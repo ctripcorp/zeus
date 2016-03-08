@@ -151,6 +151,35 @@ public class DeactivateResource {
     }
 
     @GET
+    @Path("/soft/group")
+    @Authorize(name = "activate")
+    public Response softDeactivateGroup(@Context HttpServletRequest request,
+                                            @Context HttpHeaders hh,
+                                            @QueryParam("vsId") Long vsId,
+                                            @QueryParam("groupId") Long groupId) throws Exception {
+        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(new Long[]{groupId});
+        if (groupMap.getOfflineMapping() != null && groupMap.getOfflineMapping().size() > 0) {
+            throw new ValidationException("Not found group.");
+        }
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(new Long[]{vsId});
+        if (vsMap.getOnlineMapping() == null || vsMap.getOnlineMapping().get(vsId) == null) {
+            throw new ValidationException("Vs is not activated.VsId:" + vsId);
+        }
+        VirtualServer vs = vsMap.getOnlineMapping().get(vsId);
+        OpsTask sofDeactivateTask = new OpsTask();
+        sofDeactivateTask.setSlbVirtualServerId(vsId);
+        sofDeactivateTask.setCreateTime(new Date());
+        sofDeactivateTask.setOpsType(TaskOpsType.SOFT_DEACTIVATE_GROUP);
+        sofDeactivateTask.setTargetSlbId(vs.getSlbId());
+        sofDeactivateTask.setGroupId(groupId);
+        sofDeactivateTask.setVersion(groupMap.getOfflineMapping().get(groupId).getVersion());
+        Long taskId = taskManager.addTask(sofDeactivateTask);
+
+        TaskResult results = taskManager.getResult(taskId, apiTimeout.get());
+        return responseHandler.handle(results, hh.getMediaType());
+    }
+
+    @GET
     @Path("/slb")
     @Authorize(name = "activate")
     public Response deactivateSlb(@Context HttpServletRequest request,
