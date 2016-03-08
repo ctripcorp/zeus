@@ -34,8 +34,8 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
         }
         if (m_getVersion == null) {
             try {
-                m_getId = clazzX.getMethod("getVersion");
-                MethodCache.put(clazzName + "#getVersion", m_getId);
+                m_getVersion = clazzX.getMethod("getVersion");
+                MethodCache.put(clazzName + "#getVersion", m_getVersion);
             } catch (NoSuchMethodException e) {
             }
         }
