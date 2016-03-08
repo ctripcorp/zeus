@@ -121,7 +121,7 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                         logger.warn("[FreshHealthCheckStatus] Skipped invalidate ip port.");
                         continue;
                     }
-                    String ip = ipPort[1];
+                    String ip = ipPort[0];
                     for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
                         if (vsMap.getOnlineMapping().containsKey(gvs.getVirtualServer().getId())) {
                             updateStatusItems.add(new UpdateStatusItem()
