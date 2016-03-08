@@ -39,9 +39,10 @@ public class NginxStatusFetcher extends AbstractTask {
 
     @Override
     public void run() throws Exception {
-        Long[] slbIds = entityFactory.getSlbIdsByIp(S.getIp(), SelectionMode.ONLINE_FIRST);
+        String selfIp = S.getIp();
+        Long[] slbIds = entityFactory.getSlbIdsByIp(selfIp, SelectionMode.ONLINE_FIRST);
         if (slbIds == null || slbIds.length == 0){
-            logger.error("Can Not Found Slb by Local Ip. NginxStatusFetcher ignore task! Local Ip : "+S.getIp());
+            logger.warn("Can Not Found Slb by Local Ip. NginxStatusFetcher ignore task! Local Ip : " + selfIp);
             return;
         }
 
