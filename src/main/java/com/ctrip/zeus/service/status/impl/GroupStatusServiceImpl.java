@@ -66,7 +66,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getAllOfflineGroupsStatus() throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        Set<IdVersion> slbIds = slbCriteriaQuery.queryAll(SelectionMode.OFFLINE_EXCLUSIVE);
+        Set<IdVersion> slbIds = slbCriteriaQuery.queryAll(SelectionMode.OFFLINE_FIRST);
         for (IdVersion slb : slbIds) {
             result.addAll(getOfflineGroupsStatusBySlbId(slb.getId()));
         }
@@ -88,7 +88,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Override
     public List<GroupStatus> getOfflineGroupsStatusBySlbId(Long slbId) throws Exception {
         List<GroupStatus> result = new ArrayList<>();
-        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, SelectionMode.OFFLINE_EXCLUSIVE);
+        Long[] vses = entityFactory.getVsIdsBySlbId(slbId, SelectionMode.OFFLINE_FIRST);
         ModelStatusMapping<Group> groups = entityFactory.getGroupsByVsIds(vses);
         if (groups.getOfflineMapping() == null || groups.getOfflineMapping().size() == 0) {
             return result;
