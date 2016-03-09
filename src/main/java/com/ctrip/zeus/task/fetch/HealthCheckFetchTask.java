@@ -91,7 +91,7 @@ public class HealthCheckFetchTask extends AbstractTask {
             return false;
         }
         try {
-            logger.info("HealthCheckFetchTask", "Start get ticket. retry:" + retry);
+            logger.info("Start get ticket. retry:" + retry);
             GlobalJobDo globalJobDo = globalJobDao.findByPK(key, GlobalJobEntity.READSET_FULL);
             if (globalJobDo == null) {
                 globalJobDo = new GlobalJobDo().setJobKey(key).setStartTime(new Date()).setStatus("DOING")
@@ -135,7 +135,7 @@ public class HealthCheckFetchTask extends AbstractTask {
         if (retry < 0) {
             return;
         }
-        logger.info("HealthCheckFetchTask", "Start commit ticket. retry:" + retry);
+        logger.info("Start commit ticket. retry:" + retry);
 
         GlobalJobDo globalJobDo = new GlobalJobDo().setJobKey(key).setFinishTime(new Date()).setStatus("DONE")
                 .setDataChangeLastTime(new Date()).setOwner(S.getIp());

@@ -41,7 +41,7 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
 
     private static int count = 0;
     private static DynamicIntProperty invalidInterval = DynamicPropertyFactory.getInstance().getIntProperty("health.check.status.invalid.interval", 300000);
-    private Logger logger = LoggerFactory.getLogger(StatusServiceImpl.class);
+    private Logger logger = LoggerFactory.getLogger(HealthCheckStatusServiceImpl.class);
     private static DynamicIntProperty riseOrFailMin = DynamicPropertyFactory.getInstance().getIntProperty("health.check.status.rise-fail.min", 30);
 
 
@@ -55,9 +55,9 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
         } else {
             logger.warn("Not found relative online slb for host ip [" + hostIp + "].");
         }
-        logger.info("HealthCheckStatusService", "[HealthCheckStatusService] start fetch status from nginx server.");
+        logger.info("[HealthCheckStatusService] start fetch status from nginx server.");
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
-        logger.info("HealthCheckStatusService", "[HealthCheckStatusService] finish fetch status from nginx server.");
+        logger.info("[HealthCheckStatusService] finish fetch status from nginx server.");
         if (upstreamStatus == null || upstreamStatus.getServers() == null || upstreamStatus.getServers().getServer() == null) {
             logger.info("[HeathCheckFetch] Null status data for host ip [" + hostIp + "].");
             return;
@@ -68,7 +68,7 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
         ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesBySlbIds(slbId);
         ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByVsIds(vsMap.getOnlineMapping().keySet().toArray(new Long[]{}));
 
-        logger.info("HealthCheckStatusService", "[HealthCheckStatusService] start check server items.");
+        logger.info("[HealthCheckStatusService] start check server items.");
 
         List<UpdateStatusItem> updateStatusItems = new ArrayList<>();
         for (Item item : servers) {
@@ -139,9 +139,9 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                 }
             }
             if (updateStatusItems.size() > 0) {
-                logger.info("HealthCheckStatusService", "[HealthCheckStatusService] start update status. size : " + updateStatusItems.size());
+                logger.info("[HealthCheckStatusService] start update status. size : " + updateStatusItems.size());
                 statusService.updateStatus(updateStatusItems);
-                logger.info("HealthCheckStatusService", "[HealthCheckStatusService] end update status. size : " + updateStatusItems.size());
+                logger.info("[HealthCheckStatusService] end update status. size : " + updateStatusItems.size());
             }
         }
     }
