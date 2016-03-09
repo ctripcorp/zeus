@@ -138,11 +138,11 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                     }
                 }
             }
-            if (updateStatusItems.size() > 0) {
+        }
+        if (updateStatusItems.size() > 0) {
                 logger.info("[HealthCheckStatusService] start update status. size : " + updateStatusItems.size());
                 statusService.updateStatus(updateStatusItems);
                 logger.info("[HealthCheckStatusService] end update status. size : " + updateStatusItems.size());
-            }
         }
     }
 }
