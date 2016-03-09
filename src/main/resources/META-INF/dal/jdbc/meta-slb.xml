@@ -107,6 +107,7 @@
                     FROM <TABLE/>
                     WHERE <FIELD name='hash'/> in <IN>${hashes}</IN>
                     HAVING CONCAT(slb_id, ',', version) in <IN>${id-version-array}</IN>
+                    ORDER BY <FIELD name='slb-id'/>
                     ]]>
                 </statement>
             </query>

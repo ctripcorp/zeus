@@ -180,6 +180,7 @@
                     FROM <TABLE/>
                     WHERE <FIELD name='hash'/> in <IN>${hashes}</IN>
                     AND CONCAT(<FIELD name='group-id'/>, ',', <FIELD name='version'/>) in <IN>${id-version-array}</IN>
+                    ORDER BY <FIELD name='group-id'/>
                     ]]>
                 </statement>
             </query>
