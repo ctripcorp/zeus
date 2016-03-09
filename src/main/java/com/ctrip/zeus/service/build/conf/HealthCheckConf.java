@@ -63,7 +63,7 @@ public class HealthCheckConf {
             b.append(" type=http default_down=false").append(";\n")
                     .append("check_keepalive_requests 100").append(";\n")
                     .append("check_http_send \"")
-                    .append("GET ").append(h.getUri()).append(" HTTP/1.0\\r\\n")
+                    .append("GET ").append(h.getUri()).append(" HTTP/1.1\\r\\n")
                     .append("Connection:keep-alive\\r\\n");
             if (!h.getUri().equalsIgnoreCase("/SlbHealthCheck.aspx")) {
                 b.append("Host:").append(vs.getDomains().get(0).getName().trim()).append("\\r\\n");
