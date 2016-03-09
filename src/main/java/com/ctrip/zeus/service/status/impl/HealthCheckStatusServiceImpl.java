@@ -42,7 +42,8 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
     private static int count = 0;
     private static DynamicIntProperty invalidInterval = DynamicPropertyFactory.getInstance().getIntProperty("health.check.status.invalid.interval", 300000);
     private Logger logger = LoggerFactory.getLogger(StatusServiceImpl.class);
-    private final int RISE_FAIL_MIN = 10;
+    private static DynamicIntProperty riseOrFailMin = DynamicPropertyFactory.getInstance().getIntProperty("health.check.status.rise-fail.min", 30);
+
 
     @Override
     public void freshHealthCheckStatus() throws Exception {
@@ -54,9 +55,9 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
         } else {
             logger.warn("Not found relative online slb for host ip [" + hostIp + "].");
         }
-
+        logger.info("HealthCheckStatusService", "[HealthCheckStatusService] start fetch status from nginx server.");
         UpstreamStatus upstreamStatus = LocalClient.getInstance().getUpstreamStatus();
-
+        logger.info("HealthCheckStatusService", "[HealthCheckStatusService] finish fetch status from nginx server.");
         if (upstreamStatus == null || upstreamStatus.getServers() == null || upstreamStatus.getServers().getServer() == null) {
             logger.info("[HeathCheckFetch] Null status data for host ip [" + hostIp + "].");
             return;
@@ -67,11 +68,13 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
         ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesBySlbIds(slbId);
         ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByVsIds(vsMap.getOnlineMapping().keySet().toArray(new Long[]{}));
 
+        logger.info("HealthCheckStatusService", "[HealthCheckStatusService] start check server items.");
+
         List<UpdateStatusItem> updateStatusItems = new ArrayList<>();
         for (Item item : servers) {
             if (item.getStatus() == null) continue;
             if (item.getStatus().trim().equals("up")) {
-                if (item.getRise() < RISE_FAIL_MIN) {
+                if (item.getRise() < riseOrFailMin.get()) {
                     //update
                     String[] tmp = item.getUpstream().split("_");
                     if (tmp.length != 2) {
@@ -84,8 +87,8 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                         logger.warn("[FreshHealthCheckStatus] Skipped invalidate upstream name.");
                         continue;
                     }
-                    String [] ipPort = item.getName().split(":");
-                    if (ipPort.length != 2){
+                    String[] ipPort = item.getName().split(":");
+                    if (ipPort.length != 2) {
                         logger.warn("[FreshHealthCheckStatus] Skipped invalidate ip port.");
                         continue;
                     }
@@ -103,7 +106,7 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                     }
                 }
             } else if (item.getStatus().trim().equals("down")) {
-                if (item.getFall() < RISE_FAIL_MIN) {
+                if (item.getFall() < riseOrFailMin.get()) {
                     //update
                     String[] tmp = item.getUpstream().split("_");
                     if (tmp.length != 2) {
@@ -116,8 +119,8 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                         logger.warn("[FreshHealthCheckStatus] Skipped invalidate upstream name.GroupId:" + groupId + ";SlbId:" + slbId);
                         continue;
                     }
-                    String [] ipPort = item.getName().split(":");
-                    if (ipPort.length != 2){
+                    String[] ipPort = item.getName().split(":");
+                    if (ipPort.length != 2) {
                         logger.warn("[FreshHealthCheckStatus] Skipped invalidate ip port.");
                         continue;
                     }
@@ -136,7 +139,9 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                 }
             }
             if (updateStatusItems.size() > 0) {
+                logger.info("HealthCheckStatusService", "[HealthCheckStatusService] start update status. size : " + updateStatusItems.size());
                 statusService.updateStatus(updateStatusItems);
+                logger.info("HealthCheckStatusService", "[HealthCheckStatusService] end update status. size : " + updateStatusItems.size());
             }
         }
     }

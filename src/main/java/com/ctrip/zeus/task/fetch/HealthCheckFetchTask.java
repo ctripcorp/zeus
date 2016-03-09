@@ -36,6 +36,7 @@ public class HealthCheckFetchTask extends AbstractTask {
     private GlobalJobDao globalJobDao;
 
     private static DynamicIntProperty interval = DynamicPropertyFactory.getInstance().getIntProperty("fetch.health.check.interval", 5000);
+    private static DynamicIntProperty forceGet = DynamicPropertyFactory.getInstance().getIntProperty("fetch.health.check.force.getGlobalJob", 50);
 
 
     @Override
@@ -90,6 +91,7 @@ public class HealthCheckFetchTask extends AbstractTask {
             return false;
         }
         try {
+            logger.info("HealthCheckFetchTask", "Start get ticket. retry:" + retry);
             GlobalJobDo globalJobDo = globalJobDao.findByPK(key, GlobalJobEntity.READSET_FULL);
             if (globalJobDo == null) {
                 globalJobDo = new GlobalJobDo().setJobKey(key).setStartTime(new Date()).setStatus("DOING")
@@ -111,7 +113,7 @@ public class HealthCheckFetchTask extends AbstractTask {
                 } else {
                     long last = globalJobDo.getFinishTime() == null ? 0 : globalJobDo.getFinishTime().getTime();
                     long time = System.currentTimeMillis() - last;
-                    if (time >= 10 * interval) {
+                    if (time >= forceGet.get() * interval) {
                         globalJobDo.setStartTime(new Date()).setStatus("DOING")
                                 .setDataChangeLastTime(new Date()).setOwner(S.getIp());
                         globalJobDao.updateByPK(globalJobDo, GlobalJobEntity.UPDATESET_FULL);
@@ -130,9 +132,11 @@ public class HealthCheckFetchTask extends AbstractTask {
     }
 
     private void commitTicket(String key, int retry) {
-        if (retry < 0){
+        if (retry < 0) {
             return;
         }
+        logger.info("HealthCheckFetchTask", "Start commit ticket. retry:" + retry);
+
         GlobalJobDo globalJobDo = new GlobalJobDo().setJobKey(key).setFinishTime(new Date()).setStatus("DONE")
                 .setDataChangeLastTime(new Date()).setOwner(S.getIp());
         try {
