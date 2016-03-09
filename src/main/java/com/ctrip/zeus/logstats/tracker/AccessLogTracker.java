@@ -68,6 +68,17 @@ public class AccessLogTracker implements LogTracker {
 
     @Override
     public boolean reachFileEnd() throws IOException {
+        if (raf == null) {
+            // File may not be open, wait and retry get raf.
+            try {
+                Thread.sleep(500L);
+            } catch (InterruptedException e) {
+            }
+        }
+        if (fileChannel == null) {
+            logger.error("Cannot reach underlying fileChannel.");
+            return true;
+        }
         return offset == fileChannel.size();
     }
 
@@ -157,7 +168,11 @@ public class AccessLogTracker implements LogTracker {
                             eol = true;
                             offsetValue = valueBuilder.append(new String(line, 0, colOffset)).toString();
                             valueBuilder.setLength(0);
-                            delegator.delegate(offsetValue);
+                            try {
+                                delegator.delegate(offsetValue);
+                            } catch (Exception ex) {
+                                logger.error("AccessLogTracker::delegator throws an expected error", ex);
+                            }
                             previousOffset = offset;
                             offset += ++colOffset;
                             row++;
@@ -166,11 +181,16 @@ public class AccessLogTracker implements LogTracker {
                             eol = true;
                             offsetValue = valueBuilder.append(new String(line, 0, colOffset)).toString();
                             valueBuilder.setLength(0);
-                            if ((buffer.get()) != '\n')
+                            if ((buffer.get()) != '\n') {
                                 buffer.position(colOffset);
-                            else
+                            } else {
                                 colOffset++;
-                            delegator.delegate(offsetValue);
+                            }
+                            try {
+                                delegator.delegate(offsetValue);
+                            } catch (Exception ex) {
+                                logger.error("AccessLogTracker::delegator throws an expected error", ex);
+                            }
                             previousOffset = offset;
                             offset += ++colOffset;
                             row++;
