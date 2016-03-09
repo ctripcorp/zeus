@@ -16,6 +16,7 @@ import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.status.entity.UpdateStatusItem;
 import com.ctrip.zeus.util.S;
+import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
     private static DynamicIntProperty invalidInterval = DynamicPropertyFactory.getInstance().getIntProperty("health.check.status.invalid.interval", 300000);
     private Logger logger = LoggerFactory.getLogger(HealthCheckStatusServiceImpl.class);
     private static DynamicIntProperty riseOrFailMin = DynamicPropertyFactory.getInstance().getIntProperty("health.check.status.rise-fail.min", 30);
+    private static DynamicBooleanProperty updateAlways = DynamicPropertyFactory.getInstance().getBooleanProperty("health.check.status.always.update", false);
 
 
     @Override
@@ -74,7 +76,7 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
         for (Item item : servers) {
             if (item.getStatus() == null) continue;
             if (item.getStatus().trim().equals("up")) {
-                if (item.getRise() < riseOrFailMin.get()) {
+                if (updateAlways.get() || item.getRise() < riseOrFailMin.get()) {
                     //update
                     String[] tmp = item.getUpstream().split("_");
                     if (tmp.length != 2) {
@@ -106,7 +108,7 @@ public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
                     }
                 }
             } else if (item.getStatus().trim().equals("down")) {
-                if (item.getFall() < riseOrFailMin.get()) {
+                if (updateAlways.get() || item.getFall() < riseOrFailMin.get()) {
                     //update
                     String[] tmp = item.getUpstream().split("_");
                     if (tmp.length != 2) {
