@@ -62,7 +62,21 @@ public class HealthCheckConf {
                     .append("Connection:keep-alive\\r\\n");
             b.append("UserAgent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
                     .append("check_http_expect_alive http_2xx http_3xx").append(";\n");
-        } else {
+        } else if (group.getSsl()) {
+            b.append("check interval=").append(h.getIntervals())
+                    .append(" rise=").append(h.getPasses())
+                    .append(" fall=").append(h.getFails())
+                    .append(" timeout=").append(h.getTimeout() == null ? healthCheckDefaultTimeout.get() : h.getTimeout());
+            b.append(" port=").append(80);
+            b.append(" type=http default_down=false").append(";\n")
+                    .append("check_keepalive_requests 100").append(";\n")
+                    .append("check_http_send \"")
+                    .append("GET ").append(h.getUri()).append(" HTTP/1.1\\r\\n")
+                    .append("Connection:keep-alive\\r\\n")
+                    .append("Host:").append(vs.getDomains().get(0).getName().trim()).append("\\r\\n");
+            b.append("UserAgent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
+                    .append("check_http_expect_alive http_2xx http_3xx").append(";\n");
+        }else {
             b.append("check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
