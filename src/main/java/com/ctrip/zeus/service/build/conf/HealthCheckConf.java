@@ -17,6 +17,7 @@ public class HealthCheckConf {
     private static DynamicBooleanProperty disableHealthCheck = DynamicPropertyFactory.getInstance().getBooleanProperty("build.disable.healthCheck", false);
     private static DynamicStringProperty sslHelloEnableList = DynamicPropertyFactory.getInstance().getStringProperty("build.sslHello.enable", "");
     private static DynamicStringProperty disableHealthCheckList = DynamicPropertyFactory.getInstance().getStringProperty("build.disable.healthCheck.groupId", "");
+    private static DynamicStringProperty sslSlbHealthCheck = DynamicPropertyFactory.getInstance().getStringProperty("ssl.healthCheck.aspx", "/SlbHealthCheck.aspx");
     private static DynamicIntProperty healthCheckDefaultTimeout = DynamicPropertyFactory.getInstance().getIntProperty("healthCheck.default.timeout", 2000);
 
 
@@ -48,7 +49,7 @@ public class HealthCheckConf {
                     .append(" fall=").append(h.getFails())
                     .append(" timeout=").append(h.getTimeout() == null ? healthCheckDefaultTimeout.get() : h.getTimeout())
                     .append(" type=ssl_hello").append(";\n");
-        } else if (group.getSsl() && h.getUri().equalsIgnoreCase("/SlbHealthCheck.aspx")) {
+        } else if (group.getSsl() && h.getUri().equalsIgnoreCase(sslSlbHealthCheck.get())) {
             b.append("check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
