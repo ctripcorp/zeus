@@ -448,6 +448,48 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="commit" table="commit" alias="c2">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" />
+    <member name="version" field="version" value-type="long" length="19" />
+    <member name="slb-id" field="slb_id" value-type="long" length="19" />
+    <member name="vs-ids" field="vs_ids" value-type="String" length="4096" />
+    <member name="group-ids" field="group_ids" value-type="String" length="4096" />
+    <member name="task-ids" field="task_ids" value-type="String" length="4096" />
+    <member name="cleanvs-ids" field="cleanvs_ids" value-type="String" length="4096" />
+    <member name="type" field="type" value-type="String" length="45" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="conf-group-active" table="conf_group_active" alias="cga">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
@@ -1955,7 +1997,6 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="slb_id_name" unique="true" members="slb_id ASC, name ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />

@@ -1,10 +1,16 @@
 package com.ctrip.zeus.support;
 
 import com.ctrip.zeus.auth.entity.*;
+import com.ctrip.zeus.commit.entity.Commit;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.Task;
+import com.sun.org.apache.xpath.internal.functions.FuncBoolean;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.concurrent.Callable;
 
 /**
  * @author:xingchaowang
@@ -103,13 +109,13 @@ public class C {
                 .setDescription(roleDo.getDescription());
     }
 
-    public static User toUser(AuthUserDo userDo){
+    public static User toUser(AuthUserDo userDo) {
         return new User()
                 .setUserName(userDo.getUserName())
                 .setDescription(userDo.getDescription());
     }
 
-    public static Resource toResource(AuthResourceDo resourceDo){
+    public static Resource toResource(AuthResourceDo resourceDo) {
         return new Resource()
                 .setResourceName(resourceDo.getResourceName())
                 .setDescription(resourceDo.getDescription())
@@ -197,14 +203,14 @@ public class C {
                 .setDescription(user.getDescription());
     }
 
-    public static AuthResourceDo toResourceDo(Resource resource){
+    public static AuthResourceDo toResourceDo(Resource resource) {
         return new AuthResourceDo()
                 .setResourceName(resource.getResourceName())
                 .setResourceType(resource.getResourceType())
                 .setDescription(resource.getDescription());
     }
 
-    public static OpsTask toOpsTask(TaskDo task){
+    public static OpsTask toOpsTask(TaskDo task) {
         OpsTask result = new OpsTask();
         result.setId(task.getId())
                 .setTargetSlbId(task.getTargetSlbId())
@@ -221,21 +227,96 @@ public class C {
                 .setSlbId(task.getSlbId());
         return result;
     }
-    public static TaskDo toTaskDo(OpsTask opsTask){
+
+    public static TaskDo toTaskDo(OpsTask opsTask) {
         TaskDo result = new TaskDo();
-        result.setId(opsTask.getId()==null?0L:opsTask.getId())
-                .setTargetSlbId(opsTask.getTargetSlbId()==null?0:opsTask.getTargetSlbId())
+        result.setId(opsTask.getId() == null ? 0L : opsTask.getId())
+                .setTargetSlbId(opsTask.getTargetSlbId() == null ? 0 : opsTask.getTargetSlbId())
                 .setUp(opsTask.isUp())
-                .setVersion(opsTask.getVersion()==null?0:opsTask.getVersion())
+                .setVersion(opsTask.getVersion() == null ? 0 : opsTask.getVersion())
                 .setStatus(opsTask.getStatus())
                 .setCreateTime(opsTask.getCreateTime())
                 .setFailCause(opsTask.getFailCause())
                 .setIpList(opsTask.getIpList())
-                .setGroupId(opsTask.getGroupId()==null?0:opsTask.getGroupId())
+                .setGroupId(opsTask.getGroupId() == null ? 0 : opsTask.getGroupId())
                 .setOpsType(opsTask.getOpsType())
                 .setResources(opsTask.getResources())
-                .setSlbVirtualServerId(opsTask.getSlbVirtualServerId()==null?0:opsTask.getSlbVirtualServerId())
-                .setSlbId(opsTask.getSlbId()==null?0:opsTask.getSlbId());
+                .setSlbVirtualServerId(opsTask.getSlbVirtualServerId() == null ? 0 : opsTask.getSlbVirtualServerId())
+                .setSlbId(opsTask.getSlbId() == null ? 0 : opsTask.getSlbId());
         return result;
+    }
+
+
+    /*Commit DO translation*/
+    public static Commit toCommit(CommitDo commitDto) throws Exception {
+        final Commit commit = new Commit();
+
+        commit.setId(commitDto.getId()).
+                setSlbId(commitDto.getSlbId()).
+                setVersion(commitDto.getVersion())
+                .setType(commitDto.getType())
+                .setDataChangeLastTime(commitDto.getDataChangeLastTime());
+
+        if(commitDto.getVsIds()!=null)
+        {
+            for (String vid:commitDto.getVsIds().split(",")){
+                commit.addVsId(vid);
+            }
+        }
+        if(commitDto.getGroupIds()!=null)
+        {
+            for (String vid:commitDto.getGroupIds().split(",")){
+                commit.addGroupId(vid);
+            }
+        }
+
+        if(commitDto.getTaskIds()!=null)
+        {
+            for (String vid:commitDto.getTaskIds().split(",")){
+                commit.addTaskId(vid);
+            }
+        }
+
+        if(commitDto.getCleanvsIds()!=null)
+        {
+            for (String vid:commitDto.getCleanvsIds().split(",")){
+                commit.addCleanvsId(vid);
+            }
+        }
+
+        return commit;
+    }
+
+
+
+    public static CommitDo toCommitDo(Commit commit) {
+        CommitDo commitdo = new CommitDo();
+
+        commitdo.setId(commit.getId() == null ? 0L : commit.getId()).
+                setSlbId(commit.getSlbId()).
+                setVersion(commit.getVersion())
+                .setType(commit.getType())
+                .setDataChangeLastTime(commit.getDataChangeLastTime());
+
+        if(commit.getVsIds()!=null)
+        {
+            commitdo.setVsIds(Arrays.toString(commit.getVsIds().toArray()));
+        }
+        if(commit.getGroupIds()!=null)
+        {
+            commitdo.setGroupIds(Arrays.toString(commit.getGroupIds().toArray()));
+        }
+
+        if(commit.getTaskIds()!=null)
+        {
+            commitdo.setTaskIds(Arrays.toString(commit.getTaskIds().toArray()));
+        }
+
+        if(commit.getCleanvsIds()!=null)
+        {
+            commitdo.setCleanvsIds(Arrays.toString(commit.getCleanvsIds().toArray()));
+        }
+
+        return commitdo;
     }
 }

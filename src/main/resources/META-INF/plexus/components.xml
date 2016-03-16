@@ -495,6 +495,15 @@
 			</configuration>
 		</component>
 		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>commit</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>commit</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
 			<role>com.ctrip.zeus.dal.core.ArchiveGroupDao</role>
 			<implementation>com.ctrip.zeus.dal.core.ArchiveGroupDao</implementation>
 			<requirements>
@@ -974,6 +983,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.TaskDao</role>
 			<implementation>com.ctrip.zeus.dal.core.TaskDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.CommitDao</role>
+			<implementation>com.ctrip.zeus.dal.core.CommitDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
