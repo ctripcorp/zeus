@@ -10,6 +10,7 @@
     <entity-ref name="traffic-status" />
     <entity-ref name="req-status" />
     <entity-ref name="virtual-server-conf-response" />
+    <entity-ref name="vs-conf-data" />
   </entity>
   <entity name="upstream-status">
     <entity-ref name="servers" />
@@ -88,6 +89,10 @@
     <element name="version" value-type="int" />
     <element name="server-conf" value-type="String" />
     <element name="upstream-conf" value-type="String" />
+  </entity>
+  <entity name="vs-conf-data">
+    <element name="upstream-conf" value-type="String" />
+    <element name="vhost-conf" value-type="String" />
   </entity>
 </model>
 
