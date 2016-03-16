@@ -277,5 +277,38 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="conf-slb-version" table="conf_slb_version" alias="csv">
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-id" type="SELECT">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                        SELECT <FIELDS/>
+                        FROM <TABLE/>
+                            WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        ]]>
+                </statement>
+            </query>
+            <query name="update-version-by-slb-id" type="UPDATE">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                        UPDATE <TABLE/>
+                        SET <FIELD name='version'/> = ${version}
+                            WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
 </entities>
 

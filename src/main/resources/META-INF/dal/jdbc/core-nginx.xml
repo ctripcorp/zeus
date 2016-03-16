@@ -279,6 +279,31 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-slb-id-and-ip" type="SELECT">
+                <param name="ip"/>
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                        WHERE <FIELD name='ip'/> = ${ip}
+                        AND <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-version-by-slb-id-and-ip" type="UPDATE">
+                <param name="ip"/>
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='version'/> = ${version}
+                        WHERE <FIELD name='ip'/> = ${ip}
+                        AND <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
 </entities>
