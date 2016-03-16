@@ -292,8 +292,7 @@ public class C {
     public static CommitDo toCommitDo(Commit commit) {
         CommitDo commitdo = new CommitDo();
 
-        commitdo.setId(commit.getId() == null ? 0L : commit.getId()).
-                setSlbId(commit.getSlbId()).
+        commitdo.setSlbId(commit.getSlbId()).
                 setVersion(commit.getVersion())
                 .setType(commit.getType())
                 .setDataChangeLastTime(commit.getDataChangeLastTime());
