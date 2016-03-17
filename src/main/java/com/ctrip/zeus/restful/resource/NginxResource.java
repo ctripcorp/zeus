@@ -2,7 +2,6 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
@@ -43,35 +42,7 @@ public class NginxResource {
     @Resource
     private NginxConfUpstreamDao nginxConfUpstreamDao;
     @Resource
-    private SlbRepository slbRepository;
-    @Resource
-    private SlbCriteriaQuery slbCriteriaQuery;
-    @Resource
     private EntityFactory entityFactory;
-
-    @GET
-    @Path("/load")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response load(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") Long slbId, @QueryParam("version") Integer version) throws Exception{
-        NginxResponse result = nginxService.load(slbId,version);
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-        }
-    }
-
-    @GET
-    @Path("/testConf")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response testConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") Long slbId, @QueryParam("version") Integer version) throws Exception{
-        NginxResponse result = nginxService.confTest(slbId,version);
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-        }
-    }
 
     @GET
     @Path("/conf")
@@ -100,47 +71,6 @@ public class NginxResource {
         return responseHandler.handle(response, hh.getMediaType());
     }
 
-    @GET
-    @Path("/write")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response write(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("VirtualServer")List<Long> vsIds , @QueryParam("slbId") Long slbId ,@QueryParam("version") Integer version)throws Exception
-    {
-        NginxResponse result = nginxService.writeToDisk(vsIds,slbId,version);
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-        }
-
-    }
-    @GET
-    @Path("/rollback")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response rollback(@Context HttpServletRequest request,
-                             @Context HttpHeaders hh,
-                             @QueryParam("slbId") Long slbId ,
-                             @QueryParam("version") Integer version)throws Exception
-    {
-        NginxResponse result = nginxService.localRollbackConf(slbId,version);
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-        }
-    }
-    @POST
-    @Path("/dyups/{upStreamName:[a-zA-Z0-9_-]+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response localDyups(@Context HttpServletRequest request,
-                               @Context HttpHeaders hh,
-                               @PathParam("upStreamName") String upsName, String upsCommands )throws Exception{
-        NginxResponse result = nginxService.dyopsLocal(upsName,upsCommands);
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(NginxResponse.XML, result)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(NginxResponse.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-        }
-    }
 
     @GET
     @Path("/trafficStatus")
@@ -173,21 +103,5 @@ public class NginxResource {
             l.addReqStatus(status);
         }
         return responseHandler.handle(l, hh.getMediaType());
-    }
-
-    @GET
-    @Path("/loadAll/slb/{slbId:[0-9]+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response loadAll(@Context HttpServletRequest request,@Context HttpHeaders hh, @PathParam("slbId") Long slbId) throws Exception {
-        List<NginxResponse> nginxResponseList = nginxService.loadAll(slbId, null);
-        NginxResponseList result = new NginxResponseList();
-        for (NginxResponse nginxResponse : nginxResponseList) {
-            result.addNginxResponse(nginxResponse);
-        }
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(NginxResponseList.XML, result)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(NginxResponseList.JSON, result)).type(MediaType.APPLICATION_JSON).build();
-        }
     }
 }

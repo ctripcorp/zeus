@@ -2,6 +2,7 @@ package com.ctrip.zeus.executor.impl;
 
 import com.ctrip.framework.clogging.agent.log.ILog;
 import com.ctrip.framework.clogging.agent.log.LogManager;
+import com.ctrip.zeus.commit.entity.Commit;
 import com.ctrip.zeus.executor.TaskExecutor;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
@@ -9,6 +10,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
+import com.ctrip.zeus.service.commit.CommitService;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.StatusOffset;
@@ -16,6 +18,7 @@ import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.service.task.TaskService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.task.constant.TaskStatus;
+import com.ctrip.zeus.service.version.ConfVersionService;
 import com.ctrip.zeus.status.entity.UpdateStatusItem;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.netflix.config.DynamicBooleanProperty;
@@ -55,6 +58,10 @@ public class TaskExecutorImpl implements TaskExecutor {
     NginxService nginxService;
     @Resource
     private BuildInfoService buildInfoService;
+    @Resource
+    private ConfVersionService confVersionService;
+    @Resource
+    private CommitService commitService;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
     private ILog clog = LogManager.getLogger(this.getClass());
@@ -128,7 +135,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         Map<Long, VirtualServer> onlineVses;
         Slb onlineSlb = null;
         Slb offlineSlb = null;
-        boolean buildSuc = false;
+        Long buildVersion = null;
         boolean needRollbackConf = false;
 
         try {
@@ -309,7 +316,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             //4.2 allUpGroupServers
             Set<String> allUpGroupServers = getAllUpGroupServers(needBuildVses, onlineGroups);
             //4.3 build config
-            buildSuc = buildService.build(onlineSlb, onlineVses, needBuildVses, deactivateVsOps.keySet(),
+            buildVersion = buildService.build(onlineSlb, onlineVses, needBuildVses, deactivateVsOps.keySet(),
                     vsGroups, allDownServers, allUpGroupServers);
 
             //5. push config
@@ -321,39 +328,22 @@ public class TaskExecutorImpl implements TaskExecutor {
                 needReload = true;
             }
             //5.2 push config to all slb servers. reload if needed.
+            //5.2.1 remove deactivate vs ids from need build vses
             needBuildVses.removeAll(deactivateVsOps.keySet());
             if (writeEnable.get()) {
-                try {
-                    List<NginxResponse> responses = nginxService.pushConf(onlineSlb.getSlbServers(), slbId, slbVersion, needBuildVses, needReload);
-                    for (NginxResponse response : responses) {
-                        if (!response.getSucceed()) {
-                            throw new Exception("Push config Fail.Fail Response:" + String.format(NginxResponse.JSON, response));
-                        }
-                    }
-                } catch (Exception e) {
-                    needRollbackConf = true;
-                    throw e;
-                }
-            }
-            //5.3 for dyups.
-            if (!needReload) {
-                for (Long groupId : needBuildGroupVs.keySet()) {
-                    //5.3.1 build upstream config for group
-                    Group group = onlineGroups.get(groupId);
-                    VirtualServer vs = onlineVses.get(needBuildGroupVs.get(groupId));
-                    DyUpstreamOpsData dyUpstreamOpsData = buildService.buildUpstream(slbId, vs, allDownServers, allUpGroupServers, group);
-                    List<NginxResponse> dyopsResponses = nginxService.dyops(onlineSlb.getSlbServers(), new DyUpstreamOpsData[]{dyUpstreamOpsData});
-                    for (NginxResponse response : dyopsResponses) {
-                        if (!response.getSucceed()) {
-                            logger.warn("[Dyups] upstreamName:" + dyUpstreamOpsData.getUpstreamName() + "\nStatus: Fail");
-                            throw new Exception("Dyups failed.GroupID:" + group.getId());
-                        }
-                    }
-                    logger.info("[Dyups] upstreamName:" + dyUpstreamOpsData.getUpstreamName() + "\nStatus: Suc");
+                //5.2.2 update slb current version
+                confVersionService.updateSlbCurrentVersion(slbId, buildVersion);
+                //5.2.3 add commit
+                addCommit(slbId, needReload, buildVersion, needBuildVses, needBuildGroupVs);
+                //5.2.4 fire update job
+                NginxResponse response = nginxService.updateConf(onlineSlb.getSlbServers());
+                needRollbackConf = true;
+                if (!response.getSucceed()) {
+                    throw new Exception("Update config Fail.Fail Response:" + String.format(NginxResponse.JSON, response));
                 }
             }
             performTasks(slbId, needBuildGroupVs, offlineGroups);
-            updateVersion(slbId);
+            updateVersion(slbId, buildVersion);
             setTaskResult(slbId, true, null);
         } catch (Exception e) {
             // failed
@@ -362,10 +352,24 @@ public class TaskExecutorImpl implements TaskExecutor {
             e.printStackTrace(printWriter);
             String failCause = e.getMessage() + out.getBuffer().toString();
             setTaskResult(slbId, false, failCause.length() > 1024 ? failCause.substring(0, 1024) : failCause);
-            rollBack(onlineSlb, buildSuc, needRollbackConf);
+            rollBack(onlineSlb, buildVersion, needRollbackConf);
             throw e;
         }
 
+    }
+
+    private void addCommit(Long slbId, boolean needReload, Long buildVersion, Set<Long> needBuildVses, Map<Long, Long> needBuildGroupVs) throws Exception {
+        Commit commit = new Commit();
+        commit.setSlbId(slbId)
+                .setType(needReload ? "Reload" : "Dyups")
+                .setVersion(buildVersion);
+        commit.getVsIds().addAll(needBuildVses);
+        commit.getGroupIds().addAll(needBuildGroupVs.keySet());
+        commit.getCleanvsIds().addAll(deactivateVsOps.keySet());
+        for (OpsTask t : tasks) {
+            commit.addTaskId(t.getId());
+        }
+        commitService.add(commit);
     }
 
     private void deactivateVsPreCheck(Set<Long> onlineVses, Map<Long, Group> onlineGroups) throws Exception {
@@ -392,27 +396,29 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private void updateVersion(Long slbId) throws Exception {
+    private void updateVersion(Long slbId, Long currentVersion) throws Exception {
         try {
-            int current = buildInfoService.getPaddingTicket(slbId);
-            buildInfoService.updateTicket(slbId, current);
+            buildInfoService.updateTicket(slbId, (int) (long) currentVersion);
         } catch (Exception e) {
             throw new Exception("Update Version Fail!", e);
         }
     }
 
-    private void rollBack(Slb slb, boolean buildConf, boolean needRollbackConf) {
+    private void rollBack(Slb slb, Long buildVersion, boolean needRollbackConf) {
         try {
-            if (buildConf) {
+            if (buildVersion != null && buildVersion > 0) {
+                Long pre = confVersionService.getSlbPreviousVersion(slb.getId());
+                if (pre > 0) {
+                    confVersionService.updateSlbCurrentVersion(slb.getId(), pre);
+                }
+                commitService.removeCommit(slb.getId(), buildVersion);
                 int current = buildInfoService.getCurrentTicket(slb.getId());
                 buildService.rollBackConfig(slb.getId(), current);
+                buildInfoService.resetPaddingTicket(slb.getId());
             }
             if (needRollbackConf) {
-                if (!nginxService.rollbackAllConf(slb.getId(), slb.getVersion())) {
-                    logger.error("[Rollback] Rollback config on disk fail. ");
-                }
+                nginxService.rollbackAllConf(slb.getSlbServers());
             }
-            buildInfoService.resetPaddingTicket(slb.getId());
         } catch (Exception e) {
             logger.error("RollBack Fail!", e);
         }
