@@ -257,30 +257,26 @@ public class C {
                 .setType(commitDto.getType())
                 .setDataChangeLastTime(commitDto.getDataChangeLastTime());
 
-        if(commitDto.getVsIds()!=null)
-        {
-            for (String vid:commitDto.getVsIds().split(",")){
-                commit.addVsId(vid);
+        if (commitDto.getVsIds() != null) {
+            for (String vid : commitDto.getVsIds().split(",")) {
+                commit.addVsId(Long.parseLong(vid));
             }
         }
-        if(commitDto.getGroupIds()!=null)
-        {
-            for (String vid:commitDto.getGroupIds().split(",")){
-                commit.addGroupId(vid);
-            }
-        }
-
-        if(commitDto.getTaskIds()!=null)
-        {
-            for (String vid:commitDto.getTaskIds().split(",")){
-                commit.addTaskId(vid);
+        if (commitDto.getGroupIds() != null) {
+            for (String vid : commitDto.getGroupIds().split(",")) {
+                commit.addGroupId(Long.parseLong(vid));
             }
         }
 
-        if(commitDto.getCleanvsIds()!=null)
-        {
-            for (String vid:commitDto.getCleanvsIds().split(",")){
-                commit.addCleanvsId(vid);
+        if (commitDto.getTaskIds() != null) {
+            for (String vid : commitDto.getTaskIds().split(",")) {
+                commit.addTaskId(Long.parseLong(vid));
+            }
+        }
+
+        if (commitDto.getCleanvsIds() != null) {
+            for (String vid : commitDto.getCleanvsIds().split(",")) {
+                commit.addCleanvsId(Long.parseLong(vid));
             }
         }
 
@@ -288,34 +284,39 @@ public class C {
     }
 
 
-
     public static CommitDo toCommitDo(Commit commit) {
         CommitDo commitdo = new CommitDo();
 
-        commitdo.setSlbId(commit.getSlbId()).
+        commitdo.setId(commit.getId() == null ? 0L : commit.getId()).
+                setSlbId(commit.getSlbId()).
                 setVersion(commit.getVersion())
                 .setType(commit.getType())
                 .setDataChangeLastTime(commit.getDataChangeLastTime());
 
-        if(commit.getVsIds()!=null)
-        {
-            commitdo.setVsIds(Arrays.toString(commit.getVsIds().toArray()));
+        if (commit.getVsIds() != null) {
+            commitdo.setVsIds(subIds(Arrays.toString(commit.getVsIds().toArray())));
         }
-        if(commit.getGroupIds()!=null)
-        {
-            commitdo.setGroupIds(Arrays.toString(commit.getGroupIds().toArray()));
+        if (commit.getGroupIds() != null) {
+            commitdo.setGroupIds(subIds(Arrays.toString(commit.getGroupIds().toArray())));
         }
 
-        if(commit.getTaskIds()!=null)
-        {
-            commitdo.setTaskIds(Arrays.toString(commit.getTaskIds().toArray()));
+        if (commit.getTaskIds() != null) {
+            commitdo.setTaskIds(subIds(Arrays.toString(commit.getTaskIds().toArray())));
         }
 
-        if(commit.getCleanvsIds()!=null)
-        {
-            commitdo.setCleanvsIds(Arrays.toString(commit.getCleanvsIds().toArray()));
+        if (commit.getCleanvsIds() != null) {
+            commitdo.setCleanvsIds(subIds(Arrays.toString(commit.getCleanvsIds().toArray())));
         }
 
         return commitdo;
+    }
+
+    private static String subIds(String sub) {
+
+        if (sub.length() == 2) return "";
+
+        Integer startEscape = sub.indexOf('[');
+        Integer endEscape = sub.length() - 1;
+        return sub.substring(startEscape + 1, endEscape - 1);
     }
 }
