@@ -84,7 +84,7 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
             file = new File(name);
             if (file.exists()) {
                 if (!file.delete()) {
-                    LOGGER.error("[DeleteConfFile]Delete conf file failed. File name:" + name);
+                    LOGGER.error("[DeleteConfFile] Delete conf file failed. File name:" + name);
                 }
             }
         }
@@ -154,10 +154,10 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
                     notExist.add(fileName);
                 }
             }
-            LOGGER.info("Clean Conf Suc.Clean Conf:" + sucList.toString() + " Not Exist: " + notExist.toString());
+            LOGGER.info("[CleanFile] Clean Conf Suc.Clean Conf:" + sucList.toString() + " Not Exist: " + notExist.toString());
             return true;
         } catch (Exception e) {
-            LOGGER.error("Fail to clean conf. Files: " + fileNames.toString(), e);
+            LOGGER.error("[CleanFile] Fail to clean conf. Files: " + fileNames.toString(), e);
             throw e;
         }
     }
@@ -219,11 +219,12 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
                     notExist.add(fileName);
                 }
             }
-            LOGGER.info("Copy Conf Suc.Copy Conf:" + sucList.toString() + " Not Exist: " + notExist.toString());
             return true;
         } catch (Exception e) {
-            LOGGER.error("Fail to copy conf. Files: " + fileNames.toString() + " Suc Copy:" + sucList.toString(), e);
+            LOGGER.error("[CopyFile] Fail to copy conf. Files: " + fileNames.toString() + " Suc Copy:" + sucList.toString(), e);
             throw e;
+        } finally {
+            LOGGER.info("[CopyFile] Copy Conf Suc.Copy Conf:" + sucList.toString() + " Not Exist: " + notExist.toString());
         }
     }
 
@@ -275,7 +276,7 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
             writer = new FileWriter(new File(confPath + File.separator + confFile));
             writer.write(confContent);
         } catch (Exception e) {
-            LOGGER.error("Write File Failed! Path:" + confPath + File.separator + confFile);
+            LOGGER.error("[WriteFile] Write File Failed! Path:" + confPath + File.separator + confFile);
             throw e;
         } finally {
             if (writer != null) {
@@ -352,7 +353,8 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
             }
             return response;
         } catch (IOException e) {
-            throw new Exception("Fail to backup conf. Date:" + date.toString(), e);
+            LOGGER.error("[NginxConfOpsServiceImpl-BackUpAll] Fail to backup conf. Date:" + date.toString(), e);
+            throw new Exception("[NginxConfOpsServiceImpl-BackUpAll] Fail to backup conf. Date:" + date.toString(), e);
         }
     }
 }

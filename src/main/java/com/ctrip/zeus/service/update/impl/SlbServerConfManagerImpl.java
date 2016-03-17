@@ -1,12 +1,14 @@
 package com.ctrip.zeus.service.update.impl;
 
 import com.ctrip.zeus.commit.entity.Commit;
+import com.ctrip.zeus.exceptions.NginxProcessingException;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.VsConfData;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.commit.CommitMergeService;
 import com.ctrip.zeus.service.commit.CommitService;
+import com.ctrip.zeus.service.commit.util.CommitType;
 import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.nginx.NginxService;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,10 +49,6 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
     @Resource
     private UpstreamConfPicker upstreamConfPicker;
 
-    private final String COMMIT_TYPE_RELOAD = "Reload";
-    private final String COMMIT_TYPE_DYUPS = "Dyups";
-
-
     private final Logger logger = LoggerFactory.getLogger(SlbServerConfManagerImpl.class);
     private static DynamicIntProperty maxSpan = DynamicPropertyFactory.getInstance().getIntProperty("commit.max.span", 10);
 
@@ -73,49 +72,65 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
             return response.setSucceed(true).setServerIp(ip).setOutMsg("[SlbServerConfManagerImpl] slb version == slb server version. Not need to update.");
         }
         //3. if slbVersion < serverVersion , force rollback to slbVersion
-        //case 1: force refresh
+        //case 1: force refresh or flag needRefresh is true
         //case 2: server version is large then slb version
         //case 3: version gap large than max span
-        if (refresh || slbVersion < serverVersion || slbVersion - serverVersion > maxSpan.get()) {
+        if (needRefresh || refresh || slbVersion < serverVersion || slbVersion - serverVersion > maxSpan.get()) {
             try {
+                if (slbVersion - serverVersion > maxSpan.get()) {
+                    needReload = true;
+                }
                 String nginxConf = nginxConfService.getNginxConf(slbId, slbVersion);
                 Map<Long, VsConfData> vsConfDataMap = nginxConfService.getVsConfBySlbId(slbId, slbVersion);
                 NginxResponse res = nginxService.refresh(nginxConf, vsConfDataMap, needReload);
                 if (!res.getSucceed()) {
                     needRefresh = true;
-                    logger.error("Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion + response.toString());
+                    logger.error("[SlbServerUpdate] Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion + response.toString());
                     return res.setServerIp(ip);
                 }
             } catch (Exception e) {
                 needRefresh = true;
-                logger.error("Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
-                throw e;
+                logger.error("[SlbServerUpdate] Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
+                throw new NginxProcessingException("Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
             }
         } else {
-            //4. execute commits
-            //4.1 get commits and merge to one commit
-            Commit commit = commitMergeService.mergeCommit(commitService.getCommitList(slbId, serverVersion, slbVersion));
-            //4.2 get all configs
-            String nginxConf = nginxConfService.getNginxConf(slbId, slbVersion);
-            Map<Long, VsConfData> dataMap = nginxConfService.getVsConfByVsIds(slbId, commit.getVsIds(), slbVersion);
-            //4.3 get clean vs ids
-            Set<Long> cleanSet = new HashSet<>();
-            cleanSet.addAll(commit.getCleanvsIds());
-            //4.4 get flags
-            boolean reload = commit.getType().equals(COMMIT_TYPE_RELOAD);
-            boolean test = commit.getType().equals(COMMIT_TYPE_DYUPS);
-            boolean dyups = commit.getType().equals(COMMIT_TYPE_DYUPS);
-            //4.4 get dyups data if needed
-            DyUpstreamOpsData[] dyUpstreamOpsDatas = null;
-            if (dyups) {
-                Set<Long> gids = new HashSet<>();
-                gids.addAll(commit.getGroupIds());
-                dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(dataMap, gids);
+            try {
+                //4. execute commits
+                //4.1 get commits and merge to one commit
+                Commit commit = commitMergeService.mergeCommit(commitService.getCommitList(slbId, serverVersion, slbVersion));
+                //4.2 get all configs
+                String nginxConf = nginxConfService.getNginxConf(slbId, slbVersion);
+                Map<Long, VsConfData> dataMap = nginxConfService.getVsConfByVsIds(slbId, commit.getVsIds(), slbVersion);
+                //4.3 get clean vs ids
+                Set<Long> cleanSet = new HashSet<>();
+                cleanSet.addAll(commit.getCleanvsIds());
+                //4.4 get flags
+                boolean reload = commit.getType().equals(CommitType.COMMIT_TYPE_RELOAD);
+                boolean test = commit.getType().equals(CommitType.COMMIT_TYPE_DYUPS);
+                boolean dyups = commit.getType().equals(CommitType.COMMIT_TYPE_DYUPS);
+                //4.4 get dyups data if needed
+                DyUpstreamOpsData[] dyUpstreamOpsDatas = null;
+                if (dyups) {
+                    Set<Long> gids = new HashSet<>();
+                    gids.addAll(commit.getGroupIds());
+                    dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(dataMap, gids);
+                }
+                List<NginxResponse> responses = nginxService.update(nginxConf, dataMap, cleanSet, dyUpstreamOpsDatas, reload, test, dyups);
+                for (NginxResponse r : responses) {
+                    if (!r.getSucceed()) {
+                        needRefresh = true;
+                        logger.error("[SlbServerUpdate] Update conf failed. SlbId:" + slbId + ";Version:" + slbVersion + response.toString());
+                        return r.setServerIp(ip);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("[SlbServerUpdate] Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
+                throw new NginxProcessingException("Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
             }
-            nginxService.update(nginxConf, dataMap, cleanSet, dyUpstreamOpsDatas, reload, test, dyups);
         }
         //5. update server version
         confVersionService.updateSlbServerCurrentVersion(slbId, ip, slbVersion);
+        needRefresh = false;
         return response.setServerIp(ip).setOutMsg("update success.");
     }
 

@@ -11,6 +11,7 @@ import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.commit.CommitService;
+import com.ctrip.zeus.service.commit.util.CommitType;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.status.StatusOffset;
@@ -361,7 +362,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     private void addCommit(Long slbId, boolean needReload, Long buildVersion, Set<Long> needBuildVses, Map<Long, Long> needBuildGroupVs) throws Exception {
         Commit commit = new Commit();
         commit.setSlbId(slbId)
-                .setType(needReload ? "Reload" : "Dyups")
+                .setType(needReload ? CommitType.COMMIT_TYPE_RELOAD : CommitType.COMMIT_TYPE_DYUPS)
                 .setVersion(buildVersion);
         commit.getVsIds().addAll(needBuildVses);
         commit.getGroupIds().addAll(needBuildGroupVs.keySet());
