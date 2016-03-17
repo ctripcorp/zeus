@@ -42,8 +42,8 @@ public class UpstreamConfPicker {
 
         int i = 0;
         String upstreamName = "";
+        StringBuilder sb = new StringBuilder();
         while (i < upstreamFileEntry.length()) {
-            StringBuilder sb = new StringBuilder();
             char c;
             switch (c = upstreamFileEntry.charAt(i)) {
                 case '{': {
@@ -61,6 +61,7 @@ public class UpstreamConfPicker {
                         sb.setLength(0);
                         try {
                             delegate.delegate(upstreamName, upstreamConfig);
+                            upstreamName = "";
                         } catch (Exception ex) {
                             logger.error("An unexpected error occurred when delegating upstream conf to picker.", ex);
                         }
@@ -88,12 +89,16 @@ public class UpstreamConfPicker {
                         upstreamName = sb.toString();
                         sb.setLength(0);
                     } else {
-                        grammarCheck.push(c);
+                        sb.append(c);
                     }
                     while (upstreamFileEntry.charAt(i + 1) == ' ') {
                         i++;
                     }
+                    break;
                 }
+                case '\r':
+                case '\n':
+                    break;
                 default: {
                     sb.append(c);
                     break;
