@@ -10,6 +10,7 @@ import com.ctrip.zeus.service.commit.CommitService;
 import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.nginx.NginxService;
+import com.ctrip.zeus.service.nginx.util.UpstreamConfPicker;
 import com.ctrip.zeus.service.update.SlbServerConfManager;
 import com.ctrip.zeus.service.version.ConfVersionService;
 import com.ctrip.zeus.util.S;
@@ -43,7 +44,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
     @Resource
     private CommitMergeService commitMergeService;
     @Resource
-//    private DyupstreamParser dyupstreamParser;
+    private UpstreamConfPicker upstreamConfPicker;
 
     private final String COMMIT_TYPE_RELOAD = "Reload";
     private final String COMMIT_TYPE_DYUPS = "Dyups";
@@ -107,7 +108,9 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
             //4.4 get dyups data if needed
             DyUpstreamOpsData[] dyUpstreamOpsDatas = null;
             if (dyups) {
-//                dyUpstreamOpsDatas = dyupstreamParser.parser(dataMap, commit.getGroupIds());
+                Set<Long> gids = new HashSet<>();
+                gids.addAll(commit.getGroupIds());
+                dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(dataMap, gids);
             }
             nginxService.update(nginxConf, dataMap, cleanSet, dyUpstreamOpsDatas, reload, test, dyups);
         }
