@@ -70,12 +70,13 @@ public class UpstreamConfPicker {
                     }
                     break;
                 }
+                case '\t':
                 case ' ': {
                     if (grammarCheck.empty()) {
                         String value = sb.toString();
                         if (Identifier.equals(value)) {
                             sb.setLength(0);
-                            grammarCheck.push(c);
+                            grammarCheck.push(' ');
                             while (upstreamFileEntry.charAt(i + 1) == ' ') {
                                 i++;
                             }
@@ -89,16 +90,30 @@ public class UpstreamConfPicker {
                         upstreamName = sb.toString();
                         sb.setLength(0);
                     } else {
-                        sb.append(c);
+                        sb.append(' ');
                     }
-                    while (upstreamFileEntry.charAt(i + 1) == ' ') {
+                    while (upstreamFileEntry.charAt(i + 1) == ' ' || upstreamFileEntry.charAt(i + 1) == '\t') {
                         i++;
                     }
                     break;
                 }
                 case '\r':
+                    if (upstreamFileEntry.charAt(i + 1) == '\n') {
+                        i++;
+                    } else {
+                        sb.append(c);
+                    }
+                    break;
                 case '\n':
                     break;
+                case '"': {
+                    sb.append(c);
+                    while ((c = upstreamFileEntry.charAt(++i)) != '"') {
+                        sb.append(c);
+                    }
+                    sb.append(c);
+                    break;
+                }
                 default: {
                     sb.append(c);
                     break;
