@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.nginx.util;
 import com.ctrip.zeus.exceptions.NginxProcessingException;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.nginx.entity.VsConfData;
+import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -20,19 +21,27 @@ public class UpstreamConfPicker {
 
     public DyUpstreamOpsData[] pickByGroupIds(Map<Long, VsConfData> vsConf, final Set<Long> groupIds) throws NginxProcessingException {
         final List<DyUpstreamOpsData> result = new ArrayList<>();
+        final Set<Long> selected = new HashSet<>();
         for (VsConfData data : vsConf.values()) {
             parse(data.getUpstreamConf(), new UpstreamDirectiveDelegate() {
                 @Override
                 public void delegate(String upstreamName, String content) {
                     try {
-                        if (groupIds.contains(Long.parseLong(upstreamName.substring(8)))) {
+                        Long groupId = Long.parseLong(upstreamName.substring(8));
+                        if (groupIds.contains(groupId)) {
                             result.add(new DyUpstreamOpsData().setUpstreamName(upstreamName).setUpstreamCommands(content));
+                            selected.add(groupId);
                         }
                     } catch (Exception ex) {
                         logger.warn("Upstream name might be invalid.", ex);
                     }
                 }
             });
+        }
+        Set<Long> check = new HashSet<>(groupIds);
+        check.removeAll(selected);
+        if (!check.isEmpty()) {
+            throw new NginxProcessingException("Cannot find upstream confs of groups " + Joiner.on(",").join(check) + ".");
         }
         return result.toArray(new DyUpstreamOpsData[result.size()]);
     }
