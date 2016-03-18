@@ -240,6 +240,14 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             status.setGroupName(group.getName());
             status.setActivated(onlineGroups.containsKey(groupId));
 
+            Group onlineGroup = onlineGroups.get(groupId);
+            Set<String> onlineMembers = new HashSet<>();
+            if (onlineGroup != null) {
+                for (GroupServer groupServer : onlineGroup.getGroupServers()) {
+                    onlineMembers.add(groupServer.getIp());
+                }
+            }
+
             List<GroupServer> groupServerList = group.getGroupServers();//groupRepository.listGroupServersByGroup(groupId);
             Long gvsId = null;
             for (GroupVirtualServer gv : group.getGroupVirtualServers()) {
@@ -266,11 +274,19 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 } else {
                     up = false;
                 }
+                boolean online = false;
+                if (onlineMembers.contains(gs.getIp())) {
+                    online = true;
+                }
+                if (!online) {
+                    up = false;
+                }
 
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
                 groupServerStatus.setUp(up);
+                groupServerStatus.setOnline(online);
                 status.addGroupServerStatus(groupServerStatus);
             }
             res.add(status);
