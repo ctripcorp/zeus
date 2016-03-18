@@ -2,6 +2,7 @@ package com.ctrip.zeus.support;
 
 import com.ctrip.zeus.auth.entity.*;
 import com.ctrip.zeus.commit.entity.Commit;
+import com.ctrip.zeus.commit.entity.ConfSlbVersion;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.task.entity.OpsTask;
@@ -309,6 +310,18 @@ public class C {
         }
 
         return commitdo;
+    }
+
+    public static ConfSlbVersionDo toConfSlbVersionDo(ConfSlbVersion confSlbVersion) {
+        ConfSlbVersionDo result = new ConfSlbVersionDo();
+        if (null != confSlbVersion) {
+            result.setId(confSlbVersion.getId())
+                    .setSlbId(confSlbVersion.getSlbId())
+                    .setPreviousVersion(confSlbVersion.getPreviousVersion())
+                    .setCurrentVersion(confSlbVersion.getCurrentVersion());
+        }
+
+        return result;
     }
 
     private static String subIds(String sub) {

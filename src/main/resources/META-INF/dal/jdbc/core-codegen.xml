@@ -449,7 +449,7 @@
     </query-defs>
   </entity>
   <entity name="commit" table="commit" alias="c2">
-    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" />
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="version" field="version" value-type="long" length="19" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" />
     <member name="vs-ids" field="vs_ids" value-type="String" length="4096" />
@@ -1997,6 +1997,7 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
+    <index name="slb_id_name" unique="true" members="slb_id ASC, name ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />

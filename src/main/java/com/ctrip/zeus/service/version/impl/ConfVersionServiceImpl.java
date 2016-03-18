@@ -1,9 +1,10 @@
 package com.ctrip.zeus.service.version.impl;
 
+import com.ctrip.zeus.commit.entity.ConfSlbVersion;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.version.ConfVersionService;
+import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Service;
-import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 
@@ -20,39 +21,41 @@ public class ConfVersionServiceImpl implements ConfVersionService {
     private ConfSlbVersionDao confSlbVersionDao;
 
     @Override
-    public Long getSlbServerCurrentVersion(Long sid, String ip) throws DalException {
-        Long version = -1L;
+    public Long getSlbServerCurrentVersion(Long sid, String ip) throws Exception {
         NginxServerDo nginxServer = nginxServerDao.findBySlbIdAndIp(ip, sid, NginxServerEntity.READSET_FULL);
-        if (null != nginxServer)
-            version = nginxServer.getVersion();
-        return version;
+        if (null == nginxServer)
+            throw new IllegalArgumentException(String.format("nginxServer is null, slbId:%s, ip:%s", sid, ip));
+        return nginxServer.getVersion();
     }
 
     @Override
-    public void updateSlbServerCurrentVersion(Long slbId, String ip, Long version) throws DalException {
-        nginxServerDao.updateVersionBySlbIdAndIp(new NginxServerDo().setIp(ip).setSlbId(slbId).setVersion(version), NginxServerEntity.UPDATESET_FULL);
+    public void updateSlbServerCurrentVersion(Long slbId, String ip, Long version) throws Exception {
+        if (slbId == null || ip == null || version == null)
+            throw new IllegalArgumentException(String.format("params can not be null, slbId:%s, ip:%s, version:%s", slbId, ip, version));
+        NginxServerDo nginxServerDo = new NginxServerDo().setIp(ip).setSlbId(slbId).setVersion(version);
+        nginxServerDao.updateVersionBySlbIdAndIp(nginxServerDo, NginxServerEntity.UPDATESET_FULL);
     }
 
     @Override
-    public Long getSlbCurrentVersion(Long slbId) throws DalException {
-        Long currentVersion = -1L;
-        ConfSlbVersionDo confSlbVersionDo = confSlbVersionDao.findBySlbId(slbId, ConfSlbVersionEntity.READSET_FULL);
-        if (null != confSlbVersionDo)
-            currentVersion = confSlbVersionDo.getCurrentVersion();
-        return currentVersion;
+    public Long getSlbCurrentVersion(Long slbId) throws Exception {
+        ConfSlbVersionDo confSlbVersion = confSlbVersionDao.findBySlbId(slbId, ConfSlbVersionEntity.READSET_FULL);
+        if (null == confSlbVersion)
+            throw new IllegalArgumentException(String.format("confSlbVersion is null, slbId:%s", slbId));
+        return confSlbVersion.getCurrentVersion();
     }
 
     @Override
-    public Long getSlbPreviousVersion(Long slbId) throws DalException {
-        Long perviousVersion = -1L;
-        ConfSlbVersionDo confSlbVersionDo = confSlbVersionDao.findBySlbId(slbId, ConfSlbVersionEntity.READSET_FULL);
-        if (null != confSlbVersionDo)
-            perviousVersion = confSlbVersionDo.getPreviousVersion();
-        return perviousVersion;
+    public Long getSlbPreviousVersion(Long slbId) throws Exception {
+        ConfSlbVersionDo confSlbVersion = confSlbVersionDao.findBySlbId(slbId, ConfSlbVersionEntity.READSET_FULL);
+        if (null == confSlbVersion)
+            throw new Exception(String.format("confSlbVersion is null, slbId:%s", slbId));
+        return confSlbVersion.getPreviousVersion();
     }
 
     @Override
-    public void updateSlbCurrentVersion(Long slbId, Long version) throws DalException {
+    public void updateSlbCurrentVersion(Long slbId, Long version) throws Exception {
+        if (null == slbId || null == version)
+            throw new IllegalArgumentException(String.format("params can not be null, slbId:%s, version:%s", slbId, version));
         Long currentVersion = getSlbCurrentVersion(slbId);
         Long updateToPreviousVersion = 0L;
         Long updateToCurrentVersion = version;
@@ -61,13 +64,16 @@ public class ConfVersionServiceImpl implements ConfVersionService {
                 updateToPreviousVersion = currentVersion;
             }
         } else {
-            addConfSlbVersion(new ConfSlbVersionDo().setSlbId(slbId).setCurrentVersion(version).setPreviousVersion(updateToPreviousVersion));
+            addConfSlbVersion(new ConfSlbVersion().setSlbId(slbId).setPreviousVersion(updateToPreviousVersion).setCurrentVersion(updateToCurrentVersion));
         }
         confSlbVersionDao.updateVersionBySlbId(new ConfSlbVersionDo().setSlbId(slbId).setPreviousVersion(updateToPreviousVersion).setCurrentVersion(updateToCurrentVersion), ConfSlbVersionEntity.UPDATESET_FULL);
     }
 
     @Override
-    public void addConfSlbVersion(ConfSlbVersionDo confSlbVersionDo) throws DalException {
+    public void addConfSlbVersion(ConfSlbVersion confSlbVersion) throws Exception {
+        if (null == confSlbVersion)
+            throw new IllegalArgumentException("param:confSlbVersion can not be null");
+        ConfSlbVersionDo confSlbVersionDo = C.toConfSlbVersionDo(confSlbVersion);
         confSlbVersionDao.insert(confSlbVersionDo);
     }
 }
