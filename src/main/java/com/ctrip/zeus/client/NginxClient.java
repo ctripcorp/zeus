@@ -71,10 +71,10 @@ public class NginxClient extends AbstractRestClient {
     }
 
     public NginxResponse update(boolean fresh) {
-        WebTarget target = getTarget().path("/api/update/conf").queryParam("refresh", fresh).queryParam("reload",false);
+        WebTarget target = getTarget().path("/api/update/conf").queryParam("refresh", fresh).queryParam("reload", false);
         NginxResponse result = new NginxResponse();
         try {
-            logger.info("[NginxClient]Update api start. fresh:" + fresh);
+            logger.info("[NginxClient]Update api start. fresh:" + fresh + " url:" + url);
             Response response = target.request().headers(getDefaultHeaders()).get();
             if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
                 result.setSucceed(true);
@@ -89,9 +89,9 @@ public class NginxClient extends AbstractRestClient {
             result.setSucceed(false);
             result.setOutMsg(e.getMessage());
             result.setServerIp(url);
-            logger.error("[NginxClient]Update api execute failed. fresh:" + fresh);
+            logger.error("[NginxClient]Update api execute failed. fresh:" + fresh + " url:" + url, e);
         } finally {
-            logger.info("[NginxClient]Update api end. fresh:" + fresh);
+            logger.info("[NginxClient]Update api end. fresh:" + fresh + " url:" + url);
         }
         return result;
     }

@@ -101,22 +101,24 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public NginxResponse updateConf(List<SlbServer> slbServers) throws Exception {
         Map<String, FutureTask<NginxResponse>> futureTasks = new HashMap<>();
+        //1. start future task
         for (SlbServer slbServer : slbServers) {
             final String ip = slbServer.getIp();
             final NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             FutureTask<NginxResponse> futureTask = new FutureTask<>(new Callable<NginxResponse>() {
                 @Override
                 public NginxResponse call() throws Exception {
-                    logger.info("[Push Conf]start push conf.IP:" + ip);
+                    logger.info("[Push Conf]start update conf.IP:" + ip);
                     NginxResponse response = nginxClient.update(false);
-                    logger.info("[Push Conf]finish push conf.IP:" + ip);
+                    logger.info("[Push Conf]finish update conf.IP:" + ip);
                     return response;
                 }
             });
             threadPoolExecutor.execute(futureTask);
             futureTasks.put(ip, futureTask);
         }
-        logger.info("[Push Conf]start get push conf result.");
+        //2. start get result
+        logger.info("[Push Conf]start get update conf result.");
         List<NginxResponse> result = new ArrayList<>();
         int step = nginxFutureTimeout.get() / nginxFutureCheckTimes.get();
         Set<String> finishedServer = new HashSet<>();
@@ -143,8 +145,10 @@ public class NginxServiceImpl implements NginxService {
             }
         }
         if (result.size() > 0) {
-            throw new Exception("Update Conf Failed.");
+            logger.error("[Push Conf] Update conf failed. Results: " + result.toString());
+            throw new Exception("Update Conf Failed." + result.toString());
         } else {
+            logger.error("[Push Conf] Update conf time out. ");
             throw new Exception("Update conf timeout.");
         }
     }
@@ -179,6 +183,9 @@ public class NginxServiceImpl implements NginxService {
                     NginxResponse response = futureTask.get();
                     result.add(response);
                 }
+            }
+            if (finishedServer.size() == futureTasks.size()){
+                break;
             }
             try {
                 Thread.sleep(step);

@@ -55,7 +55,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
     private boolean needRefresh = false;
 
     @Override
-    public NginxResponse update(boolean refresh, boolean needReload) throws Exception {
+    public synchronized NginxResponse update(boolean refresh, boolean needReload) throws Exception {
         NginxResponse response = new NginxResponse();
         //1. get slbId by local ip
         String ip = S.getIp();

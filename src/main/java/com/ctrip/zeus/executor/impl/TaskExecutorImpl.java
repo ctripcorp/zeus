@@ -322,7 +322,6 @@ public class TaskExecutorImpl implements TaskExecutor {
 
             //5. push config
             //5.1 need reload?
-            Integer slbVersion = onlineSlb.getVersion();
             boolean needReload = false;
             if (activateSlbOps.size() > 0 || activateGroupOps.size() > 0 || deactivateGroupOps.size() > 0
                     || activateVsOps.size() > 0 || deactivateVsOps.size() > 0 || softDeactivateGroupOps.size() > 0) {
@@ -337,8 +336,8 @@ public class TaskExecutorImpl implements TaskExecutor {
                 //5.2.3 add commit
                 addCommit(slbId, needReload, buildVersion, needBuildVses, needBuildGroupVs);
                 //5.2.4 fire update job
-                NginxResponse response = nginxService.updateConf(onlineSlb.getSlbServers());
                 needRollbackConf = true;
+                NginxResponse response = nginxService.updateConf(onlineSlb.getSlbServers());
                 if (!response.getSucceed()) {
                     throw new Exception("Update config Fail.Fail Response:" + String.format(NginxResponse.JSON, response));
                 }
