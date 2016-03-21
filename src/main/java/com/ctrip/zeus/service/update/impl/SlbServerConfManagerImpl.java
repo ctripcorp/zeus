@@ -77,18 +77,23 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         //case 3: version gap large than max span
         if (needRefresh || refresh || slbVersion < serverVersion || slbVersion - serverVersion > maxSpan.get()) {
             try {
+                //3.1 need reload in case 3
                 if (slbVersion - serverVersion > maxSpan.get()) {
                     needReload = true;
                 }
+                //3.2 get nginx config
                 String nginxConf = nginxConfService.getNginxConf(slbId, slbVersion);
                 Map<Long, VsConfData> vsConfDataMap = nginxConfService.getVsConfBySlbId(slbId, slbVersion);
+                //3.3 refresh config
                 NginxResponse res = nginxService.refresh(nginxConf, vsConfDataMap, needReload);
+                //3.3.1 if failed, set need refresh flag and return result.
                 if (!res.getSucceed()) {
                     needRefresh = true;
                     logger.error("[SlbServerUpdate] Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion + response.toString());
                     return res.setServerIp(ip);
                 }
             } catch (Exception e) {
+                //3.3.2 if throws exception, set need refresh flag.
                 needRefresh = true;
                 logger.error("[SlbServerUpdate] Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
                 throw new NginxProcessingException("Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
@@ -98,6 +103,10 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 //4. execute commits
                 //4.1 get commits and merge to one commit
                 Commit commit = commitMergeService.mergeCommit(commitService.getCommitList(slbId, serverVersion, slbVersion));
+                if (commit == null){
+                    logger.info("[SlbServerUpdate] Not found commit. return success instead.");
+                    return new NginxResponse().setSucceed(true).setServerIp(ip);
+                }
                 //4.2 get all configs
                 String nginxConf = nginxConfService.getNginxConf(slbId, slbVersion);
                 Map<Long, VsConfData> dataMap = nginxConfService.getVsConfByVsIds(slbId, commit.getVsIds(), slbVersion);
@@ -115,7 +124,9 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                     gids.addAll(commit.getGroupIds());
                     dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(dataMap, gids);
                 }
+                //4.5 update nginx configs
                 List<NginxResponse> responses = nginxService.update(nginxConf, dataMap, cleanSet, dyUpstreamOpsDatas, reload, test, dyups);
+                //4.6 check response, if failed. set need refresh flag.
                 for (NginxResponse r : responses) {
                     if (!r.getSucceed()) {
                         needRefresh = true;
@@ -124,6 +135,8 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                     }
                 }
             } catch (Exception e) {
+                //4.7  if failed. set need refresh flag.
+                needRefresh = true;
                 logger.error("[SlbServerUpdate] Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
                 throw new NginxProcessingException("Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
             }
@@ -131,7 +144,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         //5. update server version
         confVersionService.updateSlbServerCurrentVersion(slbId, ip, slbVersion);
         needRefresh = false;
-        return response.setServerIp(ip).setOutMsg("update success.");
+        return response.setServerIp(ip).setSucceed(true).setOutMsg("update success.");
     }
 
     @Override

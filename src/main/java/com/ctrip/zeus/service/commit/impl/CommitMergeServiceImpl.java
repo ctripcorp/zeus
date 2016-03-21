@@ -2,20 +2,16 @@ package com.ctrip.zeus.service.commit.impl;
 
 import com.ctrip.zeus.commit.entity.Commit;
 import com.ctrip.zeus.service.commit.CommitMergeService;
+import com.ctrip.zeus.service.commit.util.CommitType;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by fanqq on 2016/3/16.
  */
 @Service("commitMergeService")
 public class CommitMergeServiceImpl implements CommitMergeService {
-
-    private final String COMMIT_TYPE_RELOAD = "Reload";
-    private final String COMMIT_TYPE_DYUPS = "Dyups";
 
     @Override
     public Commit mergeCommit(List<Commit> commitList) throws Exception {
@@ -30,6 +26,8 @@ public class CommitMergeServiceImpl implements CommitMergeService {
                 return (int) (o1.getVersion() - o2.getVersion());
             }
         });
+        Set<Long> cleanVsIds = new HashSet<>();
+        Set<Long> vsIds = new HashSet<>();
         for (Commit commit : commitList) {
             //1. slbId
             result.setSlbId(commit.getSlbId());
@@ -42,21 +40,25 @@ public class CommitMergeServiceImpl implements CommitMergeService {
             //5. type
             if (result.getType() == null){
                 result.setType(commit.getType());
-            }else if (result.getType().equals(COMMIT_TYPE_DYUPS) && commit.getType().equals(COMMIT_TYPE_RELOAD)){
+            }else if (result.getType().equals(CommitType.COMMIT_TYPE_DYUPS) && commit.getType().equals(CommitType.COMMIT_TYPE_RELOAD)){
                 result.setType(commit.getType());
             }
             //6. clean vs ids and vs ids
             for (Long clean : commit.getCleanvsIds()){
-                if (result.getVsIds().contains(clean)){
-                    result.getVsIds().remove(clean);
+                if (vsIds.contains(clean)){
+                    vsIds.remove(clean);
                 }
             }
             for (Long vs : commit.getVsIds()){
-                if (result.getCleanvsIds().contains(vs)){
-                    result.getCleanvsIds().remove(vs);
+                if (cleanVsIds.contains(vs)){
+                    cleanVsIds.remove(vs);
                 }
             }
+            vsIds.addAll(commit.getVsIds());
+            cleanVsIds.addAll(commit.getCleanvsIds());
         }
+        result.getVsIds().addAll(vsIds);
+        result.getCleanvsIds().addAll(cleanVsIds);
         return result;
     }
 }
