@@ -23,8 +23,10 @@ public class ConfVersionServiceImpl implements ConfVersionService {
     @Override
     public Long getSlbServerCurrentVersion(Long sid, String ip) throws Exception {
         NginxServerDo nginxServer = nginxServerDao.findBySlbIdAndIp(ip, sid, NginxServerEntity.READSET_FULL);
-        if (null == nginxServer)
-            throw new IllegalArgumentException(String.format("nginxServer is null, slbId:%s, ip:%s", sid, ip));
+        if (null == nginxServer) {
+            updateSlbServerCurrentVersion(sid, ip, 0L);
+            return 0L;
+        }
         return nginxServer.getVersion();
     }
 
@@ -39,16 +41,20 @@ public class ConfVersionServiceImpl implements ConfVersionService {
     @Override
     public Long getSlbCurrentVersion(Long slbId) throws Exception {
         ConfSlbVersionDo confSlbVersion = confSlbVersionDao.findBySlbId(slbId, ConfSlbVersionEntity.READSET_FULL);
-        if (null == confSlbVersion)
-            throw new IllegalArgumentException(String.format("confSlbVersion is null, slbId:%s", slbId));
+        if (null == confSlbVersion) {
+            addConfSlbVersion(new ConfSlbVersion().setSlbId(slbId).setPreviousVersion(0L).setCurrentVersion(0L));
+            return 0L;
+        }
         return confSlbVersion.getCurrentVersion();
     }
 
     @Override
     public Long getSlbPreviousVersion(Long slbId) throws Exception {
         ConfSlbVersionDo confSlbVersion = confSlbVersionDao.findBySlbId(slbId, ConfSlbVersionEntity.READSET_FULL);
-        if (null == confSlbVersion)
-            throw new Exception(String.format("confSlbVersion is null, slbId:%s", slbId));
+        if (null == confSlbVersion) {
+            addConfSlbVersion(new ConfSlbVersion().setSlbId(slbId).setPreviousVersion(0L).setCurrentVersion(0L));
+            return 0L;
+        }
         return confSlbVersion.getPreviousVersion();
     }
 
