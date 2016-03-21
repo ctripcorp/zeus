@@ -11,6 +11,7 @@ import com.sun.org.apache.xpath.internal.functions.FuncBoolean;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
@@ -284,34 +285,6 @@ public class C {
         return commit;
     }
 
-
-    public static CommitDo toCommitDo(Commit commit) {
-        CommitDo commitdo = new CommitDo();
-
-        commitdo.setId(commit.getId() == null ? 0L : commit.getId()).
-                setSlbId(commit.getSlbId()).
-                setVersion(commit.getVersion())
-                .setType(commit.getType())
-                .setDataChangeLastTime(commit.getDataChangeLastTime());
-
-        if (commit.getVsIds() != null) {
-            commitdo.setVsIds(subIds(Arrays.toString(commit.getVsIds().toArray())));
-        }
-        if (commit.getGroupIds() != null) {
-            commitdo.setGroupIds(subIds(Arrays.toString(commit.getGroupIds().toArray())));
-        }
-
-        if (commit.getTaskIds() != null) {
-            commitdo.setTaskIds(subIds(Arrays.toString(commit.getTaskIds().toArray())));
-        }
-
-        if (commit.getCleanvsIds() != null) {
-            commitdo.setCleanvsIds(subIds(Arrays.toString(commit.getCleanvsIds().toArray())));
-        }
-
-        return commitdo;
-    }
-
     public static ConfSlbVersionDo toConfSlbVersionDo(ConfSlbVersion confSlbVersion) {
         ConfSlbVersionDo result = new ConfSlbVersionDo();
         if (null != confSlbVersion) {
@@ -324,12 +297,45 @@ public class C {
         return result;
     }
 
-    private static String subIds(String sub) {
+    public static CommitDo toCommitDo(Commit commit) {
+        CommitDo commitdo = new CommitDo();
 
-        if (sub.length() == 2) return "";
+        commitdo.setId(commit.getId() == null ? 0L : commit.getId()).
+                setSlbId(commit.getSlbId()).
+                setVersion(commit.getVersion())
+                .setType(commit.getType())
+                .setDataChangeLastTime(commit.getDataChangeLastTime());
 
-        Integer startEscape = sub.indexOf('[');
-        Integer endEscape = sub.length() - 1;
-        return sub.substring(startEscape + 1, endEscape - 1);
+        if (commit.getVsIds() != null) {
+            commitdo.setVsIds(subIds(commit.getVsIds()));
+        }
+        if (commit.getGroupIds() != null) {
+            commitdo.setGroupIds(subIds(commit.getGroupIds()));
+        }
+
+        if (commit.getTaskIds() != null) {
+            commitdo.setTaskIds(subIds(commit.getTaskIds()));
+        }
+
+        if (commit.getCleanvsIds() != null) {
+            commitdo.setCleanvsIds(subIds(commit.getCleanvsIds()));
+        }
+
+        return commitdo;
+    }
+
+    private static String subIds(List<Long> sub) {
+        if(sub==null || sub.size()==0) return "";
+
+        StringBuilder sb=new StringBuilder();
+        for (Long i:sub)
+        {
+            sb.append(i+",");
+        }
+
+        String result=sb.toString();
+        int lastSpliter = result.lastIndexOf(",");
+
+        return result.substring(0,lastSpliter);
     }
 }
