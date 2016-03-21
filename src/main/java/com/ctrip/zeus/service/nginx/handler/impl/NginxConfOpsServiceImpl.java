@@ -40,10 +40,14 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
 
         List<String> cleanFileNames = new ArrayList<>();
         for (String name : vhostFileNames) {
-            cleanFileNames.add(vhostDir + File.separator + name);
+            if (name.endsWith(CONF_SUFFIX)){
+                cleanFileNames.add(vhostDir + File.separator + name);
+            }
         }
         for (String name : upstreamFileNames) {
-            cleanFileNames.add(upstreamDir + File.separator + name);
+             if (name.endsWith(CONF_SUFFIX)) {
+                 cleanFileNames.add(upstreamDir + File.separator + name);
+             }
         }
         try {
             cleanFile(cleanFileNames, now);

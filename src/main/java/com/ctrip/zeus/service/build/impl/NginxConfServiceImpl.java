@@ -54,7 +54,8 @@ public class NginxConfServiceImpl implements NginxConfService {
         List<NginxConfServerData> result = new ArrayList<>();
         List<NginxConfServerDo> d = nginxConfServerDao.findAllBySlbIdAndVersion(slbId, (int) (long) version, NginxConfServerEntity.READSET_FULL);
         if (d == null || d.size() == 0) {
-            throw new ValidationException("Not found nginx server conf by slbId and version. slbId:" + slbId + " version:" + version);
+            logger.warn("Not found nginx server conf by slbId and version. slbId:" + slbId + " version:" + version);
+            return result;
         }
         for (NginxConfServerDo t : d) {
             result.add(new NginxConfServerData().setVsId(t.getSlbVirtualServerId()).setContent(t.getContent()));
@@ -67,7 +68,8 @@ public class NginxConfServiceImpl implements NginxConfService {
         List<NginxConfUpstreamData> result = new ArrayList<>();
         List<NginxConfUpstreamDo> d = nginxConfUpstreamDao.findAllBySlbIdAndVersion(slbId, (int) (long) version, NginxConfUpstreamEntity.READSET_FULL);
         if (d == null || d.size() == 0) {
-            throw new ValidationException("Not found nginx upstream conf by slbId and version. slbId:" + slbId + " version:" + version);
+            logger.warn("Not found nginx upstream conf by slbId and version. slbId:" + slbId + " version:" + version);
+            return result;
         }
         for (NginxConfUpstreamDo t : d) {
             result.add(new NginxConfUpstreamData().setVsId(t.getSlbVirtualServerId()).setContent(t.getContent()));
