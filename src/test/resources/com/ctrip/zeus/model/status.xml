@@ -12,7 +12,6 @@
             <server>true</server>
             <pull>true</pull>
             <up>true</up>
-            <online>true</online>
             <discription>status</discription>
         </group-server-status>
         <group-server-status>
@@ -22,7 +21,6 @@
             <server>true</server>
             <pull>true</pull>
             <up>true</up>
-            <online>true</online>
             <discription>status</discription>
         </group-server-status>
     </group-status>

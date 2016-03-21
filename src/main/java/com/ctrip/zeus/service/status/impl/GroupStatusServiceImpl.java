@@ -286,7 +286,6 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
                 groupServerStatus.setUp(up);
-                groupServerStatus.setOnline(online);
                 status.addGroupServerStatus(groupServerStatus);
             }
             res.add(status);
