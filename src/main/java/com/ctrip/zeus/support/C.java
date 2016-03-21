@@ -259,7 +259,7 @@ public class C {
                 .setType(commitDto.getType())
                 .setDataChangeLastTime(commitDto.getDataChangeLastTime());
 
-        if (commitDto.getVsIds() != null) {
+        if (commitDto.getVsIds() != null && !commitDto.getVsIds().equals("")) {
             for (String vid : commitDto.getVsIds().split(",")) {
                 commit.addVsId(Long.parseLong(vid));
             }
@@ -325,7 +325,7 @@ public class C {
     }
 
     private static String subIds(List<Long> sub) {
-        if(sub==null || sub.size()==0) return "";
+        if(sub==null || sub.size()==0) return null;
 
         StringBuilder sb=new StringBuilder();
         for (Long i:sub)
