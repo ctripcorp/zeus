@@ -304,8 +304,8 @@
                 <statement>
                     <![CDATA[
                         UPDATE <TABLE/>
-                        SET <FIELD name='current-version'/> = ${current-version}
-                        AND <FIELD name='previous-version'/> = ${previous-version}
+                        SET <FIELD name='current-version'/> = ${current-version},
+                            <FIELD name='previous-version'/> = ${previous-version}
                             WHERE <FIELD name='slb-id'/> = ${slb-id}
                         ]]>
                 </statement>
