@@ -299,11 +299,13 @@
             </query>
             <query name="update-version-by-slb-id" type="UPDATE">
                 <param name="slb-id"/>
-                <param name="version"/>
+                <param name="current-version"/>
+                <param name="previous-version"/>
                 <statement>
                     <![CDATA[
                         UPDATE <TABLE/>
-                        SET <FIELD name='version'/> = ${version}
+                        SET <FIELD name='current-version'/> = ${current-version},
+                            <FIELD name='previous-version'/> = ${previous-version}
                             WHERE <FIELD name='slb-id'/> = ${slb-id}
                         ]]>
                 </statement>
