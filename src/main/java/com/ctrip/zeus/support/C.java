@@ -288,8 +288,7 @@ public class C {
     public static ConfSlbVersionDo toConfSlbVersionDo(ConfSlbVersion confSlbVersion) {
         ConfSlbVersionDo result = new ConfSlbVersionDo();
         if (null != confSlbVersion) {
-            result.setId(confSlbVersion.getId())
-                    .setSlbId(confSlbVersion.getSlbId())
+            result.setSlbId(confSlbVersion.getSlbId())
                     .setPreviousVersion(confSlbVersion.getPreviousVersion())
                     .setCurrentVersion(confSlbVersion.getCurrentVersion());
         }
