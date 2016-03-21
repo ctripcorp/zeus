@@ -72,6 +72,7 @@ public class GroupResource {
                          @QueryParam("slbId") final Long slbId,
                          @QueryParam("appId") final String appId,
                          @QueryParam("vsId") final Long vsId,
+                         @TrimmedQueryParam("ip") final String ip,
                          @TrimmedQueryParam("slbName") final String slbName,
                          @TrimmedQueryParam("domain") final String domain,
                          @TrimmedQueryParam("type") String type,
@@ -219,6 +220,17 @@ public class GroupResource {
                     @Override
                     public Set<IdVersion> filter() throws Exception {
                         return groupFilter;
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return ip != null && groupFilter != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return groupCriteriaQuery.queryByGroupServer(ip);
                     }
                 })
                 .addFilter(new FilterSet<IdVersion>() {

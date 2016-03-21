@@ -26,6 +26,8 @@ public interface GroupCriteriaQuery {
 
     Set<IdVersion> queryAllVGroups(SelectionMode mode) throws Exception;
 
+    Set<IdVersion> queryByGroupServer(String groupServer) throws Exception;
+
     Set<IdVersion> queryByVsId(Long vsId) throws Exception;
 
     Set<IdVersion> queryByVsIds(Long[] vsIds) throws Exception;

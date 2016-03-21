@@ -110,6 +110,15 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
+    public Set<IdVersion> queryByGroupServer(String groupServer) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelGroupGsDo d : rGroupGsDao.findAllByIp(groupServer, RGroupGsEntity.READSET_FULL)) {
+            result.add(new IdVersion(d.getGroupId(), d.getGroupVersion()));
+        }
+        return result;
+    }
+
+    @Override
     public Set<IdVersion> queryByVsId(Long vsId) throws Exception {
         Set<IdVersion> result = new HashSet<>();
         for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllByVs(vsId, RGroupVsEntity.READSET_FULL)) {
