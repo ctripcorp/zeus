@@ -149,6 +149,6 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
 
     @Override
     public NginxResponse update() throws Exception {
-        return update(false, false);
+        return update(true, true);
     }
 }
