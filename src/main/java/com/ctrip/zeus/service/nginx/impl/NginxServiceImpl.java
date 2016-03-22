@@ -70,16 +70,39 @@ public class NginxServiceImpl implements NginxService {
     public List<NginxResponse> update(String nginxConf, Map<Long, VsConfData> vsConfDataMap, Set<Long> cleanVsIds, DyUpstreamOpsData[] dyups, boolean needReload, boolean needTest, boolean needDyups) throws Exception {
         List<NginxResponse> response = new ArrayList<>();
         try {
+            //1. update config
             nginxConfOpsService.updateNginxConf(nginxConf);
-            nginxConfOpsService.cleanAndUpdateConf(cleanVsIds, vsConfDataMap);
+            Long cleanConfFlag = nginxConfOpsService.cleanAndUpdateConf(cleanVsIds, vsConfDataMap);
+            //2. test reload or dyups, if needed. undo config if failed.
             if (needTest) {
-                response.add(nginxOpsService.test());
+                NginxResponse res = nginxOpsService.test();
+                response.add(res);
+                if (!res.getSucceed()) {
+                    logger.error("[NginxService]update failed.Test conf failed.");
+                    nginxConfOpsService.undoUpdateNginxConf();
+                    nginxConfOpsService.undoCleanAndUpdateConf(cleanVsIds, vsConfDataMap, cleanConfFlag);
+                }
             }
             if (needReload) {
-                response.add(nginxOpsService.reload());
+                NginxResponse res = nginxOpsService.reload();
+                response.add(res);
+                if (!res.getSucceed()) {
+                    logger.error("[NginxService]update failed.Reload conf failed.");
+                    nginxConfOpsService.undoUpdateNginxConf();
+                    nginxConfOpsService.undoCleanAndUpdateConf(cleanVsIds, vsConfDataMap, cleanConfFlag);
+                }
             }
             if (needDyups) {
-                response.addAll(nginxOpsService.dyups(dyups));
+                List<NginxResponse> dyupsRes = nginxOpsService.dyups(dyups);
+                response.addAll(dyupsRes);
+                for (NginxResponse res : dyupsRes) {
+                    if (!res.getSucceed()) {
+                        logger.error("[NginxService]update failed.Dyups conf failed.");
+                        nginxConfOpsService.undoUpdateNginxConf();
+                        nginxConfOpsService.undoCleanAndUpdateConf(cleanVsIds, vsConfDataMap, cleanConfFlag);
+                        break;
+                    }
+                }
             }
         } finally {
             logger.info("Nginx update response. Responses:" + response.toString());
@@ -90,9 +113,15 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public NginxResponse refresh(String nginxConf, Map<Long, VsConfData> vsConfDataMap, boolean reload) throws Exception {
         nginxConfOpsService.updateNginxConf(nginxConf);
-        nginxConfOpsService.updateAll(vsConfDataMap);
+        Long updateAllFlag = nginxConfOpsService.updateAll(vsConfDataMap);
         if (reload) {
-            return nginxOpsService.reload();
+            NginxResponse res = nginxOpsService.reload();
+            if (!res.getSucceed()) {
+                logger.error("[NginxService]update failed.Reload conf failed.");
+                nginxConfOpsService.undoUpdateNginxConf();
+                nginxConfOpsService.undoUpdateAll(updateAllFlag);
+            }
+            return res;
         }
         return new NginxResponse().setSucceed(true);
     }
@@ -184,7 +213,7 @@ public class NginxServiceImpl implements NginxService {
                     result.add(response);
                 }
             }
-            if (finishedServer.size() == futureTasks.size()){
+            if (finishedServer.size() == futureTasks.size()) {
                 break;
             }
             try {
@@ -205,7 +234,7 @@ public class NginxServiceImpl implements NginxService {
         for (NginxResponse response : result) {
             if (!response.getSucceed()) {
                 logger.error("[Rollback Conf]Rollback conf failed." + result.toString());
-                throw new Exception("[Rollback Conf]Rollback conf failed.");
+//                throw new Exception("[Rollback Conf]Rollback conf failed.");
             }
         }
         return result;
