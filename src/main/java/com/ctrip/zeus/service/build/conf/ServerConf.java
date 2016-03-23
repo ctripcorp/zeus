@@ -32,7 +32,12 @@ public class ServerConf {
     private static DynamicStringProperty proxyBuffers = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffers", "8 8k");
     private static DynamicStringProperty busyProxyBuffer = DynamicPropertyFactory.getInstance().getStringProperty("proxy.busy.buffers.size", "8k");
     private static DynamicStringProperty errorPageAccept = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.accept", "text/html");
-    
+    private static DynamicBooleanProperty vsHealthCheckEnalbe = DynamicPropertyFactory.getInstance().getBooleanProperty("vs.health.check.enable", false);
+    private static DynamicBooleanProperty vsHealthCheckEnalbeAll = DynamicPropertyFactory.getInstance().getBooleanProperty("vs.health.check.enable.all", false);
+    private static DynamicStringProperty vsHealthCheckGif = DynamicPropertyFactory.getInstance().getStringProperty("vs.health.check.gif.base64", null);
+    private static DynamicStringProperty errorPageHost = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.host.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+
+
     public static final String SSL_PATH = "/data/nginx/ssl/";
 
     public static String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception {
@@ -56,16 +61,40 @@ public class ServerConf {
                     .append("ssl_certificate ").append(SSL_PATH).append(vs.getId()).append("/ssl.crt;\n")
                     .append("ssl_certificate_key ").append(SSL_PATH).append(vs.getId()).append("/ssl.key;\n");
         }
-        addErrorPage(b);
+        addVirtualServerHealthCheck(b, vs);
         NginxConf.appendServerCommand(b);
         //add locations
         for (Group group : groups) {
             b.append(LocationConf.generate(slb, vs, group, UpstreamsConf.buildUpstreamName(slb, vs, group)));
         }
-
+        addErrorPage(b);
         b.append("}").append("\n");
 
         return StringFormat.format(b.toString());
+    }
+
+    private static void addVirtualServerHealthCheck(StringBuilder b, VirtualServer vs) {
+        if (vsHealthCheckEnalbe.get()) {
+            if (vsHealthCheckEnalbeAll.get()) {
+                b.append("location ~* ^/do_not_delete/noc.gif$ {\n")
+                        .append("add_header Accept-Ranges bytes;\n")
+                        .append("content_by_lua '\n")
+                        .append("local res = ngx.decode_base64(\"").append(vsHealthCheckGif.get()).append("\");\n")
+                        .append("ngx.print(res);\n")
+                        .append("return ngx.exit(200);\n';\n}\n");
+            } else {
+                String key = "vs.health.check.enable." + vs.getId();
+                DynamicBooleanProperty enable = DynamicPropertyFactory.getInstance().getBooleanProperty(key, false);
+                if (enable.get()) {
+                    b.append("location ~* ^/do_not_delete/noc.gif$ {\n")
+                            .append("add_header Accept-Ranges bytes;\n")
+                            .append("content_by_lua '\n")
+                            .append("local res = ngx.decode_base64(\"").append(vsHealthCheckGif.get()).append("\");\n")
+                            .append("ngx.print(res);\n")
+                            .append("return ngx.exit(200);\n';\n}\n");
+                }
+            }
+        }
     }
 
     private static void addProxyBufferSize(StringBuilder b, Long id) {
@@ -98,31 +127,38 @@ public class ServerConf {
         return res;
     }
 
-    private static void addErrorPage(StringBuilder sb){
-        if (!errorPageEnable.get()){
+    private static void addErrorPage(StringBuilder sb) {
+        if (!errorPageEnable.get()) {
             return;
         }
-        for (int i = 400 ; i <= 425 ; i ++ ){
-            DynamicStringProperty errorPageConfig = DynamicPropertyFactory.getInstance().getStringProperty("errorPage."+i+".url",null);
-            if (null != errorPageConfig.get()){
-                String path = "/"+ i + "page";
-                sb.append("error_page ").append(i).append(" ").append(path).append(";\n");
-                sb.append("location = ").append(path).append(" {\n");
-                sb.append("internal;\n");
-                sb.append("proxy_set_header Accept ").append(errorPageAccept.get()).append(";\n");
-                sb.append("proxy_pass ").append(errorPageConfig.get()).append(";\n}\n");
-            }
+        if (errorPageHost.get() == null) {
+            return;
         }
-        for (int i = 500 ; i <= 510 ; i ++ ){
-            DynamicStringProperty errorPageConfig = DynamicPropertyFactory.getInstance().getStringProperty("errorPage."+i+".url",null);
-            if (null != errorPageConfig.get()){
-                String path = "/"+ i + "page";
-                sb.append("error_page ").append(i).append(" ").append(path).append(";\n");
-                sb.append("location = ").append(path).append(" {\n");
-                sb.append("internal;\n");
-                sb.append("proxy_set_header Accept ").append(errorPageAccept.get()).append(";\n");
-                sb.append("proxy_pass ").append(errorPageConfig.get()).append(";\n}\n");
-            }
+        for (int i = 400; i <= 425; i++) {
+            String path = "/" + i + "page";
+            sb.append("error_page ").append(i).append(" ").append(path).append(";\n");
+            sb.append("location = ").append(path).append(" {\n");
+            sb.append("internal;\n");
+            sb.append("proxy_set_header Accept ").append(errorPageAccept.get()).append(";\n");
+            sb.append("rewrite_by_lua '\n");
+            sb.append("local domain = \"domain=\"..ngx.var.host;\n");
+            sb.append("local uri = \"&uri=\"..string.gsub(ngx.var.request_uri, \"?.*\", \"\");\n");
+            sb.append("ngx.req.set_uri_args(domain..uri);';\n");
+            sb.append("rewrite \"").append(path).append("\" \"").append("/errorpage/").append(i).append("\" break;\n");
+            sb.append("proxy_pass ").append(errorPageHost.get()).append(";\n}\n");
+        }
+        for (int i = 500; i <= 510; i++) {
+            String path = "/" + i + "page";
+            sb.append("error_page ").append(i).append(" ").append(path).append(";\n");
+            sb.append("location = ").append(path).append(" {\n");
+            sb.append("internal;\n");
+            sb.append("proxy_set_header Accept ").append(errorPageAccept.get()).append(";\n");
+            sb.append("rewrite_by_lua '\n");
+            sb.append("local domain = \"domain=\"..ngx.var.host;\n");
+            sb.append("local uri = \"&uri=\"..string.gsub(ngx.var.request_uri, \"?.*\", \"\");\n");
+            sb.append("ngx.req.set_uri_args(domain..uri);';\n");
+            sb.append("rewrite \"").append(path).append("\" \"").append("/errorpage/").append(i).append("\" break;\n");
+            sb.append("proxy_pass ").append(errorPageHost.get()).append(";\n}\n");
         }
     }
 }
