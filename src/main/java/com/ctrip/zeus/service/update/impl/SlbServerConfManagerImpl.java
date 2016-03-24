@@ -52,7 +52,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
     private final Logger logger = LoggerFactory.getLogger(SlbServerConfManagerImpl.class);
     private static DynamicIntProperty maxSpan = DynamicPropertyFactory.getInstance().getIntProperty("commit.max.span", 10);
 
-    private boolean needRefresh = false;
+   // private boolean needRefresh = false;
 
     @Override
     public synchronized NginxResponse update(boolean refresh, boolean needReload) throws Exception {
@@ -75,7 +75,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         //case 1: force refresh or flag needRefresh is true
         //case 2: server version is large then slb version
         //case 3: version gap large than max span
-        if (needRefresh || refresh || slbVersion < serverVersion || slbVersion - serverVersion > maxSpan.get()) {
+        if (refresh || slbVersion < serverVersion || slbVersion - serverVersion > maxSpan.get()) {
             try {
                 //3.1 need reload in case 3
                 if (slbVersion - serverVersion > maxSpan.get()) {
@@ -88,13 +88,11 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 NginxResponse res = nginxService.refresh(nginxConf, vsConfDataMap, needReload);
                 //3.3.1 if failed, set need refresh flag and return result.
                 if (!res.getSucceed()) {
-                    needRefresh = true;
                     logger.error("[SlbServerUpdate] Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion + response.toString());
                     return res.setServerIp(ip);
                 }
             } catch (Exception e) {
                 //3.3.2 if throws exception, set need refresh flag.
-                needRefresh = true;
                 logger.error("[SlbServerUpdate] Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
                 throw new NginxProcessingException("Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
             }
@@ -129,21 +127,18 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 //4.6 check response, if failed. set need refresh flag.
                 for (NginxResponse r : responses) {
                     if (!r.getSucceed()) {
-                        needRefresh = true;
                         logger.error("[SlbServerUpdate] Update conf failed. SlbId:" + slbId + ";Version:" + slbVersion + response.toString());
                         return r.setServerIp(ip);
                     }
                 }
             } catch (Exception e) {
                 //4.7  if failed. set need refresh flag.
-                needRefresh = true;
                 logger.error("[SlbServerUpdate] Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
                 throw new NginxProcessingException("Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
             }
         }
         //5. update server version
         confVersionService.updateSlbServerCurrentVersion(slbId, ip, slbVersion);
-        needRefresh = false;
         return response.setServerIp(ip).setSucceed(true).setOutMsg("update success.");
     }
 
