@@ -28,10 +28,10 @@ public class SlbServerConfUpdateTask extends AbstractTask {
 
     @Override
     public void run() throws Exception {
-        try{
-            slbServerConfManager.update();
-        }catch (Exception e){
-            logger.error("[SlbServerConfUpdateTask] Execute Failed.",e);
+        try {
+            slbServerConfManager.update(false, false);
+        } catch (Exception e) {
+            logger.error("[SlbServerConfUpdateTask] Execute Failed.", e);
         }
     }
 
