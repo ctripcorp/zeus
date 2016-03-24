@@ -53,7 +53,7 @@ public class BuildServiceImpl implements BuildService {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public boolean build(Slb onlineSlb,
+    public Long build(Slb onlineSlb,
                       Map<Long, VirtualServer> onlineVses,
                       Set<Long> needBuildVses,
                       Set<Long> deactivateVses,
@@ -121,7 +121,7 @@ public class BuildServiceImpl implements BuildService {
         }
         nginxConfServerDao.insert(nginxConfServerDoMap.values().toArray(new NginxConfServerDo[]{}));
         nginxConfUpstreamDao.insert(nginxConfUpstreamDoMap.values().toArray(new NginxConfUpstreamDo[]{}));
-        return true;
+        return (long)version;
     }
 
 

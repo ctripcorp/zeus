@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model>
+  <entity name="model" root="true">
+    <entity-ref name="commit" />
+    <entity-ref name="conf-slb-version" />
+  </entity>
+  <entity name="commit">
+    <attribute name="id" value-type="long" />
+    <attribute name="version" value-type="long" />
+    <element name="slb_id" value-type="long" />
+    <element name="vs_id" value-type="long" type="list" names="vs_ids" />
+    <element name="group_id" value-type="long" type="list" names="group_ids" />
+    <element name="task_id" value-type="long" type="list" names="task_ids" />
+    <element name="cleanvs_id" value-type="long" type="list" names="cleanvs_ids" />
+    <element name="type" value-type="String" />
+    <element name="DataChange_LastTime" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+  </entity>
+  <entity name="conf-slb-version">
+    <attribute name="id" value-type="long" />
+    <element name="slb_id" value-type="long" />
+    <element name="previous_version" value-type="long" />
+    <element name="current_version" value-type="long" />
+    <element name="DataChange_LastTime" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+  </entity>
+</model>
+

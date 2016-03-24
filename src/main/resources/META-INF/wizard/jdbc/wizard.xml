@@ -63,6 +63,8 @@
          <table name="r_group_status"/>
          <table name="r_slb_status"/>
          <table name="r_vs_status"/>
+         <table name="conf_slb_version"/>
+         <table name="commit"/>
       </group>
    </jdbc>
 </wizard>

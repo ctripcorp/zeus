@@ -19,7 +19,7 @@ import java.util.Set;
  */
 public interface BuildService extends Repository {
 
-    boolean build(Slb onlineSlb,
+    Long build(Slb onlineSlb,
                  Map<Long,VirtualServer> onlineVses,
                  Set<Long> needBuildVses,
                  Set<Long> deactivateVses,

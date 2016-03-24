@@ -33,4 +33,7 @@
    <model package="com.ctrip.zeus.task" name="task">
       <sample-model>src/test/resources/com/ctrip/zeus/model/task.xml</sample-model>
    </model>
+   <model package="com.ctrip.zeus.commit" name="commit">
+      <sample-model>src/test/resources/com/ctrip/zeus/model/commit.xml</sample-model>
+   </model>
 </wizard>

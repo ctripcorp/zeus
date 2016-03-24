@@ -52,6 +52,10 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.CertificateDao"/>
     </bean>
 
+    <bean id="commitDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.CommitDao"/>
+    </bean>
+
     <bean id="confGroupActiveDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfGroupActiveDao"/>
     </bean>
@@ -62,6 +66,10 @@
 
     <bean id="confSlbActiveDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfSlbActiveDao"/>
+    </bean>
+
+    <bean id="confSlbVersionDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ConfSlbVersionDao"/>
     </bean>
 
     <bean id="confSlbVirtualServerActiveDao" factory-bean="daoFactory" factory-method="getDao">

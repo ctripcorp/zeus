@@ -100,4 +100,8 @@
         <server-conf>server-conf</server-conf>
         <upstream-conf>upstream-conf</upstream-conf>
     </virtual-server-conf-response>
+    <vs-conf-data>
+        <upstream-conf>upstream</upstream-conf>
+        <vhost-conf>vhost</vhost-conf>
+    </vs-conf-data>
 </nginx>

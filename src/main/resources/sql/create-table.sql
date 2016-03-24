@@ -396,3 +396,16 @@ CREATE TABLE IF NOT EXISTS `status_server` (
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+DROP TABLE IF EXISTS `commit`;
+CREATE TABLE `commit` (
+  `id` bigint(20) NOT NULL,
+  `version` bigint(20) DEFAULT NULL,
+  `slb_id` bigint(20) DEFAULT NULL,
+  `vs_ids` varchar(4096) DEFAULT NULL,
+  `group_ids` varchar(4096) DEFAULT NULL,
+  `task_ids` varchar(4096) DEFAULT NULL,
+  `cleanvs_ids` varchar(4096) DEFAULT NULL,
+  `type` varchar(45) DEFAULT NULL,
+  `DataChange_LastTime` datetime(6) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;

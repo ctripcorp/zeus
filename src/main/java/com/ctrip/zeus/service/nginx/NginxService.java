@@ -6,9 +6,11 @@ import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
+import com.ctrip.zeus.nginx.entity.VsConfData;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -18,75 +20,51 @@ import java.util.Set;
 public interface NginxService {
 
     /**
-     * push config to slb servers , reload if needed.
+     * update nginx configs
      *
+     * @param nginxConf
+     * @param vsConfDataMap
+     * @param cleanVsIds
+     * @param dyups
+     * @param needReload
+     * @param needTest
      * @return List of nginx Response
      * @throws Exception
      */
-    List<NginxResponse> pushConf(List<SlbServer> slbServers, Long slbId, Integer slbVersion, Set<Long> vsIds ,boolean needReload) throws Exception;
+    List<NginxResponse> update(String nginxConf,
+                               Map<Long, VsConfData> vsConfDataMap,
+                               Set<Long> cleanVsIds,
+                               DyUpstreamOpsData[] dyups,
+                               boolean needReload,
+                               boolean needTest,
+                               boolean needDyups) throws Exception;
 
     /**
-     * Local rollback  Conf
+     * refresh nginx configs
      *
-     * @return the result of "ngnix -t"
+     * @param nginxConf
+     * @param vsConfDataMap
+     * @return List of nginx Response
      * @throws Exception
      */
-    NginxResponse localRollbackConf(Long slbId, Integer slbVersion) throws Exception;
+    NginxResponse refresh(String nginxConf, Map<Long, VsConfData> vsConfDataMap, boolean reload) throws Exception;
+
+    /**
+     * push config to slb servers
+     *
+     * @return Nginx Response
+     * @throws Exception
+     */
+    NginxResponse updateConf(List<SlbServer> slbServers) throws Exception;
 
     /**
      * Rollback  All  Conf
      *
-     * @return the result of "ngnix -t"
+     * @param slbServers
+     * @return List of nginx Response
      * @throws Exception
      */
-    boolean rollbackAllConf(Long slbId, Integer slbVersion) throws Exception;
-
-    /**
-     * write conf to disk
-     *
-     * @return the result of "ngnix -t"
-     * @throws Exception
-     */
-    NginxResponse writeToDisk(List<Long> vsIds, Long slbId, Integer slbVersion) throws Exception;
-
-    /**
-     * load the colocated nginx server conf from disk
-     *
-     * @return result of "ngnix -s reload"
-     * @throws Exception
-     */
-    NginxResponse load(Long slbId, Integer version) throws Exception;
-    /**
-     * test the colocated nginx server conf from disk
-     *
-     * @return result of "ngnix -t"
-     * @throws Exception
-     */
-    NginxResponse confTest(Long slbId, Integer version) throws Exception;
-
-    /**
-     * load all nginx server conf in the slb from disk
-     *
-     * @param slbId slbname
-     * @return all response
-     * @throws Exception
-     */
-    List<NginxResponse> loadAll(Long slbId, Integer version) throws Exception;
-    /**
-     * dy upstream ops api
-     *
-     * @param upsName     dy upstream name
-     * @param upsCommands dy upstream commands
-     */
-    NginxResponse dyopsLocal(String upsName, String upsCommands) throws Exception;
-
-    /**
-     * dy upstream ops api
-     *
-     * @param slbServers slbServers
-     * @param dyups dy upstream info
-     */
-    List<NginxResponse> dyops(List<SlbServer> slbServers, DyUpstreamOpsData[] dyups) throws Exception;
+    List<NginxResponse> rollbackAllConf (List < SlbServer > slbServers)throws Exception;
 
     /**
      * get traffic status of nginx server cluster.
