@@ -77,9 +77,7 @@ public class NginxClient extends AbstractRestClient {
             logger.info("[NginxClient]Update api start. fresh:" + fresh + " url:" + url);
             Response response = target.request().headers(getDefaultHeaders()).get();
             if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
-                result.setSucceed(true);
-                result.setOutMsg(response.readEntity(String.class));
-                result.setServerIp(url);
+                result = DefaultJsonParser.parse(NginxResponse.class,response.readEntity(String.class));
             } else {
                 result.setSucceed(false);
                 result.setErrMsg(response.readEntity(String.class));
