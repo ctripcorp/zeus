@@ -44,8 +44,10 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     @Override
     public IdVersion[] queryByIdAndMode(Long slbId, SelectionMode mode) throws Exception {
         RelSlbStatusDo d = rSlbStatusDao.findBySlb(slbId, RSlbStatusEntity.READSET_FULL);
-        int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
+        if (d == null) return new IdVersion[0];
 
+        int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
+        
         IdVersion[] result = new IdVersion[v.length];
         for (int i = 0; i < result.length && i < v.length; i++) {
             result[i] = new IdVersion(slbId, v[i]);
