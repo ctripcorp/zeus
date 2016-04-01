@@ -10,12 +10,11 @@ import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.handler.GroupServerValidator;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
+import com.ctrip.zeus.util.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/6/29.
@@ -78,31 +77,51 @@ public class DefaultGroupValidator implements GroupValidator {
             throw new ValidationException("No virtual server is found bound to this group.");
         if (groupId == null)
             groupId = 0L;
-        Set<Long> virtualServerIds = new HashSet<>();
-        Set<String> groupPaths = new HashSet<>();
-        for (GroupVirtualServer groupVirtualServer : groupVirtualServers) {
-            if (groupVirtualServer.getRewrite() != null && !groupVirtualServer.getRewrite().isEmpty())
-                if (!PathRewriteParser.validate(groupVirtualServer.getRewrite()))
+        Map<Long, String> paths = new HashMap<>();
+
+        for (GroupVirtualServer gvs : groupVirtualServers) {
+            if (gvs.getRewrite() != null && !gvs.getRewrite().isEmpty()) {
+                if (!PathRewriteParser.validate(gvs.getRewrite())) {
                     throw new ValidationException("Invalid rewrite value.");
-            VirtualServer vs = groupVirtualServer.getVirtualServer();
-            if (!virtualServerModelValidator.exists(vs.getId()))
-                throw new ValidationException("Virtual Server with id " + vs.getId() + " does not exist.");
-            else {
-                if (virtualServerIds.contains(vs.getId()))
-                    throw new ValidationException("Group-VirtualServer is an unique combination.");
-                else
-                    virtualServerIds.add(vs.getId());
+                }
             }
-            if (groupPaths.contains(vs.getId() + groupVirtualServer.getPath()))
-                throw new ValidationException("Duplicate path \"" + groupVirtualServer.getPath() + "\" is found on virtual server " + vs.getId() + " from post entity.");
-            else
-                groupPaths.add(vs.getId() + groupVirtualServer.getPath());
+
+            VirtualServer vs = gvs.getVirtualServer();
+            if (!virtualServerModelValidator.exists(vs.getId())) {
+                throw new ValidationException("Virtual server with id " + vs.getId() + " does not exist.");
+            }
+            if (paths.containsKey(vs.getId())) {
+                throw new ValidationException("Group and virtual server is an unique combination.");
+            }
+
+            String path = gvs.getPath();
+            path = path.substring(path.indexOf('/'));
+            paths.put(vs.getId(), path);
         }
-        for (RelGroupVsDo relGroupVsDo : rGroupVsDao.findAllByVses(virtualServerIds.toArray(new Long[virtualServerIds.size()]), RGroupVsEntity.READSET_FULL)) {
-            if (groupId.equals(relGroupVsDo.getGroupId()))
+
+        List<RelGroupVsDo> retained = new ArrayList<>();
+        for (RelGroupVsDo d : rGroupVsDao.findAllByVses(paths.keySet().toArray(new Long[paths.size()]), RGroupVsEntity.READSET_FULL)) {
+            if (groupId.equals(d.getGroupId()))
                 continue;
-            if (groupPaths.contains(relGroupVsDo.getVsId() + relGroupVsDo.getPath()))
-                throw new ValidationException("Duplicate path \"" + relGroupVsDo.getPath() + "\" is found on virtual server " + relGroupVsDo.getVsId() + " from existing entities.");
+            int i = 0;
+            String value = d.getPath();
+            while (i < value.length()) {
+                char next = value.charAt(i);
+                if (next == '/') {
+                    if (StringUtils.prefixOverlapped(paths.get(d.getVsId()), value.substring(i))) retained.add(d);
+                    break;
+                } else {
+                    i++;
+                }
+            }
+        }
+
+        if (retained.size() > 0) {
+            StringBuilder sb = new StringBuilder();
+            for (RelGroupVsDo d : retained) {
+                sb.append(d.getVsId() + "/" + d.getPath());
+            }
+            throw new ValidationException("Path is prefix-overlapped across virtual server " + sb.toString());
         }
     }
 
