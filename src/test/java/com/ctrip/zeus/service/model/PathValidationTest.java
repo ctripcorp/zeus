@@ -92,6 +92,13 @@ public class PathValidationTest extends AbstractServerTest {
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
         }
+
+        try {
+            array.get(0).setPriority(2000);
+            groupModelValidator.validateGroupVirtualServers(100L, array);
+        } catch (Exception e) {
+            Assert.assertTrue(false);
+        }
     }
 
     @Test

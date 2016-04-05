@@ -651,6 +651,7 @@ CREATE TABLE IF NOT EXISTS `r_group_vs` (
   `group_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'group_id',
   `vs_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'vs_id',
   `path` varchar(4096) DEFAULT NULL COMMENT 'path',
+	`priority` INT(11) NOT NULL DEFAULT '1000' COMMENT 'priority',
   `group_version` int(11) NOT NULL DEFAULT '0' COMMENT 'group version',
   `hash` int(11) DEFAULT NULL COMMENT 'hash search key',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',

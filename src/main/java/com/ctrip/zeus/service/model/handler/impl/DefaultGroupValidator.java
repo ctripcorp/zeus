@@ -138,17 +138,17 @@ public class DefaultGroupValidator implements GroupValidator {
                 case -1:
                     break;
                 case 0:
-                    if (entry.getPriority() == d.getPriority() || d.getPriority() == 1000) {
+                    if (entry.getPriority() == d.getPriority()) {
                         retained.add(d);
                     }
                     break;
                 case 1:
-                    if (entry.getPriority() >= d.getPriority()) {
+                    if (entry.getPriority() <= d.getPriority()) {
                         retained.add(d);
                     }
                     break;
                 case 2:
-                    if (entry.getPriority() <= d.getPriority()) {
+                    if (entry.getPriority() >= d.getPriority()) {
                         retained.add(d);
                     }
                     break;
