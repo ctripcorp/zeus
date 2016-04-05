@@ -1496,6 +1496,7 @@
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="vs-id" field="vs_id" value-type="long" length="19" nullable="false" />
     <member name="path" field="path" value-type="String" length="4096" />
+    <member name="priority" field="priority" value-type="int" length="10" nullable="false" />
     <member name="group-version" field="group_version" value-type="int" length="10" nullable="false" />
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />

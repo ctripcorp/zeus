@@ -35,25 +35,25 @@ public class PathValidationTest extends AbstractServerTest {
     public void testStringUtils() {
         String s1 = "abcdefg";
         String s2 = "abc";
-        String s3 = "ABCDefghij";
+        String s3 = "ABCDefghij($|/|\\?)";
         String s4 = "我爱中国";
-        String s5 = "我";
+        String s5 = "我($|/|\\?)";
         String s6 = "我爱中国中国爱我";
 
-        String s7 = "bcdef";
+        String s7 = "bcdef($|/|\\?)";
         String s8 = "爱";
 
-        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s2));
-        Assert.assertTrue(StringUtils.prefixOverlapped(s2, s3));
-        Assert.assertTrue(StringUtils.prefixOverlapped(s3, s1));
+        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s2, '(') == 1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s2, s3, '(') == 2);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s3, s1, '(') == 1);
 
-        Assert.assertTrue(StringUtils.prefixOverlapped(s4, s5));
-        Assert.assertTrue(StringUtils.prefixOverlapped(s5, s6));
-        Assert.assertTrue(StringUtils.prefixOverlapped(s6, s4));
+        Assert.assertTrue(StringUtils.prefixOverlapped(s4, s5, '(') == 1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s5, s6, '(') == 2);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s6, s4, '(') == 1);
 
-        Assert.assertFalse(StringUtils.prefixOverlapped(s1, s7));
-        Assert.assertFalse(StringUtils.prefixOverlapped(s4, s8));
-        Assert.assertFalse(StringUtils.prefixOverlapped(s1, s4));
+        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s7, '(') == -1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s4, s8, '(') == -1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s4, '(') == -1);
     }
 
     @Test
@@ -66,6 +66,18 @@ public class PathValidationTest extends AbstractServerTest {
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
+        }
+    }
+
+    @Test
+    public void testAddNormalPath() {
+        String path = "~* ^/normal($|/|\\?)";
+        List<GroupVirtualServer> array = new ArrayList<>();
+        array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
+        try {
+            groupModelValidator.validateGroupVirtualServers(100L, array);
+        } catch (Exception e) {
+            Assert.assertTrue(false);
         }
     }
 
@@ -112,15 +124,24 @@ public class PathValidationTest extends AbstractServerTest {
         String root = "/";
         String startWith = "^/CommentAdmin";
         String noStart = "baike";
+        String noAlphabetic = "/123";
+        String success = "success";
+        String empty = "";
 
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(root).setVirtualServer(new VirtualServer().setId(1L)));
 
         try {
             groupModelValidator.validateGroupVirtualServers(100L, array);
-            Assert.assertTrue(false);
         } catch (Exception e) {
-            Assert.assertTrue(e instanceof ValidationException);
+            Assert.assertTrue(false);
+        }
+
+        try {
+            array.get(0).setPath(success);
+            groupModelValidator.validateGroupVirtualServers(100L, array);
+        } catch (Exception e) {
+            Assert.assertTrue(false);
         }
 
         try {
@@ -138,12 +159,29 @@ public class PathValidationTest extends AbstractServerTest {
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
         }
+
+        try {
+            array.get(0).setPath(noAlphabetic);
+            groupModelValidator.validateGroupVirtualServers(100L, array);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
+        }
+
+        try {
+            array.get(0).setPath(empty);
+            groupModelValidator.validateGroupVirtualServers(100L, array);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
+        }
     }
 
     @Before
     public void check() throws Exception {
         Slb slb = slbRepository.getById(1L);
         Set<String> existingPaths = Sets.newHashSet("~* /", "~* ^/CommentAdmin/", "~* ^/baike($|/|\\?)",
+                "~* ^/123likectrip($|/|\\?)",
                 "~* ^/linkservice($|/|\\?)", "~* ^/linkservice/link($|/|\\?)",
                 "~* ^/tour-marketingservice($|/|\\?)", "~* ^/tour-MarketingServiceConfig($|/|\\?)",
                 "~* ^/cruise-interface-costa($|/|\\?)", "~* ^/Cruise-Product-WCFService($|/|\\?)", "~* ^/Cruise-Product-OctopusJob($|/|\\?)");
@@ -156,9 +194,7 @@ public class PathValidationTest extends AbstractServerTest {
             slbRepository.add(slb);
 
             for (String path : existingPaths) {
-                for (int i = 0; i < existingPaths.size(); i++) {
-                    rGroupVsDao.insert(new RelGroupVsDo().setGroupId(10).setVsId(1).setPath(path));
-                }
+                rGroupVsDao.insert(new RelGroupVsDo().setGroupId(10).setVsId(1).setPath(path));
             }
         }
     }

@@ -12,6 +12,7 @@ import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.util.StringUtils;
 import org.springframework.stereotype.Component;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -77,7 +78,7 @@ public class DefaultGroupValidator implements GroupValidator {
             throw new ValidationException("No virtual server is found bound to this group.");
         if (groupId == null)
             groupId = 0L;
-        Map<Long, String> paths = new HashMap<>();
+        Map<Long, GroupVirtualServer> paths = new HashMap<>();
 
         for (GroupVirtualServer gvs : groupVirtualServers) {
             if (gvs.getRewrite() != null && !gvs.getRewrite().isEmpty()) {
@@ -95,24 +96,64 @@ public class DefaultGroupValidator implements GroupValidator {
             }
 
             String path = gvs.getPath();
-            path = path.substring(path.indexOf('/'));
-            paths.put(vs.getId(), path);
+            if (path == null || path.isEmpty()) {
+                throw new ValidationException("Path cannot be empty.");
+            }
+            int idx = path.indexOf('/');
+            path = idx >= 0 ? path.substring(idx + 1) : path;
+            if (path.isEmpty()) {
+                continue;
+            }
+            paths.put(vs.getId(), new GroupVirtualServer().setPath(path).setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority()));
         }
+
+        if (paths.size() == 0) return;
 
         List<RelGroupVsDo> retained = new ArrayList<>();
         for (RelGroupVsDo d : rGroupVsDao.findAllByVses(paths.keySet().toArray(new Long[paths.size()]), RGroupVsEntity.READSET_FULL)) {
             if (groupId.equals(d.getGroupId()))
                 continue;
+            if (d.getPriority() == 0) d.setPriority(1000);
+
             int i = 0;
             String value = d.getPath();
             while (i < value.length()) {
                 char next = value.charAt(i);
                 if (next == '/') {
-                    if (StringUtils.prefixOverlapped(paths.get(d.getVsId()), value.substring(i))) retained.add(d);
+                    value = value.substring(i + 1);
                     break;
-                } else {
-                    i++;
                 }
+                if (Character.isAlphabetic(next)) {
+                    break;
+                }
+                i++;
+            }
+
+            // escape comparing with root path
+            if (value.isEmpty()) continue;
+
+            GroupVirtualServer entry = paths.get(d.getVsId());
+            int ol = StringUtils.prefixOverlapped(entry.getPath(), value, '(');
+            switch (ol) {
+                case -1:
+                    break;
+                case 0:
+                    if (entry.getPriority() == d.getPriority() || d.getPriority() == 1000) {
+                        retained.add(d);
+                    }
+                    break;
+                case 1:
+                    if (entry.getPriority() >= d.getPriority()) {
+                        retained.add(d);
+                    }
+                    break;
+                case 2:
+                    if (entry.getPriority() <= d.getPriority()) {
+                        retained.add(d);
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException();
             }
         }
 
