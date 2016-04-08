@@ -62,7 +62,7 @@ public class PathValidationTest extends AbstractServerTest {
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
@@ -75,7 +75,7 @@ public class PathValidationTest extends AbstractServerTest {
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -87,7 +87,7 @@ public class PathValidationTest extends AbstractServerTest {
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
@@ -95,7 +95,7 @@ public class PathValidationTest extends AbstractServerTest {
 
         try {
             array.get(0).setPriority(2000);
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -107,7 +107,7 @@ public class PathValidationTest extends AbstractServerTest {
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(10L, array);
+            groupModelValidator.validateGroupVirtualServers(10L, array, false);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -119,7 +119,7 @@ public class PathValidationTest extends AbstractServerTest {
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
@@ -139,21 +139,21 @@ public class PathValidationTest extends AbstractServerTest {
         array.add(new GroupVirtualServer().setPath(root).setVirtualServer(new VirtualServer().setId(1L)));
 
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
 
         try {
             array.get(0).setPath(success);
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
 
         try {
             array.get(0).setPath(startWith);
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
@@ -161,7 +161,7 @@ public class PathValidationTest extends AbstractServerTest {
 
         try {
             array.get(0).setPath(noStart);
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
@@ -169,7 +169,7 @@ public class PathValidationTest extends AbstractServerTest {
 
         try {
             array.get(0).setPath(noAlphabetic);
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
@@ -177,7 +177,7 @@ public class PathValidationTest extends AbstractServerTest {
 
         try {
             array.get(0).setPath(empty);
-            groupModelValidator.validateGroupVirtualServers(100L, array);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);

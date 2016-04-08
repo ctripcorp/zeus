@@ -447,12 +447,13 @@ public class GroupResource {
     @Path("/group/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addGroup")
-    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
+    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String group,
+                        @QueryParam("force") Boolean force) throws Exception {
         Group g = parseGroup(hh.getMediaType(), group);
         Long groupId = groupCriteriaQuery.queryByName(g.getName());
         if (groupId > 0L) throw new ValidationException("Group name exists.");
 
-        g = groupRepository.add(parseGroup(hh.getMediaType(), group));
+        g = groupRepository.add(parseGroup(hh.getMediaType(), group), force == null ? false : force.booleanValue());
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -469,12 +470,13 @@ public class GroupResource {
     @Path("/group/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "updateGroup")
-    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
+    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String group,
+                           @QueryParam("force") Boolean force) throws Exception {
         Group g = parseGroup(hh.getMediaType(), group);
         DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
         lock.lock(TIMEOUT);
         try {
-            g = groupRepository.update(g);
+            g = groupRepository.update(g, force == null ? false : force.booleanValue());
         } finally {
             lock.unlock();
         }

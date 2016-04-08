@@ -43,16 +43,7 @@ public class DefaultGroupValidator implements GroupValidator {
 
     @Override
     public void validate(Group target) throws Exception {
-        if (target.getName() == null || target.getName().isEmpty()
-                || target.getAppId() == null || target.getAppId().isEmpty()) {
-            throw new ValidationException("Group name and app id are required.");
-        }
-        if (target.getHealthCheck() != null) {
-            if (target.getHealthCheck().getUri() == null || target.getHealthCheck().getUri().isEmpty())
-                throw new ValidationException("Health check path cannot be empty.");
-        }
-        validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers());
-        validateGroupServers(target.getGroupServers());
+        validate(target, false);
     }
 
     @Override
@@ -73,7 +64,21 @@ public class DefaultGroupValidator implements GroupValidator {
     }
 
     @Override
-    public void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception {
+    public void validate(Group target, boolean escapePathValidation) throws Exception {
+        if (target.getName() == null || target.getName().isEmpty()
+                || target.getAppId() == null || target.getAppId().isEmpty()) {
+            throw new ValidationException("Group name and app id are required.");
+        }
+        if (target.getHealthCheck() != null) {
+            if (target.getHealthCheck().getUri() == null || target.getHealthCheck().getUri().isEmpty())
+                throw new ValidationException("Health check path cannot be empty.");
+        }
+        validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers(), escapePathValidation);
+        validateGroupServers(target.getGroupServers());
+    }
+
+    @Override
+    public void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers, boolean escapePathValidation) throws Exception {
         if (groupVirtualServers == null || groupVirtualServers.size() == 0)
             throw new ValidationException("No virtual server is found bound to this group.");
         if (groupId == null)
@@ -95,6 +100,8 @@ public class DefaultGroupValidator implements GroupValidator {
                 throw new ValidationException("Group and virtual server is an unique combination.");
             }
 
+            if (escapePathValidation) continue;
+
             String path = gvs.getPath();
             if (path == null || path.isEmpty()) {
                 throw new ValidationException("Path cannot be empty.");
@@ -102,6 +109,7 @@ public class DefaultGroupValidator implements GroupValidator {
             int idx = path.indexOf('/');
             path = idx >= 0 ? path.substring(idx + 1) : path;
             if (path.isEmpty()) {
+                paths.put(vs.getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -1000 : gvs.getPriority()));
                 continue;
             }
             paths.put(vs.getId(), new GroupVirtualServer().setPath(path).setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority()));
@@ -129,10 +137,15 @@ public class DefaultGroupValidator implements GroupValidator {
                 i++;
             }
 
-            // escape comparing with root path
-            if (value.isEmpty()) continue;
-
+            // check if root path is completely equivalent, otherwise escape comparing with root path
             GroupVirtualServer entry = paths.get(d.getVsId());
+            if (value.isEmpty()) {
+                if (d.getPath().equals(entry.getPath())) {
+                    retained.add(d);
+                }
+                continue;
+            }
+
             int ol = StringUtils.prefixOverlapped(entry.getPath(), value, '(');
             switch (ol) {
                 case -1:
@@ -160,9 +173,9 @@ public class DefaultGroupValidator implements GroupValidator {
         if (retained.size() > 0) {
             StringBuilder sb = new StringBuilder();
             for (RelGroupVsDo d : retained) {
-                sb.append(d.getVsId() + "/" + d.getPath());
+                sb.append(d.getVsId() + "(" + d.getPath() + ")");
             }
-            throw new ValidationException("Path is prefix-overlapped across virtual server " + sb.toString());
+            throw new ValidationException("Path is prefix-overlapped across virtual server " + sb.toString() + ".");
         }
     }
 

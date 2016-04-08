@@ -36,7 +36,7 @@ public class DefaultVGroupValidator implements VGroupValidator {
         if (target.getName() == null || target.getName().isEmpty()) {
             throw new ValidationException("Group name is required.");
         }
-        groupModelValidator.validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers());
+        groupModelValidator.validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers(), false);
         for (GroupVirtualServer groupVirtualServer : target.getGroupVirtualServers()) {
             if (groupVirtualServer.getRedirect() == null)
                 throw new ValidationException("Redirect value is required.");

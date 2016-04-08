@@ -20,11 +20,15 @@ public interface GroupRepository extends Repository {
 
     Group getByKey(IdVersion key) throws Exception;
 
+    Group add(Group group, boolean escapedPathValidation) throws Exception;
+
     Group add(Group group) throws Exception;
 
     Group addVGroup(Group group) throws Exception;
 
     Group update(Group group) throws Exception;
+
+    Group update(Group group, boolean escapedPathValidation) throws Exception;
 
     Group updateVGroup(Group group) throws Exception;
 

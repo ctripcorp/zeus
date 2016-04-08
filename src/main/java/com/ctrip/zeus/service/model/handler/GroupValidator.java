@@ -11,7 +11,9 @@ import java.util.List;
  */
 public interface GroupValidator extends ModelValidator<Group> {
 
-    void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers) throws Exception;
+    void validate(Group target, boolean escapePathValidation) throws Exception;
+
+    void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers, boolean escapePathValidation) throws Exception;
 
     void validateGroupServers(List<GroupServer> groupServers) throws Exception;
 }
