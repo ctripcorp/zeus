@@ -121,6 +121,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group add(Group group, boolean escapedPathValidation) throws Exception {
+        group.setId(0L);
         groupModelValidator.validate(group, escapedPathValidation);
         autoFiller.autofill(group);
         hideVirtualValue(group);
