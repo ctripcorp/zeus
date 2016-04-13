@@ -76,6 +76,7 @@ public class PathValidationTest extends AbstractServerTest {
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertTrue(array.get(0).getPriority().intValue() == 1000);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -88,14 +89,15 @@ public class PathValidationTest extends AbstractServerTest {
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(false);
+            Assert.assertTrue(array.get(0).getPriority().intValue() == 1100);
         } catch (Exception e) {
-            Assert.assertTrue(e instanceof ValidationException);
+            Assert.assertTrue(false);
         }
 
         try {
             array.get(0).setPriority(2000);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertTrue(array.get(0).getPriority().intValue() == 2000);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -120,9 +122,9 @@ public class PathValidationTest extends AbstractServerTest {
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(false);
+            Assert.assertTrue(array.get(0).getPriority().intValue() == 1100);
         } catch (Exception e) {
-            Assert.assertTrue(e instanceof ValidationException);
+            Assert.assertTrue(false);
         }
     }
 
@@ -145,34 +147,34 @@ public class PathValidationTest extends AbstractServerTest {
         }
 
         try {
-            array.get(0).setPath(success);
+            array.get(0).setPriority(null).setPath(success);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
 
         try {
-            array.get(0).setPath(startWith);
+            array.get(0).setPriority(null).setPath(startWith);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(false);
+            Assert.assertTrue(array.get(0).getPriority().intValue() == 900);
         } catch (Exception e) {
-            Assert.assertTrue(e instanceof ValidationException);
+            Assert.assertTrue(false);
         }
 
         try {
-            array.get(0).setPath(noStart);
+            array.get(0).setPriority(null).setPath(noStart);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(false);
+            Assert.assertTrue(array.get(0).getPriority().intValue() == 900);
         } catch (Exception e) {
-            Assert.assertTrue(e instanceof ValidationException);
+            Assert.assertTrue(false);
         }
 
         try {
             array.get(0).setPath(noAlphabetic);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(false);
+            Assert.assertTrue(array.get(0).getPriority().intValue() == 900);
         } catch (Exception e) {
-            Assert.assertTrue(e instanceof ValidationException);
+            Assert.assertTrue(false);
         }
 
         try {

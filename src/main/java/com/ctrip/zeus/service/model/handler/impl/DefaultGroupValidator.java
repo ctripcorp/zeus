@@ -151,18 +151,16 @@ public class DefaultGroupValidator implements GroupValidator {
                 case -1:
                     break;
                 case 0:
-                    if (entry.getPriority() == d.getPriority()) {
-                        retained.add(d);
-                    }
+                    retained.add(d);
                     break;
                 case 1:
-                    if (entry.getPriority() <= d.getPriority()) {
-                        retained.add(d);
+                    if (entry.getPriority() == null || entry.getPriority() <= d.getPriority()) {
+                        entry.setPriority(d.getPriority() + 100);
                     }
                     break;
                 case 2:
-                    if (entry.getPriority() >= d.getPriority()) {
-                        retained.add(d);
+                    if (entry.getPriority() == null || entry.getPriority() >= d.getPriority()) {
+                        entry.setPriority(d.getPriority() - 100);
                     }
                     break;
                 default:
@@ -176,6 +174,10 @@ public class DefaultGroupValidator implements GroupValidator {
                 sb.append(d.getVsId() + "(" + d.getPath() + ")");
             }
             throw new ValidationException("Path is prefix-overlapped across virtual server " + sb.toString() + ".");
+        }
+
+        for (GroupVirtualServer e : groupVirtualServers) {
+            e.setPriority(paths.get(e.getVirtualServer().getId()).getPriority());
         }
     }
 
