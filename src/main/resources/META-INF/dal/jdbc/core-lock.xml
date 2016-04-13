@@ -27,6 +27,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="get-by-server" type="SELECT" multiple="true">
+                <param name="server"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='server'/> = ${server}
+                    ]]>
+                </statement>
+            </query>
             <query name="get-by-key-for-update" type="SELECT">
                 <param name="lock-key"/>
                 <statement>
@@ -37,7 +47,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="update-by-key" type="UPDATE">
+            <query name="update-by-key" type="UPDATE" batch="true">
                 <param name="lock-key"/>
                 <statement>
                     <![CDATA[
