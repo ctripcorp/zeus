@@ -47,7 +47,7 @@ public class GroupVsRelMaintainer extends MultiRelMaintainerEx<RelGroupVsDo, Gro
         target.setGroupId(object.getId())
                 .setVsId(value.getVirtualServer().getId())
                 .setPath(value.getPath())
-                .setPriority(target.getPriority())
+                .setPriority(value.getPriority())
                 .setGroupVersion(object.getVersion());
     }
 
