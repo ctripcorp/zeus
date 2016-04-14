@@ -36,6 +36,16 @@ public abstract class AbstractRestClient {
         webTarget = client.target(url);
     }
 
+    protected AbstractRestClient(String url, int readTimeout) {
+        Client client = ClientBuilder.newBuilder()
+                .withConfig(new ClientConfig())
+                .register(MultiPartFeature.class)
+                .build();
+        client.property(ClientProperties.CONNECT_TIMEOUT, connectTimeout.get());
+        client.property(ClientProperties.READ_TIMEOUT, readTimeout);
+        webTarget = client.target(url);
+    }
+
     public String urlEncode(String url) {
         return UriComponent.encode(url, UriComponent.Type.PATH_SEGMENT);
     }
