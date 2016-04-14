@@ -1,26 +1,19 @@
 package com.ctrip.zeus.service.nginx.impl;
 
 import com.ctrip.zeus.client.NginxClient;
-import com.ctrip.zeus.dal.core.NginxServerDao;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
-import com.ctrip.zeus.nginx.NginxOperator;
 import com.ctrip.zeus.nginx.RollingTrafficStatus;
 import com.ctrip.zeus.nginx.TrafficStatusHelper;
-import com.ctrip.zeus.nginx.entity.NginxResponse;
-import com.ctrip.zeus.nginx.entity.ReqStatus;
-import com.ctrip.zeus.nginx.entity.TrafficStatus;
-import com.ctrip.zeus.nginx.entity.VsConfData;
-import com.ctrip.zeus.service.build.NginxConfService;
-import com.ctrip.zeus.service.model.EntityFactory;
+import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.service.model.GroupRepository;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.nginx.handler.NginxConfOpsService;
 import com.ctrip.zeus.service.nginx.handler.NginxOpsService;
-import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.ctrip.zeus.util.TimerUtils;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.slf4j.Logger;
@@ -41,7 +34,6 @@ import java.util.concurrent.*;
 public class NginxServiceImpl implements NginxService {
     private static final Logger LOGGER = LoggerFactory.getLogger(NginxServiceImpl.class);
     private static DynamicIntProperty adminServerPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
-    private static DynamicIntProperty dyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
     private static DynamicIntProperty nginxFutureTimeout = DynamicPropertyFactory.getInstance().getIntProperty("nginx.client.future.timeout", 3000);
     private static DynamicIntProperty nginxFutureCheckTimes = DynamicPropertyFactory.getInstance().getIntProperty("nginx.client.future.check.times", 10);
 
@@ -130,27 +122,31 @@ public class NginxServiceImpl implements NginxService {
     @Override
     public NginxResponse updateConf(List<SlbServer> slbServers) throws Exception {
         Map<String, FutureTask<NginxResponse>> futureTasks = new HashMap<>();
-        //1. start future task
+
+        logger.info("[Push Conf] Assign updating conf job to slb servers.");
         for (SlbServer slbServer : slbServers) {
             final String ip = slbServer.getIp();
             final NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             FutureTask<NginxResponse> futureTask = new FutureTask<>(new Callable<NginxResponse>() {
                 @Override
                 public NginxResponse call() throws Exception {
-                    logger.info("[Push Conf]start update conf.IP:" + ip);
+                    logger.info("[Push Conf] Start updating conf on server " + ip + ".");
                     NginxResponse response = nginxClient.update(false);
-                    logger.info("[Push Conf]finish update conf.IP:" + ip);
+                    //TODO lost error info if not logging response
+                    logger.info("[Push Conf] Finish updating conf on server " + ip + ". Success:" + response.getSucceed());
                     return response;
                 }
             });
             threadPoolExecutor.execute(futureTask);
             futureTasks.put(ip, futureTask);
         }
-        //2. start get result
-        logger.info("[Push Conf]start get update conf result.");
-        List<NginxResponse> result = new ArrayList<>();
-        int step = nginxFutureTimeout.get() / nginxFutureCheckTimes.get();
+
+        logger.info("[Push Conf] Reading result from updating conf.");
+        long start = System.nanoTime();
+
+        int sleepInterval = nginxFutureTimeout.get() / nginxFutureCheckTimes.get();
         Set<String> finishedServer = new HashSet<>();
+        List<NginxResponse> result = new ArrayList<>();
         for (int i = 0; i <= nginxFutureCheckTimes.get(); i++) {
             for (String sip : futureTasks.keySet()) {
                 FutureTask<NginxResponse> futureTask = futureTasks.get(sip);
@@ -159,51 +155,71 @@ public class NginxServiceImpl implements NginxService {
                     NginxResponse response = futureTask.get();
                     result.add(response);
                     if (response.getSucceed()) {
+                        logger.info("[Push Conf] Use success result from server " + sip + ". Cost:" + TimerUtils.nanoToMilli(System.nanoTime() - start) + "ms. Result:\n" + response.toString());
                         return response;
                     }
                 }
             }
+
             if (finishedServer.size() == futureTasks.size()) {
-                logger.error("[Push Conf] Update conf request all failed. Results: " + result.toString());
-                throw new Exception("Update conf request all failed.");
+                StringBuilder sb = new StringBuilder();
+                for (NginxResponse nr : result) {
+                    sb.append(nr.toString()).append('\n');
+                }
+                logger.error("[Push Conf] Update conf requests all failed. Costs:" + TimerUtils.nanoToMilli(System.nanoTime() - start) + "ms. Results:\n" + sb.toString());
+                throw new Exception("Update conf requests all failed.");
             }
+
             try {
-                Thread.sleep(step);
+                Thread.sleep(sleepInterval);
             } catch (Exception e) {
-                logger.warn("[Push Conf]Update conf sleep interrupted.");
+                logger.warn("[Push Conf] Update conf sleep interrupted.");
             }
         }
-        if (result.size() > 0) {
-            logger.error("[Push Conf] Update conf failed. Results: " + result.toString());
-            throw new Exception("Update Conf Failed." + result.toString());
-        } else {
-            logger.error("[Push Conf] Update conf time out. ");
-            throw new Exception("Update conf timeout.");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("[Push Conf] Update conf failed. Result:\n");
+        sb.append("Failed:\n");
+        for (NginxResponse nr : result) {
+            sb.append(nr.toString()).append('\n');
         }
+        sb.append("Timeout:\n");
+        for (SlbServer server : slbServers) {
+            if (!finishedServer.contains(server.getIp())) {
+                sb.append(server.getIp()).append(',');
+            }
+        }
+        logger.error(sb.toString());
+        throw new Exception(sb.toString());
     }
 
     @Override
-    public List<NginxResponse> rollbackAllConf(List<SlbServer> slbServers) throws Exception {
+    public void rollbackAllConf(List<SlbServer> slbServers) throws Exception {
         Map<String, FutureTask<NginxResponse>> futureTasks = new HashMap<>();
+
+        logger.info("[Rollback Conf] Assign rolling back conf job to slb servers");
         for (SlbServer slbServer : slbServers) {
             final String ip = slbServer.getIp();
             final NginxClient nginxClient = NginxClient.getClient(buildRemoteUrl(slbServer.getIp()));
             FutureTask<NginxResponse> futureTask = new FutureTask<>(new Callable<NginxResponse>() {
                 @Override
                 public NginxResponse call() throws Exception {
-                    logger.info("[Rollback Conf]start Rollback conf.IP:" + ip);
+                    logger.info("[Rollback Conf] Start Rollback conf on server " + ip + ".");
                     NginxResponse response = nginxClient.update(true);
-                    logger.info("[Rollback Conf]finish Rollback conf.IP:" + ip);
+                    logger.info("[Rollback Conf] Finish Rollback conf on server " + ip + ".");
                     return response;
                 }
             });
             threadPoolExecutor.execute(futureTask);
             futureTasks.put(ip, futureTask);
         }
-        logger.info("[Rollback Conf]start get Rollback conf result.");
-        List<NginxResponse> result = new ArrayList<>();
-        int step = nginxFutureTimeout.get() / nginxFutureCheckTimes.get();
+
+        logger.info("[Rollback Conf] Reading result from rolling back conf result.");
+        long start = System.nanoTime();
+
+        int sleepInterval = nginxFutureTimeout.get() / nginxFutureCheckTimes.get();
         Set<String> finishedServer = new HashSet<>();
+        List<NginxResponse> result = new ArrayList<>();
         for (int i = 0; i <= nginxFutureCheckTimes.get(); i++) {
             for (String sip : futureTasks.keySet()) {
                 FutureTask<NginxResponse> futureTask = futureTasks.get(sip);
@@ -211,33 +227,42 @@ public class NginxServiceImpl implements NginxService {
                     finishedServer.add(sip);
                     NginxResponse response = futureTask.get();
                     result.add(response);
+                    if (response.getSucceed()) {
+                        logger.info("[Rollback Conf] Use success result from server " + sip + ". Cost:" + TimerUtils.nanoToMilli(System.nanoTime() - start) + "ms. Result:\n" + response.toString());
+                        return;
+                    }
                 }
             }
             if (finishedServer.size() == futureTasks.size()) {
                 break;
             }
             try {
-                Thread.sleep(step);
+                Thread.sleep(sleepInterval);
             } catch (Exception e) {
-                logger.warn("Rollback conf sleep interrupted.");
+                logger.warn("[Rollback Conf] Rollback conf sleep interrupted.");
             }
         }
-        if (finishedServer.size() != futureTasks.size()) {
-            String timeOutTask = "";
-            for (String sip : futureTasks.keySet()) {
-                if (!finishedServer.contains(sip)) {
-                    timeOutTask = timeOutTask + ";" + sip;
-                }
-            }
-            logger.error("[Rollback Conf] Some Future task Time out.Time out future tasks:" + timeOutTask);
+
+        StringBuilder sb = new StringBuilder();
+        boolean success = true;
+        sb.append("[Rollback Conf] Rollback conf finished. Cost:" + TimerUtils.nanoToMilli(System.nanoTime() - start) + "ms. Result:\n");
+        for (NginxResponse nr : result) {
+            success = success & nr.getSucceed().booleanValue();
+            sb.append(nr.getServerIp()).append(':').append(nr.toString()).append('\n');
         }
-        for (NginxResponse response : result) {
-            if (!response.getSucceed()) {
-                logger.error("[Rollback Conf]Rollback conf failed." + result.toString());
-//                throw new Exception("[Rollback Conf]Rollback conf failed.");
+        sb.append("Timeout:\n");
+        for (SlbServer server : slbServers) {
+            if (!finishedServer.contains(server.getIp())) {
+                success = false;
+                sb.append(server.getIp()).append(',');
             }
         }
-        return result;
+
+        if (success) {
+            logger.info(sb.toString());
+        } else {
+            logger.error(sb.toString());
+        }
     }
 
     @Override

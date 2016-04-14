@@ -64,7 +64,7 @@ public interface NginxService {
      * @return List of nginx Response
      * @throws Exception
      */
-    List<NginxResponse> rollbackAllConf (List < SlbServer > slbServers)throws Exception;
+    void rollbackAllConf(List<SlbServer> slbServers) throws Exception;
 
     /**
      * get traffic status of nginx server cluster.
