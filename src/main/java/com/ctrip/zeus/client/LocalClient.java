@@ -16,17 +16,18 @@ import java.io.IOException;
  */
 public class LocalClient {
     private static final String LOCALHOST = "http://127.0.0.1";
-    private static final LocalClient localClient = new LocalClient();
-
-    public static LocalClient getInstance() {
-        return localClient;
-    }
 
     //TODO unify port get
     private static final DynamicIntProperty nginxDyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
     private static final DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
 
     private static final DynamicIntProperty nginxDyupsTimeout = DynamicPropertyFactory.getInstance().getIntProperty("nginx.dyups.read.timeout", 500);
+
+    private static final LocalClient localClient = new LocalClient();
+
+    public static LocalClient getInstance() {
+        return localClient;
+    }
 
     private final NginxDyupsClient dyupsClient;
     private final NginxStatusClient statusClient;
