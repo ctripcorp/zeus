@@ -1,5 +1,6 @@
 package com.ctrip.zeus.client;
 
+import com.ctrip.zeus.exceptions.NginxTimeoutException;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.nginx.entity.NginxServerStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatusList;
@@ -71,13 +72,14 @@ public class NginxClient extends AbstractRestClient {
     }
 
     public NginxResponse update(boolean fresh) {
+        String path = "/api/update/conf";
         WebTarget target = getTarget().path("/api/update/conf").queryParam("refresh", fresh).queryParam("reload", false);
         NginxResponse result = new NginxResponse();
         try {
-            logger.info("[NginxClient]Update api start. fresh:" + fresh + " url:" + url);
+            logger.info("[NginxClient] Call update api: " + url + path + "?refresh=" + fresh + "&reload=false");
             Response response = target.request().headers(getDefaultHeaders()).get();
             if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
-                result = DefaultJsonParser.parse(NginxResponse.class,response.readEntity(String.class));
+                result = DefaultJsonParser.parse(NginxResponse.class, response.readEntity(String.class));
             } else {
                 result.setSucceed(false);
                 result.setErrMsg(response.readEntity(String.class));
@@ -87,9 +89,12 @@ public class NginxClient extends AbstractRestClient {
             result.setSucceed(false);
             result.setOutMsg(e.getMessage());
             result.setServerIp(url);
-            logger.error("[NginxClient]Update api execute failed. fresh:" + fresh + " url:" + url, e);
+            if (e.getCause() instanceof java.net.SocketTimeoutException) {
+                e = new NginxTimeoutException("Update conf timeout.", e.getCause());
+            }
+            logger.error("[NginxClient] Update api execute failed: " + url + path + "?refresh=" + fresh + "&reload=false", e);
         } finally {
-            logger.info("[NginxClient]Update api end. fresh:" + fresh + " url:" + url);
+            logger.info("[NginxClient] Update api get succeeded.");
         }
         return result;
     }
