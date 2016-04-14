@@ -26,7 +26,7 @@ public class LocalClient {
     private static final DynamicIntProperty nginxDyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
     private static final DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
 
-    private static final DynamicIntProperty nginxDyupsTimeout = DynamicPropertyFactory.getInstance().getIntProperty("nginx.dyups.read.timeout", 30000);
+    private static final DynamicIntProperty nginxDyupsTimeout = DynamicPropertyFactory.getInstance().getIntProperty("nginx.dyups.read.timeout", 500);
 
     private final NginxDyupsClient dyupsClient;
     private final NginxStatusClient statusClient;

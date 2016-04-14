@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * Created by fanqq on 2016/3/14.
  */
-@Service("ninxOpsService")
+@Service("nginxOpsService")
 public class NginxOpsServiceImpl implements NginxOpsService {
 
     private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
@@ -88,9 +88,26 @@ public class NginxOpsServiceImpl implements NginxOpsService {
     public List<NginxResponse> dyups(DyUpstreamOpsData[] dyups) throws Exception {
         List<NginxResponse> responses = new ArrayList<>();
         if (dyups == null) return responses;
+
         for (DyUpstreamOpsData d : dyups) {
-            NginxResponse response = LocalClient.getInstance().dyups(d.getUpstreamName(), d.getUpstreamCommands());
-            responses.add(response);
+            NginxResponse response;
+            try {
+                response = LocalClient.getInstance().dyups(d.getUpstreamName(), d.getUpstreamCommands());
+                responses.add(response);
+            } catch (Exception ex) {
+                // retry if get SocketTimeoutException
+                //TODO do we tolerate failure
+                if (ex.getCause() instanceof java.net.SocketTimeoutException) {
+                    try {
+                        Thread.sleep(50L);
+                    } catch (InterruptedException e) {
+                    }
+                    response = LocalClient.getInstance().dyups(d.getUpstreamName(), d.getUpstreamCommands());
+                    responses.add(response);
+                } else {
+                    throw ex;
+                }
+            }
             LOGGER.info("[DyupsOps] Dyups success. upstreamName:" + d.getUpstreamName());
         }
         return responses;

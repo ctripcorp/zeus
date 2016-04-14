@@ -132,8 +132,11 @@ public class NginxServiceImpl implements NginxService {
                 public NginxResponse call() throws Exception {
                     logger.info("[Push Conf] Start updating conf on server " + ip + ".");
                     NginxResponse response = nginxClient.update(false);
-                    //TODO lost error info if not logging response
-                    logger.info("[Push Conf] Finish updating conf on server " + ip + ". Success:" + response.getSucceed());
+                    if (!response.getSucceed()) {
+                        logger.error("[Push Conf] Failed to update conf on server " + ip + ". Cause:" + response.toString());
+                    } else {
+                        logger.info("[Push Conf] Finish updating conf on server " + ip + ". Success:" + response.getSucceed() + ".");
+                    }
                     return response;
                 }
             });
@@ -206,7 +209,7 @@ public class NginxServiceImpl implements NginxService {
                 public NginxResponse call() throws Exception {
                     logger.info("[Rollback Conf] Start Rollback conf on server " + ip + ".");
                     NginxResponse response = nginxClient.update(true);
-                    logger.info("[Rollback Conf] Finish Rollback conf on server " + ip + ".");
+                    logger.info("[Rollback Conf] Finish Rollback conf on server " + ip + ". Success:" + response.getSucceed() + ".");
                     return response;
                 }
             });

@@ -71,10 +71,10 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         if (slbVersion.equals(serverVersion)) {
             return response.setSucceed(true).setServerIp(ip).setOutMsg("[SlbServerConfManagerImpl] slb version == slb server version. Not need to update.");
         }
-        //3. if slbVersion < serverVersion , force rollback to slbVersion
+        //3. force rollback to slbVersion
         //case 1: force refresh or flag needRefresh is true
         //case 2: server version is large then slb version
-        //case 3: version gap large than max span
+        //case 3: version gap larger than max span
         if (refresh || slbVersion < serverVersion || slbVersion - serverVersion > maxSpan.get()) {
             try {
                 //3.1 need reload in case 3
