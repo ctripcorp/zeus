@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Created by zhoumy on 2015/9/24.
@@ -26,6 +27,12 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     private SlbVirtualServerDao slbVirtualServerDao;
     @Resource
     private RVsStatusDao rVsStatusDao;
+
+    private final Pattern pattern;
+
+    public DefaultVirtualServerValidator() {
+        pattern = Pattern.compile("([\\w\\.\\-]+)");
+    }
 
     @Override
     public boolean exists(Long vsId) throws Exception {
@@ -45,6 +52,9 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
             for (Domain domain : virtualServer.getDomains()) {
                 if (!getPortWhiteList().contains(virtualServer.getPort())) {
                     throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed.");
+                }
+                if (!pattern.matcher(domain.getName()).matches()) {
+                    throw new ValidationException("Invalid domain name.");
                 }
                 String key = domain.getName().toLowerCase() + ":" + virtualServer.getPort();
                 if (existingHost.contains(key))
