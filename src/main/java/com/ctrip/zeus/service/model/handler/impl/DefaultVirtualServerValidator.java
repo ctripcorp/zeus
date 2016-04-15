@@ -31,7 +31,7 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     private final Pattern pattern;
 
     public DefaultVirtualServerValidator() {
-        pattern = Pattern.compile("([\\w\\.\\-]+)");
+        pattern = Pattern.compile("([\\w\\.\\-\\*]+)");
     }
 
     @Override
