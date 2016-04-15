@@ -142,8 +142,9 @@ public class GroupResource {
                         return VersionUtils.extractUniqIds(result);
                     }
                 });
-        if (vsIdRange != null && vsIdRange.length == 0)
-            throw new ValidationException("Could not find corresponding host virtual server.");
+        if (vsIdRange != null && vsIdRange.length == 0) {
+            return responseHandler.handle(new GroupList(), hh.getMediaType());
+        }
 
         final Set<IdVersion> groupFilter = vsIdRange == null ? null : groupCriteriaQuery.queryByVsIds(vsIdRange);
         final Long[] groupIds = new QueryExecuter.Builder<Long>()
