@@ -11,6 +11,7 @@ import com.ctrip.zeus.service.model.handler.GroupServerValidator;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.util.StringUtils;
+import com.google.common.collect.Sets;
 import org.springframework.stereotype.Component;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -34,6 +35,8 @@ public class DefaultGroupValidator implements GroupValidator {
     private RGroupStatusDao rGroupStatusDao;
     @Resource
     private GroupDao groupDao;
+
+    private final Set<String> pathPrefixModifier = Sets.newHashSet("=", "~", "~*", "^~");
 
     @Override
     public boolean exists(Long targetId) throws Exception {
@@ -102,10 +105,26 @@ public class DefaultGroupValidator implements GroupValidator {
 
             if (escapePathValidation) continue;
 
-            String path = gvs.getPath();
-            if (path == null || path.isEmpty()) {
+            if (gvs.getPath() == null || gvs.getPath().isEmpty()) {
                 throw new ValidationException("Path cannot be empty.");
             }
+            List<String> pathValues = new ArrayList<>(2);
+            for (String pv :  gvs.getPath().split(" ", 0)) {
+                if (pv.isEmpty()) continue;
+                if (pathValues.size() == 2) throw new ValidationException("Invalid path, too many whitespace modifiers is found.");
+
+                pathValues.add(pv);
+
+            }
+            if (pathValues.size() == 2) {
+                if (!pathPrefixModifier.contains(pathValues.get(0))) {
+                    throw new ValidationException("Invalid path, invalid prefix modifier is found.");
+                }
+                // format path value
+                gvs.setPath(pathValues.get(0) + " " + pathValues.get(1));
+            }
+
+            String path = gvs.getPath();
             int idx = path.indexOf('/');
             path = idx >= 0 ? path.substring(idx + 1) : path;
             if (path.isEmpty()) {

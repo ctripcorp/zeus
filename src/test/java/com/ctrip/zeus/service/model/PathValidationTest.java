@@ -77,6 +77,7 @@ public class PathValidationTest extends AbstractServerTest {
         try {
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(array.get(0).getPriority().intValue() == 1000);
+            Assert.assertEquals( "~* ^/normal($|/|\\?)", array.get(0).getPath());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -110,6 +111,7 @@ public class PathValidationTest extends AbstractServerTest {
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
             groupModelValidator.validateGroupVirtualServers(10L, array, false);
+            Assert.assertEquals( "~* ^/baike($|/|\\?)", array.get(0).getPath());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -183,6 +185,35 @@ public class PathValidationTest extends AbstractServerTest {
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
+        }
+    }
+
+    @Test
+    public void testRegexExpression() {
+        String path = "~* ^/ regex($|/|\\?)";
+        List<GroupVirtualServer> array = new ArrayList<>();
+        array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
+        try {
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
+        }
+
+        array.get(0).setPath("~= /regex");
+        try {
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
+        }
+
+        array.get(0).setPath("=    /exact   ");
+        try {
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertEquals("= /exact", array.get(0).getPath());
+        } catch (Exception e) {
+            Assert.assertTrue(false);
         }
     }
 
