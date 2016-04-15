@@ -26,6 +26,7 @@ public class ServerConf {
     private static DynamicStringProperty errorPage_404 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.404.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/404.htm");
     private static DynamicStringProperty errorPage_500 = DynamicPropertyFactory.getInstance().getStringProperty("errorPage.500.url", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty errorPageEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.enable", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicBooleanProperty errorPageUseNew = DynamicPropertyFactory.getInstance().getBooleanProperty("errorPage.use.new", true);
     private static DynamicStringProperty proxyBufferSizeWhiteList = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffer.size.white-list", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty proxyBufferSizeEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("proxy.buffer.size.enableAll", false);
     private static DynamicStringProperty proxyBufferSize = DynamicPropertyFactory.getInstance().getStringProperty("proxy.buffer.size", "8k");
@@ -135,21 +136,17 @@ public class ServerConf {
             return;
         }
         for (int i = 400; i <= 425; i++) {
-            String path = "/" + i + "page";
-            sb.append("error_page ").append(i).append(" ").append(path).append(";\n");
-            sb.append("location = ").append(path).append(" {\n");
-            sb.append("internal;\n");
-            sb.append("proxy_set_header Accept ").append(errorPageAccept.get()).append(";\n");
-            sb.append("rewrite_by_lua '\n");
-            sb.append("local domain = \"domain=\"..ngx.var.host;\n");
-            sb.append("local uri = \"&uri=\"..string.gsub(ngx.var.request_uri, \"?.*\", \"\");\n");
-            sb.append("ngx.req.set_uri_args(domain..uri);';\n");
-            sb.append("rewrite \"").append(path).append("\" \"").append("/errorpage/").append(i).append("\" break;\n");
-            sb.append("proxy_pass ").append(errorPageHost.get()).append(";\n}\n");
+            writeErrorPage(sb, i);
         }
         for (int i = 500; i <= 510; i++) {
-            String path = "/" + i + "page";
-            sb.append("error_page ").append(i).append(" ").append(path).append(";\n");
+            writeErrorPage(sb, i);
+        }
+    }
+
+    private static void writeErrorPage(StringBuilder sb, int statusCode) {
+        if (errorPageUseNew.get()) {
+            String path = "/" + statusCode + "page";
+            sb.append("error_page ").append(statusCode).append(" ").append(path).append(";\n");
             sb.append("location = ").append(path).append(" {\n");
             sb.append("internal;\n");
             sb.append("proxy_set_header Accept ").append(errorPageAccept.get()).append(";\n");
@@ -157,8 +154,18 @@ public class ServerConf {
             sb.append("local domain = \"domain=\"..ngx.var.host;\n");
             sb.append("local uri = \"&uri=\"..string.gsub(ngx.var.request_uri, \"?.*\", \"\");\n");
             sb.append("ngx.req.set_uri_args(domain..uri);';\n");
-            sb.append("rewrite \"").append(path).append("\" \"").append("/errorpage/").append(i).append("\" break;\n");
+            sb.append("rewrite \"").append(path).append("\" \"").append("/errorpage/").append(statusCode).append("\" break;\n");
             sb.append("proxy_pass ").append(errorPageHost.get()).append(";\n}\n");
+        } else {
+            DynamicStringProperty errorPageConfig = DynamicPropertyFactory.getInstance().getStringProperty("errorPage." + statusCode + ".url", null);
+            if (null != errorPageConfig.get()) {
+                String path = "/" + statusCode + "page";
+                sb.append("error_page ").append(statusCode).append(" ").append(path).append(";\n");
+                sb.append("location = ").append(path).append(" {\n");
+                sb.append("internal;\n");
+                sb.append("proxy_set_header Accept ").append(errorPageAccept.get()).append(";\n");
+                sb.append("proxy_pass ").append(errorPageConfig.get()).append(";\n}\n");
+            }
         }
     }
 }
