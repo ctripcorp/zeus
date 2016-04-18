@@ -183,6 +183,26 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
         Date now = new Date();
         String vhostDir = DEFAULT_NGINX_CONF_DIR + File.separator + "vhosts";
         String upstreamDir = DEFAULT_NGINX_CONF_DIR + File.separator + "upstreams";
+        List<String> deleteFileNames = new ArrayList<>();
+        File vhostFile = new File(vhostDir);
+        String[] vhostFileNames = vhostFile.list();
+        File upstreamFile = new File(upstreamDir);
+        String[] upstreamFileNames = upstreamFile.list();
+        for (String name : vhostFileNames) {
+            if (!name.endsWith(CONF_SUFFIX)) {
+                deleteFileNames.add(vhostDir + File.separator + name);
+            }
+        }
+        for (String name : upstreamFileNames) {
+            if (!name.endsWith(CONF_SUFFIX)) {
+                deleteFileNames.add(upstreamDir + File.separator + name);
+            }
+        }
+        try {
+            deleteFile(deleteFileNames);
+        } catch (Exception e) {
+            LOGGER.error("[CleanAndUpdateConf]Delete backup files failed.", e);
+        }
         for (Long vsId : cleanVsIds) {
             cleanFileNames.add(vhostDir + File.separator + vsId + CONF_SUFFIX);
             cleanFileNames.add(upstreamDir + File.separator + vsId + CONF_SUFFIX);
