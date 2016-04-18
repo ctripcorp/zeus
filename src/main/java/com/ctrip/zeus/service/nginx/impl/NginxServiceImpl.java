@@ -169,7 +169,7 @@ public class NginxServiceImpl implements NginxService {
                 for (NginxResponse nr : result) {
                     sb.append(nr.toString()).append('\n');
                 }
-                logger.error("[Push Conf] Update conf requests all failed. Costs:" + TimerUtils.nanoToMilli(System.nanoTime() - start) + "ms. Results:\n" + sb.toString());
+                logger.error("[Push Conf] Update conf requests all failed. Check the correctness of the generating conf. Costs:" + TimerUtils.nanoToMilli(System.nanoTime() - start) + "ms. Results:\n" + sb.toString());
                 throw new Exception("Update conf requests all failed.");
             }
 
