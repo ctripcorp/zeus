@@ -54,7 +54,7 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
                     throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed.");
                 }
                 if (!pattern.matcher(domain.getName()).matches()) {
-                    throw new ValidationException("Invalid domain name.");
+                    throw new ValidationException("Invalid domain name: " + domain.getName() + ".");
                 }
                 String key = domain.getName().toLowerCase() + ":" + virtualServer.getPort();
                 if (existingHost.contains(key))
