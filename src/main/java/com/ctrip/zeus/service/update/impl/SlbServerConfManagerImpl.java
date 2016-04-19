@@ -52,7 +52,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
     private final Logger logger = LoggerFactory.getLogger(SlbServerConfManagerImpl.class);
     private static DynamicIntProperty maxSpan = DynamicPropertyFactory.getInstance().getIntProperty("commit.max.span", 10);
 
-   // private boolean needRefresh = false;
+    // private boolean needRefresh = false;
 
     @Override
     public synchronized NginxResponse update(boolean refresh, boolean needReload) throws Exception {
@@ -101,7 +101,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 //4. execute commits
                 //4.1 get commits and merge to one commit
                 Commit commit = commitMergeService.mergeCommit(commitService.getCommitList(slbId, serverVersion, slbVersion));
-                if (commit == null){
+                if (commit == null) {
                     logger.info("[SlbServerUpdate] Not found commit. return success instead.");
                     return new NginxResponse().setSucceed(true).setServerIp(ip);
                 }
@@ -116,6 +116,13 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 boolean test = commit.getType().equals(CommitType.COMMIT_TYPE_DYUPS);
                 boolean dyups = commit.getType().equals(CommitType.COMMIT_TYPE_DYUPS);
                 //4.4 get dyups data if needed
+                //4.4.1 if reload is true, try to use dyups instead.
+                if (reload) {
+                    if (checkSkipReload(slbId, commit, ip, dataMap, nginxConf)) {
+                        reload = false;
+                        dyups = true;
+                    }
+                }
                 DyUpstreamOpsData[] dyUpstreamOpsDatas = null;
                 if (dyups) {
                     Set<Long> gids = new HashSet<>();
@@ -145,5 +152,31 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
     @Override
     public NginxResponse update() throws Exception {
         return update(true, true);
+    }
+
+    private boolean checkSkipReload(Long slbId, Commit commit, String ip, Map<Long, VsConfData> dataMap, String nginxConf) throws Exception {
+        //1. clean vs config, need reload.
+        if (commit.getCleanvsIds().size() > 0) {
+            return false;
+        }
+        //2. if nginx config file is changed, need reload.
+        Long serverVersion = confVersionService.getSlbServerCurrentVersion(slbId, ip);
+        String serverNginxConf = nginxConfService.getNginxConf(slbId, serverVersion);
+        if (!serverNginxConf.equals(nginxConf)){
+            return false;
+        }
+        //3. compare vhost files
+        Map<Long, VsConfData> serverDataMap = nginxConfService.getVsConfByVsIds(slbId, commit.getVsIds(), serverVersion);
+        for (Long vsId : dataMap.keySet()) {
+            //3.1 if has new vhost file, need reload.
+            if (!serverDataMap.containsKey(vsId)) {
+                return false;
+            }
+            //3.2 if any vhost file changed, need reload.
+            if (!serverDataMap.get(vsId).getVhostConf().equals(dataMap.get(vsId).getVhostConf())) {
+                return false;
+            }
+        }
+        return true;
     }
 }
