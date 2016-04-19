@@ -47,20 +47,22 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
 
     @Override
     public void validateVirtualServers(List<VirtualServer> virtualServers) throws Exception {
-        Set<String> existingHost = new HashSet<>();
+        Map<String, Long> existingHost = new HashMap<>();
         for (VirtualServer virtualServer : virtualServers) {
             for (Domain domain : virtualServer.getDomains()) {
                 if (!getPortWhiteList().contains(virtualServer.getPort())) {
-                    throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed.");
+                    throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed. Reference vs-id: " + virtualServer.getId() + ".");
                 }
                 if (!pattern.matcher(domain.getName()).matches()) {
-                    throw new ValidationException("Invalid domain name: " + domain.getName() + ".");
+                    throw new ValidationException("Invalid domain name: " + domain.getName() + ". Reference vs-id: " + virtualServer.getId() + ".");
                 }
                 String key = domain.getName().toLowerCase() + ":" + virtualServer.getPort();
-                if (existingHost.contains(key))
-                    throw new ValidationException("Duplicate domain and port combination is found: " + key);
-                else
-                    existingHost.add(key);
+                Long check = existingHost.get(key);
+                if (check != null && !check.equals(virtualServer.getId())) {
+                    throw new ValidationException(key + " already exists on current slb. Reference vs-id: " + check + ".");
+                } else {
+                    existingHost.put(key, virtualServer.getId());
+                }
             }
         }
     }

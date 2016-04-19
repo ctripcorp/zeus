@@ -2,6 +2,7 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServerList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
@@ -26,7 +27,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -239,18 +242,15 @@ public class VirtualServerResource {
                 throw new Exception("Virtual server cannot be parsed.");
             }
         }
+        vs.setName(trimIfNotNull(vs.getName()));
+        vs.setPort(trimIfNotNull(vs.getPort()));
+        for (Domain domain : vs.getDomains()) {
+            domain.setName(trimIfNotNull(domain.getName()));
+        }
         return vs;
     }
 
-    @GET
-    @Path("/vs/upgradeAll")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeAll(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
-        Set<Long> list = virtualServerCriteriaQuery.queryAll();
-        Set<Long> result = virtualServerRepository.port(list.toArray(new Long[list.size()]));
-        if (result.size() == 0)
-            return responseHandler.handle("Upgrade all successfully.", hh.getMediaType());
-        else
-            return responseHandler.handle("Upgrade fail on ids: " + Joiner.on(",").join(result), hh.getMediaType());
+    private String trimIfNotNull(String value) {
+        return value != null ? value.trim() : value;
     }
 }
