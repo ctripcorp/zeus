@@ -74,6 +74,7 @@ public class GroupMemberResource {
                               @Context HttpServletRequest request,
                               @QueryParam("online") Boolean online,
                               String groupServerList) throws Exception {
+        if (online == null) online = false;
         GroupServerList gsl = parseGroupServer(hh.getMediaType(), groupServerList);
         if (gsl.getGroupId() == null)
             throw new ValidationException("Group id is required.");
@@ -105,6 +106,7 @@ public class GroupMemberResource {
                                  @Context HttpServletRequest request,
                                  @QueryParam("online") Boolean online,
                                  String groupServerList) throws Exception {
+        if (online == null) online = false;
         GroupServerList gsl = parseGroupServer(hh.getMediaType(), groupServerList);
         if (gsl.getGroupId() == null)
             throw new ValidationException("Group id is required.");
@@ -147,6 +149,7 @@ public class GroupMemberResource {
                                  @QueryParam("groupId") Long groupId,
                                  @QueryParam("ip") List<String> ips,
                                  @QueryParam("online") Boolean online) throws Exception {
+        if (online == null) online = false;
         if (groupId == null) {
             throw new ValidationException("Group id parameter is required.");
         }

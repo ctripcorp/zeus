@@ -161,6 +161,10 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         }
         //2. if nginx config file is changed, need reload.
         Long serverVersion = confVersionService.getSlbServerCurrentVersion(slbId, ip);
+        //2.1 if server version <= 0, need reload. first time update config files.
+        if (serverVersion <= 0){
+            return false;
+        }
         String serverNginxConf = nginxConfService.getNginxConf(slbId, serverVersion);
         if (!serverNginxConf.equals(nginxConf)){
             return false;
