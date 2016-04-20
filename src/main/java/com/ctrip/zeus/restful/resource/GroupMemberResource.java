@@ -2,14 +2,22 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupServer;
-import com.ctrip.zeus.model.entity.GroupServerList;
+import com.ctrip.zeus.executor.TaskManager;
+import com.ctrip.zeus.lock.DbLockFactory;
+import com.ctrip.zeus.lock.DistLock;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.model.GroupRepository;
+import com.ctrip.zeus.service.model.ModelStatusMapping;
+import com.ctrip.zeus.service.task.constant.TaskOpsType;
+import com.ctrip.zeus.task.entity.OpsTask;
+import com.ctrip.zeus.task.entity.TaskResult;
 import com.google.common.base.Joiner;
+import com.netflix.config.DynamicLongProperty;
+import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -19,9 +27,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/8/6.
@@ -33,6 +39,15 @@ public class GroupMemberResource {
     private GroupRepository groupRepository;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private EntityFactory entityFactory;
+    @Resource
+    private TaskManager taskManager;
+    @Resource
+    private DbLockFactory dbLockFactory;
+
+    private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
+    private final int TIMEOUT = 1000;
 
     @GET
     @Path("/members")
@@ -55,7 +70,10 @@ public class GroupMemberResource {
     @Path("/member/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "addMember")
-    public Response addMember(@Context HttpHeaders hh, @Context HttpServletRequest request, String groupServerList) throws Exception {
+    public Response addMember(@Context HttpHeaders hh,
+                              @Context HttpServletRequest request,
+                              @QueryParam("online") Boolean online,
+                              String groupServerList) throws Exception {
         GroupServerList gsl = parseGroupServer(hh.getMediaType(), groupServerList);
         if (gsl.getGroupId() == null)
             throw new ValidationException("Group id is required.");
@@ -65,7 +83,17 @@ public class GroupMemberResource {
         for (GroupServer groupServer : gsl.getGroupServers()) {
             group.getGroupServers().add(groupServer);
         }
-        groupRepository.update(group);
+        DistLock lock = dbLockFactory.newLock(group.getName() + "_updateGroup");
+        lock.lock(TIMEOUT);
+        try {
+            if (online) {
+                onlineGroupUpdate(group);
+            } else {
+                groupRepository.update(group);
+            }
+        } finally {
+            lock.unlock();
+        }
         return responseHandler.handle("Successfully added group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -73,7 +101,10 @@ public class GroupMemberResource {
     @Path("/member/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "updateMember")
-    public Response updateMember(@Context HttpHeaders hh, @Context HttpServletRequest request, String groupServerList) throws Exception {
+    public Response updateMember(@Context HttpHeaders hh,
+                                 @Context HttpServletRequest request,
+                                 @QueryParam("online") Boolean online,
+                                 String groupServerList) throws Exception {
         GroupServerList gsl = parseGroupServer(hh.getMediaType(), groupServerList);
         if (gsl.getGroupId() == null)
             throw new ValidationException("Group id is required.");
@@ -94,7 +125,17 @@ public class GroupMemberResource {
         for (GroupServer gs : groupServers.values()) {
             group.getGroupServers().add(gs);
         }
-        groupRepository.update(group);
+        DistLock lock = dbLockFactory.newLock(group.getName() + "_updateGroup");
+        lock.lock(TIMEOUT);
+        try {
+            if (online) {
+                onlineGroupUpdate(group);
+            } else {
+                groupRepository.update(group);
+            }
+        } finally {
+            lock.unlock();
+        }
         return responseHandler.handle("Successfully updated group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -104,12 +145,15 @@ public class GroupMemberResource {
     @Authorize(name = "removeMember")
     public Response removeMember(@Context HttpHeaders hh, @Context HttpServletRequest request,
                                  @QueryParam("groupId") Long groupId,
-                                 @QueryParam("ip") List<String> ips) throws Exception {
-        if (groupId == null)
+                                 @QueryParam("ip") List<String> ips,
+                                 @QueryParam("online") Boolean online) throws Exception {
+        if (groupId == null) {
             throw new ValidationException("Group id parameter is required.");
+        }
         Group group = groupRepository.getById(groupId);
-        if (group == null)
+        if (group == null) {
             throw new ValidationException("Group with id " + groupId + " does not exist.");
+        }
         Map<String, GroupServer> groupServers = new HashMap<>();
         for (GroupServer gs : group.getGroupServers()) {
             groupServers.put(gs.getIp(), gs);
@@ -121,7 +165,17 @@ public class GroupMemberResource {
         for (GroupServer gs : groupServers.values()) {
             group.getGroupServers().add(gs);
         }
-        groupRepository.update(group);
+        DistLock lock = dbLockFactory.newLock(group.getName() + "_updateGroup");
+        lock.lock(TIMEOUT);
+        try {
+            if (online) {
+                onlineGroupUpdate(group);
+            } else {
+                groupRepository.update(group);
+            }
+        } finally {
+            lock.unlock();
+        }
         return responseHandler.handle("Successfully removed " + Joiner.on(",").join(ips) + " from group with id " + groupId + ".", hh.getMediaType());
     }
 
@@ -137,5 +191,46 @@ public class GroupMemberResource {
             }
         }
         return gsl;
+    }
+
+    //case 1: group only has offline version , throw ValidationException.
+    //case 2: group has same online/offline version, update offline and activate group.
+    //case 3: group has different online/offline versions, throw ValidationException.
+    private void onlineGroupUpdate(Group group) throws Exception {
+        Long groupId = group.getId();
+        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(new Long[]{groupId});
+        if (groupMap.getOnlineMapping().get(groupId) == null) {
+            throw new ValidationException("Group only has offline version . GroupId:" + groupId);
+        }
+        if (groupMap.getOnlineMapping().get(groupId).getVersion().equals(groupMap.getOfflineMapping().get(groupId).getVersion())) {
+            groupRepository.update(group);
+            ModelStatusMapping<Group> mapping = entityFactory.getGroupsByIds(new Long[]{groupId});
+            Group offGroup = mapping.getOfflineMapping().get(groupId);
+            Group onGroup = mapping.getOnlineMapping().get(groupId);
+            Set<Long> vsIds = new HashSet<>();
+            for (GroupVirtualServer gvs : offGroup.getGroupVirtualServers()) {
+                vsIds.add(gvs.getVirtualServer().getId());
+            }
+            ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
+            if (vsMaping.getOnlineMapping().size() == 0) {
+                throw new ValidationException("Related vs is not activated.VsIds: " + vsIds);
+            }
+            List<OpsTask> tasks = new ArrayList<>();
+            for (VirtualServer vs : vsMaping.getOnlineMapping().values()) {
+                OpsTask task = new OpsTask();
+                task.setCreateTime(new Date())
+                        .setGroupId(groupId)
+                        .setTargetSlbId(vs.getSlbId())
+                        .setOpsType(TaskOpsType.ACTIVATE_GROUP)
+                        .setVersion(offGroup.getVersion());
+                tasks.add(task);
+            }
+            List<Long> taskIds = taskManager.addTask(tasks);
+            taskManager.getResult(taskIds, apiTimeout.get());
+        } else {
+            throw new ValidationException("Online/Offline group version is different. Please activate group first.GroupId:"
+                    + groupId + ";OnlineVersion:" + groupMap.getOnlineMapping().get(groupId).getVersion()
+                    + ";OfflineVersion:" + groupMap.getOfflineMapping().get(groupId).getVersion());
+        }
     }
 }
