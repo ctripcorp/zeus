@@ -1,38 +1,32 @@
 package com.ctrip.zeus.service.build.conf;
 
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.service.build.ConfService;
 import com.ctrip.zeus.util.StringFormat;
-import com.netflix.config.DynamicIntProperty;
-import com.netflix.config.DynamicPropertyFactory;
-import com.netflix.config.DynamicStringProperty;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
 
 /**
  * @author:xingchaowang
  * @date: 3/8/2015.
  */
+@Component("nginxConf")
 public class NginxConf {
-    private static DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
+
     private static final String LINEBREAK = "\n";
     private static String ZONENAME = "proxy_zone";
-    private static DynamicIntProperty serverNamesHashMaxSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.serverNames-maxSize", 10000);
-    private static DynamicIntProperty serverNamesHashBucketSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.serverNames-bucketSize", 128);
-    private static DynamicIntProperty checkShmSize = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.checkShmSize", 32);
-    private static DynamicStringProperty logLevel = DynamicPropertyFactory.getInstance().getStringProperty("slb.nginx.logLevel", "");
 
-    private static DynamicIntProperty dyupsPort = DynamicPropertyFactory.getInstance().getIntProperty("dyups.port", 8081);
+    @Resource
+    ConfService confService;
 
-    public static String generate(Slb slb) {
+    public String generate(Slb slb) throws Exception {
         StringBuilder b = new StringBuilder(1024);
-
-//        Integer worker = slb.getNginxWorkerProcesses();
-
-//        b.append("worker_processes ").append((worker==null||worker==0)?DEFAULT_WORKERS:worker).append(";\n");
         b.append("worker_processes auto;\n")
                 .append("user nobody;\n")
-                .append("error_log /opt/logs/nginx/error.log").append(logLevel.get()).append(";\n")
+                .append("error_log /opt/logs/nginx/error.log").append(confService.getStringValue("logLevel", null, null, null, "")).append(";\n")
                 .append("worker_rlimit_nofile 65535;\n")
                 .append("pid logs/nginx.pid;\n");
-
 
         b.append("events {\n")
                 .append("worker_connections 30720;\n")
@@ -41,15 +35,15 @@ public class NginxConf {
                 .append("}\n");
 
         b.append("http {\n");
-        b.append("include    mime.types;\n");
+        b.append("include   mime.types;\n");
         b.append("default_type    application/octet-stream;\n");
         b.append("keepalive_timeout    65;\n");
 
         b.append("log_format main " + LogFormat.getMain() + ";\n");
         b.append("access_log /opt/logs/nginx/access.log main;\n");
-        b.append("server_names_hash_max_size ").append(serverNamesHashMaxSize.get()).append(";\n");
-        b.append("server_names_hash_bucket_size ").append(serverNamesHashBucketSize.get()).append(";\n");
-        b.append("check_shm_size ").append(checkShmSize.get()).append("M;\n");
+        b.append("server_names_hash_max_size ").append(confService.getIntValue("serverNames.maxSize", null, null, null, 10000)).append(";\n");
+        b.append("server_names_hash_bucket_size ").append(confService.getIntValue("serverNames.bucketSize", null, null, null, 128)).append(";\n");
+        b.append("check_shm_size ").append(confService.getIntValue("checkShmSize", null, null, null, 32)).append("M;\n");
         b.append("client_max_body_size 2m;\n");
         b.append("ignore_invalid_headers off;\n");
         
@@ -66,10 +60,10 @@ public class NginxConf {
     }
 
     //slb check health
-    private static String statusConf() {
+    private String statusConf() throws Exception {
         StringBuilder b = new StringBuilder(128);
         b.append("server {").append("\n");
-        b.append("listen    ").append(String.valueOf(nginxStatusPort.get())).append(";\n");
+        b.append("listen    ").append(confService.getIntValue("status.port", null, null, null, 10001)).append(";\n");
 
 
         b.append("location / {").append("\n");
@@ -93,8 +87,8 @@ public class NginxConf {
     }
 
     //updown stream
-    private static String dyupstreamConf() {
-        int port = dyupsPort.getValue();
+    private String dyupstreamConf() throws Exception {
+        int port = confService.getIntValue("dyups.port", null, null, null, 8081);
         StringBuilder b = new StringBuilder(128);
 
         b.append("dyups_upstream_conf  conf/dyupstream.conf;\n")

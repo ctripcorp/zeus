@@ -3,28 +3,25 @@ package com.ctrip.zeus.service.build.conf;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.ConfFile;
+import com.ctrip.zeus.service.build.ConfService;
 import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.StringFormat;
 import com.google.common.base.Joiner;
-import com.netflix.config.DynamicBooleanProperty;
-import com.netflix.config.DynamicIntProperty;
-import com.netflix.config.DynamicPropertyFactory;
-import com.netflix.config.DynamicStringProperty;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.*;
 
 /**
  * @author:xingchaowang
  * @date: 3/10/2015.
  */
+@Component("upstreamsConf")
 public class UpstreamsConf {
-    private static DynamicStringProperty upstreamKeepAlive = DynamicPropertyFactory.getInstance().getStringProperty("upstream.keep-alive", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
-    private static DynamicIntProperty upstreamKeepAliveDefault = DynamicPropertyFactory.getInstance().getIntProperty("upstream.keep-alive.default", 100);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
-    private static DynamicIntProperty upstreamKeepAliveTimeout = DynamicPropertyFactory.getInstance().getIntProperty("upstream.keep-alive.timeout", 110);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
-    private static DynamicStringProperty upstreamKeepAliveTimeoutList = DynamicPropertyFactory.getInstance().getStringProperty("upstream.keep-alive.timeout.whitelist", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
-    private static DynamicBooleanProperty upstreamKeepAliveTimeoutEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("upstream.keep-alive.timeout.enableAll", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    @Resource
+    ConfService confService;
 
-    public static List<ConfFile> generate(Set<Long> vsCandidates, VirtualServer vs, List<Group> groups,
+    public List<ConfFile> generate(Set<Long> vsCandidates, VirtualServer vs, List<Group> groups,
                                           Set<String> downServers, Set<String> upServers,
                                           Set<String> visited) throws Exception {
         List<ConfFile> result = new ArrayList<>();
@@ -49,7 +46,7 @@ public class UpstreamsConf {
         return result;
     }
 
-    private static String confName(Set<Long> vsCandidates, Group group) throws ValidationException {
+    private String confName(Set<Long> vsCandidates, Group group) throws ValidationException {
         if (group == null || group.getGroupVirtualServers().size() == 0)
             throw new ValidationException("Invalid group information is found when generating upstream conf file. Group is either null or does not have related vs.");
         if (group.getGroupVirtualServers().size() == 1) {
@@ -79,13 +76,13 @@ public class UpstreamsConf {
         return stringBuilder.toString();
     }
 
-    public static String buildUpstreamName(VirtualServer vs, Group group) throws Exception{
+    public String buildUpstreamName(VirtualServer vs, Group group) throws Exception{
         AssertUtils.assertNotNull(vs.getId(), "virtual server id is null!");
         AssertUtils.assertNotNull(group.getId(), "groupId not found!");
         return "backend_" + group.getId();
     }
 
-    public static String buildUpstreamConf(VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
+    public String buildUpstreamConf(VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
         if (group.isVirtual()){
             return "";
         }
@@ -102,16 +99,14 @@ public class UpstreamsConf {
         return StringFormat.format(b.toString());
     }
 
-    public static String buildUpstreamConfBody(VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
+    public String buildUpstreamConfBody(VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
         StringBuilder b = new StringBuilder(1024);
         //LBMethod
         b.append(LBConf.generate(group));
 
-        List<GroupServer> groupServers= group.getGroupServers();
+        List<GroupServer> groupServers = group.getGroupServers();
 
-        if (groupServers==null||groupServers.size()==0)
-        {
-//            groupServers = new ArrayList<>();
+        if (groupServers==null||groupServers.size() == 0) {
             return null;
         }
 
@@ -136,43 +131,22 @@ public class UpstreamsConf {
         }
         addKeepAliveSetting(b,group.getId());
         addKeepAliveTimeoutSetting(b, group.getId());
+
         //HealthCheck
         b.append(HealthCheckConf.generate(vs, group));
-
         return b.toString();
     }
 
-    private static void addKeepAliveTimeoutSetting(StringBuilder b, Long groupId) {
-        if (upstreamKeepAliveTimeoutEnableAll.get()){
-            b.append("keepalive_timeout ").append(upstreamKeepAliveTimeout.get()).append("s;\n");
-            return;
+    private void addKeepAliveTimeoutSetting(StringBuilder b, Long groupId) throws Exception {
+        if (confService.getEnable("upstream.keepAlive.timeout", null, null, groupId, false)) {
+            b.append("keepalive_timeout ").append(confService.getIntValue("upstream.keepAlive.timeout", null, null, groupId, 110)).append("s;\n");
         }
-        if (upstreamKeepAliveTimeoutList.get() == null){
-            return;
-        }
-        String[] whiteList = upstreamKeepAliveTimeoutList.get().split(";");
-        for (String w : whiteList){
-            if (w.trim().equals(String.valueOf(groupId))){
-                b.append("keepalive_timeout ").append(upstreamKeepAliveTimeout.get()).append("s;\n");
-                return;
-            }
-        }
+
     }
 
-    private static void addKeepAliveSetting(StringBuilder b, Long gid) {
-        String tmp = upstreamKeepAlive.get();
-        if (tmp==null||tmp.trim().equals("")){
-            return;
-        }else if (tmp.equals("All")){
-            b.append("keepalive ").append(upstreamKeepAliveDefault.get()).append(";\n");
-        }else {
-            String[] pairs = tmp.split(";");
-            for (String pair : pairs){
-                String[] t = pair.split("=");
-                if (t.length==2&&t[0].trim().equals(String.valueOf(gid))){
-                    b.append("keepalive ").append(t[1]).append(";\n");
-                }
-            }
+    private void addKeepAliveSetting(StringBuilder b, Long groupId) throws Exception {
+        if (confService.getEnable("upstream.keepAlive", null, null, groupId, false)) {
+            b.append("keepalive ").append(confService.getIntValue("upstream.keepAlive", null, null, groupId, 100)).append(";\n");
         }
     }
 
