@@ -217,7 +217,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
-                groupServerStatus.setRaise(raise);
+                groupServerStatus.setHealthy(raise);
                 groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
             }
@@ -288,7 +288,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
-                groupServerStatus.setRaise(raise);
+                groupServerStatus.setHealthy(raise);
                 groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
             }

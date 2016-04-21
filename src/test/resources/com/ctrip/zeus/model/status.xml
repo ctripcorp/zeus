@@ -11,7 +11,7 @@
             <member>true</member>
             <server>true</server>
             <pull>true</pull>
-            <raise>true</raise>
+            <healthy>true</healthy>
             <up>true</up>
             <discription>status</discription>
         </group-server-status>
@@ -21,7 +21,7 @@
             <member>true</member>
             <server>true</server>
             <pull>true</pull>
-            <raise>true</raise>
+            <healthy>true</healthy>
             <up>true</up>
             <discription>status</discription>
         </group-server-status>

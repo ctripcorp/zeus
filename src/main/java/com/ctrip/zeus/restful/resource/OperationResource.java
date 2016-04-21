@@ -282,9 +282,9 @@ public class OperationResource {
     }
 
     @GET
-    @Path("/healthyEnable")
+    @Path("/raise")
     @Authorize(name = "upDownMember")
-    public Response healthyEnable(@Context HttpServletRequest request,
+    public Response raise(@Context HttpServletRequest request,
                             @Context HttpHeaders hh,
                             @QueryParam("groupId") Long groupId,
                             @QueryParam("groupName") String groupName,
@@ -312,9 +312,9 @@ public class OperationResource {
     }
 
         @GET
-    @Path("/healthyDisable")
+    @Path("/fall")
     @Authorize(name = "upDownMember")
-    public Response healthyDisable(@Context HttpServletRequest request,
+    public Response fall(@Context HttpServletRequest request,
                             @Context HttpHeaders hh,
                             @QueryParam("groupId") Long groupId,
                             @QueryParam("groupName") String groupName,

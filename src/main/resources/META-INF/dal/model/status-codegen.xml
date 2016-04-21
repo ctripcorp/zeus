@@ -22,7 +22,7 @@
     <element name="member" value-type="boolean" />
     <element name="server" value-type="boolean" />
     <element name="pull" value-type="boolean" />
-    <element name="raise" value-type="boolean" />
+    <element name="healthy" value-type="boolean" />
     <element name="up" value-type="boolean" />
     <element name="discription" value-type="String" />
   </entity>
