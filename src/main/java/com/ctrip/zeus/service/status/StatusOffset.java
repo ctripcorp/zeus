@@ -12,6 +12,7 @@ public class StatusOffset {
     public static final int MEMBER_OPS = 0 ;
     public static final int PULL_OPS = 1 ;
     public static final int HEALTH_CHECK = 2 ;
+    public static final int HEALTHY = 3 ;
 
     private static DynamicStringProperty defaultStatus = DynamicPropertyFactory.getInstance().getStringProperty("offset.status.default", null);
 
@@ -52,6 +53,15 @@ public class StatusOffset {
                         }else if (pairArray[1].equals("true"))
                         {
                             result = result & ~(1<<HEALTH_CHECK);
+                        }
+                        break;
+                    case HEALTHY:
+                        if (pairArray[1].equals("false"))
+                        {
+                            result = result | (1<<HEALTHY);
+                        }else if (pairArray[1].equals("true"))
+                        {
+                            result = result & ~(1<<HEALTHY);
                         }
                         break;
                 }

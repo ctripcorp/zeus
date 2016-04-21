@@ -11,6 +11,7 @@ public class TaskOpsType {
     public static final String SERVER_OPS= "Server_Ops";
     public static final String MEMBER_OPS= "Member_Ops";
     public static final String PULL_MEMBER_OPS= "Pull_Member_Ops";
+    public static final String HEALTHY_OPS= "Healthy_Ops";
     public static final String ACTIVATE_VS= "Activate_VS";
     public static final String DEACTIVATE_VS= "Deactivate_VS";
 }

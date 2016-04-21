@@ -281,6 +281,66 @@ public class OperationResource {
         return memberOps(hh, groupId, _ips, false, TaskOpsType.PULL_MEMBER_OPS);
     }
 
+    @GET
+    @Path("/healthyEnable")
+    @Authorize(name = "upDownMember")
+    public Response healthyEnable(@Context HttpServletRequest request,
+                            @Context HttpHeaders hh,
+                            @QueryParam("groupId") Long groupId,
+                            @QueryParam("groupName") String groupName,
+                            @QueryParam("ip") List<String> ips,
+                            @QueryParam("batch") Boolean batch) throws Exception {
+        List<String> _ips = new ArrayList<>();
+        if (groupId == null) {
+            if (groupName == null) {
+                throw new ValidationException("Group Id or Name not found!");
+            } else {
+                groupId = groupCriteriaQuery.queryByName(groupName);
+            }
+        }
+
+        if (null != batch && batch.equals(true)) {
+            Group gp = groupRepository.getById(groupId);
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers) {
+                _ips.add(gs.getIp());
+            }
+        } else if (ips != null) {
+            _ips = ips;
+        }
+        return memberOps(hh, groupId, _ips, true, TaskOpsType.HEALTHY_OPS);
+    }
+
+        @GET
+    @Path("/healthyDisable")
+    @Authorize(name = "upDownMember")
+    public Response healthyDisable(@Context HttpServletRequest request,
+                            @Context HttpHeaders hh,
+                            @QueryParam("groupId") Long groupId,
+                            @QueryParam("groupName") String groupName,
+                            @QueryParam("ip") List<String> ips,
+                            @QueryParam("batch") Boolean batch) throws Exception {
+        List<String> _ips = new ArrayList<>();
+        if (groupId == null) {
+            if (groupName == null) {
+                throw new ValidationException("Group Id or Name not found!");
+            } else {
+                groupId = groupCriteriaQuery.queryByName(groupName);
+            }
+        }
+
+        if (null != batch && batch.equals(true)) {
+            Group gp = groupRepository.getById(groupId);
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers) {
+                _ips.add(gs.getIp());
+            }
+        } else if (ips != null) {
+            _ips = ips;
+        }
+        return memberOps(hh, groupId, _ips, false, TaskOpsType.HEALTHY_OPS);
+    }
+
     @POST
     @Path("/uploadcerts")
     @Consumes(MediaType.MULTIPART_FORM_DATA)

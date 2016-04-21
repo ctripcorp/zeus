@@ -78,6 +78,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     private HashMap<Long, OpsTask> activateSlbOps = new HashMap<>();
     private HashMap<Long, List<OpsTask>> memberOps = new HashMap<>();
     private HashMap<Long, List<OpsTask>> pullMemberOps = new HashMap<>();
+    private HashMap<Long, List<OpsTask>> healthyOps = new HashMap<>();
 
     private List<OpsTask> tasks = null;
 
@@ -223,7 +224,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             //c. needBuild VsIdes
             Map<Long, List<Group>> vsGroups = new HashMap<>();
             Set<Long> needBuildVses = new HashSet<>();
-            Map<Long, Long> needBuildGroupVs = new HashMap<>();
+            Map<Long, Set<Long>> needBuildGroupVs = new HashMap<>();
             final Map<String, Integer> vsGroupPriority = new HashMap<>();
             needBuildVses.addAll(activateVsOps.keySet());
             if (activateSlbOps.size() > 0 && activateSlbOps.get(slbId) != null) {
@@ -243,7 +244,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             for (Long gid : onlineGroups.keySet()) {
                 need = false;
                 if (activateGroupOps.containsKey(gid) || pullMemberOps.containsKey(gid) || memberOps.containsKey(gid)
-                        || deactivateGroupOps.containsKey(gid)) {
+                        || healthyOps.containsKey(gid) || deactivateGroupOps.containsKey(gid)) {
                     need = true;
                 }
                 Group group = onlineGroups.get(gid);
@@ -260,7 +261,12 @@ public class TaskExecutorImpl implements TaskExecutor {
                     if (onlineVses.containsKey(gvs.getVirtualServer().getId())) {
                         if (need) {
                             needBuildVses.add(gvs.getVirtualServer().getId());
-                            needBuildGroupVs.put(gid, gvs.getVirtualServer().getId());
+                            Set<Long> tmpVses = needBuildGroupVs.get(gid);
+                            if (tmpVses == null) {
+                                tmpVses = new HashSet<Long>();
+                                needBuildGroupVs.put(gid, tmpVses);
+                            }
+                            tmpVses.add(gvs.getVirtualServer().getId());
                         }
                         List<Group> groupList = vsGroups.get(gvs.getVirtualServer().getId());
                         if (groupList == null) {
@@ -284,6 +290,10 @@ public class TaskExecutorImpl implements TaskExecutor {
                             setTaskFail(task, "Not found online virtual server for Group[" + gid + "] in slb[" + slbId + "].");
                         }
                     } else if (memberOps.containsKey(gid)) {
+                        for (OpsTask task : memberOps.get(gid)) {
+                            setTaskFail(task, "Not found online virtual server for Group[" + gid + "] in slb[" + slbId + "].");
+                        }
+                    } else if (healthyOps.containsKey(gid)) {
                         for (OpsTask task : memberOps.get(gid)) {
                             setTaskFail(task, "Not found online virtual server for Group[" + gid + "] in slb[" + slbId + "].");
                         }
@@ -334,7 +344,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 //5.2.2 update slb current version
                 confVersionService.updateSlbCurrentVersion(slbId, buildVersion);
                 //5.2.3 add commit
-                addCommit(slbId, needReload, buildVersion, needBuildVses, needBuildGroupVs);
+                addCommit(slbId, needReload, buildVersion, needBuildVses, needBuildGroupVs.keySet());
                 //5.2.4 fire update job
                 needRollbackConf = true;
                 NginxResponse response = nginxService.updateConf(onlineSlb.getSlbServers());
@@ -358,13 +368,13 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     }
 
-    private void addCommit(Long slbId, boolean needReload, Long buildVersion, Set<Long> needBuildVses, Map<Long, Long> needBuildGroupVs) throws Exception {
+    private void addCommit(Long slbId, boolean needReload, Long buildVersion, Set<Long> needBuildVses, Set<Long> needBuildGroups) throws Exception {
         Commit commit = new Commit();
         commit.setSlbId(slbId)
                 .setType(needReload ? CommitType.COMMIT_TYPE_RELOAD : CommitType.COMMIT_TYPE_DYUPS)
                 .setVersion(buildVersion);
         commit.getVsIds().addAll(needBuildVses);
-        commit.getGroupIds().addAll(needBuildGroupVs.keySet());
+        commit.getGroupIds().addAll(needBuildGroups);
         commit.getCleanvsIds().addAll(deactivateVsOps.keySet());
         for (OpsTask t : tasks) {
             commit.addTaskId(t.getId());
@@ -424,7 +434,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private void performTasks(Long slbId, Map<Long, Long> groupVs, Map<Long, Group> offlineGroups) throws Exception {
+    private void performTasks(Long slbId, Map<Long, Set<Long>> groupVs, Map<Long, Group> offlineGroups) throws Exception {
         try {
             for (OpsTask task : activateSlbOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
@@ -487,8 +497,8 @@ public class TaskExecutorImpl implements TaskExecutor {
                     }
                     String[] ips = task.getIpList().split(";");
                     List<String> ipList = Arrays.asList(ips);
-                    Long vsId = groupVs.get(task.getGroupId());
-                    if (vsId == null) {
+                    Set<Long> ids = groupVs.get(task.getGroupId());
+                    if (ids == null || ids.size() == 0) {
                         Group group = offlineGroups.get(task.getGroupId());
                         if (group == null || group.getGroupVirtualServers().size() == 0) {
                             setTaskFail(task, "Not Found Group Id:" + task.getGroupId());
@@ -502,11 +512,13 @@ public class TaskExecutorImpl implements TaskExecutor {
                             memberUpdates.add(item);
                         }
                     } else {
-                        UpdateStatusItem item = new UpdateStatusItem();
-                        item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId)
-                                .setOffset(StatusOffset.MEMBER_OPS).setUp(task.getUp());
-                        item.getIpses().addAll(ipList);
-                        memberUpdates.add(item);
+                        for (Long vsId : ids) {
+                            UpdateStatusItem item = new UpdateStatusItem();
+                            item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId)
+                                    .setOffset(StatusOffset.MEMBER_OPS).setUp(task.getUp());
+                            item.getIpses().addAll(ipList);
+                            memberUpdates.add(item);
+                        }
                     }
                 }
             }
@@ -520,9 +532,9 @@ public class TaskExecutorImpl implements TaskExecutor {
                     }
                     String[] ips = task.getIpList().split(";");
                     List<String> ipList = Arrays.asList(ips);
-                    Long vsId = groupVs.get(task.getGroupId());
+                    Set<Long> ids = groupVs.get(task.getGroupId());
 
-                    if (vsId == null) {
+                    if (ids == null || ids.size() == 0) {
                         Group group = offlineGroups.get(task.getGroupId());
                         if (group == null || group.getGroupVirtualServers().size() == 0) {
                             setTaskFail(task, "Not Found Group Id:" + task.getGroupId());
@@ -536,15 +548,53 @@ public class TaskExecutorImpl implements TaskExecutor {
                             pullUpdates.add(item);
                         }
                     } else {
-                        UpdateStatusItem item = new UpdateStatusItem();
-                        item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId)
-                                .setOffset(StatusOffset.PULL_OPS).setUp(task.getUp());
-                        item.getIpses().addAll(ipList);
-                        pullUpdates.add(item);
+                        for (Long vsId : ids) {
+                            UpdateStatusItem item = new UpdateStatusItem();
+                            item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId)
+                                    .setOffset(StatusOffset.PULL_OPS).setUp(task.getUp());
+                            item.getIpses().addAll(ipList);
+                            pullUpdates.add(item);
+                        }
                     }
                 }
             }
             statusService.updateStatus(pullUpdates);
+
+            List<UpdateStatusItem> healthyStatus = new ArrayList<>();
+            for (List<OpsTask> taskList : healthyOps.values()) {
+                for (OpsTask task : taskList) {
+                    if (!task.getStatus().equals(TaskStatus.DOING)) {
+                        continue;
+                    }
+                    String[] ips = task.getIpList().split(";");
+                    List<String> ipList = Arrays.asList(ips);
+                    Set<Long> ids = groupVs.get(task.getGroupId());
+
+                    if (ids == null || ids.size() == 0) {
+                        Group group = offlineGroups.get(task.getGroupId());
+                        if (group == null || group.getGroupVirtualServers().size() == 0) {
+                            setTaskFail(task, "Not Found Group Id:" + task.getGroupId());
+                            continue;
+                        }
+                        for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+                            UpdateStatusItem item = new UpdateStatusItem();
+                            item.setGroupId(task.getGroupId()).setVsId(gvs.getVirtualServer().getId())
+                                    .setSlbId(slbId).setOffset(StatusOffset.HEALTHY).setUp(task.getUp());
+                            item.getIpses().addAll(ipList);
+                            healthyStatus.add(item);
+                        }
+                    } else {
+                        for (Long vsId : ids) {
+                            UpdateStatusItem item = new UpdateStatusItem();
+                            item.setGroupId(task.getGroupId()).setVsId(vsId).setSlbId(slbId)
+                                    .setOffset(StatusOffset.HEALTHY).setUp(task.getUp());
+                            item.getIpses().addAll(ipList);
+                            healthyStatus.add(item);
+                        }
+                    }
+                }
+            }
+            statusService.updateStatus(healthyStatus);
         } catch (Exception e) {
             throw new Exception("Perform Tasks Fail! TargetSlbId:" + tasks.get(0).getTargetSlbId(), e);
         }
@@ -613,10 +663,31 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
         }
 
+        tmpid = healthyOps.keySet();
+        for (Long gid : tmpid) {
+            Group groupTmp = groups.get(gid);
+            if (groupTmp == null) {
+                throw new Exception("PullOps: Group Not Found!");
+            }
+            List<OpsTask> taskList = healthyOps.get(gid);
+            for (OpsTask opsTask : taskList) {
+                String ipList = opsTask.getIpList();
+                String[] ips = ipList.split(";");
+                for (GroupVirtualServer gvs : groupTmp.getGroupVirtualServers()) {
+                    if (!vsIds.contains(gvs.getVirtualServer().getId())) {
+                        continue;
+                    }
+                    for (String ip : ips) {
+                        memberStatus.get(gvs.getVirtualServer().getId() + "_" + gid + "_" + ip).set(StatusOffset.HEALTHY, opsTask.getUp());
+                    }
+                }
+            }
+        }
+
         Set<String> result = new HashSet<>();
         for (String key : memberStatus.keySet()) {
             List<Boolean> status = memberStatus.get(key);
-            if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS)) {
+            if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS) && status.get(StatusOffset.HEALTHY)) {
                 result.add(key);
             }
         }
@@ -643,6 +714,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         memberOps.clear();
         deactivateGroupOps.clear();
         pullMemberOps.clear();
+        healthyOps.clear();
         activateVsOps.clear();
         deactivateVsOps.clear();
         softDeactivateGroupOps.clear();
@@ -675,6 +747,15 @@ public class TaskExecutorImpl implements TaskExecutor {
                 if (taskList == null) {
                     taskList = new ArrayList<>();
                     pullMemberOps.put(task.getGroupId(), taskList);
+                }
+                taskList.add(task);
+            }
+            //healthy ops
+            if (task.getOpsType().equals(TaskOpsType.HEALTHY_OPS)) {
+                List<OpsTask> taskList = healthyOps.get(task.getGroupId());
+                if (taskList == null) {
+                    taskList = new ArrayList<>();
+                    healthyOps.put(task.getGroupId(), taskList);
                 }
                 taskList.add(task);
             }

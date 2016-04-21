@@ -207,6 +207,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
+                boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
                 boolean up = false;
                 if (memberUp && serverUp && pullIn) {
                     up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
@@ -216,6 +217,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
+                groupServerStatus.setRaise(raise);
                 groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
             }
@@ -268,6 +270,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
+                boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
                 boolean up = false;
                 if (memberUp && serverUp && pullIn) {
                     up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
@@ -285,6 +288,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
+                groupServerStatus.setRaise(raise);
                 groupServerStatus.setUp(up);
                 status.addGroupServerStatus(groupServerStatus);
             }

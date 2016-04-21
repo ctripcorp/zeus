@@ -64,7 +64,7 @@ public class StatusResource {
                                         @QueryParam("slbName") String slbName) throws Exception {
         List<GroupStatus> statusList = null;
         if (slbId == null) {
-            if (slbName !=null){
+            if (slbName != null) {
                 slbId = slbCriteriaQuery.queryByName(slbName);
             }
         }
@@ -123,11 +123,12 @@ public class StatusResource {
 
         return responseHandler.handle(statusResult, hh.getMediaType());
     }
+
     @GET
     @Path("/job/unlock")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response jobUnlock(@Context HttpServletRequest request, @Context HttpHeaders hh,
-                                          @QueryParam("key") String key) throws Exception {
+                              @QueryParam("key") String key) throws Exception {
         globalJobDao.deleteByPK(new GlobalJobDo().setJobKey(key));
         return responseHandler.handle("success.", hh.getMediaType());
     }
