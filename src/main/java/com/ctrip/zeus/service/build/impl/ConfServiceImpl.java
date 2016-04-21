@@ -2,61 +2,63 @@ package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.service.build.ConfService;
 import com.ctrip.zeus.util.S;
-import com.netflix.config.DynamicBooleanProperty;
-import com.netflix.config.DynamicIntProperty;
-import com.netflix.config.DynamicPropertyFactory;
-import com.netflix.config.DynamicStringProperty;
+import com.netflix.config.*;
+import org.springframework.stereotype.Service;
 
 /**
  * Created by lu.wang on 2016/4/19.
  */
+@Service("confService")
 public class ConfServiceImpl implements ConfService {
 
-    private static DynamicPropertyFactory factory = DynamicPropertyFactory.getInstance();
+    private DynamicPropertyFactory factory = DynamicPropertyFactory.getInstance();
+    private DynamicStringProperty stringValue;
+    private DynamicIntProperty intValue;
 
     @Override
     public String getStringValue(String key, Long slbId, Long vsId, Long groupId, String defaultValue) throws Exception {
 
         String fullKey = getFullKey(key);
 
-        DynamicStringProperty value =
+        stringValue =
                 factory.getStringProperty(fullKey + ".ip." + S.getIp(), null);
-        if (value.get() == null && groupId != null) {
-            value = factory.getStringProperty(fullKey + ".group." + groupId, null);
+        if (stringValue.get() == null && groupId != null) {
+
+            stringValue = factory.getStringProperty(fullKey + ".group." + groupId, null);
         }
-        if (value.get() == null && vsId != null) {
-            value = factory.getStringProperty(fullKey + ".vs." + vsId, null);
+        if (stringValue.get() == null && vsId != null) {
+            stringValue = factory.getStringProperty(fullKey + ".vs." + vsId, null);
         }
-        if (value.get() == null && slbId != null) {
-            value = factory.getStringProperty(fullKey + ".slb." + slbId, null);
+        if (stringValue.get() == null && slbId != null) {
+            stringValue = factory.getStringProperty(fullKey + ".slb." + slbId, null);
         }
-        if (value.get() == null) {
-            value = factory.getStringProperty(fullKey + ".default", defaultValue);
+        if (stringValue.get() == null) {
+            stringValue = factory.getStringProperty(fullKey + ".default", defaultValue);
         }
 
-        return value.get();
+        return stringValue.get();
     }
 
     @Override
     public int getIntValue(String key, Long slbId, Long vsId, Long groupId, int defaultValue) throws Exception {
         String fullKey = getFullKey(key);
 
-        DynamicIntProperty value =
+        intValue =
                 factory.getIntProperty(fullKey + ".ip." + S.getIp(), -1);
-        if (value.get() == -1 && groupId != null) {
-            value = factory.getIntProperty(fullKey + ".group." + groupId, -1);
+        if (intValue.get() == -1 && groupId != null) {
+            intValue = factory.getIntProperty(fullKey + ".group." + groupId, -1);
         }
-        if (value.get() == -1 && vsId != null) {
-            value = factory.getIntProperty(fullKey + ".vs." + vsId, -1);
+        if (intValue.get() == -1 && vsId != null) {
+            intValue = factory.getIntProperty(fullKey + ".vs." + vsId, -1);
         }
-        if (value.get() == -1 && slbId != null) {
-            value = factory.getIntProperty(fullKey + ".slb." + slbId, -1);
+        if (intValue.get() == -1 && slbId != null) {
+            intValue = factory.getIntProperty(fullKey + ".slb." + slbId, -1);
         }
-        if (value.get() == -1) {
-            value = factory.getIntProperty(fullKey + ".default", defaultValue);
+        if (intValue.get() == -1) {
+            intValue = factory.getIntProperty(fullKey + ".default", defaultValue);
         }
 
-        return value.get();
+        return intValue.get();
     }
 
     @Override
@@ -86,7 +88,7 @@ public class ConfServiceImpl implements ConfService {
     }
 
     private String getEnableFullKey(String key) {
-        return "nginx." + key + "enable";
+        return "nginx." + key + ".enable";
     }
 
 }

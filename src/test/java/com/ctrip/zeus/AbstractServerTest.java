@@ -24,6 +24,8 @@ public abstract class AbstractServerTest extends AbstractSpringTest {
     @BeforeClass
     public static void setUpDb() throws ComponentLookupException, ComponentLifecycleException {
         S.setPropertyDefaultValue("CONF_DIR", new File("").getAbsolutePath() + "/conf/test");
+        S.setPropertyDefaultValue("archaius.deployment.applicationId", "slb-admin");
+        S.setPropertyDefaultValue("archaius.deployment.environment","unittest");
         mysqlDbServer = new MysqlDbServer();
         mysqlDbServer.start();
     }
@@ -38,3 +40,4 @@ public abstract class AbstractServerTest extends AbstractSpringTest {
         ContainerLoader.getDefaultContainer().release(ts);
     }
 }
+
