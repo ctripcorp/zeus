@@ -9,7 +9,9 @@ import com.ctrip.zeus.nginx.entity.Upstreams;
 import com.ctrip.zeus.nginx.entity.Vhosts;
 import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildService;
+import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,9 +47,13 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
     private BuildInfoDao buildInfoDao;
     @Resource
     private BuildService buildService;
+    @Resource
+    private NginxConfService nginxConfService;
 
+    private static boolean inited = false;
     @Before
     public void setCurrentVersion() throws DalException {
+        if (inited) return;
         buildInfoDao.insert(new BuildInfoDo().setSlbId(1L).setPendingTicket(2).setCurrentTicket(1));
         nginxConfDao.insert(new NginxConfDo().setSlbId(1L).setVersion(1).setContent("nginx.conf"));
 
@@ -69,6 +75,7 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
         currentConf.getUpstreams().addConfFile(new ConfFile().setName("6").setContent("upstream_6"));
 
         nginxConfSlbDao.insert(new NginxConfSlbDo().setSlbId(1L).setVersion(1).setContent(GenericSerializer.writeJson(currentConf)));
+        inited = true;
     }
 
     @Test
@@ -152,6 +159,21 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
                 Assert.assertEquals(expectedNextConf.getUpstreams().getFiles().get(i).getContent(), cf.getContent());
             }
         }
+    }
+
+    @Test
+    public void testFilterUpstreamsAndVhosts() throws Exception {
+        NginxConfEntry filteredEntry = nginxConfService.getUpstreamsAndVhosts(1L, 1L, Lists.newArrayList(1L, 2L, 3L));
+        Set<String> vhostFilename = Sets.newHashSet("1", "2", "3");
+        Set<String> upstreamFilename = Sets.newHashSet("1", "1_5", "2", "2_3", "3");
+        for (ConfFile cf : filteredEntry.getVhosts().getFiles()) {
+            Assert.assertTrue(vhostFilename.remove(cf.getName()));
+        }
+        for (ConfFile cf : filteredEntry.getUpstreams().getFiles()) {
+            Assert.assertTrue(upstreamFilename.remove(cf.getName()));
+        }
+        Assert.assertTrue(vhostFilename.isEmpty());
+        Assert.assertTrue(upstreamFilename.isEmpty());
     }
 
     private Group generateGroup(Long groupId, Long[] vsIds) {
