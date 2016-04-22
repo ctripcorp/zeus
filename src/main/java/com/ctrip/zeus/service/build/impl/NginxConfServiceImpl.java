@@ -59,15 +59,15 @@ public class NginxConfServiceImpl implements NginxConfService {
         if (completeEntry == null) return null;
 
         Set<Long> origin = new HashSet<>(vsIds);
-        Set<Long> vhostIdCheck = new HashSet<>(vsIds);
-        Set<Long> upstreamIdCheck = new HashSet<>(vsIds);
+        Set<Long> vhostIdCheck = new HashSet<>();
+        Set<Long> upstreamIdCheck = new HashSet<>();
 
         for (ConfFile cf : completeEntry.getVhosts().getFiles()) {
             try {
                 Long vsId = Long.parseLong(cf.getName());
                 if (origin.contains(vsId)) {
                     entry.getVhosts().addConfFile(cf);
-                    if (vhostIdCheck.contains(vsId)) vhostIdCheck.remove(vsId);
+                    if (!vhostIdCheck.contains(vsId)) vhostIdCheck.add(vsId);
                 }
             } catch (NumberFormatException ex) {
                 logger.error("Unable to extract vs id information from vhost file: " + cf.getName() + ".");
@@ -89,7 +89,7 @@ public class NginxConfServiceImpl implements NginxConfService {
                 if (vsIds.contains(vsId)) {
                     if (!add) {
                         add = true;
-                        if (upstreamIdCheck.contains(vsId)) upstreamIdCheck.remove(vsId);
+                        if (!upstreamIdCheck.contains(vsId)) upstreamIdCheck.add(vsId);
                     }
                 }
             }
@@ -98,14 +98,17 @@ public class NginxConfServiceImpl implements NginxConfService {
             }
         }
 
-        if (!vhostIdCheck.isEmpty() || !upstreamIdCheck.isEmpty()) {
+        if (vhostIdCheck.containsAll(origin) && upstreamIdCheck.containsAll(origin)) {
+            return entry;
+        } else {
+            vhostIdCheck.removeAll(origin);
+            upstreamIdCheck.removeAll(origin);
             StringBuilder err = new StringBuilder();
             err.append("Unexpected missing vhost conf files of given vs ids: " + Joiner.on(",").join(vhostIdCheck)).append('.').append('\n');
             err.append("Unexpected missing upstream conf files of given vs ids: " + Joiner.on(",").join(upstreamIdCheck)).append('.').append('\n');
             logger.error(err.toString());
             throw new ValidationException(err.toString());
         }
-        return entry;
     }
 
     @Override
