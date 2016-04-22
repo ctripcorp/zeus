@@ -65,6 +65,7 @@
          <table name="r_vs_status"/>
          <table name="conf_slb_version"/>
          <table name="commit"/>
+         <table name="nginx_conf_slb"/>
       </group>
    </jdbc>
 </wizard>

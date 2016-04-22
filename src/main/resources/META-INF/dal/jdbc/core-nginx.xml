@@ -72,6 +72,42 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="nginx-conf-slb" table="nginx_conf_slb" alias="ncs2">
+        <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
+        <query-defs>
+            <query name="insert" type="INSERT">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb-and-version" type="SELECT">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        AND <FIELD name='version'/> = ${version}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-slb-id-from-version" type="DELETE">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        AND <FIELD name='version'/> > ${version}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
     <entity name="nginx-conf-server" table="nginx_conf_server" alias="ncs">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>

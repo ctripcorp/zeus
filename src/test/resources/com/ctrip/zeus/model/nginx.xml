@@ -104,4 +104,23 @@
         <upstream-conf>upstream</upstream-conf>
         <vhost-conf>vhost</vhost-conf>
     </vs-conf-data>
+
+    <nginx-conf-entry>
+        <vhosts>
+            <files>
+                <conf-file/>
+                <conf-file/>
+            </files>
+        </vhosts>
+        <upstreams>
+            <files>
+                <conf-file/>
+                <conf-file/>
+            </files>
+        </upstreams>
+    </nginx-conf-entry>
+    <conf-file>
+        <name>1_2</name>
+        <content>abc</content>
+    </conf-file>
 </nginx>

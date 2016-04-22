@@ -11,6 +11,8 @@
     <entity-ref name="req-status" />
     <entity-ref name="virtual-server-conf-response" />
     <entity-ref name="vs-conf-data" />
+    <entity-ref name="nginx-conf-entry" />
+    <entity-ref name="conf-file" />
   </entity>
   <entity name="upstream-status">
     <entity-ref name="servers" />
@@ -93,6 +95,20 @@
   <entity name="vs-conf-data">
     <element name="upstream-conf" value-type="String" />
     <element name="vhost-conf" value-type="String" />
+  </entity>
+  <entity name="nginx-conf-entry">
+    <entity-ref name="vhosts" />
+    <entity-ref name="upstreams" />
+  </entity>
+  <entity name="vhosts">
+    <entity-ref name="conf-file" type="list" names="files" xml-indent="true" />
+  </entity>
+  <entity name="conf-file">
+    <element name="name" value-type="String" />
+    <element name="content" value-type="String" />
+  </entity>
+  <entity name="upstreams">
+    <entity-ref name="conf-file" type="list" names="files" xml-indent="true" />
   </entity>
 </model>
 

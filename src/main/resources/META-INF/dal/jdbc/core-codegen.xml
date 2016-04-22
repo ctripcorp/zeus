@@ -1081,6 +1081,45 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="nginx-conf-slb" table="nginx_conf_slb" alias="ncs2">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
+    <member name="version" field="version" value-type="long" length="19" nullable="false" />
+    <member name="content" field="content" value-type="String" length="16777215" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="nginx-conf-upstream" table="nginx_conf_upstream" alias="ncu">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
