@@ -1,9 +1,8 @@
 package com.ctrip.zeus.service.build.conf;
 
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupServer;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.nginx.entity.ConfFile;
 import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.StringFormat;
 import com.netflix.config.DynamicBooleanProperty;
@@ -11,9 +10,7 @@ import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -26,15 +23,48 @@ public class UpstreamsConf {
     private static DynamicStringProperty upstreamKeepAliveTimeoutList = DynamicPropertyFactory.getInstance().getStringProperty("upstream.keep-alive.timeout.whitelist", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty upstreamKeepAliveTimeoutEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("upstream.keep-alive.timeout.enableAll", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
 
-    public static String generate(Slb slb, VirtualServer vs, List<Group> groups, Set<String> allDownServers, Set<String> allUpGroupServers)throws Exception {
-        StringBuilder b = new StringBuilder(10240);
-
-        //add upstreams
+    public static List<ConfFile> generate(Slb slb, VirtualServer vs, List<Group> groups,
+                                          Set<String> downServers, Set<String> upServers,
+                                          Set<String> visited) throws Exception {
+        List<ConfFile> result = new ArrayList<>();
+        Map<String, StringBuilder> map = new HashMap<>();
         for (Group group : groups) {
-            b.append(buildUpstreamConf(slb, vs, group, buildUpstreamName(slb, vs, group), allDownServers, allUpGroupServers));
+            String confName = confName(group);
+            if (visited.contains(confName)) continue;
+
+            StringBuilder confBuilder = map.get(confName);
+            String groupUpstream = buildUpstreamConf(slb, vs, group, buildUpstreamName(slb, vs, group), downServers, upServers);
+            if (confBuilder == null) {
+                map.put(confName, new StringBuilder().append(groupUpstream));
+            } else {
+                confBuilder.append('\n').append(groupUpstream);
+            }
         }
 
-        return b.toString();
+        for (Map.Entry<String, StringBuilder> e : map.entrySet()) {
+            result.add(new ConfFile().setName(e.getKey()).setContent(e.getValue().toString()));
+            visited.add(e.getKey());
+        }
+        return result;
+    }
+
+    private static String confName(Group group) throws ValidationException {
+        if (group == null || group.getGroupVirtualServers().size() == 0)
+            throw new ValidationException("Invalid group information is found when generating upstream conf file. Group is either null or does not have related vs.");
+        if (group.getGroupVirtualServers().size() == 1) {
+            return "" + group.getGroupVirtualServers().get(0).getVirtualServer().getId();
+        }
+        long[] vsIds = new long[group.getGroupVirtualServers().size()];
+        for (int i = 0; i < group.getGroupVirtualServers().size(); i++) {
+            vsIds[i] = group.getGroupVirtualServers().get(i).getVirtualServer().getId();
+        }
+        Arrays.sort(vsIds);
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(vsIds[0]);
+        for (int i = 1; i < vsIds.length; i++) {
+            stringBuilder.append("_").append(vsIds[i]);
+        }
+        return stringBuilder.toString();
     }
 
     public static String buildUpstreamName(Slb slb, VirtualServer vs, Group group) throws Exception{

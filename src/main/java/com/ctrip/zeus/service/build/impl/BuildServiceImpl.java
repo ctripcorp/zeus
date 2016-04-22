@@ -2,14 +2,14 @@ package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.nginx.entity.*;
+import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
-import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.service.build.conf.NginxConf;
 import com.ctrip.zeus.service.build.conf.UpstreamsConf;
-import com.ctrip.zeus.service.model.AutoFiller;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.status.StatusService;
+import com.ctrip.zeus.support.GenericSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,30 +25,14 @@ import java.util.*;
 public class BuildServiceImpl implements BuildService {
     @Resource
     private BuildInfoService buildInfoService;
-
-    @Resource
-    private NginxConfService nginxConfService;
-
-    @Resource
-    private NginxServerDao nginxServerDao;
-    @Resource
-    private GroupRepository groupRepository;
     @Resource
     ConfGroupSlbActiveDao confGroupSlbActiveDao;
     @Resource
     private NginxConfBuilder nginxConfigBuilder;
     @Resource
+    private NginxConfSlbDao nginxConfSlbDao;
+    @Resource
     private NginxConfDao nginxConfDao;
-    @Resource
-    private NginxConfServerDao nginxConfServerDao;
-    @Resource
-    private NginxConfUpstreamDao nginxConfUpstreamDao;
-    @Resource
-    private StatusService statusService;
-    @Resource
-    private AutoFiller autoFiller;
-    @Resource
-    private ConfGroupActiveDao confGroupActiveDao;
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -59,24 +43,24 @@ public class BuildServiceImpl implements BuildService {
                       Set<Long> deactivateVses,
                       Map<Long, List<Group>> vsGroups,
                       Set<String> allDownServers,
-                      Set<String> allUpGroupServers
-    ) throws Exception {
+                      Set<String> allUpGroupServers) throws Exception {
         int version = buildInfoService.getTicket(onlineSlb.getId());
         int currentVersion = buildInfoService.getCurrentTicket(onlineSlb.getId());
 
         String conf = nginxConfigBuilder.generateNginxConf(onlineSlb);
-        nginxConfDao.insert(new NginxConfDo().setCreatedTime(new Date())
-                .setSlbId(onlineSlb.getId())
-                .setContent(conf)
-                .setVersion(version));
-        logger.debug("Nginx Conf build sucess! slbId: " + onlineSlb.getId() + ",version: " + version);
 
+        nginxConfDao.insert(new NginxConfDo().setSlbId(onlineSlb.getId()).setContent(conf).setVersion(version));
+        logger.info("Nginx Conf build sucess! slbId: " + onlineSlb.getId() + ",version: " + version);
 
-        List<NginxConfServerDo> nginxConfServerDoList = nginxConfServerDao.findAllBySlbIdAndVersion(onlineSlb.getId(), currentVersion, NginxConfServerEntity.READSET_FULL);
-        List<NginxConfUpstreamDo> nginxConfUpstreamDoList = nginxConfUpstreamDao.findAllBySlbIdAndVersion(onlineSlb.getId(), currentVersion, NginxConfUpstreamEntity.READSET_FULL);
-        Map<Long, NginxConfServerDo> nginxConfServerDoMap = new HashMap<>();
-        Map<Long, NginxConfUpstreamDo> nginxConfUpstreamDoMap = new HashMap<>();
+        NginxConfSlbDo d = nginxConfSlbDao.findBySlbAndVersion(onlineSlb.getId(), currentVersion, NginxConfSlbEntity.READSET_FULL);
+        // init current conf entry in case of generating conf file for entirely new cluster
+        NginxConfEntry currentConfEntry = new NginxConfEntry().setUpstreams(new Upstreams()).setVhosts(new Vhosts());
+        if (d != null) {
+            currentConfEntry = DefaultJsonParser.parse(NginxConfEntry.class, d.getContent());
+        }
 
+        NginxConfEntry nextConfEntry = new NginxConfEntry().setUpstreams(new Upstreams()).setVhosts(new Vhosts());
+        Set<String> fileTrack = new HashSet<>();
         for (Long vsId : needBuildVses) {
             if (deactivateVses.contains(vsId)) {
                 continue;
@@ -88,39 +72,50 @@ public class BuildServiceImpl implements BuildService {
             }
 
             String serverConf = nginxConfigBuilder.generateServerConf(onlineSlb, virtualServer, groups);
-            String upstreamConf = nginxConfigBuilder.generateUpstreamsConf(onlineSlb, virtualServer, groups, allDownServers, allUpGroupServers);
+            nextConfEntry.getVhosts().addConfFile(new ConfFile().setName("" + virtualServer.getId()).setContent(serverConf));
 
-            nginxConfServerDoMap.put(vsId, new NginxConfServerDo().setCreatedTime(new Date())
-                    .setSlbId(onlineSlb.getId())
-                    .setSlbVirtualServerId(vsId)
-                    .setContent(serverConf)
-                    .setVersion(version));
-
-            nginxConfUpstreamDoMap.put(vsId, new NginxConfUpstreamDo().setCreatedTime(new Date())
-                    .setSlbId(onlineSlb.getId())
-                    .setSlbVirtualServerId(vsId)
-                    .setContent(upstreamConf)
-                    .setVersion(version));
+            List<ConfFile> list = nginxConfigBuilder.generateUpstreamsConf(onlineSlb, virtualServer, groups, allDownServers, allUpGroupServers, fileTrack);
+            for (ConfFile cf : list) {
+                nextConfEntry.getUpstreams().addConfFile(cf);
+            }
         }
 
-        for (NginxConfServerDo nginxConfServerDo : nginxConfServerDoList) {
-            if (deactivateVses.contains(nginxConfServerDo.getSlbVirtualServerId())) {
-                continue;
-            }
-            if (!nginxConfServerDoMap.containsKey(nginxConfServerDo.getSlbVirtualServerId())) {
-                nginxConfServerDoMap.put(nginxConfServerDo.getSlbVirtualServerId(), nginxConfServerDo.setVersion(version));
-            }
-        }
-        for (NginxConfUpstreamDo nginxConfUpstreamDo : nginxConfUpstreamDoList) {
-            if (deactivateVses.contains(nginxConfUpstreamDo.getSlbVirtualServerId())) {
-                continue;
-            }
-            if (!nginxConfUpstreamDoMap.containsKey(nginxConfUpstreamDo.getSlbVirtualServerId())) {
-                nginxConfUpstreamDoMap.put(nginxConfUpstreamDo.getSlbVirtualServerId(), nginxConfUpstreamDo.setVersion(version));
+        for (ConfFile cf : currentConfEntry.getVhosts().getFiles()) {
+            try {
+                Long vsId = Long.parseLong(cf.getName());
+                if (deactivateVses.contains(vsId) || needBuildVses.contains(vsId)) {
+                    continue;
+                } else {
+                    nextConfEntry.getVhosts().addConfFile(cf);
+                }
+            } catch (NumberFormatException ex) {
+                logger.error("Unable to extract vs id information from vhost file: " + cf.getName() + ".");
             }
         }
-        nginxConfServerDao.insert(nginxConfServerDoMap.values().toArray(new NginxConfServerDo[]{}));
-        nginxConfUpstreamDao.insert(nginxConfUpstreamDoMap.values().toArray(new NginxConfUpstreamDo[]{}));
+
+        for (ConfFile cf : currentConfEntry.getUpstreams().getFiles()) {
+            String[] fn = cf.getName().split("_");
+            boolean add = true;
+            for (String relatedVsId : fn) {
+                if (relatedVsId.isEmpty()) continue;
+
+                Long vsId = 0L;
+                try {
+                    vsId = Long.parseLong(relatedVsId);
+                } catch (NumberFormatException ex) {
+                    add = false;
+                    logger.warn("Unable to extract vs id information from upstream file: " + cf.getName() + ".");
+                    continue;
+                }
+                if (deactivateVses.contains(vsId) || needBuildVses.contains(vsId)) {
+                    if (add) add = false;
+                }
+            }
+            if (add) {
+                nextConfEntry.getUpstreams().addConfFile(cf);
+            }
+        }
+        nginxConfSlbDao.insert(new NginxConfSlbDo().setSlbId(onlineSlb.getId()).setVersion(version).setContent(GenericSerializer.writeJson(nextConfEntry, false)));
         return (long)version;
     }
 
@@ -137,8 +132,7 @@ public class BuildServiceImpl implements BuildService {
 
     @Override
     public void rollBackConfig(Long slbId, int version) throws Exception {
-        nginxConfServerDao.deleteBySlbIdFromVersion(new NginxConfServerDo().setSlbId(slbId).setVersion(version));
         nginxConfDao.deleteBySlbIdFromVersion(new NginxConfDo().setSlbId(slbId).setVersion(version));
-        nginxConfUpstreamDao.deleteBySlbIdFromVersion(new NginxConfUpstreamDo().setSlbId(slbId).setVersion(version));
+        nginxConfSlbDao.deleteBySlbIdFromVersion(new NginxConfSlbDo().setSlbId(slbId).setVersion(version));
     }
 }
