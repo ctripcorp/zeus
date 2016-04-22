@@ -1,12 +1,11 @@
 package com.ctrip.zeus.service.build.conf;
 
-
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.HealthCheck;
-import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.build.ConfService;
 import com.ctrip.zeus.util.AssertUtils;
-import com.netflix.config.*;
+import javax.annotation.Resource;
 
 /**
  * @author:xingchaowang
@@ -14,23 +13,17 @@ import com.netflix.config.*;
  */
 public class HealthCheckConf {
 
-    private static DynamicBooleanProperty disableHealthCheck = DynamicPropertyFactory.getInstance().getBooleanProperty("build.disable.healthCheck", false);
-    private static DynamicStringProperty sslHelloEnableList = DynamicPropertyFactory.getInstance().getStringProperty("build.sslHello.enable", "");
-    private static DynamicStringProperty disableHealthCheckList = DynamicPropertyFactory.getInstance().getStringProperty("build.disable.healthCheck.groupId", "");
-    private static DynamicStringProperty sslSlbHealthCheck = DynamicPropertyFactory.getInstance().getStringProperty("ssl.healthCheck.aspx", "/SlbHealthCheck.aspx");
-    private static DynamicIntProperty healthCheckDefaultTimeout = DynamicPropertyFactory.getInstance().getIntProperty("healthCheck.default.timeout", 2000);
+    @Resource
+    ConfService confService;
 
+    public String generate(VirtualServer vs, Group group) throws Exception {
+        Long vsId = vs.getId();
+        Long groupId = group.getId();
 
-    public static String generate(VirtualServer vs, Group group) throws Exception {
-        if (disableHealthCheck.get()) {
+        if (!confService.getEnable("upstream.healthCheck", null, vsId, groupId, true)) {
             return "";
         }
-        String[] disableList = disableHealthCheckList.get().split(";");
-        for (String groupId : disableList) {
-            if (String.valueOf(group.getId()).equals(groupId.trim())) {
-                return "";
-            }
-        }
+
         HealthCheck h = group.getHealthCheck();
         if (h == null) {
             return "";
@@ -40,66 +33,58 @@ public class HealthCheckConf {
         AssertUtils.assertNotNull(h.getPasses(), "Group HealthCheck Passes config is null!");
         AssertUtils.assertNotNull(h.getUri(), "Group HealthCheck Uri config is null!");
 
-
         StringBuilder b = new StringBuilder(128);
 
-        if (group.getSsl() && sslHelloEnable(group.getId())) {
-            b.append("check interval=").append(h.getIntervals())
+        String healthCheckTimeout = confService.getStringValue("upstream.healthCheck.timeOut", null, vsId, groupId, "2000");
+        String sslAspx = confService.getStringValue("upstream.healthCheck.ssl.aspx", null, vsId, groupId, "/SlbHealthCheck.aspx");
+
+        if (group.getSsl() && confService.getEnable("upstream.healthCheck.sslHello", null, vsId, groupId, false)) {
+            b.append("    check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
-                    .append(" timeout=").append(h.getTimeout() == null ? healthCheckDefaultTimeout.get() : h.getTimeout())
+                    .append(" timeout=").append(h.getTimeout() == null ? healthCheckTimeout : h.getTimeout())
                     .append(" type=ssl_hello").append(";\n");
-        } else if (group.getSsl() && h.getUri().equalsIgnoreCase(sslSlbHealthCheck.get())) {
-            b.append("check interval=").append(h.getIntervals())
+        } else if (group.getSsl() && h.getUri().equalsIgnoreCase(sslAspx)) {
+            b.append("    check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
-                    .append(" timeout=").append(h.getTimeout() == null ? healthCheckDefaultTimeout.get() : h.getTimeout());
+                    .append(" timeout=").append(h.getTimeout() == null ? healthCheckTimeout : h.getTimeout());
             b.append(" port=").append(80);
             b.append(" type=http default_down=false").append(";\n")
-                    .append("check_keepalive_requests 100").append(";\n")
-                    .append("check_http_send \"")
+                    .append("    check_keepalive_requests 100").append(";\n")
+                    .append("    check_http_send \"")
                     .append("GET ").append(h.getUri()).append(" HTTP/1.0\\r\\n")
                     .append("Connection:keep-alive\\r\\n");
             b.append("UserAgent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
-                    .append("check_http_expect_alive http_2xx http_3xx").append(";\n");
+                    .append("    check_http_expect_alive http_2xx http_3xx").append(";\n");
         } else if (group.getSsl()) {
-            b.append("check interval=").append(h.getIntervals())
+            b.append("    check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
-                    .append(" timeout=").append(h.getTimeout() == null ? healthCheckDefaultTimeout.get() : h.getTimeout());
+                    .append(" timeout=").append(h.getTimeout() == null ? healthCheckTimeout : h.getTimeout());
             b.append(" port=").append(80);
             b.append(" type=http default_down=false").append(";\n")
-                    .append("check_keepalive_requests 100").append(";\n")
-                    .append("check_http_send \"")
+                    .append("    check_keepalive_requests 100").append(";\n")
+                    .append("    check_http_send \"")
                     .append("GET ").append(h.getUri()).append(" HTTP/1.1\\r\\n")
                     .append("Connection:keep-alive\\r\\n")
                     .append("Host:").append(vs.getDomains().get(0).getName().trim()).append("\\r\\n");
             b.append("UserAgent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
-                    .append("check_http_expect_alive http_2xx http_3xx").append(";\n");
+                    .append("    check_http_expect_alive http_2xx http_3xx").append(";\n");
         }else {
-            b.append("check interval=").append(h.getIntervals())
+            b.append("    check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())
-                    .append(" timeout=").append(h.getTimeout() == null ? healthCheckDefaultTimeout.get() : h.getTimeout());
+                    .append(" timeout=").append(h.getTimeout() == null ? healthCheckTimeout : h.getTimeout());
             b.append(" type=http default_down=false").append(";\n")
-                    .append("check_keepalive_requests 100").append(";\n")
-                    .append("check_http_send \"")
+                    .append("    check_keepalive_requests 100").append(";\n")
+                    .append("    check_http_send \"")
                     .append("GET ").append(h.getUri()).append(" HTTP/1.1\\r\\n")
                     .append("Connection:keep-alive\\r\\n")
                     .append("Host:").append(vs.getDomains().get(0).getName().trim()).append("\\r\\n");
             b.append("UserAgent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
-                    .append("check_http_expect_alive http_2xx http_3xx").append(";\n");
+                    .append("    check_http_expect_alive http_2xx http_3xx").append(";\n");
         }
         return b.toString();
-    }
-
-    private static boolean sslHelloEnable(Long groupId) {
-        String[] list = sslHelloEnableList.get().split(",");
-        for (String id : list) {
-            if (id != null && String.valueOf(groupId).equals(id.trim())) {
-                return true;
-            }
-        }
-        return false;
     }
 }

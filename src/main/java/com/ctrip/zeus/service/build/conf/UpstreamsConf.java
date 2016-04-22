@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.build.conf;
 
+import com.ctrip.zeus.domain.LBMethod;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.ConfFile;
@@ -20,26 +21,34 @@ import java.util.*;
 public class UpstreamsConf {
     @Resource
     ConfService confService;
+    @Resource
+    HealthCheckConf healthCheckConf;
+
+    private Long slbId = null;
+    private Long vsId = null;
+    public final String UpstreamPrefix = "backend_";
 
     public List<ConfFile> generate(Set<Long> vsCandidates, VirtualServer vs, List<Group> groups,
                                           Set<String> downServers, Set<String> upServers,
                                           Set<String> visited) throws Exception {
         List<ConfFile> result = new ArrayList<>();
-        Map<String, StringBuilder> map = new HashMap<>();
+        Map<String, ConfWriter> map = new HashMap<>();
         for (Group group : groups) {
+            if (group.isVirtual()) continue;
+
             String confName = confName(vsCandidates, group);
             if (visited.contains(confName)) continue;
 
-            StringBuilder confBuilder = map.get(confName);
-            String groupUpstream = buildUpstreamConf(vs, group, buildUpstreamName(vs, group), downServers, upServers);
-            if (confBuilder == null) {
-                map.put(confName, new StringBuilder().append(groupUpstream));
+            ConfWriter confWriter = map.get(confName);
+            if (confWriter == null) {
+                map.put(confName, confWriter);
             } else {
-                confBuilder.append('\n').append(groupUpstream);
+                confWriter.writeLine("");
             }
+            writeUpstream(confWriter, vs, group, downServers, upServers);
         }
 
-        for (Map.Entry<String, StringBuilder> e : map.entrySet()) {
+        for (Map.Entry<String, ConfWriter> e : map.entrySet()) {
             result.add(new ConfFile().setName(e.getKey()).setContent(e.getValue().toString()));
             visited.add(e.getKey());
         }
@@ -76,78 +85,44 @@ public class UpstreamsConf {
         return stringBuilder.toString();
     }
 
-    public String buildUpstreamName(VirtualServer vs, Group group) throws Exception{
-        AssertUtils.assertNotNull(vs.getId(), "virtual server id is null!");
-        AssertUtils.assertNotNull(group.getId(), "groupId not found!");
-        return "backend_" + group.getId();
-    }
-
-    public String buildUpstreamConf(VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
-        if (group.isVirtual()){
-            return "";
-        }
-        StringBuilder b = new StringBuilder(1024);
-        String body = buildUpstreamConfBody(vs,group,allDownServers,allUpGroupServers);
-        if (null == body){
-            return "";
-        }
-        b.append("upstream ").append(upstreamName).append(" {").append("\n");
-        b.append(body);
-
-        b.append("}").append("\n");
-
-        return StringFormat.format(b.toString());
-    }
-
-    public String buildUpstreamConfBody(VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
-        StringBuilder b = new StringBuilder(1024);
-        //LBMethod
-        b.append(LBConf.generate(group));
-
+    public void writeUpstream(ConfWriter confWriter, VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
+        Long groupId = group.getId();
         List<GroupServer> groupServers = group.getGroupServers();
+        if (groupServers == null || groupServers.size() == 0) {
+            return;
+        }
+        AssertUtils.assertNotNull(group.getId(), "groupId not found!");
+        confWriter.writeUpstreamStart(UpstreamPrefix + group.getId());
 
-        if (groupServers==null||groupServers.size() == 0) {
-            return null;
+        String lbMethod = LBMethod.getMethod(group.getLoadBalancingMethod().getType()).getValue();
+        if (!lbMethod.isEmpty()) {
+            confWriter.writeLine(lbMethod + ";");
         }
 
-        for (GroupServer as : groupServers) {
-            String ip = as.getIp();
-            boolean isDown = allDownServers.contains(ip);
-            if (!isDown) {
-                isDown = !allUpGroupServers.contains(vs.getId() + "_" + group.getId() + "_" + ip);
-            }
+        for (GroupServer server : groupServers) {
+            validate(server, vs.getId());
+            String ip = server.getIp();
 
-            AssertUtils.assertNotNull(as.getPort(), "GroupServer Port config is null! virtual server " + vs.getId());
-            AssertUtils.assertNotNull(as.getWeight(), "GroupServer Weight config is null! virtual server " + vs.getId());
-            AssertUtils.assertNotNull(as.getMaxFails(), "GroupServer MaxFails config is null! virtual server " + vs.getId());
-            AssertUtils.assertNotNull(as.getFailTimeout(), "GroupServer FailTimeout config is null! virtual server " + vs.getId());
-
-            b.append("server ").append(ip + ":" + as.getPort())
-                    .append(" weight=").append(as.getWeight())
-                    .append(" max_fails=").append(as.getMaxFails())
-                    .append(" fail_timeout=").append(as.getFailTimeout())
-                    .append(isDown?" down":"")
-                    .append(";\n");
+            boolean down = allDownServers.contains(ip) || !allUpGroupServers.contains(vs.getId() + "_" + group.getId() + "_" + ip);
+            confWriter.writeUpstreamServer(ip, server.getPort(), server.getWeight(), server.getMaxFails(), server.getFailTimeout(), down);
         }
-        addKeepAliveSetting(b,group.getId());
-        addKeepAliveTimeoutSetting(b, group.getId());
 
-        //HealthCheck
-        b.append(HealthCheckConf.generate(vs, group));
-        return b.toString();
+        if (confService.getEnable("upstream.keepAlive", slbId, vsId, groupId, false)) {
+            confWriter.writeCommand("keepalive", confService.getStringValue("upstream.keepAlive", slbId, vsId, groupId, "100"));
+        }
+        if (confService.getEnable("upstream.keepAlive.timeout", slbId, vsId, groupId, false)) {
+            confWriter.writeCommand("keepalive_timeout", confService.getStringValue("upstream.keepAlive.timeout", slbId, vsId, groupId, "110") + "s");
+        }
+
+        // This module is to be abandoned.
+        confWriter.getStringBuilder().append(healthCheckConf.generate(vs, group));
+        confWriter.writeUpstreamEnd();
     }
 
-    private void addKeepAliveTimeoutSetting(StringBuilder b, Long groupId) throws Exception {
-        if (confService.getEnable("upstream.keepAlive.timeout", null, null, groupId, false)) {
-            b.append("keepalive_timeout ").append(confService.getIntValue("upstream.keepAlive.timeout", null, null, groupId, 110)).append("s;\n");
-        }
-
+    private void validate(GroupServer groupServer, Long vsId) throws Exception {
+        AssertUtils.assertNotNull(groupServer.getPort(), "GroupServer Port config is null! virtual server " + vsId);
+        AssertUtils.assertNotNull(groupServer.getWeight(), "GroupServer Weight config is null! virtual server " + vsId);
+        AssertUtils.assertNotNull(groupServer.getMaxFails(), "GroupServer MaxFails config is null! virtual server " + vsId);
+        AssertUtils.assertNotNull(groupServer.getFailTimeout(), "GroupServer FailTimeout config is null! virtual server " + vsId);
     }
-
-    private void addKeepAliveSetting(StringBuilder b, Long groupId) throws Exception {
-        if (confService.getEnable("upstream.keepAlive", null, null, groupId, false)) {
-            b.append("keepalive ").append(confService.getIntValue("upstream.keepAlive", null, null, groupId, 100)).append(";\n");
-        }
-    }
-
 }
