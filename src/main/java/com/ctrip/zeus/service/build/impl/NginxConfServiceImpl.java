@@ -2,23 +2,17 @@ package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.NginxConfServerData;
-import com.ctrip.zeus.model.entity.NginxConfUpstreamData;
 import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
-import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.NginxConfService;
-import com.ctrip.zeus.service.status.StatusService;
+import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -64,11 +58,16 @@ public class NginxConfServiceImpl implements NginxConfService {
         NginxConfEntry completeEntry = getUpstreamsAndVhosts(slbId, version);
         if (completeEntry == null) return null;
 
+        Set<Long> origin = new HashSet<>(vsIds);
+        Set<Long> vhostIdCheck = new HashSet<>(vsIds);
+        Set<Long> upstreamIdCheck = new HashSet<>(vsIds);
+
         for (ConfFile cf : completeEntry.getVhosts().getFiles()) {
             try {
                 Long vsId = Long.parseLong(cf.getName());
-                if (vsIds.contains(vsId)) {
+                if (origin.contains(vsId)) {
                     entry.getVhosts().addConfFile(cf);
+                    if (vhostIdCheck.contains(vsId)) vhostIdCheck.remove(vsId);
                 }
             } catch (NumberFormatException ex) {
                 logger.error("Unable to extract vs id information from vhost file: " + cf.getName() + ".");
@@ -88,12 +87,23 @@ public class NginxConfServiceImpl implements NginxConfService {
                     break;
                 }
                 if (vsIds.contains(vsId)) {
-                    if (!add) add = true;
+                    if (!add) {
+                        add = true;
+                        if (upstreamIdCheck.contains(vsId)) upstreamIdCheck.remove(vsId);
+                    }
                 }
             }
             if (add) {
                 entry.getUpstreams().addConfFile(cf);
             }
+        }
+
+        if (!vhostIdCheck.isEmpty() || !upstreamIdCheck.isEmpty()) {
+            StringBuilder err = new StringBuilder();
+            err.append("Unexpected missing vhost conf files of given vs ids: " + Joiner.on(",").join(vhostIdCheck)).append('.').append('\n');
+            err.append("Unexpected missing upstream conf files of given vs ids: " + Joiner.on(",").join(upstreamIdCheck)).append('.').append('\n');
+            logger.error(err.toString());
+            throw new ValidationException(err.toString());
         }
         return entry;
     }
