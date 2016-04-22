@@ -188,6 +188,9 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         }
         //3. compare vhost files
         NginxConfEntry serverCurrentEntry = nginxConfService.getUpstreamsAndVhosts(slbId, serverVersion, commit.getVsIds());
+        if (serverCurrentEntry == null) {
+            return false;
+        }
         if (serverCurrentEntry.getVhosts().getFiles().size() != nextEntry.getVhosts().getFiles().size()) {
             return false;
         }
