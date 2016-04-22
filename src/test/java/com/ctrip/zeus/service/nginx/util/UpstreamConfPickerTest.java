@@ -2,7 +2,7 @@ package com.ctrip.zeus.service.nginx.util;
 
 import com.ctrip.zeus.exceptions.NginxProcessingException;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
-import com.ctrip.zeus.nginx.entity.VsConfData;
+import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.util.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,13 +27,13 @@ public class UpstreamConfPickerTest {
         String conf_1109 = "";
 
         InputStream confFile = this.getClass().getClassLoader().getResourceAsStream("com.ctrip.zeus.service/782.conf");
-        Map<Long, VsConfData> vsConf = new HashMap<>();
-        vsConf.put(782L, new VsConfData().setUpstreamConf(IOUtils.inputStreamStringify(confFile)));
+        NginxConfEntry entry = new NginxConfEntry().setVhosts(new Vhosts()).setUpstreams(new Upstreams());
+        entry.getUpstreams().addConfFile(new ConfFile().setName("782").setContent(IOUtils.inputStreamStringify(confFile)));
         Set<Long> groupIds = new HashSet<>();
         groupIds.add(893L);
         groupIds.add(1109L);
 
-        DyUpstreamOpsData[] result = upstreamConfPicker.pickByGroupIds(vsConf, groupIds);
+        DyUpstreamOpsData[] result = upstreamConfPicker.pickByGroupIds(entry, groupIds);
         Assert.assertEquals(2, result.length);
         for (int i = 0; i < result.length; i++) {
             DyUpstreamOpsData d = result[i];
@@ -50,8 +50,8 @@ public class UpstreamConfPickerTest {
     @Test(expected = NginxProcessingException.class)
     public void testNginxProcessingException() throws IOException, NginxProcessingException {
         InputStream confFile = this.getClass().getClassLoader().getResourceAsStream("com.ctrip.zeus.service/782.conf");
-        Map<Long, VsConfData> vsConf = new HashMap<>();
-        vsConf.put(782L, new VsConfData().setUpstreamConf(IOUtils.inputStreamStringify(confFile)));
+        NginxConfEntry entry = new NginxConfEntry().setVhosts(new Vhosts()).setUpstreams(new Upstreams());
+        entry.getUpstreams().addConfFile(new ConfFile().setName("782").setContent(IOUtils.inputStreamStringify(confFile)));
         Set<Long> groupIds = new HashSet<>();
         groupIds.add(893L);
         groupIds.add(1109L);
@@ -59,7 +59,7 @@ public class UpstreamConfPickerTest {
         groupIds.add(1077L);
 
         try {
-            upstreamConfPicker.pickByGroupIds(vsConf, groupIds);
+            upstreamConfPicker.pickByGroupIds(entry, groupIds);
         } catch (NginxProcessingException ex) {
             String message = ex.getMessage();
             Assert.assertTrue(message.contains("1076"));

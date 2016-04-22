@@ -1,10 +1,8 @@
 package com.ctrip.zeus.service.nginx.handler;
 
-import com.ctrip.zeus.nginx.entity.NginxResponse;
-import com.ctrip.zeus.nginx.entity.VsConfData;
+import com.ctrip.zeus.nginx.entity.NginxConfEntry;
+import com.ctrip.zeus.service.nginx.impl.FileOpRecord;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -19,7 +17,7 @@ public interface NginxConfOpsService {
      * @return Long
      * @throws Exception
      */
-    Long updateAll(Map<Long, VsConfData> vsConfs) throws Exception;
+    Long updateAll(NginxConfEntry entry) throws Exception;
 
     /**
      * undo write all to dist ;
@@ -55,7 +53,7 @@ public interface NginxConfOpsService {
      * @return Long time flag
      * @throws Exception
      */
-    Long cleanAndUpdateConf(Set<Long> cleanVsIds, Map<Long, VsConfData> vsConfs) throws Exception;
+    FileOpRecord cleanAndUpdateConf(Set<Long> cleanVsIds, Set<Long> updateVsIds, NginxConfEntry entry) throws Exception;
 
     /**
      * undo clean and update nginx conf  ;
@@ -64,5 +62,5 @@ public interface NginxConfOpsService {
      * @return Long time flag
      * @throws Exception
      */
-    void undoCleanAndUpdateConf(Set<Long> cleanVsIds, Map<Long, VsConfData> vsConfs, Long timeFlag) throws Exception;
+    void undoCleanAndUpdateConf(Set<Long> cleanVsIds, NginxConfEntry entry, FileOpRecord record) throws Exception;
 }

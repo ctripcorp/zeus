@@ -3,14 +3,10 @@ package com.ctrip.zeus.service.nginx;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
-import com.ctrip.zeus.nginx.entity.NginxResponse;
-import com.ctrip.zeus.nginx.entity.NginxServerStatus;
-import com.ctrip.zeus.nginx.entity.ReqStatus;
-import com.ctrip.zeus.nginx.entity.VsConfData;
+import com.ctrip.zeus.nginx.entity.*;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -23,7 +19,7 @@ public interface NginxService {
      * update nginx configs
      *
      * @param nginxConf
-     * @param vsConfDataMap
+     * @param entry
      * @param cleanVsIds
      * @param dyups
      * @param needReload
@@ -32,7 +28,8 @@ public interface NginxService {
      * @throws Exception
      */
     List<NginxResponse> update(String nginxConf,
-                               Map<Long, VsConfData> vsConfDataMap,
+                               NginxConfEntry entry,
+                               Set<Long> updateVsIds,
                                Set<Long> cleanVsIds,
                                DyUpstreamOpsData[] dyups,
                                boolean needReload,
@@ -43,11 +40,11 @@ public interface NginxService {
      * refresh nginx configs
      *
      * @param nginxConf
-     * @param vsConfDataMap
+     * @param entry
      * @return List of nginx Response
      * @throws Exception
      */
-    NginxResponse refresh(String nginxConf, Map<Long, VsConfData> vsConfDataMap, boolean reload) throws Exception;
+    NginxResponse refresh(String nginxConf, NginxConfEntry entry, boolean reload) throws Exception;
 
     /**
      * push config to slb servers

@@ -1,9 +1,12 @@
 package com.ctrip.zeus.service.nginx.handler.impl;
 
 import com.ctrip.zeus.exceptions.NginxProcessingException;
+import com.ctrip.zeus.nginx.entity.ConfFile;
+import com.ctrip.zeus.nginx.entity.NginxConfEntry;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
-import com.ctrip.zeus.nginx.entity.VsConfData;
 import com.ctrip.zeus.service.nginx.handler.NginxConfOpsService;
+import com.ctrip.zeus.service.nginx.impl.FileOpRecord;
+import com.google.common.base.Joiner;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
@@ -30,65 +33,71 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
 
 
     @Override
-    public Long updateAll(Map<Long, VsConfData> vsConfs) throws Exception {
+    public Long updateAll(NginxConfEntry entry) throws Exception {
         String vhostDir = DEFAULT_NGINX_CONF_DIR + File.separator + "vhosts";
         String upstreamDir = DEFAULT_NGINX_CONF_DIR + File.separator + "upstreams";
         File vhostFile = new File(vhostDir);
-        String[] vhostFileNames = vhostFile.list();
         File upstreamFile = new File(upstreamDir);
-        String[] upstreamFileNames = upstreamFile.list();
-        Date now = new Date();
 
+        Date now = new Date();
         backupAll(now, BACKUP_TYPE_REFRESH);
 
-        List<String> cleanFileNames = new ArrayList<>();
-        List<String> deleteFileNames = new ArrayList<>();
-        for (String name : vhostFileNames) {
+        LOGGER.info("[NginxConfUpdateAll] Cleanse and backup files under dir upstreams and vhosts on disk.");
+        List<String> cleansingFilenames = new ArrayList<>();
+        List<String> trashFilenames = new ArrayList<>();
+        for (String name : vhostFile.list()) {
             if (name.endsWith(CONF_SUFFIX)) {
-                cleanFileNames.add(vhostDir + File.separator + name);
+                cleansingFilenames.add(vhostDir + File.separator + name);
             } else {
-                deleteFileNames.add(vhostDir + File.separator + name);
+                trashFilenames.add(vhostDir + File.separator + name);
             }
         }
-        for (String name : upstreamFileNames) {
+        for (String name : upstreamFile.list()) {
             if (name.endsWith(CONF_SUFFIX)) {
-                cleanFileNames.add(upstreamDir + File.separator + name);
+                cleansingFilenames.add(upstreamDir + File.separator + name);
             } else {
-                deleteFileNames.add(upstreamDir + File.separator + name);
+                trashFilenames.add(upstreamDir + File.separator + name);
             }
         }
         try {
-            cleanFile(cleanFileNames, now);
-            deleteFile(deleteFileNames);
+            cleanFile(cleansingFilenames, now);
+            deleteFile(trashFilenames);
         } catch (Exception e) {
-            undoCleanFile(cleanFileNames, now);
+            undoCleanFile(cleansingFilenames, now);
             throw e;
         }
 
-        List<Long> sucIds = new ArrayList<>();
+        LOGGER.info("[NginxConfUpdateAll] Start to overwrite complete confs under dir upstreams and vhosts.");
+        List<String> writingVhostFiles = new ArrayList<>();
+        List<String> writingUpstreamFiles = new ArrayList<>();
         try {
-            for (Long vsId : vsConfs.keySet()) {
-                writeFile(vhostDir, vsId + CONF_SUFFIX, vsConfs.get(vsId).getVhostConf());
-                writeFile(upstreamDir, vsId + CONF_SUFFIX, vsConfs.get(vsId).getUpstreamConf());
-                sucIds.add(vsId);
+            for (ConfFile cf : entry.getVhosts().getFiles()) {
+                writeFile(vhostDir, cf.getName() + CONF_SUFFIX, cf.getContent());
+                writingVhostFiles.add(vhostDir + File.separator + cf.getName() + CONF_SUFFIX);
+            }
+            for (ConfFile cf : entry.getUpstreams().getFiles()) {
+                writeFile(upstreamDir, cf.getName() + CONF_SUFFIX, cf.getContent());
+                writingUpstreamFiles.add(upstreamDir + File.separator + cf.getName() + CONF_SUFFIX);
             }
         } catch (Exception e) {
-            List<String> deleteFile = new ArrayList<>();
-            for (Long vsId : vsConfs.keySet()) {
-                deleteFile.add(vhostDir + File.separator + vsId + CONF_SUFFIX);
-                deleteFile.add(upstreamDir + File.separator + vsId + CONF_SUFFIX);
-            }
+            LOGGER.error("Updating upstream/vhost conf failed. Proceeding files stops at \n"
+                    + Joiner.on(",").join(writingVhostFiles) + "\n"
+                    + Joiner.on(",").join(writingUpstreamFiles) + ".", e);
             try {
-                deleteFile(deleteFile);
-                undoCleanFile(cleanFileNames, now);
+                deleteFile(writingVhostFiles);
+                deleteFile(writingUpstreamFiles);
+                undoCleanFile(cleansingFilenames, now);
             } catch (Exception e1) {
-                LOGGER.error("[NginxConfOpsUpdateAll]delete file or undo clean file failed. Nginx Config on disk is uncontrollable. Need refresh config files.");
-                throw new NginxProcessingException("[NginxConfOpsUpdateAll]delete file or undo clean file failed.", e1);
+                String err = "[NginxConfUpdateAll] Delete or revert conf files failed. Broken confs on disk. Refreshing is required.";
+                LOGGER.error(err);
+                throw new NginxProcessingException(err, e1);
             }
-            LOGGER.error("Vs config updated. But some file write failed. Success updated vsIds: " + sucIds.toString(), e);
             throw e;
         }
-        LOGGER.info("Vs config updated. vsId: " + sucIds.toString());
+
+        LOGGER.info("[NginxConfUpdateAll] Successfuly updated conf files: \n"
+                + Joiner.on(",").join(writingVhostFiles) + "\n"
+                + Joiner.on(",").join(writingUpstreamFiles) + ".");
         return now.getTime();
     }
 
@@ -123,8 +132,8 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
             deleteFile(deleteFileNames);
             undoCleanFile(undoFileNames, time);
         } catch (Exception e) {
-            LOGGER.error("[UndoUpdateAll]Failed to delete and undo file.", e);
-            throw new NginxProcessingException("[UndoUpdateAll]Failed to delete and undo file.", e);
+            LOGGER.error("[UndoUpdateAll] Failed to delete and revert files on disk.", e);
+            throw new NginxProcessingException("[UndoUpdateAll] Failed to delete and revert files on disk.", e);
         }
     }
 
@@ -134,7 +143,7 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
             file = new File(name);
             if (file.exists()) {
                 if (!file.delete()) {
-                    LOGGER.error("[DeleteConfFile] Delete conf file failed. File name:" + name);
+                    LOGGER.error("[DeleteConfFile] Delete conf file failed. Filename:" + name);
                 }
             }
         }
@@ -142,7 +151,6 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
 
     @Override
     public void updateNginxConf(String nginxConf) throws Exception {
-
         String fileName = DEFAULT_NGINX_CONF_DIR + File.separator + NGINX_CONF_FILE;
         List<String> files = new ArrayList<>();
         files.add(fileName);
@@ -178,98 +186,151 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
     }
 
     @Override
-    public Long cleanAndUpdateConf(Set<Long> cleanVsIds, Map<Long, VsConfData> vsConfs) throws Exception {
-        List<String> cleanFileNames = new ArrayList<>();
-        Date now = new Date();
+    public FileOpRecord cleanAndUpdateConf(Set<Long> cleanVsIds, Set<Long> updateVsIds, NginxConfEntry entry) throws Exception {
+        FileOpRecord record = new FileOpRecord();
         String vhostDir = DEFAULT_NGINX_CONF_DIR + File.separator + "vhosts";
         String upstreamDir = DEFAULT_NGINX_CONF_DIR + File.separator + "upstreams";
-        List<String> deleteFileNames = new ArrayList<>();
+
         File vhostFile = new File(vhostDir);
         String[] vhostFileNames = vhostFile.list();
         File upstreamFile = new File(upstreamDir);
         String[] upstreamFileNames = upstreamFile.list();
+
+        LOGGER.info("[NginxConfPartialUpdate] Cleanse trash files under dir upstreams and vhosts.");
+        List<String> trashFilenames = new ArrayList<>();
         for (String name : vhostFileNames) {
             if (!name.endsWith(CONF_SUFFIX)) {
-                deleteFileNames.add(vhostDir + File.separator + name);
+                trashFilenames.add(vhostDir + File.separator + name);
             }
         }
         for (String name : upstreamFileNames) {
             if (!name.endsWith(CONF_SUFFIX)) {
-                deleteFileNames.add(upstreamDir + File.separator + name);
+                trashFilenames.add(upstreamDir + File.separator + name);
             }
         }
         try {
-            deleteFile(deleteFileNames);
+            deleteFile(trashFilenames);
         } catch (Exception e) {
-            LOGGER.error("[CleanAndUpdateConf]Delete backup files failed.", e);
+            LOGGER.error("[NginxConfPartialUpdate] Cleansing trash files failed.", e);
         }
-        for (Long vsId : cleanVsIds) {
-            cleanFileNames.add(vhostDir + File.separator + vsId + CONF_SUFFIX);
-            cleanFileNames.add(upstreamDir + File.separator + vsId + CONF_SUFFIX);
-        }
-        try {
-            cleanFile(cleanFileNames, now);
-        } catch (Exception e) {
-            undoCleanFile(cleanFileNames, now);
-            throw e;
-        }
-        List<Long> sucIds = new ArrayList<>();
-        List<String> copyFiles = new ArrayList<>();
-        try {
-            for (Long vsId : vsConfs.keySet()) {
-                copyFiles.add(vhostDir + File.separator + vsId + CONF_SUFFIX);
-                copyFiles.add(upstreamDir + File.separator + vsId + CONF_SUFFIX);
-            }
-            copyFile(copyFiles, now);
 
-            for (Long vsId : vsConfs.keySet()) {
-                writeFile(vhostDir, vsId + CONF_SUFFIX, vsConfs.get(vsId).getVhostConf());
-                writeFile(upstreamDir, vsId + CONF_SUFFIX, vsConfs.get(vsId).getUpstreamConf());
-                sucIds.add(vsId);
+        // mark files to be cleansed(.clean/.bak)
+        // extract filename if contains related vs ids
+        Set<String> nextRelatedUpstreams = new HashSet<>();
+        for (ConfFile cf : entry.getUpstreams().getFiles()) {
+            nextRelatedUpstreams.add(cf.getName());
+        }
+        Set<String> currentRelatedUpstreams = new HashSet<>();
+        for (String upfn : upstreamFile.list()) {
+            upfn = upfn.substring(0, upfn.indexOf(CONF_SUFFIX));
+            String[] fn = upfn.split("_");
+            boolean add = false;
+            for (String relatedVsId : fn) {
+                if (relatedVsId.isEmpty()) continue;
+
+                Long vsId = 0L;
+                try {
+                    vsId = Long.parseLong(relatedVsId);
+                } catch (NumberFormatException ex) {
+                    LOGGER.warn("[NginxConfPartialUpdate] Unable to extract vs id information from upstream file: " + upfn + ".");
+                    break;
+                }
+                if (updateVsIds.contains(vsId) || cleanVsIds.contains(vsId)) {
+                    if (!add) add = true;
+                }
+            }
+            if (add) {
+                currentRelatedUpstreams.add(upfn);
+            }
+        }
+
+        LOGGER.info("[NginxConfPartialUpdate] Backup related files under dir upstreams and vhosts on disk.");
+        Set<String> cleansingUpstreams = new HashSet<>(currentRelatedUpstreams);
+        cleansingUpstreams.removeAll(nextRelatedUpstreams);
+
+        Set<String> backupUpstreams = new HashSet<>(currentRelatedUpstreams);
+        backupUpstreams.retainAll(nextRelatedUpstreams);
+
+        List<String> cleansingFilenames = new ArrayList<>();
+        List<String> backingupFilenames = new ArrayList<>();
+        for (Long vsId : cleanVsIds) {
+            cleansingFilenames.add(vhostDir + File.separator + vsId + CONF_SUFFIX);
+        }
+        for (String fn : cleansingUpstreams) {
+            cleansingFilenames.add(upstreamDir + File.separator + fn + CONF_SUFFIX);
+        }
+
+        try {
+            cleanFile(cleansingFilenames, record.getTimeStamp());
+        } catch (Exception e) {
+            undoCleanFile(cleansingFilenames, record.getTimeStamp());
+            throw e;
+        }
+
+        for (ConfFile cf : entry.getVhosts().getFiles()) {
+            backingupFilenames.add(vhostDir + File.separator + cf.getName() + CONF_SUFFIX);
+        }
+        for (String fn : backupUpstreams) {
+            backingupFilenames.add(upstreamDir + File.separator + fn + CONF_SUFFIX);
+        }
+
+        try {
+            copyFile(backingupFilenames, record.getTimeStamp());
+        } catch (Exception e) {
+            undoCopyFile(backingupFilenames, record.getTimeStamp());
+            throw e;
+        }
+
+        LOGGER.info("[NginxConfPartialUpdate] Start to write confs of related vses under dir upstreams and vhosts.");
+        List<String> writingVhostFiles = new ArrayList<>();
+        List<String> writingUpstreamFiles = new ArrayList<>();
+        try {
+            for (ConfFile cf : entry.getVhosts().getFiles()) {
+                writeFile(vhostDir, cf.getName() + CONF_SUFFIX, cf.getContent());
+                writingVhostFiles.add(vhostDir + File.separator + cf.getName() + CONF_SUFFIX);
+            }
+            for (ConfFile cf : entry.getUpstreams().getFiles()) {
+                writeFile(upstreamDir, cf.getName() + CONF_SUFFIX, cf.getContent());
+                writingUpstreamFiles.add(upstreamDir + File.separator + cf.getName() + CONF_SUFFIX);
             }
         } catch (Exception e) {
-            LOGGER.error("[CleanAndUpdateConf]Vs config updated. But some file write failed.Going to undo ops. Suc Ids:" + sucIds.toString(), e);
+            LOGGER.error("Updating upstream/vhost conf failed. Proceeding files stops at \n"
+                    + Joiner.on(",").join(writingVhostFiles) + "\n"
+                    + Joiner.on(",").join(writingUpstreamFiles) + ".", e);
             try {
-                undoCleanFile(cleanFileNames, now);
-                undoCopyFile(copyFiles, now);
+                deleteFile(writingVhostFiles);
+                deleteFile(writingUpstreamFiles);
+                undoCleanFile(cleansingFilenames, record.getTimeStamp());
+                undoCopyFile(backingupFilenames, record.getTimeStamp());
             } catch (Exception e1) {
-                LOGGER.error("[CleanAndUpdateConf] undo clean file or undo copy file failed. config is Uncontrollable. Need refresh configs.Date:" + now.toString());
-                throw new NginxProcessingException("[CleanAndUpdateConf] undo clean file or undo copy file failed. config is Uncontrollable. Need refresh configs.Date:" + now.toString(), e);
+                String err = "[NginxConfPartialUpdate] Delete or revert conf files failed. Broken confs on disk. Refreshing is required. Maker - " + record.getTimeStamp().toString();
+                LOGGER.error(err);
+                throw new NginxProcessingException(err, e1);
             }
             throw e;
         }
-        LOGGER.info("[CleanAndUpdateConf]Vs config updated. vsId: " + sucIds.toString());
-        return now.getTime();
+        LOGGER.info("Successfuly updated conf files: \n"
+                + Joiner.on(",").join(writingVhostFiles) + "\n"
+                + Joiner.on(",").join(writingUpstreamFiles) + ".");
+
+        record.setCleansedFilename(cleansingFilenames);
+        record.setCopiedFilename(backingupFilenames);
+        return record;
     }
 
     @Override
-    public void undoCleanAndUpdateConf(Set<Long> cleanVsIds, Map<Long, VsConfData> vsConfs, Long timeFlag) throws Exception {
-        Date flag = new Date(timeFlag);
+    public void undoCleanAndUpdateConf(Set<Long> cleanVsIds, NginxConfEntry entry, FileOpRecord record) throws Exception {
         try {
-            LOGGER.info("[UndoCleanAndUpdateConf] Start undo clean and update conf.Time flag:" + flag.toString());
-            List<String> copyFiles = new ArrayList<>();
-            String vhostDir = DEFAULT_NGINX_CONF_DIR + File.separator + "vhosts";
-            String upstreamDir = DEFAULT_NGINX_CONF_DIR + File.separator + "upstreams";
-            List<String> cleanFileNames = new ArrayList<>();
-
-            backupAll(flag, BACKUP_TYPE_ROLLBACK);
-
-            for (Long vsId : vsConfs.keySet()) {
-                copyFiles.add(vhostDir + File.separator + vsId + CONF_SUFFIX);
-                copyFiles.add(upstreamDir + File.separator + vsId + CONF_SUFFIX);
-            }
-            undoCopyFile(copyFiles, flag);
-
-            for (Long vsId : cleanVsIds) {
-                cleanFileNames.add(vhostDir + File.separator + vsId + CONF_SUFFIX);
-                cleanFileNames.add(upstreamDir + File.separator + vsId + CONF_SUFFIX);
-            }
-            undoCleanFile(cleanFileNames, flag);
+            LOGGER.info("[UndoNginxConfPartialUpdate] Start to revert related conf files to the previous version. Maker - " + record.getTimeStamp().toString());
+            backupAll(record.getTimeStamp(), BACKUP_TYPE_ROLLBACK);
+            undoCopyFile(record.getCopiedFilename(), record.getTimeStamp());
+            undoCleanFile(record.getCleansedFilename(), record.getTimeStamp());
         } catch (Exception e) {
-            LOGGER.info("[UndoCleanAndUpdateConf] Failed to undo clean and update conf.Time flag:" + flag.toString(), e);
-            throw new NginxProcessingException("[UndoCleanAndUpdateConf] Failed to undo clean and update conf.Time flag:" + flag.toString(), e);
+            String err = "[UndoNginxConfPartialUpdate] Failed to revert related conf files to the previous version. Maker - " + record.getTimeStamp().toString();
+            LOGGER.info(err, e);
+            throw new NginxProcessingException(err, e);
         } finally {
-            LOGGER.info("[UndoCleanAndUpdateConf] End undo clean and update conf.Time flag:" + flag.toString());
+            LOGGER.info("[UndoNginxConfPartialUpdate] Successfully reverted related conf files to the previous version.");
         }
 
     }

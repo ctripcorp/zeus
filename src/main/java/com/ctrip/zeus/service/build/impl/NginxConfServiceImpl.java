@@ -4,7 +4,8 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.NginxConfServerData;
 import com.ctrip.zeus.model.entity.NginxConfUpstreamData;
-import com.ctrip.zeus.nginx.entity.VsConfData;
+import com.ctrip.zeus.nginx.entity.*;
+import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.NginxConfService;
@@ -25,24 +26,18 @@ import java.util.Map;
  */
 @Service("nginxConfService")
 public class NginxConfServiceImpl implements NginxConfService {
-
     @Resource
     private NginxConfDao nginxConfDao;
     @Resource
-    private NginxConfServerDao nginxConfServerDao;
-    @Resource
-    private NginxConfUpstreamDao nginxConfUpstreamDao;
+    private NginxConfSlbDao nginxConfSlbDao;
     @Resource
     private BuildInfoService buildInfoService;
-    @Resource
-    ConfGroupSlbActiveDao confGroupSlbActiveDao;
-
 
     private Logger logger = LoggerFactory.getLogger(NginxConfServiceImpl.class);
 
     @Override
     public String getNginxConf(Long slbId, Long version) throws Exception {
-        NginxConfDo nginxConfDo = nginxConfDao.findBySlbIdAndVersion(slbId, (int) (long) version, NginxConfEntity.READSET_FULL);
+        NginxConfDo nginxConfDo = nginxConfDao.findBySlbIdAndVersion(slbId, (int) version.longValue(), NginxConfEntity.READSET_FULL);
         if (nginxConfDo == null) {
             throw new ValidationException("Not found nginx conf by slbId and version. slbId:" + slbId + " version:" + version);
         }
@@ -50,83 +45,57 @@ public class NginxConfServiceImpl implements NginxConfService {
     }
 
     @Override
-    public List<NginxConfServerData> getNginxConfServer(Long slbId, Long version) throws Exception {
-        List<NginxConfServerData> result = new ArrayList<>();
-        List<NginxConfServerDo> d = nginxConfServerDao.findAllBySlbIdAndVersion(slbId, (int) (long) version, NginxConfServerEntity.READSET_FULL);
-        if (d == null || d.size() == 0) {
-            logger.warn("Not found nginx server conf by slbId and version. slbId:" + slbId + " version:" + version);
-            return result;
+    public NginxConfEntry getUpstreamsAndVhosts(Long slbId, Long version) throws Exception {
+        NginxConfSlbDo d = nginxConfSlbDao.findBySlbAndVersion(slbId, version, NginxConfSlbEntity.READSET_FULL);
+        if (d == null) return null;
+
+        NginxConfEntry entry = DefaultJsonParser.parse(NginxConfEntry.class, d.getContent());
+        if (entry.getUpstreams().getFiles().size() == 0 || entry.getVhosts().getFiles().size() == 0) {
+            logger.warn("No vhost or upstream files exists. "
+                    + "Upstream size: " + entry.getUpstreams().getFiles().size()
+                    + ", Vhost size: " + entry.getVhosts().getFiles().size() + ".");
         }
-        for (NginxConfServerDo t : d) {
-            result.add(new NginxConfServerData().setVsId(t.getSlbVirtualServerId()).setContent(t.getContent()));
-        }
-        return result;
+        return entry;
     }
 
     @Override
-    public List<NginxConfUpstreamData> getNginxConfUpstream(Long slbId, Long version) throws Exception {
-        List<NginxConfUpstreamData> result = new ArrayList<>();
-        List<NginxConfUpstreamDo> d = nginxConfUpstreamDao.findAllBySlbIdAndVersion(slbId, (int) (long) version, NginxConfUpstreamEntity.READSET_FULL);
-        if (d == null || d.size() == 0) {
-            logger.warn("Not found nginx upstream conf by slbId and version. slbId:" + slbId + " version:" + version);
-            return result;
-        }
-        for (NginxConfUpstreamDo t : d) {
-            result.add(new NginxConfUpstreamData().setVsId(t.getSlbVirtualServerId()).setContent(t.getContent()));
-        }
-        return result;
-    }
+    public NginxConfEntry getUpstreamsAndVhosts(Long slbId, Long version, List<Long> vsIds) throws Exception {
+        NginxConfEntry entry = new NginxConfEntry().setUpstreams(new Upstreams()).setVhosts(new Vhosts());
+        NginxConfEntry completeEntry = getUpstreamsAndVhosts(slbId, version);
+        if (completeEntry == null) return null;
 
-    @Override
-    public Map<Long, VsConfData> getVsConfBySlbId(Long slbId, Long version) throws Exception {
-        List<NginxConfServerData> confServerDataList = getNginxConfServer(slbId, version);
-        List<NginxConfUpstreamData> confUpstreamDataList = getNginxConfUpstream(slbId, version);
-        if (confServerDataList.size() != confUpstreamDataList.size()) {
-            throw new ValidationException("Count of server conf and count of upstream conf is different.");
-        }
-        Map<Long, VsConfData> dataMap = new HashMap<>();
-        for (NginxConfUpstreamData upstream : confUpstreamDataList) {
-            VsConfData vsConfData = new VsConfData();
-            Long vsId = upstream.getVsId();
-            vsConfData.setUpstreamConf(upstream.getContent());
-            dataMap.put(vsId, vsConfData);
-        }
-        for (NginxConfServerData sd : confServerDataList) {
-            if (dataMap.containsKey(sd.getVsId())) {
-                dataMap.get(sd.getVsId()).setVhostConf(sd.getContent());
-            } else {
-                throw new ValidationException("Not found upstream conf for server conf.");
+        for (ConfFile cf : completeEntry.getVhosts().getFiles()) {
+            try {
+                Long vsId = Long.parseLong(cf.getName());
+                if (vsIds.contains(vsId)) {
+                    entry.getVhosts().addConfFile(cf);
+                }
+            } catch (NumberFormatException ex) {
+                logger.error("Unable to extract vs id information from vhost file: " + cf.getName() + ".");
             }
         }
-        return dataMap;
-    }
+        for (ConfFile cf : completeEntry.getUpstreams().getFiles()) {
+            String[] fn = cf.getName().split("_");
+            boolean add = false;
+            for (String relatedVsId : fn) {
+                if (relatedVsId.isEmpty()) continue;
 
-    @Override
-    public Map<Long, VsConfData> getVsConfByVsIds(Long slbId, List<Long> vsIds, Long version) throws Exception {
-        List<NginxConfServerData> confServerDataList = getNginxConfServer(slbId, version);
-        List<NginxConfUpstreamData> confUpstreamDataList = getNginxConfUpstream(slbId, version);
-        if (confServerDataList.size() != confUpstreamDataList.size()) {
-            throw new ValidationException("Count of server conf and count of upstream conf is different.");
-        }
-        Map<Long, VsConfData> dataMap = new HashMap<>();
-        for (NginxConfUpstreamData upstream : confUpstreamDataList) {
-            if (vsIds.contains(upstream.getVsId())) {
-                VsConfData vsConfData = new VsConfData();
-                Long vsId = upstream.getVsId();
-                vsConfData.setUpstreamConf(upstream.getContent());
-                dataMap.put(vsId, vsConfData);
-            }
-        }
-        for (NginxConfServerData sd : confServerDataList) {
-            if (vsIds.contains(sd.getVsId())) {
-                if (dataMap.containsKey(sd.getVsId())) {
-                    dataMap.get(sd.getVsId()).setVhostConf(sd.getContent());
-                } else {
-                    throw new ValidationException("Not found upstream conf for server conf.");
+                Long vsId = 0L;
+                try {
+                    vsId = Long.parseLong(relatedVsId);
+                } catch (NumberFormatException ex) {
+                    logger.warn("Unable to extract vs id information from upstream file: " + cf.getName() + ".");
+                    break;
+                }
+                if (vsIds.contains(vsId)) {
+                    if (!add) add = true;
                 }
             }
+            if (add) {
+                entry.getUpstreams().addConfFile(cf);
+            }
         }
-        return dataMap;
+        return entry;
     }
 
     @Override

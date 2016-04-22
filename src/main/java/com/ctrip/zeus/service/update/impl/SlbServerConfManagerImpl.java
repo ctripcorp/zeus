@@ -2,9 +2,10 @@ package com.ctrip.zeus.service.update.impl;
 
 import com.ctrip.zeus.commit.entity.Commit;
 import com.ctrip.zeus.exceptions.NginxProcessingException;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
+import com.ctrip.zeus.nginx.entity.NginxConfEntry;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
-import com.ctrip.zeus.nginx.entity.VsConfData;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.commit.CommitMergeService;
 import com.ctrip.zeus.service.commit.CommitService;
@@ -25,7 +26,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -82,10 +82,19 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                     needReload = true;
                 }
                 //3.2 get nginx config
-                String nginxConf = nginxConfService.getNginxConf(slbId, slbVersion);
-                Map<Long, VsConfData> vsConfDataMap = nginxConfService.getVsConfBySlbId(slbId, slbVersion);
+                String nginxConf = null;
+                try {
+                    nginxConf = nginxConfService.getNginxConf(slbId, slbVersion);
+                } catch (ValidationException ex) {
+                }
+                NginxConfEntry entry = nginxConfService.getUpstreamsAndVhosts(slbId, slbVersion);
+                if (nginxConf == null || entry == null) {
+                    String err = "Nginx conf file records are missing of slb-version " + slbId +  "-" + slbVersion + ".";
+                    logger.error(err);
+                    throw new ValidationException(err);
+                }
                 //3.3 refresh config
-                NginxResponse res = nginxService.refresh(nginxConf, vsConfDataMap, needReload);
+                NginxResponse res = nginxService.refresh(nginxConf, entry, needReload);
                 //3.3.1 if failed, set need refresh flag and return result.
                 if (!res.getSucceed()) {
                     logger.error("[SlbServerUpdate] Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion + response.toString());
@@ -105,9 +114,18 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                     logger.info("[SlbServerUpdate] Not found commit. return success instead.");
                     return new NginxResponse().setSucceed(true).setServerIp(ip);
                 }
-                //4.2 get all configs
-                String nginxConf = nginxConfService.getNginxConf(slbId, slbVersion);
-                Map<Long, VsConfData> dataMap = nginxConfService.getVsConfByVsIds(slbId, commit.getVsIds(), slbVersion);
+                //4.2 get all configs by vs ids in commit
+                String nginxConf = null;
+                try {
+                    nginxConf = nginxConfService.getNginxConf(slbId, slbVersion);
+                } catch (ValidationException ex) {
+                }
+                NginxConfEntry entry = nginxConfService.getUpstreamsAndVhosts(slbId, slbVersion, commit.getVsIds());
+                if (nginxConf == null || entry == null) {
+                    String err = "Nginx conf file records are missing of slb-version " + slbId +  "-" + slbVersion + ".";
+                    logger.error(err);
+                    throw new ValidationException(err);
+                }
                 //4.3 get clean vs ids
                 Set<Long> cleanSet = new HashSet<>();
                 cleanSet.addAll(commit.getCleanvsIds());
@@ -127,10 +145,10 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 if (dyups) {
                     Set<Long> gids = new HashSet<>();
                     gids.addAll(commit.getGroupIds());
-                    dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(dataMap, gids);
+                    dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(entry, gids);
                 }
                 //4.5 update nginx configs
-                List<NginxResponse> responses = nginxService.update(nginxConf, dataMap, cleanSet, dyUpstreamOpsDatas, reload, test, dyups);
+                List<NginxResponse> responses = nginxService.update(nginxConf, entry, new HashSet<>(commit.getVsIds()), cleanSet, dyUpstreamOpsDatas, reload, test, dyups);
                 //4.6 check response, if failed. set need refresh flag.
                 for (NginxResponse r : responses) {
                     if (!r.getSucceed()) {

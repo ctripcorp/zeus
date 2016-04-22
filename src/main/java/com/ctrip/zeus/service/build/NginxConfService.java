@@ -1,14 +1,9 @@
 package com.ctrip.zeus.service.build;
 
-import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
-import com.ctrip.zeus.model.entity.NginxConfServerData;
-import com.ctrip.zeus.model.entity.NginxConfUpstreamData;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.nginx.entity.VsConfData;
+import com.ctrip.zeus.nginx.entity.NginxConfEntry;
 import com.ctrip.zeus.service.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author:xingchaowang
@@ -27,45 +22,24 @@ public interface NginxConfService extends Repository {
     public String getNginxConf(Long slbId, Long version) throws Exception;
 
     /**
-     * get nginx server config by slb name and version number
-     *
-     * @param slbId   the slb name
-     * @param version the version number
-     * @return nginx server config data list
+     * Get nginx conf under dir upstreams/ and vhosts/
+     * @param slbId
+     * @param version
+     * @return nginx conf entry which contains upstream and vhost conf files
      * @throws Exception
      */
-    public List<NginxConfServerData> getNginxConfServer(Long slbId, Long version) throws Exception;
-
-    /**
-     * get nginx upstream config by slb name and version number
-     *
-     * @param slbId   the slb name
-     * @param version the version number
-     * @return nginx upstream config data list
-     * @throws Exception
-     */
-    public List<NginxConfUpstreamData> getNginxConfUpstream(Long slbId, Long version) throws Exception;
-
-    /**
-     * get nginx upstream&server config by slb id and version number
-     *
-     * @param slbId   the slb name
-     * @param version the version number
-     * @return nginx upstream config data list
-     * @throws Exception
-     */
-    public Map<Long,VsConfData> getVsConfBySlbId(Long slbId, Long version) throws Exception;
+    public NginxConfEntry getUpstreamsAndVhosts(Long slbId, Long version) throws Exception;
 
       /**
      * get nginx upstream&server config by slb id , vsIds and version number
      *
-     * @param slbId   the slb name
-     * @param version the version number
-     * @param vsIds the vsIds
-     * @return nginx upstream config data list
+     * @param slbId
+     * @param version selected slb conf version
+     * @param vsIds selected vs ids
+     * @return nginx conf entry which contains upstream and vhost conf files of selected vs ids
      * @throws Exception
      */
-    public Map<Long,VsConfData> getVsConfByVsIds(Long slbId, List<Long> vsIds, Long version) throws Exception;
+    public NginxConfEntry getUpstreamsAndVhosts(Long slbId, Long version, List<Long> vsIds) throws Exception;
 
     /**
      * get current building version by slb name

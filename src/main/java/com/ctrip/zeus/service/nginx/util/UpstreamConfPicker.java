@@ -2,6 +2,8 @@ package com.ctrip.zeus.service.nginx.util;
 
 import com.ctrip.zeus.exceptions.NginxProcessingException;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
+import com.ctrip.zeus.nginx.entity.ConfFile;
+import com.ctrip.zeus.nginx.entity.NginxConfEntry;
 import com.ctrip.zeus.nginx.entity.VsConfData;
 import com.google.common.base.Joiner;
 import org.slf4j.Logger;
@@ -19,11 +21,11 @@ public class UpstreamConfPicker {
 
     private static final String Identifier = "upstream";
 
-    public DyUpstreamOpsData[] pickByGroupIds(Map<Long, VsConfData> vsConf, final Set<Long> groupIds) throws NginxProcessingException {
+    public DyUpstreamOpsData[] pickByGroupIds(NginxConfEntry entry, final Set<Long> groupIds) throws NginxProcessingException {
         final List<DyUpstreamOpsData> result = new ArrayList<>();
         final Set<Long> selected = new HashSet<>();
-        for (VsConfData data : vsConf.values()) {
-            parse(data.getUpstreamConf(), new UpstreamDirectiveDelegate() {
+        for (ConfFile cf : entry.getUpstreams().getFiles()) {
+            parse(cf.getContent(), new UpstreamDirectiveDelegate() {
                 @Override
                 public void delegate(String upstreamName, String content) {
                     try {

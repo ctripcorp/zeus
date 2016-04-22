@@ -57,14 +57,13 @@ public class NginxServiceImpl implements NginxService {
 
     private final Logger logger = LoggerFactory.getLogger(NginxServiceImpl.class);
 
-
     @Override
-    public List<NginxResponse> update(String nginxConf, Map<Long, VsConfData> vsConfDataMap, Set<Long> cleanVsIds, DyUpstreamOpsData[] dyups, boolean needReload, boolean needTest, boolean needDyups) throws Exception {
+    public List<NginxResponse> update(String nginxConf, NginxConfEntry entry, Set<Long> updateVsIds, Set<Long> cleanVsIds, DyUpstreamOpsData[] dyups, boolean needReload, boolean needTest, boolean needDyups) throws Exception {
         List<NginxResponse> response = new ArrayList<>();
         try {
             //1. update config
             nginxConfOpsService.updateNginxConf(nginxConf);
-            Long cleanConfFlag = nginxConfOpsService.cleanAndUpdateConf(cleanVsIds, vsConfDataMap);
+            FileOpRecord fileOpRecord = nginxConfOpsService.cleanAndUpdateConf(cleanVsIds, updateVsIds, entry);
             //2. test reload or dyups, if needed. undo config if failed.
             if (needTest) {
                 NginxResponse res = nginxOpsService.test();
@@ -72,7 +71,7 @@ public class NginxServiceImpl implements NginxService {
                 if (!res.getSucceed()) {
                     logger.error("[NginxService]update failed.Test conf failed.");
                     nginxConfOpsService.undoUpdateNginxConf();
-                    nginxConfOpsService.undoCleanAndUpdateConf(cleanVsIds, vsConfDataMap, cleanConfFlag);
+                    nginxConfOpsService.undoCleanAndUpdateConf(cleanVsIds, entry, fileOpRecord);
                 }
             }
             if (needReload) {
@@ -81,7 +80,7 @@ public class NginxServiceImpl implements NginxService {
                 if (!res.getSucceed()) {
                     logger.error("[NginxService]update failed.Reload conf failed.");
                     nginxConfOpsService.undoUpdateNginxConf();
-                    nginxConfOpsService.undoCleanAndUpdateConf(cleanVsIds, vsConfDataMap, cleanConfFlag);
+                    nginxConfOpsService.undoCleanAndUpdateConf(cleanVsIds, entry, fileOpRecord);
                 }
             }
             if (needDyups) {
@@ -91,7 +90,7 @@ public class NginxServiceImpl implements NginxService {
                     if (!res.getSucceed()) {
                         logger.error("[NginxService]update failed.Dyups conf failed.");
                         nginxConfOpsService.undoUpdateNginxConf();
-                        nginxConfOpsService.undoCleanAndUpdateConf(cleanVsIds, vsConfDataMap, cleanConfFlag);
+                        nginxConfOpsService.undoCleanAndUpdateConf(cleanVsIds, entry, fileOpRecord);
                         break;
                     }
                 }
@@ -103,9 +102,9 @@ public class NginxServiceImpl implements NginxService {
     }
 
     @Override
-    public NginxResponse refresh(String nginxConf, Map<Long, VsConfData> vsConfDataMap, boolean reload) throws Exception {
+    public NginxResponse refresh(String nginxConf, NginxConfEntry entry, boolean reload) throws Exception {
         nginxConfOpsService.updateNginxConf(nginxConf);
-        Long updateAllFlag = nginxConfOpsService.updateAll(vsConfDataMap);
+        Long updateAllFlag = nginxConfOpsService.updateAll(entry);
         if (reload) {
             NginxResponse res = nginxOpsService.reload();
             if (!res.getSucceed()) {
