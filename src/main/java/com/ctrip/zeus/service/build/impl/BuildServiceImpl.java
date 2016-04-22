@@ -7,7 +7,6 @@ import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
-import com.ctrip.zeus.service.build.conf.NginxConf;
 import com.ctrip.zeus.service.build.conf.UpstreamsConf;
 import com.ctrip.zeus.support.GenericSerializer;
 import org.slf4j.Logger;
@@ -25,8 +24,6 @@ import java.util.*;
 public class BuildServiceImpl implements BuildService {
     @Resource
     private BuildInfoService buildInfoService;
-    @Resource
-    ConfGroupSlbActiveDao confGroupSlbActiveDao;
     @Resource
     private NginxConfBuilder nginxConfigBuilder;
     @Resource

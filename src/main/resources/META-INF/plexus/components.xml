@@ -244,6 +244,15 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>nginx-conf-slb</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>nginx_conf_slb</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>nginx-conf-upstream</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -740,6 +749,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.NginxConfServerDao</role>
 			<implementation>com.ctrip.zeus.dal.core.NginxConfServerDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.NginxConfSlbDao</role>
+			<implementation>com.ctrip.zeus.dal.core.NginxConfSlbDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

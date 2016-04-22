@@ -57,7 +57,7 @@ public class ServerConf {
         b.append("proxy_http_version 1.1;\n");
         addProxyBufferSize(b, vs.getId());
 
-        if (vs.getSsl()) {
+        if (vs.isSsl()) {
             b.append("ssl on;\n")
                     .append("ssl_certificate ").append(SSL_PATH).append(vs.getId()).append("/ssl.crt;\n")
                     .append("ssl_certificate_key ").append(SSL_PATH).append(vs.getId()).append("/ssl.key;\n");
