@@ -1,6 +1,5 @@
 package com.ctrip.zeus.restful.resource;
 
-import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.entity.*;
@@ -8,9 +7,8 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.model.ModelStatusMapping;
-import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.nginx.NginxService;
-import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.support.GenericSerializer;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -20,6 +18,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -30,17 +29,12 @@ import java.util.List;
 @Component
 @Path("/nginx")
 public class NginxResource {
-
     @Resource
     private NginxService nginxService;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
     private NginxConfService nginxConfService;
-    @Resource
-    private NginxConfServerDao nginxConfServerDao;
-    @Resource
-    private NginxConfUpstreamDao nginxConfUpstreamDao;
     @Resource
     private EntityFactory entityFactory;
 
@@ -55,18 +49,17 @@ public class NginxResource {
         }
         Long slbId = map.getOnlineMapping().get(vsid).getSlbId();
         int version;
-        if (null == versionNum || versionNum <= 0)
-        {
-            version= nginxConfService.getCurrentVersion(slbId);
-        }else
-        {
+        if (null == versionNum || versionNum <= 0) {
+            version = nginxConfService.getCurrentVersion(slbId);
+        } else {
             version = versionNum;
         }
-        NginxConfServerDo nginxConfServerDo = nginxConfServerDao.findBySlbVirtualServerIdAndVersion(vsid, version, NginxConfServerEntity.READSET_FULL);
-        NginxConfUpstreamDo nginxConfUpstreamDo = nginxConfUpstreamDao.findBySlbVirtualServerIdAndVersion(vsid,version,NginxConfUpstreamEntity.READSET_FULL);
+        List<Long> vsArray = new ArrayList<>();
+        vsArray.add(vsid);
+        NginxConfEntry confEntry = nginxConfService.getUpstreamsAndVhosts(slbId, new Long(version), vsArray);
         response.setVersion(version)
-                .setServerConf(nginxConfServerDo.getContent())
-                .setUpstreamConf(nginxConfUpstreamDo.getContent())
+                .setServerConf(GenericSerializer.writeJson(confEntry.getVhosts()))
+                .setUpstreamConf(GenericSerializer.writeJson(confEntry.getUpstreams()))
                 .setVirtualServerId(vsid);
         return responseHandler.handle(response, hh.getMediaType());
     }

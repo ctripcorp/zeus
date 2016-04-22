@@ -4,7 +4,6 @@ import com.ctrip.zeus.exceptions.NginxProcessingException;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.nginx.entity.ConfFile;
 import com.ctrip.zeus.nginx.entity.NginxConfEntry;
-import com.ctrip.zeus.nginx.entity.VsConfData;
 import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

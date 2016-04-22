@@ -4,6 +4,7 @@ import com.ctrip.zeus.commit.entity.Commit;
 import com.ctrip.zeus.exceptions.NginxProcessingException;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
+import com.ctrip.zeus.nginx.entity.ConfFile;
 import com.ctrip.zeus.nginx.entity.NginxConfEntry;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.service.build.NginxConfService;
@@ -24,9 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by fanqq on 2016/3/15.
@@ -136,7 +135,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 //4.4 get dyups data if needed
                 //4.4.1 if reload is true, try to use dyups instead.
                 if (reload) {
-                    if (checkSkipReload(slbId, commit, ip, dataMap, nginxConf)) {
+                    if (checkSkipReload(slbId, commit, ip, entry, nginxConf)) {
                         reload = false;
                         dyups = true;
                     }
@@ -172,7 +171,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         return update(true, true);
     }
 
-    private boolean checkSkipReload(Long slbId, Commit commit, String ip, Map<Long, VsConfData> dataMap, String nginxConf) throws Exception {
+    private boolean checkSkipReload(Long slbId, Commit commit, String ip, NginxConfEntry nextEntry, String nginxConf) throws Exception {
         //1. clean vs config, need reload.
         if (commit.getCleanvsIds().size() > 0) {
             return false;
@@ -188,16 +187,21 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
             return false;
         }
         //3. compare vhost files
-        Map<Long, VsConfData> serverDataMap = nginxConfService.getVsConfByVsIds(slbId, commit.getVsIds(), serverVersion);
-        for (Long vsId : dataMap.keySet()) {
-            //3.1 if has new vhost file, need reload.
-            if (!serverDataMap.containsKey(vsId)) {
-                return false;
-            }
-            //3.2 if any vhost file changed, need reload.
-            if (!serverDataMap.get(vsId).getVhostConf().equals(dataMap.get(vsId).getVhostConf())) {
-                return false;
-            }
+        NginxConfEntry serverCurrentEntry = nginxConfService.getUpstreamsAndVhosts(slbId, serverVersion, commit.getVsIds());
+        if (serverCurrentEntry.getVhosts().getFiles().size() != nextEntry.getVhosts().getFiles().size()) {
+            return false;
+        }
+
+        Map<String, Integer> index = new HashMap<>();
+        List<ConfFile> vhosts = nextEntry.getVhosts().getFiles();
+        for (int i = 0; i < vhosts.size(); i++) {
+            index.put(vhosts.get(i).getName(), i);
+        }
+        for (ConfFile cf : serverCurrentEntry.getVhosts().getFiles()) {
+            Integer idx = index.get(cf.getName());
+            if (idx == null) return false;
+
+            if (!vhosts.get(idx).equals(cf.getContent())) return false;
         }
         return true;
     }
