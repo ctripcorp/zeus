@@ -57,10 +57,17 @@ public class NginxResource {
         List<Long> vsArray = new ArrayList<>();
         vsArray.add(vsid);
         NginxConfEntry confEntry = nginxConfService.getUpstreamsAndVhosts(slbId, new Long(version), vsArray);
-        response.setVersion(version)
-                .setServerConf(GenericSerializer.writeJson(confEntry.getVhosts()))
-                .setUpstreamConf(GenericSerializer.writeJson(confEntry.getUpstreams()))
-                .setVirtualServerId(vsid);
+        StringBuilder stringBuilder = new StringBuilder();
+        for (ConfFile cf : confEntry.getVhosts().getFiles()) {
+            stringBuilder.append(cf.getContent());
+        }
+        response.setServerConf(stringBuilder.toString());
+        stringBuilder.setLength(0);
+        for (ConfFile cf : confEntry.getUpstreams().getFiles()) {
+            stringBuilder.append(cf.getContent());
+        }
+        response.setUpstreamConf(stringBuilder.toString());
+        response.setVersion(version).setVirtualServerId(vsid);
         return responseHandler.handle(response, hh.getMediaType());
     }
 
