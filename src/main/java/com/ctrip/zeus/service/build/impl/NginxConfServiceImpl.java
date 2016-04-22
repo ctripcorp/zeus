@@ -98,11 +98,11 @@ public class NginxConfServiceImpl implements NginxConfService {
             }
         }
 
-        if (vhostIdCheck.containsAll(origin) && upstreamIdCheck.containsAll(origin)) {
+        vhostIdCheck.removeAll(origin);
+        upstreamIdCheck.removeAll(origin);
+        if (vhostIdCheck.isEmpty() && upstreamIdCheck.isEmpty()) {
             return entry;
         } else {
-            vhostIdCheck.removeAll(origin);
-            upstreamIdCheck.removeAll(origin);
             StringBuilder err = new StringBuilder();
             err.append("Unexpected missing vhost conf files of given vs ids: " + Joiner.on(",").join(vhostIdCheck)).append('.').append('\n');
             err.append("Unexpected missing upstream conf files of given vs ids: " + Joiner.on(",").join(upstreamIdCheck)).append('.').append('\n');
