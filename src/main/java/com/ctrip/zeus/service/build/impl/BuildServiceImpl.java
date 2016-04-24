@@ -128,9 +128,10 @@ public class BuildServiceImpl implements BuildService {
                                            Set<String> allDownServers,
                                            Set<String> allUpGroupServers,
                                            Group group) throws Exception {
-        String upstreambody = upstreamsConf.buildUpstreamConfBody(virtualServer, group, allDownServers, allUpGroupServers);
-        String upstreamName = upstreamsConf.buildUpstreamName(virtualServer, group);
-        return new DyUpstreamOpsData().setUpstreamCommands(upstreambody).setUpstreamName(upstreamName);
+        ConfWriter confWriter = new ConfWriter();
+        upstreamsConf.writeUpstream(confWriter, virtualServer, group, allDownServers, allUpGroupServers);
+        String upstreamBody = confWriter.getValue();
+        return new DyUpstreamOpsData().setUpstreamCommands(upstreamBody).setUpstreamName(UpstreamsConf.getUpstreamName(group.getId()));
     }
 
     @Override

@@ -2,9 +2,21 @@ package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.AbstractServerTest;
 import com.ctrip.zeus.service.build.ConfService;
+import com.ctrip.zeus.util.S;
+import com.netflix.config.DynamicProperty;
+import com.netflix.config.DynamicPropertyFactory;
+import com.netflix.config.DynamicStringProperty;
+import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
+import support.AbstractSpringTest;
+import support.MysqlDbServer;
+
 import javax.annotation.Resource;
+import java.io.File;
 
 /**
  * Created by lu.wang on 2016/4/20.
@@ -15,6 +27,14 @@ public class ConfServiceTest extends AbstractServerTest {
     ConfService confService;
 
     @Test
+    public void test1() {
+        DynamicStringProperty stringProperty =
+                DynamicPropertyFactory.getInstance().getStringProperty("nginx.server.proxy.buffer.size.default", "aa");
+        System.out.println(stringProperty.get());
+    }
+
+    @Test
+    @Ignore
     public void testGetStringValue() {
         try {
             String value;
@@ -47,6 +67,7 @@ public class ConfServiceTest extends AbstractServerTest {
     }
 
     @Test
+    @Ignore
     public void testGetIntValue() {
         try {
 
@@ -80,6 +101,7 @@ public class ConfServiceTest extends AbstractServerTest {
     }
 
     @Test
+    @Ignore
     public void testGetEnable() {
         try {
             boolean value;
@@ -108,6 +130,11 @@ public class ConfServiceTest extends AbstractServerTest {
         }
 
 
+    }
+
+    @Test
+    public void test() {
+        
     }
 
 }

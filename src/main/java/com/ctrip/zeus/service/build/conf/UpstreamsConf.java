@@ -26,7 +26,7 @@ public class UpstreamsConf {
 
     private Long slbId = null;
     private Long vsId = null;
-    public final String UpstreamPrefix = "backend_";
+    public static final String UpstreamPrefix = "backend_";
 
     public List<ConfFile> generate(Set<Long> vsCandidates, VirtualServer vs, List<Group> groups,
                                           Set<String> downServers, Set<String> upServers,
@@ -125,4 +125,15 @@ public class UpstreamsConf {
         AssertUtils.assertNotNull(groupServer.getMaxFails(), "GroupServer MaxFails config is null! virtual server " + vsId);
         AssertUtils.assertNotNull(groupServer.getFailTimeout(), "GroupServer FailTimeout config is null! virtual server " + vsId);
     }
+
+    public String buildUpstreamName(VirtualServer vs, Group group) throws Exception{
+        AssertUtils.assertNotNull(vs.getId(), "virtual server id is null!");
+        AssertUtils.assertNotNull(group.getId(), "groupId not found!");
+        return "backend_" + group.getId();
+    }
+
+    public static String getUpstreamName(Long groupId) {
+        return UpstreamPrefix + groupId;
+    }
+
 }

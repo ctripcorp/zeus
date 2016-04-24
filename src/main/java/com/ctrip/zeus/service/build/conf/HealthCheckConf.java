@@ -5,12 +5,15 @@ import com.ctrip.zeus.model.entity.HealthCheck;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.build.ConfService;
 import com.ctrip.zeus.util.AssertUtils;
+import org.springframework.stereotype.Component;
+
 import javax.annotation.Resource;
 
 /**
  * @author:xingchaowang
  * @date: 3/8/2015.
  */
+@Component("healthCheckConf")
 public class HealthCheckConf {
 
     @Resource
