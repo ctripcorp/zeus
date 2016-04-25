@@ -22,6 +22,8 @@ public class ConfCleanFilter implements CleanFilter {
     @Resource
     private NginxConfUpstreamDao nginxConfUpstreamDao;
     @Resource
+    private NginxConfSlbDao nginxConfSlbDao;
+    @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     private static DynamicIntProperty confSaveCounts = DynamicPropertyFactory.getInstance().getIntProperty("config.save.count", 10000);
 
@@ -32,6 +34,7 @@ public class ConfCleanFilter implements CleanFilter {
             //remove nginx_conf
             NginxConfDo nginxConfDo = nginxConfDao.findBySlbIdAndMaxVersion(slbId, NginxConfEntity.READSET_FULL);
             nginxConfDao.deleteBySlbIdLessThanVersion(new NginxConfDo().setVersion(nginxConfDo.getVersion()-confSaveCounts.get()).setSlbId(slbId));
+            nginxConfSlbDao.deleteBySlbIdLessThanVersion(new NginxConfSlbDo().setSlbId(slbId).setVersion(nginxConfDo.getVersion() - confSaveCounts.get()));
 
             //remove nginx_conf_server
             NginxConfServerDo nginxConfServerDo = nginxConfServerDao.findBySlbIdAndMaxVersion(slbId,NginxConfServerEntity.READSET_FULL);

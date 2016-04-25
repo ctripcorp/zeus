@@ -106,6 +106,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-slb-id-less-than-version" type="DELETE">
+                <param name="slb-id"/>
+                <param name="version"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                        AND <FIELD name='version'/> < ${version}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="nginx-conf-server" table="nginx_conf_server" alias="ncs">
