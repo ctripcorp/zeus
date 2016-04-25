@@ -68,7 +68,18 @@ public class ServerConf {
         for (Group group : groups) {
             b.append(LocationConf.generate(slb, vs, group, UpstreamsConf.buildUpstreamName(vs, group)));
         }
-        addErrorPage(b);
+        if (errorPageEnable.get()) {
+            if (errorPageUseNew.get()) {
+                addErrorPage(b, true);
+            } else {
+                if (DynamicPropertyFactory.getInstance().getBooleanProperty(
+                        "nginx.server.errorPage.use.new.vs." + vs.getId(), false).get()) {
+                    addErrorPage(b, true);
+                } else {
+                    addErrorPage(b, false);
+                }
+            }
+        }
         b.append("}").append("\n");
 
         return StringFormat.format(b.toString());
@@ -128,23 +139,20 @@ public class ServerConf {
         return res;
     }
 
-    private static void addErrorPage(StringBuilder sb) {
-        if (!errorPageEnable.get()) {
-            return;
-        }
+    private static void addErrorPage(StringBuilder sb, boolean useNew) {
         if (errorPageHost.get() == null) {
             return;
         }
         for (int i = 400; i <= 425; i++) {
-            writeErrorPage(sb, i);
+            writeErrorPage(sb, i, useNew);
         }
         for (int i = 500; i <= 510; i++) {
-            writeErrorPage(sb, i);
+            writeErrorPage(sb, i, useNew);
         }
     }
 
-    private static void writeErrorPage(StringBuilder sb, int statusCode) {
-        if (errorPageUseNew.get()) {
+    private static void writeErrorPage(StringBuilder sb, int statusCode, boolean useNew) {
+        if (useNew) {
             String path = "/" + statusCode + "page";
             sb.append("error_page ").append(statusCode).append(" ").append(path).append(";\n");
             sb.append("location = ").append(path).append(" {\n");
