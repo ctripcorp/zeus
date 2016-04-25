@@ -263,6 +263,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                             groupList = new ArrayList<>();
                             vsGroups.put(gvs.getVirtualServer().getId(), groupList);
                         }
+                        hasRelatedVs = true;
                         if (deactivateGroupOps.containsKey(gid)) {
                             continue;
                         }
@@ -272,7 +273,6 @@ public class TaskExecutorImpl implements TaskExecutor {
                         }
                         groupList.add(group);
                         vsGroupPriority.put("VS" + gvs.getVirtualServer().getId() + "_" + gid, gvs.getPriority());
-                        hasRelatedVs = true;
                     }
                 }
                 if (!hasRelatedVs) {
