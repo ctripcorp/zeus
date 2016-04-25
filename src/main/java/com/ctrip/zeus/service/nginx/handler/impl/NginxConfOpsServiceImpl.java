@@ -222,7 +222,10 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
         }
         Set<String> currentRelatedUpstreams = new HashSet<>();
         for (String upfn : upstreamFile.list()) {
-            upfn = upfn.substring(0, upfn.indexOf(CONF_SUFFIX));
+            int idx = upfn.indexOf(CONF_SUFFIX);
+            if (idx == -1) continue;
+
+            upfn = upfn.substring(0, idx);
             String[] fn = upfn.split("_");
             boolean add = false;
             for (String relatedVsId : fn) {
