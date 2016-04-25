@@ -1,8 +1,20 @@
 package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.AbstractServerTest;
+import com.ctrip.zeus.client.GroupClient;
+import com.ctrip.zeus.client.SlbClient;
+import com.ctrip.zeus.client.VirtualServerClient;
+import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
+import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.build.ConfService;
+import com.ctrip.zeus.service.build.conf.LocationConf;
+import com.ctrip.zeus.service.build.conf.NginxConf;
+import com.ctrip.zeus.service.build.conf.ServerConf;
+import com.ctrip.zeus.service.build.conf.UpstreamsConf;
 import com.ctrip.zeus.util.S;
+import com.netflix.config.ConfigurationManager;
 import com.netflix.config.DynamicProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
@@ -16,7 +28,14 @@ import support.AbstractSpringTest;
 import support.MysqlDbServer;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by lu.wang on 2016/4/20.
@@ -25,41 +44,48 @@ public class ConfServiceTest extends AbstractServerTest {
 
     @Resource
     ConfService confService;
+    @Resource
+    NginxConf nginxConf;
+    @Resource
+    ServerConf serverConf;
+    @Resource
+    UpstreamsConf upstreamsConf;
+    @Resource
+    LocationConf locationConf;
 
-    @Test
-    public void test1() {
-        DynamicStringProperty stringProperty =
-                DynamicPropertyFactory.getInstance().getStringProperty("nginx.server.proxy.buffer.size.default", "aa");
-        System.out.println(stringProperty.get());
+    @BeforeClass
+    public static void beforeClass() {
+        String appName = ConfigurationManager.getDeploymentContext().getApplicationId();
+        try {
+            ConfigurationManager.loadCascadedPropertiesFromResources(appName);
+        } catch (IOException e) {
+            Assert.fail("Fail to load properties.");
+        }
     }
 
     @Test
-    @Ignore
+    public void testLoad() {
+        DynamicStringProperty stringProperty =
+                DynamicPropertyFactory.getInstance().getStringProperty("nginx.location.bastion.white.list.default", "aa");
+        Assert.assertEquals("10.32.*", stringProperty.get());
+    }
+
+    @Test
     public void testGetStringValue() {
         try {
             String value;
-            //nginxConf
-            value = confService.getStringValue("logLevel", null, null, null, "");
-            Assert.assertEquals("", value);
+            //testKey1
+            value = confService.getStringValue("upstream.testKey1", null, 1L, 1L, "");
+            Assert.assertEquals("testKey1_group1_value", value);
+            value = confService.getStringValue("upstream.testKey1", null, 1L, 2L, "");
+            Assert.assertEquals("testKey1_vs1_value", value);
+            value = confService.getStringValue("upstream.testKey1", 1L, 2L, 2L, "");
+            Assert.assertEquals("testKey1_slb1_value", value);
+            value = confService.getStringValue("upstream.testKey1", 2L, 2L, 2L, "code_value");
+            Assert.assertEquals("code_value", value);
 
-            //serverConf
-            value = confService.getStringValue("server.proxy.buffer.size", 2L, null, null, "8k");
-            Assert.assertEquals("15k", value);
-
-            value = confService.getStringValue("server.proxy.buffers", 3L, null, null, "8 8k");
-            Assert.assertEquals("8 8k", value);
-
-            value = confService.getStringValue("server.proxy.busy.buffers.size", null, null, null, "8k");
-            Assert.assertEquals("8k", value);
-
-            value = confService.getStringValue("server.errorPage.accept", 3L, null, null, "text/html");
-            Assert.assertEquals("text/html;application/xml", value);
-
-            value = confService.getStringValue("server.vs.health.check.gif.base64", null, null, null, null);
-            Assert.assertNull(value);
-
-            value = confService.getStringValue("server.errorPage.host.url", null, null, null, null);
-            Assert.assertEquals("http://test.test", value);
+            value = confService.getStringValue("upstream.testKey2", 1L, 1L, 1L, "code_value");
+            Assert.assertEquals("testKey2_default_value", value);
 
         } catch (Exception e) {
             Assert.fail("Catch exception when testGetStringValue method." + e.getMessage());
@@ -67,33 +93,19 @@ public class ConfServiceTest extends AbstractServerTest {
     }
 
     @Test
-    @Ignore
     public void testGetIntValue() {
         try {
-
             int value;
-            //nginxConf
-            value = confService.getIntValue("statusPort", null, null, null, 10001);
-            Assert.assertEquals(10001, value);
-
-            value = confService.getIntValue("serverNames.maxSize", null, null, null, 10000);
-            Assert.assertEquals(10000, value);
-
-            value = confService.getIntValue("serverNames.bucketSize", null, null, null, 128);
-            Assert.assertEquals(128, value);
-
-            value = confService.getIntValue("checkShmSize", null, null, null, 32);
-            Assert.assertEquals(32, value);
-
-            value = confService.getIntValue("dyups.port", null, null, null, 8081);
-            Assert.assertEquals(8081, value);
-
-            //upstreamConf
-            value = confService.getIntValue("upstream.keepAlive", 3L, 123L, 999999L, 100);
-            Assert.assertEquals(300, value);
-
-            value = confService.getIntValue("upstream.keepAlive.timeout", 3L, 123L, 999999L, 110);
-            Assert.assertEquals(100, value);
+            value = confService.getIntValue("location.testKey1", 1L, 1L, 1L, 10);
+            Assert.assertEquals(4, value);
+            value = confService.getIntValue("location.testKey1", 1L, 1L, 2L, 10);
+            Assert.assertEquals(3, value);
+            value = confService.getIntValue("location.testKey1", 1L, 2L, 2L, 10);
+            Assert.assertEquals(2, value);
+            value = confService.getIntValue("location.testKey1", 2L, 2L, 2L, 10);
+            Assert.assertEquals(1, value);
+            value = confService.getIntValue("location.testKey1", 3L, 3L, 3L, 10);
+            Assert.assertEquals(1, value);
 
         } catch (Exception e) {
             Assert.fail("Catch exception when testGetIntValue method." + e.getMessage());
@@ -101,40 +113,123 @@ public class ConfServiceTest extends AbstractServerTest {
     }
 
     @Test
-    @Ignore
     public void testGetEnable() {
         try {
             boolean value;
-            //serverConf
-            value = confService.getEnable("server.errorPage", 3L, null, null, true);
+            //testKey1
+            value = confService.getEnable("server.testKey1", null, null, 1L, false);
+            Assert.assertTrue(value);
+            value = confService.getEnable("server.testKey1", null, null, 2L, false);
             Assert.assertFalse(value);
-
-            value = confService.getEnable("server.errorPage.use.new", 3L, null, null, true);
+            value = confService.getEnable("server.testKey1", null, null, null, false);
             Assert.assertFalse(value);
-
-            value = confService.getEnable("server.proxy.buffer.size", 3L, null, null, false);
+            value = confService.getEnable("server.testKey1", null, null, null, true);
             Assert.assertTrue(value);
 
-            value = confService.getEnable("server.vs.health.check", 2L, null, null, false);
+            //testKey2
+            value = confService.getEnable("server.testKey2", null, 1L, null, false);
+            Assert.assertTrue(value);
+            value = confService.getEnable("server.testKey2", null, 1L, 1L, false);
+            Assert.assertTrue(value);
+            value = confService.getEnable("server.testKey2", null, 1L, 10L, false);
+            Assert.assertTrue(value);
+            value = confService.getEnable("server.testKey2", null, 2L, null, false);
+            Assert.assertFalse(value);
+            value = confService.getEnable("server.testKey2", 1L, 2L, 1L, false);
             Assert.assertFalse(value);
 
-            //upstreamConf
-            value = confService.getEnable("upstream.keepAlive", 3L, 123L, 999999L, false);
+            //testKey3
+            value = confService.getEnable("server.testKey3", 1L, null, null, false);
+            Assert.assertTrue(value);
+            value = confService.getEnable("server.testKey3", 1L, 1L, 1L, false);
             Assert.assertTrue(value);
 
-            value = confService.getEnable("upstream.keepAlive.timeout", 3L, 123L, 999999L, false);
+            //testKey4
+            value = confService.getEnable("server.testKey4", 1L, 1L, 1L, false);
             Assert.assertTrue(value);
 
         } catch (Exception e) {
             Assert.fail("Catch exception when testGetEnable method." + e.getMessage());
         }
-
-
     }
 
     @Test
-    public void test() {
-        
+    public void testConf() {
+        try {
+            String slbUrl = "http://10.2.25.93:8099/";
+
+            SlbClient slbClient = new SlbClient(slbUrl);
+            Slb slb = slbClient.get("VS_Slb.uat_80"); //slbId=73
+
+            /*nginxConf.generate*/
+            String result = nginxConf.generate(slb);
+            String actualContext = deleteCRLFOnce(result);
+
+            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("com.ctrip.zeus.service/conf/nginx.conf");
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            int i = inputStream.read();
+            while(i != -1){
+                byteArrayOutputStream.write(i);
+                i = inputStream.read();
+            }
+            String exceptContext = byteArrayOutputStream.toString();
+            exceptContext = deleteCRLFOnce(exceptContext);
+            Assert.assertEquals(exceptContext, actualContext);
+
+            /*serverConf.generate*/
+            VirtualServerClient vsClient = new VirtualServerClient(slbUrl);
+            VirtualServer vs = vsClient.get("632");
+
+            GroupClient groupClient = new GroupClient(slbUrl);
+            List<Group> groupList = groupClient.getGroupsByVsId("632");
+
+            result = serverConf.generate(slb, vs, groupList); //slbId=3; virtualServerId=632;
+            actualContext = deleteCRLFOnce(result);
+
+            inputStream = this.getClass().getClassLoader().getResourceAsStream("com.ctrip.zeus.service/conf/vhosts_632.conf");
+            byteArrayOutputStream = new ByteArrayOutputStream();
+            i = inputStream.read();
+            while(i != -1){
+                byteArrayOutputStream.write(i);
+                i = inputStream.read();
+            }
+            exceptContext = deleteCRLFOnce(byteArrayOutputStream.toString());
+
+            Assert.assertEquals(exceptContext, actualContext);
+
+
+            /*upstreamConf.generate*/
+            Set<String> allDownServers = new HashSet<>();
+            Set<String> allUpServers = new HashSet<>();
+
+            for (Group group : groupList) {
+                List<GroupServer> groupServerList = group.getGroupServers();
+                for (GroupServer groupServer : groupServerList) {
+                    allUpServers.add(vs.getId() + "_" + group.getId() + "_" + groupServer.getIp());
+                }
+            }
+
+            result = upstreamsConf.generate(slb, vs, groupList, allDownServers, allUpServers);
+            actualContext = deleteCRLFOnce(result);
+
+            inputStream = this.getClass().getClassLoader().getResourceAsStream("com.ctrip.zeus.service/conf/upstreams_632.conf");
+            byteArrayOutputStream = new ByteArrayOutputStream();
+            i = inputStream.read();
+            while(i != -1){
+                byteArrayOutputStream.write(i);
+                i = inputStream.read();
+            }
+            exceptContext = deleteCRLFOnce(byteArrayOutputStream.toString());
+            Assert.assertEquals(exceptContext, actualContext);
+
+        } catch (Exception e) {
+            Assert.fail("Catch exception when testConf method.");
+        }
     }
+
+    private String deleteCRLFOnce(String input) {
+        return input.replaceAll("\\r\\n", "\n");
+    }
+
 
 }

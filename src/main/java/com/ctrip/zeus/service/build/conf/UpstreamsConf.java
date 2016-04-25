@@ -24,8 +24,6 @@ public class UpstreamsConf {
     @Resource
     HealthCheckConf healthCheckConf;
 
-    private Long slbId = null;
-    private Long vsId = null;
     public static final String UpstreamPrefix = "backend_";
 
     public List<ConfFile> generate(Set<Long> vsCandidates, VirtualServer vs, List<Group> groups,
@@ -85,7 +83,8 @@ public class UpstreamsConf {
         return stringBuilder.toString();
     }
 
-    public void writeUpstream(ConfWriter confWriter, VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
+    public void writeUpstream(ConfWriter confWriter, Long slbId, VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
+        Long vsId = vs.getId();
         Long groupId = group.getId();
         List<GroupServer> groupServers = group.getGroupServers();
         if (groupServers == null || groupServers.size() == 0) {

@@ -129,7 +129,7 @@ public class BuildServiceImpl implements BuildService {
                                            Set<String> allUpGroupServers,
                                            Group group) throws Exception {
         ConfWriter confWriter = new ConfWriter();
-        upstreamsConf.writeUpstream(confWriter, virtualServer, group, allDownServers, allUpGroupServers);
+        upstreamsConf.writeUpstream(confWriter, slbId, virtualServer, group, allDownServers, allUpGroupServers);
         String upstreamBody = confWriter.getValue();
         return new DyUpstreamOpsData().setUpstreamCommands(upstreamBody).setUpstreamName(UpstreamsConf.getUpstreamName(group.getId()));
     }

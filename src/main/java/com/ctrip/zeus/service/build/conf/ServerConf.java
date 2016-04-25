@@ -20,18 +20,14 @@ public class ServerConf {
     @Resource
     ConfService confService;
     @Resource
-    UpstreamsConf upstreamsConf;
-    @Resource
     LocationConf locationConf;
 
-    private Long slbId = null;
-    private Long vsId = null;
     public static final String SSL_PATH = "/data/nginx/ssl/";
     private static final String ZONENAME = "proxy_zone";
 
     public String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception {
-        slbId = slb.getId();
-        vsId = vs.getId();
+        Long slbId = slb.getId();
+        Long vsId = vs.getId();
 
         ConfWriter confWriter = new ConfWriter(1024, true);
         try {
@@ -59,7 +55,7 @@ public class ServerConf {
         }
 
         if (confService.getEnable("server.vs.health.check", slbId, vsId, null, false)) {
-            locationConf.writeHealthCheckLocation(confWriter);
+            locationConf.writeHealthCheckLocation(confWriter, slbId, vsId);
         }
 
         confWriter.writeCommand("    req_status", ZONENAME);
@@ -71,10 +67,10 @@ public class ServerConf {
 
         if (confService.getEnable("server.errorPage", slbId, vsId, null, false)) {
             for (int sc = 400; sc <= 425; sc++) {
-                locationConf.writeErrorPageLocation(confWriter, sc);
+                locationConf.writeErrorPageLocation(confWriter, sc, slbId, vsId);
             }
             for (int sc = 500; sc <= 510; sc++) {
-                locationConf.writeErrorPageLocation(confWriter, sc);
+                locationConf.writeErrorPageLocation(confWriter, sc, slbId, vsId);
             }
         }
 
@@ -93,19 +89,19 @@ public class ServerConf {
         return res;
     }
 
-    public void writeDyupsServer(ConfWriter confWriter) throws Exception {
+    public void writeDyupsServer(ConfWriter confWriter, Long slbId) throws Exception {
         confWriter.writeCommand("dyups_upstream_conf", "conf/dyupstream.conf");
         confWriter.writeServerStart();
-        confWriter.writeCommand("listen", confService.getStringValue("server.dyups.port", slbId, vsId, null, "8081"));
+        confWriter.writeCommand("listen", confService.getStringValue("server.dyups.port", slbId, null, null, "8081"));
 
         locationConf.writeDyupsLocation(confWriter);
 
         confWriter.writeServerEnd();
     }
 
-    public void writeCheckStatusServer(ConfWriter confWriter, String shmZoneName) throws Exception {
+    public void writeCheckStatusServer(ConfWriter confWriter, String shmZoneName, Long slbId) throws Exception {
         confWriter.writeServerStart();
-        confWriter.writeCommand("listen", confService.getStringValue("server.status.port", slbId, vsId, null, "10001"));
+        confWriter.writeCommand("listen", confService.getStringValue("server.status.port", slbId, null, null, "10001"));
         confWriter.writeCommand("req_status", shmZoneName);
         locationConf.writeCheckStatusLocations(confWriter);
         confWriter.writeServerEnd();

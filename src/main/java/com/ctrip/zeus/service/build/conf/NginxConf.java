@@ -39,7 +39,7 @@ public class NginxConf {
         confWriter.writeHttpStart();
         confWriter.writeCommand("include", "mime.types");
         confWriter.writeCommand("default_type", "application/octet-stream");
-        confWriter.writeCommand("keepalive_timeout", "65");
+        confWriter.writeCommand("keepalive_timeout", confService.getStringValue("keepAlive.timeout", slbId, null, null, "65"));
         confWriter.writeCommand("log_format", "main " + LogFormat.getMain());
         confWriter.writeCommand("access_log", "/opt/logs/nginx/access.log main");
         confWriter.writeCommand("server_names_hash_max_size", confService.getStringValue("serverNames.maxSize", slbId, null, null, "10000"));
@@ -50,8 +50,8 @@ public class NginxConf {
 
         confWriter.writeCommand("req_status_zone", ShmZoneName + " \"$hostname/$proxy_host\" 20M");
 
-        serverConf.writeCheckStatusServer(confWriter, ShmZoneName);
-        serverConf.writeDyupsServer(confWriter);
+        serverConf.writeCheckStatusServer(confWriter, ShmZoneName, slbId);
+        serverConf.writeDyupsServer(confWriter, slbId);
         serverConf.writeDefaultServers(confWriter);
 
         confWriter.writeCommand("include", "upstreams/*.conf");
