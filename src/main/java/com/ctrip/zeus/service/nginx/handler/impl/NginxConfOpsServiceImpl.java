@@ -141,7 +141,7 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
         File file;
         for (String name : deleteFile) {
             file = new File(name);
-            if (file.exists()) {
+            if (file.exists() && file.isFile()) {
                 if (!file.delete()) {
                     LOGGER.error("[DeleteConfFile] Delete conf file failed. Filename:" + name);
                 }
@@ -342,7 +342,7 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
             List<String> notExist = new ArrayList<>();
             for (String fileName : fileNames) {
                 File file = new File(fileName);
-                if (file.exists()) {
+                if (file.exists() && file.isFile()) {
                     File renameTo = new File(file.getAbsolutePath() + ".bak.clean." + sdf.format(date));
                     file.renameTo(renameTo);
                     sucList.add(fileName);
@@ -367,8 +367,8 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
             for (String fileName : fileNames) {
                 File file = new File(fileName);
                 File cleanFile = new File(file.getAbsolutePath() + ".bak.clean." + sdf.format(date));
-                if (cleanFile.exists()) {
-                    if (file.exists()) {
+                if (cleanFile.exists() && cleanFile.isFile()) {
+                    if (file.exists() && file.isFile()) {
                         if (!file.delete()) {
                             LOGGER.error("[UndoCleanFile] delete file failed. fileName: " + file.getAbsolutePath());
                         }
@@ -405,7 +405,7 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
 
             for (String fileName : fileNames) {
                 File file = new File(fileName);
-                if (file.exists()) {
+                if (file.exists() && file.isFile()) {
                     File copyTo = new File(file.getAbsolutePath() + suffix);
                     InputStream inStream = new FileInputStream(file);
                     FileOutputStream fs = new FileOutputStream(copyTo);
@@ -448,8 +448,8 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
                 File file = new File(fileName);
                 File copyFile = new File(file.getAbsolutePath() + suffix);
 
-                if (copyFile.exists()) {
-                    if (file.exists()) {
+                if (copyFile.exists() && copyFile.isFile()) {
+                    if (file.exists() && file.isFile()) {
                         if (!file.delete()) {
                             LOGGER.error("[UndoCopyFile] delete file failed. fileName: " + file.getAbsolutePath());
                         }
