@@ -21,7 +21,7 @@ public class HealthCheckConf {
     private static DynamicIntProperty healthCheckDefaultTimeout = DynamicPropertyFactory.getInstance().getIntProperty("healthCheck.default.timeout", 2000);
 
 
-    public static String generate(Slb slb, VirtualServer vs, Group group) throws Exception {
+    public static String generate(VirtualServer vs, Group group) throws Exception {
         if (disableHealthCheck.get()) {
             return "";
         }

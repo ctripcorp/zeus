@@ -66,7 +66,7 @@ public class ServerConf {
         NginxConf.appendServerCommand(b);
         //add locations
         for (Group group : groups) {
-            b.append(LocationConf.generate(slb, vs, group, UpstreamsConf.buildUpstreamName(slb, vs, group)));
+            b.append(LocationConf.generate(slb, vs, group, UpstreamsConf.buildUpstreamName(vs, group)));
         }
         addErrorPage(b);
         b.append("}").append("\n");

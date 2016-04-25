@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.ConfFile;
 import com.ctrip.zeus.util.AssertUtils;
 import com.ctrip.zeus.util.StringFormat;
+import com.google.common.base.Joiner;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -23,17 +24,17 @@ public class UpstreamsConf {
     private static DynamicStringProperty upstreamKeepAliveTimeoutList = DynamicPropertyFactory.getInstance().getStringProperty("upstream.keep-alive.timeout.whitelist", null);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
     private static DynamicBooleanProperty upstreamKeepAliveTimeoutEnableAll = DynamicPropertyFactory.getInstance().getBooleanProperty("upstream.keep-alive.timeout.enableAll", false);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
 
-    public static List<ConfFile> generate(Slb slb, VirtualServer vs, List<Group> groups,
+    public static List<ConfFile> generate(Set<Long> vsCandidates, VirtualServer vs, List<Group> groups,
                                           Set<String> downServers, Set<String> upServers,
                                           Set<String> visited) throws Exception {
         List<ConfFile> result = new ArrayList<>();
         Map<String, StringBuilder> map = new HashMap<>();
         for (Group group : groups) {
-            String confName = confName(group);
+            String confName = confName(vsCandidates, group);
             if (visited.contains(confName)) continue;
 
             StringBuilder confBuilder = map.get(confName);
-            String groupUpstream = buildUpstreamConf(slb, vs, group, buildUpstreamName(slb, vs, group), downServers, upServers);
+            String groupUpstream = buildUpstreamConf(vs, group, buildUpstreamName(vs, group), downServers, upServers);
             if (confBuilder == null) {
                 map.put(confName, new StringBuilder().append(groupUpstream));
             } else {
@@ -48,37 +49,48 @@ public class UpstreamsConf {
         return result;
     }
 
-    private static String confName(Group group) throws ValidationException {
+    private static String confName(Set<Long> vsCandidates, Group group) throws ValidationException {
         if (group == null || group.getGroupVirtualServers().size() == 0)
             throw new ValidationException("Invalid group information is found when generating upstream conf file. Group is either null or does not have related vs.");
         if (group.getGroupVirtualServers().size() == 1) {
             return "" + group.getGroupVirtualServers().get(0).getVirtualServer().getId();
         }
-        long[] vsIds = new long[group.getGroupVirtualServers().size()];
+        List<Long> vsIds = new ArrayList<>();
         for (int i = 0; i < group.getGroupVirtualServers().size(); i++) {
-            vsIds[i] = group.getGroupVirtualServers().get(i).getVirtualServer().getId();
+            VirtualServer vs = group.getGroupVirtualServers().get(i).getVirtualServer();
+            if (vsCandidates.contains(vs.getId())) {
+                vsIds.add(group.getGroupVirtualServers().get(i).getVirtualServer().getId());
+            }
         }
-        Arrays.sort(vsIds);
+        if (vsIds.size() == 0) {
+            throw new ValidationException("Fail to generate upstream conf name according to given building vses - " + Joiner.on(",").join(vsCandidates) + ".");
+        }
+        long[] vsArray = new long[vsIds.size()];
+        for (int i = 0; i < vsIds.size(); i++) {
+            vsArray[i] = vsIds.get(i).longValue();
+
+        }
+        Arrays.sort(vsArray);
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(vsIds[0]);
-        for (int i = 1; i < vsIds.length; i++) {
-            stringBuilder.append("_").append(vsIds[i]);
+        stringBuilder.append(vsArray[0]);
+        for (int i = 1; i < vsArray.length; i++) {
+            stringBuilder.append("_").append(vsArray[i]);
         }
         return stringBuilder.toString();
     }
 
-    public static String buildUpstreamName(Slb slb, VirtualServer vs, Group group) throws Exception{
+    public static String buildUpstreamName(VirtualServer vs, Group group) throws Exception{
         AssertUtils.assertNotNull(vs.getId(), "virtual server id is null!");
         AssertUtils.assertNotNull(group.getId(), "groupId not found!");
         return "backend_" + group.getId();
     }
 
-    public static String buildUpstreamConf(Slb slb, VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
+    public static String buildUpstreamConf(VirtualServer vs, Group group, String upstreamName, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
         if (group.isVirtual()){
             return "";
         }
         StringBuilder b = new StringBuilder(1024);
-        String body = buildUpstreamConfBody(slb,vs,group,allDownServers,allUpGroupServers);
+        String body = buildUpstreamConfBody(vs,group,allDownServers,allUpGroupServers);
         if (null == body){
             return "";
         }
@@ -90,10 +102,10 @@ public class UpstreamsConf {
         return StringFormat.format(b.toString());
     }
 
-    public static String buildUpstreamConfBody(Slb slb, VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
+    public static String buildUpstreamConfBody(VirtualServer vs, Group group, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
         StringBuilder b = new StringBuilder(1024);
         //LBMethod
-        b.append(LBConf.generate(slb, vs, group));
+        b.append(LBConf.generate(group));
 
         List<GroupServer> groupServers= group.getGroupServers();
 
@@ -125,7 +137,7 @@ public class UpstreamsConf {
         addKeepAliveSetting(b,group.getId());
         addKeepAliveTimeoutSetting(b, group.getId());
         //HealthCheck
-        b.append(HealthCheckConf.generate(slb, vs, group));
+        b.append(HealthCheckConf.generate(vs, group));
 
         return b.toString();
     }

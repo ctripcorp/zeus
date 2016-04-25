@@ -12,7 +12,7 @@ import com.ctrip.zeus.util.AssertUtils;
  * @date: 3/8/2015.
  */
 public class LBConf {
-    public static String generate(Slb slb, VirtualServer vs, Group group) throws Exception {
+    public static String generate(Group group) throws Exception {
         LoadBalancingMethod lb = group.getLoadBalancingMethod();
         AssertUtils.assertNotNull(lb, "LoadBalancingMethod is null! GroupName: " + group.getName());
 

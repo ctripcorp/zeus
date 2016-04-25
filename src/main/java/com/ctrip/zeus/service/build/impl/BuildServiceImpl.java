@@ -47,7 +47,7 @@ public class BuildServiceImpl implements BuildService {
         String conf = nginxConfigBuilder.generateNginxConf(onlineSlb);
 
         nginxConfDao.insert(new NginxConfDo().setSlbId(onlineSlb.getId()).setContent(conf).setVersion(version));
-        logger.info("Nginx Conf build sucess! slbId: " + onlineSlb.getId() + ",version: " + version);
+        logger.info("Nginx Conf build success! slbId: " + onlineSlb.getId() + ", version: " + version);
 
         NginxConfSlbDo d = nginxConfSlbDao.findBySlbAndVersion(onlineSlb.getId(), currentVersion, NginxConfSlbEntity.READSET_FULL);
         // init current conf entry in case of generating conf file for entirely new cluster
@@ -71,7 +71,7 @@ public class BuildServiceImpl implements BuildService {
             String serverConf = nginxConfigBuilder.generateServerConf(onlineSlb, virtualServer, groups);
             nextConfEntry.getVhosts().addConfFile(new ConfFile().setName("" + virtualServer.getId()).setContent(serverConf));
 
-            List<ConfFile> list = nginxConfigBuilder.generateUpstreamsConf(onlineSlb, virtualServer, groups, allDownServers, allUpGroupServers, fileTrack);
+            List<ConfFile> list = nginxConfigBuilder.generateUpstreamsConf(needBuildVses, virtualServer, groups, allDownServers, allUpGroupServers, fileTrack);
             for (ConfFile cf : list) {
                 nextConfEntry.getUpstreams().addConfFile(cf);
             }
@@ -122,8 +122,8 @@ public class BuildServiceImpl implements BuildService {
                                            Set<String> allDownServers,
                                            Set<String> allUpGroupServers,
                                            Group group) throws Exception {
-        String upstreambody = UpstreamsConf.buildUpstreamConfBody(null, virtualServer, group, allDownServers, allUpGroupServers);
-        String upstreamName = UpstreamsConf.buildUpstreamName(null, virtualServer, group);
+        String upstreambody = UpstreamsConf.buildUpstreamConfBody(virtualServer, group, allDownServers, allUpGroupServers);
+        String upstreamName = UpstreamsConf.buildUpstreamName(virtualServer, group);
         return new DyUpstreamOpsData().setUpstreamCommands(upstreambody).setUpstreamName(upstreamName);
     }
 
