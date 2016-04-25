@@ -162,11 +162,6 @@ public class TaskExecutorImpl implements TaskExecutor {
             //1.4 offline data check
             List<IdVersion> toFetch = new ArrayList<>();
             for (OpsTask task : activateGroupOps.values()) {
-                if (softDeactivateGroupOps.containsKey(task.getGroupId())) {
-                    setTaskFail(task, "Activating Group while soft deactivating group ,groupId[" + task.getGroupId() + "]");
-                    activateGroupOps.remove(task.getGroupId());
-                    continue;
-                }
                 if (!offlineGroups.get(task.getGroupId()).getVersion().equals(task.getVersion())) {
                     toFetch.add(new IdVersion(task.getId(), task.getVersion()));
                 }
@@ -198,11 +193,6 @@ public class TaskExecutorImpl implements TaskExecutor {
             //2.1 merge on/offline groups
             for (Long gid : activateGroupOps.keySet()) {
                 onlineGroups.put(gid, offlineGroups.get(gid));
-            }
-            for (Long gid : softDeactivateGroupOps.keySet()) {
-                if (onlineGroups.containsKey(gid)) {
-                    onlineGroups.remove(gid);
-                }
             }
             //2.2 merge on/offline vses
             for (Long sid : activateVsOps.keySet()) {
@@ -273,9 +263,14 @@ public class TaskExecutorImpl implements TaskExecutor {
                             groupList = new ArrayList<>();
                             vsGroups.put(gvs.getVirtualServer().getId(), groupList);
                         }
-                        if (!deactivateGroupOps.containsKey(gid)) {
-                            groupList.add(group);
+                        if (deactivateGroupOps.containsKey(gid)) {
+                            continue;
                         }
+                        if (softDeactivateGroupOps.containsKey(group.getId())
+                                && gvs.getVirtualServer().getId().equals(softDeactivateGroupOps.get(group.getId()).getSlbVirtualServerId())) {
+                            continue;
+                        }
+                        groupList.add(group);
                         vsGroupPriority.put("VS" + gvs.getVirtualServer().getId() + "_" + gid, gvs.getPriority());
                         hasRelatedVs = true;
                     }
