@@ -210,8 +210,9 @@ public class ConfServiceTest extends AbstractServerTest {
                 }
             }
 
-            List<ConfFile> res = upstreamsConf.generate(null, vs, groupList, allDownServers, allUpServers, null);
-            actualContext = deleteCRLFOnce(res.toString());
+            Set<String> visited = new HashSet<>();
+            List<ConfFile> res = upstreamsConf.generate(null, vs, groupList, allDownServers, allUpServers, visited);
+            actualContext = deleteCRLFOnce(res.get(0).getContent());
 
             inputStream = this.getClass().getClassLoader().getResourceAsStream("com.ctrip.zeus.service/conf/upstreams_632.conf");
             byteArrayOutputStream = new ByteArrayOutputStream();

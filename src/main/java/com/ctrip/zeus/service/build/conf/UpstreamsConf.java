@@ -39,6 +39,7 @@ public class UpstreamsConf {
 
             ConfWriter confWriter = map.get(confName);
             if (confWriter == null) {
+                confWriter = new ConfWriter(1024, true);
                 map.put(confName, confWriter);
             } else {
                 confWriter.writeLine("");
