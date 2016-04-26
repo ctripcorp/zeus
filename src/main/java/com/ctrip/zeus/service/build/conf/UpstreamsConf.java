@@ -43,7 +43,7 @@ public class UpstreamsConf {
             } else {
                 confWriter.writeLine("");
             }
-            writeUpstream(confWriter, vs, group, downServers, upServers);
+            writeUpstream(confWriter, null, vs, group, downServers, upServers);
         }
 
         for (Map.Entry<String, ConfWriter> e : map.entrySet()) {

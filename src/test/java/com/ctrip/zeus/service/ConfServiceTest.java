@@ -8,6 +8,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.nginx.entity.ConfFile;
 import com.ctrip.zeus.service.build.ConfService;
 import com.ctrip.zeus.service.build.conf.LocationConf;
 import com.ctrip.zeus.service.build.conf.NginxConf;
@@ -209,8 +210,8 @@ public class ConfServiceTest extends AbstractServerTest {
                 }
             }
 
-            result = upstreamsConf.generate(slb, vs, groupList, allDownServers, allUpServers);
-            actualContext = deleteCRLFOnce(result);
+            List<ConfFile> res = upstreamsConf.generate(null, vs, groupList, allDownServers, allUpServers, null);
+            actualContext = deleteCRLFOnce(res.toString());
 
             inputStream = this.getClass().getClassLoader().getResourceAsStream("com.ctrip.zeus.service/conf/upstreams_632.conf");
             byteArrayOutputStream = new ByteArrayOutputStream();
