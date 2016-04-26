@@ -13,7 +13,6 @@ import javax.annotation.Resource;
 public class NginxConf {
 
     private static String ShmZoneName = "proxy_zone";
-    private Long slbId = null;
 
     @Resource
     ConfService confService;
@@ -21,7 +20,7 @@ public class NginxConf {
     ServerConf serverConf;
 
     public String generate(Slb slb) throws Exception {
-        slbId = slb.getId();
+        Long slbId = slb.getId();
 
         ConfWriter confWriter = new ConfWriter(10240, true);
         confWriter.writeCommand("worker_processes", "auto");
