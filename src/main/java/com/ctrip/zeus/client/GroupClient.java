@@ -40,6 +40,15 @@ public class GroupClient extends AbstractRestClient {
         }
     }
 
+    public List<Group> getGroupsByVsId(String vsId) {
+        String res = getTarget().path("/api/groups").queryParam("vsId", vsId).request().headers(getDefaultHeaders()).get(String.class);
+        try {
+            return DefaultJsonParser.parse(GroupList.class, res).getGroups();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public Response add(Group group) {
         return getTarget().path("/api/group/new").request().headers(getDefaultHeaders())
                 .post(Entity.entity(

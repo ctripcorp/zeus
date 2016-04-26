@@ -22,7 +22,7 @@ public interface NginxConfBuilder extends Repository {
      * @return nginx  config
      * @throws Exception
      */
-    String generateNginxConf(Slb slb);
+    String generateNginxConf(Slb slb) throws Exception;
 
     /**
      * get nginx server config

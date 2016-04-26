@@ -7,6 +7,7 @@ import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
+import com.ctrip.zeus.service.build.conf.ConfWriter;
 import com.ctrip.zeus.service.build.conf.UpstreamsConf;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.util.CompressUtils;
@@ -23,8 +24,13 @@ import java.util.*;
  */
 @Service("buildService")
 public class BuildServiceImpl implements BuildService {
+
     @Resource
     private BuildInfoService buildInfoService;
+    @Resource
+    private UpstreamsConf upstreamsConf;
+    @Resource
+    ConfGroupSlbActiveDao confGroupSlbActiveDao;
     @Resource
     private NginxConfBuilder nginxConfigBuilder;
     @Resource
@@ -124,9 +130,10 @@ public class BuildServiceImpl implements BuildService {
                                            Set<String> allDownServers,
                                            Set<String> allUpGroupServers,
                                            Group group) throws Exception {
-        String upstreambody = UpstreamsConf.buildUpstreamConfBody(virtualServer, group, allDownServers, allUpGroupServers);
-        String upstreamName = UpstreamsConf.buildUpstreamName(virtualServer, group);
-        return new DyUpstreamOpsData().setUpstreamCommands(upstreambody).setUpstreamName(upstreamName);
+        ConfWriter confWriter = new ConfWriter();
+        upstreamsConf.writeUpstream(confWriter, slbId, virtualServer, group, allDownServers, allUpGroupServers);
+        String upstreamBody = confWriter.getValue();
+        return new DyUpstreamOpsData().setUpstreamCommands(upstreamBody).setUpstreamName(UpstreamsConf.getUpstreamName(group.getId()));
     }
 
     @Override
