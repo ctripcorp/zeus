@@ -2,6 +2,7 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
@@ -27,7 +28,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -129,24 +132,65 @@ public class SlbResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getSlb")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                        @QueryParam("slbId") Long slbId,
-                        @TrimmedQueryParam("slbName") String slbName,
-                        @TrimmedQueryParam("server") String serverIp,
+                        @QueryParam("slbId") final Long slbId,
+                        @TrimmedQueryParam("slbName") final String slbName,
+                        @TrimmedQueryParam("ip") final String serverIp,
                         @TrimmedQueryParam("type") String type,
                         @TrimmedQueryParam("mode") final String mode) throws Exception {
-        if (slbId == null && slbName == null) {
+        final SelectionMode selectionMode = SelectionMode.getMode(mode);
+        if (slbId == null && slbName == null && serverIp==null) {
             throw new Exception("Missing parameter.");
         }
-        if (slbId == null && slbName != null) {
-            slbId = slbCriteriaQuery.queryByName(slbName);
-        }
-        if (slbId == null || slbId.longValue() == 0L)
-            throw new ValidationException("Slb id cannot be found.");
 
-        Slb slb = slbRepository.getById(slbId);
-        if (slb == null)
-            throw new ValidationException("Slb cannot be found.");
-        return responseHandler.handle(getSlbByType(slb, type), hh.getMediaType());
+        IdVersion[] keys = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return slbId==null && serverIp != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return slbCriteriaQuery.queryBySlbServerIp(serverIp);
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return  slbId==null && slbName != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Long _slbId = slbCriteriaQuery.queryByName(slbName);
+                        if (_slbId.longValue() == 0L) throw new ValidationException("Slb id cannot be found.");
+                        return slbCriteriaQuery.queryByIdsAndMode(new Long[]{_slbId}, selectionMode);
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return slbId!=null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return slbCriteriaQuery.queryByIdsAndMode(new Long[]{slbId}, selectionMode);
+                    }
+                })
+                .build(IdVersion.class).run(new ResultHandler<IdVersion, IdVersion>() {
+                    @Override
+                    public IdVersion[] handle(Set<IdVersion> result) throws Exception {
+                        return result.toArray(new IdVersion[result.size()]);
+                    }
+                });
+
+        SlbList slbList = new SlbList();
+        for (Slb slb : slbRepository.list(keys)) {
+            slbList.addSlb(getSlbByType(slb, type));
+        }
+        slbList.setTotal(slbList.getSlbs().size());
+        return responseHandler.handle(slbList, hh.getMediaType());
     }
 
     @POST
