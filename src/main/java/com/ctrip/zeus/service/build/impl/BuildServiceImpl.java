@@ -9,6 +9,7 @@ import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.conf.UpstreamsConf;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.util.CompressUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -53,7 +54,7 @@ public class BuildServiceImpl implements BuildService {
         // init current conf entry in case of generating conf file for entirely new cluster
         NginxConfEntry currentConfEntry = new NginxConfEntry().setUpstreams(new Upstreams()).setVhosts(new Vhosts());
         if (d != null) {
-            currentConfEntry = DefaultJsonParser.parse(NginxConfEntry.class, d.getContent());
+            currentConfEntry = DefaultJsonParser.parse(NginxConfEntry.class, CompressUtils.decompress(d.getContent()));
         }
 
         NginxConfEntry nextConfEntry = new NginxConfEntry().setUpstreams(new Upstreams()).setVhosts(new Vhosts());
@@ -112,7 +113,8 @@ public class BuildServiceImpl implements BuildService {
                 nextConfEntry.getUpstreams().addConfFile(cf);
             }
         }
-        nginxConfSlbDao.insert(new NginxConfSlbDo().setSlbId(onlineSlb.getId()).setVersion(version).setContent(GenericSerializer.writeJson(nextConfEntry, false)));
+        nginxConfSlbDao.insert(new NginxConfSlbDo().setSlbId(onlineSlb.getId()).setVersion(version)
+                .setContent(CompressUtils.compress(GenericSerializer.writeJson(nextConfEntry, false))));
         return (long)version;
     }
 

@@ -6,6 +6,7 @@ import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.util.CompressUtils;
 import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ public class NginxConfServiceImpl implements NginxConfService {
         NginxConfSlbDo d = nginxConfSlbDao.findBySlbAndVersion(slbId, version, NginxConfSlbEntity.READSET_FULL);
         if (d == null) return null;
 
-        NginxConfEntry entry = DefaultJsonParser.parse(NginxConfEntry.class, d.getContent());
+        NginxConfEntry entry = DefaultJsonParser.parse(NginxConfEntry.class, CompressUtils.decompress(d.getContent()));
         if (entry.getUpstreams().getFiles().size() == 0 || entry.getVhosts().getFiles().size() == 0) {
             logger.warn("No vhost or upstream files exists. "
                     + "Upstream size: " + entry.getUpstreams().getFiles().size()

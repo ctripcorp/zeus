@@ -11,6 +11,7 @@ import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.util.CompressUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.Assert;
@@ -19,6 +20,7 @@ import org.junit.Test;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -51,8 +53,9 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
     private NginxConfService nginxConfService;
 
     private static boolean inited = false;
+
     @Before
-    public void setCurrentVersion() throws DalException {
+    public void setCurrentVersion() throws DalException, IOException {
         if (inited) return;
         buildInfoDao.insert(new BuildInfoDo().setSlbId(1L).setPendingTicket(2).setCurrentTicket(1));
         nginxConfDao.insert(new NginxConfDo().setSlbId(1L).setVersion(1).setContent("nginx.conf"));
@@ -74,7 +77,8 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
         currentConf.getUpstreams().addConfFile(new ConfFile().setName("4").setContent("upstream_8"));
         currentConf.getUpstreams().addConfFile(new ConfFile().setName("6").setContent("upstream_6"));
 
-        nginxConfSlbDao.insert(new NginxConfSlbDo().setSlbId(1L).setVersion(1).setContent(GenericSerializer.writeJson(currentConf)));
+        nginxConfSlbDao.insert(new NginxConfSlbDo().setSlbId(1L).setVersion(1)
+                .setContent(CompressUtils.compress(GenericSerializer.writeJson(currentConf))));
         inited = true;
     }
 
@@ -133,7 +137,7 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
         Assert.assertNotNull(nginxConfDao.findBySlbIdAndVersion(1L, 2, NginxConfEntity.READSET_FULL));
         NginxConfSlbDo d = nginxConfSlbDao.findBySlbAndVersion(1L, 2, NginxConfSlbEntity.READSET_FULL);
         Assert.assertNotNull(d);
-        NginxConfEntry actualNextConf = DefaultJsonParser.parse(NginxConfEntry.class, d.getContent());
+        NginxConfEntry actualNextConf = DefaultJsonParser.parse(NginxConfEntry.class, CompressUtils.decompress(d.getContent()));
         Assert.assertEquals(expectedNextConf.getVhosts().getFiles().size(), actualNextConf.getVhosts().getFiles().size());
         Assert.assertEquals(expectedNextConf.getUpstreams().getFiles().size(), actualNextConf.getUpstreams().getFiles().size());
 

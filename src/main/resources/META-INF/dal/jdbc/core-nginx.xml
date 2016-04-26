@@ -73,6 +73,7 @@
         </query-defs>
     </entity>
     <entity name="nginx-conf-slb" table="nginx_conf_slb" alias="ncs2">
+        <member name="content" field="content" value-type="byte[]" length="16777215" nullable="false" />
         <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" insert-expr="now()" update-expr="now()"/>
         <query-defs>
             <query name="insert" type="INSERT">
