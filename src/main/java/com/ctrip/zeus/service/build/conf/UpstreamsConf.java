@@ -26,7 +26,7 @@ public class UpstreamsConf {
 
     public static final String UpstreamPrefix = "backend_";
 
-    public List<ConfFile> generate(Set<Long> vsCandidates, VirtualServer vs, List<Group> groups,
+    public List<ConfFile> generate(Set<Long> vsLookup, VirtualServer vs, List<Group> groups,
                                           Set<String> downServers, Set<String> upServers,
                                           Set<String> visited) throws Exception {
         List<ConfFile> result = new ArrayList<>();
@@ -34,7 +34,7 @@ public class UpstreamsConf {
         for (Group group : groups) {
             if (group.isVirtual()) continue;
 
-            String confName = confName(vsCandidates, group);
+            String confName = confName(vsLookup, group);
             if (visited.contains(confName)) continue;
 
             ConfWriter confWriter = map.get(confName);
@@ -54,7 +54,7 @@ public class UpstreamsConf {
         return result;
     }
 
-    private String confName(Set<Long> vsCandidates, Group group) throws ValidationException {
+    private String confName(Set<Long> vsLookup, Group group) throws ValidationException {
         if (group == null || group.getGroupVirtualServers().size() == 0)
             throw new ValidationException("Invalid group information is found when generating upstream conf file. Group is either null or does not have related vs.");
         if (group.getGroupVirtualServers().size() == 1) {
@@ -63,12 +63,12 @@ public class UpstreamsConf {
         List<Long> vsIds = new ArrayList<>();
         for (int i = 0; i < group.getGroupVirtualServers().size(); i++) {
             VirtualServer vs = group.getGroupVirtualServers().get(i).getVirtualServer();
-            if (vsCandidates.contains(vs.getId())) {
+            if (vsLookup.contains(vs.getId())) {
                 vsIds.add(group.getGroupVirtualServers().get(i).getVirtualServer().getId());
             }
         }
         if (vsIds.size() == 0) {
-            throw new ValidationException("Fail to generate upstream conf name according to given building vses - " + Joiner.on(",").join(vsCandidates) + ".");
+            throw new ValidationException("Fail to generate upstream conf name according to given building vses - " + Joiner.on(",").join(vsLookup) + ".");
         }
         long[] vsArray = new long[vsIds.size()];
         for (int i = 0; i < vsIds.size(); i++) {

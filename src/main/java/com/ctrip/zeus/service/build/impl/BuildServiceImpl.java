@@ -78,7 +78,7 @@ public class BuildServiceImpl implements BuildService {
             String serverConf = nginxConfigBuilder.generateServerConf(onlineSlb, virtualServer, groups);
             nextConfEntry.getVhosts().addConfFile(new ConfFile().setName("" + virtualServer.getId()).setContent(serverConf));
 
-            List<ConfFile> list = nginxConfigBuilder.generateUpstreamsConf(needBuildVses, virtualServer, groups, allDownServers, allUpGroupServers, fileTrack);
+            List<ConfFile> list = nginxConfigBuilder.generateUpstreamsConf(onlineVses.keySet(), virtualServer, groups, allDownServers, allUpGroupServers, fileTrack);
             for (ConfFile cf : list) {
                 nextConfEntry.getUpstreams().addConfFile(cf);
             }
