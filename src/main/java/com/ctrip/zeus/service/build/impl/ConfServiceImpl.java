@@ -12,15 +12,13 @@ import org.springframework.stereotype.Service;
 public class ConfServiceImpl implements ConfService {
 
     private DynamicPropertyFactory factory = DynamicPropertyFactory.getInstance();
-    private DynamicStringProperty stringValue;
-    private DynamicIntProperty intValue;
 
     @Override
     public String getStringValue(String key, Long slbId, Long vsId, Long groupId, String defaultValue) throws Exception {
 
         String fullKey = getFullKey(key);
 
-        stringValue =
+        DynamicStringProperty stringValue =
                 factory.getStringProperty(fullKey + ".ip." + S.getIp(), null);
         if (stringValue.get() == null && groupId != null) {
 
@@ -43,7 +41,7 @@ public class ConfServiceImpl implements ConfService {
     public int getIntValue(String key, Long slbId, Long vsId, Long groupId, int defaultValue) throws Exception {
         String fullKey = getFullKey(key);
 
-        intValue =
+        DynamicIntProperty intValue =
                 factory.getIntProperty(fullKey + ".ip." + S.getIp(), -1);
         if (intValue.get() == -1 && groupId != null) {
             intValue = factory.getIntProperty(fullKey + ".group." + groupId, -1);
