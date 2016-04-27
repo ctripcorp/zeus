@@ -3,6 +3,7 @@ package com.ctrip.zeus.executor.impl;
 import com.ctrip.framework.clogging.agent.log.ILog;
 import com.ctrip.framework.clogging.agent.log.LogManager;
 import com.ctrip.zeus.commit.entity.Commit;
+import com.ctrip.zeus.exceptions.NginxProcessingException;
 import com.ctrip.zeus.executor.TaskExecutor;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
@@ -238,6 +239,10 @@ public class TaskExecutorImpl implements TaskExecutor {
                     need = true;
                 }
                 Group group = onlineGroups.get(gid);
+                if (group == null) {
+                    logger.error("Not Found Online Group Data, GroupId: " + gid);
+                    throw new NginxProcessingException("Not Found Online Group Data, GroupId: " + gid);
+                }
                 if (serverOps.size() > 0 && !need) {
                     for (GroupServer gs : group.getGroupServers()) {
                         if (serverOps.containsKey(gs.getIp())) {
