@@ -435,8 +435,9 @@ public class GroupResource {
         IdVersion[] keys = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.getMode(mode));
         List<Group> result = groupRepository.list(keys);
         if (result.size() == 0) throw new ValidationException("Group cannot be found.");
-        if (result.size() == 1)
+        if (result.size() == 1) {
             return responseHandler.handle(getGroupByType(result.get(0), type), hh.getMediaType());
+        }
         GroupList groupList = new GroupList().setTotal(result.size());
         for (Group r : result) {
             groupList.addGroup(getGroupByType(r, type));

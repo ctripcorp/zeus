@@ -28,7 +28,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -184,9 +183,13 @@ public class SlbResource {
                         return result.toArray(new IdVersion[result.size()]);
                     }
                 });
-
+        List<Slb> result = slbRepository.list(keys);
+        if (result.size() == 0) throw new ValidationException("Slb cannot be found.");
+        if (result.size() == 1) {
+            return responseHandler.handle(getSlbByType(result.get(0), type), hh.getMediaType());
+        }
         SlbList slbList = new SlbList();
-        for (Slb slb : slbRepository.list(keys)) {
+        for (Slb slb :result) {
             slbList.addSlb(getSlbByType(slb, type));
         }
         slbList.setTotal(slbList.getSlbs().size());
