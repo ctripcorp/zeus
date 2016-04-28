@@ -58,7 +58,7 @@ public class LocationConf {
                     confWriter.writeLocationStart(e.getPath());
 
                     if (confService.getEnable("location.client.max.body.size", slbId, vsId, groupId, false)) {
-                        confWriter.writeCommand("client_max_body_size", confService.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "") + "m");
+                        confWriter.writeCommand("client_max_body_size", confService.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "2") + "m");
                     }
 
                     confWriter.writeCommand("proxy_request_buffering", "off");
