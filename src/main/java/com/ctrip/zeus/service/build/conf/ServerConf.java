@@ -58,7 +58,7 @@ public class ServerConf {
             locationConf.writeHealthCheckLocation(confWriter, slbId, vsId);
         }
 
-        confWriter.writeCommand("    req_status", ZONENAME);
+        confWriter.writeCommand("req_status", ZONENAME);
 
         //add locations
         for (Group group : groups) {

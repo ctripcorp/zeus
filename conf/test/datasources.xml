@@ -9,7 +9,7 @@
             <driver>com.mysql.jdbc.Driver</driver>
             <url><![CDATA[jdbc:mysql://localhost:3336/zeus_test]]></url>
             <user>root</user>
-            <password>~{e4d4da51d8c450d0d1c03948b6670}</password>
+            <password>root</password>
             <connectionProperties>
                 <![CDATA[useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true]]></connectionProperties>
         </properties>

@@ -6,11 +6,10 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.build.ConfService;
 import com.ctrip.zeus.service.model.PathRewriteParser;
-import com.netflix.config.DynamicPropertyFactory;
-import com.netflix.config.DynamicStringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.Resource;
 import java.util.List;
 
@@ -46,7 +45,7 @@ public class LocationConf {
         Long groupId = group.getId();
 
         for (GroupVirtualServer e : group.getGroupVirtualServers()) {
-            if (e.getVirtualServer().getSlbId().longValue() == slb.getId()) {
+            if (e.getVirtualServer().getId().longValue() == vs.getId().longValue()) {
                 String upstreamName = "backend_" + group.getId();
                 // TODO confirm path is not empty
                 if (group.isVirtual()) {
@@ -77,13 +76,13 @@ public class LocationConf {
                         confWriter.writeCommand("proxy_read_timeout", readTimeout + "s");
                     }
 
-                    if (confService.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)){
+                    if (confService.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {
                         confWriter.writeIfStart("$remote_addr ~* \"" +
                                 confService.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
                                 .writeCommand("set", "$inWhite \"true\"")
                                 .writeIfEnd()
                                 .writeCommand("rewrite_by_lua", setHeaderLuaScripts);
-                    }else {
+                    } else {
                         confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
                     }
 
@@ -95,10 +94,10 @@ public class LocationConf {
                     addBastionCommand(confWriter, upstreamName, slbId, vsId, groupId);
 
                     //rewrite should after set $upstream
-                    addRewriteCommand(confWriter, slb, vs, group);
+                    addRewriteCommand(confWriter, vs, group);
                     if (group.getSsl()) {
                         confWriter.writeCommand("proxy_pass", "https://$upstream");
-                    }else {
+                    } else {
                         confWriter.writeCommand("proxy_pass", "http://$upstream");
                     }
                     confWriter.writeLocationEnd();
@@ -107,20 +106,20 @@ public class LocationConf {
         }
     }
 
-    private static String getRewrite(Slb slb, VirtualServer vs, Group group) throws Exception{
-        String res=null;
+    private static String getRewrite(VirtualServer vs, Group group) throws Exception {
+        String res = null;
         for (GroupVirtualServer groupSlb : group.getGroupVirtualServers()) {
-            if (slb.getId().equals(groupSlb.getVirtualServer().getSlbId()) && vs.getId().equals(groupSlb.getVirtualServer().getId())) {
-                res= groupSlb.getRewrite();
+            if (groupSlb.getVirtualServer().getId().longValue() == vs.getId().longValue()) {
+                res = groupSlb.getRewrite();
             }
         }
         return res;
     }
 
-    private static void addRewriteCommand(ConfWriter confWriter, Slb slb , VirtualServer vs , Group group) throws Exception {
-        if (confWriter != null){
-            String rewrite = getRewrite(slb, vs, group);
-            if (rewrite==null || rewrite.isEmpty() || !rewrite.contains(" ")){
+    private static void addRewriteCommand(ConfWriter confWriter, VirtualServer vs, Group group) throws Exception {
+        if (confWriter != null) {
+            String rewrite = getRewrite(vs, group);
+            if (rewrite == null || rewrite.isEmpty() || !rewrite.contains(" ")) {
                 return;
             }
             List<String> rewriteList = PathRewriteParser.getValues(rewrite);

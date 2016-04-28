@@ -126,12 +126,6 @@ public class UpstreamsConf {
         AssertUtils.assertNotNull(groupServer.getFailTimeout(), "GroupServer FailTimeout config is null! virtual server " + vsId);
     }
 
-    public String buildUpstreamName(VirtualServer vs, Group group) throws Exception{
-        AssertUtils.assertNotNull(vs.getId(), "virtual server id is null!");
-        AssertUtils.assertNotNull(group.getId(), "groupId not found!");
-        return "backend_" + group.getId();
-    }
-
     public static String getUpstreamName(Long groupId) {
         return UpstreamPrefix + groupId;
     }
