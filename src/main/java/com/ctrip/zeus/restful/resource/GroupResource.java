@@ -248,7 +248,7 @@ public class GroupResource {
                 .build(IdVersion.class).run(new ResultHandler<IdVersion, IdVersion>() {
                     @Override
                     public IdVersion[] handle(Set<IdVersion> result) throws Exception {
-                        result.removeAll(groupCriteriaQuery.queryAllVGroups());
+                        result.removeAll(groupCriteriaQuery.queryAllVGroups(selectionMode));
                         return result.toArray(new IdVersion[result.size()]);
                     }
                 });

@@ -52,8 +52,9 @@ public class LocationConf {
                     //TODO virtual group cannot have multi group-vs redirect
                     confWriter.writeLocationStart(e.getPath());
                     if (group.getGroupVirtualServers().size() == 1) {
-                        addRedirectCommand(confWriter.getStringBuilder(), group);
+                        addRedirectCommand(confWriter, group);
                     }
+                    confWriter.writeLocationEnd();
                 } else {
                     confWriter.writeLocationStart(e.getPath());
 
@@ -80,8 +81,9 @@ public class LocationConf {
                         confWriter.writeIfStart("$remote_addr ~* \"" +
                                 confService.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
                                 .writeCommand("set", "$inWhite \"true\"")
-                                .writeIfEnd()
-                                .writeCommand("rewrite_by_lua", setHeaderLuaScripts);
+                                .writeIfEnd();
+
+                        confWriter.writeCommand("rewrite_by_lua", setHeaderLuaScripts);
                     } else {
                         confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
                     }
@@ -95,7 +97,7 @@ public class LocationConf {
 
                     //rewrite should after set $upstream
                     addRewriteCommand(confWriter, vs, group);
-                    if (group.getSsl()) {
+                    if (group.isSsl()) {
                         confWriter.writeCommand("proxy_pass", "https://$upstream");
                     } else {
                         confWriter.writeCommand("proxy_pass", "http://$upstream");
@@ -119,7 +121,7 @@ public class LocationConf {
     private static void addRewriteCommand(ConfWriter confWriter, VirtualServer vs, Group group) throws Exception {
         if (confWriter != null) {
             String rewrite = getRewrite(vs, group);
-            if (rewrite == null || rewrite.isEmpty() || !rewrite.contains(" ")) {
+            if (rewrite == null || rewrite.isEmpty()) {
                 return;
             }
             List<String> rewriteList = PathRewriteParser.getValues(rewrite);
@@ -129,14 +131,14 @@ public class LocationConf {
         }
     }
 
-    private static void addRedirectCommand(StringBuilder sb, Group group) throws Exception {
-        if (sb != null) {
+    private static void addRedirectCommand(ConfWriter confWriter, Group group) throws Exception {
+        if (confWriter != null) {
             String redirect = group.getGroupVirtualServers().get(0).getRedirect();
             if (redirect.isEmpty())
                 return;
-            List<String> rewriteList = PathRewriteParser.getValues(redirect);
-            for (String tmp : rewriteList) {
-                sb.append("rewrite ").append(tmp).append(" redirect;\n");
+            List<String> redirectList = PathRewriteParser.getValues(redirect);
+            for (String tmp : redirectList) {
+                confWriter.writeCommand("rewrite", tmp + " redirect");
             }
         }
     }
