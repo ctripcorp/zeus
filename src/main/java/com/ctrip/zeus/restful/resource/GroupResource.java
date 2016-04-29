@@ -452,10 +452,11 @@ public class GroupResource {
     public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String group,
                         @QueryParam("force") Boolean force) throws Exception {
         Group g = parseGroup(hh.getMediaType(), group);
+        g.setVirtual(null);
         Long groupId = groupCriteriaQuery.queryByName(g.getName());
         if (groupId > 0L) throw new ValidationException("Group name exists.");
 
-        g = groupRepository.add(parseGroup(hh.getMediaType(), group), force == null ? false : force.booleanValue());
+        g = groupRepository.add(g, force == null ? false : force.booleanValue());
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -464,7 +465,12 @@ public class GroupResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addGroup")
     public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
-        Group g = groupRepository.addVGroup(parseGroup(hh.getMediaType(), group));
+        Group g = parseGroup(hh.getMediaType(), group);
+        g.setVirtual(true);
+        Long groupId = groupCriteriaQuery.queryByName(g.getName());
+        if (groupId > 0L) throw new ValidationException("Group name exists.");
+
+        g = groupRepository.addVGroup(g);
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -475,6 +481,8 @@ public class GroupResource {
     public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String group,
                            @QueryParam("force") Boolean force) throws Exception {
         Group g = parseGroup(hh.getMediaType(), group);
+        g.setVirtual(null);
+
         DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
         lock.lock(TIMEOUT);
         try {
@@ -491,6 +499,8 @@ public class GroupResource {
     @Authorize(name = "updateGroup")
     public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
         Group g = parseGroup(hh.getMediaType(), group);
+        g.setVirtual(true);
+
         DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
         lock.lock(TIMEOUT);
         try {

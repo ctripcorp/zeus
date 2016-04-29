@@ -36,6 +36,15 @@ public class ReportAspect implements Ordered {
         switch (methodName) {
             case "add":
             case "update": {
+                boolean skip = false;
+                try {
+                    Object arg = point.getArgs()[0];
+                    skip = ((Group) arg).isVirtual();
+                } catch(Exception ex) {
+                }
+
+                if (skip) return point.proceed();
+
                 Object obj = point.proceed();
                 try {
                     // No lock is necessary here, it is covered by add_/update_groupName lock
