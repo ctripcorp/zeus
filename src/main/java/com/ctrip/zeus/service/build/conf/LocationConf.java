@@ -172,16 +172,16 @@ public class LocationConf {
                 .append("return ngx.exit(200);'").toString();
     }
 
-    public void writeErrorPageLocation(ConfWriter confWriter, int statusCode, Long slbId, Long vsId) throws Exception {
-        String url = confService.getStringValue("location.errorPage.host.url", slbId, vsId, null, null);
-        if (url == null || url.isEmpty()) {
-            LOGGER.error("Error page url is not configured. Skip writing error page locations.");
-            return;
-        }
-
-        boolean errorPageUseNew = confService.getEnable("location.errorPage.use.new", slbId, vsId, null, true);
+    public void writeErrorPageLocation(ConfWriter confWriter, boolean errorPageUseNew,
+                                       int statusCode, Long slbId, Long vsId) throws Exception {
         String errorPageAccept = confService.getStringValue("location.errorPage.accept", slbId, vsId, null, "text/html");
         if (errorPageUseNew) {
+            String url = confService.getStringValue("location.errorPage.host.url", slbId, vsId, null, null);
+            if (url == null || url.isEmpty()) {
+                LOGGER.error("Error page url is not configured. Skip writing error page locations.");
+                return;
+            }
+
             String path = "/" + statusCode + "page";
             confWriter.writeCommand("error_page", statusCode + " " + path);
             confWriter.writeLocationStart("= " + path);

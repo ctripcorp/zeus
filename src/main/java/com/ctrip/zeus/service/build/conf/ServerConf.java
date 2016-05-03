@@ -66,11 +66,12 @@ public class ServerConf {
         }
 
         if (confService.getEnable("server.errorPage", slbId, vsId, null, false)) {
+            boolean useNew = confService.getEnable("server.errorPage.use.new", slbId, vsId, null, true);
             for (int sc = 400; sc <= 425; sc++) {
-                locationConf.writeErrorPageLocation(confWriter, sc, slbId, vsId);
+                locationConf.writeErrorPageLocation(confWriter, useNew, sc, slbId, vsId);
             }
             for (int sc = 500; sc <= 510; sc++) {
-                locationConf.writeErrorPageLocation(confWriter, sc, slbId, vsId);
+                locationConf.writeErrorPageLocation(confWriter, useNew, sc, slbId, vsId);
             }
         }
 
