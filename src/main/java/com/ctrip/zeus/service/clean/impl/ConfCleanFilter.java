@@ -58,9 +58,18 @@ public class ConfCleanFilter implements CleanFilter {
                 }
             }
 
+            // delete at most 20,000 rows per slb
             int retainedMinVersion = (int) min - confSaveCounts.get();
-            nginxConfDao.deleteBySlbIdLessThanVersion(new NginxConfDo().setVersion(retainedMinVersion).setSlbId(id));
-            nginxConfSlbDao.deleteBySlbIdLessThanVersion(new NginxConfSlbDo().setSlbId(id).setVersion(retainedMinVersion));
+            for (int i = 0; i < 20; i++) {
+                if (nginxConfDao.deleteBySlbIdLessThanVersion(new NginxConfDo().setVersion(retainedMinVersion).setSlbId(id)) == 0) {
+                    break;
+                }
+            }
+            for (int i = 0; i < 20; i++) {
+                if (nginxConfSlbDao.deleteBySlbIdLessThanVersion(new NginxConfSlbDo().setSlbId(id).setVersion(retainedMinVersion)) == 0) {
+                    break;
+                }
+            }
         }
 
         for (Long slbId : slbIds) {
