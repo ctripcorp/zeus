@@ -11,6 +11,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Properties;
 
 /**
  * @author:xingchaowang
@@ -29,6 +30,14 @@ public class SlbAdminMain {
         S.setPropertyDefaultValue("server.www.base-dir",new File("").getAbsolutePath()+"/src/main/www");
         S.setPropertyDefaultValue("server.temp-dir",new File("").getAbsolutePath()+"/target/temp");
         S.setPropertyDefaultValue("CONF_DIR",new File("").getAbsolutePath() + "/conf/local");
+
+        try {
+            Properties properties = new Properties();
+            properties.load(SlbAdminMain.class.getResourceAsStream("/git.properties"));
+            S.setPropertyDefaultValue("release.commitId", properties.getProperty("git.commit.id"));
+        }catch (Exception e) {
+            LOGGER.warn("Load git.properties error.");
+        }
     }
 
     private static Server startServer() throws Exception {

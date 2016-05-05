@@ -45,6 +45,9 @@
             <slb-release-info/>
         </slbs-info>
     </slb-release-info-list>
+
+    <server-war-info commitId="default">
+    </server-war-info>
     <virtual-server-list>
         <total>12</total>
         <virtual-server/>
