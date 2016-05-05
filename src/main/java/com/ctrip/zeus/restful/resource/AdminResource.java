@@ -13,13 +13,11 @@ import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.version.ConfVersionService;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -45,14 +43,16 @@ public class AdminResource {
     private ConfVersionService confVersionService;
 
     @GET
-    @Path("/releaseinfos")
+    @Path("/release/confinfos")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getAllSlbReleaseInfo")
-    public Response list(@Context final HttpHeaders hh,
+    public Response listConfInfos(@Context final HttpHeaders hh,
                          @Context HttpServletRequest request,
-                         @TrimmedQueryParam("mode") final String mode) throws Exception {
+                         @TrimmedQueryParam("mode") final String mode,
+                         @TrimmedQueryParam("diff") final String diff) throws Exception {
 
         final SelectionMode selectionMode = SelectionMode.getMode(mode);
+        final Set<Long> allSlbId = slbCriteriaQuery.queryAll();
         final Long[] slbIds = new QueryExecuter.Builder<Long>()
                 .addFilter(new FilterSet<Long>() {
                     @Override
@@ -62,7 +62,18 @@ public class AdminResource {
 
                     @Override
                     public Set<Long> filter() throws Exception {
-                        return slbCriteriaQuery.queryAll();
+                        return allSlbId;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return diff != null && diff.equals("true");
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        return getSlbServerVersionDiff(allSlbId);
                     }
                 })
                 .build(Long.class).run();
@@ -92,10 +103,10 @@ public class AdminResource {
 
 
     @GET
-    @Path("/releaseinfo")
+    @Path("/release/confinfo")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getSlbReleaseInfo")
-    public Response get(@Context final HttpHeaders hh,
+    public Response getConfInfo(@Context final HttpHeaders hh,
                         @Context HttpServletRequest request,
                         @QueryParam("slbId") Long slbId,
                         @TrimmedQueryParam("slbName") String slbName) throws Exception {
@@ -114,7 +125,17 @@ public class AdminResource {
         return responseHandler.handle(getSlbReleaseInfoBySlb(slb), hh.getMediaType());
     }
 
+    @GET
+    @Path("/release/warinfo")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "getSlbReleaseInfo")
+    public Response getWarInfo(@Context final HttpHeaders hh,
+                        @Context HttpServletRequest request) throws Exception {
 
+        String commitId = System.getProperty("release.commitId") == null ? "unKnown" : System.getProperty("release.commitId");
+        ServerWarInfo serverWarInfo = new ServerWarInfo().setCommitId(commitId);
+        return responseHandler.handle(serverWarInfo, hh.getMediaType());
+    }
 
     private SlbReleaseInfo getSlbReleaseInfoBySlb(Slb slb) throws Exception {
         if (slb == null)
@@ -139,5 +160,21 @@ public class AdminResource {
             slbReleaseInfo.addSlbServerReleaseInfo(releaseInfo);
         }
         return slbReleaseInfo;
+    }
+
+    private Set<Long> getSlbServerVersionDiff(Set<Long> allSlbId) throws Exception {
+        Set<Long> diffVersionSet = new HashSet<>();
+        if (allSlbId != null) {
+            for (Long slbId : allSlbId) {
+                Long slbCurrentVersion = confVersionService.getSlbCurrentVersion(slbId);
+                for (SlbServer slbServer : slbRepository.getById(slbId).getSlbServers()) {
+                    if (!confVersionService.getSlbServerCurrentVersion(slbId, slbServer.getIp()).equals(slbCurrentVersion)) {
+                        diffVersionSet.add(slbId);
+                        break;
+                    }
+                }
+            }
+        }
+        return diffVersionSet;
     }
 }
