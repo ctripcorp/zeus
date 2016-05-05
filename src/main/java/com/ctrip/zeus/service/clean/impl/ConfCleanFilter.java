@@ -8,6 +8,8 @@ import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,6 +35,7 @@ public class ConfCleanFilter implements CleanFilter {
     @Resource
     private EntityFactory entityFactory;
 
+    Logger logger = LoggerFactory.getLogger(this.getClass());
     private static DynamicIntProperty confSaveCounts = DynamicPropertyFactory.getInstance().getIntProperty("config.save.count", 50);
 
     @Override
@@ -48,28 +51,33 @@ public class ConfCleanFilter implements CleanFilter {
             servers.put(e.getKey(), ips);
         }
 
-        for (Long id : slbIds) {
-            Set<String> ips = servers.get(id);
-            List<NginxServerDo> list = nginxServerDao.findAllBySlbId(id, NginxServerEntity.READSET_FULL);
-            long min = Long.MAX_VALUE;
-            for (NginxServerDo d : list) {
-                if (ips.contains(d.getIp())) {
-                    if (min > d.getVersion()) min = d.getVersion();
+        for (Long id : mapping.keySet()) {
+            try {
+                Set<String> ips = servers.get(id);
+                List<NginxServerDo> list = nginxServerDao.findAllBySlbId(id, NginxServerEntity.READSET_FULL);
+                long min = Long.MAX_VALUE;
+                for (NginxServerDo d : list) {
+                    if (ips.contains(d.getIp())) {
+                        if (min > d.getVersion()) min = d.getVersion();
+                    }
                 }
+
+                // delete at most 20,000 rows per slb
+                int retainedMinVersion = (int) min - confSaveCounts.get();
+                for (int i = 0; i < 20; i++) {
+                    if (nginxConfDao.deleteBySlbIdLessThanVersion(new NginxConfDo().setVersion(retainedMinVersion).setSlbId(id)) == 0) {
+                        break;
+                    }
+                }
+                for (int i = 0; i < 20; i++) {
+                    if (nginxConfSlbDao.deleteBySlbIdLessThanVersion(new NginxConfSlbDo().setSlbId(id).setVersion(retainedMinVersion)) == 0) {
+                        break;
+                    }
+                }
+            } catch (Exception ex) {
+                logger.error("Cleanse conf files failed of slb " + id, ex);
             }
 
-            // delete at most 20,000 rows per slb
-            int retainedMinVersion = (int) min - confSaveCounts.get();
-            for (int i = 0; i < 20; i++) {
-                if (nginxConfDao.deleteBySlbIdLessThanVersion(new NginxConfDo().setVersion(retainedMinVersion).setSlbId(id)) == 0) {
-                    break;
-                }
-            }
-            for (int i = 0; i < 20; i++) {
-                if (nginxConfSlbDao.deleteBySlbIdLessThanVersion(new NginxConfSlbDo().setSlbId(id).setVersion(retainedMinVersion)) == 0) {
-                    break;
-                }
-            }
         }
 
         for (Long slbId : slbIds) {
