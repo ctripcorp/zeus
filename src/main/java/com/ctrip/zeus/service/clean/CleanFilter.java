@@ -8,9 +8,4 @@ public interface CleanFilter {
      * Filter runner.
      */
     public void runFilter()throws Exception;
-
-    /**
-     * return interval . Unit for hours. never run if return 0 .
-     */
-    public int interval();
 }

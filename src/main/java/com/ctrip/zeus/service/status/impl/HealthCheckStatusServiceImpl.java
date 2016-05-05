@@ -1,11 +1,9 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.client.LocalClient;
-import com.ctrip.zeus.dal.core.StatusHealthCheckDao;
-import com.ctrip.zeus.dal.core.StatusHealthCheckDo;
-import com.ctrip.zeus.dal.core.StatusHealthCheckEntity;
-import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupVirtualServer;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.entity.Item;
 import com.ctrip.zeus.nginx.entity.UpstreamStatus;
 import com.ctrip.zeus.service.model.EntityFactory;
@@ -19,22 +17,19 @@ import com.ctrip.zeus.util.S;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Created by fanqq on 2015/11/11.
  */
 @Service("healthCheckStatusService")
 public class HealthCheckStatusServiceImpl implements HealthCheckStatusService {
-    @Resource
-    private StatusHealthCheckDao statusHealthCheckDao;
     @Resource
     private EntityFactory entityFactory;
     @Resource

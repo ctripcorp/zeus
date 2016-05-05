@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.clean.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
+import com.ctrip.zeus.service.clean.AbstractCleanFilter;
 import com.ctrip.zeus.service.clean.CleanFilter;
 import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -19,7 +20,7 @@ import java.util.*;
  * Created by fanqq on 2015/10/20.
  */
 @Service("confCleanFilter")
-public class ConfCleanFilter implements CleanFilter {
+public class ConfCleanFilter extends AbstractCleanFilter {
     @Resource
     private NginxConfDao nginxConfDao;
     @Resource
@@ -89,10 +90,5 @@ public class ConfCleanFilter implements CleanFilter {
             NginxConfUpstreamDo nginxConfUpstreamDo = nginxConfUpstreamDao.findBySlbIdAndMaxVersion(slbId, NginxConfUpstreamEntity.READSET_FULL);
             nginxConfUpstreamDao.deleteBySlbIdLessThanVersion(new NginxConfUpstreamDo().setSlbId(slbId).setVersion(nginxConfUpstreamDo.getVersion() - confSaveCounts.get()));
         }
-    }
-
-    @Override
-    public int interval() {
-        return 24;
     }
 }

@@ -40,6 +40,6 @@ public class CleanDbTask extends AbstractTask {
 
     @Override
     public long getInterval() {
-        return 60000 * 60;
+        return 60000 * 30;
     }
 }

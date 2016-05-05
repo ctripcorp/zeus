@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.clean.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.service.clean.AbstractCleanFilter;
 import com.ctrip.zeus.service.clean.CleanFilter;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -16,7 +17,7 @@ import java.util.Set;
  * Created by fanqq on 2015/10/21.
  */
 @Service("archiveCleanFilter")
-public class ArchiveCleanFilter implements CleanFilter{
+public class ArchiveCleanFilter extends AbstractCleanFilter{
     @Resource
     private ArchiveGroupDao archiveGroupDao ;
     @Resource
@@ -33,18 +34,13 @@ public class ArchiveCleanFilter implements CleanFilter{
         Set<Long> slbIds = slbCriteriaQuery.queryAll();
         List<ArchiveSlbDo> slbs = archiveSlbDao.findMaxVersionBySlbs(slbIds.toArray(new Long[]{}), ArchiveSlbEntity.READSET_FULL);
         for (ArchiveSlbDo archiveSlbDo : slbs){
-            archiveSlbDao.deleteBySlbIdLessThanVersion(new ArchiveSlbDo().setSlbId(archiveSlbDo.getSlbId()).setVersion(archiveSlbDo.getVersion()-archiveSaveCounts.get()));
+            archiveSlbDao.deleteBySlbIdLessThanVersion(new ArchiveSlbDo().setSlbId(archiveSlbDo.getSlbId()).setVersion(archiveSlbDo.getVersion() - archiveSaveCounts.get()));
         }
 
         Set<Long> groupIds = groupCriteriaQuery.queryAll();
         List<ArchiveGroupDo> groups = archiveGroupDao.findAllByGroups(groupIds.toArray(new Long[]{}),ArchiveGroupEntity.READSET_FULL);
         for (ArchiveGroupDo archiveGroupDo : groups){
-            archiveGroupDao.deleteByGroupIdLessThanVersion(new ArchiveGroupDo().setGroupId(archiveGroupDo.getGroupId()).setVersion(archiveGroupDo.getVersion()-archiveSaveCounts.get()));
+            archiveGroupDao.deleteByGroupIdLessThanVersion(new ArchiveGroupDo().setGroupId(archiveGroupDo.getGroupId()).setVersion(archiveGroupDo.getVersion() - archiveSaveCounts.get()));
         }
-    }
-
-    @Override
-    public int interval() {
-        return 24;
     }
 }
