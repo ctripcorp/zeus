@@ -192,7 +192,20 @@ public class TaskExecutorImpl implements TaskExecutor {
 
             //2. merge data.
             //2.1 merge on/offline groups
+            Set<Long> softVses = new HashSet<>();
             for (Long gid : activateGroupOps.keySet()) {
+                if (onlineGroups.get(gid) != null) {
+                    List<Long> onVs = new ArrayList<>();
+                    List<Long> offVs = new ArrayList<>();
+                    for (GroupVirtualServer gvs : onlineGroups.get(gid).getGroupVirtualServers()) {
+                        onVs.add(gvs.getVirtualServer().getId());
+                    }
+                    for (GroupVirtualServer gvs : offlineGroups.get(gid).getGroupVirtualServers()) {
+                        offVs.add(gvs.getVirtualServer().getId());
+                    }
+                    onVs.removeAll(offVs);
+                    softVses.addAll(onVs);
+                }
                 onlineGroups.put(gid, offlineGroups.get(gid));
             }
             //2.2 merge on/offline vses
@@ -230,6 +243,12 @@ public class TaskExecutorImpl implements TaskExecutor {
                     }
                 }
             }
+            for (Long id : softVses) {
+                if (onlineVses.containsKey(id)){
+                    needBuildVses.add(id);
+                }
+            }
+
             boolean need = false;
             boolean hasRelatedVs = false;
             for (Long gid : onlineGroups.keySet()) {
