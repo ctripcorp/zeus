@@ -6,6 +6,7 @@
     <entity-ref name="slb-list" />
     <entity-ref name="slb-release-info" />
     <entity-ref name="slb-release-info-list" />
+    <entity-ref name="server-war-info" />
     <entity-ref name="virtual-server-list" />
     <entity-ref name="group-virtual-server" />
     <entity-ref name="group-server" />
@@ -71,6 +72,9 @@
   <entity name="slb-release-info-list">
     <element name="total" value-type="int" />
     <entity-ref name="slb-release-info" type="list" names="slbs-info" xml-indent="true" />
+  </entity>
+  <entity name="server-war-info">
+    <attribute name="commitId" value-type="String" />
   </entity>
   <entity name="virtual-server-list">
     <element name="total" value-type="int" />
