@@ -296,6 +296,9 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
                 writeFile(upstreamDir, cf.getName() + CONF_SUFFIX, cf.getContent());
                 writingUpstreamFiles.add(upstreamDir + File.separator + cf.getName() + CONF_SUFFIX);
             }
+            record.setWrittenFilename(new ArrayList<String>());
+            record.getWrittenFilename().addAll(writingVhostFiles);
+            record.getWrittenFilename().addAll(writingUpstreamFiles);
         } catch (Exception e) {
             LOGGER.error("Updating upstream/vhost conf failed. Proceeding files stops at \n"
                     + Joiner.on(",").join(writingVhostFiles) + "\n"
@@ -326,11 +329,12 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
         try {
             LOGGER.info("[UndoNginxConfPartialUpdate] Start to revert related conf files to the previous version. Maker - " + record.getTimeStamp().toString());
             backupAll(record.getTimeStamp(), BACKUP_TYPE_ROLLBACK);
+            deleteFile(record.getWrittenFilename());
             undoCopyFile(record.getCopiedFilename(), record.getTimeStamp());
             undoCleanFile(record.getCleansedFilename(), record.getTimeStamp());
         } catch (Exception e) {
             String err = "[UndoNginxConfPartialUpdate] Failed to revert related conf files to the previous version. Maker - " + record.getTimeStamp().toString();
-            LOGGER.info(err, e);
+            LOGGER.error(err, e);
             throw new NginxProcessingException(err, e);
         } finally {
             LOGGER.info("[UndoNginxConfPartialUpdate] Successfully reverted related conf files to the previous version.");

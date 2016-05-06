@@ -10,6 +10,8 @@ public class FileOpRecord {
     private Date timeStamp;
     private List<String> cleansedFilename;
     private List<String> copiedFilename;
+    private List<String> writtenFilename;
+
 
     public FileOpRecord() {
         this.timeStamp = new Date();
@@ -33,5 +35,13 @@ public class FileOpRecord {
 
     public void setCopiedFilename(List<String> copiedFilename) {
         this.copiedFilename = copiedFilename;
+    }
+
+    public List<String> getWrittenFilename() {
+        return writtenFilename;
+    }
+
+    public void setWrittenFilename(List<String> writtenFilename) {
+        this.writtenFilename = writtenFilename;
     }
 }
