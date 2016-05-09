@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.AbstractServerTest;
+import com.ctrip.zeus.auth.util.AuthUserConstants;
 import com.ctrip.zeus.client.GroupClient;
 import com.ctrip.zeus.client.SlbClient;
 import com.ctrip.zeus.client.VirtualServerClient;
@@ -9,31 +10,22 @@ import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.entity.ConfFile;
-import com.ctrip.zeus.service.build.ConfService;
+import com.ctrip.zeus.service.build.ConfigService;
 import com.ctrip.zeus.service.build.conf.LocationConf;
 import com.ctrip.zeus.service.build.conf.NginxConf;
 import com.ctrip.zeus.service.build.conf.ServerConf;
 import com.ctrip.zeus.service.build.conf.UpstreamsConf;
-import com.ctrip.zeus.util.S;
 import com.netflix.config.ConfigurationManager;
-import com.netflix.config.DynamicProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
-import org.codehaus.plexus.component.repository.exception.ComponentLifecycleException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-import support.AbstractSpringTest;
-import support.MysqlDbServer;
 
 import javax.annotation.Resource;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,10 +33,10 @@ import java.util.Set;
 /**
  * Created by lu.wang on 2016/4/20.
  */
-public class ConfServiceTest extends AbstractServerTest {
+public class ConfigServiceTest extends AbstractServerTest {
 
     @Resource
-    ConfService confService;
+    ConfigService configService;
     @Resource
     NginxConf nginxConf;
     @Resource
@@ -72,20 +64,38 @@ public class ConfServiceTest extends AbstractServerTest {
     }
 
     @Test
+    public void testGetKeyType() {
+        String type = configService.getKeyType("ip.authentication", AuthUserConstants.getAuthUsers(), "10.32.20.131");
+        Assert.assertEquals("sdong", type);
+
+        type = configService.getKeyType("ip.authentication", AuthUserConstants.getAuthUsers(), "10.32.64.37");
+        Assert.assertEquals("lsqiu", type);
+
+        type = configService.getKeyType("ip.authentication", AuthUserConstants.getAuthUsers(), "192.168.18.215");
+        Assert.assertEquals("opSys", type);
+
+        type = configService.getKeyType("ip.authentication", AuthUserConstants.getAuthUsers(), "172.16.226.137");
+        Assert.assertEquals("releaseSys", type);
+
+        type = configService.getKeyType("ip.authentication", AuthUserConstants.getAuthUsers(), "1.2.3.4");
+        Assert.assertNull(type);
+    }
+
+    @Test
     public void testGetStringValue() {
         try {
             String value;
             //testKey1
-            value = confService.getStringValue("upstream.testKey1", null, 1L, 1L, "");
+            value = configService.getStringValue("upstream.testKey1", null, 1L, 1L, "");
             Assert.assertEquals("testKey1_group1_value", value);
-            value = confService.getStringValue("upstream.testKey1", null, 1L, 2L, "");
+            value = configService.getStringValue("upstream.testKey1", null, 1L, 2L, "");
             Assert.assertEquals("testKey1_vs1_value", value);
-            value = confService.getStringValue("upstream.testKey1", 1L, 2L, 2L, "");
+            value = configService.getStringValue("upstream.testKey1", 1L, 2L, 2L, "");
             Assert.assertEquals("testKey1_slb1_value", value);
-            value = confService.getStringValue("upstream.testKey1", 2L, 2L, 2L, "code_value");
+            value = configService.getStringValue("upstream.testKey1", 2L, 2L, 2L, "code_value");
             Assert.assertEquals("code_value", value);
 
-            value = confService.getStringValue("upstream.testKey2", 1L, 1L, 1L, "code_value");
+            value = configService.getStringValue("upstream.testKey2", 1L, 1L, 1L, "code_value");
             Assert.assertEquals("testKey2_default_value", value);
 
         } catch (Exception e) {
@@ -97,15 +107,15 @@ public class ConfServiceTest extends AbstractServerTest {
     public void testGetIntValue() {
         try {
             int value;
-            value = confService.getIntValue("location.testKey1", 1L, 1L, 1L, 10);
+            value = configService.getIntValue("location.testKey1", 1L, 1L, 1L, 10);
             Assert.assertEquals(4, value);
-            value = confService.getIntValue("location.testKey1", 1L, 1L, 2L, 10);
+            value = configService.getIntValue("location.testKey1", 1L, 1L, 2L, 10);
             Assert.assertEquals(3, value);
-            value = confService.getIntValue("location.testKey1", 1L, 2L, 2L, 10);
+            value = configService.getIntValue("location.testKey1", 1L, 2L, 2L, 10);
             Assert.assertEquals(2, value);
-            value = confService.getIntValue("location.testKey1", 2L, 2L, 2L, 10);
+            value = configService.getIntValue("location.testKey1", 2L, 2L, 2L, 10);
             Assert.assertEquals(1, value);
-            value = confService.getIntValue("location.testKey1", 3L, 3L, 3L, 10);
+            value = configService.getIntValue("location.testKey1", 3L, 3L, 3L, 10);
             Assert.assertEquals(1, value);
 
         } catch (Exception e) {
@@ -118,35 +128,35 @@ public class ConfServiceTest extends AbstractServerTest {
         try {
             boolean value;
             //testKey1
-            value = confService.getEnable("server.testKey1", null, null, 1L, false);
+            value = configService.getEnable("server.testKey1", null, null, 1L, false);
             Assert.assertTrue(value);
-            value = confService.getEnable("server.testKey1", null, null, 2L, false);
+            value = configService.getEnable("server.testKey1", null, null, 2L, false);
             Assert.assertFalse(value);
-            value = confService.getEnable("server.testKey1", null, null, null, false);
+            value = configService.getEnable("server.testKey1", null, null, null, false);
             Assert.assertFalse(value);
-            value = confService.getEnable("server.testKey1", null, null, null, true);
+            value = configService.getEnable("server.testKey1", null, null, null, true);
             Assert.assertTrue(value);
 
             //testKey2
-            value = confService.getEnable("server.testKey2", null, 1L, null, false);
+            value = configService.getEnable("server.testKey2", null, 1L, null, false);
             Assert.assertTrue(value);
-            value = confService.getEnable("server.testKey2", null, 1L, 1L, false);
+            value = configService.getEnable("server.testKey2", null, 1L, 1L, false);
             Assert.assertTrue(value);
-            value = confService.getEnable("server.testKey2", null, 1L, 10L, false);
+            value = configService.getEnable("server.testKey2", null, 1L, 10L, false);
             Assert.assertTrue(value);
-            value = confService.getEnable("server.testKey2", null, 2L, null, false);
+            value = configService.getEnable("server.testKey2", null, 2L, null, false);
             Assert.assertFalse(value);
-            value = confService.getEnable("server.testKey2", 1L, 2L, 1L, false);
+            value = configService.getEnable("server.testKey2", 1L, 2L, 1L, false);
             Assert.assertFalse(value);
 
             //testKey3
-            value = confService.getEnable("server.testKey3", 1L, null, null, false);
+            value = configService.getEnable("server.testKey3", 1L, null, null, false);
             Assert.assertTrue(value);
-            value = confService.getEnable("server.testKey3", 1L, 1L, 1L, false);
+            value = configService.getEnable("server.testKey3", 1L, 1L, 1L, false);
             Assert.assertTrue(value);
 
             //testKey4
-            value = confService.getEnable("server.testKey4", 1L, 1L, 1L, false);
+            value = configService.getEnable("server.testKey4", 1L, 1L, 1L, false);
             Assert.assertTrue(value);
 
         } catch (Exception e) {

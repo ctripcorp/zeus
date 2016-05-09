@@ -4,7 +4,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.build.ConfService;
+import com.ctrip.zeus.service.build.ConfigService;
 import com.ctrip.zeus.service.model.PathRewriteParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ import java.util.List;
 @Component("locationConf")
 public class LocationConf {
     @Resource
-    ConfService confService;
+    ConfigService configService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationConf.class);
 
@@ -58,8 +58,8 @@ public class LocationConf {
                 } else {
                     confWriter.writeLocationStart(e.getPath());
 
-                    if (confService.getEnable("location.client.max.body.size", slbId, vsId, groupId, false)) {
-                        confWriter.writeCommand("client_max_body_size", confService.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "2") + "m");
+                    if (configService.getEnable("location.client.max.body.size", slbId, vsId, groupId, false)) {
+                        confWriter.writeCommand("client_max_body_size", configService.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "2") + "m");
                     }
 
                     confWriter.writeCommand("proxy_request_buffering", "off");
@@ -68,18 +68,18 @@ public class LocationConf {
                     confWriter.writeCommand("proxy_set_header", "Host $host");
                     confWriter.writeCommand("proxy_set_header", "X-Real-IP $remote_addr");
 
-                    if (confService.getEnable("location.upstream.keepAlive", slbId, vsId, groupId, false)) {
+                    if (configService.getEnable("location.upstream.keepAlive", slbId, vsId, groupId, false)) {
                         confWriter.writeCommand("proxy_set_header", "Connection \"\"");
                     }
                     String proxyReadTimeout = "location.proxy.readTimeout";
-                    if (confService.getEnable(proxyReadTimeout, slbId, vsId, groupId, true)) {
-                        String readTimeout = confService.getStringValue(proxyReadTimeout, slbId, vsId, groupId, "60");
+                    if (configService.getEnable(proxyReadTimeout, slbId, vsId, groupId, true)) {
+                        String readTimeout = configService.getStringValue(proxyReadTimeout, slbId, vsId, groupId, "60");
                         confWriter.writeCommand("proxy_read_timeout", readTimeout + "s");
                     }
 
-                    if (confService.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {
+                    if (configService.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {
                         confWriter.writeIfStart("$remote_addr ~* \"" +
-                                confService.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
+                                configService.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
                                 .writeCommand("set", "$inWhite \"true\"")
                                 .writeIfEnd();
 
@@ -88,7 +88,7 @@ public class LocationConf {
                         confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
                     }
 
-                    if (confService.getEnable("location.errorPage", slbId, vsId, groupId, false)) {
+                    if (configService.getEnable("location.errorPage", slbId, vsId, groupId, false)) {
                         confWriter.writeCommand("proxy_intercept_errors", "on");
                     }
 
@@ -144,7 +144,7 @@ public class LocationConf {
     }
 
     private void addBastionCommand(ConfWriter confWriter, String upstreamName, Long slbId, Long vsId, Long groupId) throws Exception {
-        String whiteList = confService.getStringValue("location.bastion.white.list", slbId, vsId, groupId, "denyAll");
+        String whiteList = configService.getStringValue("location.bastion.white.list", slbId, vsId, groupId, "denyAll");
 
         confWriter.writeIfStart("$remote_addr ~* \"" + whiteList + "\"")
                 .writeCommand("set", "$upstream $cookie_bastion")
@@ -167,16 +167,16 @@ public class LocationConf {
     private String getHcLuaScripts(Long slbId, Long vsId) throws Exception {
         return new StringBuilder(512).append("'\n")
                 //TODO hardcode health check gif
-                .append("local res = ngx.decode_base64(\"").append(confService.getStringValue("location.vs.health.check.gif.base64", slbId, vsId, null, "")).append("\");\n")
+                .append("local res = ngx.decode_base64(\"").append(configService.getStringValue("location.vs.health.check.gif.base64", slbId, vsId, null, "")).append("\");\n")
                 .append("ngx.print(res);\n")
                 .append("return ngx.exit(200);'").toString();
     }
 
     public void writeErrorPageLocation(ConfWriter confWriter, boolean errorPageUseNew,
                                        int statusCode, Long slbId, Long vsId) throws Exception {
-        String errorPageAccept = confService.getStringValue("location.errorPage.accept", slbId, vsId, null, "text/html");
+        String errorPageAccept = configService.getStringValue("location.errorPage.accept", slbId, vsId, null, "text/html");
         if (errorPageUseNew) {
-            String url = confService.getStringValue("location.errorPage.host.url", slbId, vsId, null, null);
+            String url = configService.getStringValue("location.errorPage.host.url", slbId, vsId, null, null);
             if (url == null || url.isEmpty()) {
                 LOGGER.error("Error page url is not configured. Skip writing error page locations.");
                 return;
@@ -192,7 +192,7 @@ public class LocationConf {
             confWriter.writeCommand("proxy_pass", url);
             confWriter.writeLocationEnd();
         } else {
-            String errorPageConfig = confService.getStringValue("location.errorPage." + statusCode + ".url", slbId, vsId, null, null);
+            String errorPageConfig = configService.getStringValue("location.errorPage." + statusCode + ".url", slbId, vsId, null, null);
             if (null != errorPageConfig) {
                 String path = "/" + statusCode + "page";
                 confWriter.writeCommand("error_page", statusCode + " " + path);
