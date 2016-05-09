@@ -128,6 +128,13 @@ public class TaskServiceImpl implements TaskService {
     public void updateTasks(List<OpsTask> tasks) throws Exception {
         for (OpsTask opsTask : tasks) {
             taskDao.updateByPK(C.toTaskDo(opsTask), TaskEntity.UPDATESET_FULL);
+            StringBuilder msg = new StringBuilder(128);
+            msg.append("[[taskId=").append(opsTask.getId());
+            msg.append(",status=").append(opsTask.getStatus());
+            msg.append(",opsType=").append(opsTask.getOpsType());
+            msg.append("]]Task Execute Finished.TaskId:[").append(opsTask.getId()).append("];Status: ")
+                    .append(opsTask.getStatus()).append(";failureCause:").append( opsTask.getFailCause());
+            logger.info(msg.toString());
         }
     }
 
