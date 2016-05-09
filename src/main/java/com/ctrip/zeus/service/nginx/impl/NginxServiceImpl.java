@@ -61,6 +61,7 @@ public class NginxServiceImpl implements NginxService {
     public List<NginxResponse> update(String nginxConf, NginxConfEntry entry, Set<Long> updateVsIds, Set<Long> cleanVsIds, DyUpstreamOpsData[] dyups, boolean needReload, boolean needTest, boolean needDyups) throws Exception {
         List<NginxResponse> response = new ArrayList<>();
         try {
+            logger.info("[NginxServiceImpl]Start update nginx config files.");
             //1. update config
             nginxConfOpsService.updateNginxConf(nginxConf);
             FileOpRecord fileOpRecord = nginxConfOpsService.cleanAndUpdateConf(cleanVsIds, updateVsIds, entry);
@@ -95,6 +96,7 @@ public class NginxServiceImpl implements NginxService {
                     }
                 }
             }
+            logger.info("[NginxServiceImpl]Finish update nginx config files.");
         } finally {
             logger.info("Nginx update response. Responses:" + response.toString());
         }
@@ -103,6 +105,7 @@ public class NginxServiceImpl implements NginxService {
 
     @Override
     public NginxResponse refresh(String nginxConf, NginxConfEntry entry, boolean reload) throws Exception {
+        logger.info("Start refresh nginx config files.");
         nginxConfOpsService.updateNginxConf(nginxConf);
         Long updateAllFlag = nginxConfOpsService.updateAll(entry);
         if (reload) {

@@ -27,6 +27,8 @@ public class NginxOpsServiceImpl implements NginxOpsService {
 
     @Override
     public NginxResponse reload() throws Exception {
+        long start = System.currentTimeMillis();
+        LOGGER.info("[NginxTest] Start Nginx reload");
         try {
             String command = DEFAULT_NGINX_BIN_DIR + "/nginx -s reload";
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -51,12 +53,17 @@ public class NginxOpsServiceImpl implements NginxOpsService {
         } catch (IOException e) {
             LOGGER.error("Fail to reload", e);
             throw e;
+        } finally {
+            long cost = System.currentTimeMillis() - start;
+            LOGGER.info("[NginxTest] Finish Nginx reload .Cost:" + cost);
         }
     }
 
     @Override
     public NginxResponse test() throws Exception {
+        long start = System.currentTimeMillis();
         try {
+            LOGGER.info("[NginxTest] Start Nginx -t");
             String command = DEFAULT_NGINX_BIN_DIR + "/nginx -t";
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
@@ -81,6 +88,9 @@ public class NginxOpsServiceImpl implements NginxOpsService {
         } catch (IOException e) {
             LOGGER.error("Test Nginx Conf Failed", e);
             throw e;
+        } finally {
+            long cost = System.currentTimeMillis() - start;
+            LOGGER.info("[NginxTest] Finish Nginx -t.Cost:" + cost);
         }
     }
 
@@ -88,7 +98,7 @@ public class NginxOpsServiceImpl implements NginxOpsService {
     public List<NginxResponse> dyups(DyUpstreamOpsData[] dyups) throws Exception {
         List<NginxResponse> responses = new ArrayList<>();
         if (dyups == null) return responses;
-
+        long start = System.currentTimeMillis();
         for (DyUpstreamOpsData d : dyups) {
             NginxResponse response;
             try {
@@ -110,6 +120,8 @@ public class NginxOpsServiceImpl implements NginxOpsService {
             }
             LOGGER.info("[DyupsOps] Dyups success. upstreamName:" + d.getUpstreamName());
         }
+        long cost = System.currentTimeMillis() - start;
+        LOGGER.info("[NginxTest] Finish dyupses. Total Cost:" + cost);
         return responses;
     }
 }
