@@ -67,6 +67,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         //2. get slbVersion and serverVersion
         Long slbVersion = confVersionService.getSlbCurrentVersion(slbId);
         Long serverVersion = confVersionService.getSlbServerCurrentVersion(slbId, ip);
+        logger.info("SlbVersion: " + slbVersion + " ServerVersion: " + serverVersion);
         if (slbVersion.equals(serverVersion)) {
             return response.setSucceed(true).setServerIp(ip).setOutMsg("[SlbServerConfManagerImpl] slb version == slb server version. Not need to update.");
         }
@@ -88,11 +89,12 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 }
                 NginxConfEntry entry = nginxConfService.getUpstreamsAndVhosts(slbId, slbVersion);
                 if (nginxConf == null || entry == null) {
-                    String err = "Nginx conf file records are missing of slb-version " + slbId +  "-" + slbVersion + ".";
+                    String err = "Nginx conf file records are missing of slb-version " + slbId + "-" + slbVersion + ".";
                     logger.error(err);
                     throw new ValidationException(err);
                 }
                 //3.3 refresh config
+                logger.info("[[refresh=true]]Refresh Nginx Conf. Reload: " + needReload);
                 NginxResponse res = nginxService.refresh(nginxConf, entry, needReload);
                 //3.3.1 if failed, set need refresh flag and return result.
                 if (!res.getSucceed()) {
@@ -121,7 +123,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 }
                 NginxConfEntry entry = nginxConfService.getUpstreamsAndVhosts(slbId, slbVersion, commit.getVsIds());
                 if (nginxConf == null || entry == null) {
-                    String err = "Nginx conf file records are missing of slb-version " + slbId +  "-" + slbVersion + ".";
+                    String err = "Nginx conf file records are missing of slb-version " + slbId + "-" + slbVersion + ".";
                     logger.error(err);
                     throw new ValidationException(err);
                 }
@@ -138,6 +140,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                     if (checkSkipReload(slbId, commit, ip, entry, nginxConf)) {
                         reload = false;
                         dyups = true;
+                        logger.info("[[skipReload=true]]Skipped reload.SlbId:" + slbId + "\nMerged Commit:" + commit.toString());
                     }
                 }
                 DyUpstreamOpsData[] dyUpstreamOpsDatas = null;
@@ -145,6 +148,15 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                     Set<Long> gids = new HashSet<>();
                     gids.addAll(commit.getGroupIds());
                     dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(entry, gids);
+                }
+                StringBuilder msg = new StringBuilder();
+                msg.append("[UpdateConfigInfo] Reload:").append(reload).append("\ntest:").append(test).append("\ndyups:").append(dyups);
+                msg.append("\nvsIds:").append(commit.getVsIds().toString());
+                msg.append("\ncleanVsIds:").append(commit.getCleanvsIds());
+                msg.append("\nversion:").append(commit.getVersion());
+                logger.info(msg.toString());
+                for (Long taskId : commit.getTaskIds()) {
+                    logger.info("[[taskId=" + taskId + "]]Start Update Conf of task. taskId: " + taskId);
                 }
                 //4.5 update nginx configs
                 List<NginxResponse> responses = nginxService.update(nginxConf, entry, new HashSet<>(commit.getVsIds()), cleanSet, dyUpstreamOpsDatas, reload, test, dyups);
@@ -179,11 +191,11 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         //2. if nginx config file is changed, need reload.
         Long serverVersion = confVersionService.getSlbServerCurrentVersion(slbId, ip);
         //2.1 if server version <= 0, need reload. first time update config files.
-        if (serverVersion <= 0){
+        if (serverVersion <= 0) {
             return false;
         }
         String serverNginxConf = nginxConfService.getNginxConf(slbId, serverVersion);
-        if (!serverNginxConf.equals(nginxConf)){
+        if (!serverNginxConf.equals(nginxConf)) {
             return false;
         }
         //3. compare vhost files

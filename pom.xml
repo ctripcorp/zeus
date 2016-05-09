@@ -25,6 +25,11 @@
             <version>5.1.34</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.9</version>
+        </dependency>
 
         <!-- Jersey -->
         <dependency>
@@ -189,11 +194,6 @@
             <artifactId>logback-access</artifactId>
             <version>${logback.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.ctrip.framework.clogging</groupId>
-            <artifactId>clogging-agent</artifactId>
-            <version>3.3.2</version>
-        </dependency>
         <!-- Log End -->
 
         <!-- Jetty -->
@@ -356,32 +356,32 @@
             </plugin>
         </plugins>
     </build>
-   <repositories>
-      <repository>
-           <id>central</id>
-           <url>http://repo1.maven.org/maven2</url>
-      </repository>
-      <repository>
-         <id>frameworks</id>
-         <url>https://raw.githubusercontent.com/unidal/frameworks/mvn-repo</url>
-         <releases>
-            <checksumPolicy>ignore</checksumPolicy>
-         </releases>
-      </repository>
-   </repositories>
-   <pluginRepositories>
-      <pluginRepository>
-         <id>central</id>
-         <url>http://repo1.maven.org/maven2</url>
-      </pluginRepository>
-      <pluginRepository>
-         <id>maven-plugins</id>
-         <url>https://raw.githubusercontent.com/unidal/maven-plugins/mvn-repo</url>
-         <releases>
-            <checksumPolicy>ignore</checksumPolicy>
-         </releases>
-      </pluginRepository>
-   </pluginRepositories>
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>http://repo1.maven.org/maven2</url>
+        </repository>
+        <repository>
+            <id>frameworks</id>
+            <url>https://raw.githubusercontent.com/unidal/frameworks/mvn-repo</url>
+            <releases>
+                <checksumPolicy>ignore</checksumPolicy>
+            </releases>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>central</id>
+            <url>http://repo1.maven.org/maven2</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>maven-plugins</id>
+            <url>https://raw.githubusercontent.com/unidal/maven-plugins/mvn-repo</url>
+            <releases>
+                <checksumPolicy>ignore</checksumPolicy>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
     <properties>
         <jersey.version>2.16</jersey.version>
         <spring.version>4.1.5.RELEASE</spring.version>

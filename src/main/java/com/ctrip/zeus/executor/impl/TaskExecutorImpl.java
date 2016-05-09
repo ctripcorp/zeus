@@ -1,7 +1,5 @@
 package com.ctrip.zeus.executor.impl;
 
-import com.ctrip.framework.clogging.agent.log.ILog;
-import com.ctrip.framework.clogging.agent.log.LogManager;
 import com.ctrip.zeus.commit.entity.Commit;
 import com.ctrip.zeus.exceptions.NginxProcessingException;
 import com.ctrip.zeus.executor.TaskExecutor;
@@ -66,7 +64,6 @@ public class TaskExecutorImpl implements TaskExecutor {
     private CommitService commitService;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
-    private ILog clog = LogManager.getLogger(this.getClass());
     private static DynamicBooleanProperty writeEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("write.enable", true);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
 
 
@@ -88,6 +85,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         DistLock buildLock = null;
         List<DistLock> resLocks = new ArrayList<>();
         boolean lockflag = false;
+        long start = System.currentTimeMillis();
         try {
             buildLock = dbLockFactory.newLock("TaskWorker_" + slbId);
             if (lockflag = buildLock.tryLock()) {
@@ -108,6 +106,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         } catch (Exception e) {
             logger.warn("Executor Job Failed! TaskWorker: " + slbId, e);
         } finally {
+            taskExecutorLog(slbId, System.currentTimeMillis() - start);
             for (DistLock lock : resLocks) {
                 lock.unlock();
             }
@@ -244,7 +243,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }
             }
             for (Long id : softVses) {
-                if (onlineVses.containsKey(id)){
+                if (onlineVses.containsKey(id)) {
                     needBuildVses.add(id);
                 }
             }
@@ -385,6 +384,23 @@ public class TaskExecutorImpl implements TaskExecutor {
             throw e;
         }
 
+    }
+
+    private void taskExecutorLog(Long slbId, long cost) {
+        StringBuilder sb = new StringBuilder(256);
+        sb.append("SlbId: " + slbId).append("\n");
+        sb.append("TaskCount: " + tasks.size()).append("\n");
+        sb.append("Cost: " + cost).append("\n");
+        sb.append("Tasks:").append("[\n");
+        for (OpsTask task : tasks) {
+            sb.append("{");
+            sb.append("taskId: ").append(task.getId());
+            sb.append("status: ").append(task.getStatus());
+            sb.append("failcause: ").append(task.getFailCause());
+            sb.append("}\n");
+        }
+        sb.append("]");
+        logger.info(sb.toString());
     }
 
     private void addCommit(Long slbId, boolean needReload, Long buildVersion, Set<Long> needBuildVses, Set<Long> needBuildGroups) throws Exception {
@@ -806,15 +822,12 @@ public class TaskExecutorImpl implements TaskExecutor {
     public List<Long> getResources() {
         List<Long> resources = new ArrayList<>();
         Set<Long> tmp = new HashSet<>();
-        Map<String, String> tags;
         for (OpsTask task : tasks) {
             if (task.getResources() != null) {
                 tmp.add(Long.parseLong(task.getResources()));
             }
             tmp.add(task.getTargetSlbId());
-            tags = new HashMap<>();
-            tags.put("taskId", task.getId().toString());
-            clog.info("TaskInfo", "Tasks are executing, TaskID [" + task.getId() + "]", tags);
+            logger.info("[[taskId=" + task.getId() + "]]" + "Tasks are executing, TaskID [" + task.getId() + "]");
         }
         resources.addAll(tmp);
         Collections.sort(resources);
