@@ -1,5 +1,7 @@
 package com.ctrip.zeus.auth.impl;
 
+import com.ctrip.zeus.auth.util.AuthUserConstants;
+import com.ctrip.zeus.service.build.ConfigService;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
@@ -9,6 +11,7 @@ import org.jasig.cas.client.validation.AssertionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Resource;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,35 +28,24 @@ import java.util.Map;
  * Time: 3:00 PM
  */
 public class IPAuthenticationFilter implements Filter{
-    private static final Logger logger = LoggerFactory.getLogger(IPAuthenticationFilter.class);
-    DynamicStringProperty ipUserStr = DynamicPropertyFactory.getInstance().getStringProperty("ip.authentication", "127.0.0.1,172.16.144.61=releaseSys");
-    private static final String SLB_SERVER_USER = "slbServer";
-    public static final String SERVER_TOKEN_HEADER = "SlbServerToken";
-    private DynamicBooleanProperty enableAuthorize = DynamicPropertyFactory.getInstance().getBooleanProperty("server.authorization.enable", false);
 
-    private volatile Map<String, String> ipUserMap = new HashMap<>();
+    @Resource
+    ConfigService configService;
+
+    private static final Logger logger = LoggerFactory.getLogger(IPAuthenticationFilter.class);
+    public static final String SERVER_TOKEN_HEADER = "SlbServerToken";
+    private static final String IP_AUTHENTICATION_PREFIX = "ip.authentication";
 
     @Override
-    public void init(FilterConfig filterConfig) {
-        ipUserMap = parseIpUserStr(ipUserStr.get());
-        ipUserStr.addCallback(new Runnable() {
-                @Override
-                public void run() {
-                    logger.info(ipUserStr.get());
-                    ipUserMap = parseIpUserStr(ipUserStr.get());
-                    logger.info(ipUserMap.toString());
-                }
-        });
-    }
-
+    public void init(FilterConfig filterConfig) {}
 
     public final void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain filterChain) throws IOException, ServletException {
         final HttpServletRequest request = (HttpServletRequest) servletRequest;
         final HttpServletResponse response = (HttpServletResponse) servletResponse;
         final HttpSession session = request.getSession(false);
         //1. turn off auth
-        if (!enableAuthorize.get()){
-            setAssertion(request, SLB_SERVER_USER);
+        if (!configService.getEnable("server.authorization", false)){
+            setAssertion(request, AuthUserConstants.SLB_SERVER_USER);
             filterChain.doFilter(request,response);
             return;
         }
@@ -68,7 +60,7 @@ public class IPAuthenticationFilter implements Filter{
         String slbServerToken = request.getHeader(SERVER_TOKEN_HEADER);
         if (slbServerToken != null){
             if (TokenManager.validateToken(slbServerToken)){
-                setAssertion(request, SLB_SERVER_USER);
+                setAssertion(request, AuthUserConstants.SLB_SERVER_USER);
                 filterChain.doFilter(request,response);
                 return;
             }
@@ -95,29 +87,8 @@ public class IPAuthenticationFilter implements Filter{
         // nothing to do
     }
 
-    private Map<String,String> parseIpUserStr(String ipConfig){
-        Map<String, String> result = new HashMap<>();
-        if (ipConfig == null || ipConfig.isEmpty()) {
-            return result;
-        }
-        String[] configs = ipConfig.split("#");
-        for(String config : configs) {
-            String[] parts = config.split("=", -1);
-            if (parts == null || parts.length != 2){
-                logger.error("fail to parse {}", config);
-                continue;
-            }
-            String[] ips = parts[0].split(",");
-            String userName = parts[1];
-            for (String ip : ips) {
-                result.put(ip,userName);
-            }
-        }
-        return result;
-    }
-
     private String getIpUser(String clientIP) {
-        String user = ipUserMap.get(clientIP);
+        String user = configService.getKeyType(IP_AUTHENTICATION_PREFIX, AuthUserConstants.getAuthUsers(), clientIP);
         return user;
     }
 

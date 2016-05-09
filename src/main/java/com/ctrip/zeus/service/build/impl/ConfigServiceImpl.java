@@ -1,15 +1,20 @@
 package com.ctrip.zeus.service.build.impl;
 
-import com.ctrip.zeus.service.build.ConfService;
+import com.ctrip.zeus.service.build.ConfigService;
 import com.ctrip.zeus.util.S;
 import com.netflix.config.*;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Created by lu.wang on 2016/4/19.
  */
-@Service("confService")
-public class ConfServiceImpl implements ConfService {
+@Service("configService")
+public class ConfigServiceImpl implements ConfigService {
 
     private DynamicPropertyFactory factory = DynamicPropertyFactory.getInstance();
 
@@ -79,6 +84,64 @@ public class ConfServiceImpl implements ConfService {
         }
 
         return value.get();
+    }
+
+    @Override
+    public String getStringValue(String key, String defaultValue) {
+        DynamicStringProperty stringValue =
+                factory.getStringProperty(key, defaultValue);
+        return stringValue.get();
+    }
+
+    @Override
+    public boolean getEnable(String key, boolean defaultValue){
+        DynamicBooleanProperty value =
+                factory.getBooleanProperty(key + ".enable", defaultValue);
+        return value.get();
+    }
+
+    @Override
+    public String getKeyType(String prefix, Set<String> types, String value) {
+        if (prefix == null || types == null || types.size() == 0 || value == null)
+            return null;
+
+        String typeValue;
+        for (String typeName : types) {
+            typeValue = factory.getStringProperty(prefix + "." + typeName, null).get();
+            if (typeValue != null && Arrays.asList(typeValue.split(",")).contains(value)) {
+                return typeName;
+            }
+        }
+
+        String defaultValue = factory.getStringProperty(prefix + ".default", null).get();
+        Map<String, String> valueKeyMap = parseIpUserStr(defaultValue);
+
+        for (Map.Entry entry : valueKeyMap.entrySet()) {
+            if (entry.getKey().equals(value))
+                return entry.getValue().toString();
+        }
+        
+        return null;
+    }
+
+    private Map<String,String> parseIpUserStr(String ipConfig){
+        Map<String, String> result = new HashMap<>();
+        if (ipConfig == null || ipConfig.isEmpty()) {
+            return result;
+        }
+        String[] configs = ipConfig.split("#");
+        for(String config : configs) {
+            String[] parts = config.split("=", -1);
+            if (parts == null || parts.length != 2){
+                continue;
+            }
+            String[] ips = parts[0].split(",");
+            String userName = parts[1];
+            for (String ip : ips) {
+                result.put(ip,userName);
+            }
+        }
+        return result;
     }
 
     private String getFullKey(String key) {
