@@ -1,24 +1,22 @@
 package com.ctrip.zeus.auth.impl;
 
 import com.ctrip.zeus.auth.util.AuthUserConstants;
-import com.ctrip.zeus.service.build.ConfigService;
-import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
-import com.netflix.config.DynamicStringProperty;
 import org.jasig.cas.client.util.AbstractCasFilter;
 import org.jasig.cas.client.validation.Assertion;
 import org.jasig.cas.client.validation.AssertionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Resource;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Authenticate with ip.
@@ -29,22 +27,21 @@ import java.util.Map;
  */
 public class IPAuthenticationFilter implements Filter{
 
-    @Resource
-    ConfigService configService;
-
+    private static final String IP_AUTHENTICATION_PREFIX = "ip.authentication";
     private static final Logger logger = LoggerFactory.getLogger(IPAuthenticationFilter.class);
     public static final String SERVER_TOKEN_HEADER = "SlbServerToken";
-    private static final String IP_AUTHENTICATION_PREFIX = "ip.authentication";
+    private DynamicPropertyFactory factory = DynamicPropertyFactory.getInstance();
 
     @Override
-    public void init(FilterConfig filterConfig) {}
+    public void init(FilterConfig filterConfig) {
+    }
 
     public final void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain filterChain) throws IOException, ServletException {
         final HttpServletRequest request = (HttpServletRequest) servletRequest;
         final HttpServletResponse response = (HttpServletResponse) servletResponse;
         final HttpSession session = request.getSession(false);
         //1. turn off auth
-        if (!configService.getEnable("server.authorization", false)){
+        if (!factory.getBooleanProperty("server.authorization.enable", false).get()){
             setAssertion(request, AuthUserConstants.SLB_SERVER_USER);
             filterChain.doFilter(request,response);
             return;
@@ -68,7 +65,7 @@ public class IPAuthenticationFilter implements Filter{
 
         //4. if the request is from in ip white list, then authenticate it using the ip white list.
         String clientIP = getClientIP(request);
-        String ipUser = getIpUser(clientIP);
+        String ipUser = getIpUser(IP_AUTHENTICATION_PREFIX, AuthUserConstants.getAuthUsers(), clientIP);
         if (ipUser != null){
             logger.info("Authenticated by IP: " + clientIP + " Assigned userName:" + ipUser);
             setAssertion(request, ipUser);
@@ -87,9 +84,48 @@ public class IPAuthenticationFilter implements Filter{
         // nothing to do
     }
 
-    private String getIpUser(String clientIP) {
-        String user = configService.getKeyType(IP_AUTHENTICATION_PREFIX, AuthUserConstants.getAuthUsers(), clientIP);
-        return user;
+    private Map<String,String> parseIpUserStr(String ipConfig){
+        Map<String, String> result = new HashMap<>();
+        if (ipConfig == null || ipConfig.isEmpty()) {
+            return result;
+        }
+        String[] configs = ipConfig.split("#");
+        for(String config : configs) {
+            String[] parts = config.split("=", -1);
+            if (parts == null || parts.length != 2){
+                logger.error("fail to parse {}", config);
+                continue;
+            }
+            String[] ips = parts[0].split(",");
+            String userName = parts[1];
+            for (String ip : ips) {
+                result.put(ip,userName);
+            }
+        }
+        return result;
+    }
+
+    private String getIpUser(String prefix, Set<String> types, String value) {
+        if (prefix == null || types == null || types.size() == 0 || value == null)
+            return null;
+
+        String typeValue;
+        for (String typeName : types) {
+            typeValue = factory.getStringProperty(prefix + "." + typeName, null).get();
+            if (typeValue != null && Arrays.asList(typeValue.split(",")).contains(value)) {
+                return typeName;
+            }
+        }
+
+        String defaultValue = factory.getStringProperty(prefix + ".default", null).get();
+        Map<String, String> valueKeyMap = parseIpUserStr(defaultValue);
+
+        for (Map.Entry entry : valueKeyMap.entrySet()) {
+            if (entry.getKey().equals(value))
+                return entry.getValue().toString();
+        }
+
+        return null;
     }
 
     private String getClientIP(HttpServletRequest request) {
