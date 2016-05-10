@@ -4,7 +4,6 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.clean.AbstractCleanFilter;
-import com.ctrip.zeus.service.clean.CleanFilter;
 import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.netflix.config.DynamicIntProperty;
@@ -78,17 +77,20 @@ public class ConfCleanFilter extends AbstractCleanFilter {
             } catch (Exception ex) {
                 logger.error("Cleanse conf files failed of slb " + id, ex);
             }
-
         }
 
         for (Long slbId : slbIds) {
             //remove nginx_conf_server
             NginxConfServerDo nginxConfServerDo = nginxConfServerDao.findBySlbIdAndMaxVersion(slbId, NginxConfServerEntity.READSET_FULL);
-            nginxConfServerDao.deleteBySlbIdLessThanVersion(new NginxConfServerDo().setSlbId(slbId).setVersion(nginxConfServerDo.getVersion() - confSaveCounts.get()));
+            if (nginxConfServerDo != null) {
+                nginxConfServerDao.deleteBySlbIdLessThanVersion(new NginxConfServerDo().setSlbId(slbId).setVersion(nginxConfServerDo.getVersion() - confSaveCounts.get()));
+            }
 
             //remove nginx_conf_upstreams
             NginxConfUpstreamDo nginxConfUpstreamDo = nginxConfUpstreamDao.findBySlbIdAndMaxVersion(slbId, NginxConfUpstreamEntity.READSET_FULL);
-            nginxConfUpstreamDao.deleteBySlbIdLessThanVersion(new NginxConfUpstreamDo().setSlbId(slbId).setVersion(nginxConfUpstreamDo.getVersion() - confSaveCounts.get()));
+            if (nginxConfUpstreamDo != null) {
+                nginxConfUpstreamDao.deleteBySlbIdLessThanVersion(new NginxConfUpstreamDo().setSlbId(slbId).setVersion(nginxConfUpstreamDo.getVersion() - confSaveCounts.get()));
+            }
         }
     }
 }
