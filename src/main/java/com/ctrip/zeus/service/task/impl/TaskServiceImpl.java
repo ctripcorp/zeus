@@ -47,18 +47,18 @@ public class TaskServiceImpl implements TaskService {
         StringBuilder sb = new StringBuilder(128);
         sb.append("[[");
         sb.append("opsType=").append(task.getOpsType());
-        sb.append("taskId=").append(taskId);
+        sb.append(",taskId=").append(taskId);
         if (task.getGroupId() != null) {
-            sb.append("groupId=").append(task.getGroupId());
+            sb.append(",groupId=").append(task.getGroupId());
         }
         if (task.getVersion() != null) {
-            sb.append("version=").append(task.getVersion());
+            sb.append(",version=").append(task.getVersion());
         }
         if (task.getSlbVirtualServerId() != null) {
-            sb.append("vsId=").append(task.getSlbVirtualServerId());
+            sb.append(",vsId=").append(task.getSlbVirtualServerId());
         }
         if (task.getSlbId() != null) {
-            sb.append("slbId=").append(task.getSlbId());
+            sb.append(",slbId=").append(task.getSlbId());
         }
         sb.append("]]");
         sb.append("Task Added.Task info:［").append(task.toString()).append("]");
