@@ -1,6 +1,6 @@
 package com.ctrip.zeus.auth.impl;
 
-import com.ctrip.zeus.auth.util.AuthUserConstants;
+import com.ctrip.zeus.auth.util.AuthUserUtil;
 import com.netflix.config.DynamicPropertyFactory;
 import org.jasig.cas.client.util.AbstractCasFilter;
 import org.jasig.cas.client.validation.Assertion;
@@ -42,7 +42,7 @@ public class IPAuthenticationFilter implements Filter{
         final HttpSession session = request.getSession(false);
         //1. turn off auth
         if (!factory.getBooleanProperty("server.authorization.enable", false).get()){
-            setAssertion(request, AuthUserConstants.SLB_SERVER_USER);
+            setAssertion(request, AuthUserUtil.SLB_SERVER_USER);
             filterChain.doFilter(request,response);
             return;
         }
@@ -57,7 +57,7 @@ public class IPAuthenticationFilter implements Filter{
         String slbServerToken = request.getHeader(SERVER_TOKEN_HEADER);
         if (slbServerToken != null){
             if (TokenManager.validateToken(slbServerToken)){
-                setAssertion(request, AuthUserConstants.SLB_SERVER_USER);
+                setAssertion(request, AuthUserUtil.SLB_SERVER_USER);
                 filterChain.doFilter(request,response);
                 return;
             }
@@ -65,7 +65,7 @@ public class IPAuthenticationFilter implements Filter{
 
         //4. if the request is from in ip white list, then authenticate it using the ip white list.
         String clientIP = getClientIP(request);
-        String ipUser = getIpUser(IP_AUTHENTICATION_PREFIX, AuthUserConstants.getAuthUsers(), clientIP);
+        String ipUser = getIpUser(IP_AUTHENTICATION_PREFIX, AuthUserUtil.getAuthUsers(), clientIP);
         if (ipUser != null){
             logger.info("Authenticated by IP: " + clientIP + " Assigned userName:" + ipUser);
             setAssertion(request, ipUser);

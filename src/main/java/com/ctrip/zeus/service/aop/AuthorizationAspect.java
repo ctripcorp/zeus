@@ -4,6 +4,7 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.auth.Authorizer;
 import com.ctrip.zeus.auth.ResourceGroupProvider;
 import com.ctrip.zeus.restful.message.impl.ErrorResponseHandler;
+import com.ctrip.zeus.service.aop.util.AopUtil;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.aspectj.lang.JoinPoint;
@@ -50,7 +51,7 @@ public class AuthorizationAspect implements Ordered{
         Authorize authorize = method.getAnnotation(Authorize.class);
         if (authorize != null){
             String resourceName = authorize.name();
-            HttpServletRequest request = findRequestArg(point);
+            HttpServletRequest request = AopUtil.findRequestArg(point);
             // not found request parameter
             if (request == null){
                 return;
@@ -62,16 +63,6 @@ public class AuthorizationAspect implements Ordered{
             String userName = request.getRemoteUser();
             authorizer.authorize(userName,resourceName,resourceGroup);
         }
-    }
-
-    private HttpServletRequest findRequestArg(JoinPoint point) {
-        Object[] args = point.getArgs();
-        for (Object arg : args) {
-            if (arg instanceof HttpServletRequest){
-                return (HttpServletRequest)arg;
-            }
-        }
-        return null;
     }
 
     @Override
