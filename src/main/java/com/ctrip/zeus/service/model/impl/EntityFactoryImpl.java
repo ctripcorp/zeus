@@ -66,9 +66,11 @@ public class EntityFactoryImpl implements EntityFactory {
 
         ModelStatusMapping<Group> result = new ModelStatusMapping<>();
         for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds.toArray(new Long[groupIds.size()]), RGroupStatusEntity.READSET_FULL)) {
-            result.addOffline(d.getGroupId(), ref.get(d.getGroupId() + "," + d.getOfflineVersion()));
+            Group tmp = ref.get(d.getGroupId() + "," + d.getOfflineVersion());
+            if (tmp != null) result.addOffline(d.getGroupId(), tmp);
             if (d.getOnlineVersion() != 0) {
-                result.addOnline(d.getGroupId(), ref.get(d.getGroupId() + "," + d.getOnlineVersion()));
+                tmp = ref.get(d.getGroupId() + "," + d.getOnlineVersion());
+                if (tmp != null) result.addOnline(d.getGroupId(), tmp);
             }
         }
         return result;
@@ -89,9 +91,11 @@ public class EntityFactoryImpl implements EntityFactory {
 
         ModelStatusMapping<VirtualServer> result = new ModelStatusMapping<>();
         for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds.toArray(new Long[vsIds.size()]), RVsStatusEntity.READSET_FULL)) {
-            result.addOffline(d.getVsId(), ref.get(d.getVsId() + "," + d.getOfflineVersion()));
+            VirtualServer tmp = ref.get(d.getVsId() + "," + d.getOfflineVersion());
+            if (tmp != null) result.addOffline(d.getVsId(), tmp);
             if (d.getOnlineVersion() != 0) {
-                result.addOnline(d.getVsId(), ref.get(d.getVsId() + "," + d.getOnlineVersion()));
+                tmp = ref.get(d.getVsId() + "," + d.getOnlineVersion());
+                if (tmp != null) result.addOnline(d.getVsId(), tmp);
             }
         }
         return result;
