@@ -99,7 +99,10 @@ public class TaskExecutorImpl implements TaskExecutor {
                         throw new Exception("Get Resources Failed! ResourceId : " + res);
                     }
                 }
-                executeJob(slbId);
+                //0. get pending tasks , if size == 0 return
+                if (tasks.size() != 0) {
+                    executeJob(slbId);
+                }
             } else {
                 logger.warn("TaskWorker get lock failed! TaskWorker:" + slbId);
             }
@@ -124,11 +127,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private void executeJob(Long slbId) throws Exception {
-        //0. get pending tasks , if size == 0 return
-        if (tasks.size() == 0) {
-            return;
-        }
+    public void executeJob(Long slbId) throws Exception {
         sortTaskData(slbId);
 
         Map<Long, Group> onlineGroups;
