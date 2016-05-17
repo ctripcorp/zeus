@@ -29,7 +29,4 @@ public interface SlbRepository extends Repository {
     void updateStatus(IdVersion[] slbs, SelectionMode state) throws Exception;
 
     void updateStatus(IdVersion[] slbs) throws Exception;
-
-    @Deprecated
-    Set<Long> port(Long[] slbId) throws Exception;
 }

@@ -234,18 +234,6 @@ public class SlbResource {
         return responseHandler.handle(message, hh.getMediaType());
     }
 
-    @GET
-    @Path("/slb/upgradeAll")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeAll(@Context HttpHeaders hh, @Context HttpServletRequest request) throws Exception {
-        Set<Long> list = slbCriteriaQuery.queryAll();
-        Set<Long> result = slbRepository.port(list.toArray(new Long[list.size()]));
-        if (result.size() == 0)
-            return responseHandler.handle("Upgrade all successfully.", hh.getMediaType());
-        else
-            return responseHandler.handle("Upgrade fail on ids: " + Joiner.on(",").join(result), hh.getMediaType());
-    }
-
     private Slb parseSlb(MediaType mediaType, String slb) throws Exception {
         Slb s;
         if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {

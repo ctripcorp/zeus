@@ -539,25 +539,6 @@ public class GroupResource {
         return responseHandler.handle("Virtual group is deleted.", hh.getMediaType());
     }
 
-    @GET
-    @Path("/group/upgradeAll")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response upgradeAll(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                               @QueryParam("groupId") List<Long> groupId) throws Exception {
-        List<Long> list = null;
-        if (groupId != null && groupId.size() > 0) {
-            list = groupId;
-        } else {
-            list = new ArrayList<>(groupCriteriaQuery.queryAll());
-        }
-        Set<Long> result = groupRepository.port(list.toArray(new Long[list.size()]));
-        if (result.size() == 0)
-            return responseHandler.handle("Upgrade all successfully.", hh.getMediaType());
-        else
-            return responseHandler.handle("Upgrade fail on ids: " + Joiner.on(",").join(result), hh.getMediaType());
-    }
-
-
     private Group parseGroup(MediaType mediaType, String group) throws Exception {
         Group g;
         if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {

@@ -20,7 +20,4 @@ public interface GroupSync {
     void updateStatus(List<Group> groups) throws Exception;
 
     int delete(Long groupId) throws Exception;
-
-    @Deprecated
-    Set<Long> port(Long[] groupIds) throws Exception;
 }

@@ -41,8 +41,5 @@ public interface GroupRepository extends Repository {
     void updateStatus(IdVersion[] groups) throws Exception;
 
     @Deprecated
-    Set<Long> port(Long[] groupIds) throws Exception;
-
-    @Deprecated
     Group get(String groupName) throws Exception;
 }

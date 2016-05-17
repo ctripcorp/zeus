@@ -18,7 +18,4 @@ public interface SlbSync {
     void updateStatus(List<Slb> slbs) throws Exception;
 
     int delete(Long slbId) throws Exception;
-
-    @Deprecated
-    Set<Long> port(Long[] slbIds) throws Exception;
 }

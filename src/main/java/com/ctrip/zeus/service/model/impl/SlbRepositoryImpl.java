@@ -171,11 +171,6 @@ public class SlbRepositoryImpl implements SlbRepository {
         updateStatus(slbs, SelectionMode.ONLINE_EXCLUSIVE);
     }
 
-    @Override
-    public Set<Long> port(Long[] slbId) throws Exception {
-        return slbEntityManager.port(slbId);
-    }
-
     private void refreshVirtualServer(Slb slb) throws Exception {
         slb.getVirtualServers().clear();
         Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slb.getId());

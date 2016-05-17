@@ -30,8 +30,6 @@ public class GroupEntityManager implements GroupSync {
     private MultiRelMaintainer groupGsRelMaintainer;
     @Resource
     private MultiRelMaintainer groupVsRelMaintainer;
-    @Resource
-    private ConfGroupActiveDao confGroupActiveDao;
 
     @Override
     public void add(Group group) throws Exception {
@@ -105,46 +103,6 @@ public class GroupEntityManager implements GroupSync {
         int count = groupDao.deleteById(new GroupDo().setId(groupId));
         archiveGroupDao.deleteByGroup(new ArchiveGroupDo().setGroupId(groupId));
         return count;
-    }
-
-    @Override
-    public Set<Long> port(Long[] groupIds) throws Exception {
-        List<Group> toUpdate = new ArrayList<>();
-        Set<Long> failed = new HashSet<>();
-        for (ArchiveGroupDo archiveGroupDo : archiveGroupDao.findMaxVersionByGroups(groupIds, ArchiveGroupEntity.READSET_FULL)) {
-            try {
-                toUpdate.add(ContentReaders.readGroupContent(archiveGroupDo.getContent()));
-            } catch (Exception ex) {
-                failed.add(archiveGroupDo.getGroupId());
-            }
-        }
-        RelGroupStatusDo[] dos = new RelGroupStatusDo[toUpdate.size()];
-        for (int i = 0; i < dos.length; i++) {
-            dos[i] = new RelGroupStatusDo().setGroupId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
-        }
-
-        rGroupStatusDao.insertOrUpdate(dos);
-        for (Group group : toUpdate) {
-            groupVsRelMaintainer.port(group);
-            groupGsRelMaintainer.port(group);
-        }
-
-        groupIds = new Long[toUpdate.size()];
-        for (int i = 0; i < groupIds.length; i++) {
-            groupIds[i] = toUpdate.get(i).getId();
-        }
-        List<ConfGroupActiveDo> ref = confGroupActiveDao.findAllByGroupIds(groupIds, ConfGroupActiveEntity.READSET_FULL);
-        toUpdate.clear();
-        for (ConfGroupActiveDo confGroupActiveDo : ref) {
-            try {
-                toUpdate.add(ContentReaders.readGroupContent(confGroupActiveDo.getContent()));
-            } catch (Exception ex) {
-                failed.add(confGroupActiveDo.getGroupId());
-            }
-        }
-
-        updateStatus(toUpdate);
-        return failed;
     }
 
     private void relSyncVg(Group group) throws DalException {

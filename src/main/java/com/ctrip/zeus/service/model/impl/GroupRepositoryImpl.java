@@ -210,11 +210,6 @@ public class GroupRepositoryImpl implements GroupRepository {
         updateStatus(groups, SelectionMode.ONLINE_EXCLUSIVE);
     }
 
-    @Override
-    public Set<Long> port(Long[] groupIds) throws Exception {
-        return groupEntityManager.port(groupIds);
-    }
-
     private void syncMemberStatus(Group group) throws Exception {
         List<GroupVirtualServer> virtualServers = group.getGroupVirtualServers();
         Long[] vsIds = new Long[virtualServers.size()];

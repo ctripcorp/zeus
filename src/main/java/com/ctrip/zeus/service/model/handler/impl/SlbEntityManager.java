@@ -99,44 +99,4 @@ public class SlbEntityManager implements SlbSync {
         archiveSlbDao.deleteBySlb(new ArchiveSlbDo().setSlbId(slbId));
         return count;
     }
-
-    @Override
-    public Set<Long> port(Long[] slbIds) throws Exception {
-        List<Slb> toUpdate = new ArrayList<>();
-        Set<Long> failed = new HashSet<>();
-        for (ArchiveSlbDo d : archiveSlbDao.findMaxVersionBySlbs(slbIds, ArchiveSlbEntity.READSET_FULL)) {
-            try {
-                toUpdate.add(ContentReaders.readSlbContent(d.getContent()));
-            } catch (Exception ex) {
-                failed.add(d.getId());
-            }
-        }
-        RelSlbStatusDo[] dos = new RelSlbStatusDo[toUpdate.size()];
-        for (int i = 0; i < dos.length; i++) {
-            dos[i] = new RelSlbStatusDo().setSlbId(toUpdate.get(i).getId()).setOfflineVersion(toUpdate.get(i).getVersion());
-        }
-
-        rSlbStatusDao.insertOrUpdate(dos);
-
-        for (Slb slb : toUpdate) {
-            slbServerRelMaintainer.port(slb);
-        }
-
-        slbIds = new Long[toUpdate.size()];
-        for (int i = 0; i < slbIds.length; i++) {
-            slbIds[i] = toUpdate.get(i).getId();
-        }
-        List<ConfSlbActiveDo> ref = confSlbActiveDao.findAllBySlbIds(slbIds, ConfSlbActiveEntity.READSET_FULL);
-        toUpdate.clear();
-        for (ConfSlbActiveDo d : ref) {
-            try {
-                toUpdate.add(ContentReaders.readSlbContent(d.getContent()));
-            } catch (Exception ex) {
-                failed.add(d.getSlbId());
-            }
-        }
-
-        updateStatus(toUpdate);
-        return failed;
-    }
 }
