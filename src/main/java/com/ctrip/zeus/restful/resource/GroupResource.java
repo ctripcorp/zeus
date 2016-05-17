@@ -230,7 +230,7 @@ public class GroupResource {
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return ip != null && groupFilter != null;
+                        return ip != null;
                     }
 
                     @Override
