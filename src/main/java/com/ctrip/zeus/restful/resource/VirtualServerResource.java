@@ -11,13 +11,17 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
+import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.google.common.base.Joiner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -41,6 +45,8 @@ public class VirtualServerResource {
     @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
+    private ArchiveRepository archiveRepository;
+    @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
     private TagService tagService;
@@ -48,6 +54,8 @@ public class VirtualServerResource {
     private PropertyService propertyService;
     @Resource
     private ResponseHandler responseHandler;
+
+    Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @GET
     @Path("/vses")
@@ -226,8 +234,16 @@ public class VirtualServerResource {
                                         @Context HttpServletRequest request,
                                         @QueryParam("vsId") Long vsId) throws Exception {
         if (vsId == null)
-            throw new ValidationException("vsId is required.");
+            throw new ValidationException("Query parameter - vsId is required.");
+        VirtualServer archive = virtualServerRepository.getById(vsId);
+        if (archive == null) throw new ValidationException("Virtual server cannot be found with id " + vsId + ".");
+
         virtualServerRepository.delete(vsId);
+        try {
+            archiveRepository.archiveVs(archive);
+        } catch (Exception ex) {
+            logger.warn("Try archive deleted vs failed. " + GenericSerializer.writeJson(archive, false), ex);
+        }
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
     }
 

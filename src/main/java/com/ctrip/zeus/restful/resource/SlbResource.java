@@ -12,13 +12,17 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
+import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.google.common.base.Joiner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -42,6 +46,8 @@ public class SlbResource {
     @Resource
     private SlbRepository slbRepository;
     @Resource
+    private ArchiveRepository archiveRepository;
+    @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private ResponseHandler responseHandler;
@@ -52,6 +58,8 @@ public class SlbResource {
     @Resource
     private PropertyService propertyService;
     private final int TIMEOUT = 1000;
+
+    Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @GET
     @Path("/slbs")
@@ -227,9 +235,17 @@ public class SlbResource {
     @Authorize(name = "deleteSlb")
     public Response delete(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("slbId") Long slbId) throws Exception {
         if (slbId == null) {
-            throw new Exception("Missing parameter.");
+            throw new Exception("Query param - slbId is required.");
         }
+        Slb archive = slbRepository.getById(slbId);
+        if (archive == null) throw new ValidationException("Slb cannot be found with id " + slbId + ".");
+
         int count = slbRepository.delete(slbId);
+        try {
+            archiveRepository.archiveSlb(archive);
+        } catch (Exception ex) {
+            logger.warn("Try archive deleted slb failed. " + GenericSerializer.writeJson(archive, false), ex);
+        }
         String message = count == 1 ? "Delete slb successfully." : "No deletion is needed.";
         return responseHandler.handle(message, hh.getMediaType());
     }

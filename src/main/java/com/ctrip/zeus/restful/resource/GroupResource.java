@@ -14,16 +14,16 @@ import com.ctrip.zeus.restful.filter.FilterSet;
 import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.SelectionMode;
-import com.ctrip.zeus.service.model.VersionUtils;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
-import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import com.google.common.base.Joiner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -48,6 +48,8 @@ public class GroupResource {
     @Resource
     private GroupRepository groupRepository;
     @Resource
+    private ArchiveRepository archiveRepository;
+    @Resource
     private ResponseHandler responseHandler;
     @Resource
     private DbLockFactory dbLockFactory;
@@ -62,6 +64,8 @@ public class GroupResource {
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     private final int TIMEOUT = 1000;
+
+    Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @GET
     @Path("/groups")
@@ -522,9 +526,16 @@ public class GroupResource {
             if (groupName != null && !groupName.isEmpty())
                 groupId = groupCriteriaQuery.queryByName(groupName);
         }
-        if (groupId == null || groupId == 0L)
-            throw new ValidationException("groupId is not given or does not exist.");
+        if (groupId == null) throw new ValidationException("Query parameter - groupId is not provided or could not be found by query.");
+        Group archive = groupRepository.getById(groupId);
+        if (archive == null) throw new ValidationException("Group cannot be found with id " + groupId + ".");
+
         groupRepository.delete(groupId);
+        try {
+            archiveRepository.archiveGroup(archive);
+        } catch (Exception ex) {
+            logger.warn("Try archive deleted group failed. " + GenericSerializer.writeJson(archive, false), ex);
+        }
         return responseHandler.handle("Group is deleted.", hh.getMediaType());
     }
 
@@ -534,8 +545,16 @@ public class GroupResource {
     @Authorize(name = "deleteGroup")
     public Response deleteVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("groupId") Long groupId) throws Exception {
         if (groupId == null)
-            throw new Exception("Missing parameter.");
+            throw new Exception("Query parameter - groupId is required.");
+        Group archive = groupRepository.getById(groupId);
+        if (archive == null) throw new ValidationException("Virtual group cannot be found with id " + groupId + ".");
+
         groupRepository.deleteVGroup(groupId);
+        try {
+            archiveRepository.archiveGroup(archive.setVirtual(true));
+        } catch (Exception ex) {
+            logger.warn("Try archive deleted virtual group failed. " + GenericSerializer.writeJson(archive, false), ex);
+        }
         return responseHandler.handle("Virtual group is deleted.", hh.getMediaType());
     }
 
