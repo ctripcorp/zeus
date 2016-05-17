@@ -36,8 +36,8 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
     public Long updateAll(NginxConfEntry entry) throws Exception {
         String vhostDir = DEFAULT_NGINX_CONF_DIR + File.separator + "vhosts";
         String upstreamDir = DEFAULT_NGINX_CONF_DIR + File.separator + "upstreams";
-        File vhostFile = new File(vhostDir);
-        File upstreamFile = new File(upstreamDir);
+        File vhostFile = makeSurePathExist(vhostDir);
+        File upstreamFile = makeSurePathExist(upstreamDir);
 
         Date now = new Date();
         backupAll(now, BACKUP_TYPE_REFRESH);
@@ -105,9 +105,9 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
     public void undoUpdateAll(Long flag) throws Exception {
         String vhostDir = DEFAULT_NGINX_CONF_DIR + File.separator + "vhosts";
         String upstreamDir = DEFAULT_NGINX_CONF_DIR + File.separator + "upstreams";
-        File vhostFile = new File(vhostDir);
+        File vhostFile = makeSurePathExist(vhostDir);
         String[] vhostFileNames = vhostFile.list();
-        File upstreamFile = new File(upstreamDir);
+        File upstreamFile = makeSurePathExist(upstreamDir);
         String[] upstreamFileNames = upstreamFile.list();
         Date time = new Date(flag);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
@@ -191,9 +191,9 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
         String vhostDir = DEFAULT_NGINX_CONF_DIR + File.separator + "vhosts";
         String upstreamDir = DEFAULT_NGINX_CONF_DIR + File.separator + "upstreams";
 
-        File vhostFile = new File(vhostDir);
+        File vhostFile = makeSurePathExist(vhostDir);
         String[] vhostFileNames = vhostFile.list();
-        File upstreamFile = new File(upstreamDir);
+        File upstreamFile = makeSurePathExist(upstreamDir);
         String[] upstreamFileNames = upstreamFile.list();
 
         LOGGER.info("[NginxConfPartialUpdate] Cleanse trash files under dir upstreams and vhosts.");
@@ -503,11 +503,12 @@ public class NginxConfOpsServiceImpl implements NginxConfOpsService {
         }
     }
 
-    private void makeSurePathExist(String confDir) {
+    private File makeSurePathExist(String confDir) {
         File f = new File(confDir);
         if (!f.exists() || !f.isDirectory()) {
             f.mkdirs();
         }
+        return f;
     }
 
     private NginxResponse backupAll(Date date, String type) throws Exception {
