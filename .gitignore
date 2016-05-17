@@ -19,3 +19,4 @@ logback-prod*.xml
 logback-uat.xml
 *.log
 APP_HOME_IS_UNDEFINED
+*/**/git.properties
