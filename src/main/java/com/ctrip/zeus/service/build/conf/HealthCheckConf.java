@@ -85,7 +85,7 @@ public class HealthCheckConf {
                     .append("GET ").append(h.getUri()).append(" HTTP/1.1\\r\\n")
                     .append("Connection:keep-alive\\r\\n")
                     .append("Host:").append(vs.getDomains().get(0).getName().trim()).append("\\r\\n");
-            b.append("UserAgent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
+            b.append("User-Agent:SLB_HealthCheck").append("\\r\\n\\r\\n\"").append(";\n")
                     .append("    check_http_expect_alive http_2xx http_3xx").append(";\n");
         }
         return b.toString();
