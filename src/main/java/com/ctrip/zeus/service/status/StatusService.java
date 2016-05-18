@@ -25,20 +25,10 @@ public interface StatusService extends Repository {
     /**
      * get group servers by slbId and status offset
      * @param vsIds vsIds
-     * @param offset offset [0-30]
-     * @param status status enable = true , disable = false
-     * @return set of {vsId}_{groupId}_{ip}
-     * @throws Exception
-     */
-    Set<String> fetchGroupServersByVsIdsAndStatusOffset(Long[] vsIds , int offset , boolean status) throws Exception;
-
-    /**
-     * get group servers by slbId and status offset
-     * @param vsIds vsIds
      * @return map of {vsId}_{groupId}_{ip} offsetList
      * @throws Exception
      */
-    Map<String,List<Boolean>> fetchGroupServersByVsIds(Long[] vsIds) throws Exception;
+    Map<String,List<Boolean>> fetchGroupServerStatus(Long[] vsIds , Long[] groupIds) throws Exception;
 
     /**
      * up server by group server ip
@@ -78,14 +68,6 @@ public interface StatusService extends Repository {
      * @throws Exception
      */
     boolean getServerStatus(String ip )throws  Exception;
-
-    /**
-     * find group id by ip
-     * @param ip server ip
-     * @return Group ids
-     * @throws Exception
-     */
-    Set<Long> findGroupIdByIp(String ip )throws  Exception;
 
     /**
      * Init group server status for new/update group

@@ -26,8 +26,8 @@ public class UpstreamsConf {
     public static final String UpstreamPrefix = "backend_";
 
     public List<ConfFile> generate(Set<Long> vsLookup, VirtualServer vs, List<Group> groups,
-                                          Set<String> downServers, Set<String> upServers,
-                                          Set<String> visited) throws Exception {
+                                   Set<String> downServers, Set<String> upServers,
+                                   Set<String> visited) throws Exception {
         List<ConfFile> result = new ArrayList<>();
         Map<String, ConfWriter> map = new HashMap<>();
         for (Group group : groups) {
@@ -102,7 +102,7 @@ public class UpstreamsConf {
             validate(server, vs.getId());
             String ip = server.getIp();
 
-            boolean down = allDownServers.contains(ip) || !allUpGroupServers.contains(vs.getId() + "_" + group.getId() + "_" + ip);
+            boolean down = allDownServers.contains(ip) || !allUpGroupServers.contains(group.getId() + "_" + ip);
             confWriter.writeUpstreamServer(ip, server.getPort(), server.getWeight(), server.getMaxFails(), server.getFailTimeout(), down);
         }
 

@@ -104,6 +104,10 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupServerDao"/>
     </bean>
 
+    <bean id="groupServerStatusDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupServerStatusDao"/>
+    </bean>
+
     <bean id="groupSlbDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupSlbDao"/>
     </bean>

@@ -5,6 +5,9 @@ import com.ctrip.zeus.dal.core.GlobalJobDao;
 import com.ctrip.zeus.dal.core.GlobalJobDo;
 import com.ctrip.zeus.exceptions.*;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.nginx.entity.ReqStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatus;
 import com.ctrip.zeus.nginx.entity.TrafficStatusList;
@@ -21,7 +24,10 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -53,6 +59,10 @@ public class StatusResource {
     private ResponseHandler responseHandler;
     @Resource
     private GlobalJobDao globalJobDao;
+    @Resource
+    private GroupServerStatusDao groupServerStatusDao;
+    @Resource
+    private StatusGroupServerDao statusGroupServerDao;
 
 
     @GET
@@ -132,6 +142,43 @@ public class StatusResource {
         globalJobDao.deleteByPK(new GlobalJobDo().setJobKey(key));
         return responseHandler.handle("success.", hh.getMediaType());
     }
+
+    @GET
+    @Path("/fillData")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response fillData(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                             @QueryParam("batch") Boolean batch) throws Exception {
+        List<StatusGroupServerDo> list = statusGroupServerDao.findAll(StatusGroupServerEntity.READSET_FULL);
+        if (list == null) {
+            throw new ValidationException("Not found status group server items");
+        }
+        List<Long> sucGroupId = new ArrayList<>();
+        List<Long> failGroupId = new ArrayList<>();
+        GroupServerStatusDo[] updateDatas = new GroupServerStatusDo[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            updateDatas[i] = new GroupServerStatusDo();
+            updateDatas[i].setGroupId(list.get(i).getGroupId());
+            updateDatas[i].setIp(list.get(i).getIp());
+            updateDatas[i].setStatus(list.get(i).getStatus());
+            updateDatas[i].setCreatedTime(list.get(i).getCreatedTime());
+            updateDatas[i].setDataChangeLastTime(list.get(i).getDataChangeLastTime());
+        }
+        if (batch != null && batch == true) {
+            groupServerStatusDao.batchUpdate(updateDatas);
+            return responseHandler.handle("success.", hh.getMediaType());
+        } else {
+            for (GroupServerStatusDo g : updateDatas) {
+                try {
+                    groupServerStatusDao.update(g);
+                    sucGroupId.add(g.getGroupId());
+                } catch (Exception e) {
+                    failGroupId.add(g.getGroupId());
+                }
+            }
+        }
+        return responseHandler.handle("success List: " + sucGroupId.toString() + "\nfail:" + failGroupId.toString(), hh.getMediaType());
+    }
+
 
     @GET
     @Path("/traffic")

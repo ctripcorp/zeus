@@ -177,7 +177,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
 
-        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServersByVsIds(vsIds.toArray(new Long[]{}));
+        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(vsIds.toArray(new Long[]{}),
+                groups.keySet().toArray(new Long[]{}));
         Set<String> allDownServers = statusService.findAllDownServers();
         for (Group group : groups.values()) {
             Long groupId = group.getId();
@@ -199,7 +200,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 GroupServerStatus groupServerStatus = new GroupServerStatus();
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
-                String key = gvsId + "_" + groupId + "_" + gs.getIp();
+                String key = groupId + "_" + gs.getIp();
                 if (memberStatus.get(key) == null) {
                     LOGGER.error("[StatusError]Group Member Status is missing. vsId:" + gvsId + "groupId:" + groupId + "ip:" + gs.getIp());
                     continue;
@@ -231,7 +232,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
 
-        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServersByVsIds(vsIds.toArray(new Long[]{}));
+        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(vsIds.toArray(new Long[]{}),
+                groups.keySet().toArray(new Long[]{}));
         Set<String> allDownServers = statusService.findAllDownServers();
 
         for (Group group : groups.values()) {
@@ -262,7 +264,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 GroupServerStatus groupServerStatus = new GroupServerStatus();
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
-                String key = gvsId + "_" + groupId + "_" + gs.getIp();
+                String key = groupId + "_" + gs.getIp();
                 if (memberStatus.get(key) == null) {
                     LOGGER.error("[StatusError]Group Member Status is missing. vsId:" + gvsId + "groupId:" + groupId + "ip:" + gs.getIp());
                     continue;
