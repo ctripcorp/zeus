@@ -124,19 +124,11 @@ public class DefaultGroupValidator implements GroupValidator {
                 gvs.setPath(pathValues.get(0) + " " + pathValues.get(1));
             }
 
-            String path = gvs.getPath();
-            int prefixIdx = path.indexOf('/');
-            int suffixIdx = path.indexOf(standardSuffix);
-            suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
-            prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
-            path = path.substring(prefixIdx, suffixIdx);
-            // escape root path
+            String path = extractValue(gvs.getPath());
             if (path.isEmpty()) {
                 paths.put(vs.getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -1000 : gvs.getPriority()));
                 continue;
             }
-            // escape unconventional path
-            if (suffixIdx == -1) continue;
             paths.put(vs.getId(), new GroupVirtualServer().setPath(path).setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority()));
         }
 
@@ -199,9 +191,18 @@ public class DefaultGroupValidator implements GroupValidator {
     }
 
     private static String extractValue(String path) {
-        int prefixIdx = path.indexOf('/');
+        int prefixIdx = -1;
+        boolean checkQuote = false;
+        for (char c : path.toCharArray()) {
+            if (Character.isAlphabetic(c) || c == '(') {
+                break;
+            }
+            prefixIdx++;
+            if (c == '"') checkQuote = true;
+        }
         int suffixIdx = path.indexOf(standardSuffix);
         suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
+        if (checkQuote && path.endsWith("\"")) suffixIdx--;
         prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
         return path.substring(prefixIdx, suffixIdx);
     }

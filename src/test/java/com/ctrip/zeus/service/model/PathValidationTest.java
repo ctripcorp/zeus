@@ -250,9 +250,18 @@ public class PathValidationTest extends AbstractServerTest {
 
     private static String extractValue(String path) {
         final String standardSuffix = "($|/|\\?)";
-        int prefixIdx = path.indexOf('/');
+        int prefixIdx = -1;
+        boolean checkQuote = false;
+        for (char c : path.toCharArray()) {
+            if (Character.isAlphabetic(c) || c == '(') {
+                break;
+            }
+            prefixIdx++;
+            if (c == '"') checkQuote = true;
+        }
         int suffixIdx = path.indexOf(standardSuffix);
         suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
+        if (checkQuote && path.endsWith("\"")) suffixIdx--;
         prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
         return path.substring(prefixIdx, suffixIdx);
     }
