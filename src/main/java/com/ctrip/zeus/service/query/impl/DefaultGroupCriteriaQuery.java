@@ -32,7 +32,6 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
         return g == null ? 0L : g.getId();
     }
 
-
     @Override
     public Set<Long> queryByAppId(String appId) throws Exception {
         Set<Long> groupIds = new HashSet<>();

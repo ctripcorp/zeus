@@ -35,25 +35,25 @@ public class PathValidationTest extends AbstractServerTest {
     public void testStringUtils() {
         String s1 = "abcdefg";
         String s2 = "abc";
-        String s3 = "ABCDefghij($|/|\\?)";
+        String s3 = extractValue("ABCDefghij($|/|\\?)");
         String s4 = "我爱中国";
-        String s5 = "我($|/|\\?)";
+        String s5 = extractValue("我($|/|\\?)");
         String s6 = "我爱中国中国爱我";
 
-        String s7 = "bcdef($|/|\\?)";
+        String s7 = extractValue("bcdef($|/|\\?)");
         String s8 = "爱";
 
-        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s2, '(') == 1);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s2, s3, '(') == 2);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s3, s1, '(') == 1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s2) == 1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s2, s3) == 2);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s3, s1) == 1);
 
-        Assert.assertTrue(StringUtils.prefixOverlapped(s4, s5, '(') == 1);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s5, s6, '(') == 2);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s6, s4, '(') == 1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s4, s5) == 1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s5, s6) == 2);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s6, s4) == 1);
 
-        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s7, '(') == -1);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s4, s8, '(') == -1);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s4, '(') == -1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s7) == -1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s4, s8) == -1);
+        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s4) == -1);
     }
 
     @Test
@@ -134,10 +134,11 @@ public class PathValidationTest extends AbstractServerTest {
     public void testUnconventionalPath() {
         String root = "/";
         String startWith = "^/CommentAdmin";
-        String noStart = "baike";
+        String noStart = "baik";
         String noAlphabetic = "/123";
         String success = "success";
         String empty = "";
+        String specialCase = "~* \"^/(thematic|topic)\"";
 
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(root).setVirtualServer(new VirtualServer().setId(1L)));
@@ -186,6 +187,13 @@ public class PathValidationTest extends AbstractServerTest {
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
         }
+
+        try {
+            array.get(0).setPath(specialCase);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+        } catch (Exception e) {
+            Assert.assertTrue(false);
+        }
     }
 
     @Test
@@ -224,7 +232,8 @@ public class PathValidationTest extends AbstractServerTest {
                 "~* ^/123likectrip($|/|\\?)",
                 "~* ^/linkservice($|/|\\?)", "~* ^/linkservice/link($|/|\\?)",
                 "~* ^/tour-marketingservice($|/|\\?)", "~* ^/tour-MarketingServiceConfig($|/|\\?)",
-                "~* ^/cruise-interface-costa($|/|\\?)", "~* ^/Cruise-Product-WCFService($|/|\\?)", "~* ^/Cruise-Product-OctopusJob($|/|\\?)");
+                "~* ^/cruise-interface-costa($|/|\\?)", "~* ^/Cruise-Product-WCFService($|/|\\?)", "~* ^/Cruise-Product-OctopusJob($|/|\\?)",
+                "~* \"^/(journals.aspx$|show(journal)-d([0-9]+)-([a-z,A-z])([0-9]{0,15})([a-z,A-Z,0-9,\\-]{0,20})-([a-z,A-z,0-9,\\:]{0,90}).html$|travels($|/|\\?)|members/journals/add-travels/?$|travel($|/|\\?)|add-travel($|/|\\?)|travelsite($|/|\\?))\"");
         if (slb == null) {
             slb = new Slb().setName("default").setStatus("TEST")
                     .addVip(new Vip().setIp("10.2.25.93"))
@@ -237,5 +246,14 @@ public class PathValidationTest extends AbstractServerTest {
                 rGroupVsDao.insert(new RelGroupVsDo().setGroupId(10).setVsId(1).setPath(path));
             }
         }
+    }
+
+    private static String extractValue(String path) {
+        final String standardSuffix = "($|/|\\?)";
+        int prefixIdx = path.indexOf('/');
+        int suffixIdx = path.indexOf(standardSuffix);
+        suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
+        prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
+        return path.substring(prefixIdx, suffixIdx);
     }
 }

@@ -37,6 +37,7 @@ public class DefaultGroupValidator implements GroupValidator {
     private GroupDao groupDao;
 
     private final Set<String> pathPrefixModifier = Sets.newHashSet("=", "~", "~*", "^~");
+    private static final String standardSuffix = "($|/|\\?)";
 
     @Override
     public boolean exists(Long targetId) throws Exception {
@@ -114,7 +115,6 @@ public class DefaultGroupValidator implements GroupValidator {
                 if (pathValues.size() == 2) throw new ValidationException("Invalid path, too many whitespace modifiers is found.");
 
                 pathValues.add(pv);
-
             }
             if (pathValues.size() == 2) {
                 if (!pathPrefixModifier.contains(pathValues.get(0))) {
@@ -125,12 +125,18 @@ public class DefaultGroupValidator implements GroupValidator {
             }
 
             String path = gvs.getPath();
-            int idx = path.indexOf('/');
-            path = idx >= 0 ? path.substring(idx + 1) : path;
+            int prefixIdx = path.indexOf('/');
+            int suffixIdx = path.indexOf(standardSuffix);
+            suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
+            prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
+            path = path.substring(prefixIdx, suffixIdx);
+            // escape root path
             if (path.isEmpty()) {
                 paths.put(vs.getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -1000 : gvs.getPriority()));
                 continue;
             }
+            // escape unconventional path
+            if (suffixIdx == -1) continue;
             paths.put(vs.getId(), new GroupVirtualServer().setPath(path).setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority()));
         }
 
@@ -142,20 +148,7 @@ public class DefaultGroupValidator implements GroupValidator {
                 continue;
             if (d.getPriority() == 0) d.setPriority(1000);
 
-            int i = 0;
-            String value = d.getPath();
-            while (i < value.length()) {
-                char next = value.charAt(i);
-                if (next == '/') {
-                    value = value.substring(i + 1);
-                    break;
-                }
-                if (Character.isAlphabetic(next)) {
-                    break;
-                }
-                i++;
-            }
-
+            String value = extractValue(d.getPath());
             // check if root path is completely equivalent, otherwise escape comparing with root path
             GroupVirtualServer entry = paths.get(d.getVsId());
             if (value.isEmpty()) {
@@ -165,7 +158,7 @@ public class DefaultGroupValidator implements GroupValidator {
                 continue;
             }
 
-            int ol = StringUtils.prefixOverlapped(entry.getPath(), value, '(');
+            int ol = StringUtils.prefixOverlapped(entry.getPath(), value);
             switch (ol) {
                 case -1:
                     break;
@@ -203,5 +196,13 @@ public class DefaultGroupValidator implements GroupValidator {
     @Override
     public void validateGroupServers(List<GroupServer> groupServers) throws Exception {
         groupServerModelValidator.validateGroupServers(groupServers);
+    }
+
+    private static String extractValue(String path) {
+        int prefixIdx = path.indexOf('/');
+        int suffixIdx = path.indexOf(standardSuffix);
+        suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
+        prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
+        return path.substring(prefixIdx, suffixIdx);
     }
 }
