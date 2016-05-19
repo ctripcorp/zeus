@@ -76,7 +76,11 @@ public class AccessLogTracker implements LogTracker {
             }
         }
         if (fileChannel == null) {
-            logger.error("Cannot reach underlying fileChannel.");
+            logger.error("Cannot reach underlying fileChannel. Try hotfix");
+            try {
+                hotfix();
+            } catch (Exception ex) {
+            }
             return true;
         }
         return offset == fileChannel.size();
@@ -235,7 +239,6 @@ public class AccessLogTracker implements LogTracker {
         fileChannel = null;
         raf = null;
         start();
-        fileChannel.position(offset);
     }
 
     private void tryLog() {
