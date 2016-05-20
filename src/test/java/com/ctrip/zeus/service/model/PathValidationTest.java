@@ -32,7 +32,7 @@ public class PathValidationTest extends AbstractServerTest {
     private GroupValidator groupModelValidator;
 
     @Test
-    public void testStringUtils() {
+    public void testStringUtils() throws ValidationException {
         String s1 = "abcdefg";
         String s2 = "abc";
         String s3 = extractValue("ABCDefghij($|/|\\?)");
@@ -77,7 +77,7 @@ public class PathValidationTest extends AbstractServerTest {
         try {
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(array.get(0).getPriority().intValue() == 1000);
-            Assert.assertEquals( "~* ^/normal($|/|\\?)", array.get(0).getPath());
+            Assert.assertEquals("~* ^/normal($|/|\\?)", array.get(0).getPath());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -111,7 +111,7 @@ public class PathValidationTest extends AbstractServerTest {
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
             groupModelValidator.validateGroupVirtualServers(10L, array, false);
-            Assert.assertEquals( "~* ^/baike($|/|\\?)", array.get(0).getPath());
+            Assert.assertEquals("~* ^/baike($|/|\\?)", array.get(0).getPath());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -248,21 +248,32 @@ public class PathValidationTest extends AbstractServerTest {
         }
     }
 
-    private static String extractValue(String path) {
+    private static String extractValue(String path) throws ValidationException {
         final String standardSuffix = "($|/|\\?)";
         int prefixIdx = -1;
         boolean checkQuote = false;
-        for (char c : path.toCharArray()) {
-            if (Character.isAlphabetic(c) || c == '(') {
+
+        char[] pathArray = path.toCharArray();
+        for (char c : pathArray) {
+            if (Character.isAlphabetic(c)) break;
+            if (c == '/') {
+                prefixIdx++;
+                if (prefixIdx + 1 < pathArray.length && pathArray[prefixIdx + 1] == '"') {
+                    checkQuote = true;
+                    prefixIdx++;
+                }
                 break;
             }
-            prefixIdx++;
             if (c == '"') checkQuote = true;
+            prefixIdx++;
+        }
+        if (checkQuote && !path.endsWith("\"")) {
+            throw new ValidationException("Path should end up with quote if regex quotation is used.");
         }
         int suffixIdx = path.indexOf(standardSuffix);
         suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
-        if (checkQuote && path.endsWith("\"")) suffixIdx--;
         prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
-        return path.substring(prefixIdx, suffixIdx);
+        path = path.substring(prefixIdx, suffixIdx);
+        return path;
     }
 }

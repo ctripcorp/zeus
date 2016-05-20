@@ -140,7 +140,11 @@ public class DefaultGroupValidator implements GroupValidator {
                 continue;
             if (d.getPriority() == 0) d.setPriority(1000);
 
-            String value = extractValue(d.getPath());
+            String value = d.getPath();
+            try {
+                value = extractValue(d.getPath());
+            } catch (ValidationException ex) {
+            }
             // check if root path is completely equivalent, otherwise escape comparing with root path
             GroupVirtualServer entry = paths.get(d.getVsId());
             if (value.isEmpty()) {
@@ -190,20 +194,31 @@ public class DefaultGroupValidator implements GroupValidator {
         groupServerModelValidator.validateGroupServers(groupServers);
     }
 
-    private static String extractValue(String path) {
+    private static String extractValue(String path) throws ValidationException {
         int prefixIdx = -1;
         boolean checkQuote = false;
-        for (char c : path.toCharArray()) {
-            if (Character.isAlphabetic(c) || c == '(') {
+
+        char[] pathArray = path.toCharArray();
+        for (char c : pathArray) {
+            if (Character.isAlphabetic(c)) break;
+            if (c == '/') {
+                prefixIdx++;
+                if (prefixIdx + 1 < pathArray.length && pathArray[prefixIdx + 1] == '"') {
+                    checkQuote = true;
+                    prefixIdx++;
+                }
                 break;
             }
-            prefixIdx++;
             if (c == '"') checkQuote = true;
+            prefixIdx++;
+        }
+        if (checkQuote && !path.endsWith("\"")) {
+            throw new ValidationException("Path should end up with quote if regex quotation is used.");
         }
         int suffixIdx = path.indexOf(standardSuffix);
         suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
-        if (checkQuote && path.endsWith("\"")) suffixIdx--;
         prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
-        return path.substring(prefixIdx, suffixIdx);
+        path = path.substring(prefixIdx, suffixIdx);
+        return path;
     }
 }
