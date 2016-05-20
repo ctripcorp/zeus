@@ -18,7 +18,7 @@ import java.util.List;
 @Repository("archiveRepository")
 public class ArchiveRepositoryImpl implements ArchiveRepository {
     @Resource
-    private GroupDao groupDao;
+    private GroupHistoryDao groupHistoryDao;
     @Resource
     private ArchiveGroupDao archiveGroupDao;
     @Resource
@@ -32,6 +32,7 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
 
     @Override
     public void archiveGroup(Group group) throws Exception {
+        groupHistoryDao.insert(new GroupHistoryDo().setGroupId(group.getId()).setGroupName(group.getName()));
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setHash(0).setVersion(0)
                 .setContent(GenericSerializer.writeJson(group, false)));
     }
@@ -50,10 +51,19 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
 
     @Override
     public Group getGroupArchive(Long id) throws Exception {
-        GroupDo d = groupDao.findById(id, GroupEntity.READSET_FULL);
-        if (d != null) return null;
+        GroupHistoryDo d = groupHistoryDao.findById(id, GroupHistoryEntity.READSET_FULL);
+        if (d == null) return null;
 
         ArchiveGroupDo archiveGroupDo = archiveGroupDao.findByGroupAndVersion(id, 0, ArchiveGroupEntity.READSET_FULL);
+        return archiveGroupDo == null ? null : ContentReaders.readGroupContent(archiveGroupDo.getContent());
+    }
+
+    @Override
+    public Group getGroupArchive(String name) throws Exception {
+        GroupHistoryDo d = groupHistoryDao.findByName(name, GroupHistoryEntity.READSET_FULL);
+        if (d == null) return null;
+
+        ArchiveGroupDo archiveGroupDo = archiveGroupDao.findByGroupAndVersion(d.getGroupId(), 0, ArchiveGroupEntity.READSET_FULL);
         return archiveGroupDo == null ? null : ContentReaders.readGroupContent(archiveGroupDo.getContent());
     }
 

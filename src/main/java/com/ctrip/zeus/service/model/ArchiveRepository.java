@@ -17,6 +17,8 @@ public interface ArchiveRepository {
 
     Group getGroupArchive(Long id) throws Exception;
 
+    Group getGroupArchive(String name) throws Exception;
+
     Slb getSlbArchive(Long id) throws Exception;
 
     VirtualServer getVsArchive(Long id) throws Exception;

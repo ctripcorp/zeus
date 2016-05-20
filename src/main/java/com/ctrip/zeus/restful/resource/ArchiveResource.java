@@ -36,11 +36,18 @@ public class ArchiveResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupByStatus")
     public Response getArchiveGroup(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                    @QueryParam("groupName") String groupName,
                                     @QueryParam("groupId") Long groupId) throws Exception {
-        if (groupId == null) {
-            throw new ValidationException("Query parameter - groupId is required.");
+        if (groupId == null && groupName == null) {
+            throw new ValidationException("Query parameter - groupId/groupName is required.");
         }
-        Group archive = archiveRepository.getGroupArchive(groupId);
+        Group archive = null;
+        if (groupId != null) {
+            archive = archiveRepository.getGroupArchive(groupId);
+        }
+        if (groupName != null) {
+            archive = archiveRepository.getGroupArchive(groupName);
+        }
         if (archive == null) {
             return responseHandler.handle("Group archive of id " + groupId + " cannot be found.", hh.getMediaType());
         } else {

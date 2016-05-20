@@ -86,6 +86,30 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="group-history" table="group_history" alias="gh" do-class="GroupHistoryDo">
+        <query-defs>
+            <query name="find-by-id" type="SELECT">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-name" type="SELECT">
+                <param name="group-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-name'/> = ${group-name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
     <entity name="archive-group" table="archive_group" alias="ag" do-class="ArchiveGroupDo">
         <var name="ids" value-type="Long[]"/>
         <var name="hashes" value-type="Integer[]"/>

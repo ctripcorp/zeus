@@ -92,6 +92,10 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupHealthCheckDao"/>
     </bean>
 
+    <bean id="groupHistoryDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupHistoryDao"/>
+    </bean>
+
     <bean id="groupLoadBalancingMethodDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupLoadBalancingMethodDao"/>
     </bean>
