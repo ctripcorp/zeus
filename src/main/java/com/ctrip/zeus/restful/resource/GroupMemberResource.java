@@ -90,7 +90,7 @@ public class GroupMemberResource {
             if (online) {
                 onlineGroupUpdate(group);
             } else {
-                groupRepository.update(group);
+                groupRepository.update(group,true);
             }
         } finally {
             lock.unlock();
@@ -133,7 +133,7 @@ public class GroupMemberResource {
             if (online) {
                 onlineGroupUpdate(group);
             } else {
-                groupRepository.update(group);
+                groupRepository.update(group,true);
             }
         } finally {
             lock.unlock();
@@ -174,7 +174,7 @@ public class GroupMemberResource {
             if (online) {
                 onlineGroupUpdate(group);
             } else {
-                groupRepository.update(group);
+                groupRepository.update(group,true);
             }
         } finally {
             lock.unlock();
@@ -206,7 +206,7 @@ public class GroupMemberResource {
             throw new ValidationException("Group only has offline version . GroupId:" + groupId);
         }
         if (groupMap.getOnlineMapping().get(groupId).getVersion().equals(groupMap.getOfflineMapping().get(groupId).getVersion())) {
-            groupRepository.update(group);
+            groupRepository.update(group, true);
             ModelStatusMapping<Group> mapping = entityFactory.getGroupsByIds(new Long[]{groupId});
             Group offGroup = mapping.getOfflineMapping().get(groupId);
             Group onGroup = mapping.getOnlineMapping().get(groupId);
