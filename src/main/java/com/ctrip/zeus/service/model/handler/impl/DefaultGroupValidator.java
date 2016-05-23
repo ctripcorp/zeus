@@ -219,7 +219,8 @@ public class DefaultGroupValidator implements GroupValidator {
         }
     }
 
-    private static String extractValue(String path) throws ValidationException {
+    // expose api for testing
+    public static String extractValue(String path) throws ValidationException {
         int prefixIdx = -1;
         boolean checkQuote = false;
 

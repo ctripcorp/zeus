@@ -6,6 +6,7 @@ import com.ctrip.zeus.dal.core.RelGroupVsDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
+import com.ctrip.zeus.service.model.handler.impl.DefaultGroupValidator;
 import com.ctrip.zeus.util.StringUtils;
 import com.google.common.collect.Sets;
 import org.junit.Assert;
@@ -14,7 +15,6 @@ import org.junit.Test;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -133,6 +133,7 @@ public class PathValidationTest extends AbstractServerTest {
     @Test
     public void testUnconventionalPath() {
         String root = "/";
+        String regexRoot = "~* /";
         String startWith = "^/CommentAdmin";
         String noStart = "baik";
         String noAlphabetic = "/123";
@@ -150,6 +151,14 @@ public class PathValidationTest extends AbstractServerTest {
         }
 
         try {
+            array.get(0).setPriority(null).setPath(regexRoot);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertEquals(-1000, array.get(0).getPriority().intValue());
+        } catch (Exception e) {
+            Assert.assertTrue(false);
+        }
+
+        try {
             array.get(0).setPriority(null).setPath(success);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
         } catch (Exception e) {
@@ -159,7 +168,7 @@ public class PathValidationTest extends AbstractServerTest {
         try {
             array.get(0).setPriority(null).setPath(startWith);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(array.get(0).getPriority().intValue() == 900);
+            Assert.assertEquals(900, array.get(0).getPriority().intValue());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -167,7 +176,7 @@ public class PathValidationTest extends AbstractServerTest {
         try {
             array.get(0).setPriority(null).setPath(noStart);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(array.get(0).getPriority().intValue() == 900);
+            Assert.assertEquals(900, array.get(0).getPriority().intValue());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -175,7 +184,7 @@ public class PathValidationTest extends AbstractServerTest {
         try {
             array.get(0).setPath(noAlphabetic);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(array.get(0).getPriority().intValue() == 900);
+            Assert.assertEquals(900, array.get(0).getPriority().intValue());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -228,7 +237,7 @@ public class PathValidationTest extends AbstractServerTest {
     @Before
     public void check() throws Exception {
         Slb slb = slbRepository.getById(1L);
-        Set<String> existingPaths = Sets.newHashSet("~* /", "~* ^/CommentAdmin/", "~* ^/baike($|/|\\?)",
+        Set<String> existingPaths = Sets.newHashSet("~* ^/CommentAdmin/", "~* ^/baike($|/|\\?)",
                 "~* ^/123likectrip($|/|\\?)",
                 "~* ^/linkservice($|/|\\?)", "~* ^/linkservice/link($|/|\\?)",
                 "~* ^/tour-marketingservice($|/|\\?)", "~* ^/tour-MarketingServiceConfig($|/|\\?)",
@@ -249,31 +258,6 @@ public class PathValidationTest extends AbstractServerTest {
     }
 
     private static String extractValue(String path) throws ValidationException {
-        final String standardSuffix = "($|/|\\?)";
-        int prefixIdx = -1;
-        boolean checkQuote = false;
-
-        char[] pathArray = path.toCharArray();
-        for (char c : pathArray) {
-            if (Character.isAlphabetic(c)) break;
-            if (c == '/') {
-                prefixIdx++;
-                if (prefixIdx + 1 < pathArray.length && pathArray[prefixIdx + 1] == '"') {
-                    checkQuote = true;
-                    prefixIdx++;
-                }
-                break;
-            }
-            if (c == '"') checkQuote = true;
-            prefixIdx++;
-        }
-        if (checkQuote && !path.endsWith("\"")) {
-            throw new ValidationException("Path should end up with quote if regex quotation is used.");
-        }
-        int suffixIdx = path.indexOf(standardSuffix);
-        suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
-        prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
-        path = path.substring(prefixIdx, suffixIdx);
-        return path;
+        return DefaultGroupValidator.extractValue(path);
     }
 }
