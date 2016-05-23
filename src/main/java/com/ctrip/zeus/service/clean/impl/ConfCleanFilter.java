@@ -78,19 +78,5 @@ public class ConfCleanFilter extends AbstractCleanFilter {
                 logger.error("Cleanse conf files failed of slb " + id, ex);
             }
         }
-
-        for (Long slbId : slbIds) {
-            //remove nginx_conf_server
-            NginxConfServerDo nginxConfServerDo = nginxConfServerDao.findBySlbIdAndMaxVersion(slbId, NginxConfServerEntity.READSET_FULL);
-            if (nginxConfServerDo != null) {
-                nginxConfServerDao.deleteBySlbIdLessThanVersion(new NginxConfServerDo().setSlbId(slbId).setVersion(nginxConfServerDo.getVersion() - confSaveCounts.get()));
-            }
-
-            //remove nginx_conf_upstreams
-            NginxConfUpstreamDo nginxConfUpstreamDo = nginxConfUpstreamDao.findBySlbIdAndMaxVersion(slbId, NginxConfUpstreamEntity.READSET_FULL);
-            if (nginxConfUpstreamDo != null) {
-                nginxConfUpstreamDao.deleteBySlbIdLessThanVersion(new NginxConfUpstreamDo().setSlbId(slbId).setVersion(nginxConfUpstreamDo.getVersion() - confSaveCounts.get()));
-            }
-        }
     }
 }
