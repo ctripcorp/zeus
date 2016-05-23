@@ -87,7 +87,8 @@ public class DefaultGroupValidator implements GroupValidator {
             throw new ValidationException("No virtual server is found bound to this group.");
         if (groupId == null)
             groupId = 0L;
-        Map<Long, GroupVirtualServer> paths = new HashMap<>();
+        GroupVirtualServer dummy = new GroupVirtualServer();
+        Map<Long, GroupVirtualServer> addingGvs = new HashMap<>();
 
         for (GroupVirtualServer gvs : groupVirtualServers) {
             if (gvs.getRewrite() != null && !gvs.getRewrite().isEmpty()) {
@@ -100,75 +101,108 @@ public class DefaultGroupValidator implements GroupValidator {
             if (!virtualServerModelValidator.exists(vs.getId())) {
                 throw new ValidationException("Virtual server with id " + vs.getId() + " does not exist.");
             }
-            if (paths.containsKey(vs.getId())) {
+            if (addingGvs.containsKey(vs.getId())) {
                 throw new ValidationException("Group and virtual server is an unique combination.");
+            } else {
+                addingGvs.put(vs.getId(), dummy);
             }
 
-            if (escapePathValidation) continue;
-
-            if (gvs.getPath() == null || gvs.getPath().isEmpty()) {
-                throw new ValidationException("Path cannot be empty.");
-            }
-            List<String> pathValues = new ArrayList<>(2);
-            for (String pv :  gvs.getPath().split(" ", 0)) {
-                if (pv.isEmpty()) continue;
-                if (pathValues.size() == 2) throw new ValidationException("Invalid path, too many whitespace modifiers is found.");
-
-                pathValues.add(pv);
-            }
-            if (pathValues.size() == 2) {
-                if (!pathPrefixModifier.contains(pathValues.get(0))) {
-                    throw new ValidationException("Invalid path, invalid prefix modifier is found.");
-                }
-                // format path value
-                gvs.setPath(pathValues.get(0) + " " + pathValues.get(1));
-            }
-
-            String path = extractValue(gvs.getPath());
-            if (path.isEmpty()) {
-                paths.put(vs.getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -1000 : gvs.getPriority()));
+            if (escapePathValidation) {
                 continue;
+            } else {
+                doPathValidationAndMapping(addingGvs, gvs);
             }
-            paths.put(vs.getId(), new GroupVirtualServer().setPath(path).setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority()));
         }
 
-        if (paths.size() == 0) return;
+        if (escapePathValidation || addingGvs.size() == 0) return;
+        List<RelGroupVsDo> retainedGvs = rGroupVsDao.findAllByVses(addingGvs.keySet().toArray(new Long[addingGvs.size()]), RGroupVsEntity.READSET_FULL);
+        checkPathOverlappingAcrossVs(groupId, addingGvs, retainedGvs);
 
+        // reset priority after auto reorder
+        for (GroupVirtualServer e : groupVirtualServers) {
+            e.setPriority(addingGvs.get(e.getVirtualServer().getId()).getPriority());
+        }
+    }
+
+    @Override
+    public void validateGroupServers(List<GroupServer> groupServers) throws Exception {
+        groupServerModelValidator.validateGroupServers(groupServers);
+    }
+
+    private void doPathValidationAndMapping(Map<Long, GroupVirtualServer> mappingResult, GroupVirtualServer gvs) throws ValidationException {
+        if (gvs.getPath() == null || gvs.getPath().isEmpty()) {
+            throw new ValidationException("Path cannot be empty.");
+        }
+        List<String> pathValues = new ArrayList<>(2);
+        for (String pv :  gvs.getPath().split(" ", 0)) {
+            if (pv.isEmpty()) continue;
+            if (pathValues.size() == 2) throw new ValidationException("Invalid path, too many whitespace modifiers is found.");
+
+            pathValues.add(pv);
+        }
+        if (pathValues.size() == 2) {
+            if (!pathPrefixModifier.contains(pathValues.get(0))) {
+                throw new ValidationException("Invalid path, invalid prefix modifier is found.");
+            }
+            // format path value
+            gvs.setPath(pathValues.get(0) + " " + pathValues.get(1));
+        }
+
+        String path = extractValue(gvs.getPath());
+        if (path.isEmpty()) {
+            mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -1000 : gvs.getPriority()));
+        } else {
+            mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(path).setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority()));
+        }
+    }
+
+    private void checkPathOverlappingAcrossVs(Long groupId, Map<Long, GroupVirtualServer> addingGvs, List<RelGroupVsDo> retainedGvs) throws ValidationException {
         List<RelGroupVsDo> retained = new ArrayList<>();
-        for (RelGroupVsDo d : rGroupVsDao.findAllByVses(paths.keySet().toArray(new Long[paths.size()]), RGroupVsEntity.READSET_FULL)) {
-            if (groupId.equals(d.getGroupId()))
+        for (RelGroupVsDo retainedEntry : retainedGvs) {
+            if (groupId.equals(retainedEntry.getGroupId()))
                 continue;
-            if (d.getPriority() == 0) d.setPriority(1000);
+            if (retainedEntry.getPriority() == 0) retainedEntry.setPriority(1000);
 
-            String value = d.getPath();
+            String retainedPath = retainedEntry.getPath();
             try {
-                value = extractValue(d.getPath());
+                retainedPath = extractValue(retainedEntry.getPath());
             } catch (ValidationException ex) {
             }
+
+            GroupVirtualServer addingEntry = addingGvs.get(retainedEntry.getVsId());
+            if (addingEntry == null) {
+                throw new ValidationException("Unexpected path validation is reached. Related group and vs: " + groupId + ", " + retainedEntry.getVsId());
+            }
+
+            String addingPath = addingEntry.getPath();
+            try {
+                addingPath = extractValue(addingPath);
+            } catch (ValidationException ex) {
+            }
+
             // check if root path is completely equivalent, otherwise escape comparing with root path
-            GroupVirtualServer entry = paths.get(d.getVsId());
-            if (value.isEmpty()) {
-                if (d.getPath().equals(entry.getPath())) {
-                    retained.add(d);
+            if (retainedPath.isEmpty() || addingPath.isEmpty()) {
+                if (retainedEntry.getPath().equals(addingEntry.getPath())) {
+                    retained.add(retainedEntry);
                 }
                 continue;
             }
 
-            int ol = StringUtils.prefixOverlapped(entry.getPath(), value);
+            int ol = StringUtils.prefixOverlapped(addingPath, retainedPath);
             switch (ol) {
                 case -1:
                     break;
                 case 0:
-                    retained.add(d);
+                    retained.add(retainedEntry);
                     break;
                 case 1:
-                    if (entry.getPriority() == null || entry.getPriority() <= d.getPriority()) {
-                        entry.setPriority(d.getPriority() + 100);
+                    if (addingEntry.getPriority() == null || addingEntry.getPriority() <= retainedEntry.getPriority()) {
+                        addingEntry.setPriority(retainedEntry.getPriority() + 100);
                     }
                     break;
                 case 2:
-                    if (entry.getPriority() == null || entry.getPriority() >= d.getPriority()) {
-                        entry.setPriority(d.getPriority() - 100);
+                    if (addingEntry.getPriority() == null || addingEntry.getPriority() >= retainedEntry.getPriority()) {
+                        addingEntry.setPriority(retainedEntry.getPriority() - 100);
                     }
                     break;
                 default:
@@ -183,15 +217,6 @@ public class DefaultGroupValidator implements GroupValidator {
             }
             throw new ValidationException("Path is prefix-overlapped across virtual server " + sb.toString() + ".");
         }
-
-        for (GroupVirtualServer e : groupVirtualServers) {
-            e.setPriority(paths.get(e.getVirtualServer().getId()).getPriority());
-        }
-    }
-
-    @Override
-    public void validateGroupServers(List<GroupServer> groupServers) throws Exception {
-        groupServerModelValidator.validateGroupServers(groupServers);
     }
 
     private static String extractValue(String path) throws ValidationException {
