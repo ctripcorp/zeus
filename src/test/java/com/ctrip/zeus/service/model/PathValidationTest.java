@@ -7,7 +7,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.impl.DefaultGroupValidator;
-import com.ctrip.zeus.util.StringUtils;
+import com.ctrip.zeus.util.PathUtils;
 import com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,15 +24,43 @@ import java.util.Set;
 public class PathValidationTest extends AbstractServerTest {
     @Resource
     private SlbRepository slbRepository;
-
     @Resource
     private RGroupVsDao rGroupVsDao;
-
     @Resource
     private GroupValidator groupModelValidator;
 
+    private final String standardSuffix = "($|/|\\?)";
+
     @Test
-    public void testStringUtils() throws ValidationException {
+    public void testExtractPath() throws ValidationException {
+        String normalValue1 = "abc($|/|\\?)";
+        String normalValue2 = "abc";
+        String normalValue3 = "/abc";
+        String normalValue4 = "^/abc";
+        String normalValue5 = "~* /\"abc\"";
+        String normalValue6 = "~* \"/abc\"";
+        String normalValue7 = "~* /abc($|/|\\?)";
+        String creepyValue1 = "\"/abc\"";
+        String creepyValue2 = "\"^/\\\"abc\\\"\"";
+        String creepyValue3 = "~* \"^/members($|/|\\?)|membersite($|/|\\?)\"";
+        String root1 = "~* /";
+        String root2 = "/";
+        Assert.assertEquals("abc($|/|\\?)", extractValue(normalValue1));
+        Assert.assertEquals("abc", extractValue(normalValue2));
+        Assert.assertEquals("abc", extractValue(normalValue3));
+        Assert.assertEquals("abc", extractValue(normalValue4));
+        Assert.assertEquals("abc", extractValue(normalValue5));
+        Assert.assertEquals("abc", extractValue(normalValue6));
+        Assert.assertEquals("abc($|/|\\?)", extractValue(normalValue7));
+        Assert.assertEquals("abc", extractValue(creepyValue1));
+        Assert.assertEquals("\\\"abc\\\"", extractValue(creepyValue2));
+        Assert.assertEquals("members($|/|\\?)|membersite($|/|\\?)", extractValue(creepyValue3));
+        Assert.assertEquals("/", extractValue(root1));
+        Assert.assertEquals("/", extractValue(root2));
+    }
+
+    @Test
+    public void testPathUtils() throws ValidationException {
         String s1 = "abcdefg";
         String s2 = "abc";
         String s3 = extractValue("ABCDefghij($|/|\\?)");
@@ -43,24 +71,42 @@ public class PathValidationTest extends AbstractServerTest {
         String s7 = extractValue("bcdef($|/|\\?)");
         String s8 = "爱";
 
-        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s2) == 1);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s2, s3) == 2);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s3, s1) == 1);
+        String s9 = "~* \"^/members($|/|\\?)|membersite($|/|\\?)\"";
+        String s10 = "~* \"^/members($|/|\\?)membersite($|/|\\?)\"";
 
-        Assert.assertTrue(StringUtils.prefixOverlapped(s4, s5) == 1);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s5, s6) == 2);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s6, s4) == 1);
+        Assert.assertTrue(PathUtils.prefixOverlapped(s1, s2, standardSuffix) == 1);
+        Assert.assertTrue(PathUtils.prefixOverlapped(s2, s3, standardSuffix) == 2);
+        Assert.assertTrue(PathUtils.prefixOverlapped(s3, s1, standardSuffix) == 1);
 
-        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s7) == -1);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s4, s8) == -1);
-        Assert.assertTrue(StringUtils.prefixOverlapped(s1, s4) == -1);
+        Assert.assertTrue(PathUtils.prefixOverlapped(s4, s5, standardSuffix) == 1);
+        Assert.assertTrue(PathUtils.prefixOverlapped(s5, s6, standardSuffix) == 2);
+        Assert.assertTrue(PathUtils.prefixOverlapped(s6, s4, standardSuffix) == 1);
+
+        Assert.assertTrue(PathUtils.prefixOverlapped(s1, s7, standardSuffix) == -1);
+        Assert.assertTrue(PathUtils.prefixOverlapped(s4, s8, standardSuffix) == -1);
+        Assert.assertTrue(PathUtils.prefixOverlapped(s1, s4, standardSuffix) == -1);
+
+        Assert.assertTrue(PathUtils.prefixOverlapped(s3, s3, standardSuffix) == 0);
+        Assert.assertTrue(PathUtils.prefixOverlapped(s4, s4, standardSuffix) == 0);
+
+        Assert.assertTrue(PathUtils.prefixOverlapped(s9, s10, standardSuffix) == -1);
     }
 
     @Test
     public void testAddExistingPath() {
-        String path = "~* ^/linkservice($|/|\\?)";
+        String samePath = "~* ^/linkservice($|/|\\?)";
+        String partialPath = "~* ^/members($|/|\\?)";
+
         List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
+        array.add(new GroupVirtualServer().setPath(samePath).setVirtualServer(new VirtualServer().setId(1L)));
+        try {
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
+        }
+
+        array.get(0).setPriority(null).setPath(partialPath);
         try {
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(false);
@@ -72,12 +118,23 @@ public class PathValidationTest extends AbstractServerTest {
     @Test
     public void testAddNormalPath() {
         String path = "~* ^/normal($|/|\\?)";
+        String regexRoot = "~* /";
+
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(array.get(0).getPriority().intValue() == 1000);
-            Assert.assertEquals("~* ^/normal($|/|\\?)", array.get(0).getPath());
+            Assert.assertEquals(path, array.get(0).getPath());
+        } catch (Exception e) {
+            Assert.assertTrue(false);
+        }
+
+        array.get(0).setPriority(null).setPath(regexRoot);
+        try {
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertEquals(-1000, array.get(0).getPriority().intValue());
+            Assert.assertEquals(regexRoot, array.get(0).getPath());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -133,27 +190,19 @@ public class PathValidationTest extends AbstractServerTest {
     @Test
     public void testUnconventionalPath() {
         String root = "/";
-        String regexRoot = "~* /";
         String startWith = "^/CommentAdmin";
         String noStart = "baik";
         String noAlphabetic = "/123";
         String success = "success";
         String empty = "";
         String specialCase = "~* \"^/(thematic|topic)\"";
+        String noMeaningSuffix = "~* \"^/members($|/|\\?)membersite($|/|\\?)\"";
 
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(root).setVirtualServer(new VirtualServer().setId(1L)));
 
         try {
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-        } catch (Exception e) {
-            Assert.assertTrue(false);
-        }
-
-        try {
-            array.get(0).setPriority(null).setPath(regexRoot);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertEquals(-1000, array.get(0).getPriority().intValue());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -203,6 +252,14 @@ public class PathValidationTest extends AbstractServerTest {
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
+
+        try {
+            array.get(0).setPath(noMeaningSuffix);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertEquals(1100, array.get(0).getPriority().intValue());
+        } catch (Exception e) {
+            Assert.assertTrue(false);
+        }
     }
 
     @Test
@@ -242,6 +299,7 @@ public class PathValidationTest extends AbstractServerTest {
                 "~* ^/linkservice($|/|\\?)", "~* ^/linkservice/link($|/|\\?)",
                 "~* ^/tour-marketingservice($|/|\\?)", "~* ^/tour-MarketingServiceConfig($|/|\\?)",
                 "~* ^/cruise-interface-costa($|/|\\?)", "~* ^/Cruise-Product-WCFService($|/|\\?)", "~* ^/Cruise-Product-OctopusJob($|/|\\?)",
+                "~* ^/members($|/|\\?)|membersite($|/|\\?)",
                 "~* \"^/(journals.aspx$|show(journal)-d([0-9]+)-([a-z,A-z])([0-9]{0,15})([a-z,A-Z,0-9,\\-]{0,20})-([a-z,A-z,0-9,\\:]{0,90}).html$|travels($|/|\\?)|members/journals/add-travels/?$|travel($|/|\\?)|add-travel($|/|\\?)|travelsite($|/|\\?))\"");
         if (slb == null) {
             slb = new Slb().setName("default").setStatus("TEST")

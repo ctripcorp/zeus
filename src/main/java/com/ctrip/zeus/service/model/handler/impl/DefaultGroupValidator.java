@@ -10,7 +10,7 @@ import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.handler.GroupServerValidator;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
-import com.ctrip.zeus.util.StringUtils;
+import com.ctrip.zeus.util.PathUtils;
 import com.google.common.collect.Sets;
 import org.springframework.stereotype.Component;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -37,7 +37,7 @@ public class DefaultGroupValidator implements GroupValidator {
     private GroupDao groupDao;
 
     private final Set<String> pathPrefixModifier = Sets.newHashSet("=", "~", "~*", "^~");
-    private static final String standardSuffix = "($|/|\\?)";
+    private final String standardSuffix = "($|/|\\?)";
 
     @Override
     public boolean exists(Long targetId) throws Exception {
@@ -134,9 +134,10 @@ public class DefaultGroupValidator implements GroupValidator {
             throw new ValidationException("Path cannot be empty.");
         }
         List<String> pathValues = new ArrayList<>(2);
-        for (String pv :  gvs.getPath().split(" ", 0)) {
+        for (String pv : gvs.getPath().split(" ", 0)) {
             if (pv.isEmpty()) continue;
-            if (pathValues.size() == 2) throw new ValidationException("Invalid path, too many whitespace modifiers is found.");
+            if (pathValues.size() == 2)
+                throw new ValidationException("Invalid path, too many whitespace modifiers is found.");
 
             pathValues.add(pv);
         }
@@ -149,7 +150,7 @@ public class DefaultGroupValidator implements GroupValidator {
         }
 
         String path = extractValue(gvs.getPath());
-        if (path.isEmpty()) {
+        if ("/".equals(path)) {
             mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -1000 : gvs.getPriority()));
         } else {
             mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(path).setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority()));
@@ -181,32 +182,41 @@ public class DefaultGroupValidator implements GroupValidator {
             }
 
             // check if root path is completely equivalent, otherwise escape comparing with root path
-            if (retainedPath.isEmpty() || addingPath.isEmpty()) {
+            if ("/".equals(retainedPath) || "/".equals(addingPath)) {
                 if (retainedEntry.getPath().equals(addingEntry.getPath())) {
                     retained.add(retainedEntry);
                 }
                 continue;
             }
 
-            int ol = StringUtils.prefixOverlapped(addingPath, retainedPath);
-            switch (ol) {
-                case -1:
-                    break;
-                case 0:
-                    retained.add(retainedEntry);
-                    break;
-                case 1:
-                    if (addingEntry.getPriority() == null || addingEntry.getPriority() <= retainedEntry.getPriority()) {
-                        addingEntry.setPriority(retainedEntry.getPriority() + 100);
+            List<String> addingPathMembers = regexLevelSplit(addingPath, standardSuffix, 1);
+            List<String> retainedPathMembers = regexLevelSplit(retainedPath, standardSuffix, 1);
+            if (addingPathMembers.size() == 0) addingPathMembers.add(addingPath);
+            if (retainedPathMembers.size() == 0) retainedPathMembers.add(retainedPath);
+
+            for (String ap : addingPathMembers) {
+                for (String rp : retainedPathMembers) {
+                    int ol = PathUtils.prefixOverlapped(ap, rp, standardSuffix);
+                    switch (ol) {
+                        case -1:
+                            break;
+                        case 0:
+                            retained.add(retainedEntry);
+                            break;
+                        case 1:
+                            if (addingEntry.getPriority() == null || addingEntry.getPriority() <= retainedEntry.getPriority()) {
+                                addingEntry.setPriority(retainedEntry.getPriority() + 100);
+                            }
+                            break;
+                        case 2:
+                            if (addingEntry.getPriority() == null || addingEntry.getPriority() >= retainedEntry.getPriority()) {
+                                addingEntry.setPriority(retainedEntry.getPriority() - 100);
+                            }
+                            break;
+                        default:
+                            throw new NotImplementedException();
                     }
-                    break;
-                case 2:
-                    if (addingEntry.getPriority() == null || addingEntry.getPriority() >= retainedEntry.getPriority()) {
-                        addingEntry.setPriority(retainedEntry.getPriority() - 100);
-                    }
-                    break;
-                default:
-                    throw new NotImplementedException();
+                }
             }
         }
 
@@ -221,30 +231,62 @@ public class DefaultGroupValidator implements GroupValidator {
 
     // expose api for testing
     public static String extractValue(String path) throws ValidationException {
-        int prefixIdx = -1;
-        boolean checkQuote = false;
+        int idxPrefix = 0;
+        int idxModifier = 0;
+        boolean quote = false;
 
         char[] pathArray = path.toCharArray();
         for (char c : pathArray) {
-            if (Character.isAlphabetic(c)) break;
-            if (c == '/') {
-                prefixIdx++;
-                if (prefixIdx + 1 < pathArray.length && pathArray[prefixIdx + 1] == '"') {
-                    checkQuote = true;
-                    prefixIdx++;
+            if (c == '"') {
+                quote = true;
+                idxPrefix++;
+            } else if (c == ' ') {
+                idxPrefix++;
+                idxModifier = idxPrefix;
+            } else if (c == '^' || c == '~' || c == '=' || c == '*') {
+                idxPrefix++;
+            } else if (c == '/') {
+                idxPrefix++;
+                if (idxPrefix < pathArray.length && pathArray[idxPrefix] == '"') {
+                    quote = true;
+                    idxPrefix++;
                 }
                 break;
+            } else {
+                break;
             }
-            if (c == '"') checkQuote = true;
-            prefixIdx++;
         }
-        if (checkQuote && !path.endsWith("\"")) {
+
+        if (quote && !path.endsWith("\"")) {
             throw new ValidationException("Path should end up with quote if regex quotation is used.");
         }
-        int suffixIdx = path.indexOf(standardSuffix);
-        suffixIdx = suffixIdx >= 0 ? suffixIdx : path.length();
-        prefixIdx = prefixIdx < suffixIdx && prefixIdx >= 0 ? prefixIdx + 1 : 0;
-        path = path.substring(prefixIdx, suffixIdx);
-        return path;
+        int idxSuffix = quote ? path.length() - 1 : path.length();
+        idxPrefix = idxPrefix < idxSuffix ?
+                (idxModifier > idxPrefix ? idxModifier : idxPrefix) : idxModifier;
+        return path.substring(idxPrefix, idxSuffix);
+    }
+
+    private List<String> regexLevelSplit(String path, String splitter, int depth) throws ValidationException {
+        List<String> pathMembers = new ArrayList<>();
+        if (depth > 1) {
+            throw new ValidationException("Function regexLevelSplit only support first level split.");
+        }
+        int fromIdx, idxSuffix;
+        fromIdx = idxSuffix = 0;
+        while ((idxSuffix = path.indexOf(splitter, fromIdx)) != -1) {
+            if (fromIdx > 0) {
+                if (path.charAt(fromIdx) == '|') {
+                    fromIdx++;
+                    pathMembers.add(path.substring(fromIdx, idxSuffix + 8));
+                } else {
+                    String prev = pathMembers.get(pathMembers.size() - 1);
+                    pathMembers.set(pathMembers.size() - 1, prev + path.substring(fromIdx, idxSuffix + 8));
+                }
+            } else {
+                pathMembers.add(path.substring(0, idxSuffix + 8));
+            }
+            fromIdx = idxSuffix + 8;
+        }
+        return pathMembers;
     }
 }
