@@ -48,15 +48,6 @@ public interface NginxConfService extends Repository {
      * @return current version
      * @throws Exception
      */
-    public int getCurrentBuildingVersion(Long slbId) throws Exception;
-
-    /**
-     * get current building version by slb name
-     *
-     * @param slbId the slb slbId
-     * @return current version
-     * @throws Exception
-     */
     public int getCurrentVersion(Long slbId) throws Exception;
 
 }

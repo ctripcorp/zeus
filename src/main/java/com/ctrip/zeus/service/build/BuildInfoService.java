@@ -44,12 +44,4 @@ public interface BuildInfoService extends Repository {
      * @throws Exception
      */
     int getPaddingTicket(Long slbId) throws Exception;
-
-    /**
-     * reset current ticket by slb name
-     * @param slbId the slb name
-     * @return padding ticket
-     * @throws Exception
-     */
-    int resetPaddingTicket(Long slbId) throws Exception;
 }

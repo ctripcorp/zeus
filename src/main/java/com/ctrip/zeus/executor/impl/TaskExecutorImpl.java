@@ -57,8 +57,6 @@ public class TaskExecutorImpl implements TaskExecutor {
     @Resource
     NginxService nginxService;
     @Resource
-    private BuildInfoService buildInfoService;
-    @Resource
     private ConfVersionService confVersionService;
     @Resource
     private CommitService commitService;
@@ -370,7 +368,6 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }
             }
             performTasks(slbId, needBuildGroupVs, offlineGroups);
-            updateVersion(slbId, buildVersion);
             setTaskResult(slbId, true, null);
         } catch (Exception e) {
             // failed
@@ -440,25 +437,15 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private void updateVersion(Long slbId, Long currentVersion) throws Exception {
-        try {
-            buildInfoService.updateTicket(slbId, (int) (long) currentVersion);
-        } catch (Exception e) {
-            throw new Exception("Update Version Fail!", e);
-        }
-    }
-
     private void rollBack(Slb slb, Long buildVersion, boolean needRollbackConf) {
         try {
             if (buildVersion != null && buildVersion > 0) {
+                commitService.removeCommit(slb.getId(), buildVersion);
                 Long pre = confVersionService.getSlbPreviousVersion(slb.getId());
                 if (pre > 0) {
                     confVersionService.updateSlbCurrentVersion(slb.getId(), pre);
+                    buildService.rollBackConfig(slb.getId(), pre.intValue());
                 }
-                commitService.removeCommit(slb.getId(), buildVersion);
-                int current = buildInfoService.getCurrentTicket(slb.getId());
-                buildService.rollBackConfig(slb.getId(), current);
-                buildInfoService.resetPaddingTicket(slb.getId());
             }
             if (needRollbackConf) {
                 nginxService.rollbackAllConf(slb.getSlbServers());
@@ -618,7 +605,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 }
             }
             statusService.updateStatus(healthyStatus);
-        } catch ( Exception e ) {
+        } catch (Exception e) {
             throw new Exception("Perform Tasks Fail! TargetSlbId:" + tasks.get(0).getTargetSlbId(), e);
         }
 

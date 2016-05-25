@@ -6,6 +6,7 @@ import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.service.version.ConfVersionService;
 import com.ctrip.zeus.util.CompressUtils;
 import com.google.common.base.Joiner;
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ public class NginxConfServiceImpl implements NginxConfService {
     @Resource
     private NginxConfSlbDao nginxConfSlbDao;
     @Resource
-    private BuildInfoService buildInfoService;
+    private ConfVersionService confVersionService;
 
     private Logger logger = LoggerFactory.getLogger(NginxConfServiceImpl.class);
 
@@ -113,13 +114,8 @@ public class NginxConfServiceImpl implements NginxConfService {
     }
 
     @Override
-    public int getCurrentBuildingVersion(Long slbId) throws Exception {
-        return buildInfoService.getPaddingTicket(slbId);
-    }
-
-    @Override
     public int getCurrentVersion(Long slbId) throws Exception {
-        return buildInfoService.getCurrentTicket(slbId);
+        return confVersionService.getSlbCurrentVersion(slbId).intValue();
     }
 
 }

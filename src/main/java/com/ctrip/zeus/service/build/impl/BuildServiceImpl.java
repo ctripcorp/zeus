@@ -9,6 +9,7 @@ import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfBuilder;
 import com.ctrip.zeus.service.build.conf.ConfWriter;
 import com.ctrip.zeus.service.build.conf.UpstreamsConf;
+import com.ctrip.zeus.service.version.ConfVersionService;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.util.CompressUtils;
 import org.slf4j.Logger;
@@ -32,6 +33,8 @@ public class BuildServiceImpl implements BuildService {
     @Resource
     ConfGroupSlbActiveDao confGroupSlbActiveDao;
     @Resource
+    ConfVersionService confVersionService;
+    @Resource
     private NginxConfBuilder nginxConfigBuilder;
     @Resource
     private NginxConfSlbDao nginxConfSlbDao;
@@ -49,7 +52,7 @@ public class BuildServiceImpl implements BuildService {
                       Set<String> allDownServers,
                       Set<String> allUpGroupServers) throws Exception {
         int version = buildInfoService.getTicket(onlineSlb.getId());
-        int currentVersion = buildInfoService.getCurrentTicket(onlineSlb.getId());
+        Long currentVersion = confVersionService.getSlbCurrentVersion(onlineSlb.getId());//buildInfoService.getCurrentTicket(onlineSlb.getId());
 
         String conf = nginxConfigBuilder.generateNginxConf(onlineSlb);
 
