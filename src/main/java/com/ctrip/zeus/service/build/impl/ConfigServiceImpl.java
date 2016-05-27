@@ -67,23 +67,24 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public boolean getEnable(String key, Long slbId, Long vsId, Long groupId, boolean defaultValue) throws Exception {
         String enableFullKey = getEnableFullKey(key);
+        String defaultEnable = String.valueOf(defaultValue);
 
-        DynamicBooleanProperty value =
-                factory.getBooleanProperty(enableFullKey + ".ip." + S.getIp(), false);
-        if (!value.get() && groupId != null) {
-            value = factory.getBooleanProperty(enableFullKey + ".group." + groupId, false);
+        DynamicStringProperty stringValue =
+                factory.getStringProperty(enableFullKey + ".ip." + S.getIp(), null);
+        if (stringValue.get() == null && groupId != null) {
+            stringValue = factory.getStringProperty(enableFullKey + ".group." + groupId, null);
         }
-        if (!value.get() && vsId != null) {
-            value = factory.getBooleanProperty(enableFullKey + ".vs." + vsId, false);
+        if (stringValue.get() == null && vsId != null) {
+            stringValue = factory.getStringProperty(enableFullKey + ".vs." + vsId, null);
         }
-        if (!value.get() && slbId != null) {
-            value = factory.getBooleanProperty(enableFullKey + ".slb." + slbId, false);
+        if (stringValue.get() == null && slbId != null) {
+            stringValue = factory.getStringProperty(enableFullKey + ".slb." + slbId, null);
         }
-        if (!value.get()) {
-            value = factory.getBooleanProperty(enableFullKey + ".default", defaultValue);
+        if (stringValue.get() == null) {
+            stringValue = factory.getStringProperty(enableFullKey + ".default", defaultEnable);
         }
 
-        return value.get();
+        return stringValue.get().equalsIgnoreCase("true") ? true : false;
     }
 
     @Override
