@@ -638,7 +638,8 @@ public class TaskExecutorImpl implements TaskExecutor {
         for (Long gid : tmpid) {
             Group groupTmp = groups.get(gid);
             if (groupTmp == null) {
-                throw new Exception("MemberOps: Group Not Found!");
+                /*group not activated. just skip it.*/
+                continue;
             }
             List<OpsTask> taskList = memberOps.get(gid);
             for (OpsTask opsTask : taskList) {
@@ -658,7 +659,8 @@ public class TaskExecutorImpl implements TaskExecutor {
         for (Long gid : tmpid) {
             Group groupTmp = groups.get(gid);
             if (groupTmp == null) {
-                throw new Exception("PullOps: Group Not Found!");
+                /*group not activated. just skip it.*/
+                continue;
             }
             List<OpsTask> taskList = pullMemberOps.get(gid);
             for (OpsTask opsTask : taskList) {
@@ -679,7 +681,8 @@ public class TaskExecutorImpl implements TaskExecutor {
         for (Long gid : tmpid) {
             Group groupTmp = groups.get(gid);
             if (groupTmp == null) {
-                throw new Exception("PullOps: Group Not Found!");
+                /*group not activated. just skip it.*/
+                continue;
             }
             List<OpsTask> taskList = healthyOps.get(gid);
             for (OpsTask opsTask : taskList) {
