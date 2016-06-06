@@ -180,7 +180,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
 
     @Override
     public NginxResponse update() throws Exception {
-        return update(true, true);
+        return update(false, false);
     }
 
     private boolean checkSkipReload(Long slbId, Commit commit, String ip, NginxConfEntry nextEntry, String nginxConf) throws Exception {
