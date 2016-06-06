@@ -1,7 +1,8 @@
-package com.ctrip.zeus.logstats.analyzer;
+package com.ctrip.zeus.logstats.analyzer.nginx;
 
 import com.ctrip.zeus.logstats.StatsDelegate;
-import com.ctrip.zeus.logstats.common.JsonStringWriter;
+import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
+import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzerConfig;
 import com.ctrip.zeus.logstats.common.AccessLogLineFormat;
 import com.ctrip.zeus.logstats.common.LineFormat;
 import com.ctrip.zeus.logstats.parser.AccessLogParser;
@@ -10,28 +11,31 @@ import com.ctrip.zeus.logstats.tracker.AccessLogTracker;
 import com.ctrip.zeus.logstats.tracker.LogTracker;
 import com.ctrip.zeus.logstats.tracker.LogTrackerStrategy;
 import com.ctrip.zeus.service.build.conf.LogFormat;
-import com.netflix.config.DynamicIntProperty;
-import com.netflix.config.DynamicPropertyFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by zhoumy on 2015/11/16.
  */
 public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     private static final String AccessLogFormat = LogFormat.getMainCompactString();
-    private static final DynamicIntProperty TrackerReadSize = DynamicPropertyFactory.getInstance().getIntProperty("accesslog.tracker.readsize", 1024 * 3);
+
     private final LogStatsAnalyzerConfig config;
     private final LogTracker logTracker;
     private final LogParser logParser;
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    private AccessLogConsumers consumers;
 
     public AccessLogStatsAnalyzer() {
         this(new LogStatsAnalyzerConfigBuilder()
                 .isStartFromHead(false)
                 .setLogFormat(new AccessLogLineFormat(AccessLogFormat).generate())
                 .setLogFilename("/opt/logs/nginx/access.log")
-                .setTrackerReadSize(TrackerReadSize.get())
+                .setTrackerReadSize(1024 * 3)
                 .build());
     }
 
@@ -39,6 +43,9 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
         this.config = config;
         logTracker = config.getLogTracker();
         logParser = new AccessLogParser(config.getLineFormats());
+        if (config.allowDelegate()) {
+            consumers = new AccessLogConsumers(this);
+        }
     }
 
     @Override
@@ -48,33 +55,50 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
 
     @Override
     public void start() throws IOException {
+        running.set(true);
         logTracker.start();
+        if (consumers != null) {
+            consumers.consume();
+        }
     }
 
     @Override
     public void stop() throws IOException {
+        running.set(false);
+        if (consumers != null) {
+            consumers.shutDown();
+        }
         logTracker.stop();
     }
 
     @Override
     public boolean reachFileEnd() throws IOException {
-        return logTracker.reachFileEnd();
+        if (running.get()) return logTracker.reachFileEnd();
+        return true;
+    }
+
+    @Override
+    public void run() throws IOException {
+        if (running.get()) {
+            logTracker.fastMove(new StatsDelegate<String>() {
+                @Override
+                public void delegate(String input) {
+                    if (consumers != null) {
+                        consumers.accept(input);
+                    }
+                }
+            });
+        }
     }
 
     @Override
     public String analyze() throws IOException {
-        String raw = logTracker.move();
-        return logParser.parseToJsonString(raw);
-    }
-
-    @Override
-    public void analyze(final StatsDelegate<String> delegator) throws IOException {
-        logTracker.fastMove(new StatsDelegate<String>() {
-            @Override
-            public void delegate(String input) {
-                delegator.delegate(logParser.parseToJsonString(input));
-            }
-        });
+        if (running.get()) {
+            String raw = logTracker.move();
+            return logParser.parseToJsonString(raw);
+        } else {
+            return "";
+        }
     }
 
     public static class LogStatsAnalyzerConfigBuilder {
@@ -84,6 +108,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
         private boolean allowTracking;
         private int trackerReadSize;
         private boolean startFromHead;
+        private StatsDelegate statsDelegator;
 
         public LogStatsAnalyzerConfigBuilder setLogFilename(String logFilename) {
             this.logFilename = logFilename;
@@ -111,6 +136,11 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             return this;
         }
 
+        public LogStatsAnalyzerConfigBuilder registerLogStatsDelegator(StatsDelegate<String> statsDelegator) {
+            this.statsDelegator = statsDelegator;
+            return this;
+        }
+
         public LogStatsAnalyzerConfig build() {
             File f = new File(logFilename);
             String rootDir = f.getAbsoluteFile().getParentFile().getAbsolutePath();
@@ -122,7 +152,9 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
                     .setTrackerMemoFilename(allowTracking ? rootDir + "/" + trackingFilename : null)
                     .setLogFilename(logFilename)
                     .setReadSize(trackerReadSize);
-            return new LogStatsAnalyzerConfig()
+            List<StatsDelegate> delegatorRegistry = new ArrayList<>();
+            delegatorRegistry.add(statsDelegator);
+            return new LogStatsAnalyzerConfig(delegatorRegistry)
                     .addFormat(logFormat)
                     .setLogTracker(new AccessLogTracker(strategy));
         }

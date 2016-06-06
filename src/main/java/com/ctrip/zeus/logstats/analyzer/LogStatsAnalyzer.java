@@ -24,7 +24,7 @@ public interface LogStatsAnalyzer {
      */
     boolean reachFileEnd() throws IOException;
 
-    String analyze() throws IOException;
+    void run() throws IOException;
 
-    void analyze(StatsDelegate<String> delegate) throws IOException;
+    String analyze() throws IOException;
 }
