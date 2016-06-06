@@ -136,8 +136,8 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 boolean dyups = commit.getType().equals(CommitType.COMMIT_TYPE_DYUPS);
                 //4.4 get dyups data if needed
                 //4.4.1 if reload is true, try to use dyups instead.
-                if (reload) {
-                    if (checkSkipReload(slbId, commit, ip, entry, nginxConf)) {
+                if (reload && commit.getGroupIds().size() > 0) {
+                    if (checkSkipReload(slbId, commit, serverVersion, entry, nginxConf)) {
                         reload = false;
                         dyups = true;
                         logger.info("[[skipReload=true]]Skipped reload.SlbId:" + slbId + "\nMerged Commit:" + commit.toString());
@@ -183,27 +183,30 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         return update(false, false);
     }
 
-    private boolean checkSkipReload(Long slbId, Commit commit, String ip, NginxConfEntry nextEntry, String nginxConf) throws Exception {
+    private boolean checkSkipReload(Long slbId, Commit commit, Long serverVersion, NginxConfEntry nextEntry, String nginxConf) throws Exception {
         //1. clean vs config, need reload.
         if (commit.getCleanvsIds().size() > 0) {
             return false;
         }
         //2. if nginx config file is changed, need reload.
-        Long serverVersion = confVersionService.getSlbServerCurrentVersion(slbId, ip);
         //2.1 if server version <= 0, need reload. first time update config files.
         if (serverVersion <= 0) {
+            logger.info("[[skipReload=false]] cause: serverVerion <= 0");
             return false;
         }
         String serverNginxConf = nginxConfService.getNginxConf(slbId, serverVersion);
         if (!serverNginxConf.equals(nginxConf)) {
+            logger.info("[[skipReload=false]] cause: nginxConf not equels. slbId:" + slbId + "serverVersion:" + serverVersion);
             return false;
         }
         //3. compare vhost files
         NginxConfEntry serverCurrentEntry = nginxConfService.getUpstreamsAndVhosts(slbId, serverVersion, commit.getVsIds());
         if (serverCurrentEntry == null) {
+            logger.info("[[skipReload=false]] cause: serverCurrentEntry == null. slbId:" + slbId + "serverVersion:" + serverVersion);
             return false;
         }
         if (serverCurrentEntry.getVhosts().getFiles().size() != nextEntry.getVhosts().getFiles().size()) {
+            logger.info("[[skipReload=false]] cause: entries have different size. slbId:" + slbId + "serverVersion:" + serverVersion);
             return false;
         }
 
@@ -214,9 +217,15 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         }
         for (ConfFile cf : serverCurrentEntry.getVhosts().getFiles()) {
             Integer idx = index.get(cf.getName());
-            if (idx == null) return false;
+            if (idx == null) {
+                logger.info("[[skipReload=false]] cause: nextEntry has Less vhosts. slbId:" + slbId + "serverVersion:" + serverVersion);
+                return false;
+            }
 
-            if (!vhosts.get(idx).equals(cf.getContent())) return false;
+            if (!vhosts.get(idx).getContent().equals(cf.getContent())) {
+                logger.info("[[skipReload=false]] cause: nextEntry has different vhosts. slbId:" + slbId + "serverVersion:" + serverVersion + "ConfName:" + cf.getName());
+                return false;
+            }
         }
         return true;
     }
