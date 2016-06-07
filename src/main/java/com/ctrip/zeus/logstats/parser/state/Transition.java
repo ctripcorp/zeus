@@ -5,5 +5,5 @@ package com.ctrip.zeus.logstats.parser.state;
  */
 public interface Transition {
 
-    void execute(StateContext ctxt);
+    LogStatsState transit(LogStatsState state, StateMachineContext ctxt);
 }

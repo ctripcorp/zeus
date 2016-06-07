@@ -1,16 +1,18 @@
 package com.ctrip.zeus.logstats.parser.state;
 
-import java.util.ArrayList;
+import com.ctrip.zeus.logstats.parser.KeyValue;
+
+import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Created by zhoumy on 2016/6/7.
  */
-public class AccessLogStateContext implements StateContext<String> {
+public class AccessLogStateContext implements StateMachineContext {
     private String value;
     private char[] valueArray;
     private int idx;
-    private List<String> parsedValues = new ArrayList<>();
+    private LinkedList<KeyValue> parsedValues = new LinkedList<>();
 
     @Override
     public void setSourceValue(String value) {
@@ -21,11 +23,6 @@ public class AccessLogStateContext implements StateContext<String> {
     @Override
     public int getCurrentIndex() {
         return idx;
-    }
-
-    @Override
-    public int getStateHistoryCount() {
-        return parsedValues.size();
     }
 
     @Override
@@ -48,22 +45,23 @@ public class AccessLogStateContext implements StateContext<String> {
     }
 
     @Override
-    public void addResult(String result) {
-        parsedValues.add(result);
+    public String getLastParsedValue() {
+        KeyValue last = parsedValues.getLast();
+        return last.getValue();
     }
 
     @Override
-    public String getLastStateValue() {
-        return parsedValues.get(parsedValues.size() - 1);
-    }
-
-    @Override
-    public List<String> getParsedValue() {
+    public List<KeyValue> getResult() {
         return parsedValues;
     }
 
     @Override
     public boolean shouldProceed() {
         return idx < value.length() - 1;
+    }
+
+    @Override
+    public void addResult(String key, String value) {
+        parsedValues.push(new KeyValue(key, value));
     }
 }

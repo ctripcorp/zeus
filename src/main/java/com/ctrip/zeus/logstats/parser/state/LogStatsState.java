@@ -1,19 +1,19 @@
 package com.ctrip.zeus.logstats.parser.state;
 
-import java.util.List;
-
 /**
  * Created by zhoumy on 2016/6/7.
  */
-public interface LogStatsState<V> {
+public interface LogStatsState {
 
-    V getOutput(StateContext ctxt);
-
-    boolean shouldDeplay();
-
-    List<Transition> getDelayedTransition();
+    String getName();
 
     LogStatsStateMachine getSubMachine();
 
-    Transition getTranstition();
+    Action getAction();
+
+    void setNext(LogStatsState next);
+
+    LogStatsState getNext();
+
+    boolean runSubMachine();
 }

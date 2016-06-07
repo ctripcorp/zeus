@@ -1,27 +1,26 @@
 package com.ctrip.zeus.logstats.parser.state;
 
-import java.util.List;
-
 /**
  * Created by zhoumy on 2016/6/7.
  */
-public class WrappedStringState implements LogStatsState<String> {
-    private Transition transition = new WrappedStringTransition();
+public class WrappedStringState implements LogStatsState {
+    private final String name;
+    private final char startSymbol;
+    private final char endSymbol;
+    private final Action action;
 
-    @Override
-    public String getOutput(StateContext ctxt) {
-        transition.execute(ctxt);
-        return null;
+    private LogStatsState next;
+
+    public WrappedStringState(char startSymbol, char endSymbol, String name) {
+        this.startSymbol = startSymbol;
+        this.endSymbol = endSymbol;
+        this.name = name;
+        this.action = new WrappedStringAction();
     }
 
     @Override
-    public boolean shouldDeplay() {
-        return false;
-    }
-
-    @Override
-    public List<Transition> getDelayedTransition() {
-        return null;
+    public String getName() {
+        return name;
     }
 
     @Override
@@ -30,72 +29,58 @@ public class WrappedStringState implements LogStatsState<String> {
     }
 
     @Override
-    public Transition getTranstition() {
-        return transition;
+    public Action getAction() {
+        return action;
     }
 
-    private class WrappedStringTransition implements Transition {
+    @Override
+    public void setNext(LogStatsState next) {
+        this.next = next;
+    }
+
+    @Override
+    public LogStatsState getNext() {
+        return next;
+    }
+
+    @Override
+    public boolean runSubMachine() {
+        return false;
+    }
+
+    private class WrappedStringAction implements Action {
 
         @Override
-        public void execute(StateContext ctxt) {
+        public void execute(StateMachineContext ctxt) {
             char[] matcher = new char[]{Character.MIN_VALUE, Character.MIN_VALUE};
             StringBuilder sb = new StringBuilder();
             char c;
             boolean _continue = false;
-            boolean exit = false;
             char[] source = ctxt.getSource();
             for (int i = ctxt.getCurrentIndex(); i < source.length; i++) {
                 c = source[i];
-                switch (c) {
-                    case '[': {
-                        if (matcher[0] == Character.MIN_VALUE) {
-                            matcher[0] = c;
-                            break;
-                        } // otherwise fall through
+                if (c == startSymbol) {
+                    if (!_continue && matcher[0] == Character.MIN_VALUE) {
+                        matcher[0] = c;
+                        continue;
                     }
-                    case ']': {
-                        if (matcher[0] == '[') {
-                            matcher[1] = ']';
-                            exit = true;
-                            break;
-                        }
+                } else if (c == endSymbol) {
+                    if (!_continue && matcher[0] == startSymbol) {
+                        matcher[1] = c;
+                        ctxt.proceed(i - ctxt.getCurrentIndex() + 1);
+                        ctxt.addResult(name, sb.toString());
+                        System.out.println(sb.toString());
+                        return;
                     }
-                    case ' ': {
-                        if (matcher[0] == Character.MIN_VALUE) {
-                            matcher[0] = c;
-                            break;
-                        } else {
-                            if (matcher[0] == c) {
-                                matcher[1] = c;
-                                exit = true;
-                                break;
-                            }
-                        }
-                    }
-                    case '\"': {
-                        if (matcher[0] == Character.MIN_VALUE) {
-                            matcher[0] = c;
-                            break;
-                        } else {
-                            if (!_continue && matcher[0] == c) {
-                                matcher[1] = c;
-                                exit = true;
-                                break;
-                            }
-                        }
-                    }
-                    case '\\':
-                        _continue = !_continue;
-                    default:
-                        sb.append(c);
+                } else if (c == '\\') {
+                    _continue = !_continue;
                 }
-                if (exit) {
-                    ctxt.proceed(i - ctxt.getCurrentIndex() + 1);
-                    ctxt.addResult(sb.toString());
-                    System.out.println(sb.toString());
-                    break;
-                }
+                sb.append(c);
+
             }
+            ctxt.proceed(source.length - ctxt.getCurrentIndex() + 1);
+            ctxt.addResult(name, sb.toString());
+            System.out.println(sb.toString());
         }
     }
 }

@@ -2,30 +2,26 @@ package com.ctrip.zeus.logstats.parser.state.extended;
 
 import com.ctrip.zeus.logstats.parser.state.LogStatsState;
 import com.ctrip.zeus.logstats.parser.state.LogStatsStateMachine;
-import com.ctrip.zeus.logstats.parser.state.StateContext;
-import com.ctrip.zeus.logstats.parser.state.Transition;
-
-import java.util.List;
+import com.ctrip.zeus.logstats.parser.state.StateMachineContext;
+import com.ctrip.zeus.logstats.parser.state.Action;
 
 /**
  * Created by zhoumy on 2016/6/7.
  */
 public class RequestUriState implements LogStatsState<String> {
-    private Transition transition = new RequestUriTransition();
+    private final String name;
+    private final Action action;
 
-    @Override
-    public String getOutput(StateContext ctxt) {
-        return null;
+    private LogStatsState next;
+
+    public RequestUriState(String name) {
+        this.name = name;
+        this.action = new RequestUriAction();
     }
 
     @Override
-    public boolean shouldDeplay() {
-        return false;
-    }
-
-    @Override
-    public List<Transition> getDelayedTransition() {
-        return null;
+    public String getName() {
+        return name;
     }
 
     @Override
@@ -34,14 +30,29 @@ public class RequestUriState implements LogStatsState<String> {
     }
 
     @Override
-    public Transition getTranstition() {
-        return transition;
+    public Action getAction() {
+        return action;
     }
 
-    private class RequestUriTransition implements Transition {
+    @Override
+    public void setNext(LogStatsState next) {
+        this.next = next;
+    }
+
+    @Override
+    public LogStatsState getNext() {
+        return next;
+    }
+
+    @Override
+    public boolean runSubMachine() {
+        return false;
+    }
+
+    private class RequestUriAction implements Action {
 
         @Override
-        public void execute(StateContext ctxt) {
+        public void execute(StateMachineContext ctxt) {
             char[] source = ctxt.getSource();
             boolean _ignore = false;
             StringBuilder sb = new StringBuilder();

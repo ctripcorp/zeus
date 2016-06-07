@@ -1,27 +1,22 @@
 package com.ctrip.zeus.logstats.parser.state;
 
-import java.util.List;
-
 /**
  * Created by zhoumy on 2016/6/7.
  */
 public class StringState implements LogStatsState<String> {
-    private Transition transition = new StringTransition();
+    private final String name;
+    private final Action action;
 
-    @Override
-    public String getOutput(StateContext ctxt) {
-        transition.execute(ctxt);
-        return null;
+    private LogStatsState next;
+
+    public StringState(String name) {
+        this.name = name;
+        this.action = new StringAction();
     }
 
     @Override
-    public boolean shouldDeplay() {
-        return false;
-    }
-
-    @Override
-    public List<Transition> getDelayedTransition() {
-        return null;
+    public String getName() {
+        return name;
     }
 
     @Override
@@ -30,14 +25,29 @@ public class StringState implements LogStatsState<String> {
     }
 
     @Override
-    public Transition getTranstition() {
-        return transition;
+    public Action getAction() {
+        return action;
     }
 
-    private class StringTransition implements Transition {
+    @Override
+    public void setNext(LogStatsState next) {
+        this.next = next;
+    }
+
+    @Override
+    public LogStatsState getNext() {
+        return next;
+    }
+
+    @Override
+    public boolean runSubMachine() {
+        return false;
+    }
+
+    private class StringAction implements Action {
 
         @Override
-        public void execute(StateContext ctxt) {
+        public void execute(StateMachineContext ctxt) {
             StringBuilder sb = new StringBuilder();
             char c;
             char[] source = ctxt.getSource();

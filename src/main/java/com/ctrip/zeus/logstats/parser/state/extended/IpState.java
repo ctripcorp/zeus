@@ -2,30 +2,24 @@ package com.ctrip.zeus.logstats.parser.state.extended;
 
 import com.ctrip.zeus.logstats.parser.state.LogStatsState;
 import com.ctrip.zeus.logstats.parser.state.LogStatsStateMachine;
-import com.ctrip.zeus.logstats.parser.state.StateContext;
-import com.ctrip.zeus.logstats.parser.state.Transition;
-
-import java.util.List;
+import com.ctrip.zeus.logstats.parser.state.StateMachineContext;
+import com.ctrip.zeus.logstats.parser.state.Action;
 
 /**
  * Created by zhoumy on 2016/6/7.
  */
-public class XForwardForState implements LogStatsState {
-    private Transition transition = new XForwardForTransition();
+public class IpState implements LogStatsState {
+    private final String name;
+    private final Action action;
 
-    @Override
-    public Object getOutput(StateContext ctxt) {
-        return null;
+    public IpState(String name) {
+        this.name = name;
+        this.action = new IpAction();
     }
 
     @Override
-    public boolean shouldDeplay() {
-        return true;
-    }
-
-    @Override
-    public List<Transition> getDelayedTransition() {
-        return null;
+    public String getName() {
+        return name;
     }
 
     @Override
@@ -34,20 +28,35 @@ public class XForwardForState implements LogStatsState {
     }
 
     @Override
-    public Transition getTranstition() {
-        return transition;
+    public Action getAction() {
+        return action;
     }
 
-    private class XForwardForTransition implements Transition {
+    @Override
+    public void setNext(LogStatsState next) {
+
+    }
+
+    @Override
+    public LogStatsState getNext() {
+        return null;
+    }
+
+    @Override
+    public boolean runSubMachine() {
+        return false;
+    }
+
+    private class IpAction implements Action {
 
         @Override
-        public void execute(StateContext ctxt) {
+        public void execute(StateMachineContext ctxt) {
             StringBuilder sb = new StringBuilder();
             char[] source = ctxt.getSource();
             int idx = ctxt.getCurrentIndex();
             for (; idx < source.length; idx++) {
                 char c = source[idx];
-                if (('0' <= c && c <= '9' ) || c == '.' || c == '-') {
+                if (('0' <= c && c <= '9') || c == '.' || c == '-') {
                     sb.append(c);
                 } else {
                     idx--;

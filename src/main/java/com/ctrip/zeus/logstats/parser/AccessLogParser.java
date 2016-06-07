@@ -1,7 +1,10 @@
 package com.ctrip.zeus.logstats.parser;
 
-import com.ctrip.zeus.logstats.parser.state.AccessLogStateMachine;
+import com.ctrip.zeus.logstats.common.AccessLogFormat;
+import com.ctrip.zeus.logstats.common.JsonStringWriter;
+import com.ctrip.zeus.logstats.parser.state.AccessLogStateContext;
 import com.ctrip.zeus.logstats.parser.state.LogStatsStateMachine;
+import com.ctrip.zeus.logstats.parser.state.StateMachineContext;
 
 import java.util.List;
 
@@ -9,16 +12,30 @@ import java.util.List;
  * Created by zhoumy on 2016/6/6.
  */
 public class AccessLogParser implements LogParser {
-    private LogStatsStateMachine stateMachine = new AccessLogStateMachine();
+    private AccessLogFormat accessLogFormat;
+    private LogStatsStateMachine stateMachine;
+
+    public AccessLogParser(AccessLogFormat accessLogFormat) {
+        this.accessLogFormat = accessLogFormat;
+        this.stateMachine = accessLogFormat.getStateMachine();
+    }
 
     @Override
     public List<KeyValue> parse(String line) {
-
-        return null;
+        StateMachineContext context = new AccessLogStateContext();
+        context.setSourceValue(line);
+        stateMachine.transduce(context);
+        return context.getResult();
     }
 
     @Override
     public String parseToJsonString(String line) {
-        return null;
+        JsonStringWriter writer = new JsonStringWriter();
+        writer.start();
+        for (KeyValue kv : parse(line)) {
+            writer.writeNode(kv.getKey(), kv.getValue());
+        }
+        writer.end();
+        return writer.get();
     }
 }
