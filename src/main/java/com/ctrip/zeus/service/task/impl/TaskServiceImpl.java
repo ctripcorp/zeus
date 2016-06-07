@@ -48,6 +48,7 @@ public class TaskServiceImpl implements TaskService {
         sb.append("[[");
         sb.append("opsType=").append(task.getOpsType());
         sb.append(",taskId=").append(taskId);
+        sb.append(",targetSlbId=").append(task.getTargetSlbId());
         if (task.getGroupId() != null) {
             sb.append(",groupId=").append(task.getGroupId());
         }
@@ -130,10 +131,23 @@ public class TaskServiceImpl implements TaskService {
             taskDao.updateByPK(C.toTaskDo(opsTask), TaskEntity.UPDATESET_FULL);
             StringBuilder msg = new StringBuilder(128);
             msg.append("[[taskId=").append(opsTask.getId());
-            msg.append(",status=").append(opsTask.getStatus());
+            msg.append(",taskStatus=").append(opsTask.getStatus());
             msg.append(",opsType=").append(opsTask.getOpsType());
+            msg.append(",targetSlbId=").append(opsTask.getTargetSlbId());
+            if (opsTask.getGroupId() != null) {
+                msg.append(",groupId=").append(opsTask.getGroupId());
+            }
+            if (opsTask.getVersion() != null) {
+                msg.append(",version=").append(opsTask.getVersion());
+            }
+            if (opsTask.getSlbVirtualServerId() != null) {
+                msg.append(",vsId=").append(opsTask.getSlbVirtualServerId());
+            }
+            if (opsTask.getSlbId() != null) {
+                msg.append(",slbId=").append(opsTask.getSlbId());
+            }
             msg.append("]]Task Execute Finished.TaskId:[").append(opsTask.getId()).append("];Status: ")
-                    .append(opsTask.getStatus()).append(";failureCause:").append( opsTask.getFailCause());
+                    .append(opsTask.getStatus()).append(";failureCause:").append(opsTask.getFailCause());
             logger.info(msg.toString());
         }
     }
