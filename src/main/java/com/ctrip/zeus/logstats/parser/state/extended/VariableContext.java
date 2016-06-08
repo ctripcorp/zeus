@@ -17,11 +17,6 @@ public class VariableContext implements StateMachineContext<String> {
     }
 
     @Override
-    public void setSourceValue(String value) {
-
-    }
-
-    @Override
     public void proceed(int length) {
         parent.proceed(length);
     }

@@ -24,8 +24,7 @@ public class AccessLogStateMachineParser implements LogParser {
 
     @Override
     public List<KeyValue> parse(String line) {
-        StateMachineContext context = new AccessLogContext();
-        context.setSourceValue(line);
+        StateMachineContext context = new AccessLogContext(line);
         stateMachine.transduce(context);
         return context.getResult();
     }

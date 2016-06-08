@@ -1,7 +1,6 @@
 package com.ctrip.zeus.logstats.analyzer.nginx;
 
 import com.ctrip.zeus.logstats.StatsDelegate;
-import com.ctrip.zeus.logstats.parser.AccessLogRegexParser;
 import com.ctrip.zeus.logstats.parser.KeyValue;
 import com.ctrip.zeus.logstats.parser.LogParser;
 import org.slf4j.Logger;
@@ -25,28 +24,38 @@ public class AccessLogConsumers {
     private final ConcurrentLinkedQueue<String> source;
     private final LogParser logParser;
     private final ExecutorService consumerPool;
+    private final int size;
 
     private AtomicBoolean running = new AtomicBoolean(true);
 
-    public AccessLogConsumers(AccessLogStatsAnalyzer producer) {
+    public AccessLogConsumers(AccessLogStatsAnalyzer producer, LogParser logParser, int size) {
         this.producer = new WeakReference<>(producer);
-        this.consumerPool = Executors.newFixedThreadPool(10);
+        this.consumerPool = Executors.newFixedThreadPool(size);
         this.source = new ConcurrentLinkedQueue<>();
-        this.logParser = new AccessLogRegexParser(producer.getConfig().getLineFormats());
+        this.logParser = logParser;
         this.delegator = producer.getConfig().getDelegators();
+        this.size = size;
     }
 
     public void consume() {
-        for (int i = 0; i < 19; i++) {
+        for (int i = 0; i < size; i++) {
             consumerPool.execute(new Runnable() {
                 @Override
                 public void run() {
                     while (producer.get() != null && running.get()) {
                         String value;
                         while ((value = source.poll()) != null) {
-                            List<KeyValue> result = logParser.parse(value);
-                            for (StatsDelegate d : delegator) {
-                                d.delegate(result);
+                            try {
+                                List<KeyValue> result = logParser.parse(value);
+                                for (StatsDelegate d : delegator) {
+                                    try {
+                                        d.delegate(result);
+                                    } catch(Exception ex){
+                                        logger.error("Delegator of AccessLogConsumers throws an exception.", ex);
+                                    }
+                                }
+                            } catch (Exception ex) {
+                                logger.error("Consumer throws exception when parsing " + value + ".", ex);
                             }
                         }
                     }
@@ -76,5 +85,9 @@ public class AccessLogConsumers {
             consumerPool.shutdownNow();
             Thread.currentThread().interrupt();
         }
+    }
+
+    public boolean isClosed() {
+        return consumerPool.isTerminated();
     }
 }

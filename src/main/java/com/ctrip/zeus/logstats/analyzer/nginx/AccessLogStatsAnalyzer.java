@@ -3,9 +3,9 @@ package com.ctrip.zeus.logstats.analyzer.nginx;
 import com.ctrip.zeus.logstats.StatsDelegate;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzerConfig;
-import com.ctrip.zeus.logstats.common.AccessLogRegexFormat;
+import com.ctrip.zeus.logstats.common.AccessLogStateMachineFormat;
 import com.ctrip.zeus.logstats.common.LineFormat;
-import com.ctrip.zeus.logstats.parser.AccessLogRegexParser;
+import com.ctrip.zeus.logstats.parser.AccessLogStateMachineParser;
 import com.ctrip.zeus.logstats.parser.KeyValue;
 import com.ctrip.zeus.logstats.parser.LogParser;
 import com.ctrip.zeus.logstats.tracker.AccessLogTracker;
@@ -34,7 +34,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     public AccessLogStatsAnalyzer() {
         this(new LogStatsAnalyzerConfigBuilder()
                 .isStartFromHead(false)
-                .setLogFormat(new AccessLogRegexFormat(AccessLogFormat).generate())
+                .setLogFormat(new AccessLogStateMachineFormat(AccessLogFormat).generate())
                 .setLogFilename("/opt/logs/nginx/access.log")
                 .setTrackerReadSize(1024 * 3)
                 .build());
@@ -43,9 +43,9 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     public AccessLogStatsAnalyzer(LogStatsAnalyzerConfig config) {
         this.config = config;
         logTracker = config.getLogTracker();
-        logParser = new AccessLogRegexParser(config.getLineFormats());
+        logParser = new AccessLogStateMachineParser(config.getLineFormats().get(0));
         if (config.allowDelegate()) {
-            consumers = new AccessLogConsumers(this);
+            consumers = new AccessLogConsumers(this, logParser, config.getNumberOfConsumers());
         }
     }
 
@@ -80,16 +80,16 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
 
     @Override
     public void run() throws IOException {
-        if (running.get()) {
-            logTracker.fastMove(new StatsDelegate<String>() {
-                @Override
-                public void delegate(String input) {
+        logTracker.fastMove(new StatsDelegate<String>() {
+            @Override
+            public void delegate(String input) {
+                if (running.get()) {
                     if (consumers != null) {
                         consumers.accept(input);
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     @Override
@@ -110,6 +110,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
         private int trackerReadSize;
         private boolean startFromHead;
         private StatsDelegate statsDelegator;
+        private int numberOfConsumers = 5;
 
         public LogStatsAnalyzerConfigBuilder setLogFilename(String logFilename) {
             this.logFilename = logFilename;
@@ -142,6 +143,11 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             return this;
         }
 
+        public LogStatsAnalyzerConfigBuilder setNumberOfConsumers(int count) {
+            this.numberOfConsumers = count;
+            return this;
+        }
+
         public LogStatsAnalyzerConfig build() {
             File f = new File(logFilename);
             String rootDir = f.getAbsoluteFile().getParentFile().getAbsolutePath();
@@ -156,6 +162,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             List<StatsDelegate> delegatorRegistry = new ArrayList<>();
             delegatorRegistry.add(statsDelegator);
             return new LogStatsAnalyzerConfig(delegatorRegistry)
+                    .setNumberOfConsumers(numberOfConsumers)
                     .addFormat(logFormat)
                     .setLogTracker(new AccessLogTracker(strategy));
         }

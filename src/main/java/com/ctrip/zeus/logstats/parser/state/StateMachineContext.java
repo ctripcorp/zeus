@@ -7,8 +7,6 @@ import java.util.LinkedList;
  */
 public interface StateMachineContext<R> {
 
-    void setSourceValue(String value);
-
     void proceed(int length);
 
     char[] delay(int length);

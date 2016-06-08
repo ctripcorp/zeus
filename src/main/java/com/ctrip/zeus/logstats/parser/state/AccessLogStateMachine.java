@@ -4,8 +4,8 @@ package com.ctrip.zeus.logstats.parser.state;
  * Created by zhoumy on 2016/6/7.
  */
 public class AccessLogStateMachine implements LogStatsStateMachine {
-    private LogStatsState initState;
-    private Transition transition = new DefaultTransition();
+    private final LogStatsState initState;
+    private final Transition transition = new DefaultTransition();
 
     public AccessLogStateMachine(LogStatsState initState) {
         this.initState = initState;

@@ -8,15 +8,14 @@ import java.util.LinkedList;
  * Created by zhoumy on 2016/6/7.
  */
 public class AccessLogContext implements StateMachineContext<KeyValue> {
-    private String value;
-    private char[] valueArray;
+    private final String value;
+    private final char[] valueArray;
     private int idx;
     private LinkedList<KeyValue> parsedValues = new LinkedList<>();
 
-    @Override
-    public void setSourceValue(String value) {
+    public AccessLogContext(String value) {
         this.value = value;
-        valueArray = this.value.toCharArray();
+        this.valueArray = this.value.toCharArray();
     }
 
     @Override

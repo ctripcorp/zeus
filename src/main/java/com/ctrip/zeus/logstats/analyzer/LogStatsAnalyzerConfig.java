@@ -14,6 +14,7 @@ public class LogStatsAnalyzerConfig {
     private final List<LineFormat> lineFormats;
     private final List<StatsDelegate> logStatsDelegators;
     private LogTracker logTracker;
+    private int numberOfConsumers;
 
     public LogStatsAnalyzerConfig() {
         this(new ArrayList<StatsDelegate>());
@@ -38,6 +39,11 @@ public class LogStatsAnalyzerConfig {
         return this;
     }
 
+    public LogStatsAnalyzerConfig setNumberOfConsumers(int count) {
+        numberOfConsumers = count;
+        return this;
+    }
+
     public LogTracker getLogTracker() {
         return logTracker;
     }
@@ -48,5 +54,9 @@ public class LogStatsAnalyzerConfig {
 
     public List<StatsDelegate> getDelegators() {
         return logStatsDelegators;
+    }
+
+    public int getNumberOfConsumers() {
+        return numberOfConsumers;
     }
 }
