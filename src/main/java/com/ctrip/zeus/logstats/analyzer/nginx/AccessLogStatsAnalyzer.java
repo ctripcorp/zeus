@@ -107,10 +107,10 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
         private String logFilename;
         private String trackingFilename;
         private boolean allowTracking;
-        private int trackerReadSize;
+        private int trackerReadSize = 5;
         private boolean startFromHead;
         private StatsDelegate statsDelegator;
-        private int numberOfConsumers = 5;
+        private int numberOfConsumers = 2;
 
         public LogStatsAnalyzerConfigBuilder setLogFilename(String logFilename) {
             this.logFilename = logFilename;

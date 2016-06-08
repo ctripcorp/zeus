@@ -6,7 +6,6 @@ import com.ctrip.zeus.logstats.common.AccessLogStateMachineFormat;
 import com.ctrip.zeus.logstats.common.JsonStringWriter;
 import com.ctrip.zeus.logstats.parser.KeyValue;
 import com.ctrip.zeus.service.build.conf.LogFormat;
-import org.junit.Assert;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,11 +21,14 @@ public class StressTest {
         final File accessLogFile = new File("D:/opt/logs/nginx/prod-access.log");
         final AtomicLong errorCount = new AtomicLong();
         final AtomicLong succCount = new AtomicLong();
+        final int analyzerWorkers = 2;
+        final int readBufferSize = 5;
 
         final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder = new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
                 .setLogFormat(new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate())
                 .setLogFilename(accessLogFile.getAbsolutePath())
-                .setTrackerReadSize(1024 * 25)
+                .setNumberOfConsumers(analyzerWorkers)
+                .setTrackerReadSize(1024 * readBufferSize)
                 .isStartFromHead(true)
                 .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
                     @Override
@@ -59,9 +61,10 @@ public class StressTest {
         }
         analyzer.stop();
         System.out.println("Parsing 8.81 GB access.log metrics takes " + (System.nanoTime() - now) / (1000 * 1000 * 1000) + " s.");
+        System.out.println("the number of analyzer workers: " + analyzerWorkers);
+        System.out.println("read buffer size: " + readBufferSize);
         System.out.println("success count: " + succCount.get());
         System.out.println("error count: " + errorCount.get());
-        Assert.assertEquals(0, errorCount.get());
     }
 
     private static String toJsonString(List<KeyValue> input) {
