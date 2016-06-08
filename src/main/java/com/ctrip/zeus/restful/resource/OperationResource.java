@@ -23,6 +23,7 @@ import com.ctrip.zeus.status.entity.ServerStatus;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.google.common.base.Joiner;
+import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicLongProperty;
 import com.google.common.collect.Sets;
 import com.netflix.config.DynamicPropertyFactory;
@@ -73,6 +74,7 @@ public class OperationResource {
     private EntityFactory entityFactory;
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
+    private static DynamicBooleanProperty healthyOpsActivate = DynamicPropertyFactory.getInstance().getBooleanProperty("healthy.operation.active", false);
 
 
     @GET
@@ -286,11 +288,11 @@ public class OperationResource {
     @Path("/raise")
     @Authorize(name = "upDownMember")
     public Response raise(@Context HttpServletRequest request,
-                            @Context HttpHeaders hh,
-                            @QueryParam("groupId") Long groupId,
-                            @QueryParam("groupName") String groupName,
-                            @QueryParam("ip") List<String> ips,
-                            @QueryParam("batch") Boolean batch) throws Exception {
+                          @Context HttpHeaders hh,
+                          @QueryParam("groupId") Long groupId,
+                          @QueryParam("groupName") String groupName,
+                          @QueryParam("ip") List<String> ips,
+                          @QueryParam("batch") Boolean batch) throws Exception {
         List<String> _ips = new ArrayList<>();
         if (groupId == null) {
             if (groupName == null) {
@@ -309,18 +311,22 @@ public class OperationResource {
         } else if (ips != null) {
             _ips = ips;
         }
-        return memberOps(hh, groupId, _ips, true, TaskOpsType.HEALTHY_OPS);
+        if (healthyOpsActivate.get()) {
+            return memberOps(hh, groupId, _ips, true, TaskOpsType.HEALTHY_OPS);
+        } else {
+            return healthyOps(hh, groupId, _ips, true);
+        }
     }
 
-        @GET
+    @GET
     @Path("/fall")
     @Authorize(name = "upDownMember")
     public Response fall(@Context HttpServletRequest request,
-                            @Context HttpHeaders hh,
-                            @QueryParam("groupId") Long groupId,
-                            @QueryParam("groupName") String groupName,
-                            @QueryParam("ip") List<String> ips,
-                            @QueryParam("batch") Boolean batch) throws Exception {
+                         @Context HttpHeaders hh,
+                         @QueryParam("groupId") Long groupId,
+                         @QueryParam("groupName") String groupName,
+                         @QueryParam("ip") List<String> ips,
+                         @QueryParam("batch") Boolean batch) throws Exception {
         List<String> _ips = new ArrayList<>();
         if (groupId == null) {
             if (groupName == null) {
@@ -339,7 +345,16 @@ public class OperationResource {
         } else if (ips != null) {
             _ips = ips;
         }
-        return memberOps(hh, groupId, _ips, false, TaskOpsType.HEALTHY_OPS);
+        if (healthyOpsActivate.get()) {
+            return memberOps(hh, groupId, _ips, false, TaskOpsType.HEALTHY_OPS);
+        } else {
+            return healthyOps(hh, groupId, _ips, true);
+        }
+    }
+
+    private Response healthyOps(HttpHeaders hh, Long groupId, List<String> ips, boolean b) throws Exception {
+        statusService.updateStatus(0L ,0L, groupId, ips ,StatusOffset.HEALTHY, b);
+        return responseHandler.handle(groupStatusService.getOfflineGroupStatus(groupId).get(0),hh.getMediaType());
     }
 
     @POST
@@ -456,19 +471,19 @@ public class OperationResource {
     }
 
     private Response memberOps(HttpHeaders hh, Long groupId, List<String> ips, boolean up, String type) throws Exception {
-        Map<String , List<Boolean>> status = statusService.fetchGroupServerStatus(null,new Long[]{groupId});
+        Map<String, List<Boolean>> status = statusService.fetchGroupServerStatus(null, new Long[]{groupId});
         boolean skipOps = true;
-        for (String ip : ips){
-            int index = 0 ;
+        for (String ip : ips) {
+            int index = 0;
             if (type.equals(TaskOpsType.HEALTHY_OPS)) index = StatusOffset.HEALTHY;
             if (type.equals(TaskOpsType.PULL_MEMBER_OPS)) index = StatusOffset.PULL_OPS;
             if (type.equals(TaskOpsType.MEMBER_OPS)) index = StatusOffset.MEMBER_OPS;
             boolean preStatus = status.get(groupId.toString() + "_" + ip).get(index);
-            if (preStatus != up){
+            if (preStatus != up) {
                 skipOps = false;
             }
         }
-        if (skipOps){
+        if (skipOps) {
             return Response.status(200).entity("{message:\"Group status equals the desired value.\"}").type(MediaType.APPLICATION_JSON).build();
         }
         StringBuilder sb = new StringBuilder();
