@@ -2,7 +2,8 @@ package com.ctrip.zeus.logstats;
 
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.nginx.AccessLogStatsAnalyzer;
-import com.ctrip.zeus.logstats.common.AccessLogRegexFormat;
+import com.ctrip.zeus.logstats.common.AccessLogStateMachineFormat;
+import com.ctrip.zeus.logstats.common.JsonStringWriter;
 import com.ctrip.zeus.logstats.parser.KeyValue;
 import com.ctrip.zeus.service.build.conf.LogFormat;
 import org.junit.Assert;
@@ -23,7 +24,7 @@ public class StressTest {
         final AtomicLong succCount = new AtomicLong();
 
         final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder = new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
-                .setLogFormat(new AccessLogRegexFormat(LogFormat.getMainCompactString()).generate())
+                .setLogFormat(new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate())
                 .setLogFilename(accessLogFile.getAbsolutePath())
                 .setTrackerReadSize(1024 * 25)
                 .isStartFromHead(true)
@@ -32,6 +33,9 @@ public class StressTest {
                     public void delegate(List<KeyValue> input) {
                         if (input != null && input.size() > 0) {
                             succCount.incrementAndGet();
+                            if (succCount.get() % 1000000 == 0) {
+                                System.out.println("Sample survey: " + toJsonString(input));
+                            }
                         } else {
                             errorCount.incrementAndGet();
                         }
@@ -54,9 +58,19 @@ public class StressTest {
             }
         }
         analyzer.stop();
-        System.out.println("Parsing 7.93 GB access.log metrics takes " + (System.nanoTime() - now) / (1000 * 1000 * 1000) + " s.");
+        System.out.println("Parsing 8.81 GB access.log metrics takes " + (System.nanoTime() - now) / (1000 * 1000 * 1000) + " s.");
         System.out.println("success count: " + succCount.get());
         System.out.println("error count: " + errorCount.get());
         Assert.assertEquals(0, errorCount.get());
+    }
+
+    private static String toJsonString(List<KeyValue> input) {
+        JsonStringWriter sw = new JsonStringWriter();
+        sw.start();
+        for (KeyValue kv : input) {
+            sw.writeNode(kv.getKey(), kv.getValue());
+        }
+        sw.end();
+        return sw.get();
     }
 }
