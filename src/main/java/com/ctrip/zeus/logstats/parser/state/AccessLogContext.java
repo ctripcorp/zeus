@@ -3,12 +3,11 @@ package com.ctrip.zeus.logstats.parser.state;
 import com.ctrip.zeus.logstats.parser.KeyValue;
 
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by zhoumy on 2016/6/7.
  */
-public class AccessLogStateContext implements StateMachineContext {
+public class AccessLogContext implements StateMachineContext<KeyValue> {
     private String value;
     private char[] valueArray;
     private int idx;
@@ -45,13 +44,13 @@ public class AccessLogStateContext implements StateMachineContext {
     }
 
     @Override
-    public String getLastParsedValue() {
+    public String peekLastParsedValue() {
         KeyValue last = parsedValues.getLast();
         return last.getValue();
     }
 
     @Override
-    public List<KeyValue> getResult() {
+    public LinkedList<KeyValue> getResult() {
         return parsedValues;
     }
 
@@ -62,6 +61,6 @@ public class AccessLogStateContext implements StateMachineContext {
 
     @Override
     public void addResult(String key, String value) {
-        parsedValues.push(new KeyValue(key, value));
+        parsedValues.addLast(new KeyValue(key, value));
     }
 }

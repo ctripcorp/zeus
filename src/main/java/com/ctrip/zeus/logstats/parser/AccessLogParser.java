@@ -2,7 +2,7 @@ package com.ctrip.zeus.logstats.parser;
 
 import com.ctrip.zeus.logstats.common.AccessLogFormat;
 import com.ctrip.zeus.logstats.common.JsonStringWriter;
-import com.ctrip.zeus.logstats.parser.state.AccessLogStateContext;
+import com.ctrip.zeus.logstats.parser.state.AccessLogContext;
 import com.ctrip.zeus.logstats.parser.state.LogStatsStateMachine;
 import com.ctrip.zeus.logstats.parser.state.StateMachineContext;
 
@@ -22,7 +22,7 @@ public class AccessLogParser implements LogParser {
 
     @Override
     public List<KeyValue> parse(String line) {
-        StateMachineContext context = new AccessLogStateContext();
+        StateMachineContext context = new AccessLogContext();
         context.setSourceValue(line);
         stateMachine.transduce(context);
         return context.getResult();

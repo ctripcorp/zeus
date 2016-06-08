@@ -14,7 +14,8 @@ public class AccessLogFormat {
     private String format;
     private final Map<String, LogStatsState> logStateRegitry = new HashMap<>();
     private LogStatsStateMachine stateMachine;
-    private LogStatsState initState;
+    private LogStatsState firstState;
+    private LogStatsState lastState;
 
     public AccessLogFormat() {
         registerPatternForKey("http_x_forwarded_for", new XForwardState("http_x_forwarded_for"));
@@ -23,7 +24,6 @@ public class AccessLogFormat {
         registerPatternForKey("upstream_addr", new UpstreamState("upstream_addr"));
         registerPatternForKey("upstream_status", new UpstreamState("upstream_status"));
     }
-
 
     public String[] getKeys() {
         return null;
@@ -47,44 +47,29 @@ public class AccessLogFormat {
 
     public AccessLogFormat generate() {
         parsePattern();
-        stateMachine = new AccessLogStateMachine(initState);
+        stateMachine = new AccessLogStateMachine(firstState);
         return this;
     }
 
     protected void parsePattern() {
-        LogStatsState state = null;
+        lastState = firstState = null;
         char[] formatChars = format.toCharArray();
         Stack<String> operands = new Stack<>();
         for (int i = 0; i < formatChars.length; i++) {
+            if (formatChars[i] == '$') {
+                int start = i;
+                // word characters
+                while (++i < formatChars.length && (Character.isLetterOrDigit(formatChars[i]) || formatChars[i] == '_')) {
+                }
+                String k = i - start == 0 ? "key" + i : new String(formatChars, start + 1, i - start - 1);
+                operands.push(k);
+            }
+            if (i >= formatChars.length) break;
+
             // whitespace or predefined
             switch (formatChars[i]) {
                 case ' ':
-                    if (operands.size() != 1 && operands.size() != 3) {
-                        throw new RuntimeException("not implemented");
-                    } else {
-                        LogStatsState s = null;
-                        if (operands.size() == 1) {
-                            String name = operands.pop();
-                            s = logStateRegitry.get(name);
-                            if (s == null) {
-                                s = new StringState(name);
-                            }
-                        }
-                        if (operands.size() == 3) {
-                            char end = operands.pop().charAt(0);
-                            String name = operands.pop();
-                            char start = operands.pop().charAt(0);
-                            s = new WrappedStringState(start, end, name);
-                        }
-                        if (s == null) throw new RuntimeException();
-                        if (state == null) {
-                            state = s;
-                            initState = state;
-                        } else {
-                            state.setNext(s);
-                            state = s;
-                        }
-                    }
+                    appendState(operands);
                     break;
                 case '"':
                     operands.push("\"");
@@ -96,21 +81,39 @@ public class AccessLogFormat {
                     operands.push("]");
                     break;
                 default:
+                    System.out.println(formatChars[i]);
                     throw new RuntimeException("not implemented");
             }
+        }
+        appendState(operands);
+    }
 
-            if (formatChars[i] == '$') {
-                int start = i;
-                // word characters
-                while (++i < formatChars.length && (Character.isLetterOrDigit(formatChars[i]) || formatChars[i] == '_')) {
+    private void appendState(Stack<String> operands) {
+        if (operands.size() != 1 && operands.size() != 3) {
+            throw new RuntimeException("not implemented");
+        } else {
+            LogStatsState s = null;
+            if (operands.size() == 1) {
+                String name = operands.pop();
+                s = logStateRegitry.get(name);
+                if (s == null) {
+                    s = new StringState(name);
                 }
-                String k = i - start == 0 ? "key" + i : new String(formatChars, start + 1, i - start - 1);
-                operands.push(k);
-                operands.push("$");
-                i++;
             }
-            if (i >= formatChars.length)
-                break;
+            if (operands.size() == 3) {
+                char end = operands.pop().charAt(0);
+                String name = operands.pop();
+                char start = operands.pop().charAt(0);
+                s = new WrappedStringState(start, end, name);
+            }
+            if (s == null) throw new RuntimeException();
+            if (lastState == null) {
+                lastState = s;
+                firstState = lastState;
+            } else {
+                lastState.setNext(s);
+                lastState = s;
+            }
         }
     }
 }

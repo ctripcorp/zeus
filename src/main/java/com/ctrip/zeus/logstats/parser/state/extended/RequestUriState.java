@@ -8,7 +8,7 @@ import com.ctrip.zeus.logstats.parser.state.Action;
 /**
  * Created by zhoumy on 2016/6/7.
  */
-public class RequestUriState implements LogStatsState<String> {
+public class RequestUriState implements LogStatsState {
     private final String name;
     private final Action action;
 
@@ -59,18 +59,19 @@ public class RequestUriState implements LogStatsState<String> {
             for (int i = ctxt.getCurrentIndex(); i < source.length; i++) {
                 char c = source[i];
                 switch (c) {
+                    case ' ': {
+                        ctxt.proceed(i - ctxt.getCurrentIndex());
+                        ctxt.addResult(name, sb.toString());
+                        return;
+                    }
                     case '?': {
                         _ignore = true;
                     }
-                    case ' ': {
-                        ctxt.proceed(i - ctxt.getCurrentIndex());
-                        System.out.println(sb.toString());
-                        ctxt.addResult(sb.toString());
-                    }
-                    default:
+                    default: {
                         if (!_ignore) {
                             sb.append(c);
                         }
+                    }
                 }
             }
         }

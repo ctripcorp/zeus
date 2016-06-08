@@ -12,7 +12,7 @@ public class XForwardState implements LogStatsState {
 
     public XForwardState(String name) {
         this.name = name;
-        this.subMachine = new XForwardForStateMachine(new IpState("innerXForwardFor"));
+        this.subMachine = new XForwardForStateMachine(new IpState(name));
     }
 
     @Override

@@ -1,13 +1,11 @@
 package com.ctrip.zeus.logstats.parser.state;
 
-import com.ctrip.zeus.logstats.parser.KeyValue;
-
-import java.util.List;
+import java.util.LinkedList;
 
 /**
  * Created by zhoumy on 2016/6/7.
  */
-public interface StateMachineContext {
+public interface StateMachineContext<R> {
 
     void setSourceValue(String value);
 
@@ -23,8 +21,8 @@ public interface StateMachineContext {
 
     void addResult(String key, String value);
 
-    String getLastParsedValue();
+    String peekLastParsedValue();
 
-    List<KeyValue> getResult();
+    LinkedList<R> getResult();
 
 }

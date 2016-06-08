@@ -11,6 +11,7 @@ import com.ctrip.zeus.logstats.parser.state.Action;
 public class IpState implements LogStatsState {
     private final String name;
     private final Action action;
+    private LogStatsState next;
 
     public IpState(String name) {
         this.name = name;
@@ -34,12 +35,12 @@ public class IpState implements LogStatsState {
 
     @Override
     public void setNext(LogStatsState next) {
-
+        this.next = next;
     }
 
     @Override
     public LogStatsState getNext() {
-        return null;
+        return next;
     }
 
     @Override
@@ -63,8 +64,7 @@ public class IpState implements LogStatsState {
                     break;
                 }
             }
-            ctxt.addResult(sb.toString());
-            System.out.println(sb.toString());
+            ctxt.addResult(name, sb.toString());
             ctxt.proceed(idx - ctxt.getCurrentIndex() + 1);
         }
     }

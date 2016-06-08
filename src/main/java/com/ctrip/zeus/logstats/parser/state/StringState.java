@@ -3,7 +3,7 @@ package com.ctrip.zeus.logstats.parser.state;
 /**
  * Created by zhoumy on 2016/6/7.
  */
-public class StringState implements LogStatsState<String> {
+public class StringState implements LogStatsState {
     private final String name;
     private final Action action;
 
@@ -56,8 +56,7 @@ public class StringState implements LogStatsState<String> {
                 switch (c) {
                     case ' ': {
                         ctxt.proceed(i - ctxt.getCurrentIndex());
-                        ctxt.addResult(sb.toString());
-                        System.out.println(sb.toString());
+                        ctxt.addResult(name, sb.toString());
                         return;
                     }
                     default:
@@ -65,8 +64,7 @@ public class StringState implements LogStatsState<String> {
                 }
             }
             ctxt.proceed(source.length - ctxt.getCurrentIndex());
-            ctxt.addResult(sb.toString());
-            System.out.println(sb.toString());
+            ctxt.addResult(name, sb.toString());
         }
     }
 }

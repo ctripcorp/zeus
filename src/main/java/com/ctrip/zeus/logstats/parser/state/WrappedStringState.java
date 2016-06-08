@@ -64,15 +64,16 @@ public class WrappedStringState implements LogStatsState {
                         matcher[0] = c;
                         continue;
                     }
-                } else if (c == endSymbol) {
+                }
+                if (c == endSymbol) {
                     if (!_continue && matcher[0] == startSymbol) {
                         matcher[1] = c;
                         ctxt.proceed(i - ctxt.getCurrentIndex() + 1);
                         ctxt.addResult(name, sb.toString());
-                        System.out.println(sb.toString());
                         return;
                     }
-                } else if (c == '\\') {
+                }
+                if (c == '\\') {
                     _continue = !_continue;
                 }
                 sb.append(c);
@@ -80,7 +81,6 @@ public class WrappedStringState implements LogStatsState {
             }
             ctxt.proceed(source.length - ctxt.getCurrentIndex() + 1);
             ctxt.addResult(name, sb.toString());
-            System.out.println(sb.toString());
         }
     }
 }
