@@ -66,9 +66,6 @@ public class AccessLogConsumers {
 
     public void accept(String value) {
         source.offer(value);
-        if (source.size() > 15000) {
-            System.out.println("source " + source.size());
-        }
     }
 
     public void shutDown() {

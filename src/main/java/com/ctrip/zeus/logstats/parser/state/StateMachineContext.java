@@ -23,4 +23,11 @@ public interface StateMachineContext<R> {
 
     LinkedList<R> getResult();
 
+    ContextState getState();
+
+    void setState(ContextState state);
+
+    enum ContextState {
+        SUCCESS, PROCESSING, FAILURE
+    }
 }

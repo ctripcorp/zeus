@@ -25,21 +25,27 @@ public class XForwardForStateMachine implements LogStatsStateMachine {
     @Override
     public void transduce(StateMachineContext ctxt) {
         StateMachineContext subCtxt = new VariableContext(ctxt);
-        LogStatsState current = xforwardState;
-        current.getAction().execute(subCtxt);
-        while ((current = transition.transit(xforwardState, subCtxt)) != null) {
+        subCtxt.setState(StateMachineContext.ContextState.PROCESSING);
+        try {
+            LogStatsState current = xforwardState;
             current.getAction().execute(subCtxt);
-        }
-        StringBuilder sb = new StringBuilder();
-        LinkedList<String> result = subCtxt.getResult();
-        while (!result.isEmpty()) {
-            if (sb.length() == 0) {
-                sb.append(result.poll());
-            } else {
-                sb.append(", ").append(result.poll());
+            while ((current = transition.transit(xforwardState, subCtxt)) != null) {
+                current.getAction().execute(subCtxt);
             }
+            StringBuilder sb = new StringBuilder();
+            LinkedList<String> result = subCtxt.getResult();
+            while (!result.isEmpty()) {
+                if (sb.length() == 0) {
+                    sb.append(result.poll());
+                } else {
+                    sb.append(", ").append(result.poll());
+                }
+            }
+            ctxt.addResult(xforwardState.getName(), sb.toString());
+            subCtxt.setState(StateMachineContext.ContextState.SUCCESS);
+        } catch (Exception ex) {
+            ctxt.setState(StateMachineContext.ContextState.FAILURE);
         }
-        ctxt.addResult(xforwardState.getName(), sb.toString());
     }
 
     private class XForwardTransition implements Transition {

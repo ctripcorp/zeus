@@ -11,6 +11,7 @@ public class AccessLogContext implements StateMachineContext<KeyValue> {
     private final String value;
     private final char[] valueArray;
     private int idx;
+    private ContextState state;
     private LinkedList<KeyValue> parsedValues = new LinkedList<>();
 
     public AccessLogContext(String value) {
@@ -50,7 +51,18 @@ public class AccessLogContext implements StateMachineContext<KeyValue> {
 
     @Override
     public LinkedList<KeyValue> getResult() {
+        if (state == ContextState.FAILURE) return new LinkedList<>();
         return parsedValues;
+    }
+
+    @Override
+    public ContextState getState() {
+        return state;
+    }
+
+    @Override
+    public void setState(ContextState state) {
+        this.state = state;
     }
 
     @Override

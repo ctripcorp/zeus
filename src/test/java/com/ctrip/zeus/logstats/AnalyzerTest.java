@@ -1,11 +1,9 @@
 package com.ctrip.zeus.logstats;
 
-import com.ctrip.zeus.logstats.StatsDelegate;
-import com.ctrip.zeus.logstats.TestLogWriter;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzerConfig;
 import com.ctrip.zeus.logstats.analyzer.nginx.AccessLogStatsAnalyzer;
-import com.ctrip.zeus.logstats.common.AccessLogRegexFormat;
+import com.ctrip.zeus.logstats.common.AccessLogStateMachineFormat;
 import com.ctrip.zeus.logstats.common.JsonStringWriter;
 import com.ctrip.zeus.logstats.common.LineFormat;
 import com.ctrip.zeus.logstats.parser.KeyValue;
@@ -37,7 +35,7 @@ public class AnalyzerTest {
                     "$server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" " +
                     "$host $status $body_bytes_sent $request_time $upstream_response_time " +
                     "$upstream_addr $upstream_status";
-    private static final LineFormat AccessLogFormat = new AccessLogRegexFormat(AccessLogFormatString).generate();
+    private static final LineFormat AccessLogFormat = new AccessLogStateMachineFormat(AccessLogFormatString).generate();
     private static final int TrackerReadSize = 2048;
     private final URL accessLogUrl = this.getClass().getClassLoader().getResource("com.ctrip.zeus.service/access.log");
 
@@ -79,7 +77,12 @@ public class AnalyzerTest {
 
     @Test
     public void testFileTrackingAnalyzer() throws IOException {
-        final DateFormat dateFormat = new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.ENGLISH);
+        final ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>() {
+            @Override
+            protected DateFormat initialValue() {
+                return new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.ENGLISH);
+            }
+        };
         final Date lastRecord = new Date(0, 1, 1);
 
         final AtomicInteger successCount = new AtomicInteger();
@@ -91,6 +94,7 @@ public class AnalyzerTest {
                         .setLogFormat(AccessLogFormat)
                         .setLogFilename(accessLogUrl.getFile())
                         .setTrackerReadSize(TrackerReadSize)
+                        .setNumberOfConsumers(1)
                         .allowTracking("access-log-test-track.log")
                         .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
                             @Override
@@ -98,7 +102,7 @@ public class AnalyzerTest {
                                 Assert.assertTrue(input.size() > 0);
                                 String value = toJsonString(input);
                                 try {
-                                    Date d = dateFormat.parse(getTimeLocal(value));
+                                    Date d = dateFormat.get().parse(getTimeLocal(value));
                                     Assert.assertTrue(d.getTime() >= lastRecord.getTime());
                                     successCount.incrementAndGet();
                                     lastRecord.setTime(d.getTime());
@@ -128,6 +132,8 @@ public class AnalyzerTest {
                     break;
                 }
             }
+            Assert.assertEquals(14, successCount.get());
+            Assert.assertEquals(0, errorCount.get());
         } finally {
             if (s != null)
                 s.close();
@@ -136,8 +142,71 @@ public class AnalyzerTest {
         f = new File(trackingFilename);
         if (f.exists())
             f.delete();
-        Assert.assertEquals(14, successCount.get());
-        Assert.assertEquals(0, errorCount.get());
+    }
+
+    @Test
+    public void testAnalyzerWithMultiConsumers() throws IOException {
+        final ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>() {
+            @Override
+            protected DateFormat initialValue() {
+                return new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.ENGLISH);
+            }
+        };
+        final AtomicInteger successCount = new AtomicInteger();
+        final AtomicInteger errorCount = new AtomicInteger();
+
+        final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder =
+                new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                        .isStartFromHead(true)
+                        .setLogFormat(AccessLogFormat)
+                        .setLogFilename(accessLogUrl.getFile())
+                        .setTrackerReadSize(TrackerReadSize)
+                        .setNumberOfConsumers(5)
+                        .allowTracking("access-log-test-track.log")
+                        .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
+                            @Override
+                            public void delegate(List<KeyValue> input) {
+                                Assert.assertTrue(input.size() > 0);
+                                String date = input.get(0).getValue();
+                                try {
+                                    dateFormat.get().parse(date);
+                                    successCount.incrementAndGet();
+                                } catch (Exception e) {
+                                    errorCount.incrementAndGet();
+                                }
+                                System.out.println(toJsonString(input));
+                            }
+                        });
+
+        String trackingFilename = new File(accessLogUrl.getPath()).getParentFile().getAbsolutePath() + "/access-log-test-track.log";
+        File f = new File(trackingFilename);
+        if (f.exists())
+            f.delete();
+
+        InputStream s = null;
+        try {
+            s = accessLogUrl.openStream();
+            while (true) {
+                LogStatsAnalyzer analyzer = new AccessLogStatsAnalyzer(builder.build());
+                analyzer.start();
+                if (!analyzer.reachFileEnd()) {
+                    analyzer.run();
+                    analyzer.stop();
+                } else {
+                    analyzer.stop();
+                    break;
+                }
+            }
+            Assert.assertEquals(14, successCount.get());
+            Assert.assertEquals(0, errorCount.get());
+        } finally {
+            if (s != null)
+                s.close();
+        }
+
+        f = new File(trackingFilename);
+        if (f.exists())
+            f.delete();
     }
 
     @Test

@@ -10,6 +10,7 @@ import java.util.LinkedList;
 public class VariableContext implements StateMachineContext<String> {
     private StateMachineContext parent;
     private LinkedList<String> parsedValue;
+    private ContextState state;
 
     public VariableContext(StateMachineContext parent) {
         this.parent = parent;
@@ -54,5 +55,15 @@ public class VariableContext implements StateMachineContext<String> {
     @Override
     public LinkedList<String> getResult() {
         return parsedValue;
+    }
+
+    @Override
+    public ContextState getState() {
+        return state;
+    }
+
+    @Override
+    public void setState(ContextState state) {
+        this.state = state;
     }
 }

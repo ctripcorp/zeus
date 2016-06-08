@@ -19,13 +19,23 @@ public class AccessLogStateMachine implements LogStatsStateMachine {
     @Override
     public void transduce(StateMachineContext ctxt) {
         LogStatsState current = initState;
-        current.getAction().execute(ctxt);
-        while ((current = transition.transit(current, ctxt)) != null) {
-            if (current.runSubMachine()) {
-                current.getSubMachine().transduce(ctxt);
-            } else {
-                current.getAction().execute(ctxt);
+        ctxt.setState(StateMachineContext.ContextState.PROCESSING);
+        try {
+            current.getAction().execute(ctxt);
+            while ((current = transition.transit(current, ctxt)) != null) {
+                if (current.runSubMachine()) {
+                    current.getSubMachine().transduce(ctxt);
+                } else {
+                    current.getAction().execute(ctxt);
+                }
             }
+            if (ctxt.shouldProceed()) {
+                ctxt.setState(StateMachineContext.ContextState.FAILURE);
+            } else {
+                ctxt.setState(StateMachineContext.ContextState.SUCCESS);
+            }
+        } catch (Exception ex) {
+            ctxt.setState(StateMachineContext.ContextState.FAILURE);
         }
     }
 }
