@@ -14,6 +14,7 @@ import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.status.GroupStatusService;
+import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
@@ -455,6 +456,21 @@ public class OperationResource {
     }
 
     private Response memberOps(HttpHeaders hh, Long groupId, List<String> ips, boolean up, String type) throws Exception {
+        Map<String , List<Boolean>> status = statusService.fetchGroupServerStatus(null,new Long[]{groupId});
+        boolean skipOps = true;
+        for (String ip : ips){
+            int index = 0 ;
+            if (type.equals(TaskOpsType.HEALTHY_OPS)) index = StatusOffset.HEALTHY;
+            if (type.equals(TaskOpsType.PULL_MEMBER_OPS)) index = StatusOffset.PULL_OPS;
+            if (type.equals(TaskOpsType.MEMBER_OPS)) index = StatusOffset.MEMBER_OPS;
+            boolean preStatus = status.get(groupId.toString() + "_" + ip).get(index);
+            if (preStatus != up){
+                skipOps = false;
+            }
+        }
+        if (skipOps){
+            return Response.status(200).entity("{message:\"Group status equals the desired value.\"}").type(MediaType.APPLICATION_JSON).build();
+        }
         StringBuilder sb = new StringBuilder();
         for (String ip : ips) {
             sb.append(ip).append(";");
