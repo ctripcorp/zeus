@@ -79,9 +79,10 @@ public class StateMachineParsingTest {
         final LogParser parser = new AccessLogStateMachineParser(lineFormat);
         List<String> realCases = new ArrayList<>();
         realCases.add("[01/Jun/2016:09:00:13 +0800] ws.mobile.qiche.ctripcorp.com svr5153hw1288 10.8.208.7 GET /index.php?param=/api/home&method=product.recommendBus&isNewVersion=1&from=%E6%B8%A9%E5%B7%9E&to=%E6%B8%A9%E5%B7%9E&date=2016-06-01&channel=tieyou&partner=tieyou.app 80 - 10.28.56.26 - HTTP/1.1 \"-\" \"-\" \"-\" 200 268 362 0.045 -, -, 0.045 10.8.169.162:80, 10.8.169.164:80, 10.8.177.23:80 -, -, 200 backend_441");
+        realCases.add("--");
         for (String rc : realCases) {
             List<KeyValue> kvs = parser.parse(rc);
-            Assert.assertTrue(kvs.size() > 0);
+            Assert.assertTrue(kvs.size() == 0);
             for (KeyValue kv : kvs) {
                 System.out.println(kv.getKey() + ", " + kv.getValue());
                 Assert.assertNotNull(kv.getValue());

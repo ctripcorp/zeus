@@ -36,7 +36,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
                 .isStartFromHead(false)
                 .setLogFormat(new AccessLogStateMachineFormat(AccessLogFormat).generate())
                 .setLogFilename("/opt/logs/nginx/access.log")
-                .setTrackerReadSize(1024 * 3)
+                .setTrackerReadSize(1024 * 5)
                 .build());
     }
 

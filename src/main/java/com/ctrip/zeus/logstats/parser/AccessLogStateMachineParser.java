@@ -1,6 +1,5 @@
 package com.ctrip.zeus.logstats.parser;
 
-import com.ctrip.zeus.logstats.common.AccessLogStateMachineFormat;
 import com.ctrip.zeus.logstats.common.JsonStringWriter;
 import com.ctrip.zeus.logstats.common.LineFormat;
 import com.ctrip.zeus.logstats.parser.state.AccessLogContext;

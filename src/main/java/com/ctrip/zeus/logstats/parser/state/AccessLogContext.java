@@ -67,7 +67,7 @@ public class AccessLogContext implements StateMachineContext<KeyValue> {
 
     @Override
     public boolean shouldProceed() {
-        return idx < value.length() - 1;
+        return state == ContextState.PROCESSING && idx < value.length() - 1;
     }
 
     @Override

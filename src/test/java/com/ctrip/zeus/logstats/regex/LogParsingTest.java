@@ -32,7 +32,7 @@ public class LogParsingTest {
         LineFormat lineFormat = new AccessLogRegexFormat(AccessLogFormat).generate();
         String[] actualKeys = lineFormat.getKeys();
         Assert.assertArrayEquals(expectedKeys, actualKeys);
-        Assert.assertEquals(expectedPatternString, ((AccessLogRegexFormat)lineFormat).getPatternString());
+        Assert.assertEquals(expectedPatternString, ((AccessLogRegexFormat) lineFormat).getPatternString());
     }
 
     @Test
@@ -44,7 +44,7 @@ public class LogParsingTest {
                 .setFormat(logFormat)
                 .registerComponentForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))")
                 .generate();
-        Assert.assertEquals(expectedPatternString, ((AccessLogRegexFormat)lineFormat).getPatternString());
+        Assert.assertEquals(expectedPatternString, ((AccessLogRegexFormat) lineFormat).getPatternString());
     }
 
     @Test

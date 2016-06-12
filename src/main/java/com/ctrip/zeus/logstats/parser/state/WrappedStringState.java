@@ -79,6 +79,10 @@ public class WrappedStringState implements LogStatsState {
                 sb.append(c);
 
             }
+            if (matcher[0] == Character.MIN_VALUE || matcher[0] == Character.MIN_VALUE) {
+                ctxt.setState(StateMachineContext.ContextState.FAILURE);
+                return;
+            }
             ctxt.proceed(source.length - ctxt.getCurrentIndex() + 1);
             ctxt.addResult(name, sb.toString());
         }

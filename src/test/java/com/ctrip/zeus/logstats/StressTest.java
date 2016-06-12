@@ -9,7 +9,11 @@ import com.ctrip.zeus.service.build.conf.LogFormat;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -18,11 +22,18 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class StressTest {
     public static void main(String[] args) throws IOException {
-        final File accessLogFile = new File("D:/opt/logs/nginx/prod-access.log");
+        final File accessLogFile = new File("D:/opt/logs/nginx/access.log");
         final AtomicLong errorCount = new AtomicLong();
         final AtomicLong succCount = new AtomicLong();
         final int analyzerWorkers = 2;
         final int readBufferSize = 5;
+
+        final ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>() {
+            @Override
+            protected DateFormat initialValue() {
+                return new SimpleDateFormat("dd/MMM/yyyy:hh:mm:ss Z", Locale.ENGLISH);
+            }
+        };
 
         final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder = new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
                 .setLogFormat(new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate())
@@ -34,6 +45,11 @@ public class StressTest {
                     @Override
                     public void delegate(List<KeyValue> input) {
                         if (input != null && input.size() > 0) {
+                            try {
+                                dateFormat.get().parse(input.get(0).getValue());
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
                             succCount.incrementAndGet();
                             if (succCount.get() % 1000000 == 0) {
                                 System.out.println("Sample survey: " + toJsonString(input));
