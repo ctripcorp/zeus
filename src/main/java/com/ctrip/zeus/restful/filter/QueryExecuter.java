@@ -25,7 +25,7 @@ public class QueryExecuter<T extends Comparable> {
     }
 
     public T[] run() throws Exception {
-        Set<Long> result = null;
+        Set<T> result = null;
         while (!filterQueue.isEmpty() && result == null) {
             FilterSet filter = filterQueue.poll();
             if (filter.shouldFilter()) result = filter.filter();
