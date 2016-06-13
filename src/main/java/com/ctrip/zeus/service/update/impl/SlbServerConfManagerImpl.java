@@ -103,8 +103,8 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 }
             } catch (Exception e) {
                 //3.3.2 if throws exception, set need refresh flag.
-                logger.error("[SlbServerUpdate] Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
-                throw new NginxProcessingException("Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
+                logger.error("[SlbServerUpdate] Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion + " msg:" + e.getMessage(), e);
+                throw new NginxProcessingException("Refresh conf failed. SlbId:" + slbId + ";Version:" + slbVersion + " msg:" + e.getMessage(), e);
             }
         } else {
             try {
@@ -169,8 +169,8 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 }
             } catch (Exception e) {
                 //4.7  if failed. set need refresh flag.
-                logger.error("[SlbServerUpdate] Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
-                throw new NginxProcessingException("Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion, e);
+                logger.error("[SlbServerUpdate] Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion + " msg:" + e.getMessage(), e);
+                throw new NginxProcessingException("Execute commits failed. SlbId:" + slbId + ";Version:" + slbVersion + " msg:" + e.getMessage(), e);
             }
         }
         //5. update server version
