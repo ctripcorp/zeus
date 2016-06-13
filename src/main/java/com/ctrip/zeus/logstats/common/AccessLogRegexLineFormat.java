@@ -9,17 +9,17 @@ import java.util.regex.Pattern;
 /**
  * Created by zhoumy on 2015/11/16.
  */
-public class AccessLogLineFormat implements LineFormat {
+public class AccessLogRegexLineFormat implements LineFormat {
     private String format;
     private String patternString;
     private Pattern pattern;
     private String[] keys;
     private final Map<String, String> patternRegistry = new HashMap<>();
 
-    public AccessLogLineFormat() {
+    public AccessLogRegexLineFormat() {
     }
 
-    public AccessLogLineFormat(String format) {
+    public AccessLogRegexLineFormat(String format) {
         setFormat(format);
         registerPatternForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))");
         registerPatternForKey("request_time", "(-|\\d+\\.\\d+)");

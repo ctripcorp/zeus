@@ -1,7 +1,8 @@
 package com.ctrip.zeus.logstats.analyzer.nginx;
 
 import com.ctrip.zeus.logstats.StatsDelegate;
-import com.ctrip.zeus.logstats.parser.AccessLogParser;
+import com.ctrip.zeus.logstats.parser.AccessLogRegexParser;
+import com.ctrip.zeus.logstats.parser.KeyValue;
 import com.ctrip.zeus.logstats.parser.LogParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by zhoumy on 2016/6/3.
@@ -24,41 +26,48 @@ public class AccessLogConsumers {
     private final LogParser logParser;
     private final ExecutorService consumerPool;
 
+    private AtomicBoolean running = new AtomicBoolean(true);
+
     public AccessLogConsumers(AccessLogStatsAnalyzer producer) {
         this.producer = new WeakReference<>(producer);
-        this.consumerPool = Executors.newFixedThreadPool(5);
+        this.consumerPool = Executors.newFixedThreadPool(10);
         this.source = new ConcurrentLinkedQueue<>();
-        this.logParser = new AccessLogParser(producer.getConfig().getLineFormats());
+        this.logParser = new AccessLogRegexParser(producer.getConfig().getLineFormats());
         this.delegator = producer.getConfig().getDelegators();
     }
 
     public void consume() {
-        consumerPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                while (producer.get() != null) {
-                    String value;
-                    while ((value = source.poll()) != null) {
-                        String result = logParser.parseToJsonString(value);
-                        for (StatsDelegate d : delegator) {
-                            d.delegate(result);
+        for (int i = 0; i < 19; i++) {
+            consumerPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    while (producer.get() != null && running.get()) {
+                        String value;
+                        while ((value = source.poll()) != null) {
+                            List<KeyValue> result = logParser.parse(value);
+                            for (StatsDelegate d : delegator) {
+                                d.delegate(result);
+                            }
                         }
                     }
-                    Thread.yield();
                 }
-            }
-        });
+            });
+        }
     }
 
     public void accept(String value) {
         source.offer(value);
+        if (source.size() > 15000) {
+            System.out.println("source " + source.size());
+        }
     }
 
     public void shutDown() {
+        running.set(false);
         try {
-            if (!consumerPool.awaitTermination(1000, TimeUnit.SECONDS)) {
+            if (!consumerPool.awaitTermination(1, TimeUnit.SECONDS)) {
                 consumerPool.shutdownNow();
-                if (!consumerPool.awaitTermination(1000, TimeUnit.SECONDS)) {
+                if (!consumerPool.awaitTermination(1, TimeUnit.SECONDS)) {
                     logger.error("Consumer pool did not terminate.");
                 }
             }

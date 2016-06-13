@@ -1,7 +1,5 @@
 package com.ctrip.zeus.logstats.analyzer;
 
-import com.ctrip.zeus.logstats.StatsDelegate;
-
 import java.io.IOException;
 
 /**

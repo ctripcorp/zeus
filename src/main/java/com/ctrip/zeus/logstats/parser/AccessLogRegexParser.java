@@ -11,11 +11,11 @@ import java.util.regex.Pattern;
 /**
  * Created by zhoumy on 2015/11/13.
  */
-public class AccessLogParser implements LogParser {
+public class AccessLogRegexParser implements LogParser {
     private LineFormat mainLogFormat;
     private Pattern pattern;
 
-    public AccessLogParser(List<LineFormat> formats) {
+    public AccessLogRegexParser(List<LineFormat> formats) {
         if (formats.size() >= 1) {
             mainLogFormat = formats.get(0);
             pattern = mainLogFormat.getPattern();
