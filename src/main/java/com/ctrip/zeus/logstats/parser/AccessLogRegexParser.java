@@ -12,13 +12,13 @@ import java.util.regex.Pattern;
  * Created by zhoumy on 2015/11/13.
  */
 public class AccessLogRegexParser implements LogParser {
-    private LineFormat mainLogFormat;
+    private LineFormat<Pattern, String> mainLogFormat;
     private Pattern pattern;
 
     public AccessLogRegexParser(List<LineFormat> formats) {
         if (formats.size() >= 1) {
             mainLogFormat = formats.get(0);
-            pattern = mainLogFormat.getPattern();
+            pattern = mainLogFormat.getEngine();
         }
     }
 

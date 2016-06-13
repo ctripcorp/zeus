@@ -1,9 +1,11 @@
 package com.ctrip.zeus.logstats;
 
+import com.ctrip.zeus.logstats.StatsDelegate;
+import com.ctrip.zeus.logstats.TestLogWriter;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzerConfig;
 import com.ctrip.zeus.logstats.analyzer.nginx.AccessLogStatsAnalyzer;
-import com.ctrip.zeus.logstats.common.AccessLogRegexLineFormat;
+import com.ctrip.zeus.logstats.common.AccessLogRegexFormat;
 import com.ctrip.zeus.logstats.common.JsonStringWriter;
 import com.ctrip.zeus.logstats.common.LineFormat;
 import com.ctrip.zeus.logstats.parser.KeyValue;
@@ -35,7 +37,7 @@ public class AnalyzerTest {
                     "$server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" " +
                     "$host $status $body_bytes_sent $request_time $upstream_response_time " +
                     "$upstream_addr $upstream_status";
-    private static final LineFormat AccessLogFormat = new AccessLogRegexLineFormat(AccessLogFormatString).generate();
+    private static final LineFormat AccessLogFormat = new AccessLogRegexFormat(AccessLogFormatString).generate();
     private static final int TrackerReadSize = 2048;
     private final URL accessLogUrl = this.getClass().getClassLoader().getResource("com.ctrip.zeus.service/access.log");
 

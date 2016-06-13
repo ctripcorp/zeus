@@ -1,7 +1,7 @@
-package com.ctrip.zeus.logstats;
+package com.ctrip.zeus.logstats.regex;
 
 import com.ctrip.zeus.logstats.common.JsonStringWriter;
-import com.ctrip.zeus.logstats.common.AccessLogRegexLineFormat;
+import com.ctrip.zeus.logstats.common.AccessLogRegexFormat;
 import com.ctrip.zeus.logstats.common.LineFormat;
 import com.ctrip.zeus.logstats.parser.AccessLogRegexParser;
 import com.ctrip.zeus.logstats.parser.KeyValue;
@@ -29,10 +29,10 @@ public class LogParsingTest {
                 "upstream_addr", "upstream_status", "proxy_host"};
         String expectedPatternString = "\\[(.*)\\]\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+([^?]*)(?:.*)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(-|(?:[0-9.]+(?:, [0-9.]+)*))\\s+(\\S+)\\s+\\\"(.*)\\\"\\s+\\\"(.*)\\\"\\s+\\\"(.*)\\\"\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(-|\\d+\\.\\d+)\\s+((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)\\s+((?:-|\\S+)(?: : (?:-|\\S+))?)\\s+((?:-|\\d{3})(?: : (?:-|\\d{3}))?)\\s+(\\S+)";
 
-        LineFormat lineFormat = new AccessLogRegexLineFormat(AccessLogFormat).generate();
+        LineFormat lineFormat = new AccessLogRegexFormat(AccessLogFormat).generate();
         String[] actualKeys = lineFormat.getKeys();
         Assert.assertArrayEquals(expectedKeys, actualKeys);
-        Assert.assertEquals(expectedPatternString, lineFormat.getPatternString());
+        Assert.assertEquals(expectedPatternString, ((AccessLogRegexFormat)lineFormat).getPatternString());
     }
 
     @Test
@@ -40,11 +40,11 @@ public class LogParsingTest {
         String logFormat = "[$time_local] $host $hostname $server_addr $request_method $uri \"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for $server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" $host $status $body_bytes_sent $request_time $upstream_response_time $upstream_addr $upstream_status";
         String expectedPatternString = "\\[(.*)\\]\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+\\\"(.*)\\\"\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(-|(?:[0-9.]+(?:, [0-9.]+)*))\\s+(\\S+)\\s+\\\"(.*)\\\"\\s+\\\"(.*)\\\"\\s+\\\"(.*)\\\"\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)";
 
-        LineFormat lineFormat = new AccessLogRegexLineFormat()
+        LineFormat lineFormat = new AccessLogRegexFormat()
                 .setFormat(logFormat)
-                .registerPatternForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))")
+                .registerComponentForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))")
                 .generate();
-        Assert.assertEquals(expectedPatternString, lineFormat.getPatternString());
+        Assert.assertEquals(expectedPatternString, ((AccessLogRegexFormat)lineFormat).getPatternString());
     }
 
     @Test
@@ -52,7 +52,7 @@ public class LogParsingTest {
         final String log = "[08/Mar/2016:15:31:39 +0800] a.com 0359 10.2.25.94 POST /Activity-Order-OrderService/api/xml/AutoOrder?format=json 80 - 10.2.28.241 10.2.42.237 HTTP/1.1 \"-\" \"-\" \"-\" 200 652 815 0.019 0.018 : 0.1 10.2.44.22:80 : 127.0.0.1:80 200 : 400 backend_6004";
         String[] expectedValues = {"08/Mar/2016:15:31:39 +0800", "a.com", "0359", "10.2.25.94", "POST", "/Activity-Order-OrderService/api/xml/AutoOrder", "80", "-", "10.2.28.241", "10.2.42.237", "HTTP/1.1", "-", "-", "-", "200", "652", "815", "0.019", "0.018 : 0.1", "10.2.44.22:80 : 127.0.0.1:80", "200 : 400", "backend_6004"};
 
-        LineFormat lineFormat = new AccessLogRegexLineFormat(AccessLogFormat).generate();
+        LineFormat lineFormat = new AccessLogRegexFormat(AccessLogFormat).generate();
         List<LineFormat> formats = new ArrayList<>();
         formats.add(lineFormat);
         final LogParser parser = new AccessLogRegexParser(formats);
@@ -71,13 +71,13 @@ public class LogParsingTest {
         String log3 = "[02/Dec/2015:13:43:03 +0800] ws.mobile.qiche.ctripcorp.com vms09191 10.8.95.27 POST /app/index.php \"param=/api/home&method=config.getAppConfig&_fxpcqlniredt=09031130410105805720\" 80 - 10.15.138.65 117.136.75.139 HTTP/1.1 \"\" \"-\" \"http://m.ctrip.com/webapp/train/?allianceid=106334&sid=728666&ouid=4&sourceid=2377\" ws.mobile.qiche.ctripcorp.com 200 99 0.017 0.017 10.8.119.73:80 200";
         String log4 = "[02/Dec/2015:13:00:10 +0800] ws.schedule.ctripcorp.com vms09191 10.8.95.27 POST /UbtPushApi/UserActionReceiveHandler.ashx \"-\" 80 - 10.8.91.104 - HTTP/1.1 \"Java/THttpClient/HC\" \"-\" \"-\" ws.schedule.ctripcorp.com 200 24 0.007 0.007 10.8.168.238:80 200";
 
-        LineFormat lineFormat = new AccessLogRegexLineFormat()
+        LineFormat lineFormat = new AccessLogRegexFormat()
                 .setFormat(logFormat)
-                .registerPatternForKey("request_time", "(-|\\d+\\.\\d+)")
-                .registerPatternForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)")
-                .registerPatternForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+))?)")
-                .registerPatternForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3}))?)")
-                .registerPatternForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))")
+                .registerComponentForKey("request_time", "(-|\\d+\\.\\d+)")
+                .registerComponentForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)")
+                .registerComponentForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+))?)")
+                .registerComponentForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3}))?)")
+                .registerComponentForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))")
                 .generate();
         List<LineFormat> formats = new ArrayList<>();
         formats.add(lineFormat);
@@ -102,13 +102,13 @@ public class LogParsingTest {
 
     @Test
     public void testRealCases() {
-        LineFormat lineFormat = new AccessLogRegexLineFormat()
+        LineFormat lineFormat = new AccessLogRegexFormat()
                 .setFormat(AccessLogFormat)
-                .registerPatternForKey("request_time", "(-|\\d+\\.\\d+)")
-                .registerPatternForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)")
-                .registerPatternForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+))?)")
-                .registerPatternForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3}))?)")
-                .registerPatternForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))")
+                .registerComponentForKey("request_time", "(-|\\d+\\.\\d+)")
+                .registerComponentForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)")
+                .registerComponentForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+))?)")
+                .registerComponentForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3}))?)")
+                .registerComponentForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))")
                 .generate();
         List<LineFormat> formats = new ArrayList<>();
         formats.add(lineFormat);
@@ -129,11 +129,11 @@ public class LogParsingTest {
         String logFormat = "[$time_local] $host $hostname $server_addr $request_method $uri \"$query_string\" $server_port $remote_user $remote_addr $http_x_forwarded_for $server_protocol \"$http_user_agent\" \"$cookie_COOKIE\" \"$http_referer\" $host $status $body_bytes_sent $request_time $upstream_response_time $upstream_addr $upstream_status";
         String log = "[02/Feb/2016:17:01:02 +0800] ws.connect.qiche.ctripcorp.com vms14669 10.8.208.22 GET /502page \"-\" 80 - 10.8.78.102 - HTTP/1.1 \"-\" \"-\" \"-\" ws.connect.qiche.ctripcorp.com 502 6003 0.015 - : 0.006 10.8.91.168:80 : 10.8.16.4:80 - : 200";
 
-        LineFormat lineFormat = new AccessLogRegexLineFormat().setFormat(logFormat)
-                .registerPatternForKey("request_time", "(-|\\d+\\.\\d+)")
-                .registerPatternForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)")
-                .registerPatternForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+))?)")
-                .registerPatternForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3}))?)")
+        LineFormat lineFormat = new AccessLogRegexFormat().setFormat(logFormat)
+                .registerComponentForKey("request_time", "(-|\\d+\\.\\d+)")
+                .registerComponentForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)")
+                .registerComponentForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+))?)")
+                .registerComponentForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3}))?)")
                 .generate();
         List<LineFormat> formats = new ArrayList<>();
         formats.add(lineFormat);
@@ -159,7 +159,7 @@ public class LogParsingTest {
         final String log = "[08/Mar/2016:15:31:39 +0800] a.com 0359 10.2.25.94 POST /Activity-Order-OrderService/api/xml/AutoOrder?format=json 80 - 10.2.28.241 10.2.42.237 HTTP/1.1 \"-\" \"-\" \"-\" 200 652 815 0.019 0.018 : 0.1 10.2.44.22:80 : 127.0.0.1:80 200 : 400 backend_6004";
         String expectedJsonValue = "{\"time_local\":\"08/Mar/2016:15:31:39 +0800\",\"host\":\"a.com\",\"hostname\":\"0359\",\"server_addr\":\"10.2.25.94\",\"request_method\":\"POST\",\"request_uri\":\"/Activity-Order-OrderService/api/xml/AutoOrder\",\"server_port\":\"80\",\"remote_user\":\"-\",\"remote_addr\":\"10.2.28.241\",\"http_x_forwarded_for\":\"10.2.42.237\",\"server_protocol\":\"HTTP/1.1\",\"http_user_agent\":\"-\",\"http_cookie\":\"-\",\"http_referer\":\"-\",\"status\":\"200\",\"request_length\":\"652\",\"bytes_sent\":\"815\",\"request_time\":\"0.019\",\"upstream_response_time\":\"0.018 : 0.1\",\"upstream_addr\":\"10.2.44.22:80 : 127.0.0.1:80\",\"upstream_status\":\"200 : 400\",\"proxy_host\":\"backend_6004\"}";
 
-        LineFormat lineFormat = new AccessLogRegexLineFormat(AccessLogFormat).generate();
+        LineFormat lineFormat = new AccessLogRegexFormat(AccessLogFormat).generate();
         List<LineFormat> formats = new ArrayList<>();
         formats.add(lineFormat);
         final LogParser parser = new AccessLogRegexParser(formats);

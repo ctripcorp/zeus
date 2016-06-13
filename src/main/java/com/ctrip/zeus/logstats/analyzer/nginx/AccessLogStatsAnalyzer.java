@@ -3,7 +3,7 @@ package com.ctrip.zeus.logstats.analyzer.nginx;
 import com.ctrip.zeus.logstats.StatsDelegate;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzerConfig;
-import com.ctrip.zeus.logstats.common.AccessLogRegexLineFormat;
+import com.ctrip.zeus.logstats.common.AccessLogRegexFormat;
 import com.ctrip.zeus.logstats.common.LineFormat;
 import com.ctrip.zeus.logstats.parser.AccessLogRegexParser;
 import com.ctrip.zeus.logstats.parser.KeyValue;
@@ -34,7 +34,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     public AccessLogStatsAnalyzer() {
         this(new LogStatsAnalyzerConfigBuilder()
                 .isStartFromHead(false)
-                .setLogFormat(new AccessLogRegexLineFormat(AccessLogFormat).generate())
+                .setLogFormat(new AccessLogRegexFormat(AccessLogFormat).generate())
                 .setLogFilename("/opt/logs/nginx/access.log")
                 .setTrackerReadSize(1024 * 3)
                 .build());

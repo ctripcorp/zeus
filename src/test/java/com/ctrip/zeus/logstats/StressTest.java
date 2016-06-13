@@ -2,7 +2,7 @@ package com.ctrip.zeus.logstats;
 
 import com.ctrip.zeus.logstats.analyzer.LogStatsAnalyzer;
 import com.ctrip.zeus.logstats.analyzer.nginx.AccessLogStatsAnalyzer;
-import com.ctrip.zeus.logstats.common.AccessLogRegexLineFormat;
+import com.ctrip.zeus.logstats.common.AccessLogRegexFormat;
 import com.ctrip.zeus.logstats.parser.KeyValue;
 import com.ctrip.zeus.service.build.conf.LogFormat;
 import org.junit.Assert;
@@ -23,7 +23,7 @@ public class StressTest {
         final AtomicLong succCount = new AtomicLong();
 
         final AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder builder = new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
-                .setLogFormat(new AccessLogRegexLineFormat(LogFormat.getMainCompactString()).generate())
+                .setLogFormat(new AccessLogRegexFormat(LogFormat.getMainCompactString()).generate())
                 .setLogFilename(accessLogFile.getAbsolutePath())
                 .setTrackerReadSize(1024 * 25)
                 .isStartFromHead(true)

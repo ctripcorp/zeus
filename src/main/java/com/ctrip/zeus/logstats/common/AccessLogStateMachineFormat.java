@@ -10,42 +10,52 @@ import java.util.*;
 /**
  * Created by zhoumy on 2016/6/6.
  */
-public class AccessLogFormat {
+public class AccessLogStateMachineFormat implements LineFormat<LogStatsStateMachine, LogStatsState> {
     private String format;
     private final Map<String, LogStatsState> logStateRegitry = new HashMap<>();
+    private String[] keys;
     private LogStatsStateMachine stateMachine;
     private LogStatsState firstState;
     private LogStatsState lastState;
 
-    public AccessLogFormat() {
-        registerPatternForKey("http_x_forwarded_for", new XForwardState("http_x_forwarded_for"));
-        registerPatternForKey("request_uri", new RequestUriState("request_uri"));
-        registerPatternForKey("upstream_response_time", new UpstreamState("upstream_response_time"));
-        registerPatternForKey("upstream_addr", new UpstreamState("upstream_addr"));
-        registerPatternForKey("upstream_status", new UpstreamState("upstream_status"));
+    public AccessLogStateMachineFormat() {
+    }
+
+    public AccessLogStateMachineFormat(String format) {
+        setFormat(format);
+        registerComponentForKey("http_x_forwarded_for", new XForwardState("http_x_forwarded_for"));
+        registerComponentForKey("request_uri", new RequestUriState("request_uri"));
+        registerComponentForKey("upstream_response_time", new UpstreamState("upstream_response_time"));
+        registerComponentForKey("upstream_addr", new UpstreamState("upstream_addr"));
+        registerComponentForKey("upstream_status", new UpstreamState("upstream_status"));
+    }
+
+    @Override
+    public String getFormat() {
+        return format;
+    }
+
+    @Override
+    public LogStatsStateMachine getEngine() {
+        return stateMachine;
     }
 
     public String[] getKeys() {
-        return null;
+        return keys;
     }
 
-
-    public AccessLogFormat setFormat(String format) {
+    public AccessLogStateMachineFormat setFormat(String format) {
         this.format = format;
         return this;
     }
 
-
-    public AccessLogFormat registerPatternForKey(String key, LogStatsState state) {
-        logStateRegitry.put(key, state);
+    @Override
+    public LineFormat registerComponentForKey(String key, LogStatsState component) {
+        logStateRegitry.put(key, component);
         return this;
     }
 
-    public LogStatsStateMachine getStateMachine() {
-        return stateMachine;
-    }
-
-    public AccessLogFormat generate() {
+    public AccessLogStateMachineFormat generate() {
         parsePattern();
         stateMachine = new AccessLogStateMachine(firstState);
         return this;
@@ -86,6 +96,16 @@ public class AccessLogFormat {
             }
         }
         appendState(operands);
+
+        LogStatsState state = firstState;
+        if (state != null) {
+            List<String> keyList = new ArrayList<>();
+            keyList.add(state.getName());
+            while ((state = state.getNext()) != null) {
+                keyList.add(state.getName());
+            }
+            keys = keyList.toArray(new String[keyList.size()]);
+        }
     }
 
     private void appendState(Stack<String> operands) {

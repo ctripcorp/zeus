@@ -9,24 +9,24 @@ import java.util.regex.Pattern;
 /**
  * Created by zhoumy on 2015/11/16.
  */
-public class AccessLogRegexLineFormat implements LineFormat {
+public class AccessLogRegexFormat implements LineFormat<Pattern, String> {
     private String format;
     private String patternString;
     private Pattern pattern;
     private String[] keys;
     private final Map<String, String> patternRegistry = new HashMap<>();
 
-    public AccessLogRegexLineFormat() {
+    public AccessLogRegexFormat() {
     }
 
-    public AccessLogRegexLineFormat(String format) {
+    public AccessLogRegexFormat(String format) {
         setFormat(format);
-        registerPatternForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))");
-        registerPatternForKey("request_time", "(-|\\d+\\.\\d+)");
-        registerPatternForKey("request_uri", "([^?]*)(?:.*)");
-        registerPatternForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)");
-        registerPatternForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+))?)");
-        registerPatternForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3}))?)");
+        registerComponentForKey("http_x_forwarded_for", "(-|(?:[0-9.]+(?:, [0-9.]+)*))");
+        registerComponentForKey("request_time", "(-|\\d+\\.\\d+)");
+        registerComponentForKey("request_uri", "([^?]*)(?:.*)");
+        registerComponentForKey("upstream_response_time", "((?:-|\\d+\\.\\d+)(?: : (?:-|\\d+\\.\\d+))?)");
+        registerComponentForKey("upstream_addr", "((?:-|\\S+)(?: : (?:-|\\S+))?)");
+        registerComponentForKey("upstream_status", "((?:-|\\d{3})(?: : (?:-|\\d{3}))?)");
     }
 
     @Override
@@ -34,13 +34,12 @@ public class AccessLogRegexLineFormat implements LineFormat {
         return format;
     }
 
-    @Override
     public String getPatternString() {
         return patternString;
     }
 
     @Override
-    public Pattern getPattern() {
+    public Pattern getEngine() {
         return pattern;
     }
 
@@ -56,8 +55,8 @@ public class AccessLogRegexLineFormat implements LineFormat {
     }
 
     @Override
-    public LineFormat registerPatternForKey(String key, String pattern) {
-        patternRegistry.put(key, pattern);
+    public LineFormat registerComponentForKey(String key, String component) {
+        patternRegistry.put(key, component);
         return this;
     }
 
