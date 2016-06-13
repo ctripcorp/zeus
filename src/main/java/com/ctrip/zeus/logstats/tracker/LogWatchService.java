@@ -22,5 +22,4 @@ public interface LogWatchService {
 
     String CREATE_EVENT = "ENTRY_CREATE";
     String DELETE_EVENT = "ENTRY_DELETE";
-    String MODIFY_EVENT = "ENTRY_MODIFY";
 }

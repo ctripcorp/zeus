@@ -10,6 +10,7 @@ import com.ctrip.zeus.service.build.conf.LogFormat;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -76,7 +77,7 @@ public class StressTest {
             }
         }
         analyzer.stop();
-        System.out.println("Parsing 8.81 GB access.log metrics takes " + (System.nanoTime() - now) / (1000 * 1000 * 1000) + " s.");
+        System.out.println("Parsing " + formatFileSize(accessLogFile.length()) + " access.log metrics takes " + (System.nanoTime() - now) / (1000 * 1000 * 1000) + " s.");
         System.out.println("the number of analyzer workers: " + analyzerWorkers);
         System.out.println("read buffer size: " + readBufferSize);
         System.out.println("success count: " + succCount.get());
@@ -91,5 +92,12 @@ public class StressTest {
         }
         sw.end();
         return sw.get();
+    }
+
+    public static String formatFileSize(long size) {
+        if(size <= 0) return "0";
+        final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };
+        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 }

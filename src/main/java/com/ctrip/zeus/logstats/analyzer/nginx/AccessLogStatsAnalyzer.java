@@ -152,7 +152,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             File f = new File(logFilename);
             String rootDir = f.getAbsoluteFile().getParentFile().getAbsolutePath();
             LogTrackerStrategy strategy = new LogTrackerStrategy()
-                    .setAllowLogRotate(true)
+                    .setAllowLogRotate(true, LogTracker.LOGROTATE_RENAME)
                     .setAllowTrackerMemo(allowTracking)
                     .setDoAsRoot(true)
                     .setStartMode(startFromHead ? LogTrackerStrategy.START_FROM_HEAD : LogTrackerStrategy.START_FROM_CURRENT)

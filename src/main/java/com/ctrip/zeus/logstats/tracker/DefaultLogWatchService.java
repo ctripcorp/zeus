@@ -34,8 +34,7 @@ public class DefaultLogWatchService implements LogWatchService {
     private void init() {
         try {
             watchService = dirPath.getFileSystem().newWatchService();
-            watchKey = dirPath.register(watchService, StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+            watchKey = dirPath.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
         } catch (IOException e) {
             if (watchService == null) logger.error("Fail to create watch service to dir " + dir + ".", e);
             if (watchService != null && watchKey == null)

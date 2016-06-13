@@ -3,6 +3,7 @@ package com.ctrip.zeus.logstats.analyzer.nginx;
 import com.ctrip.zeus.logstats.StatsDelegate;
 import com.ctrip.zeus.logstats.parser.KeyValue;
 import com.ctrip.zeus.logstats.parser.LogParser;
+import com.ctrip.zeus.page.entity.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,8 @@ public class AccessLogConsumers {
             consumerPool.execute(new Runnable() {
                 @Override
                 public void run() {
-                    while (producer.get() != null && running.get()) {
+                    while ((producer.get() != null && running.get())
+                            || (!running.get() && !source.isEmpty())) {
                         String value;
                         while ((value = source.poll()) != null) {
                             try {
@@ -65,7 +67,7 @@ public class AccessLogConsumers {
     }
 
     public void accept(String value) {
-        source.offer(value);
+        if (running.get()) source.offer(value);
     }
 
     public void shutDown() {
