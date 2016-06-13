@@ -76,60 +76,49 @@ public class AccessLogTracker implements LogTracker {
             }
         }
         if (fileChannel == null) {
-            logger.error("Cannot reach underlying fileChannel. Try hotfix");
-            try {
-                hotfix();
-            } catch (Exception ex) {
+            if (raf != null) {
+                fileChannel = raf.getChannel();
             }
-            return true;
+            if (fileChannel == null) {
+                logger.error("Cannot reach underlying fileChannel. Reset file handlers.");
+                try {
+                    reset(startMode, allowTracking, false);
+                } catch (Exception ex) {
+                    return true;
+                }
+            }
         }
         return offset == fileChannel.size();
     }
 
     @Override
-    public void start() throws IOException {
-        if (!new File(getLogFilename()).exists()) {
-            throw new IOException(logFilename + " is not a file or does not exist.");
-        }
-        raf = new RandomAccessFile(getLogFilename(), "r");
-        fileChannel = raf.getChannel();
-        if (startMode == LogTrackerStrategy.START_FROM_CURRENT) {
+    public boolean reopenOnFileChange(String event) {
+        logger.info("Reopen file on file change event " + event + ".");
+        try {
+            reset(LogTrackerStrategy.START_FROM_HEAD, false, false);
+            return true;
+        } catch (IOException e) {
             try {
-                offset = fileChannel.size();
-            } catch (IOException e) {
-                offset = 0;
-            }
-        } else {
-            offset = 0;
-        }
-        if (allowTracking) {
-            // init state
-            RecordOffset curr = getRecordOffset();
-            if (curr.rOffset == 0) {
-                previousOffset = offset;
-                return;
-            }
-            // log rotate must be done
-            if (fileChannel.size() < curr.rOffset)
-                previousOffset = offset;
-            else {
-                // check if log rotate has been done
-                fileChannel.position(curr.rOffset);
-                String rafline = raf.readLine();
-                if (rafline.equals(curr.rValue)) {
-                    previousOffset = curr.rOffset;
-                    offset = fileChannel.position();
-                    return;
-                }
+                Thread.sleep(500L);
+                reset(LogTrackerStrategy.START_FROM_HEAD, false, false);
+                return true;
+            } catch (InterruptedException e1) {
+            } catch (IOException e1) {
+                logger.error("Unexpected error occurred when reacting to fileChange signal " + event + ".", e1);
             }
         }
-        fileChannel.position(offset);
+        return false;
+    }
+
+    @Override
+    public void start() throws IOException {
+        reset(startMode, allowTracking, false);
     }
 
     @Override
     public void stop() throws IOException {
         rollingLogCounter = TrackLatch;
-        tryLog();
+        logIfAllowed();
         if (fileChannel != null)
             fileChannel.close();
         if (raf != null)
@@ -175,7 +164,7 @@ public class AccessLogTracker implements LogTracker {
                             try {
                                 delegator.delegate(offsetValue);
                             } catch (Exception ex) {
-                                logger.error("AccessLogTracker::delegator throws an expected error", ex);
+                                logger.error("AccessLogTracker::delegator throws an unexpected error", ex);
                             }
                             previousOffset = offset;
                             offset += ++colOffset;
@@ -193,7 +182,7 @@ public class AccessLogTracker implements LogTracker {
                             try {
                                 delegator.delegate(offsetValue);
                             } catch (Exception ex) {
-                                logger.error("AccessLogTracker::delegator throws an expected error", ex);
+                                logger.error("AccessLogTracker::delegator throws an unexpected error", ex);
                             }
                             previousOffset = offset;
                             offset += ++colOffset;
@@ -205,13 +194,13 @@ public class AccessLogTracker implements LogTracker {
                             break;
                     } // end of switch
                 }// end of while !eol && buffer.hasRemaining
-                // the cursor hasn't reached the end of a line, read one more buffer.
+                // the cursor hasn't reached the end of a line, read one more buffer
                 if (row == 0) {
                     buffer.clear();
                     try {
                         if (fileChannel.read(buffer) == -1) {
                             fileChannel.position(offset);
-                            tryLog();
+                            logIfAllowed();
                             return;
                         }
                     } catch (IOException ex) {
@@ -224,24 +213,74 @@ public class AccessLogTracker implements LogTracker {
                 eol = false;
             }
             fileChannel.position(offset);
-            tryLog();
+            logIfAllowed();
         } catch (IOException ex) {
-            logger.error("Some error occurred when tracking access.log.", ex);
-            hotfix();
+            // this code is never expected to be reached
+            logger.error("Unexpected error occurred when tracking access.log.", ex);
+            reset(LogTrackerStrategy.START_FROM_CURRENT, false, false);
         }
     }
 
-    private void hotfix() throws IOException {
+    private void reset(int startFromOption, boolean restoreFromFile, boolean restoreFromMemory) throws IOException {
+        if (!new File(getLogFilename()).exists()) {
+            throw new IOException(logFilename + " is not a file or does not exist.");
+        }
         if (fileChannel != null)
             fileChannel.close();
         if (raf != null)
             raf.close();
-        fileChannel = null;
-        raf = null;
-        start();
+
+        raf = new RandomAccessFile(getLogFilename(), "r");
+        fileChannel = raf.getChannel();
+
+        if (restoreFromMemory) {
+            // if (file is truncated / switched to a new file handle) refused to set the restored value
+            if (fileChannel.size() < offset) {
+                // fall through
+            } else {
+                fileChannel.position(offset);
+                return;
+            }
+        }
+
+        if (!restoreFromMemory && restoreFromFile) {
+            // init state
+            RecordOffset curr = readOffsetFromFile();
+            if (curr != null) {
+                long restoredPreOffset = curr.rOffset;
+                String savedPreValue = curr.rValue;
+
+                // if (file is truncated / switched to a new file handle) refused to set the restored value
+                if (fileChannel.size() < restoredPreOffset || savedPreValue.isEmpty()) {
+                    // fall through
+                } else {
+                    // try peek and check corresponding value at the restored offset
+                    fileChannel.position(restoredPreOffset);
+                    String peekValue = raf.readLine();
+                    // restore confirms right, otherwise fall through
+                    if (peekValue.equals(savedPreValue)) {
+                        previousOffset = restoredPreOffset;
+                        offset = fileChannel.position();
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (startFromOption == LogTrackerStrategy.START_FROM_CURRENT) {
+            try {
+                offset = fileChannel.size();
+            } catch (IOException e) {
+                offset = 0;
+            }
+        } else {
+            offset = 0;
+        }
+
+        fileChannel.position(offset);
     }
 
-    private void tryLog() {
+    private void logIfAllowed() {
         rollingLogCounter++;
         if (allowTracking && (TrackLatch <= rollingLogCounter)) {
             OutputStream os = null;
@@ -265,29 +304,31 @@ public class AccessLogTracker implements LogTracker {
         }
     }
 
-    private RecordOffset getRecordOffset() {
-        RecordOffset result = new RecordOffset();
+    private RecordOffset readOffsetFromFile() {
         if (allowTracking) {
+            if (!trackingFile.exists()) return null;
             Scanner scanner = null;
             try {
                 scanner = new Scanner(trackingFile);
+                RecordOffset result = new RecordOffset();
                 if (scanner.hasNextLine())
                     result.rOffset = Integer.parseInt(scanner.nextLine());
                 if (scanner.hasNextLine())
                     result.rValue = scanner.nextLine();
+                return result;
             } catch (FileNotFoundException e) {
-                result.rOffset = offset;
-                e.printStackTrace();
+                return null;
             } finally {
                 if (scanner != null)
                     scanner.close();
             }
+        } else {
+            return null;
         }
-        return result;
     }
 
     private class RecordOffset {
-        long rOffset;
-        String rValue;
+        long rOffset = -1;
+        String rValue = "";
     }
 }

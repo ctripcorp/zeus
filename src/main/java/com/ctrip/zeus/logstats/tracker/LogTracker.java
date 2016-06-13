@@ -24,6 +24,8 @@ public interface LogTracker {
      */
     boolean reachFileEnd() throws IOException;
 
+    boolean reopenOnFileChange(String event);
+
     void start() throws IOException;
 
     void stop() throws IOException;
@@ -31,4 +33,7 @@ public interface LogTracker {
     String move() throws IOException;
 
     void fastMove(StatsDelegate<String> delegate) throws IOException;
+
+    String LOGROTATE_COPYTRUNCATE = "copytruncate";
+    String LOGROTATE_RENAME = "rename";
 }

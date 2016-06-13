@@ -10,6 +10,7 @@ public class LogTrackerStrategy {
     private boolean allowLogRotate;
     private boolean allowTrackerMemo;
     private int startMode = START_FROM_CURRENT;
+    private String logRotateMode;
     private String trackerMemoFilename;
     private String logFilename;
     private boolean doAsRoot;
@@ -19,8 +20,13 @@ public class LogTrackerStrategy {
         return allowLogRotate;
     }
 
-    public LogTrackerStrategy setAllowLogRotate(boolean allowLogRotate) {
+    public String getLogRotateMode() {
+        return logRotateMode;
+    }
+
+    public LogTrackerStrategy setAllowLogRotate(boolean allowLogRotate, String logRotateMode) {
         this.allowLogRotate = allowLogRotate;
+        this.logRotateMode = logRotateMode;
         return this;
     }
 

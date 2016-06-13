@@ -1,7 +1,5 @@
 package com.ctrip.zeus.logstats.analyzer;
 
-import com.ctrip.zeus.logstats.StatsDelegate;
-
 import java.io.IOException;
 
 /**
@@ -24,7 +22,7 @@ public interface LogStatsAnalyzer {
      */
     boolean reachFileEnd() throws IOException;
 
-    String analyze() throws IOException;
+    void run() throws IOException;
 
-    void analyze(StatsDelegate<String> delegate) throws IOException;
+    String analyze() throws IOException;
 }
