@@ -116,16 +116,16 @@ public class StatusResource {
             }
         }
         if (null == slbId) {
-            List<GroupStatus> statusList = groupStatusService.getOfflineGroupStatus(groupId);
-            if (statusList != null && statusList.size() > 0) {
-                statusResult = statusList.get(0);
+            GroupStatus status = groupStatusService.getOfflineGroupStatus(groupId);
+            if (status != null) {
+                statusResult = status;
             } else {
                 throw new ValidationException("Not Found Group Status In Slb!");
             }
         } else {
-            List<GroupStatus> res = groupStatusService.getOfflineGroupStatus(groupId, slbId);
-            if (res != null && res.size() > 0) {
-                statusResult = res.get(0);
+            GroupStatus res = groupStatusService.getOfflineGroupStatus(groupId, slbId);
+            if (res != null) {
+                statusResult = res;
             } else {
                 throw new ValidationException("Not Found Group Status!");
             }
@@ -171,13 +171,13 @@ public class StatusResource {
             return responseHandler.handle("success.", hh.getMediaType());
         } else if (ips != null && ips.size() > 0) {
             for (String ip : ips) {
-                List<StatusGroupServerDo> datas = statusGroupServerDao.findAllByIp(ip,StatusGroupServerEntity.READSET_FULL);
-                if (datas == null || datas.size() == 0){
+                List<StatusGroupServerDo> datas = statusGroupServerDao.findAllByIp(ip, StatusGroupServerEntity.READSET_FULL);
+                if (datas == null || datas.size() == 0) {
                     throw new ValidationException("Not found data by ip");
                 }
                 try {
-                    for (StatusGroupServerDo d : datas){
-                        GroupServerStatusDo g  = new GroupServerStatusDo();
+                    for (StatusGroupServerDo d : datas) {
+                        GroupServerStatusDo g = new GroupServerStatusDo();
                         g.setGroupId(d.getGroupId());
                         g.setIp(d.getIp());
                         g.setStatus(d.getStatus());

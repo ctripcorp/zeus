@@ -24,11 +24,11 @@ public interface StatusService extends Repository {
 
     /**
      * get group servers by slbId and status offset
-     * @param vsIds vsIds
+     * @param groupIds groupIds
      * @return map of {vsId}_{groupId}_{ip} offsetList
      * @throws Exception
      */
-    Map<String,List<Boolean>> fetchGroupServerStatus(Long[] vsIds , Long[] groupIds) throws Exception;
+    Map<String,List<Boolean>> fetchGroupServerStatus(Long[] groupIds) throws Exception;
 
     /**
      * up server by group server ip
@@ -52,7 +52,7 @@ public interface StatusService extends Repository {
      * @param status  status enable = true , disable = false
      * @throws Exception
      */
-    void updateStatus(Long slbId ,Long vsId , Long groupId, List<String> ips , int offset , boolean status)throws Exception;
+    void updateStatus(Long groupId, List<String> ips , int offset , boolean status)throws Exception;
 
     /**
      * update status by group server ip and slbId and group id

@@ -81,7 +81,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         if (groups.getOnlineMapping() == null || groups.getOnlineMapping().size() == 0) {
             return result;
         }
-        result = getOnlineGroupsStatus(groups.getOnlineMapping(), Arrays.asList(vses), slbId);
+        result = getOnlineGroupsStatus(groups.getOnlineMapping(), slbId);
         return result;
     }
 
@@ -93,13 +93,13 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         if (groups.getOfflineMapping() == null || groups.getOfflineMapping().size() == 0) {
             return result;
         }
-        result = getOfflineGroupsStatus(groups.getOfflineMapping(), groups.getOnlineMapping(), Arrays.asList(vses), slbId);
+        result = getOfflineGroupsStatus(groups.getOfflineMapping(), groups.getOnlineMapping(), slbId);
         return result;
     }
 
     @Override
-    public List<GroupStatus> getOnlineGroupStatus(Long groupId) throws Exception {
-        List<GroupStatus> result = new ArrayList<>();
+    public GroupStatus getOnlineGroupStatus(Long groupId) throws Exception {
+        GroupStatus result = null;
         ModelStatusMapping<Group> map = entityFactory.getGroupsByIds(new Long[]{groupId});
         if (map.getOnlineMapping() == null || map.getOnlineMapping().size() == 0) {
             return result;
@@ -112,18 +112,22 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         if (vsMap.getOnlineMapping() == null || vsMap.getOnlineMapping().size() == 0) {
             return result;
         }
+        Long slbId = null;
         for (Long vid : vsMap.getOnlineMapping().keySet()) {
-            List<Long> tmpVsId = new ArrayList<>();
-            tmpVsId.add(vid);
-            result.addAll(getOnlineGroupsStatus(map.getOnlineMapping(), tmpVsId,
-                    vsMap.getOnlineMapping().get(vid).getSlbId()));
+            slbId = vsMap.getOnlineMapping().get(vid).getSlbId();
+            if (slbId != null)
+                break;
+        }
+        List<GroupStatus> list = getOnlineGroupsStatus(map.getOnlineMapping(), slbId);
+        if (list.size() > 0) {
+            result = list.get(0);
         }
         return result;
     }
 
     @Override
-    public List<GroupStatus> getOfflineGroupStatus(Long groupId) throws Exception {
-        List<GroupStatus> result = new ArrayList<>();
+    public GroupStatus getOfflineGroupStatus(Long groupId) throws Exception {
+        GroupStatus result = null;
         ModelStatusMapping<Group> map = entityFactory.getGroupsByIds(new Long[]{groupId});
         if (map.getOfflineMapping() == null || map.getOfflineMapping().size() == 0) {
             return result;
@@ -136,49 +140,39 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         if (vsMap.getOfflineMapping() == null || vsMap.getOfflineMapping().size() == 0) {
             return result;
         }
+        Long slbId = null;
         for (Long vid : vsMap.getOfflineMapping().keySet()) {
-            List<Long> tmpVsId = new ArrayList<>();
-            tmpVsId.add(vid);
-            result.addAll(getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping(), tmpVsId,
-                    vsMap.getOfflineMapping().get(vid).getSlbId()));
+            slbId = vsMap.getOfflineMapping().get(vid).getSlbId();
+            if (slbId != null)
+                break;
+        }
+        List<GroupStatus> list = getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping(), slbId);
+        if (list.size() > 0) {
+            result = list.get(0);
         }
         return result;
     }
 
     @Override
-    public List<GroupStatus> getOfflineGroupStatus(Long groupId, Long slbId) throws Exception {
-        List<GroupStatus> result = new ArrayList<>();
+    public GroupStatus getOfflineGroupStatus(Long groupId, Long slbId) throws Exception {
+        GroupStatus result = null;
         ModelStatusMapping<Group> map = entityFactory.getGroupsByIds(new Long[]{groupId});
         if (map.getOfflineMapping() == null || map.getOfflineMapping().size() == 0) {
             return result;
         }
-        List<Long> vsId = new ArrayList<>();
-        for (GroupVirtualServer gvs : map.getOfflineMapping().get(groupId).getGroupVirtualServers()) {
-            vsId.add(gvs.getVirtualServer().getId());
-        }
-        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsId.toArray(new Long[]{}));
-        if (vsMap.getOfflineMapping() == null || vsMap.getOfflineMapping().size() == 0) {
-            return result;
-        }
-        for (Long vid : vsMap.getOfflineMapping().keySet()) {
-            if (vsMap.getOfflineMapping().get(vid).getSlbId().equals(slbId)) {
-                List<Long> tmpVsId = new ArrayList<>();
-                tmpVsId.add(vid);
-                result.addAll(getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping(), tmpVsId,
-                        slbId));
-            }
-
+        List<GroupStatus> list = getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping(), slbId);
+        if (list.size() > 0) {
+            result = list.get(0);
         }
         return result;
     }
 
     @Override
-    public List<GroupStatus> getOnlineGroupsStatus(Map<Long, Group> groups, List<Long> vsIds, Long slbId) throws Exception {
+    public List<GroupStatus> getOnlineGroupsStatus(Map<Long, Group> groups, Long slbId) throws Exception {
         List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
 
-        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(vsIds.toArray(new Long[]{}),
-                groups.keySet().toArray(new Long[]{}));
+        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<String> allDownServers = statusService.findAllDownServers();
         for (Group group : groups.values()) {
             Long groupId = group.getId();
@@ -189,20 +183,13 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             status.setActivated(true);
 
             List<GroupServer> groupServerList = group.getGroupServers();//groupRepository.listGroupServersByGroup(groupId);
-            Long gvsId = null;
-            for (GroupVirtualServer gv : group.getGroupVirtualServers()) {
-                if (vsIds.contains(gv.getVirtualServer().getId())) {
-                    gvsId = gv.getVirtualServer().getId();
-                    break;
-                }
-            }
             for (GroupServer gs : groupServerList) {
                 GroupServerStatus groupServerStatus = new GroupServerStatus();
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
                 String key = groupId + "_" + gs.getIp();
                 if (memberStatus.get(key) == null) {
-                    LOGGER.error("[StatusError]Group Member Status is missing. vsId:" + gvsId + "groupId:" + groupId + "ip:" + gs.getIp());
+                    LOGGER.error("[StatusError]Group Member Status is missing. groupId:" + groupId + "ip:" + gs.getIp());
                     continue;
                 }
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
@@ -228,12 +215,10 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     }
 
     @Override
-    public List<GroupStatus> getOfflineGroupsStatus(Map<Long, Group> groups, Map<Long, Group> onlineGroups, List<Long> vsIds, Long slbId) throws Exception {
+    public List<GroupStatus> getOfflineGroupsStatus(Map<Long, Group> groups, Map<Long, Group> onlineGroups, Long slbId) throws Exception {
         List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
-
-        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(vsIds.toArray(new Long[]{}),
-                groups.keySet().toArray(new Long[]{}));
+        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<String> allDownServers = statusService.findAllDownServers();
 
         for (Group group : groups.values()) {
@@ -252,21 +237,14 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 }
             }
 
-            List<GroupServer> groupServerList = group.getGroupServers();//groupRepository.listGroupServersByGroup(groupId);
-            Long gvsId = null;
-            for (GroupVirtualServer gv : group.getGroupVirtualServers()) {
-                if (vsIds.contains(gv.getVirtualServer().getId())) {
-                    gvsId = gv.getVirtualServer().getId();
-                    break;
-                }
-            }
+            List<GroupServer> groupServerList = group.getGroupServers();
             for (GroupServer gs : groupServerList) {
                 GroupServerStatus groupServerStatus = new GroupServerStatus();
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
                 String key = groupId + "_" + gs.getIp();
                 if (memberStatus.get(key) == null) {
-                    LOGGER.error("[StatusError]Group Member Status is missing. vsId:" + gvsId + "groupId:" + groupId + "ip:" + gs.getIp());
+                    LOGGER.error("[StatusError]Group Member Status is missing. groupId:" + groupId + "ip:" + gs.getIp());
                     continue;
                 }
                 boolean memberUp = memberStatus.get(key).get(StatusOffset.MEMBER_OPS);
@@ -279,10 +257,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 } else {
                     up = false;
                 }
-                boolean online = false;
-                if (onlineMembers.contains(gs.getIp())) {
-                    online = true;
-                }
+                boolean online = onlineMembers.contains(gs.getIp());
                 if (!online) {
                     up = false;
                 }

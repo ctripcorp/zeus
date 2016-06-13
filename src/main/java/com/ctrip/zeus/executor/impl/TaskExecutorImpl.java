@@ -632,8 +632,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     }
 
     private Set<String> getAllUpGroupServers(Set<Long> vsIds, Map<Long, Group> groups) throws Exception {
-        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(vsIds.toArray(new Long[]{}),
-                groups.keySet().toArray(new Long[]{}));
+        Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<Long> tmpid = memberOps.keySet();
         for (Long gid : tmpid) {
             Group groupTmp = groups.get(gid);

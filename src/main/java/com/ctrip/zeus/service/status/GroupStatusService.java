@@ -34,12 +34,11 @@ public interface GroupStatusService {
     /**
      * Find online group status by groupId
      * @param groups groupId
-     * @param vsIds vsids
      * @param slbId slbId
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOnlineGroupsStatus(Map<Long,Group> groups ,List<Long> vsIds ,  Long slbId) throws Exception;
+    List<GroupStatus> getOnlineGroupsStatus(Map<Long,Group> groups , Long slbId) throws Exception;
 
     /**
      * Find all online group status by groupIds and slb id
@@ -47,7 +46,7 @@ public interface GroupStatusService {
      * @return status list
      * @throws Exception
      */
-     List<GroupStatus> getOnlineGroupStatus(Long groupId) throws Exception;
+    GroupStatus getOnlineGroupStatus(Long groupId) throws Exception;
 
     /**
      * Find all online groups status
@@ -70,14 +69,14 @@ public interface GroupStatusService {
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOfflineGroupStatus(Long groupId) throws Exception;
+    GroupStatus getOfflineGroupStatus(Long groupId) throws Exception;
         /**
      * Find online group status by groupId
      * @param groupId groupId
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOfflineGroupStatus(Long groupId,Long slbId) throws Exception;
+    GroupStatus getOfflineGroupStatus(Long groupId,Long slbId) throws Exception;
 
     /**
      * Find all online group status by groupIds and slb id
@@ -85,5 +84,5 @@ public interface GroupStatusService {
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOfflineGroupsStatus(Map<Long,Group> groups ,Map<Long,Group> onlineGroups ,List<Long> vsIds , Long slbId) throws Exception;
+    List<GroupStatus> getOfflineGroupsStatus(Map<Long,Group> groups ,Map<Long,Group> onlineGroups , Long slbId) throws Exception;
 }

@@ -30,10 +30,6 @@ public class StatusServiceImpl implements StatusService {
 
     private final int OFFSET_LENGTH = 5;
 
-    private static DynamicBooleanProperty groupServerStatusNewEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("group.server.status.new.version.enable", false);
-    private static DynamicBooleanProperty groupServerStatusOldDisable = DynamicPropertyFactory.getInstance().getBooleanProperty("group.server.status.old.version.disable", false);
-
-
     private Logger logger = LoggerFactory.getLogger(StatusServiceImpl.class);
 
     @Override
@@ -50,38 +46,21 @@ public class StatusServiceImpl implements StatusService {
     * group server is up while status is 0 .
     * */
     @Override
-    public Map<String, List<Boolean>> fetchGroupServerStatus(Long[] vsIds, Long[] groupIds) throws Exception {
+    public Map<String, List<Boolean>> fetchGroupServerStatus(Long[] groupIds) throws Exception {
         Map<String, List<Boolean>> result = new HashMap<>();
-        if (groupServerStatusNewEnable.get()) {
-            List<GroupServerStatusDo> groupServerStatusDos = groupServerStatusDao.findAllByGroupIds(groupIds, GroupServerStatusEntity.READSET_FULL);
-            int tmp = 1;
-            for (GroupServerStatusDo s : groupServerStatusDos) {
-                int tmpStatus = s.getStatus();
+        List<GroupServerStatusDo> groupServerStatusDos = groupServerStatusDao.findAllByGroupIds(groupIds, GroupServerStatusEntity.READSET_FULL);
+        int tmp = 1;
+        for (GroupServerStatusDo s : groupServerStatusDos) {
+            int tmpStatus = s.getStatus();
                 /*
                 * offset == 0 is true ; offset == 1 is false.
                 * */
-                List<Boolean> offset = new ArrayList<>(OFFSET_LENGTH);
-                for (int i = 0; i < OFFSET_LENGTH; i++) {
-                    offset.add(offset.size(), 0 == (tmpStatus & tmp));
-                    tmpStatus = tmpStatus >> 1;
-                }
-                result.put(s.getGroupId() + "_" + s.getIp(), offset);
+            List<Boolean> offset = new ArrayList<>(OFFSET_LENGTH);
+            for (int i = 0; i < OFFSET_LENGTH; i++) {
+                offset.add(offset.size(), 0 == (tmpStatus & tmp));
+                tmpStatus = tmpStatus >> 1;
             }
-        } else {
-            List<StatusGroupServerDo> statusGroupServerDos = statusGroupServerDao.findAllBySlbVirtualServerIds(vsIds, StatusGroupServerEntity.READSET_FULL);
-            int tmp = 1;
-            for (StatusGroupServerDo statusGroupServerDo : statusGroupServerDos) {
-                int tmpStatus = statusGroupServerDo.getStatus();
-            /*
-            * offset == 0 is true ; offset == 1 is false.
-            * */
-                List<Boolean> offset = new ArrayList<>(OFFSET_LENGTH);
-                for (int i = 0; i < OFFSET_LENGTH; i++) {
-                    offset.add(offset.size(), 0 == (tmpStatus & tmp));
-                    tmpStatus = tmpStatus >> 1;
-                }
-                result.put(statusGroupServerDo.getGroupId() + "_" + statusGroupServerDo.getIp(), offset);
-            }
+            result.put(s.getGroupId() + "_" + s.getIp(), offset);
         }
         return result;
     }
@@ -104,90 +83,47 @@ public class StatusServiceImpl implements StatusService {
     }
 
     @Override
-    public void updateStatus(Long slbId, Long vsId, Long groupId, List<String> ips, int offset, boolean status) throws Exception {
+    public void updateStatus(Long groupId, List<String> ips, int offset, boolean status) throws Exception {
         if (offset > OFFSET_LENGTH || offset < 0) {
             throw new Exception("offset of status should be [0-" + OFFSET_LENGTH + "]");
         }
-        if (!groupServerStatusOldDisable.get()) {
-            for (String ip : ips) {
-                if (ip == null || ip.isEmpty()) {
-                    continue;
-                }
-                StatusGroupServerDo data = new StatusGroupServerDo();
-                data.setSlbVirtualServerId(vsId)
-                        .setGroupId(groupId)
-                        .setIp(ip)
-                        .setCreatedTime(new Date());
-                int reset = ~(1 << offset);
-                int updatestatus = (status ? 0 : 1) << offset;
-                data.setReset(reset).setStatus(updatestatus);
-                statusGroupServerDao.updateStatus(data);
+        for (String ip : ips) {
+            if (ip == null || ip.isEmpty()) {
+                continue;
             }
-        }
-        if (groupServerStatusNewEnable.get()) {
-            for (String ip : ips) {
-                if (ip == null || ip.isEmpty()) {
-                    continue;
-                }
-                GroupServerStatusDo data = new GroupServerStatusDo();
-                data.setGroupId(groupId);
-                data.setIp(ip);
-                data.setCreatedTime(new Date());
-                int reset = ~(1 << offset);
-                int updatestatus = (status ? 0 : 1) << offset;
-                data.setReset(reset).setStatus(updatestatus);
-                groupServerStatusDao.updateStatus(data);
-            }
+            GroupServerStatusDo data = new GroupServerStatusDo();
+            data.setGroupId(groupId);
+            data.setIp(ip);
+            data.setCreatedTime(new Date());
+            int reset = ~(1 << offset);
+            int updatestatus = (status ? 0 : 1) << offset;
+            data.setReset(reset).setStatus(updatestatus);
+            groupServerStatusDao.updateStatus(data);
         }
     }
 
     @Override
     public void updateStatus(List<UpdateStatusItem> items) throws Exception {
-        if (!groupServerStatusOldDisable.get()) {
-            List<StatusGroupServerDo> updateDatas = new ArrayList<>();
-            for (UpdateStatusItem item : items) {
-                if (item.getOffset() > OFFSET_LENGTH || item.getOffset() < 0) {
-                    throw new Exception("offset of status should be [0-" + OFFSET_LENGTH + "]");
-                }
-                for (String ip : item.getIpses()) {
-                    if (ip == null || ip.isEmpty()) {
-                        continue;
-                    }
-                    StatusGroupServerDo data = new StatusGroupServerDo();
-                    data.setSlbVirtualServerId(item.getVsId())
-                            .setGroupId(item.getGroupId())
-                            .setIp(ip)
-                            .setCreatedTime(new Date());
-                    int reset = ~(1 << item.getOffset());
-                    int updatestatus = (item.isUp() ? 0 : 1) << item.getOffset();
-                    data.setReset(reset).setStatus(updatestatus);
-                    updateDatas.add(data);
-                }
+        List<GroupServerStatusDo> updateDatas = new ArrayList<>();
+        for (UpdateStatusItem item : items) {
+            if (item.getOffset() > OFFSET_LENGTH || item.getOffset() < 0) {
+                throw new Exception("offset of status should be [0-" + OFFSET_LENGTH + "]");
             }
-            statusGroupServerDao.batchUpdateStatus(updateDatas.toArray(new StatusGroupServerDo[]{}));
-        }
-        if (groupServerStatusNewEnable.get()) {
-            List<GroupServerStatusDo> updateDatas = new ArrayList<>();
-            for (UpdateStatusItem item : items) {
-                if (item.getOffset() > OFFSET_LENGTH || item.getOffset() < 0) {
-                    throw new Exception("offset of status should be [0-" + OFFSET_LENGTH + "]");
+            for (String ip : item.getIpses()) {
+                if (ip == null || ip.isEmpty()) {
+                    continue;
                 }
-                for (String ip : item.getIpses()) {
-                    if (ip == null || ip.isEmpty()) {
-                        continue;
-                    }
-                    GroupServerStatusDo data = new GroupServerStatusDo();
-                    data.setGroupId(item.getGroupId());
-                    data.setIp(ip);
-                    data.setCreatedTime(new Date());
-                    int reset = ~(1 << item.getOffset());
-                    int updatestatus = (item.isUp() ? 0 : 1) << item.getOffset();
-                    data.setReset(reset).setStatus(updatestatus);
-                    updateDatas.add(data);
-                }
+                GroupServerStatusDo data = new GroupServerStatusDo();
+                data.setGroupId(item.getGroupId());
+                data.setIp(ip);
+                data.setCreatedTime(new Date());
+                int reset = ~(1 << item.getOffset());
+                int updatestatus = (item.isUp() ? 0 : 1) << item.getOffset();
+                data.setReset(reset).setStatus(updatestatus);
+                updateDatas.add(data);
             }
-            groupServerStatusDao.batchUpdateStatus(updateDatas.toArray(new GroupServerStatusDo[]{}));
         }
+        groupServerStatusDao.batchUpdateStatus(updateDatas.toArray(new GroupServerStatusDo[]{}));
     }
 
 
@@ -205,36 +141,19 @@ public class StatusServiceImpl implements StatusService {
         /*
         * only called in group resource api
         * */
-        if (!groupServerStatusOldDisable.get()) {
-            for (Long vsId : vsIds) {
-                for (String ip : ips) {
-                    statusGroupServerDao.insert(new StatusGroupServerDo()
-                            .setGroupId(groupId)
-                            .setSlbVirtualServerId(vsId)
-                            .setIp(ip)
-                            .setStatus(statusOffset.getDefaultStatus())
-                            .setCreatedTime(new Date()));
-                }
-            }
+        for (String ip : ips) {
+            groupServerStatusDao.insert(new GroupServerStatusDo()
+                    .setGroupId(groupId)
+                    .setIp(ip)
+                    .setStatus(statusOffset.getDefaultStatus())
+                    .setCreatedTime(new Date()));
         }
-        if (groupServerStatusNewEnable.get()) {
-            for (String ip : ips) {
-                groupServerStatusDao.insert(new GroupServerStatusDo()
-                        .setGroupId(groupId)
-                        .setIp(ip)
-                        .setStatus(statusOffset.getDefaultStatus())
-                        .setCreatedTime(new Date()));
-            }
-        }
+
     }
 
     @Override
     public void cleanGroupServerStatus(Long groupId) throws Exception {
-        if (!groupServerStatusOldDisable.get()) {
-            statusGroupServerDao.deleteByGroupId(new StatusGroupServerDo().setGroupId(groupId));
-        }
-        if (groupServerStatusNewEnable.get()) {
-            groupServerStatusDao.deleteByGroupId(new GroupServerStatusDo().setGroupId(groupId));
-        }
+        groupServerStatusDao.deleteByGroupId(new GroupServerStatusDo().setGroupId(groupId));
+
     }
 }

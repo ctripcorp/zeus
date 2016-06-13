@@ -335,9 +335,12 @@ public class OperationResource {
                 groupId = groupCriteriaQuery.queryByName(groupName);
             }
         }
-
+        Group gp = groupRepository.getById(groupId);
+        if (gp == null){
+            throw new ValidationException("Group Id or Name not found!");
+        }
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(groupId);
+
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
@@ -353,8 +356,8 @@ public class OperationResource {
     }
 
     private Response healthyOps(HttpHeaders hh, Long groupId, List<String> ips, boolean b) throws Exception {
-        statusService.updateStatus(0L ,0L, groupId, ips ,StatusOffset.HEALTHY, b);
-        return responseHandler.handle(groupStatusService.getOfflineGroupStatus(groupId).get(0),hh.getMediaType());
+        statusService.updateStatus(groupId, ips, StatusOffset.HEALTHY, b);
+        return responseHandler.handle(groupStatusService.getOfflineGroupStatus(groupId), hh.getMediaType());
     }
 
     @POST
@@ -471,7 +474,7 @@ public class OperationResource {
     }
 
     private Response memberOps(HttpHeaders hh, Long groupId, List<String> ips, boolean up, String type) throws Exception {
-        Map<String, List<Boolean>> status = statusService.fetchGroupServerStatus(null, new Long[]{groupId});
+        Map<String, List<Boolean>> status = statusService.fetchGroupServerStatus(new Long[]{groupId});
         boolean skipOps = true;
         for (String ip : ips) {
             int index = 0;
@@ -535,23 +538,8 @@ public class OperationResource {
                 throw new Exception("Task Failed! Fail cause : " + taskResult.getFailCause());
             }
         }
-
-        List<GroupStatus> statuses = groupStatusService.getOfflineGroupStatus(groupId);
-        GroupStatus groupStatusList = new GroupStatus().setGroupId(groupId).setSlbName("");
-        for (GroupStatus groupStatus : statuses) {
-            groupStatusList.setSlbName(groupStatusList.getSlbName() + " " + groupStatus.getSlbName())
-                    .setGroupName(groupStatus.getGroupName())
-                    .setSlbId(groupStatus.getSlbId());
-            for (GroupServerStatus b : groupStatus.getGroupServerStatuses()) {
-                groupStatusList.addGroupServerStatus(b);
-            }
-        }
-
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(GroupStatus.XML, groupStatusList)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(GroupStatus.JSON, groupStatusList)).type(MediaType.APPLICATION_JSON).build();
-        }
+        GroupStatus groupStatus = groupStatusService.getOfflineGroupStatus(groupId);
+        return responseHandler.handle(groupStatus, hh.getMediaType());
     }
 
     private List<String> configureIps(IdVersion[] keys, List<String> ips) throws Exception {
