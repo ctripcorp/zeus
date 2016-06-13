@@ -24,6 +24,8 @@ public interface LogTracker {
      */
     boolean reachFileEnd() throws IOException;
 
+    boolean reopenTrackingFile();
+
     void start() throws IOException;
 
     void stop() throws IOException;

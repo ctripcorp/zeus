@@ -87,6 +87,24 @@ public class AccessLogTracker implements LogTracker {
     }
 
     @Override
+    public boolean reopenTrackingFile() {
+        try {
+            if (fileChannel != null)
+                fileChannel.close();
+            if (raf != null)
+                raf.close();
+            fileChannel = null;
+            raf = null;
+            start();
+            offset = fileChannel.size();
+        } catch (IOException e) {
+            logger.error("Fail to reopenTrackingFile file " + logFilename + ".", e);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public void start() throws IOException {
         if (!new File(getLogFilename()).exists()) {
             throw new IOException(logFilename + " is not a file or does not exist.");
