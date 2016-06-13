@@ -351,7 +351,7 @@ public class OperationResource {
         if (healthyOpsActivate.get()) {
             return memberOps(hh, groupId, _ips, false, TaskOpsType.HEALTHY_OPS);
         } else {
-            return healthyOps(hh, groupId, _ips, true);
+            return healthyOps(hh, groupId, _ips, false);
         }
     }
 
