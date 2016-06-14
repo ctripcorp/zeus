@@ -487,7 +487,8 @@ public class OperationResource {
             }
         }
         if (skipOps) {
-            return Response.status(200).entity("{message:\"Group status equals the desired value.\"}").type(MediaType.APPLICATION_JSON).build();
+            GroupStatus groupStatus = groupStatusService.getOfflineGroupStatus(groupId);
+            return responseHandler.handle(groupStatus,hh.getMediaType());
         }
         StringBuilder sb = new StringBuilder();
         for (String ip : ips) {
