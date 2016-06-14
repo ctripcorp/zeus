@@ -28,6 +28,8 @@ import com.netflix.config.DynamicLongProperty;
 import com.google.common.collect.Sets;
 import com.netflix.config.DynamicPropertyFactory;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -76,6 +78,7 @@ public class OperationResource {
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
     private static DynamicBooleanProperty healthyOpsActivate = DynamicPropertyFactory.getInstance().getBooleanProperty("healthy.operation.active", false);
 
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @GET
     @Path("/upServer")
@@ -336,7 +339,7 @@ public class OperationResource {
             }
         }
         Group gp = groupRepository.getById(groupId);
-        if (gp == null){
+        if (gp == null) {
             throw new ValidationException("Group Id or Name not found!");
         }
         if (null != batch && batch.equals(true)) {
@@ -488,7 +491,9 @@ public class OperationResource {
         }
         if (skipOps) {
             GroupStatus groupStatus = groupStatusService.getOfflineGroupStatus(groupId);
-            return responseHandler.handle(groupStatus,hh.getMediaType());
+            logger.info("Group status equals the desired value.Do not need execute task.GroupId:" + groupId + " ips:"
+                    + ips.toString() + " up:" + up + " type:" + type);
+            return responseHandler.handle(groupStatus, hh.getMediaType());
         }
         StringBuilder sb = new StringBuilder();
         for (String ip : ips) {
