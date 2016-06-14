@@ -1,7 +1,10 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.dal.core.ConfSlbActiveDao;
-import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
+import com.ctrip.zeus.model.entity.GroupVirtualServer;
+import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -12,8 +15,7 @@ import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
-import com.ctrip.zeus.util.AssertUtils;
-import com.netflix.config.DynamicIntProperty;
+import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +31,7 @@ import java.util.*;
  */
 @Service("groupStatusService")
 public class GroupStatusServiceImpl implements GroupStatusService {
-    private static DynamicIntProperty nginxStatusPort = DynamicPropertyFactory.getInstance().getIntProperty("slb.nginx.status-port", 10001);
-    private static DynamicIntProperty adminServerPort = DynamicPropertyFactory.getInstance().getIntProperty("server.port", 8099);
+    private static DynamicBooleanProperty healthyOpsActivate = DynamicPropertyFactory.getInstance().getBooleanProperty("healthy.operation.active", false);
 
     @Resource
     SlbRepository slbRepository;
@@ -197,11 +198,16 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
                 boolean up = false;
-                if (memberUp && serverUp && pullIn) {
-                    up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
+                if (healthyOpsActivate.get()) {
+                    up = memberUp && serverUp && pullIn && raise;
                 } else {
-                    up = false;
+                    if (memberUp && serverUp && pullIn) {
+                        up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
+                    } else {
+                        up = false;
+                    }
                 }
+
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
@@ -252,10 +258,14 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
                 boolean up = false;
-                if (memberUp && serverUp && pullIn) {
-                    up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
+                if (healthyOpsActivate.get()) {
+                    up = memberUp && serverUp && pullIn && raise;
                 } else {
-                    up = false;
+                    if (memberUp && serverUp && pullIn) {
+                        up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
+                    } else {
+                        up = false;
+                    }
                 }
                 boolean online = onlineMembers.contains(gs.getIp());
                 if (!online) {
