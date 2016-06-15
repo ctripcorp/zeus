@@ -11,6 +11,7 @@
     <element name="created-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
   </entity>
   <entity name="lock-list">
+    <element name="total" value-type="int" />
     <entity-ref name="lock-status" type="list" names="locks" xml-indent="true" />
   </entity>
 </model>

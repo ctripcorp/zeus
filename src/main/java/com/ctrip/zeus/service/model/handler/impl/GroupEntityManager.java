@@ -35,8 +35,6 @@ public class GroupEntityManager implements GroupSync {
     public void add(Group group) throws Exception {
         group.setVersion(1);
         GroupDo d = C.toGroupDo(0L, group);
-        // if app id is null, it must be virtual group
-        if (d.getAppId() == null) d.setAppId("VirtualGroup");
         groupDao.insert(d);
 
         group.setId(d.getId());
@@ -67,7 +65,8 @@ public class GroupEntityManager implements GroupSync {
         }
 
         group.setVersion(group.getVersion() + 1);
-        GroupDo d = C.toGroupDo(group.getId(), group).setAppId("VirtualGroup");
+        GroupDo d = C.toGroupDo(group.getId(), group);
+
         groupDao.updateById(d, GroupEntity.UPDATESET_FULL);
 
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setVersion(group.getVersion())

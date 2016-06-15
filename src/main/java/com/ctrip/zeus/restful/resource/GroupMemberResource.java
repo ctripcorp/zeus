@@ -63,6 +63,7 @@ public class GroupMemberResource {
         for (GroupServer groupServer : group.getGroupServers()) {
             groupServerList.addGroupServer(groupServer);
         }
+        groupServerList.setTotal(groupServerList.getGroupServers().size());
         return responseHandler.handle(groupServerList, hh.getMediaType());
     }
 

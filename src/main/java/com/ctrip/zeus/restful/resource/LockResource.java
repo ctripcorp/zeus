@@ -36,6 +36,7 @@ public class LockResource {
         for (LockStatus ls : lockService.getLockStatus()) {
             ll.addLockStatus(ls);
         }
+        ll.setTotal(ll.getLocks().size());
         return responseHandler.handle(ll, hh.getMediaType());
     }
 

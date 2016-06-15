@@ -96,6 +96,7 @@
     <element name="ip" value-type="String" />
   </entity>
   <entity name="group-server-list">
+    <element name="total" value-type="int" />
     <element name="groupId" value-type="long" />
     <entity-ref name="group-server" type="list" names="group-servers" xml-indent="true" />
   </entity>
