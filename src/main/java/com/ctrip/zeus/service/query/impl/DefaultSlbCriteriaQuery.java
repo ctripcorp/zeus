@@ -26,7 +26,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
 
     @Override
     public Long queryByName(String name) throws Exception {
-        SlbDo s = slbDao.findByName(name, SlbEntity.READSET_FULL);
+        SlbDo s = slbDao.findByName(name, SlbEntity.READSET_IDONLY);
         return s == null ? 0L : s.getId();
     }
 
@@ -58,7 +58,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     @Override
     public Set<Long> queryAll() throws Exception {
         Set<Long> slbIds = new HashSet<>();
-        for (SlbDo slbDo : slbDao.findAll(SlbEntity.READSET_FULL)) {
+        for (SlbDo slbDo : slbDao.findAll(SlbEntity.READSET_IDONLY)) {
             slbIds.add(slbDo.getId());
         }
         return slbIds;

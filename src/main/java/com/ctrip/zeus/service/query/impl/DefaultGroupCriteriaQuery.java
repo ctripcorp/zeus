@@ -28,14 +28,14 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
 
     @Override
     public Long queryByName(String name) throws Exception {
-        GroupDo g = groupDao.findByName(name, GroupEntity.READSET_FULL);
+        GroupDo g = groupDao.findByName(name, GroupEntity.READSET_IDONLY);
         return g == null ? 0L : g.getId();
     }
 
     @Override
     public Set<Long> queryByAppId(String appId) throws Exception {
         Set<Long> groupIds = new HashSet<>();
-        for (GroupDo groupDo : groupDao.findByAppId(appId, GroupEntity.READSET_FULL)) {
+        for (GroupDo groupDo : groupDao.findByAppId(appId, GroupEntity.READSET_IDONLY)) {
             groupIds.add(groupDo.getId());
         }
         return groupIds;
@@ -44,7 +44,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     @Override
     public Set<Long> queryAll() throws Exception {
         Set<Long> groupIds = new HashSet<>();
-        for (GroupDo groupDo : groupDao.findAll(GroupEntity.READSET_FULL)) {
+        for (GroupDo groupDo : groupDao.findAll(GroupEntity.READSET_IDONLY)) {
             groupIds.add(groupDo.getId());
         }
         return groupIds;

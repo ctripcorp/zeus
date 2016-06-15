@@ -30,7 +30,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     @Override
     public Set<Long> queryAll() throws Exception {
         Set<Long> result = new HashSet<>();
-        for (SlbVirtualServerDo slbVirtualServerDo : slbVirtualServerDao.findAll(SlbVirtualServerEntity.READSET_FULL)) {
+        for (SlbVirtualServerDo slbVirtualServerDo : slbVirtualServerDao.findAll(SlbVirtualServerEntity.READSET_IDONLY)) {
             result.add(slbVirtualServerDo.getId());
         }
         return result;

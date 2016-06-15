@@ -5,6 +5,11 @@
         <var name="ids" value-type="Long[]"/>
         <var name="names" value-type="String[]"/>
         <var name="max-count" value-type="int"/>
+        <readsets>
+            <readset name="IDONLY">
+                <member name="id"/>
+            </readset>
+        </readsets>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>

@@ -4,6 +4,11 @@
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
         <var name="names" value-type="String[]"/>
         <var name="ids" value-type="Long[]"/>
+        <readsets>
+            <readset name="IDONLY">
+                <member name="id"/>
+            </readset>
+        </readsets>
         <query-defs>
             <query name="insert" type="INSERT">
                 <statement>
