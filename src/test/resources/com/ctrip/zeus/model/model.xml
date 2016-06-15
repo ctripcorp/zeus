@@ -65,8 +65,9 @@
         <ip>192.168.1.11</ip>
     </group-server>
     <group-server-list>
-        <total>3</total>
         <groupId>123456789012</groupId>
+        <version>5</version>
+        <total>5</total>
         <group-servers>
             <group-server/>
             <group-server/>

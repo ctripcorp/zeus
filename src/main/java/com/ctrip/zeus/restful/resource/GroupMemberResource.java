@@ -3,15 +3,17 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
+import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.restful.filter.FilterSet;
+import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.model.EntityFactory;
-import com.ctrip.zeus.service.model.GroupRepository;
-import com.ctrip.zeus.service.model.ModelStatusMapping;
+import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
@@ -38,6 +40,8 @@ public class GroupMemberResource {
     @Resource
     private GroupRepository groupRepository;
     @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
     private ResponseHandler responseHandler;
     @Resource
     private EntityFactory entityFactory;
@@ -54,14 +58,51 @@ public class GroupMemberResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getAllByGroup")
     public Response list(@Context HttpHeaders hh,
-                         @Context HttpServletRequest request,
-                         @QueryParam("groupId") Long groupId) throws Exception {
-        Group group = groupRepository.getById(groupId);
-        if (group == null)
-            throw new ValidationException("Group with id " + groupId + " does not exist.");
+                         @Context final HttpServletRequest request,
+                         @QueryParam("groupId") final Long groupId,
+                         @QueryParam("ip") final String ip,
+                         @QueryParam("mode") String mode) throws Exception {
+        if (groupId == null) {
+            throw new ValidationException("Query parameter groupId is required.");
+        }
+        final SelectionMode selectionMode = SelectionMode.getMode(mode);
+        if (selectionMode == SelectionMode.REDUNDANT) {
+            throw new ValidationException("Redundant mode is not supported.");
+        }
+        IdVersion[] groupFilter = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return ip != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        return groupCriteriaQuery.queryByGroupServer(ip);
+                    }
+                }).build(IdVersion.class).run(new ResultHandler<IdVersion, IdVersion>() {
+                    @Override
+                    public IdVersion[] handle(Set<IdVersion> result) throws Exception {
+                        if (result == null) return groupCriteriaQuery.queryByIdAndMode(groupId, selectionMode);
+                        Set<IdVersion> filteredResult = new HashSet<>();
+                        for (IdVersion key : groupCriteriaQuery.queryByIdAndMode(groupId, selectionMode)) {
+                            if (result.contains(key)) {
+                                filteredResult.add(key);
+                            }
+                        }
+                        return filteredResult.toArray(new IdVersion[filteredResult.size()]);
+                    }
+                });
         GroupServerList groupServerList = new GroupServerList().setGroupId(groupId);
-        for (GroupServer groupServer : group.getGroupServers()) {
-            groupServerList.addGroupServer(groupServer);
+        if (groupFilter.length == 0) {
+            return responseHandler.handle(groupServerList, hh.getMediaType());
+        }
+        List<Group> groups = groupRepository.list(groupFilter);
+        if (groups.size() > 0) {
+            groupServerList.setVersion(groups.get(0).getVersion());
+            for (GroupServer groupServer : groups.get(0).getGroupServers()) {
+                groupServerList.addGroupServer(groupServer);
+            }
         }
         groupServerList.setTotal(groupServerList.getGroupServers().size());
         return responseHandler.handle(groupServerList, hh.getMediaType());
@@ -91,7 +132,7 @@ public class GroupMemberResource {
             if (online) {
                 onlineGroupUpdate(group);
             } else {
-                groupRepository.update(group,true);
+                groupRepository.update(group, true);
             }
         } finally {
             lock.unlock();
@@ -134,7 +175,7 @@ public class GroupMemberResource {
             if (online) {
                 onlineGroupUpdate(group);
             } else {
-                groupRepository.update(group,true);
+                groupRepository.update(group, true);
             }
         } finally {
             lock.unlock();
@@ -175,7 +216,7 @@ public class GroupMemberResource {
             if (online) {
                 onlineGroupUpdate(group);
             } else {
-                groupRepository.update(group,true);
+                groupRepository.update(group, true);
             }
         } finally {
             lock.unlock();
