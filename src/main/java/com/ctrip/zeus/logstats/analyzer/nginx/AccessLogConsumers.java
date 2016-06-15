@@ -39,6 +39,7 @@ public class AccessLogConsumers {
     }
 
     public void consume() {
+        logger.info("Create " + size + " access log consumers.");
         for (int i = 0; i < size; i++) {
             consumerPool.execute(new Runnable() {
                 @Override
