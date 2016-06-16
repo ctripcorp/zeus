@@ -1,6 +1,7 @@
 package com.ctrip.zeus.server;
 
 import com.ctrip.zeus.auth.impl.IPAuthenticationFilter;
+import com.ctrip.zeus.crossdomain.CrossDomainFilter;
 import com.ctrip.zeus.restful.resource.SlbResourcePackage;
 import com.ctrip.zeus.server.config.SlbAdminResourceConfig;
 import com.ctrip.zeus.util.AccessLogFilter;
@@ -111,6 +112,7 @@ public class SlbAdminServer extends AbstractServer {
             handler.addFilter(HttpServletRequestWrapperFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         }
 
+        handler.addFilter(CrossDomainFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(AccessLogFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD));
 
         //Config Servlet
