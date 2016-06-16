@@ -13,6 +13,7 @@
             <pull>true</pull>
             <healthy>true</healthy>
             <up>true</up>
+            <online>false</online>
             <discription>status</discription>
         </group-server-status>
         <group-server-status>
@@ -23,6 +24,7 @@
             <pull>true</pull>
             <healthy>true</healthy>
             <up>true</up>
+            <online>false</online>
             <discription>status</discription>
         </group-server-status>
     </group-status>

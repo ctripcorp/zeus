@@ -24,6 +24,7 @@
     <element name="pull" value-type="boolean" />
     <element name="healthy" value-type="boolean" />
     <element name="up" value-type="boolean" />
+    <element name="online" value-type="boolean" />
     <element name="discription" value-type="String" />
   </entity>
   <entity name="group-status-list">

@@ -22,8 +22,9 @@ public class HealthCheckConf {
     public String generate(VirtualServer vs, Group group) throws Exception {
         Long vsId = vs.getId();
         Long groupId = group.getId();
+        Long slbId = vs.getSlbId();
 
-        if (!configService.getEnable("upstream.healthCheck", null, vsId, groupId, true)) {
+        if (!configService.getEnable("upstream.healthCheck", slbId, vsId, groupId, true)) {
             return "";
         }
 

@@ -213,6 +213,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setPull(pullIn);
                 groupServerStatus.setHealthy(raise);
                 groupServerStatus.setUp(up);
+                groupServerStatus.setOnline(true);
                 status.addGroupServerStatus(groupServerStatus);
             }
             res.add(status);
@@ -237,14 +238,18 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
             Group onlineGroup = onlineGroups.get(groupId);
             Set<String> onlineMembers = new HashSet<>();
+            Map<String, GroupServer> members = new HashMap<>();
             if (onlineGroup != null) {
                 for (GroupServer groupServer : onlineGroup.getGroupServers()) {
                     onlineMembers.add(groupServer.getIp());
+                    members.put(groupServer.getIp(),groupServer);
                 }
             }
-
             List<GroupServer> groupServerList = group.getGroupServers();
             for (GroupServer gs : groupServerList) {
+                members.put(gs.getIp(),gs);
+            }
+            for (GroupServer gs : members.values()) {
                 GroupServerStatus groupServerStatus = new GroupServerStatus();
                 groupServerStatus.setIp(gs.getIp());
                 groupServerStatus.setPort(gs.getPort());
@@ -277,6 +282,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 groupServerStatus.setPull(pullIn);
                 groupServerStatus.setHealthy(raise);
                 groupServerStatus.setUp(up);
+                groupServerStatus.setOnline(onlineMembers.contains(gs.getIp()));
                 status.addGroupServerStatus(groupServerStatus);
             }
             res.add(status);

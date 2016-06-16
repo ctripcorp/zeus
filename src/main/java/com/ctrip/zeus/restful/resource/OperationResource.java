@@ -6,6 +6,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.build.ConfigService;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateInstaller;
@@ -74,6 +75,8 @@ public class OperationResource {
     private CertificateInstaller certificateInstaller;
     @Resource
     private EntityFactory entityFactory;
+    @Resource
+    private ConfigService configService;
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
     private static DynamicBooleanProperty healthyOpsActivate = DynamicPropertyFactory.getInstance().getBooleanProperty("healthy.operation.active", false);
@@ -304,16 +307,27 @@ public class OperationResource {
                 groupId = groupCriteriaQuery.queryByName(groupName);
             }
         }
-
+        Group gp = groupRepository.getById(groupId);
+        if (gp == null) {
+            throw new ValidationException("Group Id or Name not found!");
+        }
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(groupId);
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips = ips;
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers) {
+                if (ips.contains(gs.getIp())) {
+                    _ips.add(gs.getIp());
+                }
+            }
         }
+        if (_ips.size() == 0) {
+            throw new ValidationException("Not found ip in group.GroupId:" + groupId + " ip:" + ips.toString());
+        }
+
         if (healthyOpsActivate.get()) {
             return memberOps(hh, groupId, _ips, true, TaskOpsType.HEALTHY_OPS);
         } else {
@@ -349,7 +363,15 @@ public class OperationResource {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips = ips;
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers) {
+                if (ips.contains(gs.getIp())) {
+                    _ips.add(gs.getIp());
+                }
+            }
+        }
+        if (_ips.size() == 0) {
+            throw new ValidationException("Not found ip in group.GroupId:" + groupId + " ip:" + ips.toString());
         }
         if (healthyOpsActivate.get()) {
             return memberOps(hh, groupId, _ips, false, TaskOpsType.HEALTHY_OPS);
@@ -525,6 +547,15 @@ public class OperationResource {
                 tmp = vsMaping.getOfflineMapping().get(vsId);
             }
             slbIds.add(tmp.getSlbId());
+        }
+        //TODO flag for Healthy ops
+        if (type.equals(TaskOpsType.HEALTHY_OPS)) {
+            for (Long slbId : slbIds) {
+                if (!configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+                    logger.info("healthy.operation.active is false. slbId:" + slbId);
+                    return healthyOps(hh, groupId, ips, up);
+                }
+            }
         }
 
         List<OpsTask> tasks = new ArrayList<>();
