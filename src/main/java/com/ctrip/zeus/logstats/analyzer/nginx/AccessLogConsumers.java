@@ -3,7 +3,6 @@ package com.ctrip.zeus.logstats.analyzer.nginx;
 import com.ctrip.zeus.logstats.StatsDelegate;
 import com.ctrip.zeus.logstats.parser.KeyValue;
 import com.ctrip.zeus.logstats.parser.LogParser;
-import com.ctrip.zeus.page.entity.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class AccessLogConsumers {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final int safeLatch = 5000;
     private final WeakReference<AccessLogStatsAnalyzer> producer;
     private final List<StatsDelegate> delegator;
     private final ConcurrentLinkedQueue<String> source;
@@ -68,7 +68,19 @@ public class AccessLogConsumers {
     }
 
     public void accept(String value) {
-        if (running.get()) source.offer(value);
+        if (running.get()) {
+            if (source.size() < safeLatch) {
+                source.offer(value);
+            } else {
+                logger.warn("Too busy Consumers - new values are rejected.");
+            }
+        } else {
+            logger.warn("Consumers are not running - new values are rejected.");
+        }
+    }
+
+    public boolean available() {
+        return running.get() && source.size() < safeLatch;
     }
 
     public void shutDown() {
