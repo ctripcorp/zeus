@@ -24,21 +24,40 @@ public class AccessLogConsumers {
     private final List<StatsDelegate> delegator;
     private final ConcurrentLinkedQueue<String> source;
     private final LogParser logParser;
-    private final ExecutorService consumerPool;
     private final int size;
 
+    private ExecutorService consumerPool;
     private AtomicBoolean running = new AtomicBoolean(true);
 
     public AccessLogConsumers(AccessLogStatsAnalyzer producer, LogParser logParser, int size) {
         this.producer = new WeakReference<>(producer);
-        this.consumerPool = Executors.newFixedThreadPool(size);
         this.source = new ConcurrentLinkedQueue<>();
         this.logParser = logParser;
         this.delegator = producer.getConfig().getDelegators();
         this.size = size;
     }
 
-    public void consume() {
+    public void start() {
+        if (consumerPool == null) {
+            consumerPool = Executors.newFixedThreadPool(size);
+        }
+        if (consumerPool.isTerminated()) {
+            if (consumerPool.isShutdown()) {
+                consumerPool = Executors.newFixedThreadPool(size);
+            } else {
+                try {
+                    Thread.sleep(1000L);
+                } catch (InterruptedException e) {
+                }
+                if (consumerPool.isShutdown()) {
+                    consumerPool = Executors.newFixedThreadPool(size);
+                } else {
+                    logger.error("Previous consumer pool is not closed. Reject to start new consumer pool.");
+                    return;
+                }
+            }
+        }
+        running.set(true);
         logger.info("Create " + size + " access log consumers.");
         for (int i = 0; i < size; i++) {
             consumerPool.execute(new Runnable() {
@@ -100,6 +119,6 @@ public class AccessLogConsumers {
     }
 
     public boolean isClosed() {
-        return consumerPool.isTerminated();
+        return consumerPool == null || consumerPool.isTerminated();
     }
 }

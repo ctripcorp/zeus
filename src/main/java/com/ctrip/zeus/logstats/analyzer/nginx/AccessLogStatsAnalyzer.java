@@ -59,7 +59,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
         running.set(true);
         logTracker.start();
         if (consumers != null) {
-            consumers.consume();
+            consumers.start();
         }
     }
 
