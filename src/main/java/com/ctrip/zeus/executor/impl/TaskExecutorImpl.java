@@ -7,8 +7,8 @@ import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
-import com.ctrip.zeus.service.build.BuildInfoService;
 import com.ctrip.zeus.service.build.BuildService;
+import com.ctrip.zeus.service.build.ConfigService;
 import com.ctrip.zeus.service.commit.CommitService;
 import com.ctrip.zeus.service.commit.util.CommitType;
 import com.ctrip.zeus.service.model.*;
@@ -60,10 +60,13 @@ public class TaskExecutorImpl implements TaskExecutor {
     private ConfVersionService confVersionService;
     @Resource
     private CommitService commitService;
+    @Resource
+    private ConfigService configService;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
-    private static DynamicBooleanProperty writeEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("write.enable", true);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
 
+    private static DynamicBooleanProperty writeEnable = DynamicPropertyFactory.getInstance().getBooleanProperty("write.enable", true);//"http://slberrorpages.ctripcorp.com/slberrorpages/500.htm");
+    private static DynamicBooleanProperty healthyOpsActivate = DynamicPropertyFactory.getInstance().getBooleanProperty("healthy.operation.active", false);
 
     private HashMap<String, OpsTask> serverOps = new HashMap<>();
     private HashMap<Long, OpsTask> activateGroupOps = new HashMap<>();
@@ -340,7 +343,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             //4.1 get allDownServers
             Set<String> allDownServers = getAllDownServer();
             //4.2 allUpGroupServers
-            Set<String> allUpGroupServers = getAllUpGroupServers(needBuildVses, onlineGroups);
+            Set<String> allUpGroupServers = getAllUpGroupServers(needBuildVses, onlineGroups, slbId);
             //4.3 build config
             buildVersion = buildService.build(onlineSlb, onlineVses, needBuildVses, deactivateVsOps.keySet(),
                     vsGroups, allDownServers, allUpGroupServers);
@@ -631,7 +634,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private Set<String> getAllUpGroupServers(Set<Long> vsIds, Map<Long, Group> groups) throws Exception {
+    private Set<String> getAllUpGroupServers(Set<Long> vsIds, Map<Long, Group> groups, Long slbId) throws Exception {
         Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<Long> tmpid = memberOps.keySet();
         for (Long gid : tmpid) {
@@ -701,8 +704,14 @@ public class TaskExecutorImpl implements TaskExecutor {
         Set<String> result = new HashSet<>();
         for (String key : memberStatus.keySet()) {
             List<Boolean> status = memberStatus.get(key);
-            if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS) && status.get(StatusOffset.HEALTHY)) {
-                result.add(key);
+            if (healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+                if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS) && status.get(StatusOffset.HEALTHY)) {
+                    result.add(key);
+                }
+            } else {
+                if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS)) {
+                    result.add(key);
+                }
             }
         }
         return result;
