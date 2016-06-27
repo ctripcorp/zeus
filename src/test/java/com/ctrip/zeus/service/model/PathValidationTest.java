@@ -45,6 +45,9 @@ public class PathValidationTest extends AbstractServerTest {
         String creepyValue3 = "~* \"^/members($|/|\\?)|membersite($|/|\\?)\"";
         String root1 = "~* /";
         String root2 = "/";
+        String root3 = "~* ^/";
+        String root4 = "~* ^\"/\"";
+        String root5 = "~* \"^/\"";
         Assert.assertEquals("abc($|/|\\?)", extractValue(normalValue1));
         Assert.assertEquals("abc", extractValue(normalValue2));
         Assert.assertEquals("abc", extractValue(normalValue3));
@@ -57,6 +60,9 @@ public class PathValidationTest extends AbstractServerTest {
         Assert.assertEquals("members($|/|\\?)|membersite($|/|\\?)", extractValue(creepyValue3));
         Assert.assertEquals("/", extractValue(root1));
         Assert.assertEquals("/", extractValue(root2));
+        Assert.assertEquals("/", extractValue(root3));
+        Assert.assertEquals("/", extractValue(root4));
+        Assert.assertEquals("/", extractValue(root5));
     }
 
     @Test

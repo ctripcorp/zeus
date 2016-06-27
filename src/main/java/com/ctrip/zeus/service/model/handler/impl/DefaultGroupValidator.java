@@ -247,7 +247,7 @@ public class DefaultGroupValidator implements GroupValidator {
                 idxPrefix++;
             } else if (c == '/') {
                 idxPrefix++;
-                if (idxPrefix < pathArray.length && pathArray[idxPrefix] == '"') {
+                if (!quote && idxPrefix < pathArray.length && pathArray[idxPrefix] == '"') {
                     quote = true;
                     idxPrefix++;
                 }
@@ -258,9 +258,16 @@ public class DefaultGroupValidator implements GroupValidator {
         }
 
         if (quote && !path.endsWith("\"")) {
-            throw new ValidationException("Path should end up with quote if regex quotation is used.");
+            throw new ValidationException("Path should end up with quote if regex quotation is used. Path=" + path+".");
         }
         int idxSuffix = quote ? path.length() - 1 : path.length();
+        if (idxPrefix == idxSuffix) {
+            if (path.charAt(idxSuffix - 1) == '/') {
+                return "/";
+            } else {
+                throw new ValidationException("Path could not be validated. Path=" + path + ".");
+            }
+        }
         idxPrefix = idxPrefix < idxSuffix ?
                 (idxModifier > idxPrefix ? idxModifier : idxPrefix) : idxModifier;
         return path.substring(idxPrefix, idxSuffix);
