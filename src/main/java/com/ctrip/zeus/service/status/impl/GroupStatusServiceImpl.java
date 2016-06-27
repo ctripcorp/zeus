@@ -1,10 +1,12 @@
 package com.ctrip.zeus.service.status.impl;
 
 import com.ctrip.zeus.dal.core.ConfSlbActiveDao;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.service.build.ConfigService;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -51,6 +53,9 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     EntityFactory entityFactory;
     @Resource
     private HealthCheckStatusService healthCheckStatusService;
+    @Resource
+    private ConfigService configService;
+
 
     private Logger LOGGER = LoggerFactory.getLogger(GroupStatusServiceImpl.class);
 
@@ -115,9 +120,16 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         }
         Long slbId = null;
         for (Long vid : vsMap.getOnlineMapping().keySet()) {
-            slbId = vsMap.getOnlineMapping().get(vid).getSlbId();
-            if (slbId != null)
-                break;
+            Long tmp = vsMap.getOnlineMapping().get(vid).getSlbId();
+            if (tmp != null) {
+                slbId = tmp;
+                if (configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+                    break;
+                }
+            }
+            if (slbId == null) {
+                throw new ValidationException("Not found slbId for Group Id:" + groupId);
+            }
         }
         List<GroupStatus> list = getOnlineGroupsStatus(map.getOnlineMapping(), slbId);
         if (list.size() > 0) {
@@ -143,9 +155,16 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         }
         Long slbId = null;
         for (Long vid : vsMap.getOfflineMapping().keySet()) {
-            slbId = vsMap.getOfflineMapping().get(vid).getSlbId();
-            if (slbId != null)
-                break;
+            Long tmp = vsMap.getOfflineMapping().get(vid).getSlbId();
+            if (tmp != null) {
+                slbId = tmp;
+                if (configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+                    break;
+                }
+            }
+        }
+        if (slbId == null) {
+            throw new ValidationException("Not found slbId for Group Id:" + groupId);
         }
         List<GroupStatus> list = getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping(), slbId);
         if (list.size() > 0) {
@@ -198,7 +217,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
                 boolean up = false;
-                if (healthyOpsActivate.get()) {
+                if (healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
                     up = memberUp && serverUp && pullIn && raise;
                 } else {
                     if (memberUp && serverUp && pullIn) {
@@ -242,12 +261,12 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             if (onlineGroup != null) {
                 for (GroupServer groupServer : onlineGroup.getGroupServers()) {
                     onlineMembers.add(groupServer.getIp());
-                    members.put(groupServer.getIp(),groupServer);
+                    members.put(groupServer.getIp(), groupServer);
                 }
             }
             List<GroupServer> groupServerList = group.getGroupServers();
             for (GroupServer gs : groupServerList) {
-                members.put(gs.getIp(),gs);
+                members.put(gs.getIp(), gs);
             }
             for (GroupServer gs : members.values()) {
                 GroupServerStatus groupServerStatus = new GroupServerStatus();
@@ -263,7 +282,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
                 boolean up = false;
-                if (healthyOpsActivate.get()) {
+                if (healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
                     up = memberUp && serverUp && pullIn && raise;
                 } else {
                     if (memberUp && serverUp && pullIn) {
