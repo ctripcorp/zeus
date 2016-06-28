@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.build.conf;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.HealthCheck;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.build.ConfigService;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 
@@ -17,14 +17,14 @@ import javax.annotation.Resource;
 public class HealthCheckConf {
 
     @Resource
-    ConfigService configService;
+    ConfigHandler configHandler;
 
     public String generate(VirtualServer vs, Group group) throws Exception {
         Long vsId = vs.getId();
         Long groupId = group.getId();
         Long slbId = vs.getSlbId();
 
-        if (!configService.getEnable("upstream.healthCheck", slbId, vsId, groupId, true)) {
+        if (!configHandler.getEnable("upstream.healthCheck", slbId, vsId, groupId, true)) {
             return "";
         }
 
@@ -39,10 +39,10 @@ public class HealthCheckConf {
 
         StringBuilder b = new StringBuilder(128);
 
-        String healthCheckTimeout = configService.getStringValue("upstream.healthCheck.timeOut", null, vsId, groupId, "2000");
-        String sslAspx = configService.getStringValue("upstream.healthCheck.ssl.aspx", null, vsId, groupId, "/SlbHealthCheck.aspx");
+        String healthCheckTimeout = configHandler.getStringValue("upstream.healthCheck.timeOut", null, vsId, groupId, "2000");
+        String sslAspx = configHandler.getStringValue("upstream.healthCheck.ssl.aspx", null, vsId, groupId, "/SlbHealthCheck.aspx");
 
-        if (group.getSsl() && configService.getEnable("upstream.healthCheck.sslHello", null, vsId, groupId, false)) {
+        if (group.getSsl() && configHandler.getEnable("upstream.healthCheck.sslHello", null, vsId, groupId, false)) {
             b.append("    check interval=").append(h.getIntervals())
                     .append(" rise=").append(h.getPasses())
                     .append(" fall=").append(h.getFails())

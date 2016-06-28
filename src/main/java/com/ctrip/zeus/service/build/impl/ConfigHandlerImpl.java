@@ -1,8 +1,7 @@
 package com.ctrip.zeus.service.build.impl;
 
 import com.ctrip.zeus.server.LocalInfoPack;
-import com.ctrip.zeus.service.build.ConfigService;
-import com.ctrip.zeus.util.S;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.netflix.config.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +15,8 @@ import java.util.Set;
 /**
  * Created by lu.wang on 2016/4/19.
  */
-@Service("configService")
-public class ConfigServiceImpl implements ConfigService {
+@Service("configHandler")
+public class ConfigHandlerImpl implements ConfigHandler {
 
     private DynamicPropertyFactory factory = DynamicPropertyFactory.getInstance();
     Logger logger = LoggerFactory.getLogger(this.getClass());

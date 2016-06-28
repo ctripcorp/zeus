@@ -6,7 +6,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.build.ConfigService;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateInstaller;
@@ -18,7 +18,6 @@ import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
-import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.ServerStatus;
 import com.ctrip.zeus.task.entity.OpsTask;
@@ -76,7 +75,7 @@ public class OperationResource {
     @Resource
     private EntityFactory entityFactory;
     @Resource
-    private ConfigService configService;
+    private ConfigHandler configHandler;
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
     private static DynamicBooleanProperty healthyOpsActivate = DynamicPropertyFactory.getInstance().getBooleanProperty("healthy.operation.active", false);
@@ -551,7 +550,7 @@ public class OperationResource {
         //TODO flag for Healthy ops
         if (type.equals(TaskOpsType.HEALTHY_OPS)) {
             for (Long slbId : slbIds) {
-                if (!configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+                if (!configHandler.getEnable("healthy.operation.active", slbId, null, null, false)) {
                     logger.info("healthy.operation.active is false. slbId:" + slbId);
                     return healthyOps(hh, groupId, ips, up);
                 }

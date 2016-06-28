@@ -6,7 +6,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.build.ConfigService;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -54,7 +54,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     @Resource
     private HealthCheckStatusService healthCheckStatusService;
     @Resource
-    private ConfigService configService;
+    private ConfigHandler configHandler;
 
 
     private Logger LOGGER = LoggerFactory.getLogger(GroupStatusServiceImpl.class);
@@ -123,7 +123,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             Long tmp = vsMap.getOnlineMapping().get(vid).getSlbId();
             if (tmp != null) {
                 slbId = tmp;
-                if (configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+                if (configHandler.getEnable("healthy.operation.active", slbId, null, null, false)) {
                     break;
                 }
             }
@@ -158,7 +158,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             Long tmp = vsMap.getOfflineMapping().get(vid).getSlbId();
             if (tmp != null) {
                 slbId = tmp;
-                if (configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+                if (configHandler.getEnable("healthy.operation.active", slbId, null, null, false)) {
                     break;
                 }
             }
@@ -191,7 +191,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     public List<GroupStatus> getOnlineGroupsStatus(Map<Long, Group> groups, Long slbId) throws Exception {
         List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
-        boolean healthyActivateFlag = healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false);
+        boolean healthyActivateFlag = healthyOpsActivate.get() && configHandler.getEnable("healthy.operation.active", slbId, null, null, false);
 
         Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<String> allDownServers = statusService.findAllDownServers();
@@ -245,7 +245,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     public List<GroupStatus> getOfflineGroupsStatus(Map<Long, Group> groups, Map<Long, Group> onlineGroups, Long slbId) throws Exception {
         List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
-        boolean healthyActivateFlag = healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false);
+        boolean healthyActivateFlag = healthyOpsActivate.get() && configHandler.getEnable("healthy.operation.active", slbId, null, null, false);
 
         Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<String> allDownServers = statusService.findAllDownServers();

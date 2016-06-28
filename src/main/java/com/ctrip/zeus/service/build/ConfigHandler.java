@@ -5,7 +5,7 @@ import java.util.Set;
 /**
  * Created by lu.wang on 2016/4/19.
  */
-public interface ConfigService {
+public interface ConfigHandler {
 
     /**
      * For nginx conf generate

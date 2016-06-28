@@ -8,7 +8,7 @@ import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.service.build.BuildService;
-import com.ctrip.zeus.service.build.ConfigService;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.commit.CommitService;
 import com.ctrip.zeus.service.commit.util.CommitType;
 import com.ctrip.zeus.service.model.*;
@@ -61,7 +61,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     @Resource
     private CommitService commitService;
     @Resource
-    private ConfigService configService;
+    private ConfigHandler configHandler;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -701,7 +701,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
         }
 
-        boolean healthyActivateFlag = healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false);
+        boolean healthyActivateFlag = healthyOpsActivate.get() && configHandler.getEnable("healthy.operation.active", slbId, null, null, false);
         Set<String> result = new HashSet<>();
         for (String key : memberStatus.keySet()) {
             List<Boolean> status = memberStatus.get(key);

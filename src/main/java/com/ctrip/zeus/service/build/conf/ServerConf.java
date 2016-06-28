@@ -5,7 +5,7 @@ import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.build.ConfigService;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
@@ -18,7 +18,7 @@ import java.util.List;
 @Component("serverConf")
 public class ServerConf {
     @Resource
-    ConfigService configService;
+    ConfigHandler configHandler;
     @Resource
     LocationConf locationConf;
 
@@ -42,10 +42,10 @@ public class ServerConf {
         confWriter.writeCommand("ignore_invalid_headers", "off");
         confWriter.writeCommand("proxy_http_version", "1.1");
 
-        if (configService.getEnable("server.proxy.buffer.size", slbId, vsId, null, false)) {
-            confWriter.writeCommand("proxy_buffer_size", configService.getStringValue("server.proxy.buffer.size", slbId, vsId, null, "8k"));
-            confWriter.writeCommand("proxy_buffers", configService.getStringValue("server.proxy.buffers", slbId, vsId, null, "8 8k"));
-            confWriter.writeCommand("proxy_busy_buffers_size", configService.getStringValue("server.proxy.busy.buffers.size", slbId, vsId, null, "8k"));
+        if (configHandler.getEnable("server.proxy.buffer.size", slbId, vsId, null, false)) {
+            confWriter.writeCommand("proxy_buffer_size", configHandler.getStringValue("server.proxy.buffer.size", slbId, vsId, null, "8k"));
+            confWriter.writeCommand("proxy_buffers", configHandler.getStringValue("server.proxy.buffers", slbId, vsId, null, "8 8k"));
+            confWriter.writeCommand("proxy_busy_buffers_size", configHandler.getStringValue("server.proxy.busy.buffers.size", slbId, vsId, null, "8k"));
         }
 
         if (vs.isSsl()) {
@@ -54,7 +54,7 @@ public class ServerConf {
             confWriter.writeCommand("ssl_certificate_key", SSL_PATH + vsId + "/ssl.key");
         }
 
-        if (configService.getEnable("server.vs.health.check", slbId, vsId, null, false)) {
+        if (configHandler.getEnable("server.vs.health.check", slbId, vsId, null, false)) {
             locationConf.writeHealthCheckLocation(confWriter, slbId, vsId);
         }
 
@@ -65,8 +65,8 @@ public class ServerConf {
             locationConf.write(confWriter, slb, vs, group);
         }
 
-        if (configService.getEnable("server.errorPage", slbId, vsId, null, false)) {
-            boolean useNew = configService.getEnable("server.errorPage.use.new", slbId, vsId, null, true);
+        if (configHandler.getEnable("server.errorPage", slbId, vsId, null, false)) {
+            boolean useNew = configHandler.getEnable("server.errorPage.use.new", slbId, vsId, null, true);
             for (int sc = 400; sc <= 425; sc++) {
                 locationConf.writeErrorPageLocation(confWriter, useNew, sc, slbId, vsId);
             }
@@ -93,7 +93,7 @@ public class ServerConf {
     public void writeDyupsServer(ConfWriter confWriter, Long slbId) throws Exception {
         confWriter.writeCommand("dyups_upstream_conf", "conf/dyupstream.conf");
         confWriter.writeServerStart();
-        confWriter.writeCommand("listen", configService.getStringValue("server.dyups.port", slbId, null, null, "8081"));
+        confWriter.writeCommand("listen", configHandler.getStringValue("server.dyups.port", slbId, null, null, "8081"));
 
         locationConf.writeDyupsLocation(confWriter);
 
@@ -102,7 +102,7 @@ public class ServerConf {
 
     public void writeCheckStatusServer(ConfWriter confWriter, String shmZoneName, Long slbId) throws Exception {
         confWriter.writeServerStart();
-        confWriter.writeCommand("listen", configService.getStringValue("server.status.port", slbId, null, null, "10001"));
+        confWriter.writeCommand("listen", configHandler.getStringValue("server.status.port", slbId, null, null, "10001"));
         confWriter.writeCommand("req_status", shmZoneName);
         locationConf.writeCheckStatusLocations(confWriter);
         confWriter.writeServerEnd();

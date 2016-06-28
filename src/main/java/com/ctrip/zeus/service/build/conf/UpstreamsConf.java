@@ -4,7 +4,7 @@ import com.ctrip.zeus.domain.LBMethod;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.ConfFile;
-import com.ctrip.zeus.service.build.ConfigService;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
@@ -19,7 +19,7 @@ import java.util.*;
 @Component("upstreamsConf")
 public class UpstreamsConf {
     @Resource
-    ConfigService configService;
+    ConfigHandler configHandler;
     @Resource
     HealthCheckConf healthCheckConf;
 
@@ -106,11 +106,11 @@ public class UpstreamsConf {
             confWriter.writeUpstreamServer(ip, server.getPort(), server.getWeight(), server.getMaxFails(), server.getFailTimeout(), down);
         }
 
-        if (configService.getEnable("upstream.keepAlive", slbId, vsId, groupId, false)) {
-            confWriter.writeCommand("keepalive", configService.getStringValue("upstream.keepAlive", slbId, vsId, groupId, "100"));
+        if (configHandler.getEnable("upstream.keepAlive", slbId, vsId, groupId, false)) {
+            confWriter.writeCommand("keepalive", configHandler.getStringValue("upstream.keepAlive", slbId, vsId, groupId, "100"));
         }
-        if (configService.getEnable("upstream.keepAlive.timeout", slbId, vsId, groupId, false)) {
-            confWriter.writeCommand("keepalive_timeout", configService.getStringValue("upstream.keepAlive.timeout", slbId, vsId, groupId, "110") + "s");
+        if (configHandler.getEnable("upstream.keepAlive.timeout", slbId, vsId, groupId, false)) {
+            confWriter.writeCommand("keepalive_timeout", configHandler.getStringValue("upstream.keepAlive.timeout", slbId, vsId, groupId, "110") + "s");
         }
 
         // This module is to be abandoned.
