@@ -35,7 +35,7 @@ public class TransactionAspect {
         String objectName = point.getSignature().getDeclaringTypeName();
         String methodName = point.getSignature().getName();
 
-        long start = System.currentTimeMillis();
+//        long start = System.currentTimeMillis();
 
         boolean isInTransaction = transactionManager.isInTransaction();
         if (isInTransaction) {

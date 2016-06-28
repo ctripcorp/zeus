@@ -701,10 +701,11 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
         }
 
+        boolean healthyActivateFlag = healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false);
         Set<String> result = new HashSet<>();
         for (String key : memberStatus.keySet()) {
             List<Boolean> status = memberStatus.get(key);
-            if (healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+            if (healthyActivateFlag) {
                 if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS) && status.get(StatusOffset.HEALTHY)) {
                     result.add(key);
                 }

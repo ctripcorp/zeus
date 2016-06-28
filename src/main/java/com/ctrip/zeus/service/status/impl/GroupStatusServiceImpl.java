@@ -191,6 +191,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     public List<GroupStatus> getOnlineGroupsStatus(Map<Long, Group> groups, Long slbId) throws Exception {
         List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
+        boolean healthyActivateFlag = healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false);
 
         Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<String> allDownServers = statusService.findAllDownServers();
@@ -217,7 +218,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
                 boolean up = false;
-                if (healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+                if (healthyActivateFlag) {
                     up = memberUp && serverUp && pullIn && raise;
                 } else {
                     if (memberUp && serverUp && pullIn) {
@@ -244,6 +245,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     public List<GroupStatus> getOfflineGroupsStatus(Map<Long, Group> groups, Map<Long, Group> onlineGroups, Long slbId) throws Exception {
         List<GroupStatus> res = new ArrayList<>();
         GroupStatus status = null;
+        boolean healthyActivateFlag = healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false);
+
         Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<String> allDownServers = statusService.findAllDownServers();
 
@@ -282,7 +285,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
                 boolean up = false;
-                if (healthyOpsActivate.get() && configService.getEnable("healthy.operation.active", slbId, null, null, false)) {
+                if (healthyActivateFlag) {
                     up = memberUp && serverUp && pullIn && raise;
                 } else {
                     if (memberUp && serverUp && pullIn) {

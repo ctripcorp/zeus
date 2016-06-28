@@ -1,8 +1,11 @@
 package com.ctrip.zeus.service.build.impl;
 
+import com.ctrip.zeus.server.LocalInfoPack;
 import com.ctrip.zeus.service.build.ConfigService;
 import com.ctrip.zeus.util.S;
 import com.netflix.config.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -17,6 +20,7 @@ import java.util.Set;
 public class ConfigServiceImpl implements ConfigService {
 
     private DynamicPropertyFactory factory = DynamicPropertyFactory.getInstance();
+    Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     public String getStringValue(String key, Long slbId, Long vsId, Long groupId, String defaultValue) throws Exception {
@@ -24,7 +28,7 @@ public class ConfigServiceImpl implements ConfigService {
         String fullKey = getFullKey(key);
 
         DynamicStringProperty stringValue =
-                factory.getStringProperty(fullKey + ".ip." + S.getIp(), null);
+                factory.getStringProperty(fullKey + ".ip." + LocalInfoPack.INSTANCE.getIp(), null);
         if (stringValue.get() == null && groupId != null) {
 
             stringValue = factory.getStringProperty(fullKey + ".group." + groupId, null);
@@ -47,7 +51,7 @@ public class ConfigServiceImpl implements ConfigService {
         String fullKey = getFullKey(key);
 
         DynamicIntProperty intValue =
-                factory.getIntProperty(fullKey + ".ip." + S.getIp(), -1);
+                factory.getIntProperty(fullKey + ".ip." + LocalInfoPack.INSTANCE.getIp(), -1);
         if (intValue.get() == -1 && groupId != null) {
             intValue = factory.getIntProperty(fullKey + ".group." + groupId, -1);
         }
@@ -70,7 +74,7 @@ public class ConfigServiceImpl implements ConfigService {
         String defaultEnable = String.valueOf(defaultValue);
 
         DynamicStringProperty stringValue =
-                factory.getStringProperty(enableFullKey + ".ip." + S.getIp(), null);
+                factory.getStringProperty(enableFullKey + ".ip." + LocalInfoPack.INSTANCE.getIp(), null);
         if (stringValue.get() == null && groupId != null) {
             stringValue = factory.getStringProperty(enableFullKey + ".group." + groupId, null);
         }
