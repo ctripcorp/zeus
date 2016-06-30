@@ -19,13 +19,32 @@ public class TagServiceImpl implements TagService {
     private TagItemDao tagItemDao;
 
     @Override
+    public List<Long> query(List<String> tagNames, String type) throws Exception {
+        List<TagDo> tags = tagDao.findAllByNames(tagNames.toArray(new String[tagNames.size()]), TagEntity.READSET_FULL);
+        if (tags.size() == 0) return new ArrayList<>();
+
+        Long[] tagIds = new Long[tags.size()];
+        for (int i = 0; i < tagIds.length; i++) {
+            tagIds[i] = tags.get(i).getId();
+        }
+
+        List<Long> result = new ArrayList<>();
+        for (TagItemDo d : tagItemDao.findByTagsAndType(tagIds, type, TagItemEntity.READSET_FULL)) {
+            result.add(d.getItemId());
+        }
+        return result;
+    }
+
+    @Override
     public List<Long> query(String tagName, String type) throws Exception {
         TagDo d = tagDao.findByName(tagName, TagEntity.READSET_FULL);
         List<Long> result = new ArrayList<>();
         if (d == null)
             return result;
-        for (TagItemDo tagItemDo : tagItemDao.findByTag(d.getId(), TagItemEntity.READSET_FULL)) {
-            result.add(tagItemDo.getItemId());
+        for (TagItemDo ti : tagItemDao.findByTag(d.getId(), TagItemEntity.READSET_FULL)) {
+            if (type.equals(ti.getType())) {
+                result.add(ti.getItemId());
+            }
         }
         return result;
     }

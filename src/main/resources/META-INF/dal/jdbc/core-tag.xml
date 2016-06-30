@@ -2,6 +2,7 @@
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="tag" table="tag" alias="t" do-class="TagDo">
         <var name="ids" value-type="Long[]"/>
+        <var name="names" value-type="String[]"/>
         <query-defs>
             <query name="find-all" type="SELECT" multiple="true">
                 <statement>
@@ -18,6 +19,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-names" type="SELECT" multiple="true">
+                <param name="names"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='name'/> in <IN>${names}</IN>
                     ]]>
                 </statement>
             </query>
@@ -61,6 +72,7 @@
         </query-defs>
     </entity>
     <entity name="tag-item" table="tag_item" alias="ti" do-class="TagItemDo">
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="find-by-tag" type="SELECT" multiple="true">
                 <param name="tag-id"/>
@@ -69,6 +81,18 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='tag-id'/> = ${tag-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-tags-and-type" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="type"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='type'/> = ${type}
+                        AND <FIELD name='tag-id'/> in <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>

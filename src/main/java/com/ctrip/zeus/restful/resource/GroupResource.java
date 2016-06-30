@@ -77,10 +77,10 @@ public class GroupResource {
                          @QueryParam("appId") final String appId,
                          @QueryParam("vsId") final Long vsId,
                          @TrimmedQueryParam("ip") final String ip,
-                         @TrimmedQueryParam("slbName") final List<String> slbNames,
+                         @QueryParam("slbName") final List<String> slbNames,
+                         @QueryParam("tag") final List<String> tags,
                          @TrimmedQueryParam("domain") final String domain,
                          @TrimmedQueryParam("type") String type,
-                         @TrimmedQueryParam("tag") final String tag,
                          @TrimmedQueryParam("pname") final String pname,
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
@@ -192,12 +192,12 @@ public class GroupResource {
                 .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return tag != null;
+                        return tags != null && tags.size() > 0;
                     }
 
                     @Override
                     public Set<Long> filter() throws Exception {
-                        return new HashSet<>(tagService.query(tag, "group"));
+                        return new HashSet<>(tagService.query(tags, "group"));
                     }
                 })
                 .addFilter(new FilterSet<Long>() {

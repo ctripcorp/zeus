@@ -68,7 +68,7 @@ public class SlbResource {
     public Response list(@Context final HttpHeaders hh,
                          @Context HttpServletRequest request,
                          @TrimmedQueryParam("type") final String type,
-                         @TrimmedQueryParam("tag") final String tag,
+                         @QueryParam("tag") final List<String> tags,
                          @TrimmedQueryParam("pname") final String pname,
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
@@ -78,23 +78,12 @@ public class SlbResource {
                 .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return true;
+                        return tags != null &&tags.size() > 0;
                     }
 
                     @Override
                     public Set<Long> filter() throws Exception {
-                        return slbCriteriaQuery.queryAll();
-                    }
-                })
-                .addFilter(new FilterSet<Long>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return tag != null;
-                    }
-
-                    @Override
-                    public Set<Long> filter() throws Exception {
-                        return new HashSet<>(tagService.query(tag, "slb"));
+                        return new HashSet<>(tagService.query(tags, "slb"));
                     }
                 })
                 .addFilter(new FilterSet<Long>() {
@@ -110,7 +99,15 @@ public class SlbResource {
                         else
                             return new HashSet<>(propertyService.query(pname, "slb"));
                     }
-                }).build(Long.class).run();
+                }).build(Long.class).run(new ResultHandler<Long, Long>() {
+                    @Override
+                    public Long[] handle(Set<Long> result) throws Exception {
+                        if (result == null) {
+                            result = slbCriteriaQuery.queryAll();
+                        }
+                        return result.toArray(new Long[result.size()]);
+                    }
+                });
 
         QueryExecuter<IdVersion> executer = new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {

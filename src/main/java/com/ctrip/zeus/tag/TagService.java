@@ -7,6 +7,8 @@ import java.util.List;
  */
 public interface TagService {
 
+    List<Long> query(List<String> tagNames, String type) throws Exception;
+
     List<Long> query(String tagName, String type) throws Exception;
 
     List<String> getTags(String type, Long itemId) throws Exception;

@@ -2,6 +2,7 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServerList;
@@ -65,7 +66,7 @@ public class VirtualServerResource {
                          @Context HttpServletRequest request,
                          @QueryParam("slbId") final Long slbId,
                          @TrimmedQueryParam("domain") final String domain,
-                         @TrimmedQueryParam("tag") final String tag,
+                         @QueryParam("tag") final List<String> tags,
                          @TrimmedQueryParam("pname") final String pname,
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
@@ -114,23 +115,12 @@ public class VirtualServerResource {
                 .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return true;
+                        return tags != null && tags.size() > 0;
                     }
 
                     @Override
                     public Set<Long> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryAll();
-                    }
-                })
-                .addFilter(new FilterSet<Long>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return tag != null;
-                    }
-
-                    @Override
-                    public Set<Long> filter() throws Exception {
-                        return new HashSet<>(tagService.query(tag, "vs"));
+                        return new HashSet<>(tagService.query(tags, "vs"));
                     }
                 })
                 .addFilter(new FilterSet<Long>() {
@@ -146,7 +136,15 @@ public class VirtualServerResource {
                         else
                             return new HashSet<>(propertyService.query(pname, "vs"));
                     }
-                }).build(Long.class).run();
+                }).build(Long.class).run(new ResultHandler<Long, Long>() {
+                    @Override
+                    public Long[] handle(Set<Long> result) throws Exception {
+                        if (result == null) {
+                            result = virtualServerCriteriaQuery.queryAll();
+                        }
+                        return result.toArray(new Long[result.size()]);
+                    }
+                });
 
         QueryExecuter<IdVersion> executer = new QueryExecuter.Builder<IdVersion>()
                 .addFilter(new FilterSet<IdVersion>() {
