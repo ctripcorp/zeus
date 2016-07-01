@@ -10,7 +10,6 @@ import java.util.*;
 /**
  * Created by zhoumy on 2015/5/6.
  */
-@Component("rollingTrafficStatus")
 public class RollingTrafficStatus {
     private final CircularArray buckets;
     private final int numberOfBuckets;

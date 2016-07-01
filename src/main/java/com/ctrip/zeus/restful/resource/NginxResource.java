@@ -7,8 +7,6 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.model.ModelStatusMapping;
-import com.ctrip.zeus.service.nginx.NginxService;
-import com.ctrip.zeus.support.GenericSerializer;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -19,7 +17,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -29,8 +26,6 @@ import java.util.List;
 @Component
 @Path("/nginx")
 public class NginxResource {
-    @Resource
-    private NginxService nginxService;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
@@ -69,39 +64,5 @@ public class NginxResource {
         response.setUpstreamConf(stringBuilder.toString());
         response.setVersion(version).setVirtualServerId(vsid);
         return responseHandler.handle(response, hh.getMediaType());
-    }
-
-
-    @GET
-    @Path("/trafficStatus")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getLocalTrafficStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
-                                          @QueryParam("since") Long since,
-                                          @QueryParam("count") int count) throws Exception {
-        count = count == 0 ? 1 : count;
-        since = since == null ? System.currentTimeMillis() - 60 * 1000L : since;
-        List<ReqStatus> statuses = nginxService.getLocalTrafficStatus(new Date(since), count);
-        TrafficStatusList l = new TrafficStatusList().setTotal(statuses.size());
-        for (ReqStatus status : statuses) {
-            l.addReqStatus(status);
-        }
-        return responseHandler.handle(l, hh.getMediaType());
-    }
-
-    @GET
-    @Path("/trafficStatus/group")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getLocalTrafficStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
-                                          @QueryParam("since") Long since,
-                                          @QueryParam("groupName") String groupName,
-                                          @QueryParam("count") int count) throws Exception {
-        count = count == 0 ? 1 : count;
-        since = since == null ? System.currentTimeMillis() - 60 * 1000L : since;
-        List<ReqStatus> statuses = nginxService.getLocalTrafficStatus(new Date(since), groupName, count);
-        TrafficStatusList l = new TrafficStatusList().setTotal(statuses.size());
-        for (ReqStatus status : statuses) {
-            l.addReqStatus(status);
-        }
-        return responseHandler.handle(l, hh.getMediaType());
     }
 }

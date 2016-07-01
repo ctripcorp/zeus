@@ -1,11 +1,9 @@
 package com.ctrip.zeus.service.nginx;
 
 import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
-import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.nginx.entity.*;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -62,24 +60,4 @@ public interface NginxService {
      * @throws Exception
      */
     void rollbackAllConf(List<SlbServer> slbServers) throws Exception;
-
-    /**
-     * get traffic status of nginx server cluster.
-     *
-     * @param slbId the slb name
-     * @return the traffic statuses
-     */
-    List<ReqStatus> getTrafficStatusBySlb(Long slbId, int count, boolean aggregatedByGroup, boolean aggregatedBySlbServer) throws Exception;
-
-    List<ReqStatus> getTrafficStatusBySlb(String groupName, Long slbId, int count) throws Exception;
-
-
-    /**
-     * get traffic status of local nginx server.
-     *
-     * @return the traffic status
-     */
-    List<ReqStatus> getLocalTrafficStatus(Date time, int count);
-
-    List<ReqStatus> getLocalTrafficStatus(Date time, String groupName, int count);
 }
