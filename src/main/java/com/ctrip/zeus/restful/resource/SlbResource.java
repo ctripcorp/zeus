@@ -68,7 +68,7 @@ public class SlbResource {
     public Response list(@Context final HttpHeaders hh,
                          @Context HttpServletRequest request,
                          @TrimmedQueryParam("type") final String type,
-                         @QueryParam("tag") final List<String> tags,
+                         @TrimmedQueryParam("tag") final List<String> tags,
                          @TrimmedQueryParam("pname") final String pname,
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {

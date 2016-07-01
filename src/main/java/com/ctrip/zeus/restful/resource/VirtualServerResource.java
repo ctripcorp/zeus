@@ -66,7 +66,7 @@ public class VirtualServerResource {
                          @Context HttpServletRequest request,
                          @QueryParam("slbId") final Long slbId,
                          @TrimmedQueryParam("domain") final String domain,
-                         @QueryParam("tag") final List<String> tags,
+                         @TrimmedQueryParam("tag") final List<String> tags,
                          @TrimmedQueryParam("pname") final String pname,
                          @TrimmedQueryParam("pvalue") final String pvalue,
                          @TrimmedQueryParam("mode") final String mode) throws Exception {
