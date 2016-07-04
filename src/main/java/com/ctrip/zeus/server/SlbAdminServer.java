@@ -10,7 +10,9 @@ import com.netflix.config.DynamicIntProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.apache.jasper.servlet.JspServlet;
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.server.session.SessionHandler;
@@ -19,6 +21,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.GzipFilter;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.jasig.cas.client.authentication.AuthenticationFilter;
@@ -58,7 +61,9 @@ public class SlbAdminServer extends AbstractServer {
         DynamicStringProperty casServerLoginUrl = DynamicPropertyFactory.getInstance().getStringProperty("server.sso.casServer.login.url", "");
         DynamicStringProperty casServerUrlPrefix = DynamicPropertyFactory.getInstance().getStringProperty("server.sso.casServer.url.prefix", "");
         DynamicStringProperty serverName = DynamicPropertyFactory.getInstance().getStringProperty("server.sso.server.name", "");
-        DynamicIntProperty sessionTimeout = DynamicPropertyFactory.getInstance().getIntProperty("server.session.timeout", 60*5);
+        DynamicIntProperty sessionTimeout = DynamicPropertyFactory.getInstance().getIntProperty("server.session.timeout", 60 * 5);
+        DynamicIntProperty maxThreads = DynamicPropertyFactory.getInstance().getIntProperty("server.max.threads", 300);
+        DynamicIntProperty minThreads = DynamicPropertyFactory.getInstance().getIntProperty("server.min.threads", 50);
 
 
         //Config Jersey
@@ -133,7 +138,11 @@ public class SlbAdminServer extends AbstractServer {
         requestLogHandler.setHandler(statsHandler);
 
         //Create Jetty Server
-        server = new Server(serverPort.get());
+        QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads.get(), minThreads.get());
+        server = new Server(threadPool);
+        ServerConnector connector=new ServerConnector(server);
+        connector.setPort(serverPort.get());
+        server.setConnectors(new Connector[]{connector});
         server.setHandler(requestLogHandler);
         server.setStopTimeout(30000L);
     }
