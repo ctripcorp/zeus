@@ -52,6 +52,7 @@ public class ServerConf {
             confWriter.writeCommand("ssl", "on");
             confWriter.writeCommand("ssl_certificate", SSL_PATH + vsId + "/ssl.crt");
             confWriter.writeCommand("ssl_certificate_key", SSL_PATH + vsId + "/ssl.key");
+            confWriter.writeCommand("ssl_protocols",getProtocols(slbId,vsId));
         }
 
         if (configHandler.getEnable("server.vs.health.check", slbId, vsId, null, false)) {
@@ -77,6 +78,17 @@ public class ServerConf {
 
         confWriter.writeServerEnd();
         return confWriter.getValue();
+    }
+
+    private String getProtocols(Long slbId, Long vsId) throws Exception {
+        String result = "TLSv1 TLSv1.1 TLSv1.2";
+        if (configHandler.getEnable("ssl.protocol.sslv2",slbId,vsId,null,false)){
+            result += " SSLv2";
+        }
+        if (configHandler.getEnable("ssl.protocol.sslv3",slbId,vsId,null,false)){
+            result += " SSLv3";
+        }
+        return result;
     }
 
 
