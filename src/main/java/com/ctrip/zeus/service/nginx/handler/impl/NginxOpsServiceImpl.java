@@ -24,13 +24,14 @@ public class NginxOpsServiceImpl implements NginxOpsService {
 
     private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     private final String DEFAULT_NGINX_BIN_DIR = "/opt/app/nginx/sbin";
+    private final String SUDO = "sudo ";
 
     @Override
     public NginxResponse reload() throws Exception {
         long start = System.currentTimeMillis();
         LOGGER.info("[NginxTest] Start Nginx reload");
         try {
-            String command = DEFAULT_NGINX_BIN_DIR + "/nginx -s reload";
+            String command = SUDO + DEFAULT_NGINX_BIN_DIR + "/nginx -s reload";
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
             CommandLine commandline = CommandLine.parse(command);
@@ -64,7 +65,7 @@ public class NginxOpsServiceImpl implements NginxOpsService {
         long start = System.currentTimeMillis();
         try {
             LOGGER.info("[NginxTest] Start Nginx -t");
-            String command = DEFAULT_NGINX_BIN_DIR + "/nginx -t";
+            String command = SUDO + DEFAULT_NGINX_BIN_DIR + "/nginx -t";
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
             CommandLine commandline = CommandLine.parse(command);
