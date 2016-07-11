@@ -331,7 +331,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 List<Group> list = vsGroups.get(vsId);
                 Collections.sort(list, new Comparator<Group>() {
                     public int compare(Group group0, Group group1) {
-                        if (vsGroupPriority.get("VS" + vs + "_" + group1.getId()) == vsGroupPriority.get("VS" + vs + "_" + group0.getId())) {
+                        if (vsGroupPriority.get("VS" + vs + "_" + group1.getId()).equals(vsGroupPriority.get("VS" + vs + "_" + group0.getId()))) {
                             return (int) (group1.getId() - group0.getId());
                         }
                         return vsGroupPriority.get("VS" + vs + "_" + group1.getId()) - vsGroupPriority.get("VS" + vs + "_" + group0.getId());
