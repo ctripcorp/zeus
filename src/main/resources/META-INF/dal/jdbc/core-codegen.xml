@@ -870,10 +870,12 @@
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />
     <member name="group-name" field="group_name" value-type="String" length="255" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="group_id" unique="true" members="group_id ASC" />
     <index name="group_name" members="group_name ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1379,8 +1381,9 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="property_id_item_id_type" unique="true" members="property_id ASC, item_id ASC, type ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="property_id" members="property_id ASC" />
+    <index name="item_id" members="item_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

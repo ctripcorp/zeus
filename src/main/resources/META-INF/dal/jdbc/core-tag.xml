@@ -196,7 +196,7 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete" type="DELETE">
+            <query name="delete" type="DELETE" batch="true">
                 <param name="id"/>
                 <statement>
                     <![CDATA[
@@ -286,6 +286,20 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-property-and-item" type="SELECT">
+                <param name="property-id"/>
+                <param name="item-id"/>
+                <param name="type"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='property-id'/> = ${property-id}
+                        AND <FIELD name='item-id'/> = ${item-id}
+                        AND <FIELD name='type'/> = ${type}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-item-and-type" type="SELECT" multiple="true">
                 <param name="item-id"/>
                 <param name="type"/>
@@ -298,6 +312,18 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-item-and-properties" type="SELECT" multiple="true">
+                <param name="item-id"/>
+                <param name="pids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='item-id'/> = ${item-id}
+                      AND <FIELD name='property-id'/> in <IN>${pids}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
@@ -306,14 +332,12 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-property-and-items" type="DELETE" batch="true">
-                <param name="property-id"/>
-                <param name="item-id"/>
+            <query name="update" type="UPDATE" batch="true">
                 <statement>
                     <![CDATA[
-                    DELETE FROM <TABLE/>
-                    WHERE <FIELD name='property-id'/> = ${property-id}
-                      AND <FIELD name='item-id'/> = ${item-id}
+                    UPDATE <TABLE/>
+                    SET <FIELD name='property-id'/> = ${property-id}
+                    WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>
             </query>
@@ -328,7 +352,16 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete-by-property" type="DELETE">
+            <query name="delete-by-id" type="DELETE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-property" type="DELETE" batch="true">
                 <param name="property-id"/>
                 <statement>
                     <![CDATA[

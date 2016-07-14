@@ -15,7 +15,7 @@
   </entity>
   <entity name="property">
     <element name="name" value-type="String" />
-    <element name="value" value-type="String" type="list" names="values" xml-indent="true" />
+    <element name="value" value-type="String" />
   </entity>
 </model>
 

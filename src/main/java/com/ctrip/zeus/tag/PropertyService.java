@@ -9,9 +9,11 @@ import java.util.List;
  */
 public interface PropertyService {
 
-    List<Long> query(String pname, String pvalue, String type) throws Exception;
-
-    List<Long> query(String pname, String type) throws Exception;
+    List<Property> getAllProperties() throws Exception;
 
     List<Property> getProperties(String type, Long itemId) throws Exception;
+
+    Property getProperty(String pname, Long itemId, String type) throws Exception;
+
+    List<Long> queryTargets(String pname, String pvalue, String type) throws Exception;
 }

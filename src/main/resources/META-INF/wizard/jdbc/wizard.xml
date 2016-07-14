@@ -67,6 +67,7 @@
          <table name="commit"/>
          <table name="nginx_conf_slb"/>
          <table name="group_history"/>
+         <table name="group_server_status"/>
       </group>
    </jdbc>
 </wizard>

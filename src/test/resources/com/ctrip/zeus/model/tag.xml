@@ -15,9 +15,6 @@
     </property-list>
     <property>
         <name>abc</name>
-        <values>
-            <value>gov</value>
-            <value>school</value>
-        </values>
+        <value>gov</value>
     </property>
 </tag-model>

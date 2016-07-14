@@ -24,14 +24,30 @@ public class PropertyServiceImpl implements PropertyService {
     private PropertyItemDao propertyItemDao;
 
     @Override
-    public List<Long> query(String pname, String pvalue, String type) throws Exception {
+    public Property getProperty(String pname, Long itemId, String type) throws Exception {
+        PropertyKeyDo kd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
+        if (kd == null) return null;
+
+        List<Long> propertyIds = new ArrayList<>();
+        for (PropertyItemDo e : propertyItemDao.findAllByItemAndType(itemId, type, PropertyItemEntity.READSET_FULL)) {
+            propertyIds.add(e.getPropertyId());
+        }
+        for (PropertyDo e : propertyDao.findAllByIds(propertyIds.toArray(new Long[propertyIds.size()]), PropertyEntity.READSET_FULL)) {
+            if (e.getPropertyKeyId() == kd.getId()) {
+                return new Property().setName(pname).setValue(e.getPropertyValue());
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<Long> queryTargets(String pname, String pvalue, String type) throws Exception {
         List<Long> result = new ArrayList<>();
         PropertyKeyDo kd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
-        if (kd == null)
-            return result;
+        if (kd == null) return result;
         PropertyDo d = propertyDao.findByKeyAndValue(kd.getId(), pvalue, PropertyEntity.READSET_FULL);
-        if (d == null)
-            return result;
+        if (d == null) return result;
+
         for (PropertyItemDo propertyItemDo : propertyItemDao.findAllByPropertyAndType(d.getId(), type, PropertyItemEntity.READSET_FULL)) {
             result.add(propertyItemDo.getItemId());
         }
@@ -39,56 +55,45 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public List<Long> query(String pname, String type) throws Exception {
-        List<Long> result = new ArrayList<>();
-        PropertyKeyDo kd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
-        if (kd == null)
-            return result;
-        List<PropertyDo> l = propertyDao.findAllByKey(kd.getId(), PropertyEntity.READSET_FULL);
-        if (l.size() == 0)
-            return result;
-        Long[] pids = new Long[l.size()];
-        for (int i = 0; i < l.size(); i++) {
-            pids[i] = l.get(i).getId();
+    public List<Property> getAllProperties() throws Exception {
+        List<Property> result = new ArrayList<>();
+        Map<Long, String> keyRef = new HashMap<>();
+
+        for (PropertyKeyDo e : propertyKeyDao.findAll(PropertyKeyEntity.READSET_FULL)) {
+            keyRef.put(e.getId(), e.getName());
         }
-        for (PropertyItemDo propertyItemDo : propertyItemDao.findAllByPropertiesAndType(pids, type, PropertyItemEntity.READSET_FULL)) {
-            result.add(propertyItemDo.getItemId());
+        for (PropertyDo e : propertyDao.findAllByIds(keyRef.keySet().toArray(new Long[keyRef.size()]), PropertyEntity.READSET_FULL)) {
+            String kn = keyRef.get(e.getPropertyKeyId());
+            if (kn != null) {
+                result.add(new Property().setName(kn).setValue(e.getPropertyValue()));
+            }
         }
         return result;
     }
 
     @Override
     public List<Property> getProperties(String type, Long itemId) throws Exception {
-        // get all propertyIds from item table
-        List<PropertyItemDo> list = propertyItemDao.findAllByItemAndType(itemId, type, PropertyItemEntity.READSET_FULL);
-        if (list.size() == 0)
+        List<PropertyItemDo> items = propertyItemDao.findAllByItemAndType(itemId, type, PropertyItemEntity.READSET_FULL);
+        if (items.size() == 0)
             return new ArrayList<>();
-        Long[] pids = new Long[list.size()];
-        for (int i = 0; i < list.size(); i++) {
-            pids[i] = list.get(i).getPropertyId();
-        }
 
-        // get all properties from property table, and store keyIds
-        List<PropertyDo> pref = propertyDao.findAllByIds(pids, PropertyEntity.READSET_FULL);
-        if (pref.size() == 0)
+        List<Long> pids = new ArrayList<>();
+        for (PropertyItemDo e : items) {
+            if (e.getType().equals(type)) {
+                pids.add(e.getPropertyId());
+            }
+        }
+        List<PropertyDo> properties = propertyDao.findAllByIds(pids.toArray(new Long[pids.size()]), PropertyEntity.READSET_FULL);
+        if (properties.size() == 0)
             return new ArrayList<>();
+
         Map<Long, Property> result = new HashMap<>();
-        for (PropertyDo propertyDo : pref) {
-            result.put(propertyDo.getPropertyKeyId(), new Property());
-        }
-        // fetch key info from property key table
-        Long[] pkids = new Long[result.keySet().size()];
-        int i = 0;
-        for (Long pkid : result.keySet()) {
-            pkids[i++] = pkid;
-        }
-        for (PropertyKeyDo propertyKeyDo : propertyKeyDao.findAllByIds(pkids, PropertyKeyEntity.READSET_FULL)) {
-            result.get(propertyKeyDo.getId()).setName(propertyKeyDo.getName());
+        for (PropertyDo e : properties) {
+            result.put(e.getPropertyKeyId(), new Property().setValue(e.getPropertyValue()));
         }
 
-        // combine key value
-        for (PropertyDo propertyDo : pref) {
-            result.get(propertyDo.getPropertyKeyId()).addValue(propertyDo.getPropertyValue());
+        for (PropertyKeyDo e : propertyKeyDao.findAllByIds(result.keySet().toArray(new Long[result.size()]), PropertyKeyEntity.READSET_FULL)) {
+            result.get(e.getId()).setName(e.getName());
         }
         return new ArrayList<>(result.values());
     }

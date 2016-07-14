@@ -89,15 +89,12 @@ public class SlbResource {
                 .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return pname != null;
+                        return pname != null & pvalue != null;
                     }
 
                     @Override
                     public Set<Long> filter() throws Exception {
-                        if (pvalue != null)
-                            return new HashSet<>(propertyService.query(pname, pvalue, "slb"));
-                        else
-                            return new HashSet<>(propertyService.query(pname, "slb"));
+                        return new HashSet<>(propertyService.queryTargets(pname, pvalue, "slb"));
                     }
                 }).build(Long.class).run(new ResultHandler<Long, Long>() {
                     @Override
