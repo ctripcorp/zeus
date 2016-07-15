@@ -1,7 +1,6 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
-import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.SlbValidatorException;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
@@ -11,10 +10,9 @@ import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
-import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.service.validate.SlbValidator;
-import com.ctrip.zeus.tag.TagBox;
+import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.task.entity.TaskResultList;
@@ -42,13 +40,10 @@ import java.util.*;
 @Component
 @Path("/activate")
 public class ActivateResource {
-
     @Resource
-    private TagBox tagBox;
+    private PropertyBox propertyBox;
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
-    @Resource
-    private GroupRepository groupRepository;
     @Resource
     private SlbValidator slbValidator;
     @Resource
@@ -61,14 +56,6 @@ public class ActivateResource {
     private ResponseHandler responseHandler;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
-    @Resource
-    private ConfSlbVirtualServerActiveDao confSlbVirtualServerActiveDao;
-    @Resource
-    private ConfGroupActiveDao confGroupActiveDao;
-    @Resource
-    private SlbRepository slbRepository;
-    @Resource
-    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
@@ -124,6 +111,11 @@ public class ActivateResource {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
+
+        try {
+            propertyBox.set("status", "activated", "slb", _slbIds.toArray(new Long[_slbIds.size()]));
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(resultList, hh.getMediaType());
     }
 
@@ -213,13 +205,12 @@ public class ActivateResource {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
+
         try {
-            tagBox.tagging("active", "group", _groupIds.toArray(new Long[_groupIds.size()]));
-            tagBox.untagging("deactive", "group", _groupIds.toArray(new Long[_groupIds.size()]));
+            propertyBox.set("status", "activated", "group", _groupIds.toArray(new Long[_groupIds.size()]));
         } catch (Exception ex) {
         }
-        return responseHandler.handle(resultList,hh.getMediaType());
-
+        return responseHandler.handle(resultList, hh.getMediaType());
     }
     @GET
     @Path("/vs")
@@ -256,6 +247,11 @@ public class ActivateResource {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
+
+        try {
+            propertyBox.set("status", "activated", "vs", vsId);
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(resultList, hh.getMediaType());
     }
 }

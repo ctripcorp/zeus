@@ -19,6 +19,7 @@ import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.TagService;
 import org.slf4j.Logger;
@@ -32,10 +33,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author:xingchaowang
@@ -62,6 +60,10 @@ public class GroupResource {
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
+    @Resource
+    private PropertyBox propertyBox;
+
+    private final String vGroupAppId = "VirtualGroup";
     private final int TIMEOUT = 1000;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -461,8 +463,12 @@ public class GroupResource {
         g.setVirtual(null);
         Long groupId = groupCriteriaQuery.queryByName(g.getName());
         if (groupId > 0L) throw new ValidationException("Group name exists.");
-
         g = groupRepository.add(g, force == null ? false : force.booleanValue());
+
+        try {
+            propertyBox.set("status", "deactivated", "group", g.getId());
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -473,6 +479,7 @@ public class GroupResource {
     public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
         Group g = parseGroup(hh.getMediaType(), group);
         g.setVirtual(true);
+        g.setAppId(vGroupAppId);
         Long groupId = groupCriteriaQuery.queryByName(g.getName());
         if (groupId > 0L) throw new ValidationException("Group name exists.");
 
@@ -496,6 +503,13 @@ public class GroupResource {
         } finally {
             lock.unlock();
         }
+
+        try {
+            if (groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.OFFLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "group", g.getId());
+            }
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -506,6 +520,7 @@ public class GroupResource {
     public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
         Group g = parseGroup(hh.getMediaType(), group);
         g.setVirtual(true);
+        g.setAppId(vGroupAppId);
 
         DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
         lock.lock(TIMEOUT);
@@ -538,6 +553,10 @@ public class GroupResource {
             archiveRepository.archiveGroup(archive);
         } catch (Exception ex) {
             logger.warn("Try archive deleted group failed. " + GenericSerializer.writeJson(archive, false), ex);
+        }
+        try {
+            propertyBox.clear("group", groupId);
+        } catch (Exception ex) {
         }
         return responseHandler.handle("Group is deleted.", hh.getMediaType());
     }

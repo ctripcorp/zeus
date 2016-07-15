@@ -11,5 +11,11 @@ public interface PropertyBox {
 
     boolean set(String pname, String pvalue, String type, Long itemId) throws Exception;
 
+    void set(String pname, String pvalue, String type, Long[] itemId) throws Exception;
+
+    boolean clear(String type, Long itemId) throws Exception;
+
     boolean clear(String pname, String pvalue, String type, Long itemId) throws Exception;
+
+    void clear(String pname, String pvalue, String type, Long[] itemId) throws Exception;
 }

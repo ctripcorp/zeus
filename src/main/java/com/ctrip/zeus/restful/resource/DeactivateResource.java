@@ -9,7 +9,7 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
-import com.ctrip.zeus.tag.TagBox;
+import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.task.entity.TaskResultList;
@@ -37,7 +37,7 @@ import java.util.*;
 @Path("/deactivate")
 public class DeactivateResource {
     @Resource
-    private TagBox tagBox;
+    private PropertyBox propertyBox;
     @Resource
     private GroupRepository groupRepository;
     @Resource
@@ -49,11 +49,9 @@ public class DeactivateResource {
     @Resource
     private EntityFactory entityFactory;
 
-
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
-
 
     @GET
     @Path("/group")
@@ -117,8 +115,7 @@ public class DeactivateResource {
         resultList.setTotal(results.size());
 
         try {
-            tagBox.tagging("deactive", "group", _groupIds.toArray(new Long[_groupIds.size()]));
-            tagBox.untagging("active", "group", _groupIds.toArray(new Long[_groupIds.size()]));
+            propertyBox.set("status", "deactivated", "group", _groupIds.toArray(new Long[_groupIds.size()]));
         } catch (Exception ex) {
         }
         return responseHandler.handle(resultList, hh.getMediaType());
@@ -147,6 +144,10 @@ public class DeactivateResource {
         Long taskId = taskManager.addTask(deactivateTask);
 
         TaskResult results = taskManager.getResult(taskId, apiTimeout.get());
+        try {
+            propertyBox.set("status", "deactivated", "vs", vsId);
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(results, hh.getMediaType());
     }
 
@@ -192,6 +193,10 @@ public class DeactivateResource {
         IdVersion idVersion = new IdVersion(slbId, 0);
         slbRepository.updateStatus(new IdVersion[]{idVersion});
 
+        try {
+            propertyBox.set("status", "activated", "slb", slbId);
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(slbRepository.getById(slbId), hh.getMediaType());
     }
 }

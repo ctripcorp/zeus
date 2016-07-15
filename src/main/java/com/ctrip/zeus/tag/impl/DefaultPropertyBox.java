@@ -90,6 +90,79 @@ public class DefaultPropertyBox implements PropertyBox {
     }
 
     @Override
+    public void set(String pname, String pvalue, String type, Long[] itemIds) throws Exception {
+        PropertyKeyDo pkd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
+        if (pkd == null) {
+            pkd = new PropertyKeyDo().setName(pname);
+            propertyKeyDao.insert(pkd);
+        }
+
+        Set<Long> properties = new HashSet<>();
+        PropertyDo targetProperty = null;
+        for (PropertyDo e : propertyDao.findAllByKey(pkd.getId(), PropertyEntity.READSET_FULL)) {
+            properties.add(e.getId());
+            if (e.getPropertyValue().equals(pvalue)) {
+                targetProperty = e;
+            }
+        }
+        if (targetProperty == null) {
+            targetProperty = new PropertyDo().setPropertyKeyId(pkd.getId()).setPropertyValue(pvalue);
+            propertyDao.insert(targetProperty);
+        }
+
+        List<PropertyItemDo> adding = new ArrayList<>();
+        List<PropertyItemDo> removing = new ArrayList<>();
+        List<PropertyItemDo> updating = new ArrayList<>();
+        for (Long itemId : itemIds) {
+            List<PropertyItemDo> items = propertyItemDao.findAllByItemAndProperties(itemId, properties.toArray(new Long[properties.size()]), PropertyItemEntity.READSET_FULL);
+            PropertyItemDo d = null;
+            Iterator<PropertyItemDo> iter = items.iterator();
+            while (iter.hasNext()) {
+                PropertyItemDo n = iter.next();
+                if (n.getType().equals(type)) {
+                    d = n;
+                    iter.remove();
+                    break;
+                } else {
+                    iter.remove();
+                }
+            }
+
+            if (items.size() > 0) {
+                removing.addAll(items);
+            }
+            if (d == null) {
+                adding.add(new PropertyItemDo().setPropertyId(targetProperty.getId()).setItemId(itemId).setType(type));
+
+            } else {
+                if (d.getPropertyId() == targetProperty.getId()) continue;
+
+                d.setPropertyId(targetProperty.getId());
+                updating.add(d);
+            }
+        }
+        if (adding.size() > 0) {
+            propertyItemDao.insert(adding.toArray(new PropertyItemDo[adding.size()]));
+        }
+        if (removing.size() > 0) {
+            propertyItemDao.deleteById(removing.toArray(new PropertyItemDo[removing.size()]));
+        }
+        if (updating.size() > 0) {
+            propertyItemDao.update(updating.toArray(new PropertyItemDo[updating.size()]), PropertyItemEntity.UPDATESET_FULL);
+        }
+    }
+
+    @Override
+    public boolean clear(String type, Long itemId) throws Exception {
+        List<PropertyItemDo> list = propertyItemDao.findAllByItemAndType(itemId, type, PropertyItemEntity.READSET_FULL);
+        if (list.size() > 0) {
+            propertyItemDao.deleteById(list.toArray(new PropertyItemDo[list.size()]));
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public boolean clear(String pname, String pvalue, String type, Long itemId) throws Exception {
         PropertyKeyDo pkd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
         if (pkd == null) return false;
@@ -102,5 +175,26 @@ public class DefaultPropertyBox implements PropertyBox {
 
         propertyItemDao.deleteById(pid);
         return true;
+    }
+
+    @Override
+    public void clear(String pname, String pvalue, String type, Long[] itemIds) throws Exception {
+        PropertyKeyDo pkd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
+        if (pkd == null) return;
+
+        PropertyDo pd = propertyDao.findByKeyAndValue(pkd.getId(), pvalue, PropertyEntity.READSET_FULL);
+        if (pd == null) return;
+
+        List<PropertyItemDo> removing = new ArrayList<>();
+        for (Long itemId : itemIds) {
+            PropertyItemDo pid = propertyItemDao.findByPropertyAndItem(pd.getId(), itemId, type, PropertyItemEntity.READSET_FULL);
+            if (pid == null) continue;
+
+            removing.add(pid);
+        }
+
+        if (removing.size() > 0) {
+            propertyItemDao.deleteById(removing.toArray(new PropertyItemDo[removing.size()]));
+        }
     }
 }
