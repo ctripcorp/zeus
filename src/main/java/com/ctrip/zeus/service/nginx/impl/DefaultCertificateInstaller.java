@@ -5,8 +5,11 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateInstaller;
 import com.ctrip.zeus.util.S;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,16 +21,94 @@ import java.io.OutputStream;
  */
 @Service("certificateInstaller")
 public class DefaultCertificateInstaller implements CertificateInstaller {
-    private CertificateConfig config = new CertificateConfig();
+    private static Logger logger = LoggerFactory.getLogger(DefaultCertificateInstaller.class);
 
     @Resource
     private CertificateDao certificateDao;
     @Resource
     private RCertificateSlbServerDao rCertificateSlbServerDao;
 
+    private final CertificateConfig config = new CertificateConfig();
+    private final String localhost = "_localhost";
+
+    @PostConstruct
+    private void init() {
+        String ownerPath = config.getInstallDir(0L);
+        ownerPath = ownerPath.substring(0, ownerPath.lastIndexOf("/"));
+        File f = new File(ownerPath);
+        try {
+            if (!f.exists()) f.mkdirs();
+        } catch (SecurityException ex) {
+            logger.warn("Fail to create dir " + f.getPath() + " with default ownership.", ex);
+            if (!f.exists()) {
+                final String create = "sudo mkdir " + f.getPath();
+                try {
+                    Process p = Runtime.getRuntime().exec(create);
+                    p.wait(1000L);
+                } catch (IOException e) {
+                    logger.error("Fail to execute command {}.", create, e);
+                    return;
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
+        if (f.canExecute() && f.canRead() && f.canWrite()) {
+            // go through to install default
+        } else {
+            final String chown = "sudo chown -R deploy.deploy " + f.getPath();
+            try {
+                Process p = Runtime.getRuntime().exec(chown);
+                p.wait(1000L);
+            } catch (IOException e) {
+                logger.error("Fail to execute command {}.", chown, e);
+                return;
+            } catch (InterruptedException e) {
+                return;
+            }
+        }
+
+        try {
+            installDefault();
+        } catch (Exception ex) {
+            logger.error("Fail to install the default certificate.", ex);
+        }
+    }
+
     @Override
     public CertificateConfig getConfig() {
         return config;
+    }
+
+    @Override
+    public void installDefault() throws Exception {
+        CertificateDo cert = certificateDao.findMaxByDomainAndState(localhost, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
+        if (cert == null) {
+            logger.error("Could not find default certificate to install.");
+            return;
+        }
+
+        String defaultPath = config.getInstallDir(0L);
+        defaultPath = defaultPath.substring(0, defaultPath.lastIndexOf("/")) + "/default";
+        File f = new File(defaultPath);
+        if (f.exists()) {
+            logger.info(defaultPath + " exists. No need to install default cert.");
+            return;
+        } else {
+            f.mkdirs();
+        }
+
+        OutputStream certos = new FileOutputStream(f.getPath() + "/ssl.crt", config.getWriteFileOption());
+        OutputStream keyos = new FileOutputStream(f.getPath() + "/ssl.key", config.getWriteFileOption());
+        try {
+            certos.write(cert.getCert());
+            keyos.write(cert.getKey());
+            certos.flush();
+            certos.flush();
+        } finally {
+            certos.close();
+            keyos.close();
+        }
     }
 
     @Override
