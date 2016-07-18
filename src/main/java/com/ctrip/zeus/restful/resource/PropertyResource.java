@@ -86,4 +86,17 @@ public class PropertyResource {
         }
         return responseHandler.handle("No action is performed.", hh.getMediaType());
     }
+
+    @GET
+    @Path("/property/delete")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response deleteProperty(@Context HttpHeaders hh,
+                                   @Context HttpServletRequest request,
+                                   @QueryParam("pname") String pname,
+                                   @QueryParam("force") Boolean force) throws Exception {
+        if (pname == null) throw new ValidationException("Parameter pname is required.");
+        boolean forceEnabled = force != null && force;
+        propertyBox.removeProperty(pname, forceEnabled);
+        return responseHandler.handle("Successfully deleted property " + pname + ".", hh.getMediaType());
+    }
 }

@@ -5,7 +5,7 @@ package com.ctrip.zeus.tag;
  */
 public interface PropertyBox {
 
-    void removeProperty(String pname) throws Exception;
+    void removeProperty(String pname, boolean force) throws Exception;
 
     void renameProperty(String originPname, String updatedPname) throws Exception;
 

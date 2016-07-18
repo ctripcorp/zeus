@@ -1,6 +1,7 @@
 package com.ctrip.zeus.tag.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.tag.PropertyBox;
 import org.springframework.stereotype.Component;
 
@@ -20,15 +21,30 @@ public class DefaultPropertyBox implements PropertyBox {
     private PropertyItemDao propertyItemDao;
 
     @Override
-    public void removeProperty(String pname) throws Exception {
+    public void removeProperty(String pname, boolean force) throws Exception {
         PropertyKeyDo d = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
+        if (d == null) return;
+
         List<PropertyDo> properties = propertyDao.findAllByKey(d.getId(), PropertyEntity.READSET_FULL);
+        if (properties.size() == 0) return;
 
         PropertyItemDo[] pitems = new PropertyItemDo[properties.size()];
         for (int i = 0; i < pitems.length; i++) {
             pitems[i] = new PropertyItemDo().setPropertyId(properties.get(i).getId());
         }
-        propertyItemDao.deleteByProperty(pitems);
+
+        if (force) {
+            propertyItemDao.deleteByProperty(pitems);
+        } else {
+            Long[] propertyIds = new Long[properties.size()];
+            for (int i = 0; i < propertyIds.length; i++) {
+                propertyIds[i] = properties.get(i).getId();
+            }
+            List<PropertyItemDo> check = propertyItemDao.findAllByProperties(propertyIds, PropertyItemEntity.READSET_FULL);
+            if (check.size() > 0) {
+                throw new ValidationException("Dependency exists with property named - " + pname + ".");
+            }
+        }
         propertyDao.delete(properties.toArray(new PropertyDo[properties.size()]));
         propertyKeyDao.delete(d);
     }

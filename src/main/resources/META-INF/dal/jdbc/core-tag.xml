@@ -262,6 +262,16 @@
     <entity name="property-item" table="property_item" alias="pi" do-class="PropertyItemDo">
         <var name="pids" value-type="Long[]"/>
         <query-defs>
+            <query name="find-all-by-properties" type="SELECT" multiple="true">
+                <param name="pids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='property-id'/> in <IN>${pids}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-property-and-type" type="SELECT" multiple="true">
                 <param name="property-id"/>
                 <param name="type"/>

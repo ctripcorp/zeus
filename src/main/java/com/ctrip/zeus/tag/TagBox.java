@@ -9,7 +9,7 @@ public interface TagBox {
 
     List<String> getAllTags() throws Exception;
 
-    void removeTag(String name) throws Exception;
+    void removeTag(String name, boolean force) throws Exception;
 
     void renameTag(String oldName, String newName) throws Exception;
 

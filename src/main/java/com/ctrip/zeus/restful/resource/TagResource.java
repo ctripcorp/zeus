@@ -100,10 +100,22 @@ public class TagResource {
                 tagBox.untagging(tagName, type, null);
                 return responseHandler.handle("Untagged all the items with typeName - " + type + " from " + tagName + ".", hh.getMediaType());
             } else {
-                tagBox.removeTag(tagName);
-                return responseHandler.handle("Deleted tag named " + tagName + ".", hh.getMediaType());
+                throw new ValidationException("Type is required when doing batch untagging.");
             }
         }
-        throw new ValidationException("At least one parameter is missing.");
+        return responseHandler.handle("No action is performed.", hh.getMediaType());
+    }
+
+    @GET
+    @Path("/tag/remove")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response removeTag(@Context HttpHeaders hh,
+                              @Context HttpServletRequest request,
+                              @QueryParam("tagName") String tagName,
+                              @QueryParam("force") Boolean force) throws Exception {
+        if (tagName == null) throw new ValidationException("Tag name is required.");
+        boolean forceEnabled = force != null && force;
+        tagBox.removeTag(tagName, forceEnabled);
+        return responseHandler.handle("Successfully removed tag - " + tagName + ".", hh.getMediaType());
     }
 }

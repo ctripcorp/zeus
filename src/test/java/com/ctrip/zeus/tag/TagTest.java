@@ -71,8 +71,31 @@ public class TagTest extends AbstractSpringTest {
         Assert.assertEquals(0, glist.size());
         Assert.assertEquals(0, slist.size());
 
-        tagBox.removeTag("testTaggingGroup");
-        tagBox.removeTag("testTaggingSlb");
+        tagBox.removeTag("testTaggingGroup", true);
+        tagBox.removeTag("testTaggingSlb", true);
+    }
+
+    @Test
+    public void testRemoveTag() throws Exception {
+        tagBox.tagging("testRemoveTag", "group", new Long[]{1L});
+        tagBox.tagging("testRemoveTag", "group", new Long[]{2L});
+        tagBox.tagging("testRemoveTag", "group", new Long[]{3L});
+
+        try {
+            tagBox.removeTag("testRemoveTag", false);
+            Assert.assertTrue(false);
+        } catch (Exception ex) {
+        }
+
+        tagBox.untagging("testRemoveTag", "group", new Long[]{1L});
+        try {
+            tagBox.removeTag("testRemoveTag", false);
+            Assert.assertTrue(false);
+        } catch (Exception ex1) {
+
+        }
+        tagBox.untagging("testRemoveTag", "group", new Long[]{2L, 3L});
+        tagBox.removeTag("testRemoveTag", false);
     }
 
     @Test
@@ -90,7 +113,7 @@ public class TagTest extends AbstractSpringTest {
         l = tagService.query("ttg", "group");
         Assert.assertEquals(3, l.size());
 
-        tagBox.removeTag("ttg");
+        tagBox.removeTag("ttg", true);
     }
 
     @Test
@@ -102,9 +125,9 @@ public class TagTest extends AbstractSpringTest {
         List<String> l = tagService.getTags("group", 1L);
         Assert.assertEquals(2, l.size());
 
-        tagBox.removeTag("testTaggingGroup1");
-        tagBox.removeTag("testTaggingGroup2");
-        tagBox.removeTag("testTaggingGroup3");
+        tagBox.removeTag("testTaggingGroup1", true);
+        tagBox.removeTag("testTaggingGroup2", true);
+        tagBox.removeTag("testTaggingGroup3", true);
     }
 
     @AfterClass

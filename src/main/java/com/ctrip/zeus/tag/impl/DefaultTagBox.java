@@ -29,12 +29,17 @@ public class DefaultTagBox implements TagBox {
     }
 
     @Override
-    public void removeTag(String name) throws Exception {
+    public void removeTag(String name, boolean force) throws Exception {
         TagDo d = tagDao.findByName(name, TagEntity.READSET_FULL);
-        if (d == null)
-            return;
+        if (d == null) return;
+        if (force) {
+            tagItemDao.deleteTag(new TagItemDo().setTagId(d.getId()));
+        } else {
+            List<TagItemDo> check = tagItemDao.findByTag(d.getId(), TagItemEntity.READSET_FULL);
+            if (check.size() > 0)
+                throw new ValidationException("Combination exists with tag " + name + ".");
+        }
         tagDao.delete(d);
-        tagItemDao.deleteTag(new TagItemDo().setTagId(d.getId()));
     }
 
     @Override
