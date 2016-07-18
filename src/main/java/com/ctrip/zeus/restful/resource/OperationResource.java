@@ -185,14 +185,32 @@ public class OperationResource {
             }
         }
 
+        Group gp = groupRepository.getById(groupId);
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(groupId);
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips = ips;
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers) {
+                if (ips.contains(gs.getIp())) {
+                    _ips.add(gs.getIp());
+                }
+            }
+            if (!_ips.containsAll(ips)) {
+                IdVersion[] key = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.ONLINE_EXCLUSIVE);
+                if (key.length != 0) {
+                    Group online = groupRepository.getByKey(key[0]);
+                    if (online != null && online.getGroupServers() != null) {
+                        for (GroupServer gs : online.getGroupServers()) {
+                            if (ips.contains(gs.getIp())) {
+                                _ips.add(gs.getIp());
+                            }
+                        }
+                    }
+                }
+            }
         }
         return memberOps(hh, groupId, _ips, true, TaskOpsType.MEMBER_OPS);
     }
@@ -215,14 +233,32 @@ public class OperationResource {
             }
         }
 
+        Group gp = groupRepository.getById(groupId);
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(groupId);
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips = ips;
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers) {
+                if (ips.contains(gs.getIp())) {
+                    _ips.add(gs.getIp());
+                }
+            }
+            if (!_ips.containsAll(ips)) {
+                IdVersion[] key = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.ONLINE_EXCLUSIVE);
+                if (key.length != 0) {
+                    Group online = groupRepository.getByKey(key[0]);
+                    if (online != null && online.getGroupServers() != null) {
+                        for (GroupServer gs : online.getGroupServers()) {
+                            if (ips.contains(gs.getIp())) {
+                                _ips.add(gs.getIp());
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return memberOps(hh, groupId, _ips, false, TaskOpsType.MEMBER_OPS);
@@ -246,15 +282,32 @@ public class OperationResource {
                 groupId = groupCriteriaQuery.queryByName(groupName);
             }
         }
-
+        Group gp = groupRepository.getById(groupId);
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(groupId);
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips = ips;
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers) {
+                if (ips.contains(gs.getIp())) {
+                    _ips.add(gs.getIp());
+                }
+            }
+            if (!_ips.containsAll(ips)) {
+                IdVersion[] key = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.ONLINE_EXCLUSIVE);
+                if (key.length != 0) {
+                    Group online = groupRepository.getByKey(key[0]);
+                    if (online != null && online.getGroupServers() != null) {
+                        for (GroupServer gs : online.getGroupServers()) {
+                            if (ips.contains(gs.getIp())) {
+                                _ips.add(gs.getIp());
+                            }
+                        }
+                    }
+                }
+            }
         }
         return memberOps(hh, groupId, _ips, true, TaskOpsType.PULL_MEMBER_OPS);
     }
@@ -276,15 +329,32 @@ public class OperationResource {
                 groupId = groupCriteriaQuery.queryByName(groupName);
             }
         }
-
+        Group gp = groupRepository.getById(groupId);
         if (null != batch && batch.equals(true)) {
-            Group gp = groupRepository.getById(groupId);
             List<GroupServer> servers = gp.getGroupServers();
             for (GroupServer gs : servers) {
                 _ips.add(gs.getIp());
             }
         } else if (ips != null) {
-            _ips = ips;
+            List<GroupServer> servers = gp.getGroupServers();
+            for (GroupServer gs : servers) {
+                if (ips.contains(gs.getIp())) {
+                    _ips.add(gs.getIp());
+                }
+            }
+            if (!_ips.containsAll(ips)) {
+                IdVersion[] key = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.ONLINE_EXCLUSIVE);
+                if (key.length != 0) {
+                    Group online = groupRepository.getByKey(key[0]);
+                    if (online != null && online.getGroupServers() != null) {
+                        for (GroupServer gs : online.getGroupServers()) {
+                            if (ips.contains(gs.getIp())) {
+                                _ips.add(gs.getIp());
+                            }
+                        }
+                    }
+                }
+            }
         }
         return memberOps(hh, groupId, _ips, false, TaskOpsType.PULL_MEMBER_OPS);
     }
@@ -320,6 +390,19 @@ public class OperationResource {
             for (GroupServer gs : servers) {
                 if (ips.contains(gs.getIp())) {
                     _ips.add(gs.getIp());
+                }
+            }
+            if (!_ips.containsAll(ips)) {
+                IdVersion[] key = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.ONLINE_EXCLUSIVE);
+                if (key.length != 0) {
+                    Group online = groupRepository.getByKey(key[0]);
+                    if (online != null && online.getGroupServers() != null) {
+                        for (GroupServer gs : online.getGroupServers()) {
+                            if (ips.contains(gs.getIp())) {
+                                _ips.add(gs.getIp());
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -366,6 +449,19 @@ public class OperationResource {
             for (GroupServer gs : servers) {
                 if (ips.contains(gs.getIp())) {
                     _ips.add(gs.getIp());
+                }
+            }
+            if (!_ips.containsAll(ips)) {
+                IdVersion[] key = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.ONLINE_EXCLUSIVE);
+                if (key.length != 0) {
+                    Group online = groupRepository.getByKey(key[0]);
+                    if (online != null && online.getGroupServers() != null) {
+                        for (GroupServer gs : online.getGroupServers()) {
+                            if (ips.contains(gs.getIp())) {
+                                _ips.add(gs.getIp());
+                            }
+                        }
+                    }
                 }
             }
         }
