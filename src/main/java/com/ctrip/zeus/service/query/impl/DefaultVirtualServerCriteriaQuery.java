@@ -1,15 +1,18 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.restful.filter.FilterSet;
+import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
+import com.ctrip.zeus.service.query.QueryCommand;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.ctrip.zeus.service.query.VsQueryCommand;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/9/11.
@@ -26,6 +29,91 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     private RGroupVsDao rGroupVsDao;
     @Resource
     private RVsStatusDao rVsStatusDao;
+
+    @Override
+    public IdVersion[] queryByCommand(QueryCommand query, final SelectionMode mode) throws Exception {
+        final VsQueryCommand vsQuery = (VsQueryCommand) query;
+        final Long[] filteredVsIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsQuery.hasValue(vsQuery.id);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<Long>();
+                        for (String s : vsQuery.getValue(vsQuery.id)) {
+                            result.add(Long.parseLong(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsQuery.hasValue(vsQuery.group_search_key);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        List<IdVersion> searchKeys = new ArrayList<>();
+                        for (String s : vsQuery.getValue(vsQuery.group_search_key)) {
+                            searchKeys.add(new IdVersion(s));
+                        }
+                        return queryByGroup(searchKeys.toArray(new IdVersion[searchKeys.size()]));
+                    }
+                }).build(Long.class).run();
+
+        IdVersion[] filteredVsKeys = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return filteredVsIds != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Set<Long> vsIds = new HashSet<>();
+                        for (Long i : filteredVsIds) {
+                            vsIds.add(i);
+                        }
+                        return queryByIdsAndMode(vsIds.toArray(new Long[vsIds.size()]), mode);
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsQuery.hasValue(vsQuery.domain);
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Set<IdVersion> result = new HashSet<>();
+                        for (String s : vsQuery.getValue(vsQuery.domain)) {
+                            result.addAll(queryByDomain(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsQuery.hasValue(vsQuery.slb_id);
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        List<Long> slbIds = new ArrayList();
+                        for (String s : vsQuery.getValue(vsQuery.slb_id)) {
+                            slbIds.add(Long.parseLong(s));
+                        }
+                        return queryBySlbIds(slbIds.toArray(new Long[slbIds.size()]));
+                    }
+                }).build(IdVersion.class).run();
+
+        return (filteredVsKeys != null) ? filteredVsKeys : queryAll(mode).toArray(new IdVersion[0]);
+    }
 
     @Override
     public Set<Long> queryAll() throws Exception {
@@ -69,6 +157,22 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
         IdVersion[] result = new IdVersion[v.length];
         for (int i = 0; i < result.length && i < v.length; i++) {
             result[i] = new IdVersion(vsId, v[i]);
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Long> queryByGroup(IdVersion[] searchKeys) throws Exception {
+        Set<Long> result = new HashSet<>();
+        Map<IdVersion, Long> map = new HashMap();
+        for (IdVersion sk : searchKeys) {
+            map.put(sk, sk.getId());
+        }
+        for (RelGroupVsDo e : rGroupVsDao.findAllByGroups(map.values().toArray(new Long[map.size()]), RGroupVsEntity.READSET_FULL)) {
+            if (result.contains(e.getVsId()))
+                continue;
+            if (map.keySet().contains(new IdVersion(e.getVsId(), e.getGroupVersion())))
+                result.add(e.getVsId());
         }
         return result;
     }

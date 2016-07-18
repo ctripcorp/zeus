@@ -10,6 +10,8 @@ import java.util.Set;
  */
 public interface SlbCriteriaQuery {
 
+    IdVersion[] queryByCommand(QueryCommand query, SelectionMode mode) throws Exception;
+
     Set<Long> queryAll() throws Exception;
 
     Set<IdVersion> queryAll(SelectionMode mode) throws Exception;

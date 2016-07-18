@@ -1,10 +1,14 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.restful.filter.FilterSet;
+import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.query.GroupQueryCommand;
+import com.ctrip.zeus.service.query.QueryCommand;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -25,6 +29,107 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     private RGroupVgDao rGroupVgDao;
     @Resource
     private RGroupStatusDao rGroupStatusDao;
+
+    @Override
+    public IdVersion[] queryByCommand(QueryCommand query, final SelectionMode mode) throws Exception {
+        final GroupQueryCommand groupQuery = (GroupQueryCommand) query;
+        final Long[] filteredGroupIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return groupQuery.hasValue(groupQuery.id);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<Long>();
+                        for (String s : groupQuery.getValue(groupQuery.id)) {
+                            result.add(Long.parseLong(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return groupQuery.hasValue(groupQuery.name);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<Long>();
+                        for (String s : groupQuery.getValue(groupQuery.name)) {
+                            result.add(queryByName(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return groupQuery.hasValue(groupQuery.app_id);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<Long>();
+                        for (String s : groupQuery.getValue(groupQuery.app_id)) {
+                            result.addAll(queryByAppId(s));
+                        }
+                        return result;
+                    }
+                }).build(Long.class).run();
+
+        IdVersion[] filteredGroupKeys = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return filteredGroupIds != null;
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Set<Long> groupIds = new HashSet<Long>();
+                        for (Long i : filteredGroupIds) {
+                            groupIds.add(i);
+                        }
+                        return queryByIdsAndMode(groupIds.toArray(new Long[groupIds.size()]), mode);
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return groupQuery.hasValue(groupQuery.member_ip);
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Set<IdVersion> result = new HashSet<IdVersion>();
+                        for (String s : groupQuery.getValue(groupQuery.member_ip)) {
+                            result.addAll(queryByGroupServer(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return groupQuery.hasValue(groupQuery.vs_id);
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Set<IdVersion> result = new HashSet<IdVersion>();
+                        List<Long> vsIds = new ArrayList<Long>();
+                        for (String s : groupQuery.getValue(groupQuery.vs_id)) {
+                            vsIds.add(Long.parseLong(s));
+                        }
+                        return queryByVsIds(vsIds.toArray(new Long[vsIds.size()]));
+                    }
+                }).build(IdVersion.class).run();
+
+        return (filteredGroupKeys != null) ? filteredGroupKeys : queryAll(mode).toArray(new IdVersion[0]);
+    }
 
     @Override
     public Long queryByName(String name) throws Exception {

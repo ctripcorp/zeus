@@ -13,6 +13,12 @@ public class IdVersion implements Comparable<IdVersion> {
         this.version = version;
     }
 
+    public IdVersion(String stringValue) {
+        int split = stringValue.indexOf('_');
+        this.id = Long.parseLong(stringValue.substring(0, split));
+        this.version = Integer.parseInt(stringValue.substring(split + 1, stringValue.length()));
+    }
+
     public Long getId() {
         return id;
     }
@@ -45,7 +51,8 @@ public class IdVersion implements Comparable<IdVersion> {
     @Override
     public int compareTo(IdVersion o) {
         if (this.id < o.id) return -1;
-        if (this.id.longValue() == o.id.longValue()) return (this.version - o.version) < 0 ? -1 : ((this.version.intValue() == o.version.intValue()) ? 0 : 1);
+        if (this.id.longValue() == o.id.longValue())
+            return (this.version - o.version) < 0 ? -1 : ((this.version.intValue() == o.version.intValue()) ? 0 : 1);
         return 1;
     }
 

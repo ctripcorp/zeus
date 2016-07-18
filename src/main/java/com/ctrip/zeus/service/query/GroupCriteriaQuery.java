@@ -10,6 +10,8 @@ import java.util.Set;
  */
 public interface GroupCriteriaQuery {
 
+    IdVersion[] queryByCommand(QueryCommand query, SelectionMode mode) throws Exception;
+
     Long queryByName(String name) throws Exception;
 
     Set<Long> queryByAppId(String appId) throws Exception;

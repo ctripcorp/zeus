@@ -1,9 +1,13 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.restful.filter.FilterSet;
+import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
+import com.ctrip.zeus.service.query.QueryCommand;
+import com.ctrip.zeus.service.query.SlbQueryCommand;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +27,98 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     private RVsSlbDao rVsSlbDao;
     @Resource
     private RSlbStatusDao rSlbStatusDao;
+
+    @Override
+    public IdVersion[] queryByCommand(QueryCommand query, final SelectionMode mode) throws Exception {
+        final SlbQueryCommand slbQuery = (SlbQueryCommand) query;
+        final Long[] filteredSlbIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return slbQuery.hasValue(slbQuery.id);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<Long>();
+                        for (String s : slbQuery.getValue(slbQuery.id)) {
+                            result.add(Long.parseLong(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return slbQuery.hasValue(slbQuery.name);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<>();
+                        for (String s : slbQuery.getValue(slbQuery.name)) {
+                            result.add(queryByName(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return slbQuery.hasValue(slbQuery.vs_search_key);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        List<IdVersion> searchKey = new ArrayList<>();
+                        for (String s : slbQuery.getValue(slbQuery.vs_search_key)) {
+                            searchKey.add(new IdVersion(s));
+                        }
+                        return queryByVses(searchKey.toArray(new IdVersion[searchKey.size()]));
+                    }
+                }).build(Long.class).run();
+
+        IdVersion[] filteredSlbKeys = new QueryExecuter.Builder<IdVersion>()
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return filteredSlbIds != null || slbQuery.hasValue(slbQuery.id);
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        List<Long> slbIds = new ArrayList<>();
+                        if (slbQuery.hasValue(slbQuery.id)) {
+                            for (String s : slbQuery.getValue(slbQuery.id)) {
+                                slbIds.add(Long.parseLong(s));
+                            }
+                        }
+                        if (filteredSlbIds != null) {
+                            for (Long i : filteredSlbIds) {
+                                slbIds.add(i);
+                            }
+                        }
+                        return queryByIdsAndMode(slbIds.toArray(new Long[slbIds.size()]), mode);
+                    }
+                })
+                .addFilter(new FilterSet<IdVersion>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return slbQuery.hasValue(slbQuery.ip);
+                    }
+
+                    @Override
+                    public Set<IdVersion> filter() throws Exception {
+                        Set<IdVersion> result = new HashSet<>();
+                        for (String s : slbQuery.getValue(slbQuery.ip)) {
+                            result.addAll(queryBySlbServerIp(s));
+                        }
+                        return result;
+                    }
+                }).build(IdVersion.class).run();
+
+        return (filteredSlbKeys != null) ? filteredSlbKeys : queryAll(mode).toArray(new IdVersion[0]);
+    }
 
     @Override
     public Long queryByName(String name) throws Exception {
@@ -47,7 +143,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
         if (d == null) return new IdVersion[0];
 
         int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
-        
+
         IdVersion[] result = new IdVersion[v.length];
         for (int i = 0; i < result.length && i < v.length; i++) {
             result[i] = new IdVersion(slbId, v[i]);
