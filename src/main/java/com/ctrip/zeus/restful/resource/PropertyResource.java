@@ -62,11 +62,11 @@ public class PropertyResource {
                                     @QueryParam("pname") String pname,
                                     @QueryParam("pvalue") String pvalue,
                                     @QueryParam("type") String type,
-                                    @QueryParam("targetId") Long targetId) throws Exception {
-        if (pname == null || pvalue == null || type == null || targetId == null)
+                                    @QueryParam("targetId") List<Long> targetIds) throws Exception {
+        if (pname == null || pvalue == null || type == null || targetIds == null)
             throw new ValidationException("At least one parameter is missing.");
-        propertyBox.set(pname, pvalue, type, targetId);
-        return responseHandler.handle(targetId + " is added to property " + pname + "/" + pvalue + ".", hh.getMediaType());
+        propertyBox.set(pname, pvalue, type, targetIds.toArray(new Long[targetIds.size()]));
+        return responseHandler.handle(Joiner.on(",").join(targetIds) + " is/are added to property " + pname + "/" + pvalue + ".", hh.getMediaType());
     }
 
     @GET
@@ -77,14 +77,11 @@ public class PropertyResource {
                                        @QueryParam("pname") String pname,
                                        @QueryParam("pvalue") String pvalue,
                                        @QueryParam("type") String type,
-                                       @QueryParam("targetId") Long targetId) throws Exception {
-        if ((pname == null && pvalue == null) || type == null)
+                                       @QueryParam("targetId") List<Long> targetIds) throws Exception {
+        if ((pname == null && pvalue == null) || type == null || targetIds == null)
             throw new ValidationException("At least one parameter is missing.");
-        if (targetId != null) {
-            propertyBox.clear(pname, pvalue, type, targetId);
-            return responseHandler.handle(targetId + " is deleted from property " + pname + "/" + pvalue + ".", hh.getMediaType());
-        }
-        return responseHandler.handle("No action is performed.", hh.getMediaType());
+        propertyBox.clear(pname, pvalue, type, targetIds.toArray(new Long[targetIds.size()]));
+        return responseHandler.handle(Joiner.on(",").join(targetIds) + " is/are deleted from property " + pname + "/" + pvalue + ".", hh.getMediaType());
     }
 
     @GET
