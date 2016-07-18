@@ -4,6 +4,7 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateInstaller;
+import com.ctrip.zeus.util.IOUtils;
 import com.ctrip.zeus.util.S;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,15 +37,20 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
         String ownerPath = config.getInstallDir(0L);
         ownerPath = ownerPath.substring(0, ownerPath.lastIndexOf("/"));
         File f = new File(ownerPath);
+        boolean created = false;
         try {
-            if (!f.exists()) f.mkdirs();
+            if (!f.exists()) created = f.mkdirs();
         } catch (SecurityException ex) {
-            logger.warn("Fail to create dir " + f.getPath() + " with default ownership.", ex);
+        }
+        if (!created) {
+            logger.warn("Fail to create dir " + f.getPath() + " with default ownership.");
             if (!f.exists()) {
-                final String create = "sudo mkdir " + f.getPath();
+                final String create = "sudo mkdir -p " + f.getPath();
                 try {
                     Process p = Runtime.getRuntime().exec(create);
-                    p.wait(1000L);
+                    p.waitFor();
+                    logger.info(IOUtils.inputStreamStringify(p.getInputStream()));
+                    logger.error(IOUtils.inputStreamStringify(p.getErrorStream()));
                 } catch (IOException e) {
                     logger.error("Fail to execute command {}.", create, e);
                     return;
@@ -53,13 +59,16 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
                 }
             }
         }
+
         if (f.canExecute() && f.canRead() && f.canWrite()) {
             // go through to install default
         } else {
             final String chown = "sudo chown -R deploy.deploy " + f.getPath();
             try {
                 Process p = Runtime.getRuntime().exec(chown);
-                p.wait(1000L);
+                p.waitFor();
+                logger.info(IOUtils.inputStreamStringify(p.getInputStream()));
+                logger.error(IOUtils.inputStreamStringify(p.getErrorStream()));
             } catch (IOException e) {
                 logger.error("Fail to execute command {}.", chown, e);
                 return;
