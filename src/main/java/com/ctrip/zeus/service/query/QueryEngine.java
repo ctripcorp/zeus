@@ -14,7 +14,7 @@ import java.util.*;
 /**
  * Created by zhoumy on 2016/7/15.
  */
-public class QueryRender {
+public class QueryEngine {
     private final Queue<String[]> params;
     private final String resource;
     private final SelectionMode mode;
@@ -25,7 +25,7 @@ public class QueryRender {
 
     private final QueryCommand[] sequenceController = new QueryCommand[3];
 
-    public QueryRender(Queue<String[]> params, String resource, SelectionMode mode) {
+    public QueryEngine(Queue<String[]> params, String resource, SelectionMode mode) {
         this.params = params;
         this.resource = resource;
         this.mode = mode;
@@ -48,7 +48,7 @@ public class QueryRender {
         }
     }
 
-    public void render() throws ValidationException {
+    public void init(boolean skipable) throws ValidationException {
         Queue<String[]> curr = new LinkedList<>(params);
         Queue<String[]> next = new LinkedList<>();
         for (QueryCommand c : sequenceController) {
@@ -62,59 +62,65 @@ public class QueryRender {
             curr = next;
             next = tmp;
         }
+        if (!skipable && curr.size() > 0) {
+            throw new ValidationException("Unsupported params " + Joiner.on(",").join(curr));
+        }
     }
 
-    public IdVersion[] execute(CriteriaQueryFactory criteriaQueryFactory) throws Exception {
-        IdVersion[] tmp;
-        QueryCommand c = sequenceController[1];
-        tmp = execute(c, criteriaQueryFactory);
-        if (tmp.length == 0) return tmp;
-        c = sequenceController[2];
-        tmp = execute(c, criteriaQueryFactory);
-        if (tmp.length == 0) return tmp;
-        c = sequenceController[3];
-        return execute(c, criteriaQueryFactory);
+    public IdVersion[] run(CriteriaQueryFactory criteriaQueryFactory) throws Exception {
+        String[] traverseSequence = new String[]{sequenceController[1].getType(),
+                sequenceController[2].getType(), sequenceController[0].getType()};
+        return traverseQuery(traverseSequence, 0, criteriaQueryFactory);
     }
 
-    private IdVersion[] execute(QueryCommand c, CriteriaQueryFactory criteriaQueryFactory) throws Exception {
-        IdVersion[] tmp;
-        CriteriaQuery q = criteriaQueryFactory.getCriteriaQuery(c.getType());
+    private IdVersion[] traverseQuery(String[] queryCommands, int idx, CriteriaQueryFactory criteriaQueryFactory) throws Exception {
+        if (idx > queryCommands.length - 1) return new IdVersion[0];
 
-        switch (c.getType()) {
+        IdVersion[] result;
+        String queryCommandType = queryCommands[idx];
+        CriteriaQuery q = criteriaQueryFactory.getCriteriaQuery(queryCommandType);
+
+        switch (queryCommandType) {
             case "group": {
-                tmp = q.queryByCommand(groupQueryCommand, mode);
+                result = q.queryByCommand(groupQueryCommand, mode);
                 if (!"group".equals(resource)) {
-                    vsQueryCommand.addAtIndex(vsQueryCommand.group_search_key, nextSearchKey(tmp));
+                    vsQueryCommand.addAtIndex(vsQueryCommand.group_search_key, nextSearchKey(result));
                 }
                 break;
             }
             case "vs": {
-                tmp = q.queryByCommand(vsQueryCommand, mode);
+                result = q.queryByCommand(vsQueryCommand, mode);
                 if (!"vs".equals(resource)) {
-                    slbQueryCommand.addAtIndex(slbQueryCommand.vs_search_key, nextSearchKey(tmp));
+                    slbQueryCommand.addAtIndex(slbQueryCommand.vs_search_key, nextSearchKey(result));
 
-                    Long[] vsId = new Long[tmp.length];
-                    for (int i = 0; i < tmp.length; i++) {
-                        vsId[i] = tmp[i].getId();
+                    Long[] vsId = new Long[result.length];
+                    for (int i = 0; i < result.length; i++) {
+                        vsId[i] = result[i].getId();
                     }
                     groupQueryCommand.addAtIndex(groupQueryCommand.vs_id, Joiner.on(",").join(vsId));
                 }
                 break;
             }
             case "slb": {
-                tmp = q.queryByCommand(slbQueryCommand, mode);
+                result = q.queryByCommand(slbQueryCommand, mode);
                 if (!"slb".equals(resource)) {
-                    Long[] slbId = new Long[tmp.length];
-                    for (int i = 0; i < tmp.length; i++) {
-                        slbId[i] = tmp[i].getId();
+                    Long[] slbId = new Long[result.length];
+                    for (int i = 0; i < result.length; i++) {
+                        slbId[i] = result[i].getId();
                     }
                     vsQueryCommand.addAtIndex(vsQueryCommand.slb_id, Joiner.on(",").join(slbId));
                 }
             }
             default:
-                throw new ValidationException("Unknown query command is created. Type " + c.getType() + " is not supported.");
+                throw new ValidationException("Unknown query command is created. Type " + queryCommandType + " is not supported.");
         }
-        return tmp;
+        if (queryCommandType.equals(resource)) {
+            return result;
+        } else if (result != null && result.length == 0) {
+            return new IdVersion[0];
+        } else {
+            return traverseQuery(queryCommands, idx + 1, criteriaQueryFactory);
+        }
     }
 
     private static String nextSearchKey(IdVersion[] searchKeys) {
