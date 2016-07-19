@@ -8,17 +8,7 @@ import java.util.Set;
 /**
  * Created by zhoumy on 2015/9/11.
  */
-public interface VirtualServerCriteriaQuery {
-
-    IdVersion[] queryByCommand(QueryCommand query, SelectionMode mode) throws Exception;
-
-    Set<Long> queryAll() throws Exception;
-
-    Set<IdVersion> queryAll(SelectionMode mode) throws Exception;
-
-    Set<IdVersion> queryByIdsAndMode(Long[] vsIds, SelectionMode mode) throws Exception;
-
-    IdVersion[] queryByIdAndMode(Long vsId, SelectionMode mode) throws Exception;
+public interface VirtualServerCriteriaQuery extends CriteriaQuery {
 
     Set<Long> queryByGroup(IdVersion[] searchKeys) throws Exception;
 

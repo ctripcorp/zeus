@@ -8,23 +8,13 @@ import java.util.Set;
 /**
  * Created by zhoumy on 2015/8/7.
  */
-public interface GroupCriteriaQuery {
-
-    IdVersion[] queryByCommand(QueryCommand query, SelectionMode mode) throws Exception;
+public interface GroupCriteriaQuery extends CriteriaQuery {
 
     Long queryByName(String name) throws Exception;
 
     Set<Long> queryByAppId(String appId) throws Exception;
 
-    Set<Long> queryAll() throws Exception;
-
     Set<Long> queryAllVGroups() throws Exception;
-
-    Set<IdVersion> queryByIdsAndMode(Long[] groupIds, SelectionMode mode) throws Exception;
-
-    IdVersion[] queryByIdAndMode(Long groupId, SelectionMode mode) throws Exception;
-
-    Set<IdVersion> queryAll(SelectionMode mode) throws Exception;
 
     Set<IdVersion> queryAllVGroups(SelectionMode mode) throws Exception;
 

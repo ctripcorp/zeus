@@ -137,9 +137,9 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
-    public Set<IdVersion> queryByIdsAndMode(Long[] vsIds, SelectionMode mode) throws Exception {
+    public Set<IdVersion> queryByIdsAndMode(Long[] ids, SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
-        for (RelVsStatusDo d : rVsStatusDao.findByVses(vsIds, RVsStatusEntity.READSET_FULL)) {
+        for (RelVsStatusDo d : rVsStatusDao.findByVses(ids, RVsStatusEntity.READSET_FULL)) {
             for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
                 result.add(new IdVersion(d.getVsId(), v));
             }
@@ -148,15 +148,15 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
-    public IdVersion[] queryByIdAndMode(Long vsId, SelectionMode mode) throws Exception {
-        RelVsStatusDo d = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
+    public IdVersion[] queryByIdAndMode(Long id, SelectionMode mode) throws Exception {
+        RelVsStatusDo d = rVsStatusDao.findByVs(id, RVsStatusEntity.READSET_FULL);
         if (d == null) return new IdVersion[0];
 
         int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
 
         IdVersion[] result = new IdVersion[v.length];
         for (int i = 0; i < result.length && i < v.length; i++) {
-            result[i] = new IdVersion(vsId, v[i]);
+            result[i] = new IdVersion(id, v[i]);
         }
         return result;
     }

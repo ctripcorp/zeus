@@ -41,6 +41,9 @@ public class VsQueryCommand implements QueryCommand {
             // preserved query name
             case "ip":
                 return true;
+            case "slbId":
+                idx = slb_id;
+                break;
             default:
                 return false;
         }

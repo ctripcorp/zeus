@@ -119,7 +119,6 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        Set<IdVersion> result = new HashSet<IdVersion>();
                         List<Long> vsIds = new ArrayList<Long>();
                         for (String s : groupQuery.getValue(groupQuery.vs_id)) {
                             vsIds.add(Long.parseLong(s));
@@ -165,9 +164,9 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
-    public Set<IdVersion> queryByIdsAndMode(Long[] groupIds, SelectionMode mode) throws Exception {
+    public Set<IdVersion> queryByIdsAndMode(Long[] ids, SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
-        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL)) {
+        for (RelGroupStatusDo d : rGroupStatusDao.findByGroups(ids, RGroupStatusEntity.READSET_FULL)) {
             for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
                 result.add(new IdVersion(d.getGroupId(), v));
             }
@@ -176,15 +175,15 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     }
 
     @Override
-    public IdVersion[] queryByIdAndMode(Long groupId, SelectionMode mode) throws Exception {
-        RelGroupStatusDo d = rGroupStatusDao.findByGroup(groupId, RGroupStatusEntity.READSET_FULL);
+    public IdVersion[] queryByIdAndMode(Long id, SelectionMode mode) throws Exception {
+        RelGroupStatusDo d = rGroupStatusDao.findByGroup(id, RGroupStatusEntity.READSET_FULL);
         if (d == null) return new IdVersion[0];
 
         int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
 
         IdVersion[] result = new IdVersion[v.length];
         for (int i = 0; i < result.length && i < v.length; i++) {
-            result[i] = new IdVersion(groupId, v[i]);
+            result[i] = new IdVersion(id, v[i]);
         }
         return result;
     }

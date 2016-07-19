@@ -127,9 +127,9 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     }
 
     @Override
-    public Set<IdVersion> queryByIdsAndMode(Long[] slbIds, SelectionMode mode) throws Exception {
+    public Set<IdVersion> queryByIdsAndMode(Long[] ids, SelectionMode mode) throws Exception {
         Set<IdVersion> result = new HashSet<>();
-        for (RelSlbStatusDo d : rSlbStatusDao.findBySlbs(slbIds, RSlbStatusEntity.READSET_FULL)) {
+        for (RelSlbStatusDo d : rSlbStatusDao.findBySlbs(ids, RSlbStatusEntity.READSET_FULL)) {
             for (int v : VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion())) {
                 result.add(new IdVersion(d.getSlbId(), v));
             }
@@ -138,15 +138,15 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     }
 
     @Override
-    public IdVersion[] queryByIdAndMode(Long slbId, SelectionMode mode) throws Exception {
-        RelSlbStatusDo d = rSlbStatusDao.findBySlb(slbId, RSlbStatusEntity.READSET_FULL);
+    public IdVersion[] queryByIdAndMode(Long id, SelectionMode mode) throws Exception {
+        RelSlbStatusDo d = rSlbStatusDao.findBySlb(id, RSlbStatusEntity.READSET_FULL);
         if (d == null) return new IdVersion[0];
 
         int[] v = VersionUtils.getVersionByMode(mode, d.getOfflineVersion(), d.getOnlineVersion());
 
         IdVersion[] result = new IdVersion[v.length];
         for (int i = 0; i < result.length && i < v.length; i++) {
-            result[i] = new IdVersion(slbId, v[i]);
+            result[i] = new IdVersion(id, v[i]);
         }
         return result;
     }
