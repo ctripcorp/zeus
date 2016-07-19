@@ -70,7 +70,13 @@ public class QueryEngine {
     public IdVersion[] run(CriteriaQueryFactory criteriaQueryFactory) throws Exception {
         String[] traverseSequence = new String[]{sequenceController[1].getType(),
                 sequenceController[2].getType(), sequenceController[0].getType()};
-        return traverseQuery(traverseSequence, 0, criteriaQueryFactory);
+        IdVersion[] result = traverseQuery(traverseSequence, 0, criteriaQueryFactory);
+        if (result == null) {
+            Set<IdVersion> tmp = criteriaQueryFactory.getCriteriaQuery(traverseSequence[2]).queryAll(mode);
+            return tmp.toArray(new IdVersion[tmp.size()]);
+        } else {
+            return result;
+        }
     }
 
     private IdVersion[] traverseQuery(String[] queryCommands, int idx, CriteriaQueryFactory criteriaQueryFactory) throws Exception {
@@ -83,14 +89,14 @@ public class QueryEngine {
         switch (queryCommandType) {
             case "group": {
                 result = q.queryByCommand(groupQueryCommand, mode);
-                if (!"group".equals(resource)) {
+                if (!"group".equals(resource) && result != null && result.length > 0) {
                     vsQueryCommand.addAtIndex(vsQueryCommand.group_search_key, nextSearchKey(result));
                 }
                 break;
             }
             case "vs": {
                 result = q.queryByCommand(vsQueryCommand, mode);
-                if (!"vs".equals(resource)) {
+                if (!"vs".equals(resource) && result != null && result.length > 0) {
                     slbQueryCommand.addAtIndex(slbQueryCommand.vs_search_key, nextSearchKey(result));
 
                     Long[] vsId = new Long[result.length];
@@ -103,13 +109,14 @@ public class QueryEngine {
             }
             case "slb": {
                 result = q.queryByCommand(slbQueryCommand, mode);
-                if (!"slb".equals(resource)) {
+                if (!"slb".equals(resource) && result != null && result.length > 0) {
                     Long[] slbId = new Long[result.length];
                     for (int i = 0; i < result.length; i++) {
                         slbId[i] = result[i].getId();
                     }
                     vsQueryCommand.addAtIndex(vsQueryCommand.slb_id, Joiner.on(",").join(slbId));
                 }
+                break;
             }
             default:
                 throw new ValidationException("Unknown query command is created. Type " + queryCommandType + " is not supported.");

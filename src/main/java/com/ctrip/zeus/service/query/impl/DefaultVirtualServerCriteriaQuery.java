@@ -118,7 +118,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
                     }
                 }).build(IdVersion.class).run();
 
-        return (filteredVsKeys != null) ? filteredVsKeys : queryAll(mode).toArray(new IdVersion[0]);
+        return filteredVsKeys;
     }
 
     @Override

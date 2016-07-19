@@ -82,21 +82,14 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
                 .addFilter(new FilterSet<IdVersion>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
-                        return filteredSlbIds != null || slbQuery.hasValue(slbQuery.id);
+                        return filteredSlbIds != null;
                     }
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
                         List<Long> slbIds = new ArrayList<>();
-                        if (slbQuery.hasValue(slbQuery.id)) {
-                            for (String s : slbQuery.getValue(slbQuery.id)) {
-                                slbIds.add(Long.parseLong(s));
-                            }
-                        }
-                        if (filteredSlbIds != null) {
-                            for (Long i : filteredSlbIds) {
-                                slbIds.add(i);
-                            }
+                        for (Long i : filteredSlbIds) {
+                            slbIds.add(i);
                         }
                         return queryByIdsAndMode(slbIds.toArray(new Long[slbIds.size()]), mode);
                     }
@@ -117,7 +110,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
                     }
                 }).build(IdVersion.class).run();
 
-        return (filteredSlbKeys != null) ? filteredSlbKeys : queryAll(mode).toArray(new IdVersion[0]);
+        return filteredSlbKeys;
     }
 
     @Override

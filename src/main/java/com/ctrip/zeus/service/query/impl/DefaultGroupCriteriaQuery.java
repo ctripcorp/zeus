@@ -127,7 +127,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
                     }
                 }).build(IdVersion.class).run();
 
-        return (filteredGroupKeys != null) ? filteredGroupKeys : queryAll(mode).toArray(new IdVersion[0]);
+        return filteredGroupKeys;
     }
 
     @Override
