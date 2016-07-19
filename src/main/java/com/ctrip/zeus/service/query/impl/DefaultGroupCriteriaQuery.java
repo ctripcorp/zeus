@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.service.query.filter.FilterSet;
 import com.ctrip.zeus.service.query.filter.QueryExecuter;
 import com.ctrip.zeus.service.model.SelectionMode;
@@ -104,7 +105,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
 
                     @Override
                     public Set<IdVersion> filter() throws Exception {
-                        Set<IdVersion> result = new HashSet<IdVersion>();
+                        Set<IdVersion> result = new HashSet<>();
                         for (String s : groupQuery.getValue(groupQuery.member_ip)) {
                             result.addAll(queryByGroupServer(s.trim()));
                         }
@@ -125,7 +126,17 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
                         }
                         return queryByVsIds(vsIds.toArray(new Long[vsIds.size()]));
                     }
-                }).build(IdVersion.class).run();
+                }).build(IdVersion.class).run(new ResultHandler<IdVersion, IdVersion>() {
+                    @Override
+                    public IdVersion[] handle(Set<IdVersion> result) throws Exception {
+                        if (result == null) return null;
+                        if (result.size() == 0) return new IdVersion[0];
+                        if (filteredGroupIds == null) {
+                            result.retainAll(queryAll(mode));
+                        }
+                        return result.toArray(new IdVersion[result.size()]);
+                    }
+                });
 
         return filteredGroupKeys;
     }

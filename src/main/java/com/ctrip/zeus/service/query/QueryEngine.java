@@ -32,8 +32,8 @@ public class QueryEngine {
         switch (resource) {
             case "group":
                 sequenceController[0] = groupQueryCommand;
-                sequenceController[1] = vsQueryCommand;
-                sequenceController[2] = slbQueryCommand;
+                sequenceController[1] = slbQueryCommand;
+                sequenceController[2] = vsQueryCommand;
                 break;
             case "vs":
                 sequenceController[0] = vsQueryCommand;

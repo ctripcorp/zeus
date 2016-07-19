@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.service.query.filter.FilterSet;
 import com.ctrip.zeus.service.query.filter.QueryExecuter;
 import com.ctrip.zeus.service.model.SelectionMode;
@@ -108,7 +109,17 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
                         }
                         return result;
                     }
-                }).build(IdVersion.class).run();
+                }).build(IdVersion.class).run(new ResultHandler<IdVersion, IdVersion>() {
+                    @Override
+                    public IdVersion[] handle(Set<IdVersion> result) throws Exception {
+                        if (result == null) return null;
+                        if (result.size() == 0) return new IdVersion[0];
+                        if (filteredSlbIds == null) {
+                            result.retainAll(queryAll(mode));
+                        }
+                        return result.toArray(new IdVersion[result.size()]);
+                    }
+                });
 
         return filteredSlbKeys;
     }
