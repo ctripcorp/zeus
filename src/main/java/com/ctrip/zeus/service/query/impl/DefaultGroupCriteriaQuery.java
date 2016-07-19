@@ -59,7 +59,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
                     public Set<Long> filter() throws Exception {
                         Set<Long> result = new HashSet<Long>();
                         for (String s : groupQuery.getValue(groupQuery.name)) {
-                            result.add(queryByName(s));
+                            result.add(queryByName(s.trim()));
                         }
                         return result;
                     }
@@ -74,7 +74,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
                     public Set<Long> filter() throws Exception {
                         Set<Long> result = new HashSet<Long>();
                         for (String s : groupQuery.getValue(groupQuery.app_id)) {
-                            result.addAll(queryByAppId(s));
+                            result.addAll(queryByAppId(s.trim()));
                         }
                         return result;
                     }
@@ -106,7 +106,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
                     public Set<IdVersion> filter() throws Exception {
                         Set<IdVersion> result = new HashSet<IdVersion>();
                         for (String s : groupQuery.getValue(groupQuery.member_ip)) {
-                            result.addAll(queryByGroupServer(s));
+                            result.addAll(queryByGroupServer(s.trim()));
                         }
                         return result;
                     }

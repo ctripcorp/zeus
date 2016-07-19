@@ -2,25 +2,21 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServerList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
-import com.ctrip.zeus.service.query.filter.FilterSet;
-import com.ctrip.zeus.service.query.filter.QueryExecuter;
+import com.ctrip.zeus.restful.message.QueryParamRender;
+import com.ctrip.zeus.service.query.CriteriaQueryFactory;
+import com.ctrip.zeus.service.query.QueryEngine;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.GenericSerializer;
-import com.ctrip.zeus.tag.PropertyService;
-import com.ctrip.zeus.tag.TagService;
-import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -28,14 +24,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.HashSet;
+import javax.ws.rs.core.*;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/8/5.
@@ -48,11 +38,7 @@ public class VirtualServerResource {
     @Resource
     private ArchiveRepository archiveRepository;
     @Resource
-    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
-    @Resource
-    private TagService tagService;
-    @Resource
-    private PropertyService propertyService;
+    private CriteriaQueryFactory criteriaQueryFactory;
     @Resource
     private ResponseHandler responseHandler;
 
@@ -64,115 +50,14 @@ public class VirtualServerResource {
     @Authorize(name = "getAllVses")
     public Response list(@Context HttpHeaders hh,
                          @Context HttpServletRequest request,
-                         @QueryParam("slbId") final Long slbId,
-                         @TrimmedQueryParam("domain") final String domain,
-                         @TrimmedQueryParam("tag") final List<String> tags,
-                         @TrimmedQueryParam("pname") final String pname,
-                         @TrimmedQueryParam("pvalue") final String pvalue,
-                         @TrimmedQueryParam("mode") final String mode) throws Exception {
-        final SelectionMode selectionMode = SelectionMode.getMode(mode);
-
-        final IdVersion[] vsFilter = new QueryExecuter.Builder<IdVersion>()
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return slbId != null;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryBySlbId(slbId);
-                    }
-                })
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return domain != null;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryByDomain(domain);
-                    }
-                }).build(IdVersion.class).run();
-
-        final Long[] vsIds = new QueryExecuter.Builder<Long>()
-                .addFilter(new FilterSet<Long>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return vsFilter != null;
-                    }
-
-                    @Override
-                    public Set<Long> filter() throws Exception {
-                        Set<Long> result = new HashSet<>();
-                        for (IdVersion e : vsFilter) {
-                            result.add(e.getId());
-                        }
-                        return result;
-                    }
-                })
-                .addFilter(new FilterSet<Long>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return tags != null && tags.size() > 0;
-                    }
-
-                    @Override
-                    public Set<Long> filter() throws Exception {
-                        return new HashSet<>(tagService.query(tags, "vs"));
-                    }
-                })
-                .addFilter(new FilterSet<Long>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return pname != null & pvalue != null;
-                    }
-
-                    @Override
-                    public Set<Long> filter() throws Exception {
-                        return new HashSet<>(propertyService.queryTargets(pname, pvalue, "slb"));
-                    }
-                }).build(Long.class).run(new ResultHandler<Long, Long>() {
-                    @Override
-                    public Long[] handle(Set<Long> result) throws Exception {
-                        if (result == null) {
-                            result = virtualServerCriteriaQuery.queryAll();
-                        }
-                        return result.toArray(new Long[result.size()]);
-                    }
-                });
-
-        QueryExecuter<IdVersion> executer = new QueryExecuter.Builder<IdVersion>()
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return vsFilter != null;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        Set<IdVersion> result = new HashSet<>();
-                        for (IdVersion e : vsFilter) {
-                            result.add(e);
-                        }
-                        return result;
-                    }
-                })
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return true;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, selectionMode);
-                    }
-                }).build(IdVersion.class);
-
+                         @TrimmedQueryParam("mode") final String mode,
+                         @TrimmedQueryParam("type") final String type,
+                         @Context UriInfo uriInfo) throws Exception {
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "vs", SelectionMode.getMode(mode));
+        queryRender.init(true);
+        IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
         VirtualServerList vslist = new VirtualServerList();
-        for (VirtualServer virtualServer : virtualServerRepository.listAll(executer.run())) {
+        for (VirtualServer virtualServer : virtualServerRepository.listAll(searchKeys)) {
             vslist.addVirtualServer(virtualServer);
         }
         vslist.setTotal(vslist.getVirtualServers().size());
@@ -185,11 +70,22 @@ public class VirtualServerResource {
     @Authorize(name = "getVs")
     public Response getVirtualServer(@Context HttpHeaders hh,
                                      @Context HttpServletRequest request,
-                                     @QueryParam("vsId") Long vsId) throws Exception {
-        VirtualServer vs = virtualServerRepository.getById(vsId);
-        if (vs == null)
-            throw new ValidationException("Virtual server cannot be found.");
-        return responseHandler.handle(vs, hh.getMediaType());
+                                     @TrimmedQueryParam("mode") final String mode,
+                                     @Context UriInfo uriInfo) throws Exception {
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "vs", SelectionMode.getMode(mode));
+        queryRender.init(true);
+        IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
+        List<VirtualServer> result = virtualServerRepository.listAll(searchKeys);
+        if (result.size() == 0) throw new ValidationException("Virtual server cannot be found.");
+        if (result.size() == 1) {
+            return responseHandler.handle(result.get(0), hh.getMediaType());
+        }
+        VirtualServerList vslist = new VirtualServerList();
+        for (VirtualServer virtualServer : virtualServerRepository.listAll(searchKeys)) {
+            vslist.addVirtualServer(virtualServer);
+        }
+        vslist.setTotal(vslist.getVirtualServers().size());
+        return responseHandler.handle(vslist, hh.getMediaType());
     }
 
     @POST

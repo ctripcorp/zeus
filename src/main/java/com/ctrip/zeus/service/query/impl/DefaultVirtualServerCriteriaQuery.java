@@ -37,7 +37,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     }
 
     @Override
-    public IdVersion[] queryByCommand(QueryCommand query, final SelectionMode mode) throws Exception {
+    public IdVersion[] queryByCommand(final QueryCommand query, final SelectionMode mode) throws Exception {
         final VsQueryCommand vsQuery = (VsQueryCommand) query;
         final Long[] filteredVsIds = new QueryExecuter.Builder<Long>()
                 .addFilter(new FilterSet<Long>() {
@@ -97,7 +97,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
                     public Set<IdVersion> filter() throws Exception {
                         Set<IdVersion> result = new HashSet<>();
                         for (String s : vsQuery.getValue(vsQuery.domain)) {
-                            result.addAll(queryByDomain(s));
+                            result.addAll(queryByDomain(s.trim()));
                         }
                         return result;
                     }
@@ -177,7 +177,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
         for (RelGroupVsDo e : rGroupVsDao.findAllByGroups(map.values().toArray(new Long[map.size()]), RGroupVsEntity.READSET_FULL)) {
             if (result.contains(e.getVsId()))
                 continue;
-            if (map.keySet().contains(new IdVersion(e.getVsId(), e.getGroupVersion())))
+            if (map.keySet().contains(new IdVersion(e.getGroupId(), e.getGroupVersion())))
                 result.add(e.getVsId());
         }
         return result;

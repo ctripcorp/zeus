@@ -5,6 +5,7 @@ import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.query.command.*;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 
 import java.util.*;
 
@@ -78,15 +79,18 @@ public class QueryEngine {
             if (propItems != null) pre.retainAll(propItems);
         }
 
-        QueryCommand c = sequenceController[0];
+        if (pre != null && pre.size() == 0) return new IdVersion[0];
 
+        QueryCommand c = sequenceController[0];
         if (pre != null) {
-            Set<Long> orig = new HashSet<>();
             // 0 is the index of id
-            for (String s : c.getValue(0)) {
-                orig.add(Long.parseLong(s));
+            if (c.hasValue(0)) {
+                Set<Long> orig = new HashSet<>();
+                for (String s : c.getValue(0)) {
+                    orig.add(Long.parseLong(s));
+                }
+                pre.retainAll(orig);
             }
-            pre.retainAll(orig);
             c.addAtIndex(0, Joiner.on(",").join(pre));
         }
 
@@ -94,12 +98,18 @@ public class QueryEngine {
         String[] traverseSequence = new String[]{sequenceController[1].getType(),
                 sequenceController[2].getType(), sequenceController[0].getType()};
         IdVersion[] result = traverseQuery(traverseSequence, 0, criteriaQueryFactory);
-        if (result == null) {
+        if (resource.equals("group")) {
+            GroupCriteriaQuery q = (GroupCriteriaQuery) criteriaQueryFactory.getCriteriaQuery("group");
+            Set<IdVersion> tmp = result == null ? q.queryAll(mode) : Sets.newHashSet(result);
+            if (tmp.size() > 0) {
+                tmp.removeAll(q.queryAllVGroups(mode));
+            }
+            result = tmp.toArray(new IdVersion[tmp.size()]);
+        } else if (result == null) {
             Set<IdVersion> tmp = criteriaQueryFactory.getCriteriaQuery(traverseSequence[2]).queryAll(mode);
-            return tmp.toArray(new IdVersion[tmp.size()]);
-        } else {
-            return result;
+            result = tmp.toArray(new IdVersion[tmp.size()]);
         }
+        return result;
     }
 
     private IdVersion[] traverseQuery(String[] queryCommands, int idx, CriteriaQueryFactory criteriaQueryFactory) throws Exception {

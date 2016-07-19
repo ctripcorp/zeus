@@ -57,7 +57,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
                     public Set<Long> filter() throws Exception {
                         Set<Long> result = new HashSet<>();
                         for (String s : slbQuery.getValue(slbQuery.name)) {
-                            result.add(queryByName(s));
+                            result.add(queryByName(s.trim()));
                         }
                         return result;
                     }
@@ -104,7 +104,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
                     public Set<IdVersion> filter() throws Exception {
                         Set<IdVersion> result = new HashSet<>();
                         for (String s : slbQuery.getValue(slbQuery.ip)) {
-                            result.addAll(queryBySlbServerIp(s));
+                            result.addAll(queryBySlbServerIp(s.trim()));
                         }
                         return result;
                     }

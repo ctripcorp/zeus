@@ -2,25 +2,20 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
-import com.ctrip.zeus.service.query.filter.FilterSet;
-import com.ctrip.zeus.service.query.filter.QueryExecuter;
+import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.support.GenericSerializer;
-import com.ctrip.zeus.tag.PropertyService;
-import com.ctrip.zeus.tag.TagService;
-import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -28,13 +23,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.HashSet;
+import javax.ws.rs.core.*;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -48,15 +38,12 @@ public class SlbResource {
     @Resource
     private ArchiveRepository archiveRepository;
     @Resource
-    private SlbCriteriaQuery slbCriteriaQuery;
-    @Resource
     private ResponseHandler responseHandler;
     @Resource
     private DbLockFactory dbLockFactory;
     @Resource
-    private TagService tagService;
-    @Resource
-    private PropertyService propertyService;
+    private CriteriaQueryFactory criteriaQueryFactory;
+
     private final int TIMEOUT = 1000;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -67,64 +54,20 @@ public class SlbResource {
     @Authorize(name = "getAllSlbs")
     public Response list(@Context final HttpHeaders hh,
                          @Context HttpServletRequest request,
+                         @TrimmedQueryParam("mode") final String mode,
                          @TrimmedQueryParam("type") final String type,
-                         @TrimmedQueryParam("tag") final List<String> tags,
-                         @TrimmedQueryParam("pname") final String pname,
-                         @TrimmedQueryParam("pvalue") final String pvalue,
-                         @TrimmedQueryParam("mode") final String mode) throws Exception {
-
-        final SelectionMode selectionMode = SelectionMode.getMode(mode);
-        final Long[] slbIds = new QueryExecuter.Builder<Long>()
-                .addFilter(new FilterSet<Long>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return tags != null &&tags.size() > 0;
-                    }
-
-                    @Override
-                    public Set<Long> filter() throws Exception {
-                        return new HashSet<>(tagService.query(tags, "slb"));
-                    }
-                })
-                .addFilter(new FilterSet<Long>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return pname != null & pvalue != null;
-                    }
-
-                    @Override
-                    public Set<Long> filter() throws Exception {
-                        return new HashSet<>(propertyService.queryTargets(pname, pvalue, "slb"));
-                    }
-                }).build(Long.class).run(new ResultHandler<Long, Long>() {
-                    @Override
-                    public Long[] handle(Set<Long> result) throws Exception {
-                        if (result == null) {
-                            result = slbCriteriaQuery.queryAll();
-                        }
-                        return result.toArray(new Long[result.size()]);
-                    }
-                });
-
-        QueryExecuter<IdVersion> executer = new QueryExecuter.Builder<IdVersion>()
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return true;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return slbIds.length == 0 ? new HashSet<IdVersion>() : slbCriteriaQuery.queryByIdsAndMode(slbIds, selectionMode);
-                    }
-                })
-                .build(IdVersion.class);
-
+                         @Context UriInfo uriInfo) throws Exception {
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "slb", SelectionMode.getMode(mode));
+        queryRender.init(true);
+        IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
         final SlbList slbList = new SlbList();
-        for (Slb slb : slbRepository.list(executer.run())) {
-            slbList.addSlb(getSlbByType(slb, type));
+        if (searchKeys != null) {
+            for (Slb slb : slbRepository.list(searchKeys)) {
+                slbList.addSlb(getSlbByType(slb, type));
+            }
+            slbList.setTotal(slbList.getSlbs().size());
+
         }
-        slbList.setTotal(slbList.getSlbs().size());
         return responseHandler.handle(slbList, hh.getMediaType());
     }
 
@@ -133,65 +76,19 @@ public class SlbResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getSlb")
     public Response get(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                        @QueryParam("slbId") final Long slbId,
-                        @TrimmedQueryParam("slbName") final String slbName,
-                        @TrimmedQueryParam("ip") final String serverIp,
-                        @TrimmedQueryParam("type") String type,
-                        @TrimmedQueryParam("mode") final String mode) throws Exception {
-        final SelectionMode selectionMode = SelectionMode.getMode(mode);
-        if (slbId == null && slbName == null && serverIp==null) {
-            throw new Exception("Missing parameter.");
-        }
-
-        IdVersion[] keys = new QueryExecuter.Builder<IdVersion>()
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return slbId==null && serverIp != null;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return slbCriteriaQuery.queryBySlbServerIp(serverIp);
-                    }
-                })
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return  slbId==null && slbName != null;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        Long _slbId = slbCriteriaQuery.queryByName(slbName);
-                        if (_slbId.longValue() == 0L) throw new ValidationException("Slb id cannot be found.");
-                        return slbCriteriaQuery.queryByIdsAndMode(new Long[]{_slbId}, selectionMode);
-                    }
-                })
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return slbId!=null;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return slbCriteriaQuery.queryByIdsAndMode(new Long[]{slbId}, selectionMode);
-                    }
-                })
-                .build(IdVersion.class).run(new ResultHandler<IdVersion, IdVersion>() {
-                    @Override
-                    public IdVersion[] handle(Set<IdVersion> result) throws Exception {
-                        return result.toArray(new IdVersion[result.size()]);
-                    }
-                });
-        List<Slb> result = slbRepository.list(keys);
+                        @TrimmedQueryParam("type") final String type,
+                        @TrimmedQueryParam("mode") final String mode,
+                        @Context UriInfo uriInfo) throws Exception {
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "slb", SelectionMode.getMode(mode));
+        queryRender.init(true);
+        IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
+        List<Slb> result = slbRepository.list(searchKeys);
         if (result.size() == 0) throw new ValidationException("Slb cannot be found.");
         if (result.size() == 1) {
             return responseHandler.handle(getSlbByType(result.get(0), type), hh.getMediaType());
         }
         SlbList slbList = new SlbList();
-        for (Slb slb :result) {
+        for (Slb slb : result) {
             slbList.addSlb(getSlbByType(slb, type));
         }
         slbList.setTotal(slbList.getSlbs().size());
