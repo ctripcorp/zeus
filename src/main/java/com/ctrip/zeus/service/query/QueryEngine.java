@@ -3,10 +3,7 @@ package com.ctrip.zeus.service.query;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.SelectionMode;
-import com.ctrip.zeus.service.query.command.GroupQueryCommand;
-import com.ctrip.zeus.service.query.command.QueryCommand;
-import com.ctrip.zeus.service.query.command.SlbQueryCommand;
-import com.ctrip.zeus.service.query.command.VsQueryCommand;
+import com.ctrip.zeus.service.query.command.*;
 import com.google.common.base.Joiner;
 
 import java.util.*;
@@ -22,8 +19,10 @@ public class QueryEngine {
     private final GroupQueryCommand groupQueryCommand = new GroupQueryCommand();
     private final VsQueryCommand vsQueryCommand = new VsQueryCommand();
     private final SlbQueryCommand slbQueryCommand = new SlbQueryCommand();
+    private final TagQueryCommand tagCommand = new TagQueryCommand();
+    private final PropQueryCommand propertyCommand = new PropQueryCommand();
 
-    private final QueryCommand[] sequenceController = new QueryCommand[3];
+    private final QueryCommand[] sequenceController = new QueryCommand[5];
 
     public QueryEngine(Queue<String[]> params, String resource, SelectionMode mode) {
         this.params = params;
@@ -46,6 +45,8 @@ public class QueryEngine {
                 sequenceController[2] = vsQueryCommand;
                 break;
         }
+        sequenceController[3] = tagCommand;
+        sequenceController[4] = propertyCommand;
     }
 
     public void init(boolean skipable) throws ValidationException {
@@ -68,6 +69,28 @@ public class QueryEngine {
     }
 
     public IdVersion[] run(CriteriaQueryFactory criteriaQueryFactory) throws Exception {
+        // filter by tags and props
+        Set<Long> pre = criteriaQueryFactory.getTagService().queryByCommand(tagCommand, resource);
+        Set<Long> propItems = criteriaQueryFactory.getPropertyService().queryByCommand(propertyCommand, resource);
+        if (pre == null) {
+            pre = propItems;
+        } else {
+            if (propItems != null) pre.retainAll(propItems);
+        }
+
+        QueryCommand c = sequenceController[0];
+
+        if (pre != null) {
+            Set<Long> orig = new HashSet<>();
+            // 0 is the index of id
+            for (String s : c.getValue(0)) {
+                orig.add(Long.parseLong(s));
+            }
+            pre.retainAll(orig);
+            c.addAtIndex(0, Joiner.on(",").join(pre));
+        }
+
+        // filter by criteria queries
         String[] traverseSequence = new String[]{sequenceController[1].getType(),
                 sequenceController[2].getType(), sequenceController[0].getType()};
         IdVersion[] result = traverseQuery(traverseSequence, 0, criteriaQueryFactory);

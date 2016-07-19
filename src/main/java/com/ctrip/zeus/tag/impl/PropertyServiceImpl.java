@@ -1,15 +1,14 @@
 package com.ctrip.zeus.tag.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.service.query.command.PropQueryCommand;
+import com.ctrip.zeus.service.query.command.QueryCommand;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.entity.Property;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/7/21.
@@ -22,6 +21,23 @@ public class PropertyServiceImpl implements PropertyService {
     private PropertyDao propertyDao;
     @Resource
     private PropertyItemDao propertyItemDao;
+
+    @Override
+    public Set<Long> queryByCommand(QueryCommand command, String type) throws Exception {
+        Set<Long> result = null;
+        PropQueryCommand propQuery = (PropQueryCommand) command;
+        if (command.hasValue(propQuery.union_prop)) {
+            result = unionQuery(propQuery.getProperties(propQuery.union_prop), type);
+        }
+        if (command.hasValue(propQuery.join_prop)) {
+            if (result == null) {
+                result = joinQuery(propQuery.getProperties(propQuery.join_prop), type);
+            } else {
+                result.retainAll(joinQuery(propQuery.getProperties(propQuery.join_prop), type));
+            }
+        }
+        return result;
+    }
 
     @Override
     public Property getProperty(String pname, Long itemId, String type) throws Exception {
@@ -38,6 +54,81 @@ public class PropertyServiceImpl implements PropertyService {
             }
         }
         return null;
+    }
+
+    @Override
+    public Set<Long> unionQuery(List<Property> properties, String type) throws Exception {
+        Map<String, Long> pnames = new HashMap<>();
+        Map<String, Long> pids = new HashMap<>();
+        Long obj = 0L;
+        for (Property p : properties) {
+            pnames.put(p.getName(), obj);
+            pids.put(p.getName() + ":" + p.getValue(), obj);
+        }
+
+        for (PropertyKeyDo e : propertyKeyDao.findByNames(pnames.keySet().toArray(new String[0]), PropertyKeyEntity.READSET_FULL)) {
+            pnames.put(e.getName(), e.getId());
+        }
+        for (PropertyDo e : propertyDao.findAllByIds(pnames.values().toArray(new Long[0]), PropertyEntity.READSET_FULL)) {
+            String k = pnames.get(e.getPropertyKeyId()) + ":" + e.getPropertyValue();
+            if (pids.containsKey(k)) {
+                pids.put(k, e.getId());
+            }
+        }
+
+        Set<Long> result = new HashSet<>();
+        for (PropertyItemDo e : propertyItemDao.findAllByProperties(pids.values().toArray(new Long[0]), PropertyItemEntity.READSET_FULL)) {
+            if (e.getType().equals(type)) {
+                result.add(e.getItemId());
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Long> joinQuery(List<Property> properties, String type) throws Exception {
+        Map<String, Long> pnames = new HashMap<>();
+        Map<String, Long> pids = new HashMap<>();
+        Long obj = 0L;
+        for (Property p : properties) {
+            pnames.put(p.getName(), obj);
+            pids.put(p.getName() + ":" + p.getValue(), obj);
+        }
+
+        for (PropertyKeyDo e : propertyKeyDao.findByNames(pnames.keySet().toArray(new String[0]), PropertyKeyEntity.READSET_FULL)) {
+            pnames.put(e.getName(), e.getId());
+        }
+        for (Long l : pnames.values()) {
+            if (l == obj) return new HashSet<>();
+        }
+
+        for (PropertyDo e : propertyDao.findAllByIds(pnames.values().toArray(new Long[0]), PropertyEntity.READSET_FULL)) {
+            String k = pnames.get(e.getPropertyKeyId()) + ":" + e.getPropertyValue();
+            if (pids.containsKey(k)) {
+                pids.put(k, e.getId());
+            }
+        }
+        for (Long l : pids.values()) {
+            if (l == obj) return new HashSet<>();
+        }
+
+        int joinedValue = pids.size();
+        Map<Long, Counter> marker = new HashMap<>();
+        for (PropertyItemDo e : propertyItemDao.findAllByProperties(pids.values().toArray(new Long[0]), PropertyItemEntity.READSET_FULL)) {
+            if (e.getType().equals(type)) {
+                Counter m = marker.get(e.getPropertyId());
+                if (m == null) {
+                    marker.put(e.getItemId(), new Counter());
+                } else {
+                    m.incr();
+                }
+            }
+        }
+        Set<Long> result = new HashSet<>();
+        for (Map.Entry<Long, Counter> e : marker.entrySet()) {
+            if (e.getValue().get() == joinedValue) result.add(e.getKey());
+        }
+        return result;
     }
 
     @Override
@@ -96,5 +187,17 @@ public class PropertyServiceImpl implements PropertyService {
             result.get(e.getId()).setName(e.getName());
         }
         return new ArrayList<>(result.values());
+    }
+
+    private class Counter {
+        int count = 1;
+
+        public void incr() {
+            count++;
+        }
+
+        public int get() {
+            return count;
+        }
     }
 }

@@ -209,6 +209,7 @@
     </entity>
     <entity name="property-key" table="property_key" alias="pk" do-class="PropertyKeyDo">
         <var name="ids" value-type="Long[]"/>
+        <var name="names" value-type="String[]"/>
         <query-defs>
             <query name="find-all-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
@@ -235,6 +236,16 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-names" type="SELECT" multiple="true">
+                <param name="names"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='name'/> in <IN>${names}</IN>
                     ]]>
                 </statement>
             </query>
