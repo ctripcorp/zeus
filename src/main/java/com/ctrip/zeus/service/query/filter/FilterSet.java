@@ -1,4 +1,4 @@
-package com.ctrip.zeus.restful.filter;
+package com.ctrip.zeus.service.query.filter;
 
 import java.util.Set;
 

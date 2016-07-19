@@ -6,13 +6,13 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.restful.filter.FilterSet;
-import com.ctrip.zeus.restful.filter.QueryExecuter;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.ctrip.zeus.service.query.filter.FilterSet;
+import com.ctrip.zeus.service.query.filter.QueryExecuter;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;

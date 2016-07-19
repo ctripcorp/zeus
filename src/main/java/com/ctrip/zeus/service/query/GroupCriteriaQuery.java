@@ -10,8 +10,6 @@ import java.util.Set;
  */
 public interface GroupCriteriaQuery extends CriteriaQuery {
 
-    Long queryByName(String name) throws Exception;
-
     Set<Long> queryByAppId(String appId) throws Exception;
 
     Set<Long> queryAllVGroups() throws Exception;

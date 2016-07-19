@@ -9,8 +9,6 @@ import java.util.Set;
  */
 public interface SlbCriteriaQuery extends CriteriaQuery {
 
-    Long queryByName(String name) throws Exception;
-
     Set<Long> queryByVs(IdVersion vsIdVersion) throws Exception;
 
     Set<Long> queryByVses(IdVersion[] vsIdVersions) throws Exception;

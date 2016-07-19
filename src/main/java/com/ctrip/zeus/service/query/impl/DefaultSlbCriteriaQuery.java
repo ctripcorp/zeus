@@ -1,14 +1,14 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.restful.filter.FilterSet;
-import com.ctrip.zeus.restful.filter.QueryExecuter;
+import com.ctrip.zeus.service.query.filter.FilterSet;
+import com.ctrip.zeus.service.query.filter.QueryExecuter;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.VersionUtils;
-import com.ctrip.zeus.service.query.QueryCommand;
-import com.ctrip.zeus.service.query.SlbQueryCommand;
+import com.ctrip.zeus.service.query.command.QueryCommand;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.service.query.command.SlbQueryCommand;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;

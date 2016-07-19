@@ -1,6 +1,4 @@
-package com.ctrip.zeus.service.query;
-
-import com.ctrip.zeus.exceptions.ValidationException;
+package com.ctrip.zeus.service.query.command;
 
 /**
  * Created by zhoumy on 2016/7/15.
@@ -21,7 +19,7 @@ public class VsQueryCommand implements QueryCommand {
     }
 
     @Override
-    public boolean add(String queryName, String queryValue) throws ValidationException {
+    public boolean add(String queryName, String queryValue) {
         int idx;
         switch (queryName) {
             case "id":
@@ -52,7 +50,7 @@ public class VsQueryCommand implements QueryCommand {
     }
 
     @Override
-    public boolean addAtIndex(int idx, String queryValue) throws ValidationException {
+    public boolean addAtIndex(int idx, String queryValue) {
         if (idx < values.length) {
             values[idx] = queryValue;
             return true;

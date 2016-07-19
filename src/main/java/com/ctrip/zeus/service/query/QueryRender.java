@@ -3,16 +3,19 @@ package com.ctrip.zeus.service.query;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.SelectionMode;
+import com.ctrip.zeus.service.query.command.GroupQueryCommand;
+import com.ctrip.zeus.service.query.command.QueryCommand;
+import com.ctrip.zeus.service.query.command.SlbQueryCommand;
+import com.ctrip.zeus.service.query.command.VsQueryCommand;
 import com.google.common.base.Joiner;
 
-import javax.ws.rs.core.UriInfo;
 import java.util.*;
 
 /**
  * Created by zhoumy on 2016/7/15.
  */
 public class QueryRender {
-    private final UriInfo uriInfo;
+    private final Queue<String[]> params;
     private final String resource;
     private final SelectionMode mode;
 
@@ -22,8 +25,8 @@ public class QueryRender {
 
     private final QueryCommand[] sequenceController = new QueryCommand[3];
 
-    public QueryRender(UriInfo uriInfo, String resource, SelectionMode mode) {
-        this.uriInfo = uriInfo;
+    public QueryRender(Queue<String[]> params, String resource, SelectionMode mode) {
+        this.params = params;
         this.resource = resource;
         this.mode = mode;
         switch (resource) {
@@ -46,13 +49,7 @@ public class QueryRender {
     }
 
     public void render() throws ValidationException {
-        Queue<String[]> curr = new LinkedList<>();
-        for (Map.Entry<String, List<String>> e : uriInfo.getQueryParameters().entrySet()) {
-            String v = (e.getValue() != null && e.getValue().size() > 0) ? e.getValue().get(0) : null;
-            if (v != null) {
-                curr.add(new String[]{e.getKey(), v.trim()});
-            }
-        }
+        Queue<String[]> curr = new LinkedList<>(params);
         Queue<String[]> next = new LinkedList<>();
         for (QueryCommand c : sequenceController) {
             while (!curr.isEmpty()) {
