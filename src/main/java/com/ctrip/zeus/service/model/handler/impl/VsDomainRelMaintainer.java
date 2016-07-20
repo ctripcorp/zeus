@@ -4,7 +4,6 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.VersionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -16,7 +15,7 @@ import java.util.Map;
  * Created by zhoumy on 2015/12/22.
  */
 @Component("vsDomainRelMaintainer")
-public class VsDomainRelMaintainer extends MultiRelMaintainerEx<RelVsDomainDo, Domain, VirtualServer> {
+public class VsDomainRelMaintainer extends AbstractMultiRelMaintainer<RelVsDomainDo, Domain, VirtualServer> {
     @Resource
     private RVsDomainDao rVsDomainDao;
     @Resource
@@ -24,11 +23,6 @@ public class VsDomainRelMaintainer extends MultiRelMaintainerEx<RelVsDomainDo, D
 
     public VsDomainRelMaintainer() {
         super(RelVsDomainDo.class, VirtualServer.class);
-    }
-
-    @Override
-    protected List<RelVsDomainDo> getAll(Long id) throws Exception {
-        return rVsDomainDao.findAllByVs(id, RVsDomainEntity.READSET_FULL);
     }
 
     @Override
@@ -86,15 +80,6 @@ public class VsDomainRelMaintainer extends MultiRelMaintainerEx<RelVsDomainDo, D
     @Override
     public void deleteRel(Long objectId) throws Exception {
         rVsDomainDao.deleteAllByVs(new RelVsDomainDo().setVsId(objectId));
-    }
-
-    @Override
-    public void batchDeleteRel(Long[] objectIds) throws Exception {
-        RelVsDomainDo[] dos = new RelVsDomainDo[objectIds.length];
-        for (int i = 0; i < dos.length; i++) {
-            dos[i] = new RelVsDomainDo().setVsId(objectIds[i]);
-        }
-        rVsDomainDao.deleteAllByVs(dos);
     }
 
     @Override

@@ -15,10 +15,5 @@ public interface MultiRelMaintainer<W, X> {
 
     void deleteRel(Long objectId) throws Exception;
 
-    void batchDeleteRel(Long[] objectIds) throws Exception;
-
     List<W> getRelations(X object) throws Exception;
-
-    @Deprecated
-    void port(X object) throws Exception;
 }

@@ -3,7 +3,6 @@ package com.ctrip.zeus.service.model.handler;
 import com.ctrip.zeus.model.entity.VirtualServer;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/9/22.
@@ -17,7 +16,4 @@ public interface VirtualServerSync {
     void updateStatus(List<VirtualServer> virtualServers) throws Exception;
 
     void delete(Long vsId) throws Exception;
-
-    @Deprecated
-    Set<Long> port(Long[] vsIds) throws Exception;
 }

@@ -17,7 +17,7 @@ import java.util.Map;
  * Created by zhoumy on 2015/12/22.
  */
 @Component("slbServerRelMaintainer")
-public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServerDo, SlbServer, Slb> {
+public class SlbServerRelMaintainer extends AbstractMultiRelMaintainer<RelSlbSlbServerDo, SlbServer, Slb> {
     @Resource
     private RSlbSlbServerDao rSlbSlbServerDao;
     @Resource
@@ -25,11 +25,6 @@ public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServer
 
     public SlbServerRelMaintainer() {
         super(RelSlbSlbServerDo.class, Slb.class);
-    }
-
-    @Override
-    protected List<RelSlbSlbServerDo> getAll(Long id) throws Exception {
-        return rSlbSlbServerDao.findAllBySlb(id, RSlbSlbServerEntity.READSET_FULL);
     }
 
     @Override
@@ -86,11 +81,6 @@ public class SlbServerRelMaintainer extends MultiRelMaintainerEx<RelSlbSlbServer
     @Override
     public void deleteRel(Long objectId) throws Exception {
         rSlbSlbServerDao.deleteAllBySlb(new RelSlbSlbServerDo().setSlbId(objectId));
-    }
-
-    @Override
-    public void batchDeleteRel(Long[] objectIds) throws Exception {
-        throw new NotImplementedException();
     }
 
     @Override

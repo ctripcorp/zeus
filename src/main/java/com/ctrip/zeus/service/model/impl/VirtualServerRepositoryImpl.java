@@ -182,9 +182,4 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     public void updateStatus(IdVersion[] vses) throws Exception {
         updateStatus(vses, SelectionMode.ONLINE_EXCLUSIVE);
     }
-
-    @Override
-    public Set<Long> port(Long[] vsIds) throws Exception {
-        return virtualServerEntityManager.port(vsIds);
-    }
 }

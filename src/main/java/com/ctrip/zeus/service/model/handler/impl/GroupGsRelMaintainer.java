@@ -17,7 +17,7 @@ import java.util.Map;
  * Created by zhoumy on 2015/12/22.
  */
 @Component("groupGsRelMaintainer")
-public class GroupGsRelMaintainer extends MultiRelMaintainerEx<RelGroupGsDo, GroupServer, Group> {
+public class GroupGsRelMaintainer extends AbstractMultiRelMaintainer<RelGroupGsDo, GroupServer, Group> {
     @Resource
     private RGroupGsDao rGroupGsDao;
     @Resource
@@ -25,11 +25,6 @@ public class GroupGsRelMaintainer extends MultiRelMaintainerEx<RelGroupGsDo, Gro
 
     public GroupGsRelMaintainer() {
         super(RelGroupGsDo.class, Group.class);
-    }
-
-    @Override
-    public List<RelGroupGsDo> getAll(Long id) throws Exception {
-        return rGroupGsDao.findAllByGroup(id, RGroupGsEntity.READSET_FULL);
     }
 
     @Override
@@ -87,11 +82,6 @@ public class GroupGsRelMaintainer extends MultiRelMaintainerEx<RelGroupGsDo, Gro
     @Override
     public void deleteRel(Long objectId) throws Exception {
         rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(objectId));
-    }
-
-    @Override
-    public void batchDeleteRel(Long[] objectIds) throws Exception {
-        throw new NotImplementedException();
     }
 
     @Override
