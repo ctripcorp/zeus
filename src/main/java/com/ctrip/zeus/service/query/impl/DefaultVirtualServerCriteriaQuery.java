@@ -31,7 +31,6 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     @Resource
     private RVsStatusDao rVsStatusDao;
 
-
     @Override
     public IdVersion[] queryByCommand(final QueryCommand query, final SelectionMode mode) throws Exception {
         final VsQueryCommand vsQuery = (VsQueryCommand) query;
@@ -62,6 +61,21 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
                         Set<Long> result = new HashSet<Long>();
                         for (String s : vsQuery.getValue(vsQuery.name)) {
                             result.addAll(fuzzyQueryByName(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsQuery.hasValue(vsQuery.ssl);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<Long>();
+                        for (String s : vsQuery.getValue(vsQuery.ssl)) {
+                            result.addAll(queryBySsl(Boolean.parseBoolean(s)));
                         }
                         return result;
                     }
@@ -216,6 +230,15 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
                 continue;
             if (map.keySet().contains(new IdVersion(e.getGroupId(), e.getGroupVersion())))
                 result.add(e.getVsId());
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Long> queryBySsl(boolean ssl) throws Exception {
+        Set<Long> result = new HashSet<>();
+        for (SlbVirtualServerDo e : slbVirtualServerDao.findAllBySsl(ssl, SlbVirtualServerEntity.READSET_IDONLY)) {
+            result.add(e.getId());
         }
         return result;
     }

@@ -11,6 +11,8 @@ public interface VirtualServerCriteriaQuery extends CriteriaQuery {
 
     Set<Long> queryByGroup(IdVersion[] searchKeys) throws Exception;
 
+    Set<Long> queryBySsl(boolean ssl) throws Exception;
+
     Set<IdVersion> queryBySlbId(Long slbId) throws Exception;
 
     Set<IdVersion> queryBySlbIds(Long[] slbIds) throws Exception;

@@ -203,6 +203,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-ssl" type="SELECT" multiple="true">
+                <param name="is-ssl"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='is-ssl'/> = ${is-ssl}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
