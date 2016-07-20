@@ -13,6 +13,8 @@ public interface CriteriaQuery {
 
     Long queryByName(String name) throws Exception;
 
+    Set<Long> fuzzyQueryByName(String name) throws Exception;
+
     IdVersion[] queryByCommand(QueryCommand query, SelectionMode mode) throws Exception;
 
     Set<Long> queryAll() throws Exception;

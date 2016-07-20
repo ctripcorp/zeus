@@ -58,7 +58,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
                     public Set<Long> filter() throws Exception {
                         Set<Long> result = new HashSet<>();
                         for (String s : slbQuery.getValue(slbQuery.name)) {
-                            result.add(queryByName(s.trim()));
+                            result.addAll(fuzzyQueryByName(s.trim()));
                         }
                         return result;
                     }
@@ -128,6 +128,16 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
     public Long queryByName(String name) throws Exception {
         SlbDo s = slbDao.findByName(name, SlbEntity.READSET_IDONLY);
         return s == null ? 0L : s.getId();
+    }
+
+    @Override
+    public Set<Long> fuzzyQueryByName(String name) throws Exception {
+        name = String.format("%%%s%%", name);
+        Set<Long> result = new HashSet<>();
+        for (SlbDo e : slbDao.searchByName(name, SlbEntity.READSET_IDONLY)) {
+            result.add(e.getId());
+        }
+        return result;
     }
 
     @Override

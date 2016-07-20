@@ -69,6 +69,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="search-by-name" type="SELECT" multiple="true">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='name'/> like ${name}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-app-id" type="SELECT" multiple="true">
                 <param name="app-id"/>
                 <statement>

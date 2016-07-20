@@ -28,8 +28,8 @@ public class PropQueryCommand implements QueryCommand {
             case "unionProp":
                 idx = union_prop;
                 break;
-            case "props":
-            case "joinPro":
+            case "prop":
+            case "joinProp":
                 idx = join_prop;
                 break;
             default:

@@ -60,7 +60,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
                     public Set<Long> filter() throws Exception {
                         Set<Long> result = new HashSet<Long>();
                         for (String s : groupQuery.getValue(groupQuery.name)) {
-                            result.add(queryByName(s.trim()));
+                            result.addAll(fuzzyQueryByName(s.trim()));
                         }
                         return result;
                     }
@@ -145,6 +145,16 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
     public Long queryByName(String name) throws Exception {
         GroupDo g = groupDao.findByName(name, GroupEntity.READSET_IDONLY);
         return g == null ? 0L : g.getId();
+    }
+
+    @Override
+    public Set<Long> fuzzyQueryByName(String name) throws Exception {
+        name = String.format("%%%s%%", name);
+        Set<Long> result = new HashSet<>();
+        for (GroupDo e : groupDao.searchByName(name, GroupEntity.READSET_IDONLY)) {
+            result.add(e.getId());
+        }
+        return result;
     }
 
     @Override

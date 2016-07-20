@@ -10,7 +10,6 @@ import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.query.command.QueryCommand;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.query.command.VsQueryCommand;
-import org.apache.commons.lang.NotImplementedException;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -32,10 +31,6 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
     @Resource
     private RVsStatusDao rVsStatusDao;
 
-    @Override
-    public Long queryByName(String name) throws Exception {
-        throw new NotImplementedException();
-    }
 
     @Override
     public IdVersion[] queryByCommand(final QueryCommand query, final SelectionMode mode) throws Exception {
@@ -52,6 +47,21 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
                         Set<Long> result = new HashSet<Long>();
                         for (String s : vsQuery.getValue(vsQuery.id)) {
                             result.add(Long.parseLong(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return vsQuery.hasValue(vsQuery.name);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<Long>();
+                        for (String s : vsQuery.getValue(vsQuery.name)) {
+                            result.addAll(fuzzyQueryByName(s));
                         }
                         return result;
                     }
@@ -130,6 +140,22 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
                 });
 
         return filteredVsKeys;
+    }
+
+    @Override
+    public Long queryByName(String name) throws Exception {
+        SlbVirtualServerDo d = slbVirtualServerDao.findByName(name, SlbVirtualServerEntity.READSET_IDONLY);
+        return d == null ? 0L : d.getId();
+    }
+
+    @Override
+    public Set<Long> fuzzyQueryByName(String name) throws Exception {
+        name = String.format("%%%s%%", name);
+        Set<Long> result = new HashSet<>();
+        for (SlbVirtualServerDo d : slbVirtualServerDao.searchByName(name, SlbVirtualServerEntity.READSET_IDONLY)) {
+            result.add(d.getId());
+        }
+        return result;
     }
 
     @Override
