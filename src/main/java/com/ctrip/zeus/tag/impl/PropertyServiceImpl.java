@@ -58,19 +58,20 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public Set<Long> unionQuery(List<Property> properties, String type) throws Exception {
-        Map<String, Long> pnames = new HashMap<>();
+        Set<String> pnames = new HashSet<>();
         Map<String, Long> pids = new HashMap<>();
         Long obj = 0L;
         for (Property p : properties) {
-            pnames.put(p.getName(), obj);
+            pnames.add(p.getName());
             pids.put(p.getName() + ":" + p.getValue(), obj);
         }
 
-        for (PropertyKeyDo e : propertyKeyDao.findByNames(pnames.keySet().toArray(new String[0]), PropertyKeyEntity.READSET_FULL)) {
-            pnames.put(e.getName(), e.getId());
+        Map<Long, String> pnameRef = new HashMap<>();
+        for (PropertyKeyDo e : propertyKeyDao.findByNames(pnames.toArray(new String[pnames.size()]), PropertyKeyEntity.READSET_FULL)) {
+            pnameRef.put(e.getId(), e.getName());
         }
-        for (PropertyDo e : propertyDao.findAllByIds(pnames.values().toArray(new Long[0]), PropertyEntity.READSET_FULL)) {
-            String k = pnames.get(e.getPropertyKeyId()) + ":" + e.getPropertyValue();
+        for (PropertyDo e : propertyDao.findAllByKeys(pnameRef.keySet().toArray(new Long[pnameRef.size()]), PropertyEntity.READSET_FULL)) {
+            String k = pnameRef.get(e.getPropertyKeyId()) + ":" + e.getPropertyValue();
             if (pids.containsKey(k)) {
                 pids.put(k, e.getId());
             }
@@ -87,23 +88,22 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public Set<Long> joinQuery(List<Property> properties, String type) throws Exception {
-        Map<String, Long> pnames = new HashMap<>();
+        Set<String> pnames = new HashSet<>();
         Map<String, Long> pids = new HashMap<>();
         Long obj = 0L;
         for (Property p : properties) {
-            pnames.put(p.getName(), obj);
+            pnames.add(p.getName());
             pids.put(p.getName() + ":" + p.getValue(), obj);
         }
 
-        for (PropertyKeyDo e : propertyKeyDao.findByNames(pnames.keySet().toArray(new String[0]), PropertyKeyEntity.READSET_FULL)) {
-            pnames.put(e.getName(), e.getId());
+        Map<Long, String> pnameRef = new HashMap<>();
+        for (PropertyKeyDo e : propertyKeyDao.findByNames(pnames.toArray(new String[pnames.size()]), PropertyKeyEntity.READSET_FULL)) {
+            pnameRef.put(e.getId(), e.getName());
         }
-        for (Long l : pnames.values()) {
-            if (l == obj) return new HashSet<>();
-        }
+        if (pnameRef.size() < pnames.size()) return new HashSet<>();
 
-        for (PropertyDo e : propertyDao.findAllByIds(pnames.values().toArray(new Long[0]), PropertyEntity.READSET_FULL)) {
-            String k = pnames.get(e.getPropertyKeyId()) + ":" + e.getPropertyValue();
+        for (PropertyDo e : propertyDao.findAllByKeys(pnameRef.keySet().toArray(new Long[pnameRef.size()]), PropertyEntity.READSET_FULL)) {
+            String k = pnameRef.get(e.getPropertyKeyId()) + ":" + e.getPropertyValue();
             if (pids.containsKey(k)) {
                 pids.put(k, e.getId());
             }
@@ -153,7 +153,7 @@ public class PropertyServiceImpl implements PropertyService {
         for (PropertyKeyDo e : propertyKeyDao.findAll(PropertyKeyEntity.READSET_FULL)) {
             keyRef.put(e.getId(), e.getName());
         }
-        for (PropertyDo e : propertyDao.findAllByIds(keyRef.keySet().toArray(new Long[keyRef.size()]), PropertyEntity.READSET_FULL)) {
+        for (PropertyDo e : propertyDao.findAllByKeys(keyRef.keySet().toArray(new Long[keyRef.size()]), PropertyEntity.READSET_FULL)) {
             String kn = keyRef.get(e.getPropertyKeyId());
             if (kn != null) {
                 result.add(new Property().setName(kn).setValue(e.getPropertyValue()));

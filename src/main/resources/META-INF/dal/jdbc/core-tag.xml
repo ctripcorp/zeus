@@ -164,6 +164,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-keys" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='property-key-id'/> in <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-key" type="SELECT" multiple="true">
                 <param name="property-key-id"/>
                 <statement>
