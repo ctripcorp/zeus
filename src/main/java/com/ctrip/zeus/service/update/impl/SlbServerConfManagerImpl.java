@@ -136,15 +136,23 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 boolean dyups = commit.getType().equals(CommitType.COMMIT_TYPE_DYUPS);
                 //4.4 get dyups data if needed
                 //4.4.1 if reload is true, try to use dyups instead.
+                DyUpstreamOpsData[] dyUpstreamOpsDatas = null;
                 if (reload && commit.getGroupIds().size() > 0) {
                     if (checkSkipReload(slbId, commit, serverVersion, entry, nginxConf)) {
-                        reload = false;
-                        dyups = true;
-                        logger.info("[[skipReload=true]]Skipped reload.SlbId:" + slbId + "\nMerged Commit:" + commit.toString());
+                        Set<Long> gids = new HashSet<>();
+                        gids.addAll(commit.getGroupIds());
+                        try {
+                            dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(entry, gids);
+                            reload = false;
+                            dyups = true;
+                            logger.info("[[skipReload=true]]Skipped reload.SlbId:" + slbId + "\nMerged Commit:" + commit.toString());
+                        } catch (Exception e) {
+                            logger.warn("[[skipReload=false]]Skipped reload failed. Because not found upstream data for some groups. Msg:" + e.getMessage(), e);
+                        }
                     }
                 }
-                DyUpstreamOpsData[] dyUpstreamOpsDatas = null;
-                if (dyups) {
+
+                if (dyups && dyUpstreamOpsDatas == null) {
                     Set<Long> gids = new HashSet<>();
                     gids.addAll(commit.getGroupIds());
                     dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(entry, gids);
