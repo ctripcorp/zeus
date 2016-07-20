@@ -68,6 +68,7 @@
          <table name="nginx_conf_slb"/>
          <table name="group_history"/>
          <table name="group_server_status"/>
+         <table name="app_info"/>
       </group>
    </jdbc>
 </wizard>
