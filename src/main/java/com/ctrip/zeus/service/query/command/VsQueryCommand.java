@@ -4,12 +4,12 @@ package com.ctrip.zeus.service.query.command;
  * Created by zhoumy on 2016/7/15.
  */
 public class VsQueryCommand implements QueryCommand {
-    public int id = 0;
-    public int name = 1;
-    public int domain = 2;
-    public int ssl = 3;
-    public int slb_id = 4;
-    public int group_search_key = 5;
+    public final static int id = 0;
+    public final static int name = 1;
+    public final static int domain = 2;
+    public final static int ssl = 3;
+    public final static int slb_id = 4;
+    public final static int group_search_key = 5;
 
     private String[] values = new String[6];
     private final String type;
@@ -67,7 +67,7 @@ public class VsQueryCommand implements QueryCommand {
     @Override
     public String[] getValue(int idx) {
         String value = values[idx];
-        return value == null ? null : value.split(",");
+        return value == null ? new String[0] : value.split(",");
     }
 
     @Override

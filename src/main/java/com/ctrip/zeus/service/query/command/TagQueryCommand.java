@@ -4,8 +4,8 @@ package com.ctrip.zeus.service.query.command;
  * Created by zhoumy on 2016/7/19.
  */
 public class TagQueryCommand implements QueryCommand {
-    public final int union_tag = 0;
-    public final int join_tag = 1;
+    public final static int union_tag = 0;
+    public final static int join_tag = 1;
 
     private final String type;
 
@@ -51,7 +51,7 @@ public class TagQueryCommand implements QueryCommand {
     @Override
     public String[] getValue(int idx) {
         String value = values[idx];
-        return value == null ? null : value.split(",");
+        return value == null ? new String[0] : value.split(",");
     }
 
     @Override

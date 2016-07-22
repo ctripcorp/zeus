@@ -9,15 +9,18 @@ import java.util.List;
  * Created by zhoumy on 2016/7/19.
  */
 public class PropQueryCommand implements QueryCommand {
-    public final int union_prop = 0;
-    public final int join_prop = 1;
+    public final static int union_prop = 0;
+    public final static int join_prop = 1;
 
     private final String type;
+    private PropQueryCommand next;
+    private PropQueryCommand last;
 
     private String[] values = new String[2];
 
     public PropQueryCommand() {
-        this.type = "prop";
+        type = "prop";
+        last = this;
     }
 
     @Override
@@ -41,7 +44,9 @@ public class PropQueryCommand implements QueryCommand {
     @Override
     public boolean addAtIndex(int idx, String queryValue) {
         if (idx < values.length) {
-            values[idx] = queryValue;
+            last.values[idx] = queryValue;
+            last.next = new PropQueryCommand();
+            last = last.next;
             return true;
         } else {
             return false;
@@ -56,7 +61,7 @@ public class PropQueryCommand implements QueryCommand {
     @Override
     public String[] getValue(int idx) {
         String value = values[idx];
-        return value == null ? null : value.split(",");
+        return value == null ? new String[0] : value.split(",");
     }
 
     public List<Property> getProperties(int idx) {
@@ -72,5 +77,9 @@ public class PropQueryCommand implements QueryCommand {
     @Override
     public String getType() {
         return type;
+    }
+
+    public PropQueryCommand next() {
+        return next;
     }
 }

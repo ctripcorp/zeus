@@ -64,6 +64,7 @@ public class QueryEngine {
             curr = next;
             next = tmp;
         }
+
         if (!skipable && curr.size() > 0) {
             throw new ValidationException("Unsupported params " + Joiner.on(",").join(curr));
         }

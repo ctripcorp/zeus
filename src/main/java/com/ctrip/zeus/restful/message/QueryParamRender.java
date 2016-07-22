@@ -13,9 +13,10 @@ public class QueryParamRender {
     public static Queue<String[]> extractRawQueryParam(UriInfo uriInfo) {
         Queue<String[]> params = new LinkedList<>();
         for (Map.Entry<String, List<String>> e : uriInfo.getQueryParameters().entrySet()) {
-            String v = (e.getValue() != null && e.getValue().size() > 0) ? e.getValue().get(0) : null;
-            if (v != null) {
-                params.add(new String[]{e.getKey(), v.trim()});
+            if (e.getValue() != null && e.getValue().size() > 0) {
+                for (String v : e.getValue()) {
+                    params.add(new String[]{e.getKey(), v.trim()});
+                }
             }
         }
         return params;

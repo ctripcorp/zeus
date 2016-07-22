@@ -4,11 +4,11 @@ package com.ctrip.zeus.service.query.command;
  * Created by zhoumy on 2016/7/15.
  */
 public class SlbQueryCommand implements QueryCommand {
-    public final int id = 0;
-    public final int name = 1;
-    public final int ip = 2;
-    public final int vip = 3;
-    public final int vs_search_key = 4;
+    public final static int id = 0;
+    public final static int name = 1;
+    public final static int ip = 2;
+    public final static int vip = 3;
+    public final static int vs_search_key = 4;
 
     private final String type;
     private String[] values = new String[5];
@@ -58,7 +58,7 @@ public class SlbQueryCommand implements QueryCommand {
     @Override
     public String[] getValue(int idx) {
         String value = values[idx];
-        return value == null ? null : value.split(",");
+        return value == null ? new String[0] : value.split(",");
     }
 
     @Override

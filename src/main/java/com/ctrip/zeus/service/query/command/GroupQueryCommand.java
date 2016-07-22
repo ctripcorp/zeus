@@ -4,11 +4,11 @@ package com.ctrip.zeus.service.query.command;
  * Created by zhoumy on 2016/7/15.
  */
 public class GroupQueryCommand implements QueryCommand {
-    public final int id = 0;
-    public final int name = 1;
-    public final int app_id = 2;
-    public final int member_ip = 3;
-    public final int vs_id = 4;
+    public final static int id = 0;
+    public final static int name = 1;
+    public final static int app_id = 2;
+    public final static int member_ip = 3;
+    public final static int vs_id = 4;
 
     private final String type;
     private final String[] values = new String[5];
@@ -60,7 +60,7 @@ public class GroupQueryCommand implements QueryCommand {
     @Override
     public String[] getValue(int idx) {
         String value = values[idx];
-        return value == null ? null : value.split(",");
+        return value == null ? new String[0] : value.split(",");
     }
 
     @Override

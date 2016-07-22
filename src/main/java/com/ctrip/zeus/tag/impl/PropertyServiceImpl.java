@@ -26,15 +26,22 @@ public class PropertyServiceImpl implements PropertyService {
     public Set<Long> queryByCommand(QueryCommand command, String type) throws Exception {
         Set<Long> result = null;
         PropQueryCommand propQuery = (PropQueryCommand) command;
-        if (command.hasValue(propQuery.union_prop)) {
-            result = unionQuery(propQuery.getProperties(propQuery.union_prop), type);
-        }
-        if (command.hasValue(propQuery.join_prop)) {
-            if (result == null) {
-                result = joinQuery(propQuery.getProperties(propQuery.join_prop), type);
-            } else {
-                result.retainAll(joinQuery(propQuery.getProperties(propQuery.join_prop), type));
+        while (propQuery != null) {
+            if (propQuery.hasValue(propQuery.union_prop)) {
+                if (result == null) {
+                    result = unionQuery(propQuery.getProperties(propQuery.union_prop), type);
+                } else {
+                    result.retainAll(unionQuery(propQuery.getProperties(propQuery.union_prop), type));
+                }
             }
+            if (propQuery.hasValue(propQuery.join_prop)) {
+                if (result == null) {
+                    result = joinQuery(propQuery.getProperties(propQuery.join_prop), type);
+                } else {
+                    result.retainAll(joinQuery(propQuery.getProperties(propQuery.join_prop), type));
+                }
+            }
+            propQuery = propQuery.next();
         }
         return result;
     }
