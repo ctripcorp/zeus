@@ -2,8 +2,8 @@ package com.ctrip.zeus.support;
 
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.restful.message.ignore.GroupView;
-import com.ctrip.zeus.restful.message.ignore.ViewConstraints;
+import com.ctrip.zeus.restful.message.view.GroupView;
+import com.ctrip.zeus.restful.message.view.ViewConstraints;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

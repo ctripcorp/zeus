@@ -1,4 +1,4 @@
-package com.ctrip.zeus.restful.message.ignore;
+package com.ctrip.zeus.restful.message.view;
 
 import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
