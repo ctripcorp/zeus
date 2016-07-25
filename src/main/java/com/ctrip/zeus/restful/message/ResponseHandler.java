@@ -16,4 +16,6 @@ public interface ResponseHandler {
      * @throws Exception
      */
     Response handle(Object object, MediaType mediaType) throws Exception;
+
+    Response handle(String serializedValue, MediaType mediaType) throws Exception;
 }

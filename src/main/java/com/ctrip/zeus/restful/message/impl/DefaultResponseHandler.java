@@ -39,6 +39,7 @@ public class DefaultResponseHandler implements ResponseHandler {
                 return zr;
             }
             if (type.equals(MediaType.APPLICATION_JSON_TYPE)) {
+//                zr.setResponse(JSON.toJSONString(object));
                 zr.setResponse(GenericSerializer.writeJson(object).replace("%", "%%"));
                 return zr;
             }
@@ -72,6 +73,15 @@ public class DefaultResponseHandler implements ResponseHandler {
             String error = "Response cannot be serialized using application/json by default.";
             logger.error(error, ex);
             throw new ValidationException(error);
+        }
+    }
+
+    @Override
+    public Response handle(String serializedValue, MediaType mediaType) throws Exception {
+        if (mediaType != null && acceptedMediaTypes.contains(mediaType)) {
+            return Response.status(Response.Status.OK).entity(serializedValue).type(mediaType).build();
+        } else {
+            return Response.status(Response.Status.OK).entity(serializedValue).type(defaultMediaType).build();
         }
     }
 

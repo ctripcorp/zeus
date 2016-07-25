@@ -7,6 +7,7 @@ import com.ctrip.zeus.restful.response.entity.ErrorMessage;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.util.ExceptionUtils;
 import org.springframework.stereotype.Component;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -46,6 +47,11 @@ public class ErrorResponseHandler implements ResponseHandler {
     @Override
     public Response handle(Object object, MediaType mediaType) throws Exception {
         return handle(object, mediaType, false);
+    }
+
+    @Override
+    public Response handle(String serializedValue, MediaType mediaType) throws Exception {
+        return handle(serializedValue, mediaType, false);
     }
 
     public Response handle(Object object, MediaType mediaType, boolean printStackTrace) throws Exception {

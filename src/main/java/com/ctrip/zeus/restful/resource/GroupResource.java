@@ -5,15 +5,21 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
+import com.ctrip.zeus.tag.PropertyService;
+import com.ctrip.zeus.tag.TagService;
+import com.ctrip.zeus.tag.entity.Property;
+import com.ctrip.zeus.tag.entity.PropertyList;
+import com.ctrip.zeus.tag.entity.TagList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -45,6 +51,10 @@ public class GroupResource {
     private CriteriaQueryFactory criteriaQueryFactory;
     @Resource
     private PropertyBox propertyBox;
+    @Resource
+    private TagService tagService;
+    @Resource
+    private PropertyService propertyService;
 
     private final String vGroupAppId = "VirtualGroup";
     private final int TIMEOUT = 1000;
@@ -66,10 +76,10 @@ public class GroupResource {
 
         GroupList groupList = new GroupList();
         for (Group group : groupRepository.list(searchKeys)) {
-            groupList.addGroup(getGroupByType(group, type));
+            groupList.addGroup(group);
         }
         groupList.setTotal(groupList.getGroups().size());
-        return responseHandler.handle(groupList, hh.getMediaType());
+        return responseHandler.handle(ObjectJsonWriter.write(groupList, type), hh.getMediaType());
     }
 
     @GET
@@ -99,17 +109,17 @@ public class GroupResource {
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "group", SelectionMode.getMode(mode));
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
-        List<Group> result= groupRepository.list(searchKeys);
+        List<Group> result = groupRepository.list(searchKeys);
         if (result.size() == 0) throw new ValidationException("Group cannot be found.");
         if (result.size() == 1) {
-            return responseHandler.handle(getGroupByType(result.get(0), type), hh.getMediaType());
+            return responseHandler.handle(ObjectJsonWriter.write(result.get(0), type), hh.getMediaType());
         }
         GroupList groupList = new GroupList().setTotal(result.size());
         for (Group g : result) {
-            groupList.addGroup(getGroupByType(g, type));
+            groupList.addGroup(g);
         }
         groupList.setTotal(groupList.getGroups().size());
-        return responseHandler.handle(groupList, hh.getMediaType());
+        return responseHandler.handle(ObjectJsonWriter.write(groupList, type), hh.getMediaType());
     }
 
     @POST
@@ -245,7 +255,7 @@ public class GroupResource {
             g = DefaultSaxParser.parseEntity(Group.class, group);
         } else {
             try {
-                g = DefaultJsonParser.parse(Group.class, group);
+                g = ObjectJsonParser.parse(group, Group.class);
             } catch (Exception e) {
                 throw new Exception("Group cannot be parsed.");
             }
@@ -265,22 +275,5 @@ public class GroupResource {
 
     private String trimIfNotNull(String value) {
         return value != null ? value.trim() : value;
-    }
-
-    private Group getGroupByType(Group group, String type) {
-        if ("INFO".equalsIgnoreCase(type)) {
-            return new Group().setId(group.getId())
-                    .setName(group.getName());
-        }
-        if ("NORMAL".equalsIgnoreCase(type)) {
-            return new Group().setId(group.getId())
-                    .setName(group.getName())
-                    .setAppId(group.getAppId())
-                    .setHealthCheck(group.getHealthCheck())
-                    .setLoadBalancingMethod(group.getLoadBalancingMethod())
-                    .setSsl(group.getSsl())
-                    .setVersion(group.getVersion());
-        }
-        return group;
     }
 }

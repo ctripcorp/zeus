@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,6 +35,16 @@ public class GenericSerializer {
 
     public static String writeJson(Object object) {
         return writeJson(object, true);
+    }
+
+    public static String inject(String jsonValue, String key, Object object) {
+        StringBuilder sb = new StringBuilder(jsonValue);
+        sb.setLength(jsonValue.lastIndexOf('}'));
+        sb.append(',');
+        sb.append("\"" + key + "\":");
+        sb.append(writeJson(object));
+        sb.append('}');
+        return sb.toString();
     }
 
     public static String writeJson(Object object, boolean pretty) {
