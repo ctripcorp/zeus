@@ -153,6 +153,49 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
+    public Map<Long, List<Property>> getProperties(String type, Long[] itemIds) throws Exception {
+        Map<Long, List<Long>> rItemProp = new HashMap<>();
+        Set<Long> propIds = new HashSet<>();
+
+        for (PropertyItemDo d : propertyItemDao.findAllByItemsAndType(itemIds, type, PropertyItemEntity.READSET_FULL)) {
+            propIds.add(d.getPropertyId());
+            List<Long> l = rItemProp.get(d.getItemId());
+            if (l == null) {
+                l = new ArrayList<>();
+                rItemProp.put(d.getItemId(), l);
+            }
+            l.add(d.getPropertyId());
+        }
+
+        if (propIds.size() == 0) return new HashMap<>();
+
+        Map<Long, String> rKeyIdName = new HashMap<>();
+        for (PropertyKeyDo d : propertyKeyDao.findAll(PropertyKeyEntity.READSET_FULL)) {
+            rKeyIdName.put(d.getId(), d.getName());
+        }
+
+        Map<Long, Property> rIdProp = new HashMap<>();
+        for (PropertyDo d : propertyDao.findAllByIds(propIds.toArray(new Long[propIds.size()]), PropertyEntity.READSET_FULL)) {
+            String key = rKeyIdName.get(d.getPropertyKeyId());
+            if (key != null) {
+                rIdProp.put(d.getId(), new Property().setName(key).setValue(d.getPropertyValue()));
+            }
+        }
+
+        Map<Long, List<Property>> result = new HashMap<>();
+        for (Map.Entry<Long, List<Long>> e : rItemProp.entrySet()) {
+            List<Property> l = new ArrayList<>();
+            result.put(e.getKey(), l);
+            for (Long i : e.getValue()) {
+                Property p = rIdProp.get(i);
+                if (p != null) l.add(p);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
     public List<Property> getAllProperties() throws Exception {
         List<Property> result = new ArrayList<>();
         Map<Long, String> keyRef = new HashMap<>();

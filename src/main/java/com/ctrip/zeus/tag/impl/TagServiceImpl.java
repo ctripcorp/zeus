@@ -120,6 +120,41 @@ public class TagServiceImpl implements TagService {
         return result;
     }
 
+    @Override
+    public Map<Long, List<String>> getTags(String type, Long[] itemIds) throws Exception {
+        Map<Long, List<Long>> rItemTag = new HashMap<>();
+        Set<Long> tagIds = new HashSet<>();
+
+        for (TagItemDo d : tagItemDao.findAllByItemsAndType(itemIds, type, TagItemEntity.READSET_FULL)) {
+            tagIds.add(d.getTagId());
+            List<Long> l = rItemTag.get(d.getItemId());
+            if (l == null) {
+                l = new ArrayList<>();
+                rItemTag.put(d.getItemId(), l);
+            }
+            l.add(d.getTagId());
+        }
+
+        if (tagIds.size() == 0) return new HashMap<>();
+
+        Map<Long, String> rIdName = new HashMap<>();
+        for (TagDo d : tagDao.findAllByIds(tagIds.toArray(new Long[tagIds.size()]), TagEntity.READSET_FULL)) {
+            rIdName.put(d.getId(), d.getName());
+        }
+
+        Map<Long, List<String>> result = new HashMap<>();
+        for (Map.Entry<Long, List<Long>> e : rItemTag.entrySet()) {
+            List<String> l = new ArrayList<>();
+            result.put(e.getKey(), l);
+            for (Long i : e.getValue()) {
+                String r = rIdName.get(i);
+                if (r != null) l.add(r);
+            }
+        }
+
+        return result;
+    }
+
     private class Counter {
         int count = 1;
 

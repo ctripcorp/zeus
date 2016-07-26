@@ -108,6 +108,18 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-items-and-type" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="type"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='item-id'/> in <IN>${ids}</IN>
+                      AND <FIELD name='type'/> = ${type}
+                    ]]>
+                </statement>
+            </query>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
@@ -281,15 +293,15 @@
         </query-defs>
     </entity>
     <entity name="property-item" table="property_item" alias="pi" do-class="PropertyItemDo">
-        <var name="pids" value-type="Long[]"/>
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="find-all-by-properties" type="SELECT" multiple="true">
-                <param name="pids"/>
+                <param name="ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='property-id'/> in <IN>${pids}</IN>
+                    WHERE <FIELD name='property-id'/> in <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>
@@ -306,13 +318,13 @@
                 </statement>
             </query>
             <query name="find-all-by-properties-and-type" type="SELECT" multiple="true">
-                <param name="pids"/>
+                <param name="ids"/>
                 <param name="type"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='property-id'/> in <IN>${pids}</IN>
+                    WHERE <FIELD name='property-id'/> in <IN>${ids}</IN>
                       AND <FIELD name='type'/> = ${type}
                     ]]>
                 </statement>
@@ -343,15 +355,27 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-items-and-type" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="type"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='item-id'/> in <IN>${ids}</IN>
+                      AND <FIELD name='type'/> = ${type}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-item-and-properties" type="SELECT" multiple="true">
                 <param name="item-id"/>
-                <param name="pids"/>
+                <param name="ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='item-id'/> = ${item-id}
-                      AND <FIELD name='property-id'/> in <IN>${pids}</IN>
+                      AND <FIELD name='property-id'/> in <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>

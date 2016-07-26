@@ -23,10 +23,10 @@ public abstract class GroupView {
     abstract String getAppId();
 
     @JsonView(ViewConstraints.Normal.class)
-    abstract List<GroupServer> getGroupServers();
+    abstract Boolean getSsl();
 
     @JsonView(ViewConstraints.Normal.class)
-    abstract List<GroupVirtualServer> getGroupVirtualServers();
+    abstract Integer getVersion();
 
     @JsonView(ViewConstraints.Normal.class)
     abstract HealthCheck getHealthCheck();
@@ -35,11 +35,16 @@ public abstract class GroupView {
     abstract LoadBalancingMethod getLoadBalancingMethod();
 
     @JsonView(ViewConstraints.Normal.class)
-    abstract Boolean getSsl();
+    abstract List<GroupServer> getGroupServers();
 
-    @JsonView(ViewConstraints.Normal.class)
-    abstract Integer getVersion();
+    @JsonView(ViewConstraints.Detail.class)
+    abstract List<GroupVirtualServer> getGroupVirtualServers();
 
     @JsonIgnore
     abstract Boolean getVirtual();
+
+    public abstract class GroupVirtualServerView {
+        @JsonIgnore
+        abstract String getRewrite();
+    }
 }

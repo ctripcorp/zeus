@@ -4,6 +4,7 @@ import com.ctrip.zeus.service.query.command.QueryCommand;
 import com.ctrip.zeus.tag.entity.Property;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,4 +25,6 @@ public interface PropertyService {
     Set<Long> joinQuery(List<Property> properties, String type) throws Exception;
 
     List<Long> queryTargets(String pname, String pvalue, String type) throws Exception;
+
+    Map<Long, List<Property>> getProperties(String type, Long[] itemIds) throws Exception;
 }

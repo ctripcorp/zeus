@@ -3,6 +3,7 @@ package com.ctrip.zeus.tag;
 import com.ctrip.zeus.service.query.command.QueryCommand;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -19,4 +20,6 @@ public interface TagService {
     List<Long> query(String tagName, String type) throws Exception;
 
     List<String> getTags(String type, Long itemId) throws Exception;
+
+    Map<Long, List<String>> getTags(String type, Long[] itemIds) throws Exception;
 }

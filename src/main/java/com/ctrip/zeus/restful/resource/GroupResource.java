@@ -7,6 +7,7 @@ import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.QueryParamRender;
+import com.ctrip.zeus.restful.message.view.*;
 import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
@@ -15,11 +16,7 @@ import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
-import com.ctrip.zeus.tag.PropertyService;
-import com.ctrip.zeus.tag.TagService;
-import com.ctrip.zeus.tag.entity.Property;
-import com.ctrip.zeus.tag.entity.PropertyList;
-import com.ctrip.zeus.tag.entity.TagList;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -52,9 +49,7 @@ public class GroupResource {
     @Resource
     private PropertyBox propertyBox;
     @Resource
-    private TagService tagService;
-    @Resource
-    private PropertyService propertyService;
+    private ViewDecorator viewDecorator;
 
     private final String vGroupAppId = "VirtualGroup";
     private final int TIMEOUT = 1000;
@@ -74,12 +69,15 @@ public class GroupResource {
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
-        GroupList groupList = new GroupList();
+        GroupListView listView = new GroupListView();
         for (Group group : groupRepository.list(searchKeys)) {
-            groupList.addGroup(group);
+            listView.add(new ExtendedView.ExtendedGroup(group));
         }
-        groupList.setTotal(groupList.getGroups().size());
-        return responseHandler.handle(ObjectJsonWriter.write(groupList, type), hh.getMediaType());
+        if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
+            viewDecorator.decorate(listView.getList(), "group");
+        }
+
+        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @GET
@@ -90,12 +88,12 @@ public class GroupResource {
                                 @Context HttpServletRequest request,
                                 @TrimmedQueryParam("mode") final String mode) throws Exception {
         Set<IdVersion> keys = groupCriteriaQuery.queryAllVGroups(SelectionMode.getMode(mode));
-        GroupList groupList = new GroupList();
+
+        GroupListView listView = new GroupListView();
         for (Group group : groupRepository.list(keys.toArray(new IdVersion[keys.size()]))) {
-            groupList.addGroup(group);
+            listView.add(new ExtendedView.ExtendedGroup(group));
         }
-        groupList.setTotal(groupList.getGroups().size());
-        return responseHandler.handle(groupList, hh.getMediaType());
+        return responseHandler.handle(ObjectJsonWriter.write(listView, null), hh.getMediaType());
     }
 
     @GET
@@ -109,17 +107,18 @@ public class GroupResource {
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "group", SelectionMode.getMode(mode));
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
-        List<Group> result = groupRepository.list(searchKeys);
-        if (result.size() == 0) throw new ValidationException("Group cannot be found.");
-        if (result.size() == 1) {
-            return responseHandler.handle(ObjectJsonWriter.write(result.get(0), type), hh.getMediaType());
+
+        GroupListView listView = new GroupListView();
+        for (Group group : groupRepository.list(searchKeys)) {
+            listView.add(new ExtendedView.ExtendedGroup(group));
         }
-        GroupList groupList = new GroupList().setTotal(result.size());
-        for (Group g : result) {
-            groupList.addGroup(g);
+
+        if (listView.getTotal() == 0) throw new ValidationException("Group cannot be found.");
+        if (listView.getTotal() == 1) {
+            return responseHandler.handle(ObjectJsonWriter.write(listView.getList().get(0), type), hh.getMediaType());
         }
-        groupList.setTotal(groupList.getGroups().size());
-        return responseHandler.handle(ObjectJsonWriter.write(groupList, type), hh.getMediaType());
+
+        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @POST

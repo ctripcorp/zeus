@@ -6,18 +6,26 @@ import com.ctrip.zeus.exceptions.ValidationException;
  * Created by zhoumy on 2016/7/25.
  */
 public class ViewConstraints {
+    public static final String INFO = "INFO";
+    public static final String NORMAL = "NORMAL";
+    public static final String DETAIL = "DETAIL";
+    public static final String EXTENDED = "EXTENDED";
+
     static public Class<?> getContraintType(String type) throws ValidationException {
+        if (type == null || type.isEmpty()) return Detail.class;
+
         switch (type.toUpperCase()) {
-            case "INFO":
+            case INFO:
                 return Info.class;
-            case "NORMAL":
+            case NORMAL:
                 return Normal.class;
-            case "DETAIL":
+            case DETAIL:
                 return Detail.class;
-            case "EXTENDED":
+            case EXTENDED:
                 return Extended.class;
+            default:
+                return Detail.class;
         }
-        throw new ValidationException("Unknown view type - " + type + ".");
     }
 
     static public class Info {
