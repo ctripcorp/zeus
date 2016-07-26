@@ -4,10 +4,13 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.model.entity.VirtualServerList;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.QueryParamRender;
+import com.ctrip.zeus.restful.message.view.ExtendedView;
+import com.ctrip.zeus.restful.message.view.ViewConstraints;
+import com.ctrip.zeus.restful.message.view.ViewDecorator;
+import com.ctrip.zeus.restful.message.view.VsListView;
 import com.ctrip.zeus.service.query.CriteriaQueryFactory;
 import com.ctrip.zeus.service.query.QueryEngine;
 import com.ctrip.zeus.restful.message.ResponseHandler;
@@ -17,6 +20,7 @@ import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.support.ObjectJsonWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -25,7 +29,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.util.List;
 
 /**
  * Created by zhoumy on 2015/8/5.
@@ -41,6 +44,8 @@ public class VirtualServerResource {
     private CriteriaQueryFactory criteriaQueryFactory;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private ViewDecorator viewDecorator;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -56,12 +61,16 @@ public class VirtualServerResource {
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "vs", SelectionMode.getMode(mode));
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
-        VirtualServerList vslist = new VirtualServerList();
-        for (VirtualServer virtualServer : virtualServerRepository.listAll(searchKeys)) {
-            vslist.addVirtualServer(virtualServer);
+
+        VsListView listView = new VsListView();
+        for (VirtualServer vs : virtualServerRepository.listAll(searchKeys)) {
+            listView.add(new ExtendedView.ExtendedVs(vs));
         }
-        vslist.setTotal(vslist.getVirtualServers().size());
-        return responseHandler.handle(vslist, hh.getMediaType());
+        if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
+            viewDecorator.decorate(listView.getList(), "vs");
+        }
+
+        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @GET
@@ -71,21 +80,26 @@ public class VirtualServerResource {
     public Response getVirtualServer(@Context HttpHeaders hh,
                                      @Context HttpServletRequest request,
                                      @TrimmedQueryParam("mode") final String mode,
+                                     @TrimmedQueryParam("type") final String type,
                                      @Context UriInfo uriInfo) throws Exception {
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "vs", SelectionMode.getMode(mode));
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
-        List<VirtualServer> result = virtualServerRepository.listAll(searchKeys);
-        if (result.size() == 0) throw new ValidationException("Virtual server cannot be found.");
-        if (result.size() == 1) {
-            return responseHandler.handle(result.get(0), hh.getMediaType());
+
+        VsListView listView = new VsListView();
+        for (VirtualServer vs : virtualServerRepository.listAll(searchKeys)) {
+            listView.add(new ExtendedView.ExtendedVs(vs));
         }
-        VirtualServerList vslist = new VirtualServerList();
-        for (VirtualServer virtualServer : virtualServerRepository.listAll(searchKeys)) {
-            vslist.addVirtualServer(virtualServer);
+        if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
+            viewDecorator.decorate(listView.getList(), "vs");
         }
-        vslist.setTotal(vslist.getVirtualServers().size());
-        return responseHandler.handle(vslist, hh.getMediaType());
+
+        if (listView.getTotal() == 0) throw new ValidationException("Virtual server cannot be found.");
+        if (listView.getTotal() == 1) {
+            return responseHandler.handle(listView.getList().get(0), hh.getMediaType());
+        }
+
+        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @POST

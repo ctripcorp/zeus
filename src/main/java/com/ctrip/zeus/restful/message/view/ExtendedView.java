@@ -113,14 +113,48 @@ public interface ExtendedView<T> {
         }
     }
 
-    class ExtendedVS implements ExtendedView<VirtualServer> {
+    class ExtendedVs extends VsView implements ExtendedView<VirtualServer> {
         private List<String> tags;
         private List<Property> properties;
         private VirtualServer instance;
 
+        public ExtendedVs(VirtualServer instance) {
+            this.instance = instance;
+        }
+
         @Override
         public Long getId() {
-            return null;
+            return instance.getId();
+        }
+
+        @Override
+        String getName() {
+            return instance.getName();
+        }
+
+        @Override
+        String getPort() {
+            return instance.getPort();
+        }
+
+        @Override
+        Long getSlbId() {
+            return instance.getSlbId();
+        }
+
+        @Override
+        Boolean getSsl() {
+            return instance.getSsl();
+        }
+
+        @Override
+        Integer getVersion() {
+            return instance.getVersion();
+        }
+
+        @Override
+        List<Domain> getDomains() {
+            return instance.getDomains();
         }
 
         @Override
@@ -149,14 +183,63 @@ public interface ExtendedView<T> {
         }
     }
 
-    class ExtendedSlb implements ExtendedView<Slb> {
+    class ExtendedSlb extends SlbView implements ExtendedView<Slb> {
         private List<String> tags;
         private List<Property> properties;
         private Slb instance;
 
+        public ExtendedSlb(Slb instance) {
+            this.instance = instance;
+        }
+
         @Override
         public Long getId() {
-            return null;
+            return instance.getId();
+        }
+
+        @Override
+        String getName() {
+            return instance.getName();
+        }
+
+        @Override
+        String getNginxBin() {
+            return instance.getNginxBin();
+        }
+
+        @Override
+        String getNginxConf() {
+            return instance.getNginxConf();
+        }
+
+        @Override
+        Integer getNginxWorkerProcesses() {
+            return instance.getNginxWorkerProcesses();
+        }
+
+        @Override
+        List<SlbServer> getSlbServers() {
+            return instance.getSlbServers();
+        }
+
+        @Override
+        String getStatus() {
+            return instance.getStatus();
+        }
+
+        @Override
+        Integer getVersion() {
+            return instance.getVersion();
+        }
+
+        @Override
+        List<Vip> getVips() {
+            return instance.getVips();
+        }
+
+        @Override
+        List<VirtualServer> getVirtualServers() {
+            return instance.getVirtualServers();
         }
 
         @Override

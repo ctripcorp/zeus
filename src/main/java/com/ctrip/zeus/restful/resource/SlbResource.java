@@ -10,12 +10,17 @@ import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
+import com.ctrip.zeus.restful.message.view.ExtendedView;
+import com.ctrip.zeus.restful.message.view.SlbListView;
+import com.ctrip.zeus.restful.message.view.ViewConstraints;
+import com.ctrip.zeus.restful.message.view.ViewDecorator;
 import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.support.ObjectJsonWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -24,7 +29,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.util.List;
 
 /**
  * @author:xingchaowang
@@ -43,6 +47,8 @@ public class SlbResource {
     private DbLockFactory dbLockFactory;
     @Resource
     private CriteriaQueryFactory criteriaQueryFactory;
+    @Resource
+    private ViewDecorator viewDecorator;
 
     private final int TIMEOUT = 1000;
 
@@ -60,15 +66,16 @@ public class SlbResource {
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "slb", SelectionMode.getMode(mode));
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
-        final SlbList slbList = new SlbList();
-        if (searchKeys != null) {
-            for (Slb slb : slbRepository.list(searchKeys)) {
-                slbList.addSlb(getSlbByType(slb, type));
-            }
-            slbList.setTotal(slbList.getSlbs().size());
 
+        SlbListView listView = new SlbListView();
+        for (Slb slb : slbRepository.list(searchKeys)) {
+            listView.add(new ExtendedView.ExtendedSlb(slb));
         }
-        return responseHandler.handle(slbList, hh.getMediaType());
+        if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
+            viewDecorator.decorate(listView.getList(), "slb");
+        }
+
+        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @GET
@@ -82,17 +89,21 @@ public class SlbResource {
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "slb", SelectionMode.getMode(mode));
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
-        List<Slb> result = slbRepository.list(searchKeys);
-        if (result.size() == 0) throw new ValidationException("Slb cannot be found.");
-        if (result.size() == 1) {
-            return responseHandler.handle(getSlbByType(result.get(0), type), hh.getMediaType());
+
+        SlbListView listView = new SlbListView();
+        for (Slb slb : slbRepository.list(searchKeys)) {
+            listView.add(new ExtendedView.ExtendedSlb(slb));
         }
-        SlbList slbList = new SlbList();
-        for (Slb slb : result) {
-            slbList.addSlb(getSlbByType(slb, type));
+        if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
+            viewDecorator.decorate(listView.getList(), "slb");
         }
-        slbList.setTotal(slbList.getSlbs().size());
-        return responseHandler.handle(slbList, hh.getMediaType());
+
+        if (listView.getTotal() == 0) throw new ValidationException("Slb cannot be found.");
+        if (listView.getTotal() == 1) {
+            return responseHandler.handle(ObjectJsonWriter.write(listView.getList().get(0), type), hh.getMediaType());
+        }
+
+        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @POST
@@ -164,27 +175,6 @@ public class SlbResource {
             slbServer.setHostName(trimIfNotNull(slbServer.getHostName()));
         }
         return s;
-    }
-
-    private Slb getSlbByType(Slb slb, String type) {
-        if ("INFO".equalsIgnoreCase(type)) {
-            return new Slb().setId(slb.getId())
-                    .setName(slb.getName());
-        }
-        if ("NORMAL".equalsIgnoreCase(type)) {
-            Slb result = new Slb().setId(slb.getId())
-                    .setName(slb.getName())
-                    .setNginxBin(slb.getNginxBin())
-                    .setNginxConf(slb.getNginxConf())
-                    .setNginxWorkerProcesses(slb.getNginxWorkerProcesses())
-                    .setStatus(slb.getStatus())
-                    .setVersion(slb.getVersion());
-            for (SlbServer slbServer : slb.getSlbServers()) {
-                result.addSlbServer(slbServer);
-            }
-            return result;
-        }
-        return slb;
     }
 
     private String trimIfNotNull(String value) {
