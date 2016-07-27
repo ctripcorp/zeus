@@ -96,7 +96,7 @@ public class VirtualServerResource {
 
         if (listView.getTotal() == 0) throw new ValidationException("Virtual server cannot be found.");
         if (listView.getTotal() == 1) {
-            return responseHandler.handle(listView.getList().get(0), hh.getMediaType());
+            return responseHandler.handle(ObjectJsonWriter.write(listView.getList().get(0), type), hh.getMediaType());
         }
 
         return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());

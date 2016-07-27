@@ -22,7 +22,6 @@ public class ObjectJsonWriter {
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .setPropertyNamingStrategy(new LowerCaseWithHyphenStrategy());
         objectMapper.addMixInAnnotations(ExtendedView.ExtendedGroup.class, GroupView.class);
-        objectMapper.addMixInAnnotations(GroupVirtualServer.class, GroupView.GroupVirtualServerView.class);
     }
 
     public static String write(Object obj, String type) throws ValidationException, JsonProcessingException {

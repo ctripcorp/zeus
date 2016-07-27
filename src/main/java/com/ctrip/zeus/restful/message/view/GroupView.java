@@ -42,9 +42,4 @@ public abstract class GroupView {
 
     @JsonIgnore
     abstract Boolean getVirtual();
-
-    public abstract class GroupVirtualServerView {
-        @JsonIgnore
-        abstract String getRewrite();
-    }
 }
