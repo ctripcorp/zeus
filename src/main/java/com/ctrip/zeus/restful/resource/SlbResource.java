@@ -75,7 +75,7 @@ public class SlbResource {
             viewDecorator.decorate(listView.getList(), "slb");
         }
 
-        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @GET
@@ -100,10 +100,10 @@ public class SlbResource {
 
         if (listView.getTotal() == 0) throw new ValidationException("Slb cannot be found.");
         if (listView.getTotal() == 1) {
-            return responseHandler.handle(ObjectJsonWriter.write(listView.getList().get(0), type), hh.getMediaType());
+            return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView.getList().get(0), type), hh.getMediaType());
         }
 
-        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @POST

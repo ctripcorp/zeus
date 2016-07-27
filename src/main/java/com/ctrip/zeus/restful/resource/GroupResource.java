@@ -77,7 +77,7 @@ public class GroupResource {
             viewDecorator.decorate(listView.getList(), "group");
         }
 
-        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @GET
@@ -93,7 +93,7 @@ public class GroupResource {
         for (Group group : groupRepository.list(keys.toArray(new IdVersion[keys.size()]))) {
             listView.add(new ExtendedView.ExtendedGroup(group));
         }
-        return responseHandler.handle(ObjectJsonWriter.write(listView, null), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, null), hh.getMediaType());
     }
 
     @GET
@@ -115,10 +115,10 @@ public class GroupResource {
 
         if (listView.getTotal() == 0) throw new ValidationException("Group cannot be found.");
         if (listView.getTotal() == 1) {
-            return responseHandler.handle(ObjectJsonWriter.write(listView.getList().get(0), type), hh.getMediaType());
+            return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView.getList().get(0), type), hh.getMediaType());
         }
 
-        return responseHandler.handle(ObjectJsonWriter.write(listView, type), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @POST
