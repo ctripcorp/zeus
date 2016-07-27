@@ -50,7 +50,7 @@ public class ErrorResponseHandler implements ResponseHandler {
     }
 
     @Override
-    public Response handle(String serializedValue, MediaType mediaType) throws Exception {
+    public Response handleSerializedValue(String serializedValue, MediaType mediaType) throws Exception {
         return handle(serializedValue, mediaType, false);
     }
 

@@ -77,7 +77,7 @@ public class DefaultResponseHandler implements ResponseHandler {
     }
 
     @Override
-    public Response handle(String serializedValue, MediaType mediaType) throws Exception {
+    public Response handleSerializedValue(String serializedValue, MediaType mediaType) throws Exception {
         if (mediaType != null && acceptedMediaTypes.contains(mediaType)) {
             return Response.status(Response.Status.OK).entity(serializedValue).type(mediaType).build();
         } else {
