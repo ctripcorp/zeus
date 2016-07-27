@@ -74,6 +74,16 @@
     <entity name="tag-item" table="tag_item" alias="ti" do-class="TagItemDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
+            <query name="find-all-by-type" type="SELECT" multiple="true">
+                <param name="type"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='type'/> = ${type}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-tag" type="SELECT" multiple="true">
                 <param name="tag-id"/>
                 <statement>
@@ -295,6 +305,16 @@
     <entity name="property-item" table="property_item" alias="pi" do-class="PropertyItemDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>
+            <query name="find-all-by-type" type="SELECT" multiple="true">
+                <param name="type"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='type'/> = ${type}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-properties" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>

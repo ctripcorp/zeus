@@ -3,6 +3,8 @@ package com.ctrip.zeus.tag.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.query.command.PropQueryCommand;
 import com.ctrip.zeus.service.query.command.QueryCommand;
+import com.ctrip.zeus.service.query.filter.FilterSet;
+import com.ctrip.zeus.service.query.filter.QueryExecuter;
 import com.ctrip.zeus.tag.PropertyService;
 import com.ctrip.zeus.tag.entity.Property;
 import org.springframework.stereotype.Component;
@@ -23,25 +25,105 @@ public class PropertyServiceImpl implements PropertyService {
     private PropertyItemDao propertyItemDao;
 
     @Override
-    public Set<Long> queryByCommand(QueryCommand command, String type) throws Exception {
+    public Set<Long> queryByCommand(QueryCommand command, final String type) throws Exception {
         Set<Long> result = null;
+
         PropQueryCommand propQuery = (PropQueryCommand) command;
         while (propQuery != null) {
-            if (propQuery.hasValue(propQuery.union_prop)) {
-                if (result == null) {
-                    result = unionQuery(propQuery.getProperties(propQuery.union_prop), type);
-                } else {
-                    result.retainAll(unionQuery(propQuery.getProperties(propQuery.union_prop), type));
+            final PropQueryCommand tmp = propQuery;
+            Long[] filteredPropIds = new QueryExecuter.Builder<Long>()
+                    .addFilter(new FilterSet<Long>() {
+                        @Override
+                        public boolean shouldFilter() throws Exception {
+                            return tmp.hasValue(tmp.union_prop);
+                        }
+
+                        @Override
+                        public Set<Long> filter() throws Exception {
+                            return unionQuery(tmp.getProperties(tmp.union_prop), type);
+                        }
+                    })
+                    .addFilter(new FilterSet<Long>() {
+                        @Override
+                        public boolean shouldFilter() throws Exception {
+                            return tmp.hasValue(tmp.join_prop);
+                        }
+
+                        @Override
+                        public Set<Long> filter() throws Exception {
+                            return joinQuery(tmp.getProperties(tmp.join_prop), type);
+                        }
+                    })
+                    .addFilter(new FilterSet<Long>() {
+                        @Override
+                        public boolean shouldFilter() throws Exception {
+                            return tmp.hasValue(tmp.item_type);
+                        }
+
+                        @Override
+                        public Set<Long> filter() throws Exception {
+                            List<String> t = new ArrayList<>();
+                            for (String s : tmp.getValue(tmp.item_type)) {
+                                t.add(s.trim());
+                            }
+                            Set<Long> result = new HashSet<>();
+                            for (String s : t) {
+                                result.retainAll(queryByType(s));
+                            }
+                            return result;
+                        }
+                    }).build(Long.class).run();
+
+            if (filteredPropIds != null) {
+                if (filteredPropIds.length == 0) return new HashSet<>();
+
+                Set<Long> tmpIds = new HashSet<>();
+                for (Long i : filteredPropIds) {
+                    tmpIds.add(i);
                 }
-            }
-            if (propQuery.hasValue(propQuery.join_prop)) {
+
                 if (result == null) {
-                    result = joinQuery(propQuery.getProperties(propQuery.join_prop), type);
+                    result = tmpIds;
                 } else {
-                    result.retainAll(joinQuery(propQuery.getProperties(propQuery.join_prop), type));
+                    result.retainAll(tmpIds);
                 }
             }
             propQuery = propQuery.next();
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Long> queryByType(String type) throws Exception {
+        Set<Long> propIds = new HashSet<>();
+        for (PropertyItemDo d : propertyItemDao.findAllByType(type, PropertyItemEntity.READSET_FULL)) {
+            propIds.add(d.getPropertyId());
+        }
+        return propIds;
+    }
+
+    @Override
+    public List<Property> getProperties(Long[] propIds) throws Exception {
+        Map<Long, String> rIdName = new HashMap<>();
+        Set<Long> propKeys = new HashSet<>();
+        List<PropertyDo> props = propertyDao.findAllByIds(propIds, PropertyEntity.READSET_FULL);
+        for (PropertyDo d : props) {
+            propKeys.add(d.getPropertyKeyId());
+            rIdName.put(d.getId(), d.getPropertyValue());
+        }
+
+        Map<Long, String> rKeyName = new HashMap<>();
+        for (PropertyKeyDo d : propertyKeyDao.findAllByIds(propKeys.toArray(new Long[propKeys.size()]), PropertyKeyEntity.READSET_FULL)) {
+            rKeyName.put(d.getId(), d.getName());
+        }
+
+        List<Property> result = new ArrayList<>();
+        for (PropertyDo p : props) {
+            String k = rKeyName.get(p.getPropertyKeyId());
+            String v = rIdName.get(p.getId());
+            if (k != null && v != null) {
+                result.add(new Property().setName(k).setValue(v));
+            }
         }
         return result;
     }
@@ -134,6 +216,24 @@ public class PropertyServiceImpl implements PropertyService {
         Set<Long> result = new HashSet<>();
         for (Map.Entry<Long, Counter> e : marker.entrySet()) {
             if (e.getValue().get() == joinedValue) result.add(e.getKey());
+        }
+        return result;
+    }
+
+    @Override
+    public Set<Long> queryTargets(String pname, String type) throws Exception {
+        Set<Long> result = new HashSet<>();
+        PropertyKeyDo kd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
+        if (kd == null) return result;
+
+        List<Long> propIds = new ArrayList<>();
+        for (PropertyDo d : propertyDao.findAllByKey(kd.getId(), PropertyEntity.READSET_FULL)) {
+            propIds.add(d.getId());
+        }
+        if (propIds.size() == 0) return result;
+
+        for (PropertyItemDo d : propertyItemDao.findAllByProperties(propIds.toArray(new Long[propIds.size()]), PropertyItemEntity.READSET_FULL)) {
+            result.add(d.getItemId());
         }
         return result;
     }

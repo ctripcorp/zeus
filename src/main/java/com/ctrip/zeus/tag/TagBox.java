@@ -1,13 +1,9 @@
 package com.ctrip.zeus.tag;
 
-import java.util.List;
-
 /**
  * Created by zhoumy on 2015/7/16.
  */
 public interface TagBox {
-
-    List<String> getAllTags() throws Exception;
 
     void removeTag(String name, boolean force) throws Exception;
 

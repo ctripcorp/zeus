@@ -11,12 +11,14 @@ import java.util.List;
 public class PropQueryCommand implements QueryCommand {
     public final static int union_prop = 0;
     public final static int join_prop = 1;
+    public final static int id = 2;
+    public final static int item_type = 3;
 
     private final String type;
     private PropQueryCommand next;
     private PropQueryCommand last;
 
-    private String[] values = new String[2];
+    private String[] values = new String[4];
 
     public PropQueryCommand() {
         type = "prop";
@@ -34,6 +36,12 @@ public class PropQueryCommand implements QueryCommand {
             case "prop":
             case "joinProp":
                 idx = join_prop;
+                break;
+            case "id":
+                idx = id;
+                break;
+            case "type":
+                idx = item_type;
                 break;
             default:
                 return false;

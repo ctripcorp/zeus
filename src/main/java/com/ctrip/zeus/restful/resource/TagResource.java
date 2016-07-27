@@ -19,6 +19,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/7/16.
@@ -40,16 +41,25 @@ public class TagResource {
                              @Context HttpServletRequest request,
                              @QueryParam("type") String type,
                              @QueryParam("targetId") Long targetId) throws Exception {
-        List<String> list;
-        if (type != null && targetId != null) {
-            list = tagService.getTags(type, targetId);
-        } else {
-            list = tagBox.getAllTags();
+        List<String> tags = null;
+        if (type != null) {
+            if (targetId != null) {
+                tags = tagService.getTags(type, targetId);
+            } else {
+                Set<Long> tagIds = tagService.queryByType(type);
+                tags = tagService.getTags(tagIds.toArray(new Long[tagIds.size()]));
+            }
         }
-        TagList tagList = new TagList().setTotal(list.size());
-        for (String s : list) {
-            tagList.addTag(s);
+
+        if (tags == null) {
+            tags = tagService.getAllTags();
         }
+
+        TagList tagList = new TagList();
+        for (String t : tags) {
+            tagList.addTag(t);
+        }
+        tagList.setTotal(tagList.getTags().size());
         return responseHandler.handle(tagList, hh.getMediaType());
     }
 

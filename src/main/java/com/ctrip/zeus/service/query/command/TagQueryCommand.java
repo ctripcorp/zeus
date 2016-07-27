@@ -6,10 +6,12 @@ package com.ctrip.zeus.service.query.command;
 public class TagQueryCommand implements QueryCommand {
     public final static int union_tag = 0;
     public final static int join_tag = 1;
+    public final static int item_id = 2;
+    public final static int item_type = 3;
 
     private final String type;
 
-    private String[] values = new String[2];
+    private String[] values = new String[4];
 
     public TagQueryCommand() {
         type = "tag";
@@ -26,6 +28,12 @@ public class TagQueryCommand implements QueryCommand {
             case "tags":
             case "joinTag":
                 idx = join_tag;
+                break;
+            case "targetId":
+                idx = item_id;
+                break;
+            case "type":
+                idx =item_type;
                 break;
             default:
                 return false;

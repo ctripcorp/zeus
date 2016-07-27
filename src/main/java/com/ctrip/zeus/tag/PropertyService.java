@@ -14,6 +14,10 @@ public interface PropertyService {
 
     Set<Long> queryByCommand(QueryCommand command, String type) throws Exception;
 
+    Set<Long> queryByType(String type) throws Exception;
+
+    List<Property> getProperties(Long[] propIds) throws Exception;
+
     List<Property> getAllProperties() throws Exception;
 
     List<Property> getProperties(String type, Long itemId) throws Exception;
@@ -23,6 +27,8 @@ public interface PropertyService {
     Set<Long> unionQuery(List<Property> properties, String type) throws Exception;
 
     Set<Long> joinQuery(List<Property> properties, String type) throws Exception;
+
+    Set<Long> queryTargets(String pname, String type) throws Exception;
 
     List<Long> queryTargets(String pname, String pvalue, String type) throws Exception;
 

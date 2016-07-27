@@ -13,13 +13,19 @@ public interface TagService {
 
     Set<Long> queryByCommand(QueryCommand command, String type) throws Exception;
 
+    Set<Long> queryByType(String type) throws Exception;
+
     Set<Long> unionQuery(List<String> tagNames, String type) throws Exception;
 
     Set<Long> joinQuery(List<String> tagNames, String type) throws Exception;
 
     List<Long> query(String tagName, String type) throws Exception;
 
+    List<String> getTags(Long[] tagIds) throws Exception;
+
     List<String> getTags(String type, Long itemId) throws Exception;
+
+    List<String> getAllTags() throws Exception;
 
     Map<Long, List<String>> getTags(String type, Long[] itemIds) throws Exception;
 }

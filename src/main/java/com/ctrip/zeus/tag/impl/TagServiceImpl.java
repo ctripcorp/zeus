@@ -1,8 +1,11 @@
 package com.ctrip.zeus.tag.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.query.command.QueryCommand;
 import com.ctrip.zeus.service.query.command.TagQueryCommand;
+import com.ctrip.zeus.service.query.filter.FilterSet;
+import com.ctrip.zeus.service.query.filter.QueryExecuter;
 import com.ctrip.zeus.tag.TagService;
 import org.springframework.stereotype.Component;
 
@@ -20,26 +23,69 @@ public class TagServiceImpl implements TagService {
     private TagItemDao tagItemDao;
 
     @Override
-    public Set<Long> queryByCommand(QueryCommand command, String type) throws Exception {
-        Set<Long> result = null;
-        TagQueryCommand tagQuery = (TagQueryCommand) command;
-        if (command.hasValue(tagQuery.union_tag)) {
-            List<String> tn = new ArrayList<>();
-            for (String s : tagQuery.getValue(tagQuery.union_tag)) {
-                tn.add(s.trim());
-            }
-            result = unionQuery(tn, type);
+    public Set<Long> queryByCommand(final QueryCommand command, final String type) throws Exception {
+        final TagQueryCommand tagQuery = (TagQueryCommand) command;
+        Long[] tagIds = new QueryExecuter.Builder<Long>()
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return tagQuery.hasValue(tagQuery.union_tag);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        List<String> tn = new ArrayList<>();
+                        for (String s : tagQuery.getValue(tagQuery.union_tag)) {
+                            tn.add(s.trim());
+                        }
+                        return unionQuery(tn, type);
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return command.hasValue(tagQuery.join_tag);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        List<String> tn = new ArrayList<>();
+                        for (String s : tagQuery.getValue(tagQuery.join_tag)) {
+                            tn.add(s.trim());
+                        }
+                        return joinQuery(tn, type);
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
+                        return tagQuery.hasValue(tagQuery.item_type);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        String[] tmpt = tagQuery.getValue(tagQuery.item_type);
+                        if (tmpt.length > 1)
+                            throw new ValidationException("Query tags does not support multiple types.");
+                        return queryByType(tmpt[0]);
+                    }
+                }).build(Long.class).run();
+
+        if (tagIds == null) return null;
+        if (tagIds.length == 0) return new HashSet<>();
+
+        Set<Long> result = new HashSet<>();
+        for (Long i : tagIds) {
+            result.add(i);
         }
-        if (command.hasValue(tagQuery.join_tag)) {
-            List<String> tn = new ArrayList<>();
-            for (String s : tagQuery.getValue(tagQuery.join_tag)) {
-                tn.add(s.trim());
-            }
-            if (result == null) {
-                result = joinQuery(tn, type);
-            } else {
-                result.retainAll(joinQuery(tn, type));
-            }
+        return result;
+    }
+
+    @Override
+    public Set<Long> queryByType(String type) throws Exception {
+        Set<Long> result = new HashSet<>();
+        for (TagItemDo d : tagItemDao.findAllByType(type, TagItemEntity.READSET_FULL)) {
+            result.add(d.getTagId());
         }
         return result;
     }
@@ -100,6 +146,24 @@ public class TagServiceImpl implements TagService {
             if (type.equals(ti.getType())) {
                 result.add(ti.getItemId());
             }
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> getAllTags() throws Exception {
+        List<String> result = new ArrayList<>();
+        for (TagDo tagDo : tagDao.findAll(TagEntity.READSET_FULL)) {
+            result.add(tagDo.getName());
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> getTags(Long[] tagIds) throws Exception {
+        List<String> result = new ArrayList<>();
+        for (TagDo d : tagDao.findAllByIds(tagIds, TagEntity.READSET_FULL)) {
+            result.add(d.getName());
         }
         return result;
     }

@@ -6,7 +6,6 @@ import com.ctrip.zeus.tag.TagBox;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,15 +17,6 @@ public class DefaultTagBox implements TagBox {
     private TagDao tagDao;
     @Resource
     private TagItemDao tagItemDao;
-
-    @Override
-    public List<String> getAllTags() throws Exception {
-        List<String> result = new ArrayList<>();
-        for (TagDo tagDo : tagDao.findAll(TagEntity.READSET_FULL)) {
-            result.add(tagDo.getName());
-        }
-        return result;
-    }
 
     @Override
     public void removeTag(String name, boolean force) throws Exception {

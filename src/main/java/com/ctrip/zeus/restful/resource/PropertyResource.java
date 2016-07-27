@@ -20,6 +20,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/7/20.
@@ -41,12 +42,20 @@ public class PropertyResource {
                                    @Context HttpServletRequest request,
                                    @QueryParam("type") String type,
                                    @QueryParam("targetId") Long targetId) throws Exception {
-        List<Property> list;
-        if (type != null && targetId != null) {
-            list = propertyService.getProperties(type, targetId);
-        } else {
+        List<Property> list = null;
+        if (type != null) {
+            if (targetId != null) {
+                list = propertyService.getProperties(type, targetId);
+            } else {
+                Set<Long> propIds = propertyService.queryByType(type);
+                list = propertyService.getProperties(propIds.toArray(new Long[propIds.size()]));
+            }
+        }
+
+        if (list == null) {
             list = propertyService.getAllProperties();
         }
+
         PropertyList propertyList = new PropertyList().setTotal(list.size());
         for (Property property : list) {
             propertyList.addProperty(property);
