@@ -37,10 +37,10 @@ public class PropQueryCommand implements QueryCommand {
             case "joinProp":
                 idx = join_prop;
                 break;
-            case "id":
+            case "targetId":
                 idx = id;
                 break;
-            case "type":
+            case "targetType":
                 idx = item_type;
                 break;
             default:

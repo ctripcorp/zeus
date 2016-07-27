@@ -32,7 +32,7 @@ public class TagQueryCommand implements QueryCommand {
             case "targetId":
                 idx = item_id;
                 break;
-            case "type":
+            case "targetType":
                 idx =item_type;
                 break;
             default:
