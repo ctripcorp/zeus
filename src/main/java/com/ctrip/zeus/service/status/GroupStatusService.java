@@ -70,6 +70,15 @@ public interface GroupStatusService {
      * @throws Exception
      */
     GroupStatus getOfflineGroupStatus(Long groupId) throws Exception;
+
+        /**
+     * Find online group status by groupId
+     * @param groupIds groupIds
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getOfflineGroupsStatus(Set<Long> groupIds) throws Exception;
+
         /**
      * Find online group status by groupId
      * @param groupId groupId

@@ -4,8 +4,14 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.dal.core.GlobalJobDao;
 import com.ctrip.zeus.dal.core.GlobalJobDo;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.restful.message.TrimmedQueryParam;
+import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.model.SelectionMode;
+import com.ctrip.zeus.service.query.CriteriaQueryFactory;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.QueryEngine;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupStatus;
@@ -18,11 +24,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -42,26 +47,25 @@ public class StatusResource {
     private ResponseHandler responseHandler;
     @Resource
     private GlobalJobDao globalJobDao;
+    @Resource
+    private CriteriaQueryFactory criteriaQueryFactory;
 
     @GET
     @Path("/groups")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
     public Response allGroupStatusInSlb(@Context HttpServletRequest request, @Context HttpHeaders hh,
-                                        @QueryParam("slbId") Long slbId,
-                                        @QueryParam("slbName") String slbName) throws Exception {
+                                        @TrimmedQueryParam("mode") final String mode,
+                                        @Context UriInfo uriInfo) throws Exception {
         List<GroupStatus> statusList = null;
-        if (slbId == null) {
-            if (slbName != null) {
-                slbId = slbCriteriaQuery.queryByName(slbName);
-            }
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "group", SelectionMode.getMode(mode));
+        queryRender.init(true);
+        IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
+        Set<Long> groupIds = new HashSet<>();
+        for (IdVersion idv : searchKeys){
+            groupIds.add(idv.getId());
         }
-        if (null == slbId) {
-            statusList = groupStatusService.getAllOfflineGroupsStatus();
-        } else {
-            statusList = groupStatusService.getOfflineGroupsStatusBySlbId(slbId);
-        }
-
+        statusList = groupStatusService.getOfflineGroupsStatus(groupIds);
         GroupStatusList result = new GroupStatusList();
         for (GroupStatus groupStatus : statusList) {
             result.addGroupStatus(groupStatus);

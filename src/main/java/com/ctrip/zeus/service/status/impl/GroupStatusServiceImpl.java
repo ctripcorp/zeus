@@ -174,6 +174,17 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     }
 
     @Override
+    public List<GroupStatus> getOfflineGroupsStatus(Set<Long> groupIds) throws Exception {
+        List<GroupStatus> result = new ArrayList<>();
+        ModelStatusMapping<Group> map = entityFactory.getGroupsByIds(groupIds.toArray(new Long[]{}));
+        if (map.getOfflineMapping() == null || map.getOfflineMapping().size() == 0) {
+            return result;
+        }
+        result = getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping(), -1L);
+        return result;
+    }
+
+    @Override
     public GroupStatus getOfflineGroupStatus(Long groupId, Long slbId) throws Exception {
         GroupStatus result = null;
         ModelStatusMapping<Group> map = entityFactory.getGroupsByIds(new Long[]{groupId});
