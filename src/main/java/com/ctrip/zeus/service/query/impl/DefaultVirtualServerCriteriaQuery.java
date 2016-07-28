@@ -147,7 +147,13 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
                         if (result == null) return null;
                         if (result.size() == 0) return new IdVersion[0];
                         if (filteredVsIds == null) {
-                            result.retainAll(queryAll(mode));
+                            Long[] arr = new Long[result.size()];
+                            int i = 0;
+                            for (IdVersion e : result) {
+                                arr[i] = e.getId();
+                                i++;
+                            }
+                            result.retainAll(queryByIdsAndMode(arr, mode));
                         }
                         return result.toArray(new IdVersion[result.size()]);
                     }
