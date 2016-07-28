@@ -58,7 +58,7 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
                     public Set<Long> filter() throws Exception {
                         Set<Long> result = new HashSet<>();
                         for (String s : slbQuery.getValue(slbQuery.name)) {
-                            result.addAll(fuzzyQueryByName(s.trim()));
+                            result.add(queryByName(s.trim()));
                         }
                         return result;
                     }

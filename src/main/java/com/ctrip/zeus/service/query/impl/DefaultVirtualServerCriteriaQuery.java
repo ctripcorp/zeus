@@ -60,7 +60,7 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
                     public Set<Long> filter() throws Exception {
                         Set<Long> result = new HashSet<Long>();
                         for (String s : vsQuery.getValue(vsQuery.name)) {
-                            result.addAll(fuzzyQueryByName(s));
+                            result.add(queryByName(s));
                         }
                         return result;
                     }

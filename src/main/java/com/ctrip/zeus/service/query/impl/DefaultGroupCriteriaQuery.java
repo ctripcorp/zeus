@@ -60,7 +60,7 @@ public class DefaultGroupCriteriaQuery implements GroupCriteriaQuery {
                     public Set<Long> filter() throws Exception {
                         Set<Long> result = new HashSet<Long>();
                         for (String s : groupQuery.getValue(groupQuery.name)) {
-                            result.addAll(fuzzyQueryByName(s.trim()));
+                            result.add(queryByName(s.trim()));
                         }
                         return result;
                     }
