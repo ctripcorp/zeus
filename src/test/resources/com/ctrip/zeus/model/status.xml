@@ -14,7 +14,7 @@
             <healthy>true</healthy>
             <up>true</up>
             <online>false</online>
-            <discription>status</discription>
+            <next-status>status</next-status>
         </group-server-status>
         <group-server-status>
             <ip>192.168.1.1</ip>
@@ -25,7 +25,7 @@
             <healthy>true</healthy>
             <up>true</up>
             <online>false</online>
-            <discription>status</discription>
+            <next-status>status</next-status>
         </group-server-status>
     </group-status>
     <group-status-list>

@@ -260,6 +260,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
 
             Group onlineGroup = onlineGroups.get(groupId);
             Set<String> onlineMembers = new HashSet<>();
+            Set<String> offlineMembers = new HashSet<>();
             Map<String, GroupServer> members = new HashMap<>();
             if (onlineGroup != null) {
                 for (GroupServer groupServer : onlineGroup.getGroupServers()) {
@@ -269,6 +270,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             }
             List<GroupServer> groupServerList = group.getGroupServers();
             for (GroupServer gs : groupServerList) {
+                offlineMembers.add(gs.getIp());
                 members.put(gs.getIp(), gs);
             }
             for (GroupServer gs : members.values()) {
@@ -285,6 +287,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
                 boolean up = false;
+                NextStatus nextStatus = NextStatus.Online;
                 if (healthyActivateFlag) {
                     up = memberUp && serverUp && pullIn && raise;
                 } else {
@@ -298,17 +301,34 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 if (!online) {
                     up = false;
                 }
-
+                if (onlineMembers.contains(gs.getIp()) && offlineMembers.contains(gs.getIp())) {
+                    nextStatus = NextStatus.Online;
+                } else if (onlineMembers.contains(gs.getIp()) && !offlineMembers.contains(gs.getIp())) {
+                    nextStatus = NextStatus.ToBeOffline;
+                } else if (!onlineMembers.contains(gs.getIp()) && offlineMembers.contains(gs.getIp())) {
+                    nextStatus = NextStatus.ToBeOnline;
+                }
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
                 groupServerStatus.setPull(pullIn);
                 groupServerStatus.setHealthy(raise);
                 groupServerStatus.setUp(up);
                 groupServerStatus.setOnline(onlineMembers.contains(gs.getIp()));
+                groupServerStatus.setNextStatus(nextStatus.getName());
                 status.addGroupServerStatus(groupServerStatus);
             }
             res.add(status);
         }
         return res;
+    }
+
+    enum NextStatus {
+        Online,
+        ToBeOnline,
+        ToBeOffline;
+
+        String getName() {
+            return name();
+        }
     }
 }

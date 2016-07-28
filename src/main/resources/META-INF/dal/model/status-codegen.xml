@@ -25,7 +25,7 @@
     <element name="healthy" value-type="boolean" />
     <element name="up" value-type="boolean" />
     <element name="online" value-type="boolean" />
-    <element name="discription" value-type="String" />
+    <element name="next-status" value-type="String" />
   </entity>
   <entity name="group-status-list">
     <element name="total" value-type="int" />
