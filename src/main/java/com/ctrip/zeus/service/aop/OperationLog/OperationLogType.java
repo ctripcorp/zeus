@@ -6,6 +6,7 @@ package com.ctrip.zeus.service.aop.OperationLog;
 public enum OperationLogType {
     SLB,
     GROUP,
+    VS,
     SERVER;
     public String value() {
         return name();
