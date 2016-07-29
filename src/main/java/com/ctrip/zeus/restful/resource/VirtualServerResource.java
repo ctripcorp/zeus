@@ -58,18 +58,9 @@ public class VirtualServerResource {
                          @TrimmedQueryParam("mode") final String mode,
                          @TrimmedQueryParam("type") final String type,
                          @Context UriInfo uriInfo) throws Exception {
-        SelectionMode selectionMode = SelectionMode.getMode(mode);
-        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "vs", selectionMode);
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "vs", SelectionMode.getMode(mode));
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
-
-        if (SelectionMode.REDUNDANT == selectionMode) {
-            if (searchKeys.length > 2)
-                throw new ValidationException("Too many matches have been found after querying.");
-        } else {
-            if (searchKeys.length > 1)
-                throw new ValidationException("Too many matches have been found after querying.");
-        }
 
         VsListView listView = new VsListView();
         for (VirtualServer vs : virtualServerRepository.listAll(searchKeys)) {
@@ -91,9 +82,18 @@ public class VirtualServerResource {
                                      @TrimmedQueryParam("mode") final String mode,
                                      @TrimmedQueryParam("type") final String type,
                                      @Context UriInfo uriInfo) throws Exception {
+        SelectionMode selectionMode = SelectionMode.getMode(mode);
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "vs", SelectionMode.getMode(mode));
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
+
+        if (SelectionMode.REDUNDANT == selectionMode) {
+            if (searchKeys.length > 2)
+                throw new ValidationException("Too many matches have been found after querying.");
+        } else {
+            if (searchKeys.length > 1)
+                throw new ValidationException("Too many matches have been found after querying.");
+        }
 
         VsListView listView = new VsListView();
         for (VirtualServer vs : virtualServerRepository.listAll(searchKeys)) {
