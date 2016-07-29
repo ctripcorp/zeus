@@ -194,7 +194,7 @@ public class DeactivateResource {
         slbRepository.updateStatus(new IdVersion[]{idVersion});
 
         try {
-            propertyBox.set("status", "activated", "slb", slbId);
+            propertyBox.set("status", "deactivated", "slb", slbId);
         } catch (Exception ex) {
         }
         return responseHandler.handle(slbRepository.getById(slbId), hh.getMediaType());
