@@ -14,10 +14,10 @@ public class ContentWriters {
     }
 
     public static String writeGroupContent(Group g) {
-        return GenericSerializer.writeJson(g);
+        return GenericSerializer.writeJson(g, false);
     }
 
     public static String writeSlbContent(Slb s) {
-        return GenericSerializer.writeJson(s);
+        return GenericSerializer.writeJson(s, false);
     }
 }

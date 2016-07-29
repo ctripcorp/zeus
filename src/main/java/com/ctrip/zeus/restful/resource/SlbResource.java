@@ -86,9 +86,18 @@ public class SlbResource {
                         @TrimmedQueryParam("type") final String type,
                         @TrimmedQueryParam("mode") final String mode,
                         @Context UriInfo uriInfo) throws Exception {
-        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "slb", SelectionMode.getMode(mode));
+        SelectionMode selectionMode = SelectionMode.getMode(mode);
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "slb", selectionMode);
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
+
+        if (SelectionMode.REDUNDANT == selectionMode) {
+            if (searchKeys.length > 2)
+                throw new ValidationException("Too many matches have been found after querying.");
+        } else {
+            if (searchKeys.length > 1)
+                throw new ValidationException("Too many matches have been found after querying.");
+        }
 
         SlbListView listView = new SlbListView();
         for (Slb slb : slbRepository.list(searchKeys)) {

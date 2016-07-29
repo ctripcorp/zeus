@@ -104,9 +104,18 @@ public class GroupResource {
                         @TrimmedQueryParam("type") String type,
                         @TrimmedQueryParam("mode") final String mode,
                         @Context UriInfo uriInfo) throws Exception {
-        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "group", SelectionMode.getMode(mode));
+        SelectionMode selectionMode = SelectionMode.getMode(mode);
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "group", selectionMode);
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
+
+        if (SelectionMode.REDUNDANT == selectionMode) {
+            if (searchKeys.length > 2)
+                throw new ValidationException("Too many matches have been found after querying.");
+        } else {
+            if (searchKeys.length > 1)
+                throw new ValidationException("Too many matches have been found after querying.");
+        }
 
         GroupListView listView = new GroupListView();
         for (Group group : groupRepository.list(searchKeys)) {
