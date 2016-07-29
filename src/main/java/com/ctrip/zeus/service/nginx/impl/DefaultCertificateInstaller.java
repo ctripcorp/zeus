@@ -208,7 +208,8 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
         if (rVsDomain.size() > rDomainCert.size()) {
             Set<String> range = new HashSet<>(rVsDomain.values());
             range.removeAll(rDomainCert.keySet());
-            throw new ValidationException("Missing certificates on vses: " + Joiner.on(",").join(next) + ".");
+            if (range.size() > 0)
+                throw new ValidationException("Missing certificates on vses: " + Joiner.on(",").join(range) + ".");
         }
 
         for (Map.Entry<Long, String> e : rVsDomain.entrySet()) {
