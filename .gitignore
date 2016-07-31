@@ -20,3 +20,11 @@ logback-uat.xml
 *.log
 APP_HOME_IS_UNDEFINED
 */**/git.properties
+apidoc/node_modules
+apidoc/vendor
+apidoc/locales
+apidoc/img
+apidoc/utils
+main.js
+apidoc/css
+api_*

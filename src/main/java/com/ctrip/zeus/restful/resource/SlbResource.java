@@ -54,6 +54,26 @@ public class SlbResource {
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * @api {get} /api/slbs: Request slb information
+     * @apiName ListSlbs
+     * @apiGroup Slb
+     *
+     * @apiParam {long[]} slbId         1,2,3
+     * @apiParam {string[]} slbName     a,b,c
+     * @apiParam {string[]} ip          10.2.1.1,10.2.11.21
+     * @apiParam {string[]} vip         not supported yet
+     * @apiParam {string} mode          get {online/offline/redundant} (redundant=online&offline) version
+     * @apiParam {string} type          get slbs with {info/normal/detail/extended} information
+     * @apiParam {string[]} anyTag      union search slbs by tags e.g. anyTag=group1,group2
+     * @apiParam {string[]} tags        join search slbs by tags e.g. tags=group1,group2
+     * @apiParam {string[]} anyProp     union search slbs by properties(key:value) e.g. anyProp=dc:oy,dc:jq
+     * @apiParam {string[]} props       join search slbs by properties(key:value) e.g. props=department:hotel,dc:jq
+     * @apiParam {any} vs               supported vs property queries, ref /api/vses
+     * @apiParam {any} group            supported group property queries, ref /api/groups
+     *
+     * @apiSuccess {Slb[]} slbs         slb list json object
+     */
     @GET
     @Path("/slbs")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

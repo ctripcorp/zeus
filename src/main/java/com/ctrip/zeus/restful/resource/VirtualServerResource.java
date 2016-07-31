@@ -49,6 +49,28 @@ public class VirtualServerResource {
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * @api {get} /api/vses: Request vs information
+     * @apiName ListVirtualServers
+     * @apiGroup Vs
+     *
+     *
+     * @apiParam {long[]} vsId          1,2,3
+     * @apiParam {string[]} vsName      a,b,c
+     * @apiParam {string[]} ip          reserved
+     * @apiParam {string[]} domain      a.ctrip.com,b.ctrip.com
+     * @apiParam {boolean} ssl          true/false
+     * @apiParam {string} mode          get {online/offline/redundant} (redundant=online&offline) version
+     * @apiParam {string} type          get vses with {info/normal/detail/extended} information
+     * @apiParam {string[]} anyTag      union search vses by tags e.g. anyTag=group1,group2
+     * @apiParam {string[]} tags        join search vses by tags e.g. tags=group1,group2
+     * @apiParam {string[]} anyProp     union search vses by properties(key:value) e.g. anyProp=dc:oy,dc:jq
+     * @apiParam {string[]} props       join search vses by properties(key:value) e.g. props=department:hotel,dc:jq
+     * @apiParam {any} group            supported group property queries, ref /api/groups
+     * @apiParam {any} slb              supported slb property queries, ref /api/slbs
+     *
+     * @apiSuccess {VirtualServer[]} vses   vs list json object
+     */
     @GET
     @Path("/vses")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

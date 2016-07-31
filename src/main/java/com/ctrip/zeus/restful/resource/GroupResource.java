@@ -56,6 +56,26 @@ public class GroupResource {
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * @api {get} /api/groups: Request group information
+     * @apiName ListGroups
+     * @apiGroup Group
+     *
+     * @apiParam {long[]} groupId       1,2,3
+     * @apiParam {string[]} groupName   a,b,c
+     * @apiParam {string[]} appId       1001,1101,1100
+     * @apiParam {string[]} ip          10.2.1.2,10.2.1.11
+     * @apiParam {string} mode          get {online/offline/redundant} (redundant=online&offline) version
+     * @apiParam {string} type          get groups with {info/normal/detail/extended} information
+     * @apiParam {string[]} anyTag      union search groups by tags e.g. anyTag=group1,group2
+     * @apiParam {string[]} tags        join search groups by tags e.g. tags=group1,group2
+     * @apiParam {string[]} anyProp     union search groups by properties(key:value) e.g. anyProp=dc:oy,dc:jq
+     * @apiParam {string[]} props       join search groups by properties(key:value) e.g. props=department:hotel,dc:jq
+     * @apiParam {any} vs               supported vs property queries, ref /api/vses
+     * @apiParam {any} slb              supported slb property queries, ref /api/slbs
+     *
+     * @apiSuccess {Group[]} groups     group list json object
+     */
     @GET
     @Path("/groups")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
