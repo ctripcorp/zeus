@@ -19,7 +19,7 @@ public abstract class GroupView {
     @JsonView(ViewConstraints.Info.class)
     abstract String getName();
 
-    @JsonView(ViewConstraints.Normal.class)
+    @JsonView(ViewConstraints.Info.class)
     abstract String getAppId();
 
     @JsonView(ViewConstraints.Normal.class)
