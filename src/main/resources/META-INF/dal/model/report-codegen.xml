@@ -5,6 +5,7 @@
     <entity-ref name="group-server" />
     <entity-ref name="report-group-list" />
     <entity-ref name="report-group" />
+    <entity-ref name="report-feed" />
   </entity>
   <entity name="cms-report">
     <element name="id" value-type="String" />
@@ -44,6 +45,11 @@
     <element name="current-version" value-type="int" />
     <element name="reported-version" value-type="int" />
     <element name="status" value-type="String" />
+    <element name="description" value-type="String" />
+  </entity>
+  <entity name="report-feed">
+    <element name="target-id" value-type="long" />
+    <element name="topic" value-type="String" />
     <element name="description" value-type="String" />
   </entity>
 </model>

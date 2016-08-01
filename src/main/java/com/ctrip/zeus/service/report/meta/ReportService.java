@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.report.meta;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.report.entity.ReportFeed;
 import com.ctrip.zeus.report.entity.ReportGroup;
 
 import java.util.List;
@@ -20,6 +21,8 @@ public interface ReportService {
     void reportMetaDataAction(Long targetId, ReportTopic reportTopic) throws Exception;
 
     List<ReportGroup> listErrors() throws Exception;
+
+    List<ReportFeed> listFeeds() throws Exception;
 
     ReportGroup getReportGroupById(Long groupId) throws Exception;
 }

@@ -45,4 +45,10 @@
         <status>error</status>
         <description>appid invalid</description>
     </report-group>
+    <report-feed>
+        <target-id>12345678901</target-id>
+        <topic>abc</topic>
+        <description>appid invalid</description>
+    </report-feed>
+
 </report>

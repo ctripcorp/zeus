@@ -27,4 +27,8 @@ public class ObjectJsonWriter {
     public static String write(Object obj, String type) throws ValidationException, JsonProcessingException {
         return objectMapper.writerWithView(ViewConstraints.getContraintType(type)).writeValueAsString(obj);
     }
+
+    public static String write(Object obj) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(obj);
+    }
 }

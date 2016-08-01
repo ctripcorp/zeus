@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.report.meta.impl;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.report.entity.ReportFeed;
 import com.ctrip.zeus.report.entity.ReportGroup;
 import com.ctrip.zeus.service.report.meta.ReportService;
 import com.ctrip.zeus.service.report.meta.ReportTopic;
@@ -36,6 +37,11 @@ public class MockReportService implements ReportService {
 
     @Override
     public List<ReportGroup> listErrors() throws Exception {
+        return null;
+    }
+
+    @Override
+    public List<ReportFeed> listFeeds() throws Exception {
         return null;
     }
 
