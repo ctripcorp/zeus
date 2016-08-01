@@ -253,6 +253,35 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
+    public Map<Property, List<Long>> queryTargetGroup(String pname, String type) throws Exception {
+        Map<Property, List<Long>> result = new HashMap<>();
+        PropertyKeyDo kd = propertyKeyDao.findByName(pname, PropertyKeyEntity.READSET_FULL);
+        if (kd == null) return result;
+
+        Map<Long, Property> props = new HashMap<>();
+        for (PropertyDo d : propertyDao.findAllByKey(kd.getId(), PropertyEntity.READSET_FULL)) {
+            props.put(d.getId(), new Property().setName(kd.getName()).setValue(d.getPropertyValue()));
+        }
+        if (props.size() == 0) return result;
+
+        Map<Long, List<Long>> rPropItems = new HashMap<>();
+        for (PropertyItemDo d : propertyItemDao.findAllByProperties(props.keySet().toArray(new Long[props.size()]), PropertyItemEntity.READSET_FULL)) {
+            List<Long> l = rPropItems.get(d.getPropertyId());
+            if (l == null) {
+                l = new ArrayList<>();
+                rPropItems.put(d.getPropertyId(), l);
+            }
+            l.add(d.getItemId());
+        }
+        for (Map.Entry<Long, List<Long>> e : rPropItems.entrySet()) {
+            Property p = props.get(e.getKey());
+            if (p == null) continue;
+            result.put(p, e.getValue());
+        }
+        return result;
+    }
+
+    @Override
     public Map<Long, List<Property>> getProperties(String type, Long[] itemIds) throws Exception {
         Map<Long, List<Long>> rItemProp = new HashMap<>();
         Set<Long> propIds = new HashSet<>();
