@@ -91,12 +91,6 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
 
     @Override
     public void installDefault() throws Exception {
-        CertificateDo cert = certificateDao.findMaxByDomainAndState(localhost, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
-        if (cert == null) {
-            logger.error("Could not find default certificate to install.");
-            return;
-        }
-
         String defaultPath = config.getInstallDir(0L);
         defaultPath = defaultPath.substring(0, defaultPath.lastIndexOf("/")) + "/default";
         File f = new File(defaultPath);
@@ -107,6 +101,12 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
             f.mkdirs();
         }
 
+        CertificateDo cert = certificateDao.findMaxByDomainAndState(localhost, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
+        if (cert == null) {
+            logger.error("Could not find default certificate to install.");
+            return;
+        }
+        
         OutputStream certos = new FileOutputStream(f.getPath() + "/ssl.crt", config.getWriteFileOption());
         OutputStream keyos = new FileOutputStream(f.getPath() + "/ssl.key", config.getWriteFileOption());
         try {
