@@ -141,6 +141,9 @@ public class GroupResource {
         for (Group group : groupRepository.list(searchKeys)) {
             listView.add(new ExtendedView.ExtendedGroup(group));
         }
+        if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
+            viewDecorator.decorate(listView.getList(), "group");
+        }
 
         if (listView.getTotal() == 0) throw new ValidationException("Group cannot be found.");
         if (listView.getTotal() == 1) {

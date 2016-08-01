@@ -156,6 +156,18 @@
                     WHERE <FIELD name='id'/> = ${key-id}]]>
                 </statement>
             </query>
+            <query name="update-status-by-target-and-topics" type="UPDATE" batch="true">
+                <param name="target-id"/>
+                <param name="topics"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='state'/> = ${state}
+                    WHERE <FIELD name='target-id'/> = ${target-id}
+                        AND <FIELD name='topic'/> IN <IN>${topics}</IN>
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
 </entities>
