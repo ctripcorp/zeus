@@ -11,11 +11,13 @@ import java.util.List;
  */
 public interface ReportService {
 
-    void reportGroup(Group group) throws Exception;
+    void reportGroupAction(Group group) throws Exception;
 
-    void reportByVs(VirtualServer virtualServer) throws Exception;
+    void reportGroupAction(VirtualServer virtualServer) throws Exception;
 
-    void reportDeletion(Long groupId) throws Exception;
+    void reportGroupDeletion(Long groupId) throws Exception;
+
+    void reportMetaDataAction(Long targetId, ReportTopic reportTopic) throws Exception;
 
     List<ReportGroup> listErrors() throws Exception;
 

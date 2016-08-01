@@ -3,6 +3,7 @@
   <entity name="app-info" table="app_info" alias="ai">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="app-id" field="app_id" value-type="String" length="50" nullable="false" />
+    <member name="app-name" field="app_name" value-type="String" length="128" nullable="false" />
     <member name="sbu" field="sbu" value-type="String" length="128" nullable="false" />
     <member name="sbu-english-name" field="sbu_english_name" value-type="String" length="256" nullable="false" />
     <member name="owner" field="owner" value-type="String" length="256" nullable="false" />
@@ -461,6 +462,7 @@
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="domain" members="domain ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1427,6 +1429,7 @@
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <index name="property_id" members="property_id ASC" />
     <index name="item_id" members="item_id ASC" />
+    <index name="type" members="type ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1506,6 +1509,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="ip_vs_id" unique="true" members="ip ASC, vs_id ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="vs_id" members="vs_id ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -1949,6 +1953,48 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="report-queue" table="report_queue" alias="rq">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="target-id" field="target_id" value-type="long" length="19" nullable="false" />
+    <member name="topic" field="topic" value-type="int" length="10" nullable="false" />
+    <member name="state" field="state" value-type="boolean" nullable="false" />
+    <member name="description" field="description" value-type="String" length="255" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="uniq_idx_topic_target" unique="true" members="topic ASC, target_id ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="state" members="state ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="server" table="server" alias="s">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="ip" field="ip" value-type="String" length="100" nullable="false" />
@@ -2168,6 +2214,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="slb_id_name" unique="true" members="slb_id ASC, name ASC" />
     <index name="idx_DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="is_ssl" members="is_ssl ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -2416,6 +2463,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="tag_id_item_id_type" unique="true" members="tag_id ASC, item_id ASC, type ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="type" members="type ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

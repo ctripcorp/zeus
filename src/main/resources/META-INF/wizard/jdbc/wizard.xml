@@ -69,6 +69,7 @@
          <table name="group_history"/>
          <table name="group_server_status"/>
          <table name="app_info"/>
+         <table name="report_queue"/>
       </group>
    </jdbc>
 </wizard>

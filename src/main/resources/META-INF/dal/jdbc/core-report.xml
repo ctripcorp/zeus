@@ -92,5 +92,71 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="report-queue" table="report_queue" alias="rq" do-class="ReportQueueDo">
+        <readsets>
+            <readset name="IDONLY">
+                <member name="target-id"/>
+            </readset>
+        </readsets>
+        <var name="topics" value-type="Integer[]"/>
+        <query-defs>
+            <query name="insert-or-update-by-topic-and-target" type="INSERT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        <FIELD name='state'/> = ${state},
+                        <FIELD name='description'/> = ${description}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-topic-and-state" type="SELECT" multiple="true">
+                <param name="topics"/>
+                <param name="state"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='topic'/> IN <IN>${topic}</IN>
+                        AND <FIELD name='state'/> = ${state}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-topics-target-and-state" type="SELECT" multiple="true">
+                <param name="topics"/>
+                <param name="target-id"/>
+                <param name="state"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='topic'/> IN <IN>${topics}</IN>
+                        AND <FIELD name='target-id'/> = ${target-id}
+                        AND <FIELD name='state'/> = ${state}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-state" type="SELECT" multiple="true">
+                <param name="state"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='state'/> = ${state}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-by-PK" type="UPDATE" batch="true">
+                <param name="key-id"/>
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELDS/>
+                    WHERE <FIELD name='id'/> = ${key-id}]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
 </entities>
 

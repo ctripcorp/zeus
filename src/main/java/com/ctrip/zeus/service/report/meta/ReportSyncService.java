@@ -7,6 +7,10 @@ public interface ReportSyncService {
 
     void sync(Long slbId) throws Exception;
 
+    void consumeReportQueue(Long slbId) throws Exception;
+
+    String forceSync(Long targetId, ReportTopic topic) throws Exception;
+
     String syncGroup(Long groupId) throws Exception;
 
     String reportDeletionByGroup(Long groupId) throws Exception;
