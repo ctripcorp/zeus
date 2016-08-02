@@ -21,6 +21,8 @@ import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonWriter;
+import com.ctrip.zeus.tag.PropertyBox;
+import com.ctrip.zeus.tag.TagBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -44,6 +46,10 @@ public class VirtualServerResource {
     private CriteriaQueryFactory criteriaQueryFactory;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private PropertyBox propertyBox;
+    @Resource
+    private TagBox tagBox;
     @Resource
     private ViewDecorator viewDecorator;
 
@@ -180,6 +186,16 @@ public class VirtualServerResource {
         } catch (Exception ex) {
             logger.warn("Try archive deleted vs failed. " + GenericSerializer.writeJson(archive, false), ex);
         }
+
+        try {
+            propertyBox.clear("vs", vsId);
+        } catch (Exception ex) {
+        }
+        try {
+            tagBox.clear("vs", vsId);
+        } catch (Exception ex) {
+        }
+
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
     }
 

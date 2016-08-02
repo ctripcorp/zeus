@@ -12,4 +12,6 @@ public interface TagBox {
     void tagging(String tagName, String type, Long[] itemIds) throws Exception;
 
     void untagging(String tagName, String type, Long[] itemIds) throws Exception;
+
+    void clear(String type, Long itemId) throws Exception;
 }

@@ -128,4 +128,18 @@ public class TagResource {
         tagBox.removeTag(tagName, forceEnabled);
         return responseHandler.handle("Successfully removed tag - " + tagName + ".", hh.getMediaType());
     }
+
+    @GET
+    @Path(("/tag/clear"))
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response clearTag(@Context HttpHeaders hh,
+                             @Context HttpServletRequest request,
+                             @QueryParam("targetId") Long targetId,
+                             @QueryParam("type") String type) throws Exception {
+        if (targetId == null || type == null) {
+            throw new ValidationException("Query Param targetId and type is required.");
+        }
+        tagBox.clear(type, targetId);
+        return responseHandler.handle("Successfully clear tag from " + type + " " + targetId + ".", hh.getMediaType());
+    }
 }

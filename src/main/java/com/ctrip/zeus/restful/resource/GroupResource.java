@@ -17,6 +17,7 @@ import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
 
+import com.ctrip.zeus.tag.TagBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -48,6 +49,8 @@ public class GroupResource {
     private CriteriaQueryFactory criteriaQueryFactory;
     @Resource
     private PropertyBox propertyBox;
+    @Resource
+    private TagBox tagBox;
     @Resource
     private ViewDecorator viewDecorator;
 
@@ -254,10 +257,16 @@ public class GroupResource {
         } catch (Exception ex) {
             logger.warn("Try archive deleted group failed. " + GenericSerializer.writeJson(archive, false), ex);
         }
+
         try {
             propertyBox.clear("group", groupId);
         } catch (Exception ex) {
         }
+        try {
+            tagBox.clear("group", groupId);
+        } catch (Exception ex) {
+        }
+
         return responseHandler.handle("Group is deleted.", hh.getMediaType());
     }
 

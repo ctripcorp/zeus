@@ -171,6 +171,15 @@
                     ]]>
                 </statement>
             </query>
+            <query name="delete-by-id" type="DELETE" batch="true">
+                <param name="id"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
         </query-defs>
     </entity>
     <entity name="property" table="property" alias="p" do-class="PropertyDo">

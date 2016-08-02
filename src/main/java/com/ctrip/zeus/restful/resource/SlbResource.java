@@ -21,6 +21,8 @@ import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonWriter;
+import com.ctrip.zeus.tag.PropertyBox;
+import com.ctrip.zeus.tag.TagBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -47,6 +49,10 @@ public class SlbResource {
     private DbLockFactory dbLockFactory;
     @Resource
     private CriteriaQueryFactory criteriaQueryFactory;
+    @Resource
+    private PropertyBox propertyBox;
+    @Resource
+    private TagBox tagBox;
     @Resource
     private ViewDecorator viewDecorator;
 
@@ -177,6 +183,16 @@ public class SlbResource {
         } catch (Exception ex) {
             logger.warn("Try archive deleted slb failed. " + GenericSerializer.writeJson(archive, false), ex);
         }
+
+        try {
+            propertyBox.clear("slb", slbId);
+        } catch (Exception ex) {
+        }
+        try {
+            tagBox.clear("slb", slbId);
+        } catch (Exception ex) {
+        }
+
         String message = count == 1 ? "Delete slb successfully." : "No deletion is needed.";
         return responseHandler.handle(message, hh.getMediaType());
     }

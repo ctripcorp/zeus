@@ -70,4 +70,12 @@ public class DefaultTagBox implements TagBox {
             tagItemDao.deleteTagType(new TagItemDo().setTagId(d.getId()).setType(type));
         }
     }
+
+    @Override
+    public void clear(String type, Long itemId) throws Exception {
+        List<TagItemDo> list = tagItemDao.findByItemAndType(itemId, type, TagItemEntity.READSET_FULL);
+        if (list.size() > 0) {
+            tagItemDao.deleteById(list.toArray(new TagItemDo[list.size()]));
+        }
+    }
 }

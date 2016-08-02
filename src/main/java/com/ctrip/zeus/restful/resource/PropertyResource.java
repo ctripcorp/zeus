@@ -105,4 +105,18 @@ public class PropertyResource {
         propertyBox.removeProperty(pname, forceEnabled);
         return responseHandler.handle("Successfully deleted property " + pname + ".", hh.getMediaType());
     }
+
+    @GET
+    @Path(("/property/clear"))
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response clearProperty(@Context HttpHeaders hh,
+                                  @Context HttpServletRequest request,
+                                  @QueryParam("targetId") Long targetId,
+                                  @QueryParam("type") String type) throws Exception {
+        if (targetId == null || type == null) {
+            throw new ValidationException("Query Param targetId and type is required.");
+        }
+        propertyBox.clear(type, targetId);
+        return responseHandler.handle("Successfully clear property from " + type + " " + targetId + ".", hh.getMediaType());
+    }
 }
