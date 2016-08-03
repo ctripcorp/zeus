@@ -63,12 +63,12 @@ public class DefaultResponseHandler implements ResponseHandler {
         if (mediaType != null && acceptedMediaTypes.contains(mediaType)) {
             Message response = generateMessage(object, mediaType);
             return Response.status(response.getStatus()).entity(response.getResponse())
-                    .type(mediaType).build();
+                    .type(mediaType.withCharset("utf-8")).build();
         }
         try {
             Message response = generateMessage(object, defaultMediaType);
             return Response.status(response.getStatus()).entity(response.getResponse())
-                    .type(defaultMediaType).build();
+                    .type(defaultMediaType.withCharset("utf-8")).build();
         } catch (Exception ex) {
             String error = "Response cannot be serialized using application/json by default.";
             logger.error(error, ex);
@@ -79,9 +79,11 @@ public class DefaultResponseHandler implements ResponseHandler {
     @Override
     public Response handleSerializedValue(String serializedValue, MediaType mediaType) throws Exception {
         if (mediaType != null && acceptedMediaTypes.contains(mediaType)) {
-            return Response.status(Response.Status.OK).entity(serializedValue).type(mediaType).build();
+            return Response.status(Response.Status.OK).entity(serializedValue)
+                    .type(mediaType.withCharset("utf-8")).build();
         } else {
-            return Response.status(Response.Status.OK).entity(serializedValue).type(defaultMediaType).build();
+            return Response.status(Response.Status.OK).entity(serializedValue)
+                    .type(defaultMediaType.withCharset("utf-8")).build();
         }
     }
 
