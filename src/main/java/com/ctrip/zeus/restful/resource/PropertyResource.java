@@ -87,8 +87,20 @@ public class PropertyResource {
                                        @QueryParam("pvalue") String pvalue,
                                        @QueryParam("type") String type,
                                        @QueryParam("targetId") List<Long> targetIds) throws Exception {
-        if ((pname == null && pvalue == null) || type == null || targetIds == null)
-            throw new ValidationException("At least one parameter is missing.");
+        if (targetIds == null && type == null) {
+            throw new ValidationException("Query parameter targetId and type are required.");
+        }
+
+        if (pname == null && pvalue == null) {
+            for (Long tId : targetIds) {
+                propertyBox.clear(type, tId);
+            }
+            return responseHandler.handle("Successfully clear property from " + type + " " + Joiner.on(",").join(targetIds) + ".", hh.getMediaType());
+        }
+
+        if (pname == null || pvalue == null) {
+            throw new ValidationException("Both pname and pvalue is required.");
+        }
         propertyBox.clear(pname, pvalue, type, targetIds.toArray(new Long[targetIds.size()]));
         return responseHandler.handle(Joiner.on(",").join(targetIds) + " is/are deleted from property " + pname + "/" + pvalue + ".", hh.getMediaType());
     }
@@ -104,19 +116,5 @@ public class PropertyResource {
         boolean forceEnabled = force != null && force;
         propertyBox.removeProperty(pname, forceEnabled);
         return responseHandler.handle("Successfully deleted property " + pname + ".", hh.getMediaType());
-    }
-
-    @GET
-    @Path(("/property/clear"))
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response clearProperty(@Context HttpHeaders hh,
-                                  @Context HttpServletRequest request,
-                                  @QueryParam("targetId") Long targetId,
-                                  @QueryParam("type") String type) throws Exception {
-        if (targetId == null || type == null) {
-            throw new ValidationException("Query Param targetId and type is required.");
-        }
-        propertyBox.clear(type, targetId);
-        return responseHandler.handle("Successfully clear property from " + type + " " + targetId + ".", hh.getMediaType());
     }
 }
