@@ -265,7 +265,7 @@ public class PropertyServiceImpl implements PropertyService {
         if (props.size() == 0) return result;
 
         Map<Long, List<Long>> rPropItems = new HashMap<>();
-        for (PropertyItemDo d : propertyItemDao.findAllByProperties(props.keySet().toArray(new Long[props.size()]), PropertyItemEntity.READSET_FULL)) {
+        for (PropertyItemDo d : propertyItemDao.findAllByPropertiesAndType(props.keySet().toArray(new Long[props.size()]), type, PropertyItemEntity.READSET_FULL)) {
             List<Long> l = rPropItems.get(d.getPropertyId());
             if (l == null) {
                 l = new ArrayList<>();
