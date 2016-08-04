@@ -19,6 +19,7 @@ import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
@@ -44,6 +45,8 @@ public class VirtualServerResource {
     private ArchiveRepository archiveRepository;
     @Resource
     private CriteriaQueryFactory criteriaQueryFactory;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
@@ -172,7 +175,9 @@ public class VirtualServerResource {
         virtualServerRepository.update(virtualServer);
 
         try {
-            propertyBox.set("status", "toBeActivated", "vs",virtualServer.getId());
+            if (virtualServerCriteriaQuery.queryByIdAndMode(virtualServer.getId(), SelectionMode.OFFLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "vs", virtualServer.getId());
+            }
         } catch (Exception ex) {
         }
         return responseHandler.handle(virtualServer, hh.getMediaType());

@@ -50,6 +50,8 @@ public class SlbResource {
     @Resource
     private CriteriaQueryFactory criteriaQueryFactory;
     @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
+    @Resource
     private PropertyBox propertyBox;
     @Resource
     private TagBox tagBox;
@@ -170,7 +172,9 @@ public class SlbResource {
         }
 
         try {
-            propertyBox.set("status", "toBeActivated", "slb", s.getId());
+            if (slbCriteriaQuery.queryByIdAndMode(s.getId(), SelectionMode.OFFLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "slb", s.getId());
+            }
         } catch (Exception ex) {
         }
         return responseHandler.handle(s, hh.getMediaType());
