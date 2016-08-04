@@ -208,7 +208,7 @@ public class GroupResource {
         }
 
         try {
-            if (groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.OFFLINE_EXCLUSIVE).length == 1) {
+            if (groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
                 propertyBox.set("status", "toBeActivated", "group", g.getId());
             }
         } catch (Exception ex) {

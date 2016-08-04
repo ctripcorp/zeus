@@ -175,7 +175,7 @@ public class VirtualServerResource {
         virtualServerRepository.update(virtualServer);
 
         try {
-            if (virtualServerCriteriaQuery.queryByIdAndMode(virtualServer.getId(), SelectionMode.OFFLINE_EXCLUSIVE).length == 1) {
+            if (virtualServerCriteriaQuery.queryByIdAndMode(virtualServer.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
                 propertyBox.set("status", "toBeActivated", "vs", virtualServer.getId());
             }
         } catch (Exception ex) {

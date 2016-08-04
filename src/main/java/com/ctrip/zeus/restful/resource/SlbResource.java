@@ -172,7 +172,7 @@ public class SlbResource {
         }
 
         try {
-            if (slbCriteriaQuery.queryByIdAndMode(s.getId(), SelectionMode.OFFLINE_EXCLUSIVE).length == 1) {
+            if (slbCriteriaQuery.queryByIdAndMode(s.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
                 propertyBox.set("status", "toBeActivated", "slb", s.getId());
             }
         } catch (Exception ex) {
