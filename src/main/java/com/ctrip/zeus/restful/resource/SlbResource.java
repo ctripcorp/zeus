@@ -147,6 +147,11 @@ public class SlbResource {
     @Authorize(name = "addSlb")
     public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
         Slb s = slbRepository.add(parseSlb(hh.getMediaType(), slb));
+
+        try {
+            propertyBox.set("status", "deactivated", "slb", s.getId());
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(s, hh.getMediaType());
     }
 
@@ -162,6 +167,11 @@ public class SlbResource {
             s = slbRepository.update(s);
         } finally {
             lock.unlock();
+        }
+
+        try {
+            propertyBox.set("status", "toBeActivated", "slb", s.getId());
+        } catch (Exception ex) {
         }
         return responseHandler.handle(s, hh.getMediaType());
     }

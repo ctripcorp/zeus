@@ -149,6 +149,11 @@ public class VirtualServerResource {
         if (virtualServer.getSlbId() == null)
             throw new ValidationException("Slb id is not provided.");
         virtualServer = virtualServerRepository.add(virtualServer.getSlbId(), virtualServer);
+
+        try {
+            propertyBox.set("status", "deactivated", "vs", virtualServer.getId());
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(virtualServer, hh.getMediaType());
 
     }
@@ -165,6 +170,11 @@ public class VirtualServerResource {
         if (virtualServer.getSlbId() == null)
             throw new ValidationException("Slb id is not provided.");
         virtualServerRepository.update(virtualServer);
+
+        try {
+            propertyBox.set("status", "toBeActivated", "vs",virtualServer.getId());
+        } catch (Exception ex) {
+        }
         return responseHandler.handle(virtualServer, hh.getMediaType());
     }
 
