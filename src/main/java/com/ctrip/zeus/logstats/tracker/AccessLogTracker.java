@@ -225,7 +225,9 @@ public class AccessLogTracker implements LogTracker {
                     }
                     buffer.flip();
                     valueBuilder.append(new String(line, 0, colOffset));
+                    offset += colOffset;
                 }
+                row = 0;
                 colOffset = 0;
                 eol = false;
             }
