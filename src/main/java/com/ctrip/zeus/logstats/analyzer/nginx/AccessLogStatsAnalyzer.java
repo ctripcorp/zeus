@@ -36,7 +36,7 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
                 .isStartFromHead(false)
                 .setLogFormat(new AccessLogStateMachineFormat(AccessLogFormat).generate())
                 .setLogFilename("/opt/logs/nginx/access.log")
-                .setTrackerReadSize(1024 * 5)
+                .setReadBufferSize(1024 * 5)
                 .build());
     }
 
@@ -105,12 +105,16 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
     public static class LogStatsAnalyzerConfigBuilder {
         private LineFormat logFormat;
         private String logFilename;
-        private String trackingFilename;
-        private boolean allowTracking;
-        private int trackerReadSize = 5;
+
         private boolean startFromHead;
+        private Boolean dropOnFileChange;
+        private int readBufferSize = 5;
+
         private StatsDelegate statsDelegator;
         private int numberOfConsumers = 2;
+
+        private boolean allowTracking;
+        private String trackingFilename;
 
         public LogStatsAnalyzerConfigBuilder setLogFilename(String logFilename) {
             this.logFilename = logFilename;
@@ -122,8 +126,8 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             return this;
         }
 
-        public LogStatsAnalyzerConfigBuilder setTrackerReadSize(int size) {
-            this.trackerReadSize = size;
+        public LogStatsAnalyzerConfigBuilder setReadBufferSize(int size) {
+            this.readBufferSize = size;
             return this;
         }
 
@@ -148,17 +152,27 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
             return this;
         }
 
+        public LogStatsAnalyzerConfigBuilder isDropOnFileChange(boolean dropOnFileChange) {
+            this.dropOnFileChange = dropOnFileChange;
+            return this;
+        }
+
         public LogStatsAnalyzerConfig build() {
             File f = new File(logFilename);
             String rootDir = f.getAbsoluteFile().getParentFile().getAbsolutePath();
             LogTrackerStrategy strategy = new LogTrackerStrategy()
-                    .setAllowLogRotate(true, LogTracker.LOGROTATE_RENAME)
-                    .setAllowTrackerMemo(allowTracking)
-                    .setDoAsRoot(true)
-                    .setStartMode(startFromHead ? LogTrackerStrategy.START_FROM_HEAD : LogTrackerStrategy.START_FROM_CURRENT)
-                    .setTrackerMemoFilename(allowTracking ? rootDir + "/" + trackingFilename : null)
                     .setLogFilename(logFilename)
-                    .setReadSize(trackerReadSize);
+                    .setAllowLogRotate(true, LogTrackerStrategy.LOGROTATE_RENAME)
+                    .setReadBufferSize(readBufferSize)
+                    .setStartMode(startFromHead ? LogTrackerStrategy.START_FROM_HEAD : LogTrackerStrategy.START_FROM_CURRENT)
+                    .setAllowTrackerMemo(allowTracking)
+                    .setTrackerMemoFilename(allowTracking ? rootDir + "/" + trackingFilename : null)
+                    .setDoAsRoot(true);
+
+            if (dropOnFileChange != null) {
+                strategy.isDropOnFileChange(dropOnFileChange);
+            }
+
             List<StatsDelegate> delegatorRegistry = new ArrayList<>();
             delegatorRegistry.add(statsDelegator);
             return new LogStatsAnalyzerConfig(delegatorRegistry)

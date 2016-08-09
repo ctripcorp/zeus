@@ -47,7 +47,7 @@ public class AnalyzerTest {
                         .isStartFromHead(true)
                         .setLogFormat(AccessLogFormat)
                         .setLogFilename(accessLogUrl.getFile())
-                        .setTrackerReadSize(TrackerReadSize)
+                        .setReadBufferSize(TrackerReadSize)
                         .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
                             @Override
                             public void delegate(List<KeyValue> input) {
@@ -65,6 +65,20 @@ public class AnalyzerTest {
             int total = s.available();
             analyzer.start();
             for (int i = 0; i < total / TrackerReadSize + 1; i++) {
+                analyzer.run();
+            }
+            analyzer.stop();
+        } finally {
+            if (s != null)
+                s.close();
+        }
+        Assert.assertEquals(14, count.get());
+
+        count.set(0);
+        try {
+            s = accessLogUrl.openStream();
+            analyzer.start();
+            while (!analyzer.reachFileEnd()) {
                 analyzer.run();
             }
             analyzer.stop();
@@ -93,7 +107,7 @@ public class AnalyzerTest {
                         .isStartFromHead(true)
                         .setLogFormat(AccessLogFormat)
                         .setLogFilename(accessLogUrl.getFile())
-                        .setTrackerReadSize(TrackerReadSize)
+                        .setReadBufferSize(TrackerReadSize)
                         .setNumberOfConsumers(1)
                         .allowTracking("access-log-test-track.log")
                         .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
@@ -160,7 +174,7 @@ public class AnalyzerTest {
                         .isStartFromHead(true)
                         .setLogFormat(AccessLogFormat)
                         .setLogFilename(accessLogUrl.getFile())
-                        .setTrackerReadSize(TrackerReadSize)
+                        .setReadBufferSize(TrackerReadSize)
                         .setNumberOfConsumers(5)
                         .allowTracking("access-log-test-track.log")
                         .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
@@ -217,7 +231,7 @@ public class AnalyzerTest {
                         .isStartFromHead(false)
                         .setLogFormat(AccessLogFormat)
                         .setLogFilename(accessLogUrl.getFile())
-                        .setTrackerReadSize(TrackerReadSize)
+                        .setReadBufferSize(TrackerReadSize)
                         .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
                             @Override
                             public void delegate(List<KeyValue> input) {
@@ -244,6 +258,82 @@ public class AnalyzerTest {
                 s.close();
         }
         Assert.assertEquals(0, count.get());
+    }
+
+    @Test
+    public void testTrackerReadToEndWhenLogRotating() throws IOException {
+        final AtomicInteger count = new AtomicInteger();
+        final LogStatsAnalyzerConfig config =
+                new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                        .isStartFromHead(true)
+                        .setLogFormat(AccessLogFormat)
+                        .setLogFilename(accessLogUrl.getFile())
+                        .setReadBufferSize(TrackerReadSize)
+                        .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
+                            @Override
+                            public void delegate(List<KeyValue> input) {
+                                Assert.assertTrue(input.size() > 0);
+                                count.incrementAndGet();
+                                System.out.println(toJsonString(input));
+                            }
+                        }).build();
+
+
+        final LogStatsAnalyzer analyzer = new AccessLogStatsAnalyzer(config);
+        Thread reopenEvent = new Thread() {
+            @Override
+            public void run() {
+                analyzer.getConfig().getLogTracker().reopenOnFileChange("REOPEN_TEST");
+            }
+        };
+
+        analyzer.start();
+        reopenEvent.start();
+        while (!analyzer.reachFileEnd()) {
+            analyzer.run();
+        }
+        analyzer.stop();
+
+        Assert.assertEquals(28, count.get());
+    }
+
+    @Test
+    public void testTrackerDropWhenLogRotating() throws IOException {
+        final AtomicInteger count = new AtomicInteger();
+        final LogStatsAnalyzerConfig config =
+                new AccessLogStatsAnalyzer.LogStatsAnalyzerConfigBuilder()
+                        .isStartFromHead(true)
+                        .setLogFormat(AccessLogFormat)
+                        .setLogFilename(accessLogUrl.getFile())
+                        .setReadBufferSize(TrackerReadSize)
+                        .isDropOnFileChange(true)
+                        .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
+                            @Override
+                            public void delegate(List<KeyValue> input) {
+                                Assert.assertTrue(input.size() > 0);
+                                count.incrementAndGet();
+                                System.out.println(toJsonString(input));
+                            }
+                        }).build();
+
+
+        final LogStatsAnalyzer analyzer = new AccessLogStatsAnalyzer(config);
+        Thread reopenEvent = new Thread() {
+            @Override
+            public void run() {
+                analyzer.getConfig().getLogTracker().reopenOnFileChange("REOPEN_TEST");
+            }
+        };
+
+        analyzer.start();
+        reopenEvent.start();
+        while (!analyzer.reachFileEnd()) {
+            analyzer.run();
+        }
+        analyzer.stop();
+
+        Assert.assertTrue(count.get() >= 14);
+        Assert.assertTrue(count.get() < 28);
     }
 
     @Test
@@ -291,7 +381,7 @@ public class AnalyzerTest {
                             .isStartFromHead(true)
                             .setLogFormat(AccessLogFormat)
                             .setLogFilename(logRotateFilename)
-                            .setTrackerReadSize(TrackerReadSize)
+                            .setReadBufferSize(TrackerReadSize)
                             .allowTracking(logRotateTrackingFilename);
                     File f = new File(logRotateTrackingFilename);
                     if (f.exists())
@@ -376,7 +466,7 @@ public class AnalyzerTest {
                             .isStartFromHead(true)
                             .setLogFormat(AccessLogFormat)
                             .setLogFilename(logRotateFilename)
-                            .setTrackerReadSize(TrackerReadSize)
+                            .setReadBufferSize(TrackerReadSize)
                             .allowTracking(logRotateTrackingFilename)
                             .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
                                 @Override

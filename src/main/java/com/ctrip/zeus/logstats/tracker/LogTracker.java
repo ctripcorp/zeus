@@ -34,6 +34,5 @@ public interface LogTracker {
 
     void fastMove(StatsDelegate<String> delegate) throws IOException;
 
-    String LOGROTATE_COPYTRUNCATE = "copytruncate";
-    String LOGROTATE_RENAME = "rename";
+
 }

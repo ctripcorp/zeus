@@ -7,14 +7,24 @@ public class LogTrackerStrategy {
     public static final int START_FROM_HEAD = 0;
     public static final int START_FROM_CURRENT = 1;
 
-    private boolean allowLogRotate;
-    private boolean allowTrackerMemo;
-    private int startMode = START_FROM_CURRENT;
-    private String logRotateMode;
-    private String trackerMemoFilename;
+    public static final String LOGROTATE_COPYTRUNCATE = "copytruncate";
+    public static final String LOGROTATE_RENAME = "rename";
+
     private String logFilename;
+    private int readBufferSize;
+
+    private int startMode = START_FROM_CURRENT;
+
+    private boolean allowLogRotate;
+    private String logRotateMode;
+    private boolean dropOnFileChange;
+    private boolean reopenAfterLogRotate;
+
+    private boolean allowTrackerMemo;
+    private String trackerMemoFilename;
+
     private boolean doAsRoot;
-    private int readSize;
+
 
     public boolean isAllowLogRotate() {
         return allowLogRotate;
@@ -24,9 +34,33 @@ public class LogTrackerStrategy {
         return logRotateMode;
     }
 
+    public boolean isDropOnFileChange() {
+        return dropOnFileChange;
+    }
+
+    public boolean isReopenAfterLogRotate() {
+        return reopenAfterLogRotate;
+    }
+
+    public LogTrackerStrategy isDropOnFileChange(boolean dropOnFileChange) {
+        this.dropOnFileChange = dropOnFileChange;
+        return this;
+    }
+
     public LogTrackerStrategy setAllowLogRotate(boolean allowLogRotate, String logRotateMode) {
         this.allowLogRotate = allowLogRotate;
         this.logRotateMode = logRotateMode;
+
+        switch (logRotateMode) {
+            case LOGROTATE_COPYTRUNCATE:
+                dropOnFileChange = true;
+                reopenAfterLogRotate = false;
+                break;
+            case LOGROTATE_RENAME:
+                dropOnFileChange = false;
+                reopenAfterLogRotate = true;
+        }
+
         return this;
     }
 
@@ -66,12 +100,12 @@ public class LogTrackerStrategy {
         return this;
     }
 
-    public int getReadSize() {
-        return readSize;
+    public int getReadBufferSize() {
+        return readBufferSize;
     }
 
-    public LogTrackerStrategy setReadSize(int readSize) {
-        this.readSize = readSize;
+    public LogTrackerStrategy setReadBufferSize(int readBufferSize) {
+        this.readBufferSize = readBufferSize;
         return this;
     }
 

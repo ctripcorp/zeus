@@ -8,35 +8,46 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by zhoumy on 2015/11/13.
  */
 public class AccessLogTracker implements LogTracker {
-    private final int TrackLatch = 10;
+
     private final LogTrackerStrategy strategy;
     private final String logFilename;
-    private final int size;
+    private final int startMode;
+
+    private final boolean dropOnFileChange;
+    private final AtomicBoolean reopenRequested = new AtomicBoolean(false);
+
     private final ByteBuffer buffer;
+    private final int size;
     private RandomAccessFile raf;
     private FileChannel fileChannel;
+
     private long offset;
     private long previousOffset;
-    private String offsetValue = "";
-    private int rollingLogCounter;
-    private File trackingFile;
-    private boolean allowTracking;
-    private int startMode;
     private byte[] line;
+    private String offsetValue = "";
+
+    private boolean allowTracking;
+    private final int TrackLatch = 10;
+    private int rollingLogCounter;
+
+    private File trackingFile;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public AccessLogTracker(LogTrackerStrategy strategy) {
         this.strategy = strategy;
         logFilename = strategy.getLogFilename();
-        size = strategy.getReadSize();
-        allowTracking = strategy.isAllowTrackerMemo();
         startMode = strategy.getStartMode();
+
+        dropOnFileChange = strategy.isDropOnFileChange();
+
+        allowTracking = strategy.isAllowTrackerMemo();
         if (allowTracking) {
             trackingFile = new File(strategy.getTrackerMemoFilename());
             if (!trackingFile.exists())
@@ -47,6 +58,7 @@ public class AccessLogTracker implements LogTracker {
                     logger.error("Create access log tracking file fails.", e);
                 }
         }
+        size = strategy.getReadBufferSize();
         buffer = ByteBuffer.allocate(size);
         line = new byte[size];
     }
@@ -94,6 +106,10 @@ public class AccessLogTracker implements LogTracker {
     @Override
     public boolean reopenOnFileChange(String event) {
         logger.info("Reopen file on file change event " + event + ".");
+        return reopenRequested.compareAndSet(false, true);
+    }
+
+    private boolean reopenFile(String event) {
         try {
             reset(LogTrackerStrategy.START_FROM_HEAD, false, false);
             return true;
@@ -106,8 +122,8 @@ public class AccessLogTracker implements LogTracker {
             } catch (IOException e1) {
                 logger.error("Unexpected error occurred when reacting to fileChange signal " + event + ".", e1);
             }
+            return false;
         }
-        return false;
     }
 
     @Override
@@ -136,6 +152,7 @@ public class AccessLogTracker implements LogTracker {
     public void fastMove(final StatsDelegate<String> delegator) throws IOException {
         try {
             if (offset > fileChannel.size()) {
+                //TODO copytruncate strategy
                 previousOffset = offset = 0;
                 fileChannel.position(offset);
             }
@@ -213,6 +230,17 @@ public class AccessLogTracker implements LogTracker {
                 eol = false;
             }
             fileChannel.position(offset);
+
+            if (reopenRequested.get()) {
+                if (dropOnFileChange && reopenRequested.compareAndSet(true, false)) {
+                    reopenFile("DROP_AFTER_REOPEN");
+                } else {
+                    if (offset == fileChannel.size() && reopenRequested.compareAndSet(true, false)) {
+                        reopenFile("END_OF_FILE");
+                    }
+                }
+            }
+
             logIfAllowed();
         } catch (IOException ex) {
             // this code is never expected to be reached

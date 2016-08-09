@@ -40,7 +40,7 @@ public class StressTest {
                 .setLogFormat(new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate())
                 .setLogFilename(accessLogFile.getAbsolutePath())
                 .setNumberOfConsumers(analyzerWorkers)
-                .setTrackerReadSize(1024 * readBufferSize)
+                .setReadBufferSize(1024 * readBufferSize)
                 .isStartFromHead(true)
                 .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
                     @Override
