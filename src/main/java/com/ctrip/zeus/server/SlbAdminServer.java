@@ -4,6 +4,7 @@ import com.ctrip.zeus.auth.impl.IPAuthenticationFilter;
 import com.ctrip.zeus.crossdomain.CrossDomainFilter;
 import com.ctrip.zeus.restful.resource.SlbResourcePackage;
 import com.ctrip.zeus.server.config.SlbAdminResourceConfig;
+import com.ctrip.zeus.startup.SpringInitializationNotifier;
 import com.ctrip.zeus.util.AccessLogFilter;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicIntProperty;
@@ -90,6 +91,7 @@ public class SlbAdminServer extends AbstractServer {
         handler.setInitParameter("contextConfigLocation", "classpath*:" + springContextFile.get()); //+ ",classpath*:spring-context-security.xml");
         ContextLoaderListener sprintContextListener = new ContextLoaderListener();
         handler.addEventListener(sprintContextListener);
+        handler.addEventListener(new SpringInitializationNotifier());
 
         //Support Jersey
         ServletContainer jerseyServletContainer = new ServletContainer(config);
@@ -116,7 +118,7 @@ public class SlbAdminServer extends AbstractServer {
 
             handler.addFilter(HttpServletRequestWrapperFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         }
-
+        handler.addFilter(PreCheckFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(CrossDomainFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(AccessLogFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD));
 

@@ -41,8 +41,45 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
     private final CertificateConfig config = new CertificateConfig();
     private final String localhost = "_localhost";
 
-    @PostConstruct
-    private void init() {
+    @Override
+    public CertificateConfig getConfig() {
+        return config;
+    }
+
+    @Override
+    public void installDefault() throws Exception {
+        createSslPath();
+
+        String defaultPath = config.getInstallDir(0L);
+        defaultPath = defaultPath.substring(0, defaultPath.lastIndexOf("/")) + "/default";
+        File f = new File(defaultPath);
+        if (f.exists()) {
+            logger.info(defaultPath + " exists. No need to install default cert.");
+            return;
+        } else {
+            f.mkdirs();
+        }
+
+        CertificateDo cert = certificateDao.findMaxByDomainAndState(localhost, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
+        if (cert == null) {
+            logger.error("Could not find default certificate to install.");
+            return;
+        }
+
+        OutputStream certos = new FileOutputStream(f.getPath() + "/ssl.crt", config.getWriteFileOption());
+        OutputStream keyos = new FileOutputStream(f.getPath() + "/ssl.key", config.getWriteFileOption());
+        try {
+            certos.write(cert.getCert());
+            keyos.write(cert.getKey());
+            certos.flush();
+            certos.flush();
+        } finally {
+            certos.close();
+            keyos.close();
+        }
+    }
+
+    private void createSslPath() {
         String ownerPath = config.getInstallDir(0L);
         ownerPath = ownerPath.substring(0, ownerPath.lastIndexOf("/"));
         File f = new File(ownerPath);
@@ -84,48 +121,6 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
             } catch (InterruptedException e) {
                 return;
             }
-        }
-
-        try {
-            installDefault();
-        } catch (Exception ex) {
-            logger.error("Fail to install the default certificate.", ex);
-        }
-    }
-
-    @Override
-    public CertificateConfig getConfig() {
-        return config;
-    }
-
-    @Override
-    public void installDefault() throws Exception {
-        String defaultPath = config.getInstallDir(0L);
-        defaultPath = defaultPath.substring(0, defaultPath.lastIndexOf("/")) + "/default";
-        File f = new File(defaultPath);
-        if (f.exists()) {
-            logger.info(defaultPath + " exists. No need to install default cert.");
-            return;
-        } else {
-            f.mkdirs();
-        }
-
-        CertificateDo cert = certificateDao.findMaxByDomainAndState(localhost, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
-        if (cert == null) {
-            logger.error("Could not find default certificate to install.");
-            return;
-        }
-        
-        OutputStream certos = new FileOutputStream(f.getPath() + "/ssl.crt", config.getWriteFileOption());
-        OutputStream keyos = new FileOutputStream(f.getPath() + "/ssl.key", config.getWriteFileOption());
-        try {
-            certos.write(cert.getCert());
-            keyos.write(cert.getKey());
-            certos.flush();
-            certos.flush();
-        } finally {
-            certos.close();
-            keyos.close();
         }
     }
 
