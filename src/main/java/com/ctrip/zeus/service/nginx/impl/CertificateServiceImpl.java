@@ -144,6 +144,59 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
+    public void install(final Long slbId, List<String> ips) throws Exception {
+        final AtomicBoolean success = new AtomicBoolean(true);
+        List<FutureTask<String>> reqQueue = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(ips.size() < 6 ? ips.size() : 6);
+        try {
+            for (final String ip : ips) {
+                reqQueue.add(new FutureTask<>(new Callable<String>() {
+                    @Override
+                    public String call() {
+                        CertSyncClient c = new CertSyncClient("http://" + ip + ":8099");
+                        Response res;
+                        try {
+                            res = c.requestBatchInstall(slbId);
+                        } catch (Exception ex) {
+                            success.set(false);
+                            logger.error(ip + ":" + "Fail to get response. ", ex);
+                            return ip + ":" + "Fail to get response.\n";
+                        }
+                        if (res.getStatus() / 100 > 2)
+                            res = c.requestBatchInstall(slbId);
+                        if (res.getStatus() / 100 > 2) {
+                            success.set(false);
+                            try {
+                                String error = ip + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity());
+                                logger.error(error);
+                                return error + "\n";
+                            } catch (IOException e) {
+                                logger.error(ip + ":" + "Unable to parse the response entity.", e);
+                                return ip + ":" + "Unable to parse the response entity.\n";
+                            }
+                        }
+                        return ip + ":" + "success.";
+                    }
+                }));
+            }
+            for (FutureTask futureTask : reqQueue) {
+                executor.execute(futureTask);
+            }
+
+            String message = "";
+            for (FutureTask futureTask : reqQueue) {
+                message += futureTask.get(3000, TimeUnit.MILLISECONDS);
+            }
+
+            if (!success.get()) {
+                throw new Exception(message);
+            }
+        } finally {
+            executor.shutdown();
+        }
+    }
+
+    @Override
     public void uninstallIfRecalled(final Long vsId, List<String> ips) throws Exception {
         Map<String, RelCertSlbServerDo> abandoned = new HashMap<>();
         for (RelCertSlbServerDo d : rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL)) {
@@ -230,6 +283,10 @@ public class CertificateServiceImpl implements CertificateService {
 
         public Response requestUninstall(Long vsId) {
             return getTarget().path("/api/op/uninstallcerts").queryParam("vsId", vsId).request().get();
+        }
+
+        public Response requestBatchInstall(Long slbId) {
+            return getTarget().path("/api/op/cert/batchInstall").queryParam("slbId", slbId).request().headers(getDefaultHeaders()).get();
         }
     }
 }

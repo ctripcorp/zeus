@@ -18,7 +18,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='domain'/> in <IN>${domains}</IN>
+                    WHERE <FIELD name='domain'/> IN <IN>${domains}</IN>
                         AND <FIELD name='state'/> = ${state}
                     GROUP By domain
                     ]]>
@@ -35,6 +35,19 @@
                         AND <FIELD name='state'/> = ${state}
                     ORDER BY id DESC
                     LIMIT 1
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-max-by-domain-and-state" type="SELECT" multiple="true">
+                <param name="domains"/>
+                <param name="state"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='domain'/> IN <IN>${domains}</IN>
+                        AND <FIELD name='state'/> = ${state}
+                    ORDER BY id
                     ]]>
                 </statement>
             </query>

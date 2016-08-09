@@ -5,11 +5,13 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
+import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Repository;
@@ -31,6 +33,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
+    private SlbQuery slbQuery;
+    @Resource
     private VirtualServerRepository virtualServerRepository;
     @Resource
     private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
@@ -40,6 +44,8 @@ public class SlbRepositoryImpl implements SlbRepository {
     private VirtualServerValidator virtualServerModelValidator;
     @Resource
     private AutoFiller autoFiller;
+    @Resource
+    private CertificateService certificateService;
     @Resource
     private ArchiveSlbDao archiveSlbDao;
 
@@ -130,7 +136,14 @@ public class SlbRepositoryImpl implements SlbRepository {
         slbModelValidator.validate(slb);
         autoFiller.autofill(slb);
         refreshVirtualServer(slb);
+
+        List<String> servers = slbQuery.getSlbIps(slb.getId());
+        for (SlbServer s : slb.getSlbServers()) {
+            servers.remove(s);
+        }
+
         slbEntityManager.update(slb);
+        certificateService.install(slb.getId(), servers);
 
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()

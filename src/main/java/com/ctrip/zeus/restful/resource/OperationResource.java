@@ -582,6 +582,18 @@ public class OperationResource {
     }
 
     @GET
+    @Path("/cert/batchInstall")
+    public Response batchInstall(@Context HttpServletRequest request,
+                                 @Context HttpHeaders hh,
+                                 @QueryParam("slbId") Long slbId) throws Exception {
+        if (slbId == null) {
+            throw new ValidationException("slbId is required.");
+        }
+        certificateInstaller.localBatchInstall(slbId);
+        return responseHandler.handle("Certificates are installed successfully.", hh.getMediaType());
+    }
+
+    @GET
     @Path("/uninstallcerts")
     @Authorize(name = "uninstallCerts")
     public Response uninstallCerts(@Context HttpServletRequest request,

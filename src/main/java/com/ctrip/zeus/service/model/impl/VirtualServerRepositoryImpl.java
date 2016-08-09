@@ -96,7 +96,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         virtualServerModelValidator.validateVirtualServers(check);
         virtualServerEntityManager.add(virtualServer);
 
-        if (virtualServer.getSsl().booleanValue()) {
+        if (virtualServer.getSsl()) {
             installCertificate(virtualServer);
         }
         return virtualServer;
