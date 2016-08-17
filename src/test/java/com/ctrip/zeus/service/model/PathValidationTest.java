@@ -255,12 +255,21 @@ public class PathValidationTest extends AbstractServerTest {
         try {
             array.get(0).setPath(specialCase);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertEquals(900, array.get(0).getPriority().intValue());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
 
         try {
             array.get(0).setPath(noMeaningSuffix);
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
+        }
+
+        try {
+            array.get(0).setPriority(null).setPath(noMeaningSuffix);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertEquals(1100, array.get(0).getPriority().intValue());
         } catch (Exception e) {

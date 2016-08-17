@@ -1,11 +1,11 @@
 package com.ctrip.zeus.server;
 
-import org.apache.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.DelegatingFilterProxy;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 /**
@@ -29,7 +29,7 @@ public class PreCheckFilter extends DelegatingFilterProxy {
             if (response instanceof HttpServletResponse) {
                 HttpServletResponse res = (HttpServletResponse) response;
                 res.reset();
-                res.setStatus(HttpStatus.SC_SERVICE_UNAVAILABLE);
+                res.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
                 res.getWriter().write("Service has not prepared.");
                 return;
             }

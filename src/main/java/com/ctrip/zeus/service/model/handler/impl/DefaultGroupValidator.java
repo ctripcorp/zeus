@@ -107,9 +107,7 @@ public class DefaultGroupValidator implements GroupValidator {
                 addingGvs.put(vs.getId(), dummy);
             }
 
-            if (escapePathValidation) {
-                continue;
-            } else {
+            if (!escapePathValidation) {
                 doPathValidationAndMapping(addingGvs, gvs);
             }
         }
@@ -118,9 +116,14 @@ public class DefaultGroupValidator implements GroupValidator {
         List<RelGroupVsDo> retainedGvs = rGroupVsDao.findAllByVses(addingGvs.keySet().toArray(new Long[addingGvs.size()]), RGroupVsEntity.READSET_FULL);
         checkPathOverlappingAcrossVs(groupId, addingGvs, retainedGvs);
 
-        // reset priority after auto reorder
+        // reset priority after auto reorder enabled(priority is originally null)
         for (GroupVirtualServer e : groupVirtualServers) {
-            e.setPriority(addingGvs.get(e.getVirtualServer().getId()).getPriority());
+            Integer ref = addingGvs.get(e.getVirtualServer().getId()).getPriority();
+            if (e.getPriority() == null) {
+                e.setPriority(ref);
+            } else if (e.getPriority().intValue() != ref.intValue()) {
+                throw new ValidationException("Potential path overlapping problem exists at vs-" + e.getVirtualServer().getId() + ". Recommend priority is " + ref + ".");
+            }
         }
     }
 
@@ -258,7 +261,7 @@ public class DefaultGroupValidator implements GroupValidator {
         }
 
         if (quote && !path.endsWith("\"")) {
-            throw new ValidationException("Path should end up with quote if regex quotation is used. Path=" + path+".");
+            throw new ValidationException("Path should end up with quote if regex quotation is used. Path=" + path + ".");
         }
         int idxSuffix = quote ? path.length() - 1 : path.length();
         if (idxPrefix == idxSuffix) {
