@@ -114,6 +114,39 @@ public class GroupMemberResource {
     @Path("/member/add")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "addMember")
+    public Response redirectAddMember(@Context HttpHeaders hh,
+                                      @Context HttpServletRequest request,
+                                      @QueryParam("online") Boolean online,
+                                      String groupServerList) throws Exception {
+        return this.addMember(hh, request, online, groupServerList);
+    }
+
+    @POST
+    @Path("/member/update")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "updateMember")
+    public Response redirectUpdateMember(@Context HttpHeaders hh,
+                                         @Context HttpServletRequest request,
+                                         @QueryParam("online") Boolean online,
+                                         String groupServerList) throws Exception {
+        return this.updateMember(hh, request, online, groupServerList);
+    }
+
+    @GET
+    @Path("/member/remove")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "removeMember")
+    public Response redirectRemoveMember(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                         @QueryParam("groupId") Long groupId,
+                                         @QueryParam("ip") List<String> ips,
+                                         @QueryParam("online") Boolean online) throws Exception {
+        return this.removeMember(hh, request, groupId, ips, online);
+    }
+
+    @POST
+    @Path("/group/addMember")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "addMember")
     public Response addMember(@Context HttpHeaders hh,
                               @Context HttpServletRequest request,
                               @QueryParam("online") Boolean online,
@@ -149,7 +182,7 @@ public class GroupMemberResource {
     }
 
     @POST
-    @Path("/member/update")
+    @Path("/group/updateMember")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "updateMember")
     public Response updateMember(@Context HttpHeaders hh,
@@ -199,7 +232,7 @@ public class GroupMemberResource {
     }
 
     @GET
-    @Path("/member/remove")
+    @Path("/group/removeMember")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "removeMember")
     public Response removeMember(@Context HttpHeaders hh, @Context HttpServletRequest request,
