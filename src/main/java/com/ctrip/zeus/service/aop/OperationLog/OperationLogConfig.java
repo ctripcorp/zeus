@@ -50,6 +50,8 @@ public class OperationLogConfig {
         config.put("OperationResource.downMember", new OpConf(OperationLogType.GROUP, new int[]{2, 3}));
         config.put("OperationResource.pullIn", new OpConf(OperationLogType.GROUP, new int[]{2, 3}));
         config.put("OperationResource.pullOut", new OpConf(OperationLogType.GROUP, new int[]{2, 3}));
+        config.put("OperationResource.raise", new OpConf(OperationLogType.GROUP, new int[]{2, 3}));
+        config.put("OperationResource.fall", new OpConf(OperationLogType.GROUP, new int[]{2, 3}));
 
         disableList.addCallback(new Runnable() {
             @Override
