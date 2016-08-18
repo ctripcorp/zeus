@@ -252,6 +252,7 @@ public class LocationConf {
         confWriter.writeLocationEnd();
 
         confWriter.writeLocationStart("/");
+        confWriter.writeCommand("set", LogFormat.VAR_UPSTREAM_NAME + " 127.0.0.1");
         confWriter.writeLine("return 404 \"Not Found!\";");
         confWriter.writeLocationEnd();
     }
