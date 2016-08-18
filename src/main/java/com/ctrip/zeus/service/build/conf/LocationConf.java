@@ -47,65 +47,79 @@ public class LocationConf {
         for (GroupVirtualServer e : group.getGroupVirtualServers()) {
             if (e.getVirtualServer().getId().longValue() == vs.getId().longValue()) {
                 String upstreamName = "backend_" + group.getId();
+
                 // TODO confirm path is not empty
+
+                // if group is virtual
                 if (group.isVirtual()) {
-                    //TODO virtual group cannot have multi group-vs redirect
-                    confWriter.writeLocationStart(e.getPath());
-                    if (group.getGroupVirtualServers().size() == 1) {
-                        addRedirectCommand(confWriter, group);
-                    }
-                    confWriter.writeLocationEnd();
-                } else {
-                    confWriter.writeLocationStart(e.getPath());
-
-                    if (configHandler.getEnable("location.client.max.body.size", slbId, vsId, groupId, false)) {
-                        confWriter.writeCommand("client_max_body_size", configHandler.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "2") + "m");
-                    }
-
-                    confWriter.writeCommand("proxy_request_buffering", "off");
-                    confWriter.writeCommand("proxy_next_upstream", "off");
-
-                    confWriter.writeCommand("proxy_set_header", "Host $host");
-                    confWriter.writeCommand("proxy_set_header", "X-Real-IP $remote_addr");
-
-                    if (configHandler.getEnable("location.upstream.keepAlive", slbId, vsId, groupId, false)) {
-                        confWriter.writeCommand("proxy_set_header", "Connection \"\"");
-                    }
-                    String proxyReadTimeout = "location.proxy.readTimeout";
-                    if (configHandler.getEnable(proxyReadTimeout, slbId, vsId, groupId, true)) {
-                        String readTimeout = configHandler.getStringValue(proxyReadTimeout, slbId, vsId, groupId, "60");
-                        confWriter.writeCommand("proxy_read_timeout", readTimeout + "s");
-                    }
-
-                    if (configHandler.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {
-                        confWriter.writeIfStart("$remote_addr ~* \"" +
-                                configHandler.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
-                                .writeCommand("set", "$inWhite \"true\"")
-                                .writeIfEnd();
-
-                        confWriter.writeCommand("rewrite_by_lua", setHeaderLuaScripts);
-                    } else {
-                        confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
-                    }
-
-                    if (configHandler.getEnable("location.errorPage", slbId, vsId, groupId, false)) {
-                        confWriter.writeCommand("proxy_intercept_errors", "on");
-                    }
-
-                    confWriter.writeCommand("set", "$upstream " + upstreamName);
-                    addBastionCommand(confWriter, upstreamName, slbId, vsId, groupId);
-
-                    //rewrite should after set $upstream
-                    addRewriteCommand(confWriter, vs, group);
-                    if (group.isSsl()) {
-                        confWriter.writeCommand("proxy_pass", "https://$upstream");
-                    } else {
-                        confWriter.writeCommand("proxy_pass", "http://$upstream");
-                    }
-                    confWriter.writeLocationEnd();
+                    writeVirtualLocation(confWriter, e.getPath(), group);
+                    continue;
                 }
+
+                // if group is not virtual
+                confWriter.writeLocationStart(e.getPath());
+                if (configHandler.getEnable("location.client.max.body.size", slbId, vsId, groupId, false)) {
+                    confWriter.writeCommand("client_max_body_size", configHandler.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "2") + "m");
+                }
+
+                // write proxy configuration
+                confWriter.writeCommand("proxy_request_buffering", "off");
+                confWriter.writeCommand("proxy_next_upstream", "off");
+
+                confWriter.writeCommand("proxy_set_header", "Host $host");
+                confWriter.writeCommand("proxy_set_header", "X-Real-IP $remote_addr");
+
+                if (configHandler.getEnable("location.upstream.keepAlive", slbId, vsId, groupId, false)) {
+                    confWriter.writeCommand("proxy_set_header", "Connection \"\"");
+                }
+                String proxyReadTimeout = "location.proxy.readTimeout";
+                if (configHandler.getEnable(proxyReadTimeout, slbId, vsId, groupId, true)) {
+                    String readTimeout = configHandler.getStringValue(proxyReadTimeout, slbId, vsId, groupId, "60");
+                    confWriter.writeCommand("proxy_read_timeout", readTimeout + "s");
+                }
+
+                // write x-forward-for configuration
+                if (configHandler.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {
+                    confWriter.writeIfStart("$remote_addr ~* \"" +
+                            configHandler.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
+                            .writeCommand("set", "$inWhite \"true\"")
+                            .writeIfEnd();
+
+                    confWriter.writeCommand("rewrite_by_lua", setHeaderLuaScripts);
+                } else {
+                    confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
+                }
+
+                // write error page configuration if defined
+                if (configHandler.getEnable("location.errorPage", slbId, vsId, groupId, false)) {
+                    confWriter.writeCommand("proxy_intercept_errors", "on");
+                }
+
+                // set upstream value
+                confWriter.writeCommand("set", "$upstream " + upstreamName);
+                confWriter.writeCommand("set", LogFormat.VAR_UPSTREAM_NAME + " " + upstreamName);
+
+                addBastionCommand(confWriter, upstreamName, slbId, vsId, groupId);
+
+                //rewrite should be after $upstream
+                addRewriteCommand(confWriter, vs, group);
+                if (group.isSsl()) {
+                    confWriter.writeCommand("proxy_pass", "https://$upstream");
+                } else {
+                    confWriter.writeCommand("proxy_pass", "http://$upstream");
+                }
+                confWriter.writeLocationEnd();
             }
         }
+    }
+
+    private static void writeVirtualLocation(ConfWriter confWriter, String path, Group group) throws Exception {
+        confWriter.writeLocationStart(path);
+        //TODO virtual group cannot have multi group-vs redirect
+        if (group.getGroupVirtualServers().size() == 1) {
+            addRedirectCommand(confWriter, group);
+        }
+        confWriter.writeLocationEnd();
     }
 
     private static String getRewrite(VirtualServer vs, Group group) throws Exception {
