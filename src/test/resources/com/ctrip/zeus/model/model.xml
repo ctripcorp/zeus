@@ -54,6 +54,15 @@
         <virtual-server/>
     </virtual-server-list>
 
+    <group-vs-bound>
+        <group-id>123456789012</group-id>
+        <vs-id>123456789012</vs-id>
+        <priority>1000</priority>
+        <path>/hotel</path>
+        <rewrite>^/regex</rewrite>
+        <redirect>/fullurl</redirect>
+    </group-vs-bound>
+
     <group-virtual-server priority="0">
         <path>/hotel</path>
         <rewrite>^/regex</rewrite>

@@ -8,6 +8,7 @@
     <entity-ref name="slb-release-info-list" />
     <entity-ref name="server-war-info" />
     <entity-ref name="virtual-server-list" />
+    <entity-ref name="group-vs-bound" />
     <entity-ref name="group-virtual-server" />
     <entity-ref name="group-server" />
     <entity-ref name="group-server-list" />
@@ -79,6 +80,14 @@
   <entity name="virtual-server-list">
     <element name="total" value-type="int" />
     <entity-ref name="virtual-server" type="list" names="virtual-servers" />
+  </entity>
+  <entity name="group-vs-bound">
+    <element name="group-id" value-type="long" />
+    <element name="vs-id" value-type="long" />
+    <element name="priority" value-type="int" />
+    <element name="path" value-type="String" />
+    <element name="rewrite" value-type="String" />
+    <element name="redirect" value-type="String" />
   </entity>
   <entity name="group-virtual-server">
     <attribute name="priority" value-type="int" />
