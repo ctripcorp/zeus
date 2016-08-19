@@ -111,9 +111,15 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             throw new ValidationException("Slb with id " + virtualServer.getSlbId() + "does not exits.");
         }
 
+        Set<String> domains = new HashSet<>();
         for (Domain domain : virtualServer.getDomains()) {
-            domain.setName(domain.getName().toLowerCase());
+            domains.add(domain.getName().toLowerCase());
         }
+        virtualServer.getDomains().clear();
+        for (String d : domains) {
+            virtualServer.getDomains().add(new Domain().setName(d));
+        }
+
         Set<Long> retained = new HashSet<>();
         for (IdVersion idVersion : virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId())) {
             retained.add(idVersion.getId());

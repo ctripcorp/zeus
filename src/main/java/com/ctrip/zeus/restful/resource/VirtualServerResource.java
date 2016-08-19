@@ -32,6 +32,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/8/5.
@@ -181,6 +184,46 @@ public class VirtualServerResource {
         } catch (Exception ex) {
         }
         return responseHandler.handle(virtualServer, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/vs/addDomain")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "updateVs")
+    public Response addDomain(@Context HttpHeaders hh,
+                              @Context HttpServletRequest request,
+                              @QueryParam("vsId") Long vsId,
+                              @TrimmedQueryParam("domain") String domain) throws Exception {
+        VirtualServer vs = virtualServerRepository.getById(vsId);
+        for (String d : domain.split(",")) {
+            vs.addDomain(new Domain().setName(d));
+        }
+        vs = virtualServerRepository.update(vs);
+        return responseHandler.handle(vs, hh.getMediaType());
+    }
+
+    @GET
+    @Path("vs/removeDomain")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "updateVs")
+    public Response removeDomain(@Context HttpHeaders hh,
+                                 @Context HttpServletRequest request,
+                                 @QueryParam("vsId") Long vsId,
+                                 @TrimmedQueryParam("domain") String domain) throws Exception {
+        VirtualServer vs = virtualServerRepository.getById(vsId);
+        Set<String> domains = new HashSet<>();
+        for (String d : domain.split(",")) {
+            domains.add(d);
+        }
+        Iterator<Domain> iter = vs.getDomains().iterator();
+        while (iter.hasNext()) {
+            Domain d = iter.next();
+            if (domains.contains(d.getName())) {
+                iter.remove();
+            }
+        }
+        vs = virtualServerRepository.update(vs);
+        return responseHandler.handle(vs, hh.getMediaType());
     }
 
     @GET
