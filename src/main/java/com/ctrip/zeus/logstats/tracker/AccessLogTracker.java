@@ -158,8 +158,9 @@ public class AccessLogTracker implements LogTracker {
             }
             buffer.clear();
             try {
-                if (fileChannel.read(buffer) == -1)
+                if (fileChannel.read(buffer) == -1) {
                     return;
+                }
             } catch (IOException ex) {
                 stop();
             }
@@ -211,13 +212,25 @@ public class AccessLogTracker implements LogTracker {
                             break;
                     } // end of switch
                 }// end of while !eol && buffer.hasRemaining
-                // the cursor hasn't reached the end of a line, read one more buffer
+
+                // the cursor has possibly not reached the end of a line, read one more buffer
                 if (row == 0) {
                     buffer.clear();
                     try {
+                        // reach file end
                         if (fileChannel.read(buffer) == -1) {
+                            offsetValue = valueBuilder.append(new String(line, 0, colOffset)).toString();
+                            valueBuilder.setLength(0);
+                            try {
+                                delegator.delegate(offsetValue);
+                            } catch (Exception ex) {
+                                logger.error("AccessLogTracker::delegator throws an unexpected error", ex);
+                            }
+                            offset += colOffset;
+                            previousOffset = offset - offsetValue.length();
                             fileChannel.position(offset);
-                            logIfAllowed();
+
+                            nextRound();
                             return;
                         }
                     } catch (IOException ex) {
@@ -233,22 +246,26 @@ public class AccessLogTracker implements LogTracker {
             }
             fileChannel.position(offset);
 
-            if (reopenRequested.get()) {
-                if (dropOnFileChange && reopenRequested.compareAndSet(true, false)) {
-                    reopenFile("DROP_AFTER_REOPEN");
-                } else {
-                    if (offset == fileChannel.size() && reopenRequested.compareAndSet(true, false)) {
-                        reopenFile("END_OF_FILE");
-                    }
-                }
-            }
-
-            logIfAllowed();
+            nextRound();
         } catch (IOException ex) {
             // this code is never expected to be reached
             logger.error("Unexpected error occurred when tracking access.log.", ex);
             reset(LogTrackerStrategy.START_FROM_CURRENT, false, false);
         }
+    }
+
+    private void nextRound() throws IOException {
+        if (reopenRequested.get()) {
+            if (dropOnFileChange && reopenRequested.compareAndSet(true, false)) {
+                reopenFile("DROP_AFTER_REOPEN");
+            } else {
+                if (offset == fileChannel.size() && reopenRequested.compareAndSet(true, false)) {
+                    reopenFile("END_OF_FILE");
+                }
+            }
+        }
+
+        logIfAllowed();
     }
 
     private void reset(int startFromOption, boolean restoreFromFile, boolean restoreFromMemory) throws IOException {
@@ -288,7 +305,7 @@ public class AccessLogTracker implements LogTracker {
                     fileChannel.position(restoredPreOffset);
                     String peekValue = raf.readLine();
                     // restore confirms right, otherwise fall through
-                    if (peekValue.equals(savedPreValue)) {
+                    if (savedPreValue.endsWith(peekValue)) {
                         previousOffset = restoredPreOffset;
                         offset = fileChannel.position();
                         return;
