@@ -159,7 +159,7 @@ public class AccessLogTracker implements LogTracker {
             buffer.clear();
             try {
                 if (fileChannel.read(buffer) == -1) {
-                    return;
+                    nextRound();
                 }
             } catch (IOException ex) {
                 stop();
