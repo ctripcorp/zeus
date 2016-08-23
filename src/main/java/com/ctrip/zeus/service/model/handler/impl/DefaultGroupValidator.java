@@ -17,6 +17,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Created by zhoumy on 2015/6/29.
@@ -38,6 +39,8 @@ public class DefaultGroupValidator implements GroupValidator {
 
     private final Set<String> pathPrefixModifier = Sets.newHashSet("=", "~", "~*", "^~");
     private final String standardSuffix = "($|/|\\?)";
+    private final String[] standardSuffixIdentifier = new String[]{"$", "/", "\\?"};
+    private final Pattern basicPathPath = Pattern.compile("^(\\w+\\/?)+(\\$|\\\\\\?)?");
 
     @Override
     public boolean exists(Long targetId) throws Exception {
@@ -192,10 +195,16 @@ public class DefaultGroupValidator implements GroupValidator {
                 continue;
             }
 
-            List<String> addingPathMembers = regexLevelSplit(addingPath, standardSuffix, 1);
-            List<String> retainedPathMembers = regexLevelSplit(retainedPath, standardSuffix, 1);
+            List<String> addingPathMembers = regexLevelSplit(addingPath, 1);
+            List<String> retainedPathMembers = regexLevelSplit(retainedPath, 1);
             if (addingPathMembers.size() == 0) addingPathMembers.add(addingPath);
             if (retainedPathMembers.size() == 0) retainedPathMembers.add(retainedPath);
+
+            for (String pathMember : addingPathMembers) {
+                if (!basicPathPath.matcher(pathMember).matches()) {
+                    throw new ValidationException("Invalid characters are found in sub path " + pathMember + ".");
+                }
+            }
 
             for (String ap : addingPathMembers) {
                 for (String rp : retainedPathMembers) {
@@ -276,27 +285,88 @@ public class DefaultGroupValidator implements GroupValidator {
         return path.substring(idxPrefix, idxSuffix);
     }
 
-    private List<String> regexLevelSplit(String path, String splitter, int depth) throws ValidationException {
+    private List<String> restrictAndDecorate(String path, boolean appendSuffix) throws ValidationException {
+        if (path == null || path.isEmpty()) throw new ValidationException("Get empty path when trying to decorate.");
+        List<String> subPaths = new ArrayList<>();
+        StringBuilder pb = new StringBuilder();
+        char[] pp = path.toCharArray();
+        int startIdx, endIdx;
+        startIdx = 0;
+        endIdx = pp.length - 1;
+        if (pp[startIdx] == '(' && pp[endIdx] == ')') {
+            startIdx++;
+            endIdx--;
+        }
+
+        for (int i = startIdx; i <= endIdx; i++) {
+            switch (pp[i]) {
+                case '|':
+                    if (appendSuffix) {
+                        String p = pb.toString();
+                        pb.setLength(0);
+                        for (String s : standardSuffixIdentifier) {
+                            subPaths.add(p + s);
+                        }
+                    }
+                    break;
+                default:
+                    pb.append(pp[i]);
+                    break;
+            }
+        }
+
+        if (pb.length() > 0) {
+            String p = pb.toString();
+            pb.setLength(0);
+            if (appendSuffix) {
+                for (String s : standardSuffixIdentifier) {
+                    subPaths.add(p + s);
+                }
+            } else {
+                subPaths.add(p);
+            }
+        }
+
+        if (subPaths.size() == 0) {
+            for (String s : standardSuffixIdentifier) {
+                subPaths.add(path + s);
+            }
+        }
+
+        return subPaths;
+    }
+
+    public List<String> regexLevelSplit(String path, int depth) throws ValidationException {
         List<String> pathMembers = new ArrayList<>();
         if (depth > 1) {
             throw new ValidationException("Function regexLevelSplit only support first level split.");
         }
         int fromIdx, idxSuffix;
         fromIdx = idxSuffix = 0;
-        while ((idxSuffix = path.indexOf(splitter, fromIdx)) != -1) {
+        while ((idxSuffix = path.indexOf(standardSuffix, fromIdx)) != -1) {
             if (fromIdx > 0) {
                 if (path.charAt(fromIdx) == '|') {
                     fromIdx++;
-                    pathMembers.add(path.substring(fromIdx, idxSuffix + 8));
+                    pathMembers.addAll(restrictAndDecorate(path.substring(fromIdx, idxSuffix), true));
                 } else {
                     String prev = pathMembers.get(pathMembers.size() - 1);
-                    pathMembers.set(pathMembers.size() - 1, prev + path.substring(fromIdx, idxSuffix + 8));
+
+                    List<String> subPaths = restrictAndDecorate(prev + path.substring(fromIdx, idxSuffix + 8), true);
+                    pathMembers.set(pathMembers.size() - 1, subPaths.get(0));
+                    for (int i = 1; i < subPaths.size(); i++) {
+                        pathMembers.add(pathMembers.get(i));
+                    }
                 }
             } else {
-                pathMembers.add(path.substring(0, idxSuffix + 8));
+                pathMembers.addAll(restrictAndDecorate(path.substring(0, idxSuffix), true));
             }
             fromIdx = idxSuffix + 8;
         }
+
+        if (pathMembers.size() == 0) {
+            pathMembers.addAll(restrictAndDecorate(path, false));
+        }
+
         return pathMembers;
     }
 }

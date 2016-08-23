@@ -17,6 +17,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Created by zhoumy on 2016/3/31.
@@ -96,6 +97,63 @@ public class PathValidationTest extends AbstractServerTest {
         Assert.assertTrue(PathUtils.prefixOverlapped(s4, s4, standardSuffix) == 0);
 
         Assert.assertTrue(PathUtils.prefixOverlapped(s9, s10, standardSuffix) == -1);
+    }
+
+    @Test
+    public void testRegexSplit() {
+        String s1 = "Thingstodo-Order-OrderService($|/|\\?)";
+        String s2 = "Thingstodo-Order-OrderService/|^/Thingstodo-Order-OrderService($|/|\\?)";
+        String s3 = "(restapi|html5|market|webapp)($|/|\\?)";
+        String s4 = "members($|/|\\?)|membersite($|/|\\?)";
+
+        DefaultGroupValidator tmp = (DefaultGroupValidator) groupModelValidator;
+        List<String> r;
+        try {
+            r = tmp.regexLevelSplit(s1, 1);
+            Assert.assertEquals(3, r.size());
+            Assert.assertEquals("Thingstodo-Order-OrderService$", r.get(0));
+            Assert.assertEquals("Thingstodo-Order-OrderService/", r.get(1));
+            Assert.assertEquals("Thingstodo-Order-OrderService\\?", r.get(2));
+        } catch (ValidationException e) {
+            Assert.assertTrue(false);
+        }
+
+        try {
+            r = tmp.regexLevelSplit(s2, 1);
+            Assert.assertEquals(6, r.size());
+            Pattern p = Pattern.compile("^\\w+($|/|\\?)?");
+            Assert.assertFalse(p.matcher(r.get(0)).matches());
+            Assert.assertFalse(p.matcher(r.get(1)).matches());
+        } catch (ValidationException e) {
+            Assert.assertTrue(false);
+        }
+
+        try {
+            r = tmp.regexLevelSplit(s3, 1);
+            Assert.assertEquals(12, r.size());
+            Assert.assertEquals("restapi$", r.get(0));
+            Assert.assertEquals("restapi/", r.get(1));
+            Assert.assertEquals("restapi\\?", r.get(2));
+            Assert.assertEquals("html5$", r.get(3));
+            Assert.assertEquals("html5/", r.get(4));
+            Assert.assertEquals("html5\\?", r.get(5));
+        } catch (ValidationException e) {
+            Assert.assertTrue(false);
+        }
+
+        try {
+            r = tmp.regexLevelSplit(s4, 1);
+            Assert.assertEquals(6, r.size());
+            Assert.assertEquals("members$", r.get(0));
+            Assert.assertEquals("members/", r.get(1));
+            Assert.assertEquals("members\\?", r.get(2));
+            Assert.assertEquals("membersite$", r.get(3));
+            Assert.assertEquals("membersite/", r.get(4));
+            Assert.assertEquals("membersite\\?", r.get(5));
+        } catch (ValidationException e) {
+            Assert.assertTrue(false);
+        }
+
     }
 
     @Test
@@ -271,9 +329,8 @@ public class PathValidationTest extends AbstractServerTest {
         try {
             array.get(0).setPriority(null).setPath(noMeaningSuffix);
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertEquals(1100, array.get(0).getPriority().intValue());
-        } catch (Exception e) {
             Assert.assertTrue(false);
+        } catch (Exception e) {
         }
     }
 
