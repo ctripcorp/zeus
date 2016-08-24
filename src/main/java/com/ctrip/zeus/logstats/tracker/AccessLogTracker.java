@@ -152,16 +152,26 @@ public class AccessLogTracker implements LogTracker {
     public void fastMove(final StatsDelegate<String> delegator) throws IOException {
         try {
             if (offset > fileChannel.size()) {
-                //TODO copytruncate strategy
-                previousOffset = offset = 0;
-                fileChannel.position(offset);
+                //TODO copy_truncate strategy
+                if (!reopenRequested.get()) {
+                    logger.info("Go back to head on COPY_TRUNCATE event.");
+                    previousOffset = offset = 0;
+                    fileChannel.position(offset);
+                } else {
+                    logger.warn("Invalid offset value is found. offset=" + offset + ", file-size=" + fileChannel.size());
+                    nextRound();
+                    return;
+                }
             }
+
             buffer.clear();
             try {
                 if (fileChannel.read(buffer) == -1) {
                     nextRound();
+                    return;
                 }
             } catch (IOException ex) {
+                logger.error("Fail to read content to buffer.", ex);
                 stop();
             }
             buffer.flip();
@@ -234,6 +244,7 @@ public class AccessLogTracker implements LogTracker {
                             return;
                         }
                     } catch (IOException ex) {
+                        logger.error("Fail to read content to buffer.", ex);
                         stop();
                     }
                     buffer.flip();
@@ -244,8 +255,8 @@ public class AccessLogTracker implements LogTracker {
                 colOffset = 0;
                 eol = false;
             }
-            fileChannel.position(offset);
 
+            fileChannel.position(offset);
             nextRound();
         } catch (IOException ex) {
             // this code is never expected to be reached
