@@ -40,7 +40,7 @@ public class DefaultGroupValidator implements GroupValidator {
     private final Set<String> pathPrefixModifier = Sets.newHashSet("=", "~", "~*", "^~");
     private final String standardSuffix = "($|/|\\?)";
     private final String[] standardSuffixIdentifier = new String[]{"$", "/", "\\?"};
-    private final Pattern basicPathPath = Pattern.compile("^(\\w|-)+(\\$|\\\\\\?)?");
+    private final Pattern basicPathPath = Pattern.compile("^((\\w|-)+/?)(\\$|\\\\\\?)?");
 
     @Override
     public boolean exists(Long targetId) throws Exception {
