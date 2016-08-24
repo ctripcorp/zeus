@@ -200,11 +200,11 @@ public class DefaultGroupValidator implements GroupValidator {
             if (addingPathMembers.size() == 0) addingPathMembers.add(addingPath);
             if (retainedPathMembers.size() == 0) retainedPathMembers.add(retainedPath);
 
-            for (String pathMember : addingPathMembers) {
-                if (!basicPathPath.matcher(pathMember).matches()) {
-                    throw new ValidationException("Invalid characters are found in sub path " + pathMember + ".");
-                }
-            }
+//            for (String pathMember : addingPathMembers) {
+//                if (!basicPathPath.matcher(pathMember).matches()) {
+//                    throw new ValidationException("Invalid characters are found in sub path " + pathMember + ".");
+//                }
+//            }
 
             for (String ap : addingPathMembers) {
                 for (String rp : retainedPathMembers) {
