@@ -107,6 +107,7 @@ public class PathValidationTest extends AbstractServerTest {
         String s4 = "members($|/|\\?)|membersite($|/|\\?)";
 
         DefaultGroupValidator tmp = (DefaultGroupValidator) groupModelValidator;
+        Pattern p = Pattern.compile("^(\\w|-)+(\\$|\\\\\\?)?");
         List<String> r;
         try {
             r = tmp.regexLevelSplit(s1, 1);
@@ -114,6 +115,10 @@ public class PathValidationTest extends AbstractServerTest {
             Assert.assertEquals("Thingstodo-Order-OrderService$", r.get(0));
             Assert.assertEquals("Thingstodo-Order-OrderService/", r.get(1));
             Assert.assertEquals("Thingstodo-Order-OrderService\\?", r.get(2));
+
+            Assert.assertTrue(p.matcher(r.get(0)).matches());
+            Assert.assertTrue(p.matcher(r.get(1)).matches());
+            Assert.assertTrue(p.matcher(r.get(2)).matches());
         } catch (ValidationException e) {
             Assert.assertTrue(false);
         }
@@ -121,7 +126,6 @@ public class PathValidationTest extends AbstractServerTest {
         try {
             r = tmp.regexLevelSplit(s2, 1);
             Assert.assertEquals(6, r.size());
-            Pattern p = Pattern.compile("^\\w+($|/|\\?)?");
             Assert.assertFalse(p.matcher(r.get(0)).matches());
             Assert.assertFalse(p.matcher(r.get(1)).matches());
         } catch (ValidationException e) {
