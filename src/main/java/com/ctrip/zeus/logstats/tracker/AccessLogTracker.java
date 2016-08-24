@@ -100,7 +100,7 @@ public class AccessLogTracker implements LogTracker {
                 }
             }
         }
-        return offset == fileChannel.size();
+        return offset == fileChannel.size() && !reopenRequested.get();
     }
 
     @Override
