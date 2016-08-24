@@ -24,7 +24,6 @@ import javax.annotation.Resource;
 public class ReportAspect implements Ordered {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
-    private static final DynamicBooleanProperty cmsSync = DynamicPropertyFactory.getInstance().getBooleanProperty("cms.sync", false);
     private static final DynamicBooleanProperty cmsVserverSync = DynamicPropertyFactory.getInstance().getBooleanProperty("cms.vserver.sync", false);
 
     @Resource
@@ -32,11 +31,22 @@ public class ReportAspect implements Ordered {
 
     @Around("execution(* com.ctrip.zeus.service.model.GroupRepository.*(..))")
     public Object injectReportGroupAction(ProceedingJoinPoint point) throws Throwable {
-        if (!cmsSync.get())
-            return point.proceed();
         String methodName = point.getSignature().getName();
         switch (methodName) {
-            case "add":
+            case "add": {
+                boolean skip = false;
+                try {
+                    Object arg = point.getArgs()[0];
+                    skip = ((Group) arg).isVirtual();
+                } catch (Exception ex) {
+                }
+
+                if (skip) return point.proceed();
+
+                Object obj = point.proceed();
+                reportService.reportMetaDataAction(obj, ReportTopic.GROUP_CREATE);
+                return obj;
+            }
             case "update": {
                 boolean skip = false;
                 try {
@@ -48,12 +58,7 @@ public class ReportAspect implements Ordered {
                 if (skip) return point.proceed();
 
                 Object obj = point.proceed();
-                try {
-                    // No lock is necessary here, it is covered by add_/update_groupName lock
-                    reportService.reportGroupAction((Group) obj);
-                } catch (Exception ex) {
-                    logger.error("Fail to report group to queue.", ex);
-                }
+                reportService.reportMetaDataAction(obj, ReportTopic.GROUP_UPDATE);
                 return obj;
             }
             case "delete": {
@@ -61,7 +66,7 @@ public class ReportAspect implements Ordered {
                 try {
                     Long groupId = (Long) point.getArgs()[0];
                     // No lock is necessary here, it is covered by delete_groupId lock
-                    reportService.reportGroupDeletion(groupId);
+                    reportService.reportMetaDataAction(new Group().setId(groupId), ReportTopic.GROUP_DELETE);
                 } catch (Exception ex) {
                     logger.error("Fail to push group to queue.", ex);
                 }
@@ -74,10 +79,6 @@ public class ReportAspect implements Ordered {
 
     @Around("execution(* com.ctrip.zeus.service.model.VirtualServerRepository.*(..))")
     public Object injectVsAction(ProceedingJoinPoint point) throws Throwable {
-        if (!cmsSync.get()) {
-            return point.proceed();
-        }
-
         String methodName = point.getSignature().getName();
         Object obj = point.proceed();
 
@@ -97,11 +98,10 @@ public class ReportAspect implements Ordered {
                 case "update":
                     value = (VirtualServer) obj;
                     try {
-                        reportService.reportGroupAction(value);
+                        reportService.reportMetaDataAction(value, ReportTopic.VS_UPDATE);
                     } catch (Exception ex) {
                         logger.error("Fail to push GROUP_UPDATE(ref-vs-id={}) to report queue.", value.getId(), ex);
                     }
-
 
                     if (!cmsVserverSync.get()) return obj;
 
@@ -113,7 +113,7 @@ public class ReportAspect implements Ordered {
                     break;
                 case "delete":
                     if (!cmsVserverSync.get()) return obj;
-                    
+
                     long vsId = (Long) point.getArgs()[0];
                     try {
                         reportService.reportMetaDataAction(vsId, ReportTopic.VS_DELETE);

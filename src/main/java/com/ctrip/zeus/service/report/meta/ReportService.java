@@ -1,7 +1,5 @@
 package com.ctrip.zeus.service.report.meta;
 
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.report.entity.ReportFeed;
 import com.ctrip.zeus.report.entity.ReportGroup;
 
@@ -12,13 +10,9 @@ import java.util.List;
  */
 public interface ReportService {
 
-    void reportGroupAction(Group group) throws Exception;
-
-    void reportGroupAction(VirtualServer virtualServer) throws Exception;
-
-    void reportGroupDeletion(Long groupId) throws Exception;
-
     void reportMetaDataAction(Long targetId, ReportTopic reportTopic) throws Exception;
+
+    void reportMetaDataAction(Object target, ReportTopic reportTopic);
 
     List<ReportGroup> listErrors() throws Exception;
 

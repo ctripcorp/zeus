@@ -15,23 +15,14 @@ import java.util.List;
  */
 @Component("mockReportService")
 public class MockReportService implements ReportService {
-    @Override
-    public void reportGroupAction(Group group) throws Exception {
-
-    }
-
-    @Override
-    public void reportGroupAction(VirtualServer virtualServer) throws Exception {
-
-    }
-
-    @Override
-    public void reportGroupDeletion(Long groupId) throws Exception {
-
-    }
 
     @Override
     public void reportMetaDataAction(Long targetId, ReportTopic reportTopic) throws Exception {
+
+    }
+
+    @Override
+    public void reportMetaDataAction(Object target, ReportTopic reportTopic) {
 
     }
 
