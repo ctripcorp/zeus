@@ -168,15 +168,13 @@ public class GroupMemberResource {
                 onlineGroupUpdate(group);
             } else {
                 groupRepository.update(group, true);
+                try {
+                    propertyBox.set("status", "toBeActivated", "group", group.getId());
+                } catch (Exception ex) {
+                }
             }
         } finally {
             lock.unlock();
-            try {
-                if (groupCriteriaQuery.queryByIdAndMode(group.getId(), SelectionMode.REDUNDANT).length == 2) {
-                    propertyBox.set("status", "toBeActivated", "group", group.getId());
-                }
-            } catch (Exception ex) {
-            }
         }
         return responseHandler.handle("Successfully added group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
@@ -262,16 +260,13 @@ public class GroupMemberResource {
                 onlineGroupUpdate(group);
             } else {
                 groupRepository.update(group, true);
+                try {
+                    propertyBox.set("status", "toBeActivated", "group", group.getId());
+                } catch (Exception ex) {
+                }
             }
         } finally {
             lock.unlock();
-
-            try {
-                if (groupCriteriaQuery.queryByIdAndMode(group.getId(), SelectionMode.REDUNDANT).length == 2) {
-                    propertyBox.set("status", "toBeActivated", "group", group.getId());
-                }
-            } catch (Exception ex) {
-            }
         }
         return responseHandler.handle("Successfully removed " + Joiner.on(",").join(ips) + " from group with id " + groupId + ".", hh.getMediaType());
     }
