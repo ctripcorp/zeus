@@ -222,44 +222,54 @@ public class GroupResource {
     @Authorize(name = "updateGroup")
     public Response bindVs(@Context HttpHeaders hh, @Context HttpServletRequest request,
                            @QueryParam("update") Boolean update, @QueryParam("force") Boolean force, String bound) throws Exception {
-        GroupVsBound b = ObjectJsonParser.parse(bound, GroupVsBound.class);
-        if (b == null) {
+        GroupVsBoundList boundList = ObjectJsonParser.parse(bound, GroupVsBoundList.class);
+        if (boundList == null) {
             throw new ValidationException("Could not get any entity. Deserialization might have failed.");
         }
-        if (b.getGroupId() == null || b.getVsId() == null || b.getPath() == null) {
-            throw new ValidationException("Properties groupId, vsId and path are required.");
+        if (boundList.getGroupId() == null) {
+            throw new ValidationException("Property group-id is required.");
         }
-        Group target = groupRepository.getById(b.getGroupId());
-        if (target == null) {
-            throw new ValidationException("Group " + b.getGroupId() + " cannot be found.");
-        }
-        boolean isUpdate = update != null && update;
-        boolean updated = false;
-        for (GroupVirtualServer e : target.getGroupVirtualServers()) {
-            if (e.getVirtualServer().getId().equals(b.getVsId())) {
-                if (isUpdate) {
-                    e.setPath(b.getPath()).setPriority(b.getPriority()).setRedirect(b.getRedirect()).setRewrite(b.getRewrite());
-                    updated = true;
-                    break;
-                } else {
-                    throw new ValidationException("Bound with vs " + b.getVsId() + " already exists. Use ?update=true parameter to update.");
-                }
+        Map<Long, GroupVsBound> boundVsMap = new HashMap<>();
+        for (GroupVsBound b : boundList.getBounds()) {
+            if (b.getVsId() == null || b.getPath() == null) {
+                throw new ValidationException("Property vs-id and path are required.");
             }
+            boundVsMap.put(b.getVsId(), b);
         }
 
-        if (isUpdate) {
-            if (!updated) {
-                throw new ValidationException("Bound with vs " + b.getVsId() + " could not be found. No need to update.");
-            }
-        } else {
-            GroupVirtualServer newBound = new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(b.getVsId()))
-                    .setPath(b.getPath()).setPriority(b.getPriority()).setRedirect(b.getRedirect()).setRewrite(b.getRewrite());
-            target.getGroupVirtualServers().add(newBound);
+        Group target = groupRepository.getById(boundList.getGroupId());
+        if (target == null) {
+            throw new ValidationException("Group " + boundList.getGroupId() + " cannot be found.");
         }
+
+        final boolean isUpdate = update != null && update;
 
         DistLock lock = dbLockFactory.newLock(target.getName() + "_updateGroup");
         lock.lock(TIMEOUT);
         try {
+            for (GroupVirtualServer e : target.getGroupVirtualServers()) {
+                boolean updated = false;
+                GroupVsBound b = boundVsMap.get(e.getVirtualServer().getId());
+                if (b != null) {
+                    if (isUpdate) {
+                        e.setPath(b.getPath()).setPriority(b.getPriority()).setRedirect(b.getRedirect()).setRewrite(b.getRewrite());
+                        updated = true;
+                    } else {
+                        throw new ValidationException("Bound with vs " + b.getVsId() + " already exists. Use ?update=true parameter to update.");
+                    }
+                }
+
+                if (isUpdate) {
+                    if (!updated) {
+                        throw new ValidationException("Bound with vs " + b.getVsId() + " could not be found. No need to update.");
+                    }
+                } else {
+                    GroupVirtualServer newBound = new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(b.getVsId()))
+                            .setPath(b.getPath()).setPriority(b.getPriority()).setRedirect(b.getRedirect()).setRewrite(b.getRewrite());
+                    target.getGroupVirtualServers().add(newBound);
+                }
+            }
+
             target = groupRepository.update(target, force != null && force);
             try {
                 if (groupCriteriaQuery.queryByIdAndMode(target.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
@@ -280,7 +290,7 @@ public class GroupResource {
     @Authorize(name = "updateGroup")
     public Response unbindVs(@Context HttpHeaders hh, @Context HttpServletRequest request,
                              @QueryParam("groupId") Long groupId,
-                             @QueryParam("vsId") Long vsId) throws Exception {
+                             @QueryParam("vsId") String vsId) throws Exception {
         if (vsId == null) throw new ValidationException("Parameter groupId and vsId must be provided");
 
         Group target = groupRepository.getById(groupId);
@@ -288,19 +298,24 @@ public class GroupResource {
             throw new ValidationException("Group " + groupId + " cannot be found.");
         }
 
-        Iterator<GroupVirtualServer> iter = target.getGroupVirtualServers().iterator();
-        while (iter.hasNext()) {
-            GroupVirtualServer e = iter.next();
-            if (e.getVirtualServer().getId().equals(vsId)) iter.remove();
-        }
-
-        if (target.getGroupVirtualServers().size() == 0) {
-            throw new ValidationException("No bound will exist after unbinding. Request is rejected.");
+        Set<Long> unboundVsIds = new HashSet<>();
+        for (String s : vsId.split(",")) {
+            unboundVsIds.add(Long.parseLong(s));
         }
 
         DistLock lock = dbLockFactory.newLock(target.getName() + "_updateGroup");
         lock.lock(TIMEOUT);
         try {
+            Iterator<GroupVirtualServer> iter = target.getGroupVirtualServers().iterator();
+            while (iter.hasNext()) {
+                GroupVirtualServer e = iter.next();
+                if (unboundVsIds.contains(e.getVirtualServer().getId())) iter.remove();
+            }
+
+            if (target.getGroupVirtualServers().size() == 0) {
+                throw new ValidationException("No bound will exist after unbinding. Request is rejected.");
+            }
+
             target = groupRepository.update(target, true);
             try {
                 if (groupCriteriaQuery.queryByIdAndMode(target.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {

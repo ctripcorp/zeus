@@ -9,9 +9,10 @@ public class SlbQueryCommand implements QueryCommand {
     public final static int ip = 2;
     public final static int vip = 3;
     public final static int vs_search_key = 4;
+    public final static int fuzzy_name = 5;
 
     private final String type;
-    private String[] values = new String[5];
+    private String[] values = new String[6];
 
     public SlbQueryCommand() {
         type = "slb";
@@ -34,6 +35,9 @@ public class SlbQueryCommand implements QueryCommand {
                 break;
             case "vip":
                 return true;
+            case "fuzzyName":
+                idx = fuzzy_name;
+                break;
             default:
                 return false;
         }

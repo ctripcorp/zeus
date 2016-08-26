@@ -104,8 +104,24 @@ public class SlbRepositoryImpl implements SlbRepository {
     public Slb getByKey(IdVersion key) throws Exception {
         ArchiveSlbDo d = archiveSlbDao.findBySlbAndVersion(key.getId(), key.getVersion(), ArchiveSlbEntity.READSET_FULL);
         if (d == null) return null;
+
         Slb result = ContentReaders.readSlbContent(d.getContent());
         refreshVirtualServer(result);
+
+        return result;
+    }
+
+    @Override
+    public Slb getByKey(IdVersion key, RepositoryContext context) throws Exception {
+        ArchiveSlbDo d = archiveSlbDao.findBySlbAndVersion(key.getId(), key.getVersion(), ArchiveSlbEntity.READSET_FULL);
+        if (d == null) return null;
+
+        Slb result = ContentReaders.readSlbContent(d.getContent());
+
+        if (!context.isLite()) {
+            refreshVirtualServer(result);
+        }
+
         return result;
     }
 

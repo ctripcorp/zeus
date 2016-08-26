@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.service.Repository;
+import com.ctrip.zeus.service.model.impl.RepositoryContext;
 
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,8 @@ public interface SlbRepository extends Repository {
     Slb getById(Long slbId) throws Exception;
 
     Slb getByKey(IdVersion key) throws Exception;
+
+    Slb getByKey(IdVersion key, RepositoryContext context) throws Exception;
 
     Slb add(Slb slb) throws Exception;
 

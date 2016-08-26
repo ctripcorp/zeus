@@ -18,8 +18,10 @@ import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.model.impl.RepositoryContext;
 import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.tag.TagBox;
@@ -31,6 +33,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -163,7 +168,8 @@ public class SlbResource {
     @Authorize(name = "updateSlb")
     public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
         Slb s = parseSlb(hh.getMediaType(), slb);
-        DistLock lock = dbLockFactory.newLock(s.getName() + "_updateSlb");
+
+        DistLock lock = dbLockFactory.newLock(s.getId() + "_updateSlb");
         lock.lock(TIMEOUT);
         try {
             s = slbRepository.update(s);
@@ -209,6 +215,95 @@ public class SlbResource {
 
         String message = count == 1 ? "Delete slb successfully." : "No deletion is needed.";
         return responseHandler.handle(message, hh.getMediaType());
+    }
+
+    @POST
+    @Path("/slb/addServer")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name = "updateSlb")
+    public Response addServer(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody) throws Exception {
+        Slb serverList = ObjectJsonParser.parse(requestBody, Slb.class);
+        if (serverList == null) throw new ValidationException("Fail to parse request.");
+
+        Long slbId = serverList.getId();
+        IdVersion[] searchKey = slbCriteriaQuery.queryByIdAndMode(slbId, SelectionMode.OFFLINE_FIRST);
+        if (searchKey.length == 0) throw new ValidationException("Oops, slb " + slbId + " does not exists.");
+
+        DistLock lock = dbLockFactory.newLock(slbId + "_updateSlb");
+        lock.lock(TIMEOUT);
+
+        Slb slb;
+        try {
+            RepositoryContext ctxt = new RepositoryContext();
+            ctxt.setLite(true);
+
+            slb = slbRepository.getByKey(searchKey[0], ctxt);
+            for (SlbServer server : serverList.getSlbServers()) {
+                slb.addSlbServer(server);
+            }
+            slb = slbRepository.update(slb);
+
+        } finally {
+            lock.unlock();
+        }
+
+        try {
+            if (slbCriteriaQuery.queryByIdAndMode(slbId, SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "slb", slbId);
+            }
+        } catch (Exception ex) {
+        }
+
+        return responseHandler.handle(slb, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/slb/removeServer")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name = "updateSlb")
+    public Response removeServer(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                 @QueryParam("slbId") Long slbId,
+                                 @TrimmedQueryParam("ip") String ip) throws Exception {
+        IdVersion[] searchKey = slbCriteriaQuery.queryByIdAndMode(slbId, SelectionMode.OFFLINE_FIRST);
+        if (searchKey.length == 0) throw new ValidationException("Oops, slb " + slbId + " does not exists.");
+
+        DistLock lock = dbLockFactory.newLock(slbId + "_updateSlb");
+        lock.lock(TIMEOUT);
+
+        Slb slb;
+        try {
+            RepositoryContext ctxt = new RepositoryContext();
+            ctxt.setLite(true);
+
+            Set<String> servers = new HashSet<>();
+            for (String s : ip.split(",")) {
+                servers.add(s);
+            }
+
+            slb = slbRepository.getByKey(searchKey[0], ctxt);
+            Iterator<SlbServer> iter = slb.getSlbServers().iterator();
+
+            while (iter.hasNext()) {
+                SlbServer server = iter.next();
+                if (servers.contains(server.getIp())) {
+                    iter.remove();
+                    break;
+                }
+            }
+            slb = slbRepository.update(slb);
+
+        } finally {
+            lock.unlock();
+        }
+
+        try {
+            if (slbCriteriaQuery.queryByIdAndMode(slbId, SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "slb", slbId);
+            }
+        } catch (Exception ex) {
+        }
+
+        return responseHandler.handle(slb, hh.getMediaType());
     }
 
     private Slb parseSlb(MediaType mediaType, String slb) throws Exception {

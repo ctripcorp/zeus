@@ -9,9 +9,10 @@ public class GroupQueryCommand implements QueryCommand {
     public final static int app_id = 2;
     public final static int member_ip = 3;
     public final static int vs_id = 4;
+    public final static int fuzzy_name = 5;
 
     private final String type;
-    private final String[] values = new String[5];
+    private final String[] values = new String[6];
 
     public GroupQueryCommand() {
         this.type = "group";
@@ -35,6 +36,9 @@ public class GroupQueryCommand implements QueryCommand {
             case "ip":
             case "member":
                 idx = member_ip;
+                break;
+            case "fuzzyName":
+                idx = fuzzy_name;
                 break;
             default:
                 return false;

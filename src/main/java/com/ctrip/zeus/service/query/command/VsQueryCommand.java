@@ -10,8 +10,9 @@ public class VsQueryCommand implements QueryCommand {
     public final static int ssl = 3;
     public final static int slb_id = 4;
     public final static int group_search_key = 5;
+    public final static int fuzzy_name = 6;
 
-    private String[] values = new String[6];
+    private String[] values = new String[7];
     private final String type;
 
     public VsQueryCommand() {
@@ -41,6 +42,9 @@ public class VsQueryCommand implements QueryCommand {
                 return true;
             case "slbId":
                 idx = slb_id;
+                break;
+            case "fuzzyName":
+                idx = fuzzy_name;
                 break;
             default:
                 return false;

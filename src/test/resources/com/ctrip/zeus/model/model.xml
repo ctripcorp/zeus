@@ -54,8 +54,14 @@
         <virtual-server/>
     </virtual-server-list>
 
-    <group-vs-bound>
+    <group-vs-bound-list>
         <group-id>123456789012</group-id>
+        <bounds>
+            <group-vs-bound/>
+            <group-vs-bound/>
+        </bounds>
+    </group-vs-bound-list>
+    <group-vs-bound>
         <vs-id>123456789012</vs-id>
         <priority>1000</priority>
         <path>/hotel</path>

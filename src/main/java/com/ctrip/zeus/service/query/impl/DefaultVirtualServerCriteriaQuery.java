@@ -68,6 +68,21 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
                 .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
+                        return vsQuery.hasValue(vsQuery.fuzzy_name);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<>();
+                        for (String s : vsQuery.getValue(vsQuery.fuzzy_name)) {
+                            result.addAll(fuzzyQueryByName(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
                         return vsQuery.hasValue(vsQuery.ssl);
                     }
 

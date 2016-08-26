@@ -2,8 +2,11 @@ package com.ctrip.zeus.support;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by zhoumy on 2016/7/25.
@@ -20,5 +23,18 @@ public class ObjectJsonParser {
         } catch (IOException e) {
             return null;
         }
+    }
+
+    public static <T> List<T> parseArray(String jsonValue, Class<T> t) {
+        List<T> result = new ArrayList<>();
+        try {
+            T[] array = objectMapper.readValue(jsonValue, TypeFactory.defaultInstance().constructArrayType(t));
+            for (T t1 : array) {
+                result.add(t1);
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        return result;
     }
 }

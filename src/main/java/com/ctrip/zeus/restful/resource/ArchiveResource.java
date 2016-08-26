@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.ArchiveRepository;
 import org.springframework.stereotype.Component;
 
@@ -36,17 +37,18 @@ public class ArchiveResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getGroupByStatus")
     public Response getArchiveGroup(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                                    @QueryParam("groupName") String groupName,
-                                    @QueryParam("groupId") Long groupId) throws Exception {
+                                    @TrimmedQueryParam("groupName") String groupName,
+                                    @QueryParam("groupId") Long groupId,
+                                    @QueryParam("version") Integer version) throws Exception {
         if (groupId == null && groupName == null) {
             throw new ValidationException("Query parameter - groupId/groupName is required.");
         }
         Group archive = null;
         if (groupId != null) {
-            archive = archiveRepository.getGroupArchive(groupId);
+            archive = archiveRepository.getGroupArchive(groupId, version == null ? 0 : version);
         }
         if (groupName != null) {
-            archive = archiveRepository.getGroupArchive(groupName);
+            archive = archiveRepository.getGroupArchive(groupName, version == null ? 0 : version);
         }
         if (archive == null) {
             return responseHandler.handle("Group archive of id " + groupId + " cannot be found.", hh.getMediaType());
@@ -60,11 +62,12 @@ public class ArchiveResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getSlb")
     public Response getArchiveSlb(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                                    @QueryParam("slbId") Long slbId) throws Exception {
+                                  @QueryParam("slbId") Long slbId,
+                                  @QueryParam("version") Integer version) throws Exception {
         if (slbId == null) {
             throw new ValidationException("Query parameter - slbId is required.");
         }
-        Slb archive = archiveRepository.getSlbArchive(slbId);
+        Slb archive = archiveRepository.getSlbArchive(slbId, version == null ? 0 : version);
         if (archive == null) {
             return responseHandler.handle("Slb archive of id " + slbId + " cannot be found.", hh.getMediaType());
         } else {
@@ -77,11 +80,12 @@ public class ArchiveResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "getVs")
     public Response getArchiveVs(@Context HttpHeaders hh, @Context HttpServletRequest request,
-                                    @QueryParam("vsId") Long vsId) throws Exception {
+                                 @QueryParam("vsId") Long vsId,
+                                 @QueryParam("version") Integer version) throws Exception {
         if (vsId == null) {
             throw new ValidationException("Query parameter - vsId is required.");
         }
-        VirtualServer archive = archiveRepository.getVsArchive(vsId);
+        VirtualServer archive = archiveRepository.getVsArchive(vsId, version == null ? 0 : version);
         if (archive == null) {
             return responseHandler.handle("Virtual server archive of id " + vsId + " cannot be found.", hh.getMediaType());
         } else {

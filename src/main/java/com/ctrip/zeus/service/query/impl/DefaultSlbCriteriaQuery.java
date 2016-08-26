@@ -66,6 +66,21 @@ public class DefaultSlbCriteriaQuery implements SlbCriteriaQuery {
                 .addFilter(new FilterSet<Long>() {
                     @Override
                     public boolean shouldFilter() throws Exception {
+                        return slbQuery.hasValue(slbQuery.fuzzy_name);
+                    }
+
+                    @Override
+                    public Set<Long> filter() throws Exception {
+                        Set<Long> result = new HashSet<>();
+                        for (String s : slbQuery.getValue(slbQuery.fuzzy_name)) {
+                            result.addAll(fuzzyQueryByName(s));
+                        }
+                        return result;
+                    }
+                })
+                .addFilter(new FilterSet<Long>() {
+                    @Override
+                    public boolean shouldFilter() throws Exception {
                         return slbQuery.hasValue(slbQuery.vs_search_key);
                     }
 

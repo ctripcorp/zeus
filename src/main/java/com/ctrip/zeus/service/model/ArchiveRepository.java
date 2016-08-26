@@ -15,11 +15,11 @@ public interface ArchiveRepository {
 
     void archiveVs(VirtualServer vs) throws Exception;
 
-    Group getGroupArchive(Long id) throws Exception;
+    Group getGroupArchive(Long id, int version) throws Exception;
 
-    Group getGroupArchive(String name) throws Exception;
+    Group getGroupArchive(String name, int version) throws Exception;
 
-    Slb getSlbArchive(Long id) throws Exception;
+    Slb getSlbArchive(Long id, int version) throws Exception;
 
-    VirtualServer getVsArchive(Long id) throws Exception;
+    VirtualServer getVsArchive(Long id, int version) throws Exception;
 }

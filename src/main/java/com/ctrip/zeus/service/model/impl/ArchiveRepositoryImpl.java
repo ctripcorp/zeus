@@ -10,7 +10,6 @@ import com.ctrip.zeus.support.GenericSerializer;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * Created by zhoumy on 2016/5/17.
@@ -18,15 +17,13 @@ import java.util.List;
 @Repository("archiveRepository")
 public class ArchiveRepositoryImpl implements ArchiveRepository {
     @Resource
+    private GroupDao groupDao;
+    @Resource
     private GroupHistoryDao groupHistoryDao;
     @Resource
     private ArchiveGroupDao archiveGroupDao;
     @Resource
-    private SlbDao slbDao;
-    @Resource
     private ArchiveSlbDao archiveSlbDao;
-    @Resource
-    private SlbVirtualServerDao slbVirtualServerDao;
     @Resource
     private ArchiveVsDao archiveVsDao;
 
@@ -50,38 +47,37 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     }
 
     @Override
-    public Group getGroupArchive(Long id) throws Exception {
-        GroupHistoryDo d = groupHistoryDao.findById(id, GroupHistoryEntity.READSET_FULL);
-        if (d == null) return null;
-
-        ArchiveGroupDo archiveGroupDo = archiveGroupDao.findByGroupAndVersion(id, 0, ArchiveGroupEntity.READSET_FULL);
+    public Group getGroupArchive(Long id, int version) throws Exception {
+        ArchiveGroupDo archiveGroupDo = archiveGroupDao.findByGroupAndVersion(id, version, ArchiveGroupEntity.READSET_FULL);
         return archiveGroupDo == null ? null : ContentReaders.readGroupContent(archiveGroupDo.getContent());
     }
 
     @Override
-    public Group getGroupArchive(String name) throws Exception {
-        GroupHistoryDo d = groupHistoryDao.findByName(name, GroupHistoryEntity.READSET_FULL);
-        if (d == null) return null;
+    public Group getGroupArchive(String name, int version) throws Exception {
+        Long groupId;
+        if (version == 0) {
+            GroupHistoryDo d = groupHistoryDao.findByName(name, GroupHistoryEntity.READSET_FULL);
+            if (d == null) return null;
+            groupId = d.getGroupId();
+        } else {
+            GroupDo d = groupDao.findByName(name, GroupEntity.READSET_IDONLY);
+            if (d == null) return null;
+            groupId = d.getId();
+        }
 
-        ArchiveGroupDo archiveGroupDo = archiveGroupDao.findByGroupAndVersion(d.getGroupId(), 0, ArchiveGroupEntity.READSET_FULL);
+        ArchiveGroupDo archiveGroupDo = archiveGroupDao.findByGroupAndVersion(groupId, version, ArchiveGroupEntity.READSET_FULL);
         return archiveGroupDo == null ? null : ContentReaders.readGroupContent(archiveGroupDo.getContent());
     }
 
     @Override
-    public Slb getSlbArchive(Long id) throws Exception {
-        SlbDo d = slbDao.findById(id, SlbEntity.READSET_FULL);
-        if (d != null) return null;
-
-        ArchiveSlbDo archiveSlbDo = archiveSlbDao.findBySlbAndVersion(id, 0, ArchiveSlbEntity.READSET_FULL);
+    public Slb getSlbArchive(Long id, int version) throws Exception {
+        ArchiveSlbDo archiveSlbDo = archiveSlbDao.findBySlbAndVersion(id, version, ArchiveSlbEntity.READSET_FULL);
         return archiveSlbDo == null ? null : ContentReaders.readSlbContent(archiveSlbDo.getContent());
     }
 
     @Override
-    public VirtualServer getVsArchive(Long id) throws Exception {
-        List<SlbVirtualServerDo> d = slbVirtualServerDao.findAllByIds(new Long[]{id}, SlbVirtualServerEntity.READSET_FULL);
-        if (d != null) return null;
-
-        MetaVsArchiveDo archiveVsDo = archiveVsDao.findByVsAndVersion(id, 0, ArchiveVsEntity.READSET_FULL);
+    public VirtualServer getVsArchive(Long id, int version) throws Exception {
+        MetaVsArchiveDo archiveVsDo = archiveVsDao.findByVsAndVersion(id, version, ArchiveVsEntity.READSET_FULL);
         return archiveVsDo == null ? null : ContentReaders.readVirtualServerContent(archiveVsDo.getContent());
     }
 }
