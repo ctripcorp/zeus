@@ -97,6 +97,9 @@ public class SlbAdminServer extends AbstractServer {
         ServletContainer jerseyServletContainer = new ServletContainer(config);
         ServletHolder jerseyServletHolder = new ServletHolder(jerseyServletContainer);
 
+        //Support CrossDomain
+        handler.addFilter(CrossDomainFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        
         //Support GZip
         handler.addFilter(GzipFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST))
                 .setInitParameter("mimeTypes", "application/json, application/xml,text/xml, text/html");
@@ -119,7 +122,6 @@ public class SlbAdminServer extends AbstractServer {
             handler.addFilter(HttpServletRequestWrapperFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         }
         handler.addFilter(PreCheckFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
-        handler.addFilter(CrossDomainFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(AccessLogFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD));
 
         //Config Servlet
