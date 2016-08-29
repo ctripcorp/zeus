@@ -153,13 +153,16 @@ public class SlbRepositoryImpl implements SlbRepository {
         autoFiller.autofill(slb);
         refreshVirtualServer(slb);
 
-        List<String> servers = slbQuery.getSlbIps(slb.getId());
-        for (SlbServer s : slb.getSlbServers()) {
-            servers.remove(s);
+        Set<String> checkList = new HashSet<>();
+        for (SlbServer ss : slb.getSlbServers()) {
+            checkList.add(ss.getIp());
+        }
+        for (String ss : slbQuery.getSlbIps(slb.getId())) {
+            checkList.remove(ss);
         }
 
         slbEntityManager.update(slb);
-        certificateService.install(slb.getId(), servers);
+        certificateService.install(slb.getId(), new ArrayList<>(checkList));
 
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()

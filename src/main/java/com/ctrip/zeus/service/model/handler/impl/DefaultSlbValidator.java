@@ -51,13 +51,14 @@ public class DefaultSlbValidator implements SlbValidator {
         if (!nameCheck.equals(0L) && !nameCheck.equals(slb.getId())) {
             throw new ValidationException("Duplicate name " + slb.getName() + " is found at slb " + nameCheck + ".");
         }
-        String[] ips = new String[slb.getSlbServers().size()];
-        for (int i = 0; i < ips.length; i++) {
-            ips[i] = slb.getSlbServers().get(i).getIp();
-        }
 
+        Set<String> ips = new HashSet<>();
         // check if any other slb version who has the server ip is still in effect.
         for (SlbServer slbServer : slb.getSlbServers()) {
+            if (!ips.add(slbServer.getIp())) {
+                throw new ValidationException("Duplicate ip " + slbServer.getIp() + " is found.");
+            }
+
             Set<IdVersion> range = slbCriteriaQuery.queryBySlbServerIp(slbServer.getIp());
             Set<Long> check = new HashSet<>();
             Iterator<IdVersion> iter = range.iterator();
