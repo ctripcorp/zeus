@@ -17,6 +17,7 @@ import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
 
+import com.ctrip.zeus.tag.entity.Property;
 import com.ctrip.zeus.tag.TagBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,18 +161,32 @@ public class GroupResource {
     @Path("/group/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addGroup")
-    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String group,
+    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody,
                         @QueryParam("force") Boolean force) throws Exception {
-        Group g = parseGroup(hh.getMediaType(), group);
-        g.setVirtual(null);
-        Long groupId = groupCriteriaQuery.queryByName(g.getName());
-        if (groupId > 0L) throw new ValidationException("Group name exists.");
+        ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(null);
+        trim(g);
+
+        Long checkId = groupCriteriaQuery.queryByName(g.getName());
+        if (checkId > 0L)
+            throw new ValidationException("Group name " + g.getName() + " has been taken by " + checkId + ".");
+
         g = groupRepository.add(g, force != null && force);
+
 
         try {
             propertyBox.set("status", "deactivated", "group", g.getId());
         } catch (Exception ex) {
         }
+
+        if (extendedView.getProperties() != null) {
+            setProperties(g.getId(), extendedView.getProperties());
+        }
+
+        if (extendedView.getTags() != null) {
+            addTag(g.getId(), extendedView.getTags());
+        }
+
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -179,14 +194,26 @@ public class GroupResource {
     @Path("/vgroup/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addGroup")
-    public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
-        Group g = parseGroup(hh.getMediaType(), group);
-        g.setVirtual(true);
-        g.setAppId(vGroupAppId);
-        Long groupId = groupCriteriaQuery.queryByName(g.getName());
-        if (groupId > 0L) throw new ValidationException("Group name exists.");
+    public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody) throws Exception {
+        ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true).setAppId(vGroupAppId);
+        trim(g);
+
+        Long checkId = groupCriteriaQuery.queryByName(g.getName());
+        if (checkId > 0L)
+            throw new ValidationException("Group name " + g.getName() + " has been taken by " + checkId + ".");
 
         g = groupRepository.addVGroup(g);
+
+
+        if (extendedView.getProperties() != null) {
+            setProperties(g.getId(), extendedView.getProperties());
+        }
+
+        if (extendedView.getTags() != null) {
+            addTag(g.getId(), extendedView.getTags());
+        }
+
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -194,12 +221,16 @@ public class GroupResource {
     @Path("/group/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "updateGroup")
-    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String group,
+    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody,
                            @QueryParam("force") Boolean force) throws Exception {
-        Group g = parseGroup(hh.getMediaType(), group);
-        g.setVirtual(null);
+        ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(null);
+        trim(g);
 
-        DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
+        IdVersion[] check = groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.OFFLINE_FIRST);
+        if (check.length == 0) throw new ValidationException("Group " + g.getId() + " cannot be found.");
+
+        DistLock lock = dbLockFactory.newLock(g.getId() + "_updateGroup");
         lock.lock(TIMEOUT);
         try {
             g = groupRepository.update(g, force != null && force);
@@ -207,12 +238,50 @@ public class GroupResource {
             lock.unlock();
         }
 
+
         try {
             if (groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
                 propertyBox.set("status", "toBeActivated", "group", g.getId());
             }
         } catch (Exception ex) {
         }
+
+        if (extendedView.getProperties() != null) {
+            setProperties(g.getId(), extendedView.getProperties());
+        }
+
+        if (extendedView.getTags() != null) {
+            addTag(g.getId(), extendedView.getTags());
+        }
+
+        return responseHandler.handle(g, hh.getMediaType());
+    }
+
+    @POST
+    @Path("/vgroup/update")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    @Authorize(name = "updateGroup")
+    public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody) throws Exception {
+        ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true).setAppId(vGroupAppId);
+        trim(g);
+
+        DistLock lock = dbLockFactory.newLock(g.getId() + "_updateGroup");
+        lock.lock(TIMEOUT);
+        try {
+            g = groupRepository.updateVGroup(g);
+        } finally {
+            lock.unlock();
+        }
+
+        if (extendedView.getProperties() != null) {
+            setProperties(g.getId(), extendedView.getProperties());
+        }
+
+        if (extendedView.getTags() != null) {
+            addTag(g.getId(), extendedView.getTags());
+        }
+
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -244,26 +313,25 @@ public class GroupResource {
 
         final boolean isUpdate = update != null && update;
 
-        DistLock lock = dbLockFactory.newLock(target.getName() + "_updateGroup");
+        DistLock lock = dbLockFactory.newLock(target.getId() + "_updateGroup");
         lock.lock(TIMEOUT);
         try {
             for (GroupVirtualServer e : target.getGroupVirtualServers()) {
-                boolean updated = false;
                 GroupVsBound b = boundVsMap.get(e.getVirtualServer().getId());
                 if (b != null) {
                     if (isUpdate) {
                         e.setPath(b.getPath()).setPriority(b.getPriority()).setRedirect(b.getRedirect()).setRewrite(b.getRewrite());
-                        updated = true;
+                        boundVsMap.remove(e.getVirtualServer().getId());
                     } else {
                         throw new ValidationException("Bound with vs " + b.getVsId() + " already exists. Use ?update=true parameter to update.");
                     }
                 }
+            }
 
-                if (isUpdate) {
-                    if (!updated) {
-                        throw new ValidationException("Bound with vs " + b.getVsId() + " could not be found. No need to update.");
-                    }
-                } else {
+            if (isUpdate && boundVsMap.size() > 0) {
+                throw new ValidationException("Bound with vs " + Joiner.on(',').join(boundVsMap.keySet()) + " could not be found. No need to update.");
+            } else {
+                for (GroupVsBound b : boundVsMap.values()) {
                     GroupVirtualServer newBound = new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(b.getVsId()))
                             .setPath(b.getPath()).setPriority(b.getPriority()).setRedirect(b.getRedirect()).setRewrite(b.getRewrite());
                     target.getGroupVirtualServers().add(newBound);
@@ -330,24 +398,6 @@ public class GroupResource {
         return responseHandler.handle(target, hh.getMediaType());
     }
 
-    @POST
-    @Path("/vgroup/update")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
-    @Authorize(name = "updateGroup")
-    public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String group) throws Exception {
-        Group g = parseGroup(hh.getMediaType(), group);
-        g.setVirtual(true);
-        g.setAppId(vGroupAppId);
-
-        DistLock lock = dbLockFactory.newLock(g.getName() + "_updateGroup");
-        lock.lock(TIMEOUT);
-        try {
-            g = groupRepository.updateVGroup(g);
-        } finally {
-            lock.unlock();
-        }
-        return responseHandler.handle(g, hh.getMediaType());
-    }
 
     @GET
     @Path("/group/delete")
@@ -403,17 +453,27 @@ public class GroupResource {
         return responseHandler.handle("Virtual group is deleted.", hh.getMediaType());
     }
 
-    private Group parseGroup(MediaType mediaType, String group) throws Exception {
-        Group g;
-        if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {
-            g = DefaultSaxParser.parseEntity(Group.class, group);
-        } else {
+    private void setProperties(Long groupId, List<Property> properties) {
+        for (Property p : properties) {
             try {
-                g = ObjectJsonParser.parse(group, Group.class);
+                propertyBox.set(p.getName(), p.getValue(), "group", groupId);
             } catch (Exception e) {
-                throw new Exception("Group cannot be parsed.");
+                logger.warn("Fail to set property " + p.getName() + "/" + p.getValue() + " on group " + groupId + ".");
             }
         }
+    }
+
+    private void addTag(Long groupId, List<String> tags) {
+        for (String tag : tags) {
+            try {
+                tagBox.tagging(tag, "group", new Long[]{groupId});
+            } catch (Exception e) {
+                logger.warn("Fail to tagging " + tag + " on group " + groupId + ".");
+            }
+        }
+    }
+
+    private void trim(Group g) throws Exception {
         g.setAppId(trimIfNotNull(g.getAppId()));
         g.setName(trimIfNotNull(g.getName()));
         if (g.getHealthCheck() != null)
@@ -424,7 +484,6 @@ public class GroupResource {
         }
         if (g.getLoadBalancingMethod() != null)
             g.getLoadBalancingMethod().setValue(trimIfNotNull(g.getLoadBalancingMethod().getValue()));
-        return g;
     }
 
     private String trimIfNotNull(String value) {

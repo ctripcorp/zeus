@@ -25,6 +25,7 @@ import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.tag.TagBox;
+import com.ctrip.zeus.tag.entity.Property;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -152,13 +154,27 @@ public class SlbResource {
     @Path("/slb/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addSlb")
-    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
-        Slb s = slbRepository.add(parseSlb(hh.getMediaType(), slb));
+    public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody) throws Exception {
+        ExtendedView.ExtendedSlb extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedSlb.class);
+        Slb s = ObjectJsonParser.parse(requestBody, Slb.class);
+        trim(s);
+
+        s = slbRepository.add(s);
+
 
         try {
             propertyBox.set("status", "deactivated", "slb", s.getId());
         } catch (Exception ex) {
         }
+
+        if (extendedView.getProperties() != null) {
+            setProperties(s.getId(), extendedView.getProperties());
+        }
+
+        if (extendedView.getTags() != null) {
+            addTag(s.getId(), extendedView.getTags());
+        }
+
         return responseHandler.handle(s, hh.getMediaType());
     }
 
@@ -166,8 +182,13 @@ public class SlbResource {
     @Path("/slb/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "updateSlb")
-    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String slb) throws Exception {
-        Slb s = parseSlb(hh.getMediaType(), slb);
+    public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody) throws Exception {
+        ExtendedView.ExtendedSlb extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedSlb.class);
+        Slb s = ObjectJsonParser.parse(requestBody, Slb.class);
+        trim(s);
+
+        IdVersion[] check = slbCriteriaQuery.queryByIdAndMode(s.getId(), SelectionMode.OFFLINE_FIRST);
+        if (check.length == 0) throw new ValidationException("Slb " + s.getId() + " cannot be found.");
 
         DistLock lock = dbLockFactory.newLock(s.getId() + "_updateSlb");
         lock.lock(TIMEOUT);
@@ -183,6 +204,14 @@ public class SlbResource {
             }
         } catch (Exception ex) {
         }
+        if (extendedView.getProperties() != null) {
+            setProperties(s.getId(), extendedView.getProperties());
+        }
+
+        if (extendedView.getTags() != null) {
+            addTag(s.getId(), extendedView.getTags());
+        }
+
         return responseHandler.handle(s, hh.getMediaType());
     }
 
@@ -306,17 +335,27 @@ public class SlbResource {
         return responseHandler.handle(slb, hh.getMediaType());
     }
 
-    private Slb parseSlb(MediaType mediaType, String slb) throws Exception {
-        Slb s;
-        if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {
-            s = DefaultSaxParser.parseEntity(Slb.class, slb);
-        } else {
+    private void setProperties(Long slbId, List<Property> properties) {
+        for (Property p : properties) {
             try {
-                s = DefaultJsonParser.parse(Slb.class, slb);
+                propertyBox.set(p.getName(), p.getValue(), "slb", slbId);
             } catch (Exception e) {
-                throw new Exception("Slb cannot be parsed.");
+                logger.warn("Fail to set property " + p.getName() + "/" + p.getValue() + " on slb " + slbId + ".");
             }
         }
+    }
+
+    private void addTag(Long slbId, List<String> tags) {
+        for (String tag : tags) {
+            try {
+                tagBox.tagging(tag, "slb", new Long[]{slbId});
+            } catch (Exception e) {
+                logger.warn("Fail to tagging " + tag + " on slb " + slbId + ".");
+            }
+        }
+    }
+
+    private void trim(Slb s) throws Exception {
         s.setName(trimIfNotNull(s.getName()));
         for (VirtualServer virtualServer : s.getVirtualServers()) {
             virtualServer.setName(trimIfNotNull(virtualServer.getName()));
@@ -328,7 +367,6 @@ public class SlbResource {
             slbServer.setIp(trimIfNotNull(slbServer.getIp()));
             slbServer.setHostName(trimIfNotNull(slbServer.getHostName()));
         }
-        return s;
     }
 
     private String trimIfNotNull(String value) {

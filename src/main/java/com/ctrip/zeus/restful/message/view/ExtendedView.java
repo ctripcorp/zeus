@@ -32,6 +32,10 @@ public interface ExtendedView<T> {
         private List<Property> properties;
         private Group instance;
 
+        public ExtendedGroup() {
+            this(new Group());
+        }
+
         public ExtendedGroup(Group instance) {
             this.instance = instance;
         }
@@ -118,6 +122,10 @@ public interface ExtendedView<T> {
         private List<Property> properties;
         private VirtualServer instance;
 
+        public ExtendedVs() {
+            this(new VirtualServer());
+        }
+
         public ExtendedVs(VirtualServer instance) {
             this.instance = instance;
         }
@@ -187,6 +195,10 @@ public interface ExtendedView<T> {
         private List<String> tags;
         private List<Property> properties;
         private Slb instance;
+
+        public ExtendedSlb() {
+            this(new Slb());
+        }
 
         public ExtendedSlb(Slb instance) {
             this.instance = instance;

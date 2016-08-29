@@ -2,6 +2,8 @@ package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.lock.DbLockFactory;
+import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
@@ -21,9 +23,11 @@ import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.tag.TagBox;
+import com.ctrip.zeus.tag.entity.Property;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -34,6 +38,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -53,11 +58,15 @@ public class VirtualServerResource {
     @Resource
     private ResponseHandler responseHandler;
     @Resource
+    private DbLockFactory dbLockFactory;
+    @Resource
     private PropertyBox propertyBox;
     @Resource
     private TagBox tagBox;
     @Resource
     private ViewDecorator viewDecorator;
+
+    private final int TIMEOUT = 1000;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -65,7 +74,6 @@ public class VirtualServerResource {
      * @api {get} /api/vses: Request vs information
      * @apiName ListVirtualServers
      * @apiGroup Vs
-     *
      *
      * @apiParam {long[]} vsId          1,2,3
      * @apiParam {string[]} vsName      a,b,c
@@ -150,17 +158,29 @@ public class VirtualServerResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "addVs")
     public Response addVirtualServer(@Context HttpHeaders hh,
-                                     @Context HttpServletRequest request, String vs) throws Exception {
-        VirtualServer virtualServer = parseVirtualServer(hh.getMediaType(), vs);
-        if (virtualServer.getSlbId() == null)
-            throw new ValidationException("Slb id is not provided.");
-        virtualServer = virtualServerRepository.add(virtualServer.getSlbId(), virtualServer);
+                                     @Context HttpServletRequest request, String requestBody) throws Exception {
+        ExtendedView.ExtendedVs extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedVs.class);
+        VirtualServer vs = ObjectJsonParser.parse(requestBody, VirtualServer.class);
+        trim(vs);
+
+        if (vs.getSlbId() == null)
+            throw new ValidationException("Field slb-id is required.");
+        vs = virtualServerRepository.add(vs.getSlbId(), vs);
 
         try {
-            propertyBox.set("status", "deactivated", "vs", virtualServer.getId());
+            propertyBox.set("status", "deactivated", "vs", vs.getId());
         } catch (Exception ex) {
         }
-        return responseHandler.handle(virtualServer, hh.getMediaType());
+
+        if (extendedView.getProperties() != null) {
+            setProperties(vs.getId(), extendedView.getProperties());
+        }
+
+        if (extendedView.getTags() != null) {
+            addTag(vs.getId(), extendedView.getTags());
+        }
+
+        return responseHandler.handle(vs, hh.getMediaType());
 
     }
 
@@ -169,21 +189,39 @@ public class VirtualServerResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "updateVs")
     public Response updateVirtualServer(@Context HttpHeaders hh,
-                                        @Context HttpServletRequest request, String vs) throws Exception {
-        VirtualServer virtualServer = parseVirtualServer(hh.getMediaType(), vs);
-        if (virtualServer.getId() == null || virtualServer.getId().longValue() <= 0L)
-            throw new ValidationException("Invalid virtual server id.");
-        if (virtualServer.getSlbId() == null)
-            throw new ValidationException("Slb id is not provided.");
-        virtualServerRepository.update(virtualServer);
+                                        @Context HttpServletRequest request, String requestBody) throws Exception {
+        ExtendedView.ExtendedVs extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedVs.class);
+        VirtualServer vs = ObjectJsonParser.parse(requestBody, VirtualServer.class);
+        trim(vs);
+
+        IdVersion[] check = virtualServerCriteriaQuery.queryByIdAndMode(vs.getId(), SelectionMode.OFFLINE_FIRST);
+        if (check.length == 0) throw new ValidationException("Virtual server " + vs.getId() + " cannot be found.");
+        if (vs.getSlbId() == null) throw new ValidationException("Field slb-id is required.");
+
+        DistLock lock = dbLockFactory.newLock(vs.getId() + "_updateVs");
+        lock.lock(TIMEOUT);
+        try {
+            virtualServerRepository.update(vs);
+        } finally {
+            lock.unlock();
+        }
 
         try {
-            if (virtualServerCriteriaQuery.queryByIdAndMode(virtualServer.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
-                propertyBox.set("status", "toBeActivated", "vs", virtualServer.getId());
+            if (virtualServerCriteriaQuery.queryByIdAndMode(vs.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "vs", vs.getId());
             }
         } catch (Exception ex) {
         }
-        return responseHandler.handle(virtualServer, hh.getMediaType());
+
+        if (extendedView.getProperties() != null) {
+            setProperties(vs.getId(), extendedView.getProperties());
+        }
+
+        if (extendedView.getTags() != null) {
+            addTag(vs.getId(), extendedView.getTags());
+        }
+
+        return responseHandler.handle(vs, hh.getMediaType());
     }
 
     @GET
@@ -195,10 +233,20 @@ public class VirtualServerResource {
                               @QueryParam("vsId") Long vsId,
                               @TrimmedQueryParam("domain") String domain) throws Exception {
         VirtualServer vs = virtualServerRepository.getById(vsId);
+        if (vs == null) throw new ValidationException("Virtual server " + vs.getId() + " cannot be found.");
+
         for (String d : domain.split(",")) {
             vs.addDomain(new Domain().setName(d));
         }
-        vs = virtualServerRepository.update(vs);
+
+        DistLock lock = dbLockFactory.newLock(vs.getId() + "_updateVs");
+        lock.lock(TIMEOUT);
+        try {
+            virtualServerRepository.update(vs);
+        } finally {
+            lock.unlock();
+        }
+
         return responseHandler.handle(vs, hh.getMediaType());
     }
 
@@ -211,6 +259,8 @@ public class VirtualServerResource {
                                  @QueryParam("vsId") Long vsId,
                                  @TrimmedQueryParam("domain") String domain) throws Exception {
         VirtualServer vs = virtualServerRepository.getById(vsId);
+        if (vs == null) throw new ValidationException("Virtual server " + vs.getId() + " cannot be found.");
+
         Set<String> domains = new HashSet<>();
         for (String d : domain.split(",")) {
             domains.add(d);
@@ -222,7 +272,15 @@ public class VirtualServerResource {
                 iter.remove();
             }
         }
-        vs = virtualServerRepository.update(vs);
+
+        DistLock lock = dbLockFactory.newLock(vs.getId() + "_updateVs");
+        lock.lock(TIMEOUT);
+        try {
+            virtualServerRepository.update(vs);
+        } finally {
+            lock.unlock();
+        }
+
         return responseHandler.handle(vs, hh.getMediaType());
     }
 
@@ -257,23 +315,32 @@ public class VirtualServerResource {
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
     }
 
-    private VirtualServer parseVirtualServer(MediaType mediaType, String virtualServer) throws Exception {
-        VirtualServer vs;
-        if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {
-            vs = DefaultSaxParser.parseEntity(VirtualServer.class, virtualServer);
-        } else {
+    private void setProperties(Long vsId, List<Property> properties) {
+        for (Property p : properties) {
             try {
-                vs = DefaultJsonParser.parse(VirtualServer.class, virtualServer);
+                propertyBox.set(p.getName(), p.getValue(), "vs", vsId);
             } catch (Exception e) {
-                throw new Exception("Virtual server cannot be parsed.");
+                logger.warn("Fail to set property " + p.getName() + "/" + p.getValue() + " on vs " + vsId + ".");
             }
         }
+    }
+
+    private void addTag(Long vsId, List<String> tags) {
+        for (String tag : tags) {
+            try {
+                tagBox.tagging(tag, "vs", new Long[]{vsId});
+            } catch (Exception e) {
+                logger.warn("Fail to tagging " + tag + " on vs " + vsId + ".");
+            }
+        }
+    }
+
+    private void trim(VirtualServer vs) throws Exception {
         vs.setName(trimIfNotNull(vs.getName()));
         vs.setPort(trimIfNotNull(vs.getPort()));
         for (Domain domain : vs.getDomains()) {
             domain.setName(trimIfNotNull(domain.getName()));
         }
-        return vs;
     }
 
     private String trimIfNotNull(String value) {
