@@ -5,7 +5,6 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.view.*;
 import com.ctrip.zeus.service.query.*;
@@ -281,6 +280,28 @@ public class GroupResource {
 
         if (extendedView.getTags() != null) {
             addTag(g.getId(), extendedView.getTags());
+        }
+
+        return responseHandler.handle(g, hh.getMediaType());
+    }
+
+    @POST
+    @Path("/group/updateCheckUri")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
+    public Response updateCheckUri(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                   String requestBody) throws Exception {
+        Group g = ObjectJsonParser.parse(requestBody, Group.class);
+        IdVersion[] check = groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.OFFLINE_FIRST);
+        if (check.length == 0) throw new ValidationException("Group " + g.getId() + " cannot be found.");
+
+        DistLock lock = dbLockFactory.newLock(g.getId() + "_updateGroup");
+        lock.lock(TIMEOUT);
+        try {
+            Group orig = groupRepository.getById(g.getId());
+            orig.getHealthCheck().setUri(g.getHealthCheck().getUri());
+            g = groupRepository.update(orig);
+        } finally {
+            lock.unlock();
         }
 
         return responseHandler.handle(g, hh.getMediaType());
