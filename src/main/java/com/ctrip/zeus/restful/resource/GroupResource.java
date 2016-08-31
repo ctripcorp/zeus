@@ -19,6 +19,7 @@ import com.ctrip.zeus.tag.PropertyBox;
 
 import com.ctrip.zeus.tag.entity.Property;
 import com.ctrip.zeus.tag.TagBox;
+import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

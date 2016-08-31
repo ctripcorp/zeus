@@ -164,7 +164,7 @@ public class DefaultGroupValidator implements GroupValidator {
     }
 
     private void checkPathOverlappingAcrossVs(Long groupId, Map<Long, GroupVirtualServer> addingGvs, List<RelGroupVsDo> retainedGvs) throws ValidationException {
-        List<RelGroupVsDo> retained = new ArrayList<>();
+        Set<RelGroupVsDo> retained = new HashSet<>();
         for (RelGroupVsDo retainedEntry : retainedGvs) {
             if (groupId.equals(retainedEntry.getGroupId()))
                 continue;
