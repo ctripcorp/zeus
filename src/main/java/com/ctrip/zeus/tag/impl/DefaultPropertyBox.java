@@ -85,7 +85,6 @@ public class DefaultPropertyBox implements PropertyBox {
             if (n.getType().equals(type)) {
                 d = n;
                 iter.remove();
-                break;
             } else {
                 iter.remove();
             }
@@ -138,7 +137,6 @@ public class DefaultPropertyBox implements PropertyBox {
                 if (n.getType().equals(type)) {
                     d = n;
                     iter.remove();
-                    break;
                 } else {
                     iter.remove();
                 }
