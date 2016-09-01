@@ -169,7 +169,9 @@ public class GroupMemberResource {
             } else {
                 groupRepository.update(group, true);
                 try {
-                    propertyBox.set("status", "toBeActivated", "group", group.getId());
+                    if (groupCriteriaQuery.queryByIdAndMode(group.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                        propertyBox.set("status", "toBeActivated", "group", group.getId());
+                    }
                 } catch (Exception ex) {
                 }
             }
@@ -216,7 +218,9 @@ public class GroupMemberResource {
             } else {
                 groupRepository.update(group, true);
                 try {
-                    propertyBox.set("status", "toBeActivated", "group", group.getId());
+                    if (groupCriteriaQuery.queryByIdAndMode(group.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                        propertyBox.set("status", "toBeActivated", "group", group.getId());
+                    }
                 } catch (Exception ex) {
                 }
             }
@@ -261,7 +265,9 @@ public class GroupMemberResource {
             } else {
                 groupRepository.update(group, true);
                 try {
-                    propertyBox.set("status", "toBeActivated", "group", group.getId());
+                    if (groupCriteriaQuery.queryByIdAndMode(group.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                        propertyBox.set("status", "toBeActivated", "group", group.getId());
+                    }
                 } catch (Exception ex) {
                 }
             }
