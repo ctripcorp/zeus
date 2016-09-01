@@ -247,6 +247,13 @@ public class VirtualServerResource {
             lock.unlock();
         }
 
+        try {
+            if (virtualServerCriteriaQuery.queryByIdAndMode(vs.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "vs", vs.getId());
+            }
+        } catch (Exception ex) {
+        }
+
         return responseHandler.handle(vs, hh.getMediaType());
     }
 
@@ -279,6 +286,13 @@ public class VirtualServerResource {
             virtualServerRepository.update(vs);
         } finally {
             lock.unlock();
+        }
+
+        try {
+            if (virtualServerCriteriaQuery.queryByIdAndMode(vs.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "vs", vs.getId());
+            }
+        } catch (Exception ex) {
         }
 
         return responseHandler.handle(vs, hh.getMediaType());
