@@ -754,8 +754,9 @@
     <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
     <var name="key-id" value-type="long" key-member="id" />
     <primary-key name="PRIMARY" members="id" />
-    <index name="slb_id_key_type" unique="true" members="slb_id ASC, key ASC, type ASC" />
+    <index name="slb_id_key" unique="true" members="slb_id ASC, key ASC" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="slb_id_type" members="slb_id ASC, type ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
