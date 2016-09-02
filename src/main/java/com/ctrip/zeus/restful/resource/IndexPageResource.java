@@ -1,6 +1,7 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.page.entity.DefaultPage;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.errorPage.IndexPageService;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -72,10 +73,20 @@ public class IndexPageResource {
     }
 
     @GET
-    @Path("/getinfo")
+    @Path("/online/version")
     public Response getErrorPage(@Context HttpServletRequest request,
                                  @Context HttpHeaders hh,
-                                 @QueryParam("slbId") Long slbId) throws Exception {
-        return responseHandler.handle(indexPageService.getCurrentIndexPage(slbId), hh.getMediaType());
+                                 @QueryParam("slbId") Long slbId,
+                                 @QueryParam("ip") String ip) throws Exception {
+        DefaultPage res = null;
+        if (slbId != null) {
+            res = indexPageService.getCurrentIndexPage(slbId);
+        } else if (ip != null) {
+            res = indexPageService.getCurrentIndexPage(ip);
+        }
+        if (res == null) {
+            return responseHandler.handle("Not Found Online Version", hh.getMediaType());
+        }
+        return responseHandler.handle(res, hh.getMediaType());
     }
 }

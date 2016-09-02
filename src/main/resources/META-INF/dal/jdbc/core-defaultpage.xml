@@ -111,7 +111,7 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        file_data = value(file_data)
+                        file_data = values(file_data)
                     ]]>
                 </statement>
             </query>
@@ -134,7 +134,7 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                         WHERE <FIELD name='key'/> = ${key}
-                        ORDER BY <FIELD name='version'/> DES
+                        ORDER BY <FIELD name='version'/> DESC
                         LIMIT 1
                     ]]>
                 </statement>
@@ -178,7 +178,7 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        version = value(version)
+                        version = values(version)
                     ]]>
                 </statement>
             </query>

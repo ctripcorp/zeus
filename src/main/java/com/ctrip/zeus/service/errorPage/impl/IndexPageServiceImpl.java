@@ -16,6 +16,7 @@ import com.ctrip.zeus.startup.PreCheck;
 import com.ctrip.zeus.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -26,6 +27,7 @@ import java.util.List;
 /**
  * Created by fanqq on 2016/9/1.
  */
+@Service("indexPageService")
 public class IndexPageServiceImpl implements IndexPageService, PreCheck {
 
 
@@ -101,6 +103,18 @@ public class IndexPageServiceImpl implements IndexPageService, PreCheck {
     @Override
     public DefaultPage getCurrentIndexPage(Long slbId) throws Exception {
         DefaultPageActiveDo indexPageActiveDo = defaultPageActiveDao.findByKeyAndSlbIdAndType(KEY, slbId, PAGE_TYPE, DefaultPageActiveEntity.READSET_FULL);
+        if (indexPageActiveDo == null) {
+            return null;
+        } else {
+            DefaultPage res = new DefaultPage().setCode(KEY).setVersion(indexPageActiveDo.getVersion());
+            DefaultPageFileDo page = defaultPageFileDao.findByKeyAndVersion(KEY, indexPageActiveDo.getVersion(), DefaultPageFileEntity.READSET_FULL);
+            return res.setErrprPageFile(new String(page.getFileData()));
+        }
+    }
+
+    @Override
+    public DefaultPage getCurrentIndexPage(String ip) throws Exception {
+        DefaultPageServerActiveDo indexPageActiveDo = defaultPageServerActiveDao.findByServerIpAndKey(KEY, ip, DefaultPageServerActiveEntity.READSET_FULL);
         if (indexPageActiveDo == null) {
             return null;
         } else {

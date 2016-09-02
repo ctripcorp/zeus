@@ -14,6 +14,8 @@ public interface ErrorPageService {
 
     public DefaultPage getCurrentErrorPage(String code, Long slbId) throws Exception;
 
+    public DefaultPage getCurrentErrorPage(String code, String ip) throws Exception;
+
     public byte[] getErrorPage(String code, Long version) throws Exception;
 
     public Long getMaxErrorPageVersion(String code) throws Exception;

@@ -226,7 +226,7 @@ public class LocationConf {
             confWriter.writeCommand("error_page", statusCode + " " + path);
             confWriter.writeLocationStart("= " + path);
             confWriter.writeLine("internal;");
-            confWriter.writeCommand("rewrite", "\"/(.*)\" \"/$1.html\" break;");
+            confWriter.writeCommand("rewrite", "\"/(.*)\" \"/$1.html\" break");
             confWriter.writeCommand("root", configHandler.getStringValue("error.page.root.path", "/opt/app/nginx/conf/errorpage"));
             confWriter.writeLocationEnd();
         }

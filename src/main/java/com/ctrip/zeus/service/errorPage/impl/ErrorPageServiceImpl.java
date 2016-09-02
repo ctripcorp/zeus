@@ -109,6 +109,18 @@ public class ErrorPageServiceImpl implements ErrorPageService, PreCheck {
     }
 
     @Override
+    public DefaultPage getCurrentErrorPage(String code, String ip) throws Exception {
+        DefaultPageServerActiveDo errorPageActiveDo = defaultPageServerActiveDao.findByServerIpAndKey(code, ip, DefaultPageServerActiveEntity.READSET_FULL);
+        if (errorPageActiveDo == null) {
+            return null;
+        } else {
+            DefaultPage res = new DefaultPage().setCode(code).setVersion(errorPageActiveDo.getVersion());
+            DefaultPageFileDo page = defaultPageFileDao.findByKeyAndVersion(code, errorPageActiveDo.getVersion(), DefaultPageFileEntity.READSET_FULL);
+            return res.setErrprPageFile(new String(page.getFileData()));
+        }
+    }
+
+    @Override
     public byte[] getErrorPage(String code, Long version) throws Exception {
         DefaultPageFileDo errorPageActiveDo;
         if (version != null && version > 0) {

@@ -43,14 +43,14 @@ public class InstallDefaultPageClient extends AbstractRestClient {
     }
 
     public String errorPage(String code , Long version ) throws Exception {
-        WebTarget target = getTarget().path("/errorPage/install/local");
+        WebTarget target = getTarget().path("/api/errorPage/install/local");
         target = target.queryParam("code",code);
         target = target.queryParam("version",version);
         String responseStr = target.request().headers(getDefaultHeaders()).get(String.class);
         return responseStr;
     }
      public String indexPage(Long version ) throws Exception {
-        WebTarget target = getTarget().path("/indexPage/install/local");
+        WebTarget target = getTarget().path("/api/indexPage/install/local");
         target = target.queryParam("version",version);
         String responseStr = target.request().headers(getDefaultHeaders()).get(String.class);
         return responseStr;

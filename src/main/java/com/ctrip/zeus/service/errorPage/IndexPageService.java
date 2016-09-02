@@ -10,11 +10,13 @@ public interface IndexPageService {
 
     public void installIndexPage(Long slbId, Long version) throws Exception;
 
-    public void installLocalIndexPage( Long version) throws Exception;
+    public void installLocalIndexPage(Long version) throws Exception;
 
     public DefaultPage getCurrentIndexPage(Long slbId) throws Exception;
 
-    public byte[] getIndexPage( Long version) throws Exception;
+    public DefaultPage getCurrentIndexPage(String ip) throws Exception;
+
+    public byte[] getIndexPage(Long version) throws Exception;
 
     public Long getMaxIndexPageVersion() throws Exception;
 
