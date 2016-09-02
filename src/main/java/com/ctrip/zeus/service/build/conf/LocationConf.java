@@ -191,23 +191,23 @@ public class LocationConf {
         String errorPageAccept = configHandler.getStringValue("location.errorPage.accept", slbId, vsId, null, "text/html");
         if (errorPageUseNew) {
             String url = configHandler.getStringValue("location.errorPage.host.url", slbId, vsId, null, null);
-            if (url == null || url.isEmpty()) {
-                LOGGER.error("Error page url is not configured. Skip writing error page locations.");
+            if (url != null && !url.isEmpty()) {
+                String path = "/" + statusCode + "page";
+                confWriter.writeCommand("error_page", statusCode + " " + path);
+                confWriter.writeLocationStart("= " + path);
+                confWriter.writeLine("internal;");
+                confWriter.writeCommand("proxy_set_header Accept", errorPageAccept);
+                confWriter.writeCommand("rewrite_by_lua", errLuaScripts);
+                confWriter.writeCommand("rewrite", "\"" + path + "\" \"/errorpage/" + statusCode + "\" break");
+                confWriter.writeCommand("proxy_pass", url);
+                confWriter.writeLocationEnd();
                 return;
+            } else {
+                LOGGER.info("Error page url is not configured. key:location.errorPage.host.url; vsId:" + vsId);
             }
-
-            String path = "/" + statusCode + "page";
-            confWriter.writeCommand("error_page", statusCode + " " + path);
-            confWriter.writeLocationStart("= " + path);
-            confWriter.writeLine("internal;");
-            confWriter.writeCommand("proxy_set_header Accept", errorPageAccept);
-            confWriter.writeCommand("rewrite_by_lua", errLuaScripts);
-            confWriter.writeCommand("rewrite", "\"" + path + "\" \"/errorpage/" + statusCode + "\" break");
-            confWriter.writeCommand("proxy_pass", url);
-            confWriter.writeLocationEnd();
         } else {
             String errorPageConfig = configHandler.getStringValue("location.errorPage." + statusCode + ".url", slbId, vsId, null, null);
-            if (null != errorPageConfig) {
+            if (errorPageConfig != null && !errorPageConfig.isEmpty()) {
                 String path = "/" + statusCode + "page";
                 confWriter.writeCommand("error_page", statusCode + " " + path);
                 confWriter.writeLocationStart("= " + path);
@@ -215,7 +215,20 @@ public class LocationConf {
                 confWriter.writeCommand("proxy_set_header Accept", errorPageAccept);
                 confWriter.writeCommand("proxy_pass", errorPageConfig);
                 confWriter.writeLocationEnd();
+                return;
+            } else {
+                LOGGER.info("Error page url is not configured. key:location.errorPage." + statusCode + ".url; vsId:" + vsId);
             }
+        }
+        // Use Default error page.
+        if (configHandler.getEnable("nginx.default.error.page", slbId, vsId, null, false)) {
+            String path = "/" + statusCode + "page";
+            confWriter.writeCommand("error_page", statusCode + " " + path);
+            confWriter.writeLocationStart("= " + path);
+            confWriter.writeLine("internal;");
+            confWriter.writeCommand("rewrite", "\"/(.*)\" \"/$1.html\" break;");
+            confWriter.writeCommand("root", configHandler.getStringValue("error.page.root.path", "/opt/app/nginx/conf/errorpage"));
+            confWriter.writeLocationEnd();
         }
     }
 

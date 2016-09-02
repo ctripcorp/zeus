@@ -14,6 +14,7 @@
     <file path="core-task.xml"/>
     <file path="core-server.xml"/>
     <file path="core-commit.xml"/>
+    <file path="core-defaultpage.xml"/>
 
     <file path="rel-vs.xml"/>
     <file path="rel-group.xml"/>

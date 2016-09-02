@@ -2,9 +2,15 @@
 <model>
   <entity name="page" root="true">
     <entity-ref name="page-context" />
+    <entity-ref name="default-page" />
   </entity>
   <entity name="page-context">
     <element name="title" value-type="String" />
+  </entity>
+  <entity name="default-page">
+    <element name="code" value-type="String" />
+    <element name="version" value-type="long" />
+    <element name="errpr-page-file" value-type="String" />
   </entity>
 </model>
 

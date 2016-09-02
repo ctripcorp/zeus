@@ -2,6 +2,7 @@ package com.ctrip.zeus.executor.impl;
 
 import com.ctrip.zeus.executor.TaskExecutor;
 import com.ctrip.zeus.executor.TaskWorker;
+import com.ctrip.zeus.server.LocalInfoPack;
 import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -50,7 +51,7 @@ public class TaskWorkerImpl implements TaskWorker {
 
     private Long getWorkerSlbId() throws Exception {
         Long workerSlbId = null;
-        String selfIp = S.getIp();
+        String selfIp = LocalInfoPack.INSTANCE.getIp();
         Long[] slbIds = entityFactory.getSlbIdsByIp(selfIp, SelectionMode.ONLINE_FIRST);
         if (slbIds != null && slbIds.length > 0) {
             workerSlbId = slbIds[0];
