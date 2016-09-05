@@ -746,7 +746,7 @@
     </query-defs>
   </entity>
   <entity name="default-page-active" table="default_page_active" alias="dpa">
-    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" />
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
     <member name="key" field="key" value-type="String" length="128" nullable="false" />
     <member name="type" field="type" value-type="String" length="128" nullable="false" />
