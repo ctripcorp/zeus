@@ -18,8 +18,10 @@ import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
+import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.ServerStatus;
+import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.google.common.base.Joiner;
@@ -76,6 +78,9 @@ public class OperationResource {
     private EntityFactory entityFactory;
     @Resource
     private ConfigHandler configHandler;
+    @Resource
+    private PropertyBox propertyBox;
+
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
     private static DynamicBooleanProperty healthyOpsActivate = DynamicPropertyFactory.getInstance().getBooleanProperty("healthy.operation.active", false);
@@ -150,7 +155,16 @@ public class OperationResource {
         }
         ServerStatus ss = new ServerStatus().setIp(serverip).setUp(statusService.getServerStatus(serverip));
 
-        Long[] gids = entityFactory.getGroupIdsByGroupServerIp(serverip, SelectionMode.ONLINE_EXCLUSIVE);
+        Long[] gids = entityFactory.getGroupIdsByGroupServerIp(serverip, SelectionMode.ONLINE_FIRST);
+
+        Set<Long> groupIdSet = new HashSet<>();
+        groupIdSet.addAll(Arrays.asList(gids));
+        List<GroupStatus> statuses = groupStatusService.getOfflineGroupsStatus(groupIdSet);
+
+        for (GroupStatus gs : statuses) {
+            addHealthyProperty(gs);
+        }
+
 
         List<Group> groups = groupRepository.list(gids);
 
@@ -160,11 +174,7 @@ public class OperationResource {
             }
         }
 
-        if (MediaType.APPLICATION_XML_TYPE.equals(hh.getMediaType())) {
-            return Response.status(200).entity(String.format(ServerStatus.XML, ss)).type(MediaType.APPLICATION_XML).build();
-        } else {
-            return Response.status(200).entity(String.format(ServerStatus.JSON, ss)).type(MediaType.APPLICATION_JSON).build();
-        }
+        return responseHandler.handle(ss, hh.getMediaType());
     }
 
     @GET
@@ -683,6 +693,7 @@ public class OperationResource {
             }
         }
         GroupStatus groupStatus = groupStatusService.getOfflineGroupStatus(groupId);
+        addHealthyProperty(groupStatus);
         return responseHandler.handle(groupStatus, hh.getMediaType());
     }
 
@@ -711,6 +722,36 @@ public class OperationResource {
             ips = new ArrayList<>(slbIps);
         }
         return ips;
+    }
+
+    private void addHealthyProperty(GroupStatus gs) throws Exception {
+        boolean health = true;
+        boolean unhealth = true;
+        for (GroupServerStatus gss : gs.getGroupServerStatuses()) {
+            if (gss.getServer() && gss.getHealthy() && gss.getPull() && gss.getMember()) {
+                unhealth = false;
+            } else {
+                health = false;
+            }
+        }
+        if (health) {
+            propertyBox.set("healthy", "health", "group", gs.getGroupId());
+        } else if (unhealth) {
+            propertyBox.set("healthy", "unhealth", "group", gs.getGroupId());
+        } else {
+            propertyBox.set("healthy", "sub-health", "group", gs.getGroupId());
+        }
+    }
+
+    @GET
+    @Path("/health/fillData")
+    public Response healthFillData(@Context HttpServletRequest request,
+                                   @Context HttpHeaders hh) throws Exception {
+        List<GroupStatus> list = groupStatusService.getAllOfflineGroupsStatus();
+        for (GroupStatus gs : list) {
+            addHealthyProperty(gs);
+        }
+        return responseHandler.handle("Fill Data Success.", hh.getMediaType());
     }
 
 }
