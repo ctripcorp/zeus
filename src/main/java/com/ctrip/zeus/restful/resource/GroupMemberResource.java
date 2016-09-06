@@ -14,7 +14,10 @@ import com.ctrip.zeus.service.query.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
+import com.ctrip.zeus.status.entity.GroupServerStatus;
+import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.google.common.base.Joiner;
@@ -51,6 +54,8 @@ public class GroupMemberResource {
     private DbLockFactory dbLockFactory;
     @Resource
     private PropertyBox propertyBox;
+    @Resource
+    private GroupStatusService groupStatusService;
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
     private final int TIMEOUT = 1000;
@@ -142,6 +147,7 @@ public class GroupMemberResource {
                 } catch (Exception ex) {
                 }
             }
+            addHealthProperty(group.getId());
         } finally {
             lock.unlock();
         }
@@ -191,6 +197,7 @@ public class GroupMemberResource {
                 } catch (Exception ex) {
                 }
             }
+            addHealthProperty(group.getId());
         } finally {
             lock.unlock();
         }
@@ -238,6 +245,7 @@ public class GroupMemberResource {
                 } catch (Exception ex) {
                 }
             }
+            addHealthProperty(groupId);
         } finally {
             lock.unlock();
         }
@@ -297,5 +305,26 @@ public class GroupMemberResource {
                     + groupId + ";OnlineVersion:" + groupMap.getOnlineMapping().get(groupId).getVersion()
                     + ";OfflineVersion:" + groupMap.getOfflineMapping().get(groupId).getVersion());
         }
+    }
+
+    private void addHealthProperty(Long groupId) throws Exception {
+        GroupStatus gs = groupStatusService.getOfflineGroupStatus(groupId);
+        boolean health = true;
+        boolean unhealth = true;
+        for (GroupServerStatus gss : gs.getGroupServerStatuses()) {
+            if (gss.getServer() && gss.getHealthy() && gss.getPull() && gss.getMember()) {
+                unhealth = false;
+            } else {
+                health = false;
+            }
+        }
+        if (health) {
+            propertyBox.set("healthy", "health", "group", gs.getGroupId());
+        } else if (unhealth) {
+            propertyBox.set("healthy", "unhealth", "group", gs.getGroupId());
+        } else {
+            propertyBox.set("healthy", "sub-health", "group", gs.getGroupId());
+        }
+
     }
 }

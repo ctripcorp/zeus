@@ -11,6 +11,9 @@ import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.status.GroupStatusService;
+import com.ctrip.zeus.status.entity.GroupServerStatus;
+import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonWriter;
@@ -54,6 +57,8 @@ public class GroupResource {
     private TagBox tagBox;
     @Resource
     private ViewDecorator viewDecorator;
+    @Resource
+    private GroupStatusService groupStatusService;
 
     private final String vGroupAppId = "VirtualGroup";
     private final int TIMEOUT = 1000;
@@ -187,6 +192,8 @@ public class GroupResource {
             addTag(g.getId(), extendedView.getTags());
         }
 
+        addHealthProperty(g.getId());
+
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -253,6 +260,8 @@ public class GroupResource {
         if (extendedView.getTags() != null) {
             addTag(g.getId(), extendedView.getTags());
         }
+
+        addHealthProperty(g.getId());
 
         return responseHandler.handle(g, hh.getMediaType());
     }
@@ -510,5 +519,27 @@ public class GroupResource {
 
     private String trimIfNotNull(String value) {
         return value != null ? value.trim() : value;
+    }
+
+
+    private void addHealthProperty(Long groupId) throws Exception {
+        GroupStatus gs = groupStatusService.getOfflineGroupStatus(groupId);
+        boolean health = true;
+        boolean unhealth = true;
+        for (GroupServerStatus gss : gs.getGroupServerStatuses()) {
+            if (gss.getServer() && gss.getHealthy() && gss.getPull() && gss.getMember()) {
+                unhealth = false;
+            } else {
+                health = false;
+            }
+        }
+        if (health) {
+            propertyBox.set("healthy", "health", "group", gs.getGroupId());
+        } else if (unhealth) {
+            propertyBox.set("healthy", "unhealth", "group", gs.getGroupId());
+        } else {
+            propertyBox.set("healthy", "sub-health", "group", gs.getGroupId());
+        }
+
     }
 }
