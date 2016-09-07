@@ -54,8 +54,10 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
         defaultPath = defaultPath.substring(0, defaultPath.lastIndexOf("/")) + "/default";
         File f = new File(defaultPath);
         if (f.exists()) {
-            logger.info(defaultPath + " exists. No need to install default cert.");
-            return;
+            if (f.isDirectory() && f.listFiles().length == 2) {
+                logger.info(defaultPath + " exists. No need to install default cert.");
+                return;
+            }
         } else {
             f.mkdirs();
         }
