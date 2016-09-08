@@ -36,4 +36,7 @@
    <model package="com.ctrip.zeus.commit" name="commit">
       <sample-model>src/test/resources/com/ctrip/zeus/model/commit.xml</sample-model>
    </model>
+   <model package="com.ctrip.zeus.queue" name="queue">
+      <sample-model>src/test/resources/com/ctrip/zeus/model/queue.xml</sample-model>
+   </model>
 </wizard>

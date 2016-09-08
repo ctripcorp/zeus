@@ -1,0 +1,10 @@
+<queue>
+    <message>
+        <performer>performer</performer>
+        <type>type</type>
+        <status>type</status>
+        <target-id>1234567890123</target-id>
+        <target-data>Unsupported content type:</target-data>
+        <create-time>2013-05-20 13:34:00</create-time>
+    </message>
+</queue>

@@ -310,6 +310,7 @@
                         ${basedir}/src/main/resources/META-INF/dal/model/operationlog-manifest.xml,
                         ${basedir}/src/main/resources/META-INF/dal/model/tag-manifest.xml,
                         ${basedir}/src/main/resources/META-INF/dal/model/task-manifest.xml,
+                        ${basedir}/src/main/resources/META-INF/dal/model/queue-manifest.xml,
                      ]]></manifest>
                         </configuration>
                     </execution>

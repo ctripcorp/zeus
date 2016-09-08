@@ -1,18 +1,16 @@
 package com.ctrip.zeus.support;
 
-import com.ctrip.zeus.auth.entity.*;
+import com.ctrip.zeus.auth.entity.Resource;
+import com.ctrip.zeus.auth.entity.Role;
+import com.ctrip.zeus.auth.entity.User;
 import com.ctrip.zeus.commit.entity.Commit;
 import com.ctrip.zeus.commit.entity.ConfSlbVersion;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.queue.entity.Message;
 import com.ctrip.zeus.task.entity.OpsTask;
-import com.ctrip.zeus.task.entity.Task;
-import com.sun.org.apache.xpath.internal.functions.FuncBoolean;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * @author:xingchaowang
@@ -211,6 +209,24 @@ public class C {
                 .setResourceType(resource.getResourceType())
                 .setDescription(resource.getDescription());
     }
+
+    public static MessageQueueDo toMessageQueueDo(Message msg) {
+        return new MessageQueueDo()
+                .setTargetData(msg.getTargetData())
+                .setTargetId(msg.getTargetId())
+                .setStatus(msg.getStatus())
+                .setCreateTime(msg.getCreateTime())
+                .setPerformer(msg.getPerformer());
+    }
+    public static Message toMessage(MessageQueueDo msg) {
+        return new Message()
+                .setTargetData(msg.getTargetData())
+                .setTargetId(msg.getTargetId())
+                .setStatus(msg.getStatus())
+                .setCreateTime(msg.getCreateTime())
+                .setPerformer(msg.getPerformer());
+    }
+
 
     public static OpsTask toOpsTask(TaskDo task) {
         OpsTask result = new OpsTask();

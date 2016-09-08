@@ -8,6 +8,10 @@
         <constructor-arg type="java.lang.Class" value="org.unidal.dal.jdbc.transaction.TransactionManager"/>
     </bean>
 
+    <bean id="appInfoDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.AppInfoDao"/>
+    </bean>
+
     <bean id="archiveGroupDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.ArchiveGroupDao"/>
     </bean>
@@ -122,6 +126,10 @@
 
     <bean id="groupSlbDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.GroupSlbDao"/>
+    </bean>
+
+    <bean id="messageQueueDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.MessageQueueDao"/>
     </bean>
 
     <bean id="nginxConfDao" factory-bean="daoFactory" factory-method="getDao">

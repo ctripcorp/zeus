@@ -15,6 +15,7 @@
     <file path="core-server.xml"/>
     <file path="core-commit.xml"/>
     <file path="core-defaultpage.xml"/>
+    <file path="core-message.xml"/>
 
     <file path="rel-vs.xml"/>
     <file path="rel-group.xml"/>

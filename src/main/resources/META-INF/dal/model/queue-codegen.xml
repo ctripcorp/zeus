@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model>
+  <entity name="queue" root="true">
+    <entity-ref name="message" />
+  </entity>
+  <entity name="message">
+    <element name="performer" value-type="String" />
+    <element name="type" value-type="String" />
+    <element name="status" value-type="String" />
+    <element name="target-id" value-type="long" />
+    <element name="target-data" value-type="String" />
+    <element name="create-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
+  </entity>
+</model>
+
