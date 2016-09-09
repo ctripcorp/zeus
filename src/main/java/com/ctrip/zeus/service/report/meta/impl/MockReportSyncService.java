@@ -19,7 +19,7 @@ public class MockReportSyncService implements ReportSyncService {
     }
 
     @Override
-    public String forceSync(Long targetId, ReportTopic topic) throws Exception {
+    public String syncVs(Long targetId, ReportTopic topic) throws Exception {
         return null;
     }
 
@@ -29,7 +29,7 @@ public class MockReportSyncService implements ReportSyncService {
     }
 
     @Override
-    public String reportDeletionByGroup(Long groupId) throws Exception {
+    public String syncGroupDeletion(Long groupId) throws Exception {
         return "";
     }
 

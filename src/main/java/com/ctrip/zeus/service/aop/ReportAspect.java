@@ -4,8 +4,6 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.report.meta.ReportService;
 import com.ctrip.zeus.service.report.meta.ReportTopic;
-import com.netflix.config.DynamicBooleanProperty;
-import com.netflix.config.DynamicPropertyFactory;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -22,9 +20,7 @@ import javax.annotation.Resource;
 @Aspect
 @Component("reportAspect")
 public class ReportAspect implements Ordered {
-
     private Logger logger = LoggerFactory.getLogger(this.getClass());
-    private static final DynamicBooleanProperty cmsVserverSync = DynamicPropertyFactory.getInstance().getBooleanProperty("cms.vserver.sync", false);
 
     @Resource
     private ReportService reportService;
@@ -34,29 +30,11 @@ public class ReportAspect implements Ordered {
         String methodName = point.getSignature().getName();
         switch (methodName) {
             case "add": {
-                boolean skip = false;
-                try {
-                    Object arg = point.getArgs()[0];
-                    skip = ((Group) arg).isVirtual();
-                } catch (Exception ex) {
-                }
-
-                if (skip) return point.proceed();
-
                 Object obj = point.proceed();
                 reportService.reportMetaDataAction(obj, ReportTopic.GROUP_CREATE);
                 return obj;
             }
             case "update": {
-                boolean skip = false;
-                try {
-                    Object arg = point.getArgs()[0];
-                    skip = ((Group) arg).isVirtual();
-                } catch (Exception ex) {
-                }
-
-                if (skip) return point.proceed();
-
                 Object obj = point.proceed();
                 reportService.reportMetaDataAction(obj, ReportTopic.GROUP_UPDATE);
                 return obj;
@@ -86,40 +64,16 @@ public class ReportAspect implements Ordered {
         try {
             switch (methodName) {
                 case "add":
-                    if (!cmsVserverSync.get()) return obj;
-
                     value = (VirtualServer) obj;
-                    try {
-                        reportService.reportMetaDataAction(value.getId(), ReportTopic.VS_CREATE);
-                    } catch (Exception ex) {
-                        logger.error("Fail to push VS_CREATE(ref-id={}) to report queue.", value.getId(), ex);
-                    }
+                    reportService.reportMetaDataAction(value, ReportTopic.VS_CREATE);
                     break;
                 case "update":
                     value = (VirtualServer) obj;
-                    try {
-                        reportService.reportMetaDataAction(value, ReportTopic.VS_UPDATE);
-                    } catch (Exception ex) {
-                        logger.error("Fail to push GROUP_UPDATE(ref-vs-id={}) to report queue.", value.getId(), ex);
-                    }
-
-                    if (!cmsVserverSync.get()) return obj;
-
-                    try {
-                        reportService.reportMetaDataAction(value.getId(), ReportTopic.VS_UPDATE);
-                    } catch (Exception ex) {
-                        logger.error("Fail to push VS_UPDATE(ref-id={}) to report queue.", value.getId(), ex);
-                    }
+                    reportService.reportMetaDataAction(value, ReportTopic.VS_UPDATE);
                     break;
                 case "delete":
-                    if (!cmsVserverSync.get()) return obj;
-
                     long vsId = (Long) point.getArgs()[0];
-                    try {
-                        reportService.reportMetaDataAction(vsId, ReportTopic.VS_DELETE);
-                    } catch (Exception ex) {
-                        logger.error("Fail to push VS_DELETE(ref-id={}) to report queue.", vsId, ex);
-                    }
+                    reportService.reportMetaDataAction(new VirtualServer().setId(vsId), ReportTopic.VS_DELETE);
                     break;
                 default:
                     return obj;

@@ -9,11 +9,11 @@ public interface ReportSyncService {
 
     void consumeReportQueue(Long slbId) throws Exception;
 
-    String forceSync(Long targetId, ReportTopic topic) throws Exception;
+    String syncVs(Long targetId, ReportTopic topic) throws Exception;
 
     String syncGroup(Long groupId) throws Exception;
 
-    String reportDeletionByGroup(Long groupId) throws Exception;
+    String syncGroupDeletion(Long groupId) throws Exception;
 
     boolean needSync() throws Exception;
 }

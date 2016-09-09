@@ -1,7 +1,5 @@
 package com.ctrip.zeus.service.report.meta.impl;
 
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.report.entity.ReportFeed;
 import com.ctrip.zeus.report.entity.ReportGroup;
 import com.ctrip.zeus.service.report.meta.ReportService;
@@ -17,11 +15,6 @@ import java.util.List;
 public class MockReportService implements ReportService {
 
     @Override
-    public void reportMetaDataAction(Long targetId, ReportTopic reportTopic) throws Exception {
-
-    }
-
-    @Override
     public void reportMetaDataAction(Object target, ReportTopic reportTopic) {
 
     }
@@ -33,11 +26,6 @@ public class MockReportService implements ReportService {
 
     @Override
     public List<ReportFeed> listFeeds() throws Exception {
-        return null;
-    }
-
-    @Override
-    public ReportGroup getReportGroupById(Long groupId) throws Exception {
         return null;
     }
 }

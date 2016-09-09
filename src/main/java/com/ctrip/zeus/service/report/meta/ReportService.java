@@ -10,13 +10,9 @@ import java.util.List;
  */
 public interface ReportService {
 
-    void reportMetaDataAction(Long targetId, ReportTopic reportTopic) throws Exception;
-
     void reportMetaDataAction(Object target, ReportTopic reportTopic);
 
     List<ReportGroup> listErrors() throws Exception;
 
     List<ReportFeed> listFeeds() throws Exception;
-
-    ReportGroup getReportGroupById(Long groupId) throws Exception;
 }
