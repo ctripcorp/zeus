@@ -63,10 +63,10 @@ public class MessageQueueServiceImpl implements MessageQueueService {
     }
 
     public void fetchMessage() throws Exception {
-        logger.info("[MessageQueueService] Start Fetch Messages. StartTime:" + startTime.toString());
         Map<String, List<Message>> res = new HashMap<>();
         List<MessageQueueDo> list = messageQueueDao.findByStatusAndAfterCreateTime("TODO", startTime, MessageQueueEntity.READSET_FULL);
         if (list != null && list.size() > 0) {
+            logger.info("[MessageQueueService] Fetch Messages success. StartTime:" + startTime.toString() + ";count:" + list.size());
             for (MessageQueueDo messageQueueDo : list) {
                 if (!res.containsKey(messageQueueDo.getType())) {
                     res.put(messageQueueDo.getType(), new ArrayList<Message>());
@@ -85,8 +85,6 @@ public class MessageQueueServiceImpl implements MessageQueueService {
             }
 
             logger.info("[MessageQueueService] Finish Fetch Messages. message count:" + list.size());
-        } else {
-            logger.info("[MessageQueueService] Finish Fetch Messages. Not Found Any Message.");
         }
     }
 
