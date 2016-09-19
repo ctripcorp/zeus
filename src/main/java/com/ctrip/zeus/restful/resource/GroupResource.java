@@ -115,14 +115,22 @@ public class GroupResource {
     @Authorize(name = "getAllGroups")
     public Response listVGroups(@Context HttpHeaders hh,
                                 @Context HttpServletRequest request,
-                                @TrimmedQueryParam("mode") final String mode) throws Exception {
-        Set<IdVersion> keys = groupCriteriaQuery.queryAllVGroups(SelectionMode.getMode(mode));
+                                @TrimmedQueryParam("mode") final String mode,
+                                @TrimmedQueryParam("type") final String type,
+                                @Context UriInfo uriInfo) throws Exception {
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "vgroup", SelectionMode.getMode(mode));
+        queryRender.init(true);
+        IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
         GroupListView listView = new GroupListView();
-        for (Group group : groupRepository.list(keys.toArray(new IdVersion[keys.size()]))) {
+        for (Group group : groupRepository.list(searchKeys)) {
             listView.add(new ExtendedView.ExtendedGroup(group));
         }
-        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, null), hh.getMediaType());
+        if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
+            viewDecorator.decorate(listView.getList(), "group");
+        }
+
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
     @GET
@@ -135,6 +143,43 @@ public class GroupResource {
                         @Context UriInfo uriInfo) throws Exception {
         SelectionMode selectionMode = SelectionMode.getMode(mode);
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "group", selectionMode);
+        queryRender.init(true);
+        IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
+
+        if (SelectionMode.REDUNDANT == selectionMode) {
+            if (searchKeys.length > 2)
+                throw new ValidationException("Too many matches have been found after querying.");
+        } else {
+            if (searchKeys.length > 1)
+                throw new ValidationException("Too many matches have been found after querying.");
+        }
+
+        GroupListView listView = new GroupListView();
+        for (Group group : groupRepository.list(searchKeys)) {
+            listView.add(new ExtendedView.ExtendedGroup(group));
+        }
+        if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
+            viewDecorator.decorate(listView.getList(), "group");
+        }
+
+        if (listView.getTotal() == 0) throw new ValidationException("Group cannot be found.");
+        if (listView.getTotal() == 1) {
+            return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView.getList().get(0), type), hh.getMediaType());
+        }
+
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
+    }
+
+    @GET
+    @Path("/vgroup")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Authorize(name = "getGroupByStatus")
+    public Response getVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                              @TrimmedQueryParam("type") String type,
+                              @TrimmedQueryParam("mode") final String mode,
+                              @Context UriInfo uriInfo) throws Exception {
+        SelectionMode selectionMode = SelectionMode.getMode(mode);
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "vgroup", selectionMode);
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
@@ -213,6 +258,11 @@ public class GroupResource {
         g = groupRepository.addVGroup(g);
 
 
+        try {
+            propertyBox.set("status", "deactivated", "group", g.getId());
+        } catch (Exception ex) {
+        }
+
         if (extendedView.getProperties() != null) {
             setProperties(g.getId(), extendedView.getProperties());
         }
@@ -281,6 +331,13 @@ public class GroupResource {
             g = groupRepository.updateVGroup(g);
         } finally {
             lock.unlock();
+        }
+
+        try {
+            if (groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "group", g.getId());
+            }
+        } catch (Exception ex) {
         }
 
         if (extendedView.getProperties() != null) {
@@ -445,6 +502,8 @@ public class GroupResource {
             throw new ValidationException("Query parameter - groupId is not provided or could not be found by query.");
         Group archive = groupRepository.getById(groupId);
         if (archive == null) throw new ValidationException("Group cannot be found with id " + groupId + ".");
+        if (archive.isVirtual())
+            throw new ValidationException("Virtual group cannot be deleted. Use /vgroup/delete instead.");
 
         groupRepository.delete(groupId);
         try {
@@ -474,6 +533,8 @@ public class GroupResource {
             throw new Exception("Query parameter - groupId is required.");
         Group archive = groupRepository.getById(groupId);
         if (archive == null) throw new ValidationException("Virtual group cannot be found with id " + groupId + ".");
+        if (archive.isVirtual())
+            throw new ValidationException("Group cannot be deleted. Use /group/delete instead.");
 
         groupRepository.deleteVGroup(groupId);
         try {

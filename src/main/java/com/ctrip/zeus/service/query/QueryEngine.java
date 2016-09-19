@@ -15,6 +15,7 @@ import java.util.*;
 public class QueryEngine {
     private final Queue<String[]> params;
     private final String resource;
+    private String alias;
     private final SelectionMode mode;
 
     private final GroupQueryCommand groupQueryCommand = new GroupQueryCommand();
@@ -27,10 +28,12 @@ public class QueryEngine {
 
     public QueryEngine(Queue<String[]> params, String resource, SelectionMode mode) {
         this.params = params;
-        this.resource = resource;
+        this.resource = resource.equals("vgroup") ? "group" : resource;
+        this.alias = resource.equals("vgroup") ? resource : null;
         this.mode = mode;
         switch (resource) {
             case "group":
+            case "vgroup":
                 sequenceController[0] = groupQueryCommand;
                 sequenceController[1] = slbQueryCommand;
                 sequenceController[2] = vsQueryCommand;
@@ -101,9 +104,20 @@ public class QueryEngine {
         IdVersion[] result = traverseQuery(traverseSequence, 0, criteriaQueryFactory);
         if (resource.equals("group")) {
             GroupCriteriaQuery q = (GroupCriteriaQuery) criteriaQueryFactory.getCriteriaQuery("group");
-            Set<IdVersion> tmp = result == null ? q.queryAll(mode) : Sets.newHashSet(result);
-            if (tmp.size() > 0) {
-                tmp.removeAll(q.queryAllVGroups(mode));
+
+            Set<IdVersion> tmp;
+            if (alias == null) {
+                tmp = result == null ? q.queryAll(mode) : Sets.newHashSet(result);
+                if (tmp.size() > 0) {
+                    tmp.removeAll(q.queryAllVGroups(mode));
+                }
+            } else {
+                if (result != null && result.length > 0) {
+                    tmp = Sets.newHashSet(result);
+                    tmp.retainAll(q.queryAllVGroups(mode));
+                } else {
+                    tmp = q.queryAllVGroups(mode);
+                }
             }
             result = tmp.toArray(new IdVersion[tmp.size()]);
         } else if (result == null) {
