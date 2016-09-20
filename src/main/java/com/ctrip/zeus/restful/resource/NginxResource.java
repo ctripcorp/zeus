@@ -5,8 +5,8 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.nginx.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.build.NginxConfService;
-import com.ctrip.zeus.service.model.EntityFactory;
-import com.ctrip.zeus.service.model.ModelStatusMapping;
+import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -31,18 +31,29 @@ public class NginxResource {
     @Resource
     private NginxConfService nginxConfService;
     @Resource
-    private EntityFactory entityFactory;
+    private VirtualServerRepository virtualServerRepository;
+    @Resource
+    private VirtualServerCriteriaQuery virtualServerCriteriaQuery;
 
     @GET
     @Path("/conf")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getVsConf(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("vsId") Long vsid ,@QueryParam("version") Integer versionNum) throws Exception{
-        VirtualServerConfResponse response = new VirtualServerConfResponse();
-        ModelStatusMapping<VirtualServer> map =  entityFactory.getVsesByIds(new Long[]{vsid});
-        if (map.getOnlineMapping() == null || map.getOnlineMapping().get(vsid) == null){
-            throw new ValidationException("Not Found Vs by vsId.");
+    public Response getVsConf(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                              @QueryParam("vsId") Long vsId, @QueryParam("slbId") Long slbId, @QueryParam("version") Integer versionNum) throws Exception {
+
+        if (vsId == null || slbId == null) {
+            throw new ValidationException("Query vsId and slbId are required.");
         }
-        Long slbId = map.getOnlineMapping().get(vsid).getSlbId();
+
+        IdVersion[] key = virtualServerCriteriaQuery.queryByIdAndMode(vsId, SelectionMode.ONLINE_EXCLUSIVE);
+        if (key.length == 0) {
+            throw new ValidationException("Cannot find activated version of vs-" + vsId + ".");
+        }
+        VirtualServer vs = virtualServerRepository.getByKey(key[0]);
+        if (!vs.getSlbIds().contains(slbId)) {
+            throw new ValidationException("Activated version of vs-" + vsId + " is not related to slb-" + slbId + ".");
+        }
+
         int version;
         if (null == versionNum || versionNum <= 0) {
             version = nginxConfService.getCurrentVersion(slbId);
@@ -50,19 +61,21 @@ public class NginxResource {
             version = versionNum;
         }
         List<Long> vsArray = new ArrayList<>();
-        vsArray.add(vsid);
-        NginxConfEntry confEntry = nginxConfService.getUpstreamsAndVhosts(slbId, new Long(version), vsArray);
+        vsArray.add(vsId);
+        NginxConfEntry confEntry = nginxConfService.getUpstreamsAndVhosts(slbId, (long) version, vsArray);
         StringBuilder stringBuilder = new StringBuilder();
         for (ConfFile cf : confEntry.getVhosts().getFiles()) {
             stringBuilder.append(cf.getContent());
         }
+
+        VirtualServerConfResponse response = new VirtualServerConfResponse();
         response.setServerConf(stringBuilder.toString());
         stringBuilder.setLength(0);
         for (ConfFile cf : confEntry.getUpstreams().getFiles()) {
             stringBuilder.append(cf.getContent());
         }
         response.setUpstreamConf(stringBuilder.toString());
-        response.setVersion(version).setVirtualServerId(vsid);
+        response.setVersion(version).setVirtualServerId(vsId);
         return responseHandler.handle(response, hh.getMediaType());
     }
 }

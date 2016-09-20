@@ -27,8 +27,6 @@ public class SlbEntityManager implements SlbSync {
     private SlbServerRelMaintainer slbServerRelMaintainer;
     @Resource
     private RSlbStatusDao rSlbStatusDao;
-    @Resource
-    private ConfSlbActiveDao confSlbActiveDao;
 
     @Override
     public void add(Slb slb) throws Exception {
@@ -39,7 +37,7 @@ public class SlbEntityManager implements SlbSync {
         Long slbId = d.getId();
         slb.setId(slbId);
         for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            virtualServer.setSlbId(slbId);
+            virtualServer.getSlbIds().add(slbId);
             virtualServerEntityManager.add(virtualServer);
         }
 

@@ -146,8 +146,8 @@ public interface ExtendedView<T> {
         }
 
         @Override
-        Long getSlbId() {
-            return instance.getSlbId();
+        List<Long> getSlbIds() {
+            return instance.getSlbIds();
         }
 
         @Override
