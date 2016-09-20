@@ -519,7 +519,7 @@ public class GroupResource {
         try {
             archiveRepository.archiveGroup(archive);
         } catch (Exception ex) {
-            logger.warn("Try archive deleted group failed. " + GenericSerializer.writeJson(archive, false), ex);
+            logger.warn("Try archive deleted group-" + groupId + " failed. ", ex);
         }
 
         try {
@@ -552,7 +552,7 @@ public class GroupResource {
         try {
             archiveRepository.archiveGroup(archive.setVirtual(true));
         } catch (Exception ex) {
-            logger.warn("Try archive deleted virtual group failed. " + GenericSerializer.writeJson(archive, false), ex);
+            logger.warn("Try archive deleted virtual group-" + groupId + " failed.", ex);
         }
         return responseHandler.handle("Virtual group is deleted.", hh.getMediaType());
     }

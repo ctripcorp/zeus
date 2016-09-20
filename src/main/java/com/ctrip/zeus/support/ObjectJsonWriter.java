@@ -2,9 +2,7 @@ package com.ctrip.zeus.support;
 
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.restful.message.view.ExtendedView;
-import com.ctrip.zeus.restful.message.view.GroupView;
-import com.ctrip.zeus.restful.message.view.ViewConstraints;
+import com.ctrip.zeus.restful.message.view.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +20,8 @@ public class ObjectJsonWriter {
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .setPropertyNamingStrategy(new LowerCaseWithHyphenStrategy());
         objectMapper.addMixInAnnotations(ExtendedView.ExtendedGroup.class, GroupView.class);
+        objectMapper.addMixInAnnotations(ExtendedView.ExtendedVs.class, VsView.class);
+        objectMapper.addMixInAnnotations(ExtendedView.ExtendedSlb.class, SlbView.class);
     }
 
     public static String write(Object obj, String type) throws ValidationException, JsonProcessingException {

@@ -6,8 +6,6 @@ import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.view.ExtendedView;
 import com.ctrip.zeus.restful.message.view.ViewConstraints;
@@ -24,7 +22,6 @@ import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
-import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
@@ -165,9 +162,7 @@ public class VirtualServerResource {
         VirtualServer vs = ObjectJsonParser.parse(requestBody, VirtualServer.class);
         trim(vs);
 
-        if (vs.getSlbId() == null)
-            throw new ValidationException("Field slb-id is required.");
-        vs = virtualServerRepository.add(vs.getSlbId(), vs);
+        vs = virtualServerRepository.add(vs);
 
         try {
             propertyBox.set("status", "deactivated", "vs", vs.getId());
@@ -200,7 +195,6 @@ public class VirtualServerResource {
 
         IdVersion[] check = virtualServerCriteriaQuery.queryByIdAndMode(vs.getId(), SelectionMode.OFFLINE_FIRST);
         if (check.length == 0) throw new ValidationException("Virtual server " + vs.getId() + " cannot be found.");
-        if (vs.getSlbId() == null) throw new ValidationException("Field slb-id is required.");
 
         DistLock lock = dbLockFactory.newLock(vs.getId() + "_updateVs");
         lock.lock(TIMEOUT);
@@ -322,7 +316,7 @@ public class VirtualServerResource {
         try {
             archiveRepository.archiveVs(archive);
         } catch (Exception ex) {
-            logger.warn("Try archive deleted vs failed. " + GenericSerializer.writeJson(archive, false), ex);
+            logger.warn("Try archive deleted vs-" + vsId + " failed.", ex);
         }
 
         try {

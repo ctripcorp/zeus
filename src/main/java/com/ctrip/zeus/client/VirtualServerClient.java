@@ -1,7 +1,7 @@
 package com.ctrip.zeus.client;
 
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
+import com.ctrip.zeus.support.ObjectJsonParser;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -17,10 +17,6 @@ public class VirtualServerClient extends AbstractRestClient {
     public VirtualServer get(String vsId) {
         String res = getTarget().path("/api/vs").queryParam("vsId", vsId).request(MediaType.APPLICATION_JSON)
                 .headers(getDefaultHeaders()).get(String.class);
-        try {
-            return DefaultJsonParser.parse(VirtualServer.class, res);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return ObjectJsonParser.parse(res, VirtualServer.class);
     }
 }
