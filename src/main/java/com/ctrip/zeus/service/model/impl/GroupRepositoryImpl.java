@@ -137,7 +137,13 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group addVGroup(Group group) throws Exception {
-        vGroupValidator.validate(group);
+        return addVGroup(group, false);
+    }
+
+    @Override
+    public Group addVGroup(Group group, boolean escapedPathValidation) throws Exception {
+        group.setId(0L);
+        vGroupValidator.validate(group, escapedPathValidation);
         autoFiller.autofillVGroup(group);
         group.setVirtual(true);
         groupEntityManager.add(group, true);
@@ -164,9 +170,14 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group updateVGroup(Group group) throws Exception {
+        return updateVGroup(group, false);
+    }
+
+    @Override
+    public Group updateVGroup(Group group, boolean escapedPathValidation) throws Exception {
         if (!vGroupValidator.exists(group.getId()))
             throw new ValidationException("Group with id " + group.getId() + " does not exist.");
-        vGroupValidator.validate(group);
+        vGroupValidator.validate(group, escapedPathValidation);
         autoFiller.autofillVGroup(group);
         group.setVirtual(true);
         groupEntityManager.update(group);

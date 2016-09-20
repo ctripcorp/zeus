@@ -33,14 +33,7 @@ public class DefaultVGroupValidator implements VGroupValidator {
 
     @Override
     public void validate(Group target) throws Exception {
-        if (target.getName() == null || target.getName().isEmpty()) {
-            throw new ValidationException("Group name is required.");
-        }
-        groupModelValidator.validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers(), false);
-        for (GroupVirtualServer groupVirtualServer : target.getGroupVirtualServers()) {
-            if (groupVirtualServer.getRedirect() == null)
-                throw new ValidationException("Redirect value is required.");
-        }
+        validate(target, false);
     }
 
     @Override
@@ -51,5 +44,17 @@ public class DefaultVGroupValidator implements VGroupValidator {
     @Override
     public void removable(Long targetId) throws Exception {
         groupModelValidator.removable(targetId);
+    }
+
+    @Override
+    public void validate(Group target, boolean escapePathValidation) throws Exception {
+        if (target.getName() == null || target.getName().isEmpty()) {
+            throw new ValidationException("Group name is required.");
+        }
+        groupModelValidator.validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers(), escapePathValidation);
+        for (GroupVirtualServer groupVirtualServer : target.getGroupVirtualServers()) {
+            if (groupVirtualServer.getRedirect() == null)
+                throw new ValidationException("Redirect value is required.");
+        }
     }
 }

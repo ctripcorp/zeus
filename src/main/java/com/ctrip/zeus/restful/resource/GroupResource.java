@@ -246,7 +246,8 @@ public class GroupResource {
     @Path("/vgroup/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "addGroup")
-    public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody) throws Exception {
+    public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody,
+                              @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
         Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true).setAppId(vGroupAppId);
         trim(g);
@@ -255,7 +256,7 @@ public class GroupResource {
         if (checkId > 0L)
             throw new ValidationException("Group name " + g.getName() + " has been taken by " + checkId + ".");
 
-        g = groupRepository.addVGroup(g);
+        g = groupRepository.addVGroup(g, force != null && force);
 
 
         try {
@@ -320,7 +321,8 @@ public class GroupResource {
     @Path("/vgroup/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
     @Authorize(name = "updateGroup")
-    public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody) throws Exception {
+    public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody
+            , @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
         Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true).setAppId(vGroupAppId);
         trim(g);
@@ -328,7 +330,7 @@ public class GroupResource {
         DistLock lock = dbLockFactory.newLock(g.getId() + "_updateGroup");
         lock.lock(TIMEOUT);
         try {
-            g = groupRepository.updateVGroup(g);
+            g = groupRepository.updateVGroup(g, force != null && force);
         } finally {
             lock.unlock();
         }

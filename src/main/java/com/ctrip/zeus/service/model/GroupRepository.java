@@ -26,11 +26,15 @@ public interface GroupRepository extends Repository {
 
     Group addVGroup(Group group) throws Exception;
 
+    Group addVGroup(Group group, boolean escapedPathValidation) throws Exception;
+
     Group update(Group group) throws Exception;
 
     Group update(Group group, boolean escapedPathValidation) throws Exception;
 
     Group updateVGroup(Group group) throws Exception;
+
+    Group updateVGroup(Group group, boolean escapedPathValidation) throws Exception;
 
     int delete(Long groupId) throws Exception;
 
