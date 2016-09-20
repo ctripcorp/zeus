@@ -71,6 +71,9 @@
          <table name="app_info"/>
          <table name="report_queue"/>
          <table name="message_queue"/>
+         <table name="default_page_active"/>
+         <table name="default_page_file"/>
+         <table name="default_page_server_active"/>
       </group>
    </jdbc>
 </wizard>
