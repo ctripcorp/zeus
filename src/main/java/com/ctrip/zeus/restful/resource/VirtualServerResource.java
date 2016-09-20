@@ -13,6 +13,8 @@ import com.ctrip.zeus.restful.message.view.ExtendedView;
 import com.ctrip.zeus.restful.message.view.ViewConstraints;
 import com.ctrip.zeus.restful.message.view.ViewDecorator;
 import com.ctrip.zeus.restful.message.view.VsListView;
+import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.query.CriteriaQueryFactory;
 import com.ctrip.zeus.service.query.QueryEngine;
 import com.ctrip.zeus.restful.message.ResponseHandler;
@@ -65,6 +67,8 @@ public class VirtualServerResource {
     private TagBox tagBox;
     @Resource
     private ViewDecorator viewDecorator;
+    @Resource
+    private MessageQueueService messageQueueService;
 
     private final int TIMEOUT = 1000;
 
@@ -74,7 +78,6 @@ public class VirtualServerResource {
      * @api {get} /api/vses: Request vs information
      * @apiName ListVirtualServers
      * @apiGroup Vs
-     *
      * @apiParam {long[]} vsId          1,2,3
      * @apiParam {string[]} vsName      a,b,c
      * @apiParam {string[]} ip          reserved
@@ -88,7 +91,6 @@ public class VirtualServerResource {
      * @apiParam {string[]} props       join search vses by properties(key:value) e.g. props=department:hotel,dc:jq
      * @apiParam {any} group            supported group property queries, ref /api/groups
      * @apiParam {any} slb              supported slb property queries, ref /api/slbs
-     *
      * @apiSuccess {VirtualServer[]} vses   vs list json object
      */
     @GET
@@ -180,6 +182,8 @@ public class VirtualServerResource {
             addTag(vs.getId(), extendedView.getTags());
         }
 
+        messageQueueService.produceMessage(MessageType.NewVs, vs.getId(), null);
+
         return responseHandler.handle(vs, hh.getMediaType());
 
     }
@@ -221,6 +225,8 @@ public class VirtualServerResource {
             addTag(vs.getId(), extendedView.getTags());
         }
 
+        messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
+
         return responseHandler.handle(vs, hh.getMediaType());
     }
 
@@ -253,6 +259,8 @@ public class VirtualServerResource {
             }
         } catch (Exception ex) {
         }
+
+        messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
 
         return responseHandler.handle(vs, hh.getMediaType());
     }
@@ -294,7 +302,7 @@ public class VirtualServerResource {
             }
         } catch (Exception ex) {
         }
-
+        messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
         return responseHandler.handle(vs, hh.getMediaType());
     }
 
@@ -325,7 +333,7 @@ public class VirtualServerResource {
             tagBox.clear("vs", vsId);
         } catch (Exception ex) {
         }
-
+        messageQueueService.produceMessage(MessageType.DeleteVs, vsId, null);
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
     }
 

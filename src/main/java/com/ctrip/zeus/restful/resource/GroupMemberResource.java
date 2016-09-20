@@ -9,6 +9,8 @@ import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.query.filter.FilterSet;
 import com.ctrip.zeus.service.query.filter.QueryExecuter;
 import com.ctrip.zeus.restful.message.ResponseHandler;
@@ -56,6 +58,8 @@ public class GroupMemberResource {
     private PropertyBox propertyBox;
     @Resource
     private GroupStatusService groupStatusService;
+    @Resource
+    private MessageQueueService messageQueueService;
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
     private final int TIMEOUT = 1000;
@@ -151,6 +155,8 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
+
+        messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
         return responseHandler.handle("Successfully added group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -201,6 +207,7 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
+        messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
         return responseHandler.handle("Successfully updated group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -249,6 +256,7 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
+        messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
         return responseHandler.handle("Successfully removed " + Joiner.on(",").join(ips) + " from group with id " + groupId + ".", hh.getMediaType());
     }
 

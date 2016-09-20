@@ -6,6 +6,8 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
@@ -56,6 +58,8 @@ public class ActivateResource {
     private ResponseHandler responseHandler;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private MessageQueueService messageQueueService;
 
     private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
@@ -63,33 +67,30 @@ public class ActivateResource {
 
     @GET
     @Path("/slb")
-    @Authorize(name="activate")
-    public Response activateSlb(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("slbId") List<Long> slbIds,  @QueryParam("slbName") List<String> slbNames)throws Exception{
+    @Authorize(name = "activate")
+    public Response activateSlb(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("slbId") List<Long> slbIds, @QueryParam("slbName") List<String> slbNames) throws Exception {
         List<Long> _slbIds = new ArrayList<>();
         SlbValidateResponse validateResponse = null;
-        if ( slbIds!=null && !slbIds.isEmpty() )
-        {
+        if (slbIds != null && !slbIds.isEmpty()) {
             _slbIds.addAll(slbIds);
         }
-        if ( slbNames!=null && !slbNames.isEmpty() )
-        {
-            for (String slbName : slbNames)
-            {
+        if (slbNames != null && !slbNames.isEmpty()) {
+            for (String slbName : slbNames) {
                 _slbIds.add(slbCriteriaQuery.queryByName(slbName));
             }
         }
         ModelStatusMapping<Slb> slbModelStatusMapping = entityFactory.getSlbsByIds(_slbIds.toArray(new Long[]{}));
-        if (slbModelStatusMapping.getOfflineMapping() == null || slbModelStatusMapping.getOfflineMapping().size()==0){
+        if (slbModelStatusMapping.getOfflineMapping() == null || slbModelStatusMapping.getOfflineMapping().size() == 0) {
             throw new ValidationException("Not Found Slb By Id.");
         }
-        for (Long id : _slbIds){
-            if (slbModelStatusMapping.getOfflineMapping().get(id) == null){
-                throw new ValidationException("Not Found Slb By Id."+id);
+        for (Long id : _slbIds) {
+            if (slbModelStatusMapping.getOfflineMapping().get(id) == null) {
+                throw new ValidationException("Not Found Slb By Id." + id);
             }
-            validateResponse=slbValidator.validate(slbModelStatusMapping.getOfflineMapping().get(id));
-            if (!validateResponse.getSucceed()){
-                throw new SlbValidatorException("msg:"+validateResponse.getMsg()+"\nslbId:"+validateResponse.getSlbId()
-                +"\nip:"+validateResponse.getIp());
+            validateResponse = slbValidator.validate(slbModelStatusMapping.getOfflineMapping().get(id));
+            if (!validateResponse.getSucceed()) {
+                throw new SlbValidatorException("msg:" + validateResponse.getMsg() + "\nslbId:" + validateResponse.getSlbId()
+                        + "\nip:" + validateResponse.getIp());
             }
         }
         List<OpsTask> tasks = new ArrayList<>();
@@ -104,10 +105,10 @@ public class ActivateResource {
         }
 
         List<Long> taskIds = taskManager.addTask(tasks);
-        List<TaskResult> results = taskManager.getResult(taskIds,apiTimeout.get());
+        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
 
         TaskResultList resultList = new TaskResultList();
-        for (TaskResult t : results){
+        for (TaskResult t : results) {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
@@ -116,29 +117,29 @@ public class ActivateResource {
             propertyBox.set("status", "activated", "slb", _slbIds.toArray(new Long[_slbIds.size()]));
         } catch (Exception ex) {
         }
+        for (Long slbId : _slbIds) {
+            messageQueueService.produceMessage(MessageType.ActivateSlb, slbId, null);
+        }
         return responseHandler.handle(resultList, hh.getMediaType());
     }
 
     @GET
     @Path("/group")
-    @Authorize(name="activate")
-    public Response activateGroup(@Context HttpServletRequest request,@Context HttpHeaders hh,@QueryParam("groupId") List<Long> groupIds,  @QueryParam("groupName") List<String> groupNames)throws Exception{
+    @Authorize(name = "activate")
+    public Response activateGroup(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") List<Long> groupIds, @QueryParam("groupName") List<String> groupNames) throws Exception {
         List<Long> _groupIds = new ArrayList<>();
 
-        if ( groupIds!=null && !groupIds.isEmpty())
-        {
+        if (groupIds != null && !groupIds.isEmpty()) {
             _groupIds.addAll(groupIds);
         }
-        if ( groupNames!=null && !groupNames.isEmpty() )
-        {
-            for (String groupName : groupNames)
-            {
+        if (groupNames != null && !groupNames.isEmpty()) {
+            for (String groupName : groupNames) {
                 _groupIds.add(groupCriteriaQuery.queryByName(groupName));
             }
         }
 
         ModelStatusMapping<Group> mapping = entityFactory.getGroupsByIds(_groupIds.toArray(new Long[]{}));
-        if (mapping.getOfflineMapping() == null || mapping.getOfflineMapping().size()==0){
+        if (mapping.getOfflineMapping() == null || mapping.getOfflineMapping().size() == 0) {
             throw new ValidationException("Not Found Group By Id.");
         }
         List<OpsTask> tasks = new ArrayList<>();
@@ -146,22 +147,22 @@ public class ActivateResource {
             Group offGroup = mapping.getOfflineMapping().get(id);
             Group onGroup = mapping.getOnlineMapping().get(id);
 
-            AssertUtils.assertNotNull(offGroup,"Group Not Found! GroupId:"+id);
-            AssertUtils.assertNotNull(offGroup.getGroupVirtualServers(),"Group Virtual Servers Not Found! GroupId:"+id);
+            AssertUtils.assertNotNull(offGroup, "Group Not Found! GroupId:" + id);
+            AssertUtils.assertNotNull(offGroup.getGroupVirtualServers(), "Group Virtual Servers Not Found! GroupId:" + id);
 
 
             Set<Long> onlineVsIds = new HashSet<>();
             Set<Long> offlinevsIds = new HashSet<>();
 
-            for (GroupVirtualServer gv : offGroup.getGroupVirtualServers()){
-                if (!virtualServerValidator.isActivated(gv.getVirtualServer().getId())){
-                    throw new ValidationException("Related VS has not been activated.VS: "+gv.getVirtualServer().getId());
+            for (GroupVirtualServer gv : offGroup.getGroupVirtualServers()) {
+                if (!virtualServerValidator.isActivated(gv.getVirtualServer().getId())) {
+                    throw new ValidationException("Related VS has not been activated.VS: " + gv.getVirtualServer().getId());
                 }
                 offlinevsIds.add(gv.getVirtualServer().getId());
             }
 
-            if (onGroup != null){
-                for (GroupVirtualServer gv : onGroup.getGroupVirtualServers()){
+            if (onGroup != null) {
+                for (GroupVirtualServer gv : onGroup.getGroupVirtualServers()) {
                     onlineVsIds.add(gv.getVirtualServer().getId());
                 }
             }
@@ -172,12 +173,12 @@ public class ActivateResource {
 
             ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(tmp.toArray(new Long[]{}));
 
-            for (Long vsId : tmp){
+            for (Long vsId : tmp) {
                 VirtualServer vs = vsMaping.getOnlineMapping().get(vsId);
-                if (vs == null){
-                    throw new ValidationException("Vs is not activated. vsId:"+vsId);
+                if (vs == null) {
+                    throw new ValidationException("Vs is not activated. vsId:" + vsId);
                 }
-                if (onlineVsIds.contains(vsId) && !offlinevsIds.contains(vsId)){
+                if (onlineVsIds.contains(vsId) && !offlinevsIds.contains(vsId)) {
                     OpsTask task = new OpsTask();
                     task.setCreateTime(new Date())
                             .setGroupId(id)
@@ -198,10 +199,10 @@ public class ActivateResource {
             }
         }
         List<Long> taskIds = taskManager.addTask(tasks);
-        List<TaskResult> results = taskManager.getResult(taskIds,apiTimeout.get());
+        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
 
         TaskResultList resultList = new TaskResultList();
-        for (TaskResult t : results){
+        for (TaskResult t : results) {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
@@ -210,26 +211,32 @@ public class ActivateResource {
             propertyBox.set("status", "activated", "group", _groupIds.toArray(new Long[_groupIds.size()]));
         } catch (Exception ex) {
         }
+
+        for (Long id : _groupIds) {
+            messageQueueService.produceMessage(MessageType.ActivateGroup, id, null);
+        }
+
         return responseHandler.handle(resultList, hh.getMediaType());
     }
+
     @GET
     @Path("/vs")
-    @Authorize(name="activate")
+    @Authorize(name = "activate")
     public Response activateVirtualServer(@Context HttpServletRequest request,
                                           @Context HttpHeaders hh,
-                                          @QueryParam("vsId") Long vsId)throws Exception {
+                                          @QueryParam("vsId") Long vsId) throws Exception {
         ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(new Long[]{vsId});
         VirtualServer offlineVs = vsMaping.getOfflineMapping().get(vsId);
         VirtualServer onlineVs = vsMaping.getOnlineMapping().get(vsId);
-        if (offlineVs == null){
+        if (offlineVs == null) {
             throw new ValidationException("Not Found Vs By ID");
         }
-        if (onlineVs!=null && !offlineVs.getSlbId().equals(onlineVs.getSlbId())){
+        if (onlineVs != null && !offlineVs.getSlbId().equals(onlineVs.getSlbId())) {
             throw new ValidationException("Has different slb id for online/offline vses.");
         }
         Long slbId = offlineVs.getSlbId();
-        ModelStatusMapping<Slb>  slbMap = entityFactory.getSlbsByIds(new Long[]{slbId});
-        if (slbMap.getOnlineMapping().get(slbId) == null){
+        ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(new Long[]{slbId});
+        if (slbMap.getOnlineMapping().get(slbId) == null) {
             throw new ValidationException("Related Slb is not activated.");
         }
         OpsTask task = new OpsTask();
@@ -241,9 +248,9 @@ public class ActivateResource {
         List<Long> taskIds = new ArrayList<>();
         taskIds.add(taskManager.addTask(task));
 
-        List<TaskResult> results = taskManager.getResult(taskIds,apiTimeout.get());
+        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
         TaskResultList resultList = new TaskResultList();
-        for (TaskResult t : results){
+        for (TaskResult t : results) {
             resultList.addTaskResult(t);
         }
         resultList.setTotal(results.size());
@@ -252,6 +259,9 @@ public class ActivateResource {
             propertyBox.set("status", "activated", "vs", vsId);
         } catch (Exception ex) {
         }
+
+        messageQueueService.produceMessage(MessageType.ActivateVs, vsId, null);
+
         return responseHandler.handle(resultList, hh.getMediaType());
     }
 }

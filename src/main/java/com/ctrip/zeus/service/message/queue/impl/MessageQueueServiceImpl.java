@@ -6,6 +6,7 @@ import com.ctrip.zeus.dal.core.MessageQueueDo;
 import com.ctrip.zeus.dal.core.MessageQueueEntity;
 import com.ctrip.zeus.queue.entity.Message;
 import com.ctrip.zeus.server.LocalInfoPack;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.message.queue.Consumer;
 import com.ctrip.zeus.service.message.queue.MessageQueueService;
 import com.ctrip.zeus.service.message.queue.MessageType;
@@ -30,6 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MessageQueueServiceImpl implements MessageQueueService {
     @Resource
     private MessageQueueDao messageQueueDao;
+    @Resource
+    private ConfigHandler configHandler;
 
     private final DynamicIntProperty poolSize = DynamicPropertyFactory.getInstance().getIntProperty("message.queue.service.thread.pool.size", 10);
     private final DynamicIntProperty fetchInterval = DynamicPropertyFactory.getInstance().getIntProperty("message.queue.service.fetch.interval", 1000);
@@ -56,8 +59,8 @@ public class MessageQueueServiceImpl implements MessageQueueService {
         messageQueueDo.setType(type.toString())
                 .setCreateTime(new Date())
                 .setStatus("TODO")
-                .setTargetId(targetId)
-                .setTargetData(targetData);
+                .setTargetId(targetId == null ? 0L : targetId)
+                .setTargetData(targetData == null ? "" : targetData);
         messageQueueDao.insert(messageQueueDo);
         logger.info("[[messageType=" + type.toString() + ",messageStatus=produce]][MessageQueueService] Produce Message Success. type:" + type.toString() + ";targetId:" + targetId + ";targetData:" + targetData);
     }
@@ -190,7 +193,9 @@ public class MessageQueueServiceImpl implements MessageQueueService {
                     return;
                 }
                 try {
-                    fetchMessage();
+                    if (configHandler.getEnable("message.queue", null, null, null, false)) {
+                        fetchMessage();
+                    }
                 } catch (Throwable e) {
                     logger.error("Message Queue Execute Failed.", e);
                 }

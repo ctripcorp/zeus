@@ -7,6 +7,8 @@ import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.view.*;
+import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
@@ -59,6 +61,8 @@ public class GroupResource {
     private ViewDecorator viewDecorator;
     @Resource
     private GroupStatusService groupStatusService;
+    @Resource
+    private MessageQueueService messageQueueService;
 
     private final String vGroupAppId = "VirtualGroup";
     private final int TIMEOUT = 1000;
@@ -69,7 +73,6 @@ public class GroupResource {
      * @api {get} /api/groups: Request group information
      * @apiName ListGroups
      * @apiGroup Group
-     *
      * @apiParam {long[]} groupId       1,2,3
      * @apiParam {string[]} groupName   a,b,c
      * @apiParam {string[]} appId       1001,1101,1100
@@ -82,7 +85,6 @@ public class GroupResource {
      * @apiParam {string[]} props       join search groups by properties(key:value) e.g. props=department:hotel,dc:jq
      * @apiParam {any} vs               supported vs property queries, ref /api/vses
      * @apiParam {any} slb              supported slb property queries, ref /api/slbs
-     *
      * @apiSuccess {Group[]} groups     group list json object
      */
     @GET
@@ -238,6 +240,7 @@ public class GroupResource {
         }
 
         addHealthProperty(g.getId());
+        messageQueueService.produceMessage(MessageType.NewGroup, g.getId(), null);
 
         return responseHandler.handle(g, hh.getMediaType());
     }
@@ -313,6 +316,7 @@ public class GroupResource {
         }
 
         addHealthProperty(g.getId());
+        messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
 
         return responseHandler.handle(g, hh.getMediaType());
     }
@@ -371,7 +375,7 @@ public class GroupResource {
         } finally {
             lock.unlock();
         }
-
+        messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
         return responseHandler.handle(g, hh.getMediaType());
     }
 
@@ -439,6 +443,8 @@ public class GroupResource {
             lock.unlock();
         }
 
+        messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
+
         return responseHandler.handle(target, hh.getMediaType());
     }
 
@@ -485,6 +491,8 @@ public class GroupResource {
             lock.unlock();
         }
 
+        messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
+
         return responseHandler.handle(target, hh.getMediaType());
     }
 
@@ -522,6 +530,8 @@ public class GroupResource {
             tagBox.clear("group", groupId);
         } catch (Exception ex) {
         }
+
+        messageQueueService.produceMessage(MessageType.DeleteGroup, groupId, null);
 
         return responseHandler.handle("Group is deleted.", hh.getMediaType());
     }

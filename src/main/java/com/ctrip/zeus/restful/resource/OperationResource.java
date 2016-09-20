@@ -7,6 +7,8 @@ import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.build.ConfigHandler;
+import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateInstaller;
@@ -80,6 +82,8 @@ public class OperationResource {
     private ConfigHandler configHandler;
     @Resource
     private PropertyBox propertyBox;
+    @Resource
+    private MessageQueueService messageQueueService;
 
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
@@ -173,6 +177,8 @@ public class OperationResource {
                 ss.addGroupName(group.getName());
             }
         }
+
+        messageQueueService.produceMessage(MessageType.OpsServer, null, serverip);
 
         return responseHandler.handle(ss, hh.getMediaType());
     }
@@ -694,6 +700,18 @@ public class OperationResource {
         }
         GroupStatus groupStatus = groupStatusService.getOfflineGroupStatus(groupId);
         addHealthyProperty(groupStatus);
+
+        if (type.equals(TaskOpsType.HEALTHY_OPS)) {
+            messageQueueService.produceMessage(MessageType.OpsHealthy, groupId, null);
+        }
+        if (type.equals(TaskOpsType.PULL_MEMBER_OPS)) {
+            messageQueueService.produceMessage(MessageType.OpsPull, groupId, null);
+        }
+        if (type.equals(TaskOpsType.MEMBER_OPS)){
+            messageQueueService.produceMessage(MessageType.OpsMember, groupId, null);
+        }
+
+
         return responseHandler.handle(groupStatus, hh.getMediaType());
     }
 
