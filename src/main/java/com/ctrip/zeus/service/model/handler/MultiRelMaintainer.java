@@ -7,13 +7,13 @@ import java.util.List;
  */
 public interface MultiRelMaintainer<W, X> {
 
-    void addRel(X object) throws Exception;
+    void insert(X object) throws Exception;
 
-    void updateRel(X object) throws Exception;
+    void refreshOffline(X object) throws Exception;
 
-    void updateStatus(X[] object) throws Exception;
+    void refreshOnline(X[] object) throws Exception;
 
-    void deleteRel(Long objectId) throws Exception;
+    void clear(Long objectId) throws Exception;
 
-    List<W> getRelations(X object) throws Exception;
+    List<W> get(X object) throws Exception;
 }

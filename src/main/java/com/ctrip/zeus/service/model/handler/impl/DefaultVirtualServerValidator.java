@@ -46,7 +46,7 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     }
 
     @Override
-    public void validateVirtualServers(List<VirtualServer> virtualServers) throws Exception {
+    public void unite(List<VirtualServer> virtualServers) throws Exception {
         Map<String, Long> existingHost = new HashMap<>();
         for (VirtualServer virtualServer : virtualServers) {
             for (Domain domain : virtualServer.getDomains()) {
@@ -80,6 +80,8 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     public void validate(VirtualServer virtualServer) throws ValidationException {
         if (virtualServer.getDomains() == null || virtualServer.getDomains().size() == 0)
             throw new ValidationException("Virtual server must have domain(s).");
+        if (virtualServer.getSlbIds() == null || virtualServer.getSlbIds().size() == 0)
+            throw new ValidationException("Virtual server must nest at slb.");
         Set<String> uniq = new HashSet<>();
         Iterator<Domain> domainIter = virtualServer.getDomains().iterator();
         while (domainIter.hasNext()) {

@@ -128,7 +128,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Override
     public Slb add(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
-        virtualServerModelValidator.validateVirtualServers(slb.getVirtualServers());
+        virtualServerModelValidator.unite(slb.getVirtualServers());
         autoFiller.autofill(slb);
         slbEntityManager.add(slb);
         for (VirtualServer virtualServer : slb.getVirtualServers()) {

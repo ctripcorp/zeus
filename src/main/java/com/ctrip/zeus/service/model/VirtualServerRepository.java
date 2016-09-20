@@ -17,7 +17,7 @@ public interface VirtualServerRepository {
 
     VirtualServer getByKey(IdVersion key) throws Exception;
 
-    VirtualServer add(Long slbId, VirtualServer virtualServer) throws Exception;
+    VirtualServer add(VirtualServer virtualServer) throws Exception;
 
     VirtualServer update(VirtualServer virtualServer) throws Exception;
 

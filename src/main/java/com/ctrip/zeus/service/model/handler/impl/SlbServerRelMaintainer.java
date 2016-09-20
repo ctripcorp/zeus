@@ -79,12 +79,12 @@ public class SlbServerRelMaintainer extends AbstractMultiRelMaintainer<RelSlbSlb
     }
 
     @Override
-    public void deleteRel(Long objectId) throws Exception {
+    public void clear(Long objectId) throws Exception {
         rSlbSlbServerDao.deleteAllBySlb(new RelSlbSlbServerDo().setSlbId(objectId));
     }
 
     @Override
-    public List<SlbServer> getRelations(Slb object) throws Exception {
+    public List<SlbServer> get(Slb object) throws Exception {
         return object.getSlbServers();
     }
 }

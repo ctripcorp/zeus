@@ -80,12 +80,12 @@ public class GroupGsRelMaintainer extends AbstractMultiRelMaintainer<RelGroupGsD
     }
 
     @Override
-    public void deleteRel(Long objectId) throws Exception {
+    public void clear(Long objectId) throws Exception {
         rGroupGsDao.deleteAllByGroup(new RelGroupGsDo().setGroupId(objectId));
     }
 
     @Override
-    public List<GroupServer> getRelations(Group object) throws Exception {
+    public List<GroupServer> get(Group object) throws Exception {
         return object.getGroupServers();
     }
 }

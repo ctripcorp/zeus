@@ -10,10 +10,7 @@ import com.ctrip.zeus.support.C;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by zhoumy on 2015/9/29.
@@ -52,7 +49,7 @@ public class SlbEntityManager implements SlbSync {
 
         rSlbStatusDao.insertOrUpdate(new RelSlbStatusDo().setSlbId(slb.getId()).setOfflineVersion(slb.getVersion()));
 
-        slbServerRelMaintainer.addRel(slb);
+        slbServerRelMaintainer.insert(slb);
     }
 
     @Override
@@ -75,7 +72,7 @@ public class SlbEntityManager implements SlbSync {
 
         rSlbStatusDao.insertOrUpdate(check.setOfflineVersion(slb.getVersion()));
 
-        slbServerRelMaintainer.updateRel(slb);
+        slbServerRelMaintainer.refreshOffline(slb);
     }
 
     @Override
@@ -86,14 +83,14 @@ public class SlbEntityManager implements SlbSync {
         }
 
         Slb[] array = slbs.toArray(new Slb[slbs.size()]);
-        slbServerRelMaintainer.updateStatus(array);
+        slbServerRelMaintainer.refreshOnline(array);
 
         rSlbStatusDao.updateOnlineVersionBySlb(dos, RSlbStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
     }
 
     @Override
     public int delete(Long slbId) throws Exception {
-        slbServerRelMaintainer.deleteRel(slbId);
+        slbServerRelMaintainer.clear(slbId);
         rSlbStatusDao.deleteAllBySlb(new RelSlbStatusDo().setSlbId(slbId));
         int count = slbDao.deleteByPK(new SlbDo().setId(slbId));
         archiveSlbDao.deleteBySlb(new ArchiveSlbDo().setSlbId(slbId));

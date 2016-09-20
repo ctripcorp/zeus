@@ -82,12 +82,12 @@ public class GroupVsRelMaintainer extends AbstractMultiRelMaintainer<RelGroupVsD
     }
 
     @Override
-    public void deleteRel(Long objectId) throws Exception {
+    public void clear(Long objectId) throws Exception {
         rGroupVsDao.deleteAllByGroup(new RelGroupVsDo().setGroupId(objectId));
     }
 
     @Override
-    public List<GroupVirtualServer> getRelations(Group object) throws Exception {
+    public List<GroupVirtualServer> get(Group object) throws Exception {
         return object.getGroupVirtualServers();
     }
 }
