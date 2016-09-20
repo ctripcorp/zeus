@@ -81,11 +81,9 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         if (!slbModelValidator.exists(slbId)) {
             throw new ValidationException("Slb with id " + slbId + "does not exits.");
         }
-
         virtualServer.setSlbId(slbId);
-        for (Domain domain : virtualServer.getDomains()) {
-            domain.setName(domain.getName().toLowerCase());
-        }
+        virtualServerModelValidator.validate(virtualServer);
+
         Set<Long> retained = new HashSet<>();
         for (IdVersion idVersion : virtualServerCriteriaQuery.queryBySlbId(slbId)) {
             retained.add(idVersion.getId());
@@ -110,15 +108,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         if (!slbModelValidator.exists(virtualServer.getSlbId())) {
             throw new ValidationException("Slb with id " + virtualServer.getSlbId() + "does not exits.");
         }
-
-        Set<String> domains = new HashSet<>();
-        for (Domain domain : virtualServer.getDomains()) {
-            domains.add(domain.getName().toLowerCase());
-        }
-        virtualServer.getDomains().clear();
-        for (String d : domains) {
-            virtualServer.getDomains().add(new Domain().setName(d));
-        }
+        virtualServerModelValidator.validate(virtualServer);
 
         Set<Long> retained = new HashSet<>();
         for (IdVersion idVersion : virtualServerCriteriaQuery.queryBySlbId(virtualServer.getSlbId())) {

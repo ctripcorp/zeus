@@ -76,6 +76,23 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
         }
     }
 
+    @Override
+    public void validate(VirtualServer virtualServer) throws ValidationException {
+        if (virtualServer.getDomains() == null || virtualServer.getDomains().size() == 0)
+            throw new ValidationException("Virtual server must have domain(s).");
+        Set<String> uniq = new HashSet<>();
+        Iterator<Domain> domainIter = virtualServer.getDomains().iterator();
+        while (domainIter.hasNext()) {
+            Domain domain = domainIter.next();
+            String name = domain.getName().toLowerCase();
+            if (uniq.contains(name)) domainIter.remove();
+            else {
+                uniq.add(name);
+                domain.setName(name);
+            }
+        }
+    }
+
     private Set<String> getPortWhiteList() {
         Set<String> result = new HashSet<>();
         String whiteList = portWhiteList.get();
