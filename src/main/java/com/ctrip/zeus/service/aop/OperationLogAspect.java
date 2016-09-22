@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.aop;
 
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.model.transform.DefaultJsonParser;
@@ -13,6 +14,7 @@ import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.operationLog.OperationLogService;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
+import com.ctrip.zeus.support.ObjectJsonParser;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.aspectj.lang.JoinPoint;
@@ -179,7 +181,7 @@ public class OperationLogAspect implements Ordered {
                 }
                 // 3.3 type is AccessType.GROUP , parse data to Group object.
                 if (OperationLogConfig.getInstance().getType(key) == OperationLogType.GROUP) {
-                    Group group = parseGroup(hh.getMediaType(), (String) args[i]);
+                    Group group = parseGroup((String) args[i]);
                     if (group == null) {
                         return ID_UNKNOW;//"Group Parse Fail";
                     }
@@ -254,7 +256,7 @@ public class OperationLogAspect implements Ordered {
                         }
 
                     } else if (OperationLogConfig.getInstance().getType(key) == OperationLogType.GROUP && hh != null) {
-                        Group group = parseGroup(hh.getMediaType(), postData);
+                        Group group = parseGroup(postData);
                         if (group == null) {
                             data.put("Group", "Group Parse Fail!");
                         } else {
@@ -266,7 +268,7 @@ public class OperationLogAspect implements Ordered {
             }
             //1.2 in case of update
             Object obj = args[ids[0]];
-            String tmp = null;
+            String tmp;
             if (obj instanceof String) {
                 tmp = (String) obj;
             } else {
@@ -283,7 +285,7 @@ public class OperationLogAspect implements Ordered {
                 }
 
             } else if (OperationLogConfig.getInstance().getType(key) == OperationLogType.GROUP && hh != null) {
-                Group group = parseGroup(hh.getMediaType(), tmp);
+                Group group = parseGroup(tmp);
                 if (group == null) {
                     data.put("Group", "Group Parse Fail!");
                 } else {
@@ -367,18 +369,9 @@ public class OperationLogAspect implements Ordered {
         }
     }
 
-    private Group parseGroup(MediaType mediaType, String group) {
-        Group g;
-        try {
-            if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {
-                g = DefaultSaxParser.parseEntity(Group.class, group);
-            } else {
-                g = DefaultJsonParser.parse(Group.class, group);
-            }
-        } catch (Exception e) {
-            logger.warn("Group Parse Fail!");
-            return null;
-        }
+    private Group parseGroup(String group) {
+        Group g = ObjectJsonParser.parse(group, Group.class);
+        trim(g);
         return g;
     }
 
@@ -410,5 +403,22 @@ public class OperationLogAspect implements Ordered {
             return null;
         }
         return s;
+    }
+
+    private void trim(Group g) {
+        g.setAppId(trimIfNotNull(g.getAppId()));
+        g.setName(trimIfNotNull(g.getName()));
+        if (g.getHealthCheck() != null)
+            g.getHealthCheck().setUri(trimIfNotNull(g.getHealthCheck().getUri()));
+        for (GroupServer groupServer : g.getGroupServers()) {
+            groupServer.setIp(trimIfNotNull(groupServer.getIp()));
+            groupServer.setHostName(trimIfNotNull(groupServer.getHostName()));
+        }
+        if (g.getLoadBalancingMethod() != null)
+            g.getLoadBalancingMethod().setValue(trimIfNotNull(g.getLoadBalancingMethod().getValue()));
+    }
+
+    private String trimIfNotNull(String value) {
+        return value != null ? value.trim() : value;
     }
 }
