@@ -298,13 +298,15 @@ public class GroupMemberResource {
             }
             List<OpsTask> tasks = new ArrayList<>();
             for (VirtualServer vs : vsMaping.getOnlineMapping().values()) {
-                OpsTask task = new OpsTask();
-                task.setCreateTime(new Date())
-                        .setGroupId(groupId)
-                        .setTargetSlbId(vs.getSlbId())
-                        .setOpsType(TaskOpsType.ACTIVATE_GROUP)
-                        .setVersion(offGroup.getVersion());
-                tasks.add(task);
+                for (Long slbId : vs.getSlbIds()) {
+                    OpsTask task = new OpsTask();
+                    task.setCreateTime(new Date())
+                            .setGroupId(groupId)
+                            .setTargetSlbId(slbId)
+                            .setOpsType(TaskOpsType.ACTIVATE_GROUP)
+                            .setVersion(offGroup.getVersion());
+                    tasks.add(task);
+                }
             }
             List<Long> taskIds = taskManager.addTask(tasks);
             taskManager.getResult(taskIds, apiTimeout.get());

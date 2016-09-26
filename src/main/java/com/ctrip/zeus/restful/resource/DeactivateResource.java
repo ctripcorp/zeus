@@ -8,13 +8,13 @@ import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.task.entity.TaskResultList;
-import com.netflix.config.DynamicBooleanProperty;
-import com.netflix.config.DynamicIntProperty;
+import com.google.common.base.Joiner;
 import com.netflix.config.DynamicLongProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
@@ -39,8 +39,6 @@ public class DeactivateResource {
     @Resource
     private PropertyBox propertyBox;
     @Resource
-    private GroupRepository groupRepository;
-    @Resource
     private SlbRepository slbRepository;
     @Resource
     private ResponseHandler responseHandler;
@@ -48,64 +46,71 @@ public class DeactivateResource {
     private TaskManager taskManager;
     @Resource
     private EntityFactory entityFactory;
+    @Resource
+    private GroupCriteriaQuery groupCriteriaQuery;
 
-    private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
-    private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
 
     @GET
     @Path("/group")
     @Authorize(name = "deactivate")
     public Response deactivateGroup(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") List<Long> groupIds, @QueryParam("groupName") List<String> groupNames) throws Exception {
-        List<Long> _groupIds = new ArrayList<>();
-        List<Long> _slbIds = new ArrayList<>();
+        Set<Long> _groupIds = new HashSet<>();
 
         if (groupIds != null && !groupIds.isEmpty()) {
             _groupIds.addAll(groupIds);
         }
         if (groupNames != null && !groupNames.isEmpty()) {
             for (String groupName : groupNames) {
-                Group group = groupRepository.get(groupName);
-                if (group == null) {
-                    continue;
+                Long groupId = groupCriteriaQuery.queryByName(groupName);
+                if (groupId != null && !groupId.equals(0L)) {
+                    _groupIds.add(groupId);
                 }
-                _groupIds.add(group.getId());
             }
         }
-
 
         ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(_groupIds.toArray(new Long[]{}));
-        if (groupMap.getOnlineMapping() == null || groupMap.getOnlineMapping().size() == 0) {
-            throw new ValidationException("Group is not activated.");
+
+        _groupIds.removeAll(groupMap.getOnlineMapping().keySet());
+        if (_groupIds.size() > 0) {
+            throw new ValidationException("Groups with id (" + Joiner.on(",").join(_groupIds) + ") are not activated.");
         }
 
-        List<OpsTask> tasks = new ArrayList<>();
-        for (Long id : _groupIds) {
-            Group group = groupMap.getOnlineMapping().get(id);
+        Set<Long> vsIds = new HashSet<>();
+        for (Map.Entry<Long, Group> e : groupMap.getOnlineMapping().entrySet()) {
+            Group group = e.getValue();
             if (group == null) {
-                throw new ValidationException("Group is not activated.GroupId:" + id);
+                throw new Exception("Unexpected online group with null value. groupId=" + e.getKey() + ".");
             }
-            Set<Long> vsIds = new HashSet<>();
-            for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
-                vsIds.add(gvs.getVirtualServer().getId());
+            for (GroupVirtualServer vs : group.getGroupVirtualServers()) {
+                vsIds.add(vs.getVirtualServer().getId());
             }
-            ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
-            if (vsMap.getOnlineMapping() == null || vsMap.getOnlineMapping().size() == 0) {
-                throw new ValidationException("Related Vs is not activated.");
-            }
+        }
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
+
+        List<OpsTask> tasks = new ArrayList<>();
+        for (Map.Entry<Long, Group> e : groupMap.getOnlineMapping().entrySet()) {
+            Group group = e.getValue();
+
             Set<Long> slbIds = new HashSet<>();
-            for (Long vsId : vsMap.getOnlineMapping().keySet()) {
-                slbIds.add(vsMap.getOnlineMapping().get(vsId).getSlbId());
+            for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+                VirtualServer vs = vsMap.getOnlineMapping().get(gvs.getVirtualServer().getId());
+                if (vs == null) {
+                    throw new ValidationException("Virtual server " + gvs.getVirtualServer().getId() + " is found deactivated.");
+                }
+                slbIds.addAll(vs.getSlbIds());
             }
+
             for (Long slbId : slbIds) {
                 OpsTask task = new OpsTask();
-                task.setGroupId(id);
+                task.setGroupId(e.getKey());
                 task.setOpsType(TaskOpsType.DEACTIVATE_GROUP);
                 task.setTargetSlbId(slbId);
                 tasks.add(task);
             }
         }
         List<Long> taskIds = taskManager.addTask(tasks);
+
         List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
 
         TaskResultList resultList = new TaskResultList();
@@ -115,7 +120,7 @@ public class DeactivateResource {
         resultList.setTotal(results.size());
 
         try {
-            propertyBox.set("status", "deactivated", "group", _groupIds.toArray(new Long[_groupIds.size()]));
+            propertyBox.set("status", "deactivated", "group", groupMap.getOnlineMapping().keySet().toArray(new Long[groupMap.getOnlineMapping().size()]));
         } catch (Exception ex) {
         }
         return responseHandler.handle(resultList, hh.getMediaType());
@@ -127,57 +132,85 @@ public class DeactivateResource {
     public Response deactivateVirtualServer(@Context HttpServletRequest request,
                                             @Context HttpHeaders hh,
                                             @QueryParam("vsId") Long vsId) throws Exception {
-        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByVsIds(new Long[]{vsId});
-        if (groupMap.getOnlineMapping() != null && groupMap.getOnlineMapping().size() > 0) {
-            throw new ValidationException("Has Activated Groups Related to Vs[" + vsId + "]");
+        Set<IdVersion> relatedGroupIds = groupCriteriaQuery.queryByVsId(vsId);
+        if (relatedGroupIds.size() > 0) {
+            Set<Long> groupIds = new HashSet<>();
+            for (IdVersion key : relatedGroupIds) {
+                groupIds.add(key.getId());
+            }
+            relatedGroupIds.retainAll(groupCriteriaQuery.queryByIdsAndMode(groupIds.toArray(new Long[groupIds.size()]), SelectionMode.ONLINE_EXCLUSIVE));
+            throw new ValidationException("Activated groups are found related to Vs[" + vsId + "].");
         }
+
         ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(new Long[]{vsId});
         if (vsMap.getOnlineMapping() == null || vsMap.getOnlineMapping().get(vsId) == null) {
-            throw new ValidationException("Vs is not activated.VsId:" + vsId);
+            throw new ValidationException("Vs is not activated. VsId:" + vsId);
         }
-        VirtualServer vs = vsMap.getOnlineMapping().get(vsId);
-        OpsTask deactivateTask = new OpsTask();
-        deactivateTask.setSlbVirtualServerId(vsId);
-        deactivateTask.setCreateTime(new Date());
-        deactivateTask.setOpsType(TaskOpsType.DEACTIVATE_VS);
-        deactivateTask.setTargetSlbId(vs.getSlbId());
-        Long taskId = taskManager.addTask(deactivateTask);
 
-        TaskResult results = taskManager.getResult(taskId, apiTimeout.get());
+        VirtualServer vs = vsMap.getOnlineMapping().get(vsId);
+        List<OpsTask> deactivatingTask = new ArrayList<>();
+        for (Long slbId : vs.getSlbIds()) {
+            OpsTask task = new OpsTask();
+            task.setSlbVirtualServerId(vsId);
+            task.setCreateTime(new Date());
+            task.setOpsType(TaskOpsType.DEACTIVATE_VS);
+            task.setTargetSlbId(slbId);
+        }
+        List<Long> taskIds = taskManager.addTask(deactivatingTask);
+
+        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
+
+        TaskResultList resultList = new TaskResultList();
+        for (TaskResult t : results) {
+            resultList.addTaskResult(t);
+        }
+        resultList.setTotal(results.size());
+
         try {
             propertyBox.set("status", "deactivated", "vs", vsId);
         } catch (Exception ex) {
         }
-        return responseHandler.handle(results, hh.getMediaType());
+        return responseHandler.handle(resultList, hh.getMediaType());
     }
 
     @GET
     @Path("/soft/group")
     @Authorize(name = "activate")
     public Response softDeactivateGroup(@Context HttpServletRequest request,
-                                            @Context HttpHeaders hh,
-                                            @QueryParam("vsId") Long vsId,
-                                            @QueryParam("groupId") Long groupId) throws Exception {
-        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(new Long[]{groupId});
-        if (groupMap.getOfflineMapping() != null && groupMap.getOfflineMapping().size() > 0) {
-            throw new ValidationException("Not found group.");
+                                        @Context HttpHeaders hh,
+                                        @QueryParam("vsId") Long vsId,
+                                        @QueryParam("groupId") Long groupId) throws Exception {
+        IdVersion[] groupIdsOffline = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.OFFLINE_FIRST);
+        if (groupIdsOffline.length == 0) {
+            throw new ValidationException("Cannot find group by groupId-" + groupId + ".");
         }
         ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(new Long[]{vsId});
         if (vsMap.getOnlineMapping() == null || vsMap.getOnlineMapping().get(vsId) == null) {
             throw new ValidationException("Vs is not activated.VsId:" + vsId);
         }
         VirtualServer vs = vsMap.getOnlineMapping().get(vsId);
-        OpsTask sofDeactivateTask = new OpsTask();
-        sofDeactivateTask.setSlbVirtualServerId(vsId);
-        sofDeactivateTask.setCreateTime(new Date());
-        sofDeactivateTask.setOpsType(TaskOpsType.SOFT_DEACTIVATE_GROUP);
-        sofDeactivateTask.setTargetSlbId(vs.getSlbId());
-        sofDeactivateTask.setGroupId(groupId);
-        sofDeactivateTask.setVersion(groupMap.getOfflineMapping().get(groupId).getVersion());
-        Long taskId = taskManager.addTask(sofDeactivateTask);
+        List<OpsTask> softDeactivatingTasks = new ArrayList<>();
+        for (Long slbId : vs.getSlbIds()) {
+            OpsTask task = new OpsTask();
+            task.setSlbVirtualServerId(vsId);
+            task.setCreateTime(new Date());
+            task.setOpsType(TaskOpsType.SOFT_DEACTIVATE_GROUP);
+            task.setTargetSlbId(slbId);
+            task.setGroupId(groupId);
+            task.setVersion(groupIdsOffline[0].getVersion());
+            softDeactivatingTasks.add(task);
+        }
+        List<Long> taskIds = taskManager.addTask(softDeactivatingTasks);
 
-        TaskResult results = taskManager.getResult(taskId, apiTimeout.get());
-        return responseHandler.handle(results, hh.getMediaType());
+        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
+
+        TaskResultList resultList = new TaskResultList();
+        for (TaskResult t : results) {
+            resultList.addTaskResult(t);
+        }
+        resultList.setTotal(results.size());
+
+        return responseHandler.handle(resultList, hh.getMediaType());
     }
 
     @GET
