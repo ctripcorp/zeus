@@ -61,9 +61,7 @@ public class ActivateResource {
     @Resource
     private MessageQueueService messageQueueService;
 
-    private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
-    private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
 
     @GET
     @Path("/slb")
