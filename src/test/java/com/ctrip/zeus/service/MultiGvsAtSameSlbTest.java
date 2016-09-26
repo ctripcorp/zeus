@@ -187,7 +187,9 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
                 .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.201"))
                 .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
         for (Long id : vsIds) {
-            group.addGroupVirtualServer(new GroupVirtualServer().setPath("/" + groupId).setVirtualServer(new VirtualServer().setId(id).setSlbId(1L)));
+            VirtualServer vs = new VirtualServer().setId(id);
+            vs.getSlbIds().add(1L);
+            group.addGroupVirtualServer(new GroupVirtualServer().setPath("/" + groupId).setVirtualServer(vs));
         }
         return group;
     }

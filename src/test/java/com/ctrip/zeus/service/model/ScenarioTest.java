@@ -81,8 +81,9 @@ public class ScenarioTest extends AbstractServerTest {
         Counter.decrementAndGet();
         Slb slb1 = slbRepository.getById(1L);
 
-        VirtualServer testMigrate = new VirtualServer().setName("testMigrate.ctrip.com_80").setPort("80").setSlbId(1L).setSsl(false);
-        virtualServerRepository.add(1L, testMigrate);
+        VirtualServer testMigrate = new VirtualServer().setName("testMigrate.ctrip.com_80").setPort("80").setSsl(false);
+        testMigrate.getSlbIds().add(1L);
+        virtualServerRepository.add(testMigrate);
         Group groupOnMigrateVs = generateGroup("groupOnMigrateVs", testMigrate.getId());
         groupRepository.add(groupOnMigrateVs);
 
@@ -93,7 +94,7 @@ public class ScenarioTest extends AbstractServerTest {
 
 
         Slb slb2 = slbRepository.getById(2L);
-        testMigrate.setSlbId(2L);
+        testMigrate.getSlbIds().set(0, 2L);
         virtualServerRepository.update(testMigrate);
         ref = virtualServerRepository.getById(testMigrate.getId());
 
@@ -103,7 +104,7 @@ public class ScenarioTest extends AbstractServerTest {
         ModelAssert.assertSlbEquals(slb1, slbRepository.getById(1L));
         ModelAssert.assertSlbEquals(slb2.addVirtualServer(testMigrate), slbRepository.getById(2L));
 
-        Assert.assertEquals(2L, groupRepository.getById(groupOnMigrateVs.getId()).getGroupVirtualServers().get(0).getVirtualServer().getSlbId().longValue());
+        Assert.assertEquals(2L, groupRepository.getById(groupOnMigrateVs.getId()).getGroupVirtualServers().get(0).getVirtualServer().getSlbIds().get(0).longValue());
 
         groupRepository.delete(groupOnMigrateVs.getId());
         virtualServerRepository.delete(testMigrate.getId());
