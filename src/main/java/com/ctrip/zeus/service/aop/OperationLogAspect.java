@@ -173,7 +173,7 @@ public class OperationLogAspect implements Ordered {
                 }
                 // 3.2 type is AccessType.SLB , parse data to Slb object.
                 if (OperationLogConfig.getInstance().getType(key) == OperationLogType.SLB) {
-                    Slb slb = parseSlb(hh.getMediaType(), (String) args[i]);
+                    Slb slb = parseSlb((String) args[i]);
                     if (slb == null) {
                         return ID_UNKNOW;//"Slb Parse Fail";
                     }
@@ -189,7 +189,7 @@ public class OperationLogAspect implements Ordered {
                 }
                 // 3.3 type is AccessType.VS , parse data to Group object.
                 if (OperationLogConfig.getInstance().getType(key) == OperationLogType.VS) {
-                    VirtualServer vs = parseVS(hh.getMediaType(), (String) args[i]);
+                    VirtualServer vs = parseVS((String) args[i]);
                     if (vs == null) {
                         return ID_UNKNOW;//"Group Parse Fail";
                     }
@@ -248,7 +248,7 @@ public class OperationLogAspect implements Ordered {
                 if (ids.length >= 2 && args[ids[1]] instanceof String) {
                     String postData = (String) args[ids[1]];
                     if (OperationLogConfig.getInstance().getType(key) == OperationLogType.SLB && hh != null) {
-                        Slb slb = parseSlb(hh.getMediaType(), postData);
+                        Slb slb = parseSlb(postData);
                         if (slb == null) {
                             data.put("Slb", "Slb Parse Fail!");
                         } else {
@@ -276,7 +276,7 @@ public class OperationLogAspect implements Ordered {
                 return data;
             }
             if (OperationLogConfig.getInstance().getType(key) == OperationLogType.SLB && hh != null) {
-                Slb slb = parseSlb(hh.getMediaType(), tmp);
+                Slb slb = parseSlb(tmp);
                 if (slb == null) {
                     data.put("Slb", "Slb Parse Fail!");
                 } else {
@@ -293,7 +293,7 @@ public class OperationLogAspect implements Ordered {
                     data.put("Version", String.valueOf(group.getVersion()));
                 }
             } else if (OperationLogConfig.getInstance().getType(key) == OperationLogType.VS && hh != null) {
-                VirtualServer vs = parseVS(hh.getMediaType(), tmp);
+                VirtualServer vs = parseVS(tmp);
                 if (vs == null) {
                     data.put("VS", "Group Parse Fail!");
                 } else {
@@ -375,33 +375,13 @@ public class OperationLogAspect implements Ordered {
         return g;
     }
 
-    private Slb parseSlb(MediaType mediaType, String slb) {
-        Slb s;
-        try {
-            if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {
-                s = DefaultSaxParser.parseEntity(Slb.class, slb);
-            } else {
-                s = DefaultJsonParser.parse(Slb.class, slb);
-            }
-        } catch (Exception e) {
-            logger.warn("Slb Parse Fail!");
-            return null;
-        }
+    private Slb parseSlb(String slb) {
+        Slb s = ObjectJsonParser.parse(slb, Slb.class);
         return s;
     }
 
-    private VirtualServer parseVS(MediaType mediaType, String vs) {
-        VirtualServer s;
-        try {
-            if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {
-                s = DefaultSaxParser.parseEntity(VirtualServer.class, vs);
-            } else {
-                s = DefaultJsonParser.parse(VirtualServer.class, vs);
-            }
-        } catch (Exception e) {
-            logger.warn("VirtualServer Parse Fail!");
-            return null;
-        }
+    private VirtualServer parseVS(String vs) {
+        VirtualServer s = ObjectJsonParser.parse(vs, VirtualServer.class);
         return s;
     }
 
