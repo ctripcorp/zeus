@@ -20,8 +20,6 @@ import java.util.*;
 public class UpstreamsConf {
     @Resource
     ConfigHandler configHandler;
-    @Resource
-    HealthCheckConf healthCheckConf;
 
     public static final String UpstreamPrefix = "backend_";
 
@@ -113,8 +111,6 @@ public class UpstreamsConf {
             confWriter.writeCommand("keepalive_timeout", configHandler.getStringValue("upstream.keepAlive.timeout", slbId, vsId, groupId, "110") + "s");
         }
 
-        // This module is to be abandoned.
-        confWriter.getStringBuilder().append(healthCheckConf.generate(vs, group));
         confWriter.writeUpstreamEnd();
     }
 
