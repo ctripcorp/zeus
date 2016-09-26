@@ -84,7 +84,9 @@ public class MessageQueueServiceImpl implements MessageQueueService {
             logger.info("[MessageQueueService] Start process consumers.");
             for (Consumer consumer : consumers) {
                 logger.info("[MessageQueueService] Invoke Consumer : " + consumer.getClass().getSimpleName());
-                executorService.execute(new ConsumerExecutor(consumer, res));
+                if (configHandler.getEnable("message.consumer." + consumer.getClass().getSimpleName() + ".enable", true)) {
+                    executorService.execute(new ConsumerExecutor(consumer, res));
+                }
             }
 
             logger.info("[MessageQueueService] Finish Fetch Messages. message count:" + list.size());
