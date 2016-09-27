@@ -507,45 +507,43 @@ public class TaskExecutorImpl implements TaskExecutor {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                IdVersion idVersion = new IdVersion(task.getSlbId(), task.getVersion());
-                slbRepository.updateStatus(new IdVersion[]{idVersion});
+                IdVersion newSlbStatus = new IdVersion(task.getSlbId(), task.getVersion());
+                slbRepository.updateStatus(new IdVersion[]{newSlbStatus});
             }
-            List<IdVersion> vsIds = new ArrayList<>();
+
+            // update vs status
+            List<IdVersion> newVsStatus = new ArrayList<>();
             for (OpsTask task : activateVsOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                vsIds.add(new IdVersion(task.getSlbVirtualServerId(), task.getVersion()));
+                newVsStatus.add(new IdVersion(task.getSlbVirtualServerId(), task.getVersion()));
             }
-            virtualServerRepository.updateStatus(vsIds.toArray(new IdVersion[]{}));
-
-            List<IdVersion> deactivateVsIds = new ArrayList<>();
             for (OpsTask task : deactivateVsOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                deactivateVsIds.add(new IdVersion(task.getSlbVirtualServerId(), 0));
+                newVsStatus.add(new IdVersion(task.getSlbVirtualServerId(), 0));
             }
-            virtualServerRepository.updateStatus(deactivateVsIds.toArray(new IdVersion[]{}));
+            virtualServerRepository.updateStatus(newVsStatus.toArray(new IdVersion[newVsStatus.size()]));
 
-            List<IdVersion> activateGroups = new ArrayList<>();
+            // update group status
+            List<IdVersion> newGroupStatus = new ArrayList<>();
             for (OpsTask task : activateGroupOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                activateGroups.add(new IdVersion(task.getGroupId(), task.getVersion()));
+                newGroupStatus.add(new IdVersion(task.getGroupId(), task.getVersion()));
             }
-            groupRepository.updateStatus(activateGroups.toArray(new IdVersion[]{}));
-
-            List<IdVersion> deactivateGroups = new ArrayList<>();
             for (OpsTask task : deactivateGroupOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
                 }
-                deactivateGroups.add(new IdVersion(task.getGroupId(), 0));
+                newGroupStatus.add(new IdVersion(task.getGroupId(), 0));
             }
-            groupRepository.updateStatus(deactivateGroups.toArray(new IdVersion[]{}));
+            groupRepository.updateStatus(newGroupStatus.toArray(new IdVersion[newGroupStatus.size()]));
 
+            // update server status
             for (OpsTask task : serverOps.values()) {
                 if (!task.getStatus().equals(TaskStatus.DOING)) {
                     continue;
@@ -556,6 +554,8 @@ public class TaskExecutorImpl implements TaskExecutor {
                     statusService.downServer(task.getIpList());
                 }
             }
+
+            // update member op status
             List<UpdateStatusItem> memberUpdates = new ArrayList<>();
             for (List<OpsTask> taskList : memberOps.values()) {
                 for (OpsTask task : taskList) {
@@ -566,6 +566,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
             statusService.updateStatus(memberUpdates);
 
+            // update pull op status
             List<UpdateStatusItem> pullUpdates = new ArrayList<>();
             for (List<OpsTask> taskList : pullMemberOps.values()) {
                 for (OpsTask task : taskList) {
@@ -576,6 +577,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
             statusService.updateStatus(pullUpdates);
 
+            // update hc op status
             List<UpdateStatusItem> healthyStatus = new ArrayList<>();
             for (List<OpsTask> taskList : healthyOps.values()) {
                 for (OpsTask task : taskList) {
