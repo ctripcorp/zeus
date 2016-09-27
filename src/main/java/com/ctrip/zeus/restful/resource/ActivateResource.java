@@ -132,7 +132,7 @@ public class ActivateResource {
             }
         }
 
-        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(_groupIds.toArray(new Long[groupIds.size()]));
+        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(_groupIds.toArray(new Long[_groupIds.size()]));
 
         _groupIds.removeAll(groupMap.getOfflineMapping().keySet());
         if (_groupIds.size() > 0) {
