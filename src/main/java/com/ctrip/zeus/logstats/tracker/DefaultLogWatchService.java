@@ -31,15 +31,21 @@ public class DefaultLogWatchService implements LogWatchService {
         init();
     }
 
-    private void init() {
+    private boolean init() {
         try {
-            watchService = dirPath.getFileSystem().newWatchService();
-            watchKey = dirPath.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
+            if (watchService == null) {
+                watchService = dirPath.getFileSystem().newWatchService();
+            }
+            if (watchKey == null) {
+                watchKey = dirPath.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
+            }
+            return true;
         } catch (IOException e) {
             if (watchService == null) logger.error("Fail to create watch service to dir " + dir + ".", e);
             if (watchService != null && watchKey == null)
                 logger.error("Fail to register events to watch service at dir " + dir + ".", e);
         }
+        return false;
     }
 
     @Override
@@ -49,7 +55,11 @@ public class DefaultLogWatchService implements LogWatchService {
 
     @Override
     public List<FileChangeEvent> pollEvents() {
-        if (watchService == null || watchKey == null) return null;
+        if (watchService == null || watchKey == null) {
+            if (!init()) {
+                return null;
+            }
+        }
         List<WatchEvent<?>> watchEvents = watchKey.pollEvents();
         if (watchEvents.size() == 0) return null;
 
