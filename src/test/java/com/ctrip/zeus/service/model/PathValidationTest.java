@@ -256,6 +256,29 @@ public class PathValidationTest extends AbstractServerTest {
     }
 
     @Test
+    public void testAddRootPath() {
+        String path = "~* /";
+        List<GroupVirtualServer> array = new ArrayList<>();
+        array.add(new GroupVirtualServer().setPath(path).setPriority(1000).setVirtualServer(new VirtualServer().setId(1L)));
+        try {
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
+        }
+
+        array.get(0).setPriority(null);
+        try {
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertTrue(array.get(0).getPriority().intValue() == -1000);
+        } catch (Exception e) {
+            Assert.assertTrue(false);
+        }
+
+        testAddNormalPath();
+    }
+
+    @Test
     public void testUnconventionalPath() {
         String root = "/";
         String startWith = "^/CommentAdmin";
@@ -386,7 +409,7 @@ public class PathValidationTest extends AbstractServerTest {
             slbRepository.add(slb);
 
             for (String path : existingPaths) {
-                rGroupVsDao.insert(new RelGroupVsDo().setGroupId(10).setVsId(1).setPath(path));
+                rGroupVsDao.insert(new RelGroupVsDo().setGroupId(10).setVsId(1).setPath(path).setPriority(1000));
             }
         }
     }

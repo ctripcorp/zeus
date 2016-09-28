@@ -116,7 +116,15 @@ public class DefaultGroupValidator implements GroupValidator {
         }
 
         if (escapePathValidation || addingGvs.size() == 0) return;
-        List<RelGroupVsDo> retainedGvs = rGroupVsDao.findAllByVses(addingGvs.keySet().toArray(new Long[addingGvs.size()]), RGroupVsEntity.READSET_FULL);
+        Map<Long, List<RelGroupVsDo>> retainedGvs = new HashMap<>();
+        for (RelGroupVsDo e : rGroupVsDao.findAllByVses(addingGvs.keySet().toArray(new Long[addingGvs.size()]), RGroupVsEntity.READSET_FULL)) {
+            List<RelGroupVsDo> relsOfVs = retainedGvs.get(e.getVsId());
+            if (relsOfVs == null) {
+                relsOfVs = new ArrayList<>();
+                retainedGvs.put(e.getVsId(), relsOfVs);
+            }
+            relsOfVs.add(e);
+        }
         checkPathOverlappingAcrossVs(groupId, addingGvs, retainedGvs);
 
         // reset priority after auto reorder enabled(priority is originally null)
@@ -157,28 +165,22 @@ public class DefaultGroupValidator implements GroupValidator {
 
         String path = extractValue(gvs.getPath());
         if ("/".equals(path)) {
-            mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -1000 : gvs.getPriority()));
+            if ("/".equals(gvs.getPath())) {
+                mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -2000 : gvs.getPriority()));
+            } else {
+                mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -1000 : gvs.getPriority()));
+            }
         } else {
             mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(path).setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority()));
         }
     }
 
-    private void checkPathOverlappingAcrossVs(Long groupId, Map<Long, GroupVirtualServer> addingGvs, List<RelGroupVsDo> retainedGvs) throws ValidationException {
-        Set<RelGroupVsDo> retained = new HashSet<>();
-        for (RelGroupVsDo retainedEntry : retainedGvs) {
-            if (groupId.equals(retainedEntry.getGroupId()))
-                continue;
-            if (retainedEntry.getPriority() == 0) retainedEntry.setPriority(1000);
-
-            String retainedPath = retainedEntry.getPath();
-            try {
-                retainedPath = extractValue(retainedEntry.getPath());
-            } catch (ValidationException ex) {
-            }
-
-            GroupVirtualServer addingEntry = addingGvs.get(retainedEntry.getVsId());
+    private void checkPathOverlappingAcrossVs(Long groupId, Map<Long, GroupVirtualServer> addingGvs, Map<Long, List<RelGroupVsDo>> retainedGvs) throws ValidationException {
+        Set<RelGroupVsDo> overlappedEntries = new HashSet<>();
+        for (Map.Entry<Long, GroupVirtualServer> e : addingGvs.entrySet()) {
+            GroupVirtualServer addingEntry = e.getValue();
             if (addingEntry == null) {
-                throw new ValidationException("Unexpected path validation is reached. Related group and vs: " + groupId + ", " + retainedEntry.getVsId());
+                throw new ValidationException("Unexpected path validation is reached. Related group and vs: " + groupId + ", " + e.getKey());
             }
 
             String addingPath = addingEntry.getPath();
@@ -187,54 +189,87 @@ public class DefaultGroupValidator implements GroupValidator {
             } catch (ValidationException ex) {
             }
 
-            // check if root path is completely equivalent, otherwise escape comparing with root path
-            if ("/".equals(retainedPath) || "/".equals(addingPath)) {
-                if (retainedEntry.getPath().equals(addingEntry.getPath())) {
-                    retained.add(retainedEntry);
-                }
-                continue;
+            boolean addingPathIsRoot = "/".equals(addingPath);
+            List<String> addingPathMembers = new ArrayList<>();
+            if (!addingPathIsRoot) {
+                addingPathMembers = regexLevelSplit(addingPath, 1);
+                if (addingPathMembers.size() == 0) addingPathMembers.add(addingPath);
+//                for (String pathMember : addingPathMembers) {
+//                    if (!basicPathPath.matcher(pathMember).matches()) {
+//                        throw new ValidationException("Invalid characters are found in sub path " + pathMember + ".");
+//                    }
+//                }
+            } else {
+                addingPathMembers.add(addingPath);
             }
 
-            List<String> addingPathMembers = regexLevelSplit(addingPath, 1);
-            List<String> retainedPathMembers = regexLevelSplit(retainedPath, 1);
-            if (addingPathMembers.size() == 0) addingPathMembers.add(addingPath);
-            if (retainedPathMembers.size() == 0) retainedPathMembers.add(retainedPath);
+            List<RelGroupVsDo> relsOfVs = retainedGvs.get(e.getKey());
+            for (RelGroupVsDo retainedEntry : relsOfVs) {
+                if (groupId.equals(retainedEntry.getGroupId())) continue;
+                if (retainedEntry.getPriority() == 0) retainedEntry.setPriority(1000);
 
-//            for (String pathMember : addingPathMembers) {
-//                if (!basicPathPath.matcher(pathMember).matches()) {
-//                    throw new ValidationException("Invalid characters are found in sub path " + pathMember + ".");
-//                }
-//            }
+                String retainedPath = retainedEntry.getPath();
+                try {
+                    retainedPath = extractValue(retainedEntry.getPath());
+                } catch (ValidationException ex) {
+                }
 
-            for (String ap : addingPathMembers) {
-                for (String rp : retainedPathMembers) {
-                    int ol = PathUtils.prefixOverlapped(ap, rp, standardSuffix);
-                    switch (ol) {
-                        case -1:
-                            break;
-                        case 0:
-                            retained.add(retainedEntry);
-                            break;
-                        case 1:
-                            if (addingEntry.getPriority() == null || addingEntry.getPriority() <= retainedEntry.getPriority()) {
-                                addingEntry.setPriority(retainedEntry.getPriority() + 100);
-                            }
-                            break;
-                        case 2:
-                            if (addingEntry.getPriority() == null || addingEntry.getPriority() >= retainedEntry.getPriority()) {
-                                addingEntry.setPriority(retainedEntry.getPriority() - 100);
-                            }
-                            break;
-                        default:
-                            throw new NotImplementedException();
+                boolean retainedPathIsRoot = "/".equals(retainedPath);
+                List<String> retainedPathMembers = new ArrayList<>();
+                if (!retainedPathIsRoot) {
+                    retainedPathMembers = regexLevelSplit(retainedPath, 1);
+                    if (retainedPathMembers.size() == 0) retainedPathMembers.add(retainedPath);
+                } else {
+                    retainedPathMembers.add(retainedPath);
+                }
+
+                // check if root path is completely equivalent, otherwise escape comparing with root path
+                if (addingPathIsRoot && retainedPathIsRoot) {
+                    if (retainedEntry.getPath().equals(addingEntry.getPath())) {
+                        overlappedEntries.add(retainedEntry);
+                    }
+                    continue;
+                }
+
+                for (String ap : addingPathMembers) {
+                    for (String rp : retainedPathMembers) {
+                        if (addingPathIsRoot && addingEntry.getPriority() >= retainedEntry.getPriority()) {
+                            addingEntry.setPriority(retainedEntry.getPriority() - 100);
+                            continue;
+                        }
+                        if (retainedPathIsRoot && addingEntry.getPriority() <= retainedEntry.getPriority()) {
+                            addingEntry.setPriority(retainedEntry.getPriority() + 100);
+                            continue;
+                        }
+
+                        int ol = PathUtils.prefixOverlapped(ap, rp, standardSuffix);
+                        switch (ol) {
+                            case -1:
+                                break;
+                            case 0:
+                                overlappedEntries.add(retainedEntry);
+                                break;
+                            case 1:
+                                if (addingEntry.getPriority() == null || addingEntry.getPriority() <= retainedEntry.getPriority()) {
+                                    addingEntry.setPriority(retainedEntry.getPriority() + 100);
+                                }
+                                break;
+                            case 2:
+                                if (addingEntry.getPriority() == null || addingEntry.getPriority() >= retainedEntry.getPriority()) {
+                                    addingEntry.setPriority(retainedEntry.getPriority() - 100);
+                                }
+                                break;
+                            default:
+                                throw new NotImplementedException();
+                        }
                     }
                 }
             }
         }
 
-        if (retained.size() > 0) {
+        if (overlappedEntries.size() > 0) {
             StringBuilder sb = new StringBuilder();
-            for (RelGroupVsDo d : retained) {
+            for (RelGroupVsDo d : overlappedEntries) {
                 sb.append(d.getVsId() + "(" + d.getPath() + ")");
             }
             throw new ValidationException("Path is prefix-overlapped across virtual server " + sb.toString() + ".");
