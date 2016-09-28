@@ -607,11 +607,11 @@ public class GroupResource {
             }
         }
         if (health) {
-            propertyBox.set("healthy", "health", "group", gs.getGroupId());
+            propertyBox.set("healthy", "healthy", "group", gs.getGroupId());
         } else if (unhealth) {
-            propertyBox.set("healthy", "unhealth", "group", gs.getGroupId());
+            propertyBox.set("healthy", "broken", "group", gs.getGroupId());
         } else {
-            propertyBox.set("healthy", "sub-health", "group", gs.getGroupId());
+            propertyBox.set("healthy", "unhealthy", "group", gs.getGroupId());
         }
 
     }
