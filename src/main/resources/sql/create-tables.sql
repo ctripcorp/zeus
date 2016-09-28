@@ -923,18 +923,18 @@ CREATE TABLE IF NOT EXISTS `slb_vip` (
 
 -- Dumping structure for table slb_virtual_server
 DROP TABLE IF EXISTS `slb_virtual_server`;
-CREATE TABLE IF NOT EXISTS `slb_virtual_server` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `slb_id` bigint(20) NOT NULL DEFAULT '0',
-  `name` varchar(200) NOT NULL DEFAULT '0',
-  `port` varchar(200) NOT NULL DEFAULT '0',
-  `is_ssl` bit(1) NOT NULL DEFAULT b'0',
-  `created_time` timestamp NULL DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT '0' COMMENT 'version',
-  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `slb_id_name` (`slb_id`,`name`),
-  KEY `idx_DataChange_LastTime` (`DataChange_LastTime`)
+CREATE TABLE `slb_virtual_server` (
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`slb_id` BIGINT(20) NULL DEFAULT '0',
+	`name` VARCHAR(200) NOT NULL DEFAULT '0',
+	`port` VARCHAR(200) NOT NULL DEFAULT '0',
+	`is_ssl` BIT(1) NOT NULL DEFAULT b'0',
+	`created_time` TIMESTAMP NULL DEFAULT NULL,
+	`version` INT(11) NOT NULL DEFAULT '0' COMMENT 'version',
+	`DataChange_LastTime` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`),
+	INDEX `idx_DataChange_LastTime` (`DataChange_LastTime`),
+	INDEX `is_ssl` (`is_ssl`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.

@@ -107,11 +107,21 @@ public class QueryTest extends AbstractServerTest {
         int i = 0;
         for (IdVersion e : vsKeys) {
             values[i] = e.getId();
-            Assert.assertEquals(1, e.getVersion().intValue());
+            if (e.getId().equals(1L)) {
+                Assert.assertEquals(2, e.getVersion().intValue());
+            } else {
+                Assert.assertEquals(1, e.getVersion().intValue());
+            }
             i++;
         }
         Arrays.sort(values);
         Assert.assertArrayEquals(new Long[]{1L, 2L, 3L}, values);
+
+        vsKeys = virtualServerCriteriaQuery.queryBySlbId(1L);
+        Assert.assertEquals(2, vsKeys.size());
+        vsKeys = virtualServerCriteriaQuery.queryBySlbId(3L);
+        Assert.assertEquals(1, vsKeys.size());
+
 
         IdVersion[] vsKeyArray = virtualServerCriteriaQuery.queryByIdAndMode(2L, SelectionMode.ONLINE_EXCLUSIVE);
         Assert.assertEquals(1, vsKeyArray.length);
@@ -123,8 +133,8 @@ public class QueryTest extends AbstractServerTest {
         Counter.decrementAndGet();
 
         Set<Long> slbIds = slbCriteriaQuery.queryAll();
-        Assert.assertEquals(2, slbIds.size());
-        Assert.assertArrayEquals(new Long[]{1L, 2L}, slbIds.toArray(new Long[2]));
+        Assert.assertEquals(3, slbIds.size());
+        Assert.assertArrayEquals(new Long[]{1L, 2L, 3L}, slbIds.toArray(new Long[3]));
 
         slbIds = slbCriteriaQuery.queryByVs(new IdVersion(2L, 1));
         Assert.assertEquals(1, slbIds.size());
@@ -142,7 +152,11 @@ public class QueryTest extends AbstractServerTest {
         int i = 0;
         for (IdVersion e : sKeys) {
             values[i] = e.getId();
-            Assert.assertEquals(1, e.getVersion().intValue());
+            if (e.getId().equals(1L)) {
+                Assert.assertEquals(2, e.getVersion().intValue());
+            } else {
+                Assert.assertEquals(1, e.getVersion().intValue());
+            }
             i++;
         }
         Arrays.sort(values);
@@ -166,10 +180,7 @@ public class QueryTest extends AbstractServerTest {
         Assert.assertEquals(3, mapping.getOfflineMapping().size());
         Assert.assertEquals(2, mapping.getOnlineMapping().size());
 
-        Long[] groupIds = entityFactory.getGroupIdsByVsIds(new Long[]{1L, 2L, 3L}, SelectionMode.ONLINE_FIRST);
-        Assert.assertEquals(3, groupIds.length);
-
-        groupIds = entityFactory.getGroupIdsByGroupServerIp("10.2.6.201", SelectionMode.ONLINE_EXCLUSIVE);
+        Long[] groupIds = entityFactory.getGroupIdsByGroupServerIp("10.2.6.201", SelectionMode.ONLINE_EXCLUSIVE);
         Assert.assertEquals(4, groupIds.length);
         Arrays.sort(groupIds);
         Assert.assertArrayEquals(new Long[]{1L, 2L, 4L, 6L}, groupIds);
@@ -216,6 +227,7 @@ public class QueryTest extends AbstractServerTest {
                 .addVirtualServer(new VirtualServer().setName("defaultSlbVs2").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("defaultSlbVs2.ctrip.com")));
         slbRepository.add(default1);
+
         IdVersion[] vses = new IdVersion[2];
         for (int i = 0; i < 2; i++) {
             VirtualServer t = default1.getVirtualServers().get(i);
@@ -230,6 +242,17 @@ public class QueryTest extends AbstractServerTest {
                 .addVirtualServer(new VirtualServer().setName("defaultSlbVs3").setSsl(false).setPort("80")
                         .addDomain(new Domain().setName("defaultSlbVs3.ctrip.com")));
         slbRepository.add(default2);
+
+        Slb default0 = new Slb().setName("default0").setStatus("TEST")
+                .addVip(new Vip().setIp("10.2.25.92"))
+                .addSlbServer(new SlbServer().setIp("10.2.25.92").setHostName("uat0357"))
+                .addSlbServer(new SlbServer().setIp("10.2.25.91").setHostName("uat0356"));
+        slbRepository.add(default0);
+
+        VirtualServer vs0 = default1.getVirtualServers().get(0);
+        vs0.getSlbIds().add(default0.getId());
+        vs0 = virtualServerRepository.update(vs0);
+        virtualServerRepository.updateStatus(new IdVersion[]{new IdVersion(vs0.getId(), vs0.getVersion())});
     }
 
     private void addGroups() throws Exception {

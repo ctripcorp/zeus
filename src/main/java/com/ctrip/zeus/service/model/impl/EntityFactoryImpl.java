@@ -268,43 +268,4 @@ public class EntityFactoryImpl implements EntityFactory {
                     }
                 });
     }
-
-    @Override
-    public Long[] getGroupIdsByVsIds(Long[] vsIds, SelectionMode mode) throws Exception {
-        if (vsIds == null || vsIds.length == 0) return new Long[0];
-
-        final Set<IdVersion> groupFilter = groupCriteriaQuery.queryByVsIds(vsIds);
-        final SelectionMode m = mode;
-        return new QueryExecuter.Builder<IdVersion>()
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return true;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return groupFilter;
-                    }
-                })
-                .addFilter(new FilterSet<IdVersion>() {
-                    @Override
-                    public boolean shouldFilter() throws Exception {
-                        return groupFilter.size() != 0;
-                    }
-
-                    @Override
-                    public Set<IdVersion> filter() throws Exception {
-                        return virtualServerCriteriaQuery.queryByIdsAndMode(VersionUtils.extractUniqIds(groupFilter), m);
-                    }
-                }).build(IdVersion.class)
-                .run(new ResultHandler<IdVersion, Long>() {
-                    @Override
-                    public Long[] handle(Set<IdVersion> result) throws Exception {
-                        if (result == null) return new Long[0];
-                        if (result.size() == 0) return new Long[0];
-                        return VersionUtils.extractUniqIds(result);
-                    }
-                });
-    }
 }

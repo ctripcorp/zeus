@@ -93,6 +93,6 @@ public class VirtualServerEntityManager implements VirtualServerSync {
     }
 
     private static SlbVirtualServerDo toSlbVirtualServerDo(VirtualServer e) {
-        return new SlbVirtualServerDo().setId(e.getId()).setName(e.getName()).setPort(e.getPort()).setIsSsl(e.isSsl()).setVersion(e.getVersion());
+        return new SlbVirtualServerDo().setId(e.getId() == null ? 0L : e.getId()).setName(e.getName()).setPort(e.getPort()).setIsSsl(e.isSsl()).setVersion(e.getVersion());
     }
 }

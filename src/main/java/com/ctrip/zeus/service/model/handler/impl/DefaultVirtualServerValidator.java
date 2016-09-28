@@ -82,6 +82,13 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
             throw new ValidationException("Virtual server must have domain(s).");
         if (virtualServer.getSlbIds() == null || virtualServer.getSlbIds().size() == 0)
             throw new ValidationException("Missing field slbIds or empty value is found.");
+
+        Set<Long> slbIds = new HashSet<>();
+        for (Long slbId : virtualServer.getSlbIds()) {
+            if (!slbIds.add(slbId)) {
+                throw new ValidationException("Duplicate slbId-" + slbId + " is found.");
+            }
+        }
         Set<String> uniq = new HashSet<>();
         Iterator<Domain> domainIter = virtualServer.getDomains().iterator();
         while (domainIter.hasNext()) {

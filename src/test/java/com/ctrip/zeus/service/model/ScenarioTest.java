@@ -81,7 +81,7 @@ public class ScenarioTest extends AbstractServerTest {
         Counter.decrementAndGet();
         Slb slb1 = slbRepository.getById(1L);
 
-        VirtualServer testMigrate = new VirtualServer().setName("testMigrate.ctrip.com_80").setPort("80").setSsl(false);
+        VirtualServer testMigrate = new VirtualServer().setName("testMigrate.ctrip.com_80").setPort("80").setSsl(false).addDomain(new Domain().setName("testMigrate.ctrip.com"));
         testMigrate.getSlbIds().add(1L);
         virtualServerRepository.add(testMigrate);
         Group groupOnMigrateVs = generateGroup("groupOnMigrateVs", testMigrate.getId());
