@@ -245,13 +245,17 @@ public class TaskExecutorImpl implements TaskExecutor {
 
             //5.2 push config to all slb servers. reload if needed.
             //5.2.1 remove deactivate vs ids from need build vses
-            buildingVsIds.removeAll(deactivateVsOps.keySet());
-            buildingVsIds.removeAll(softDeactivateVsOps.keySet());
+            Set<Long> cleanVsIds = new HashSet<>();
+            cleanVsIds.addAll(deactivateVsOps.keySet());
+            cleanVsIds.addAll(softDeactivateVsOps.keySet());
+
+            buildingVsIds.removeAll(cleanVsIds);
+
             if (writeEnable.get()) {
                 //5.2.2 update slb current version
                 confVersionService.updateSlbCurrentVersion(slbId, buildVersion);
                 //5.2.3 add commit
-                addCommit(slbId, needReload, buildVersion, buildingVsIds, buildingGroupIds);
+                addCommit(slbId, needReload, buildVersion, buildingVsIds, cleanVsIds, buildingGroupIds);
                 //5.2.4 fire update job
                 needRollbackConf = true;
                 NginxResponse response = nginxService.updateConf(nxOnlineSlb.getSlbServers());
@@ -445,14 +449,14 @@ public class TaskExecutorImpl implements TaskExecutor {
         logger.info(sb.toString());
     }
 
-    private void addCommit(Long slbId, boolean needReload, Long buildVersion, Set<Long> needBuildVses, Set<Long> needBuildGroups) throws Exception {
+    private void addCommit(Long slbId, boolean needReload, Long buildVersion, Set<Long> needBuildVses, Set<Long> cleanVsIds, Set<Long> needBuildGroups) throws Exception {
         Commit commit = new Commit();
         commit.setSlbId(slbId)
                 .setType(needReload ? CommitType.COMMIT_TYPE_RELOAD : CommitType.COMMIT_TYPE_DYUPS)
                 .setVersion(buildVersion);
         commit.getVsIds().addAll(needBuildVses);
         commit.getGroupIds().addAll(needBuildGroups);
-        commit.getCleanvsIds().addAll(deactivateVsOps.keySet());
+        commit.getCleanvsIds().addAll(cleanVsIds);
         for (OpsTask t : tasks) {
             commit.addTaskId(t.getId());
         }
