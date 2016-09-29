@@ -56,20 +56,21 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
 
     @Override
     public void start() throws IOException {
-        running.set(true);
         logTracker.start();
         if (consumers != null) {
             consumers.start();
         }
+        running.set(true);
     }
 
     @Override
     public void stop() throws IOException {
-        running.set(false);
-        if (consumers != null) {
-            consumers.shutDown();
+        if (running.compareAndSet(true, false)) {
+            if (consumers != null) {
+                consumers.shutDown();
+            }
+            logTracker.stop();
         }
-        logTracker.stop();
     }
 
     @Override
