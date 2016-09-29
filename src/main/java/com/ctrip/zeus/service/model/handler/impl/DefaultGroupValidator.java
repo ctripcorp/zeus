@@ -116,6 +116,7 @@ public class DefaultGroupValidator implements GroupValidator {
         }
 
         if (escapePathValidation || addingGvs.size() == 0) return;
+
         Map<Long, List<RelGroupVsDo>> retainedGvs = new HashMap<>();
         for (RelGroupVsDo e : rGroupVsDao.findAllByVses(addingGvs.keySet().toArray(new Long[addingGvs.size()]), RGroupVsEntity.READSET_FULL)) {
             List<RelGroupVsDo> relsOfVs = retainedGvs.get(e.getVsId());
@@ -204,6 +205,8 @@ public class DefaultGroupValidator implements GroupValidator {
             }
 
             List<RelGroupVsDo> relsOfVs = retainedGvs.get(e.getKey());
+            if (relsOfVs == null) continue;
+
             for (RelGroupVsDo retainedEntry : relsOfVs) {
                 if (groupId.equals(retainedEntry.getGroupId())) continue;
                 if (retainedEntry.getPriority() == 0) retainedEntry.setPriority(1000);
