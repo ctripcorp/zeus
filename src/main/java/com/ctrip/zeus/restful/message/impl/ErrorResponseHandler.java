@@ -5,9 +5,9 @@ import com.ctrip.zeus.restful.message.Message;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.response.entity.ErrorMessage;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.util.ExceptionUtils;
 import org.springframework.stereotype.Component;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -26,7 +26,7 @@ public class ErrorResponseHandler implements ResponseHandler {
         if (type.equals(MediaType.APPLICATION_XML)) {
             err.setResponse(GenericSerializer.writeXml(em).replace("%", "%%"));
         } else {
-            err.setResponse(GenericSerializer.writeJson(em).replace("%", "%%"));
+            err.setResponse(ObjectJsonWriter.write(em));
         }
         if (object instanceof NotFoundException) {
             err.setStatus(Response.Status.NOT_FOUND.getStatusCode());
