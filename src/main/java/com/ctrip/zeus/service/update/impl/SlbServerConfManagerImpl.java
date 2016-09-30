@@ -156,6 +156,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                     Set<Long> gids = new HashSet<>();
                     gids.addAll(commit.getGroupIds());
                     dyUpstreamOpsDatas = upstreamConfPicker.pickByGroupIds(entry, gids);
+                    randomSortUpstreamServers(dyUpstreamOpsDatas);
                 }
                 StringBuilder msg = new StringBuilder();
                 msg.append("[UpdateConfigInfo] Reload:").append(reload).append("\ntest:").append(test).append("\ndyups:").append(dyups);
@@ -184,6 +185,37 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         //5. update server version
         confVersionService.updateSlbServerCurrentVersion(slbId, ip, slbVersion);
         return response.setServerIp(ip).setSucceed(true).setOutMsg("update success.");
+    }
+
+    private void randomSortUpstreamServers(DyUpstreamOpsData[] dyUpstreamOpsDatas) {
+        StringBuilder sb = new StringBuilder(256);
+        for (DyUpstreamOpsData d : dyUpstreamOpsDatas) {
+            sb.setLength(0);
+            String upstream = d.getUpstreamCommands();
+            if (upstream == null) {
+                return;
+            }
+            String[] lines = upstream.split(";");
+            List<String> servers = new ArrayList<>();
+            List<String> others = new ArrayList<>();
+
+            for (String s : lines) {
+                if (s.contains("server")) {
+                    servers.add(s);
+                } else {
+                    others.add(s);
+                }
+            }
+            Collections.shuffle(servers);
+
+            for (String n : servers) {
+                sb.append(n).append(";");
+            }
+            for (String o : others) {
+                sb.append(o).append(";");
+            }
+            d.setUpstreamCommands(sb.toString());
+        }
     }
 
     @Override
