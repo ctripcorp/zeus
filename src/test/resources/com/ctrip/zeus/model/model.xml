@@ -1,8 +1,7 @@
 <model>
     <virtual-server name="vs001" id="123456789012" ssl="true" version="1">
-        <!--deprecated field slb-id
+        <!--deprecated field slb-id-->
         <slb-id>123456789012</slb-id>
-        -->
         <slb-ids>
             <value>123456789012</value>
             <value>123456789012</value>

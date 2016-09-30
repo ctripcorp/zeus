@@ -179,7 +179,7 @@ public class VirtualServerResource {
 
         messageQueueService.produceMessage(MessageType.NewVs, vs.getId(), null);
 
-        return responseHandler.handle(vs, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
 
     }
 
@@ -221,7 +221,7 @@ public class VirtualServerResource {
 
         messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
 
-        return responseHandler.handle(vs, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
     }
 
     @GET
@@ -256,7 +256,7 @@ public class VirtualServerResource {
 
         messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
 
-        return responseHandler.handle(vs, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
     }
 
     @GET
@@ -297,7 +297,8 @@ public class VirtualServerResource {
         } catch (Exception ex) {
         }
         messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
-        return responseHandler.handle(vs, hh.getMediaType());
+
+        return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
     }
 
     @GET
@@ -327,7 +328,9 @@ public class VirtualServerResource {
             tagBox.clear("vs", vsId);
         } catch (Exception ex) {
         }
+
         messageQueueService.produceMessage(MessageType.DeleteVs, vsId, null);
+
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
     }
 

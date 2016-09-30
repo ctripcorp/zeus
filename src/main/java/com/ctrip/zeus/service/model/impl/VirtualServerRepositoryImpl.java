@@ -79,8 +79,23 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Override
     public VirtualServer add(VirtualServer virtualServer) throws Exception {
         virtualServerModelValidator.validate(virtualServer);
+        //TODO render for deprecated field
+        if (virtualServer.getSlbId() != null) {
+            if (!virtualServer.getSlbIds().contains(virtualServer.getSlbId())) {
+                virtualServer.getSlbIds().add(virtualServer.getSlbId());
+            }
+            virtualServer.setSlbId(null);
+        }
 
-        for (Long slbId : virtualServer.getSlbIds()) {
+        Iterator<Long> iter = virtualServer.getSlbIds().iterator();
+        Set<Long> uniq = new HashSet<>();
+        while (iter.hasNext()) {
+            Long slbId = iter.next();
+            if (!uniq.add(slbId)) {
+                iter.remove();
+                continue;
+            }
+
             if (!slbModelValidator.exists(slbId)) {
                 throw new ValidationException("Slb with id " + slbId + "does not exits.");
             }
@@ -108,9 +123,25 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         if (!virtualServerModelValidator.exists(virtualServer.getId())) {
             throw new ValidationException("Virtual server with id " + virtualServer.getId() + " does not exist.");
         }
+        //TODO render for deprecated field
+        if (virtualServer.getSlbId() != null) {
+            if (!virtualServer.getSlbIds().contains(virtualServer.getSlbId())) {
+                virtualServer.getSlbIds().add(virtualServer.getSlbId());
+            }
+            virtualServer.setSlbId(null);
+        }
+
         virtualServerModelValidator.validate(virtualServer);
 
-        for (Long slbId : virtualServer.getSlbIds()) {
+        Iterator<Long> iter = virtualServer.getSlbIds().iterator();
+        Set<Long> uniq = new HashSet<>();
+        while (iter.hasNext()) {
+            Long slbId = iter.next();
+            if (!uniq.add(slbId)) {
+                iter.remove();
+                continue;
+            }
+
             if (!slbModelValidator.exists(slbId)) {
                 throw new ValidationException("Slb with id " + slbId + "does not exits.");
             }
@@ -121,11 +152,11 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             }
             Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(retained.toArray(new Long[retained.size()]), SelectionMode.REDUNDANT);
             List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
-            Iterator<VirtualServer> iter = check.iterator();
-            while (iter.hasNext()) {
-                VirtualServer c = iter.next();
+            Iterator<VirtualServer> vsIter = check.iterator();
+            while (vsIter.hasNext()) {
+                VirtualServer c = vsIter.next();
                 if (c.getId().equals(virtualServer.getId())) {
-                    iter.remove();
+                    vsIter.remove();
                 }
             }
             check.add(virtualServer);

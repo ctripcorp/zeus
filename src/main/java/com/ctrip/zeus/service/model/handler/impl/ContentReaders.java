@@ -13,25 +13,27 @@ import java.io.IOException;
  * Created by zhoumy on 2015/9/22.
  */
 public class ContentReaders {
-
     public static Group readGroupContent(String content) throws IOException, SAXException {
-        if (content.charAt(0) == '<')
+        if (content.charAt(0) == '<') {
             return DefaultSaxParser.parseEntity(Group.class, content);
-        else
+        } else {
             return ObjectJsonParser.parse(content, Group.class);
+        }
     }
 
     public static Slb readSlbContent(String content) throws IOException, SAXException {
-        if (content.charAt(0) == '<')
+        if (content.charAt(0) == '<') {
             return DefaultSaxParser.parseEntity(Slb.class, content);
-        else
+        } else {
             return ObjectJsonParser.parse(content, Slb.class);
+        }
     }
 
     public static VirtualServer readVirtualServerContent(String content) throws IOException, SAXException {
-        if (content.charAt(0) == '<')
+        if (content.charAt(0) == '<') {
             return DefaultSaxParser.parseEntity(VirtualServer.class, content);
-        else
+        } else {
             return ObjectJsonParser.parse(content, VirtualServer.class);
+        }
     }
 }

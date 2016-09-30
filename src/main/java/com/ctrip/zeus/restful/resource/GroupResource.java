@@ -242,7 +242,7 @@ public class GroupResource {
         addHealthProperty(g.getId());
         messageQueueService.produceMessage(MessageType.NewGroup, g.getId(), null);
 
-        return responseHandler.handle(g, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
     }
 
     @POST
@@ -318,7 +318,7 @@ public class GroupResource {
         addHealthProperty(g.getId());
         messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
 
-        return responseHandler.handle(g, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
     }
 
     @POST
@@ -354,7 +354,7 @@ public class GroupResource {
             addTag(g.getId(), extendedView.getTags());
         }
 
-        return responseHandler.handle(g, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
     }
 
     @POST
@@ -376,7 +376,8 @@ public class GroupResource {
             lock.unlock();
         }
         messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
-        return responseHandler.handle(g, hh.getMediaType());
+
+        return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
     }
 
     @POST
@@ -445,7 +446,7 @@ public class GroupResource {
 
         messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
 
-        return responseHandler.handle(target, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedGroup(target), hh.getMediaType());
     }
 
     @GET
@@ -493,7 +494,7 @@ public class GroupResource {
 
         messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
 
-        return responseHandler.handle(target, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedGroup(target), hh.getMediaType());
     }
 
 

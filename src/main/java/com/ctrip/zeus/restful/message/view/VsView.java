@@ -20,6 +20,9 @@ public abstract class VsView {
     abstract String getPort();
 
     @JsonView(ViewConstraints.Normal.class)
+    abstract Long getSlbId();
+
+    @JsonView(ViewConstraints.Normal.class)
     abstract List<Long> getSlbIds();
 
     @JsonView(ViewConstraints.Normal.class)
