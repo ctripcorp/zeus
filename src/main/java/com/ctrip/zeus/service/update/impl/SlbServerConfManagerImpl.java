@@ -193,7 +193,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
             sb.setLength(0);
             String upstream = d.getUpstreamCommands();
             if (upstream == null) {
-                return;
+                continue;
             }
             String[] lines = upstream.split(";");
             List<String> servers = new ArrayList<>();
