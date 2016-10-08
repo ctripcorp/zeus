@@ -28,7 +28,6 @@ import java.util.*;
  */
 @Service("groupStatusService")
 public class GroupStatusServiceImpl implements GroupStatusService {
-    private static DynamicBooleanProperty healthyOpsActivate = DynamicPropertyFactory.getInstance().getBooleanProperty("healthy.operation.active", false);
 
     @Resource
     SlbRepository slbRepository;
@@ -161,16 +160,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
-                boolean up = false;
-                if (healthyOpsActivate.get()) {
-                    up = memberUp && serverUp && pullIn && raise;
-                } else {
-                    if (memberUp && serverUp && pullIn) {
-                        up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
-                    } else {
-                        up = false;
-                    }
-                }
+                boolean up =  memberUp && serverUp && pullIn && raise;
 
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
@@ -227,17 +217,8 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
-                boolean up = false;
+                boolean up = memberUp && serverUp && pullIn && raise;
                 NextStatus nextStatus = NextStatus.Online;
-                if (healthyOpsActivate.get()) {
-                    up = memberUp && serverUp && pullIn && raise;
-                } else {
-                    if (memberUp && serverUp && pullIn) {
-                        up = memberStatus.get(key).get(StatusOffset.HEALTH_CHECK);
-                    } else {
-                        up = false;
-                    }
-                }
                 boolean online = onlineMembers.contains(gs.getIp());
                 if (!online) {
                     up = false;
