@@ -8,6 +8,7 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.Resource;
 import java.util.List;
 
@@ -48,11 +49,15 @@ public class ServerConf {
             confWriter.writeCommand("proxy_busy_buffers_size", configHandler.getStringValue("server.proxy.busy.buffers.size", slbId, vsId, null, "8k"));
         }
 
+        if (configHandler.getEnable("large.client.header.buffers", slbId, vsId, null, false)) {
+            confWriter.writeCommand("large_client_header_buffers", configHandler.getStringValue("large.client.header.buffers", slbId, vsId, null, "4 8k"));
+        }
+
         if (vs.isSsl()) {
             confWriter.writeCommand("ssl", "on");
             confWriter.writeCommand("ssl_certificate", SSL_PATH + vsId + "/ssl.crt");
             confWriter.writeCommand("ssl_certificate_key", SSL_PATH + vsId + "/ssl.key");
-            confWriter.writeCommand("ssl_protocols",getProtocols(slbId,vsId));
+            confWriter.writeCommand("ssl_protocols", getProtocols(slbId, vsId));
         }
 
         if (configHandler.getEnable("server.vs.health.check", slbId, vsId, null, false)) {
@@ -82,10 +87,10 @@ public class ServerConf {
 
     private String getProtocols(Long slbId, Long vsId) throws Exception {
         String result = "TLSv1 TLSv1.1 TLSv1.2";
-        if (configHandler.getEnable("ssl.protocol.sslv2",slbId,vsId,null,false)){
+        if (configHandler.getEnable("ssl.protocol.sslv2", slbId, vsId, null, false)) {
             result += " SSLv2";
         }
-        if (configHandler.getEnable("ssl.protocol.sslv3",slbId,vsId,null,false)){
+        if (configHandler.getEnable("ssl.protocol.sslv3", slbId, vsId, null, false)) {
             result += " SSLv3";
         }
         return result;

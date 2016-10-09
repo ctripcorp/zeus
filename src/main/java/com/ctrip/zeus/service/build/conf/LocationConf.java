@@ -62,6 +62,10 @@ public class LocationConf {
                     confWriter.writeCommand("client_max_body_size", configHandler.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "2") + "m");
                 }
 
+                if (configHandler.getEnable("location.gzip", slbId, vsId, groupId, false)) {
+                    confWriter.writeCommand("gzip", "on");
+                }
+
                 // write proxy configuration
                 confWriter.writeCommand("proxy_request_buffering", "off");
                 confWriter.writeCommand("proxy_next_upstream", "off");
