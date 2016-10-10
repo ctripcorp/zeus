@@ -128,23 +128,26 @@ public class DefaultPropertyBox implements PropertyBox {
         List<PropertyItemDo> adding = new ArrayList<>();
         List<PropertyItemDo> removing = new ArrayList<>();
         List<PropertyItemDo> updating = new ArrayList<>();
+
+        Set<Long> uniqItemIds = new HashSet<>();
         for (Long itemId : itemIds) {
-            List<PropertyItemDo> items = propertyItemDao.findAllByItemAndProperties(itemId, properties.toArray(new Long[properties.size()]), PropertyItemEntity.READSET_FULL);
-            PropertyItemDo d = null;
-            Iterator<PropertyItemDo> iter = items.iterator();
-            while (iter.hasNext()) {
-                PropertyItemDo n = iter.next();
-                if (n.getType().equals(type)) {
-                    d = n;
-                    iter.remove();
-                } else {
-                    iter.remove();
+            uniqItemIds.add(itemId);
+        }
+
+        Map<Long, PropertyItemDo> items = new HashMap<>();
+        for (PropertyItemDo e : propertyItemDao.findAllByProperties(properties.toArray(new Long[properties.size()]), PropertyItemEntity.READSET_FULL)) {
+            if (uniqItemIds.contains(e.getItemId())) {
+                if (e.getType().equals(type)) {
+                    PropertyItemDo dup = items.put(e.getItemId(), e);
+                    if (dup != null) {
+                        removing.add(dup);
+                    }
                 }
             }
+        }
 
-            if (items.size() > 0) {
-                removing.addAll(items);
-            }
+        for (Long itemId : uniqItemIds) {
+            PropertyItemDo d = items.get(itemId);
             if (d == null) {
                 adding.add(new PropertyItemDo().setPropertyId(targetProperty.getId()).setItemId(itemId).setType(type));
 
@@ -155,6 +158,7 @@ public class DefaultPropertyBox implements PropertyBox {
                 updating.add(d);
             }
         }
+
         if (adding.size() > 0) {
             propertyItemDao.insert(adding.toArray(new PropertyItemDo[adding.size()]));
         }
