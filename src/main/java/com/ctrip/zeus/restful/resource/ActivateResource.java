@@ -9,7 +9,6 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.message.queue.MessageQueueService;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
-import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
@@ -19,8 +18,7 @@ import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.task.entity.TaskResultList;
 import com.ctrip.zeus.util.AssertUtils;
-import com.netflix.config.DynamicBooleanProperty;
-import com.netflix.config.DynamicIntProperty;
+import com.google.common.base.Joiner;
 import com.netflix.config.DynamicLongProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
@@ -53,17 +51,13 @@ public class ActivateResource {
     @Resource
     private TaskManager taskManager;
     @Resource
-    private VirtualServerValidator virtualServerValidator;
-    @Resource
     private ResponseHandler responseHandler;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private MessageQueueService messageQueueService;
 
-    private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
-    private static DynamicBooleanProperty writable = DynamicPropertyFactory.getInstance().getBooleanProperty("activate.writable", true);
 
     @GET
     @Path("/slb")
@@ -127,7 +121,7 @@ public class ActivateResource {
     @Path("/group")
     @Authorize(name = "activate")
     public Response activateGroup(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") List<Long> groupIds, @QueryParam("groupName") List<String> groupNames) throws Exception {
-        List<Long> _groupIds = new ArrayList<>();
+        Set<Long> _groupIds = new HashSet<>();
 
         if (groupIds != null && !groupIds.isEmpty()) {
             _groupIds.addAll(groupIds);
@@ -138,67 +132,95 @@ public class ActivateResource {
             }
         }
 
-        ModelStatusMapping<Group> mapping = entityFactory.getGroupsByIds(_groupIds.toArray(new Long[]{}));
-        if (mapping.getOfflineMapping() == null || mapping.getOfflineMapping().size() == 0) {
-            throw new ValidationException("Not Found Group By Id.");
+        ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(_groupIds.toArray(new Long[_groupIds.size()]));
+
+        _groupIds.removeAll(groupMap.getOfflineMapping().keySet());
+        if (_groupIds.size() > 0) {
+            throw new ValidationException("Groups with id (" + Joiner.on(",").join(_groupIds) + ") are not found.");
         }
+
+        // Fetch all related vs entities first to reduce IO
+        Set<Long> vsIds = new HashSet<>();
+        for (Map.Entry<Long, Group> e : groupMap.getOfflineMapping().entrySet()) {
+            Group group = e.getValue();
+            if (group == null) {
+                throw new Exception("Unexpected offline group with null value. groupId=" + e.getKey() + ".");
+            }
+            AssertUtils.assertNotNull(group.getGroupVirtualServers(), "Group with id " + e.getKey() + " does not have any related virtual server.");
+            for (GroupVirtualServer vs : group.getGroupVirtualServers()) {
+                vsIds.add(vs.getVirtualServer().getId());
+            }
+        }
+        for (Map.Entry<Long, Group> e : groupMap.getOnlineMapping().entrySet()) {
+            Group group = e.getValue();
+            if (group == null) {
+                throw new Exception("Unexpected online group with null value. groupId=" + e.getKey() + ".");
+            }
+            AssertUtils.assertNotNull(group.getGroupVirtualServers(), "Group with id " + e.getKey() + " does not have any related virtual server.");
+            for (GroupVirtualServer vs : group.getGroupVirtualServers()) {
+                vsIds.add(vs.getVirtualServer().getId());
+            }
+        }
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
+
+
         List<OpsTask> tasks = new ArrayList<>();
-        for (Long id : _groupIds) {
-            Group offGroup = mapping.getOfflineMapping().get(id);
-            Group onGroup = mapping.getOnlineMapping().get(id);
+        for (Map.Entry<Long, Group> e : groupMap.getOfflineMapping().entrySet()) {
+            Group offlineVersion = groupMap.getOfflineMapping().get(e.getKey());
 
-            AssertUtils.assertNotNull(offGroup, "Group Not Found! GroupId:" + id);
-            AssertUtils.assertNotNull(offGroup.getGroupVirtualServers(), "Group Virtual Servers Not Found! GroupId:" + id);
-
-
-            Set<Long> onlineVsIds = new HashSet<>();
-            Set<Long> offlinevsIds = new HashSet<>();
-
-            for (GroupVirtualServer gv : offGroup.getGroupVirtualServers()) {
-                if (!virtualServerValidator.isActivated(gv.getVirtualServer().getId())) {
-                    throw new ValidationException("Related VS has not been activated.VS: " + gv.getVirtualServer().getId());
+            Set<Long> offlineRelatedVsIds = new HashSet<>();
+            for (GroupVirtualServer gvs : offlineVersion.getGroupVirtualServers()) {
+                VirtualServer vs = vsMap.getOnlineMapping().get(gvs.getVirtualServer().getId());
+                if (vs == null) {
+                    throw new ValidationException("Virtual server " + gvs.getVirtualServer().getId() + " is found deactivated.");
                 }
-                offlinevsIds.add(gv.getVirtualServer().getId());
+                offlineRelatedVsIds.add(vs.getId());
             }
 
-            if (onGroup != null) {
-                for (GroupVirtualServer gv : onGroup.getGroupVirtualServers()) {
-                    onlineVsIds.add(gv.getVirtualServer().getId());
+            Set<Long> onlineRelatedVsIds = new HashSet<>();
+            Group onlineVersion = groupMap.getOnlineMapping().get(e.getKey());
+            if (onlineVersion != null) {
+                for (GroupVirtualServer gvs : onlineVersion.getGroupVirtualServers()) {
+                    VirtualServer vs = vsMap.getOnlineMapping().get(gvs.getVirtualServer().getId());
+                    if (vs == null) {
+                        throw new Exception("Virtual server " + gvs.getVirtualServer().getId() + " is found deactivated of an online group. GroupId=" + e.getKey() + ".");
+                    }
+                    onlineRelatedVsIds.add(gvs.getVirtualServer().getId());
                 }
             }
 
             Set<Long> tmp = new HashSet<>();
-            tmp.addAll(onlineVsIds);
-            tmp.addAll(offlinevsIds);
-
-            ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(tmp.toArray(new Long[]{}));
+            tmp.addAll(offlineRelatedVsIds);
+            tmp.addAll(onlineRelatedVsIds);
 
             for (Long vsId : tmp) {
-                VirtualServer vs = vsMaping.getOnlineMapping().get(vsId);
-                if (vs == null) {
-                    throw new ValidationException("Vs is not activated. vsId:" + vsId);
-                }
-                if (onlineVsIds.contains(vsId) && !offlinevsIds.contains(vsId)) {
-                    OpsTask task = new OpsTask();
-                    task.setCreateTime(new Date())
-                            .setGroupId(id)
-                            .setTargetSlbId(vs.getSlbId())
-                            .setSlbVirtualServerId(vsId)
-                            .setOpsType(TaskOpsType.SOFT_DEACTIVATE_GROUP)
-                            .setVersion(offGroup.getVersion());
-                    tasks.add(task);
+                VirtualServer vs = vsMap.getOnlineMapping().get(vsId);
+                if (onlineRelatedVsIds.contains(vsId) && !offlineRelatedVsIds.contains(vsId)) {
+                    for (Long slbId : vs.getSlbIds()) {
+                        OpsTask task = new OpsTask();
+                        task.setGroupId(e.getKey())
+                                .setTargetSlbId(slbId)
+                                .setSlbVirtualServerId(vsId)
+                                .setOpsType(TaskOpsType.SOFT_DEACTIVATE_GROUP)
+                                .setVersion(offlineVersion.getVersion())
+                                .setCreateTime(new Date());
+                        tasks.add(task);
+                    }
                 } else {
-                    OpsTask task = new OpsTask();
-                    task.setCreateTime(new Date())
-                            .setGroupId(id)
-                            .setTargetSlbId(vs.getSlbId())
-                            .setOpsType(TaskOpsType.ACTIVATE_GROUP)
-                            .setVersion(offGroup.getVersion());
-                    tasks.add(task);
+                    for (Long slbId : vs.getSlbIds()) {
+                        OpsTask task = new OpsTask();
+                        task.setGroupId(e.getKey())
+                                .setTargetSlbId(slbId)
+                                .setOpsType(TaskOpsType.ACTIVATE_GROUP)
+                                .setVersion(offlineVersion.getVersion())
+                                .setCreateTime(new Date());
+                        tasks.add(task);
+                    }
                 }
             }
         }
         List<Long> taskIds = taskManager.addTask(tasks);
+
         List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
 
         TaskResultList resultList = new TaskResultList();
@@ -208,7 +230,7 @@ public class ActivateResource {
         resultList.setTotal(results.size());
 
         try {
-            propertyBox.set("status", "activated", "group", _groupIds.toArray(new Long[_groupIds.size()]));
+            propertyBox.set("status", "activated", "group", groupMap.getOfflineMapping().keySet().toArray(new Long[groupMap.getOfflineMapping().size()]));
         } catch (Exception ex) {
         }
 
@@ -225,30 +247,61 @@ public class ActivateResource {
     public Response activateVirtualServer(@Context HttpServletRequest request,
                                           @Context HttpHeaders hh,
                                           @QueryParam("vsId") Long vsId) throws Exception {
-        ModelStatusMapping<VirtualServer> vsMaping = entityFactory.getVsesByIds(new Long[]{vsId});
-        VirtualServer offlineVs = vsMaping.getOfflineMapping().get(vsId);
-        VirtualServer onlineVs = vsMaping.getOnlineMapping().get(vsId);
-        if (offlineVs == null) {
-            throw new ValidationException("Not Found Vs By ID");
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(new Long[]{vsId});
+        VirtualServer offlineVersion = vsMap.getOfflineMapping().get(vsId);
+        if (offlineVersion == null) {
+            throw new ValidationException("Cannot find vs by id " + vsId + ".");
         }
-        if (onlineVs != null && !offlineVs.getSlbId().equals(onlineVs.getSlbId())) {
-            throw new ValidationException("Has different slb id for online/offline vses.");
+
+        Set<Long> offlineRelatedSlbIds = new HashSet<>();
+        offlineRelatedSlbIds.addAll(offlineVersion.getSlbIds());
+
+        Set<Long> onlineRelatedSlbIds = new HashSet<>();
+        VirtualServer onlineVersion = vsMap.getOnlineMapping().get(vsId);
+        if (onlineVersion != null) {
+            onlineRelatedSlbIds.addAll(onlineVersion.getSlbIds());
         }
-        Long slbId = offlineVs.getSlbId();
-        ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(new Long[]{slbId});
-        if (slbMap.getOnlineMapping().get(slbId) == null) {
-            throw new ValidationException("Related Slb is not activated.");
+
+        Set<Long> tmp = new HashSet<>();
+        tmp.addAll(offlineRelatedSlbIds);
+        tmp.addAll(onlineRelatedSlbIds);
+
+        ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(tmp.toArray(new Long[tmp.size()]));
+
+        List<OpsTask> tasks = new ArrayList<>();
+        for (Long slbId : tmp) {
+            Slb slb = slbMap.getOnlineMapping().get(slbId);
+            if (slb == null) {
+                if (offlineRelatedSlbIds.contains(slbId)) {
+                    throw new ValidationException("Slb " + slbId + " is found deactivated.");
+                } else {
+                    throw new Exception("Slb " + slbId + " is found deactivated of an online vs. VsId=" + vsId);
+                }
+            }
+
+            if (onlineRelatedSlbIds.contains(slbId) && !offlineRelatedSlbIds.contains(slbId)) {
+                OpsTask task = new OpsTask();
+                task.setSlbVirtualServerId(vsId)
+                        .setTargetSlbId(slbId)
+                        .setVersion(offlineVersion.getVersion())
+                        .setOpsType(TaskOpsType.SOFT_DEACTIVATE_VS)
+                        .setCreateTime(new Date());
+                tasks.add(task);
+            } else {
+                OpsTask task = new OpsTask();
+                task.setSlbVirtualServerId(vsId)
+                        .setTargetSlbId(slbId)
+                        .setVersion(offlineVersion.getVersion())
+                        .setOpsType(TaskOpsType.ACTIVATE_VS)
+                        .setCreateTime(new Date());
+                tasks.add(task);
+            }
         }
-        OpsTask task = new OpsTask();
-        task.setSlbVirtualServerId(vsId);
-        task.setCreateTime(new Date());
-        task.setOpsType(TaskOpsType.ACTIVATE_VS);
-        task.setTargetSlbId(slbId);
-        task.setVersion(offlineVs.getVersion());
-        List<Long> taskIds = new ArrayList<>();
-        taskIds.add(taskManager.addTask(task));
+
+        List<Long> taskIds = taskManager.addTask(tasks);
 
         List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
+
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results) {
             resultList.addTaskResult(t);

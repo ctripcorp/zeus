@@ -19,20 +19,20 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
     protected static final int OFFSET_ONLINE = 1;
     private static final Map<String, Method> MethodCache = new HashMap<>();
 
-    protected final Class<T> clazzT;
+    protected final Class<T> domainClazz;
     protected final String clazzName;
 
     private Method m_getId;
     private Method m_getVersion;
 
-    protected AbstractMultiRelMaintainer(Class<T> clazzT, Class<X> clazzX) {
-        this.clazzT = clazzT;
-        clazzName = clazzX.getSimpleName();
+    protected AbstractMultiRelMaintainer(Class<T> domainClazz, Class<X> viewClazz) {
+        this.domainClazz = domainClazz;
+        clazzName = viewClazz.getSimpleName();
         m_getId = MethodCache.get(clazzName + "#getId");
         m_getVersion = MethodCache.get(clazzName + "#getVersion");
         if (m_getId == null) {
             try {
-                m_getId = clazzX.getMethod("getId");
+                m_getId = viewClazz.getMethod("getId");
                 MethodCache.put(clazzName + "#getId", m_getId);
             } catch (NoSuchMethodException e) {
                 logger.error("Cannot find getId() method from class " + clazzName + ".", e);
@@ -40,7 +40,7 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
         }
         if (m_getVersion == null) {
             try {
-                m_getVersion = clazzX.getMethod("getVersion");
+                m_getVersion = viewClazz.getMethod("getVersion");
                 MethodCache.put(clazzName + "#getVersion", m_getVersion);
             } catch (NoSuchMethodException e) {
                 logger.error("Cannot find getVersion() method from class " + clazzName + ".", e);
@@ -49,11 +49,11 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
     }
 
     @Override
-    public void addRel(X object) throws Exception {
-        List<W> rels = getRelations(object);
-        T[] dos = (T[]) Array.newInstance(clazzT, rels.size());
+    public void insert(X object) throws Exception {
+        List<W> rels = get(object);
+        T[] dos = (T[]) Array.newInstance(domainClazz, rels.size());
         for (int i = 0; i < dos.length; i++) {
-            T d = clazzT.newInstance();
+            T d = domainClazz.newInstance();
             setDo(object, rels.get(i), d);
             dos[i] = d;
         }
@@ -61,11 +61,11 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
     }
 
     @Override
-    public void updateRel(X object) throws Exception {
-        List<W> rels = getRelations(object);
+    public void refreshOffline(X object) throws Exception {
+        List<W> rels = get(object);
         Integer[] versions = getStatusByObjectId(object);
         if (versions[OFFSET_OFFLINE].intValue() == versions[OFFSET_ONLINE].intValue()) {
-            addRel(object);
+            insert(object);
             return;
         }
         int onlineVersion = versions[OFFSET_ONLINE];
@@ -76,25 +76,25 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
             }
         }
 
-        Map<String, List<T>> actionMap = groupByAction(object, rels, offline, clazzT);
+        Map<String, List<T>> actionMap = groupByAction(object, rels, offline, domainClazz);
         List<T> action = actionMap.get("update");
-        if (action != null) updateByPrimaryKey(action.toArray((T[]) Array.newInstance(clazzT, action.size())));
+        if (action != null) updateByPrimaryKey(action.toArray((T[]) Array.newInstance(domainClazz, action.size())));
 
         action = actionMap.get("delete");
-        if (action != null) deleteByPrimaryKey(action.toArray((T[]) Array.newInstance(clazzT, action.size())));
+        if (action != null) deleteByPrimaryKey(action.toArray((T[]) Array.newInstance(domainClazz, action.size())));
 
         action = actionMap.get("insert");
-        if (action != null) insert(action.toArray((T[]) Array.newInstance(clazzT, action.size())));
+        if (action != null) insert(action.toArray((T[]) Array.newInstance(domainClazz, action.size())));
     }
 
     @Override
-    public void updateStatus(X[] objects) throws Exception {
+    public void refreshOnline(X[] objects) throws Exception {
         Long[] ids = new Long[objects.length];
         Map<Long, Integer> idx = new HashMap<>();
 
         List<T>[] dosRef = new List[objects.length];
         List<Integer[]> versionRef = new ArrayList<>(objects.length);
-        Integer[] initValue = new Integer[]{0, 0};
+        final Integer[] initValue = new Integer[]{0, 0};
 
         for (int i = 0; i < objects.length; i++) {
             Long id = getObjectId(objects[i]);
@@ -122,7 +122,7 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
                     versions[OFFSET_OFFLINE].intValue() == getObjectVersion(object).intValue()) {
                 rels = new ArrayList<>();
             } else {
-                rels = getRelations(object);
+                rels = get(object);
             }
 
             int retainedVersion = versions[OFFSET_OFFLINE];
@@ -132,7 +132,7 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
                     discard.add(t);
                 }
             }
-            for (Map.Entry<String, List<T>> e : groupByAction(object, rels, discard, clazzT).entrySet()) {
+            for (Map.Entry<String, List<T>> e : groupByAction(object, rels, discard, domainClazz).entrySet()) {
                 List<T> v = actionMap.get(e.getKey());
                 if (v == null) {
                     actionMap.put(e.getKey(), e.getValue());
@@ -143,14 +143,14 @@ public abstract class AbstractMultiRelMaintainer<T, W, X> implements MultiRelMai
         }
 
         List<T> action = actionMap.get("update");
-        if (action != null) updateByPrimaryKey(action.toArray((T[]) Array.newInstance(clazzT, action.size())));
+        if (action != null) updateByPrimaryKey(action.toArray((T[]) Array.newInstance(domainClazz, action.size())));
 
         action = actionMap.get("delete");
-        if (action != null) deleteByPrimaryKey(action.toArray((T[]) Array.newInstance(clazzT, action.size())));
+        if (action != null) deleteByPrimaryKey(action.toArray((T[]) Array.newInstance(domainClazz, action.size())));
 
         action = actionMap.get("insert");
         if (action != null) add.addAll(action);
-        if (action != null) insert(add.toArray((T[]) Array.newInstance(clazzT, add.size())));
+        if (action != null) insert(add.toArray((T[]) Array.newInstance(domainClazz, add.size())));
     }
 
     protected Map<String, List<T>> groupByAction(X object, List<W> rels, List<T> update, Class<T> clazzT) throws Exception {

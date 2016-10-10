@@ -5,8 +5,6 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
-import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
@@ -20,7 +18,6 @@ import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.impl.RepositoryContext;
 import com.ctrip.zeus.service.query.*;
-import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
@@ -73,7 +70,6 @@ public class SlbResource {
      * @api {get} /api/slbs: Request slb information
      * @apiName ListSlbs
      * @apiGroup Slb
-     *
      * @apiParam {long[]} slbId         1,2,3
      * @apiParam {string[]} slbName     a,b,c
      * @apiParam {string[]} ip          10.2.1.1,10.2.11.21
@@ -86,7 +82,6 @@ public class SlbResource {
      * @apiParam {string[]} props       join search slbs by properties(key:value) e.g. props=department:hotel,dc:jq
      * @apiParam {any} vs               supported vs property queries, ref /api/vses
      * @apiParam {any} group            supported group property queries, ref /api/groups
-     *
      * @apiSuccess {Slb[]} slbs         slb list json object
      */
     @GET
@@ -161,7 +156,6 @@ public class SlbResource {
 
         s = slbRepository.add(s);
 
-
         try {
             propertyBox.set("status", "deactivated", "slb", s.getId());
         } catch (Exception ex) {
@@ -175,7 +169,7 @@ public class SlbResource {
             addTag(s.getId(), extendedView.getTags());
         }
 
-        return responseHandler.handle(s, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedSlb(s), hh.getMediaType());
     }
 
     @POST
@@ -212,7 +206,7 @@ public class SlbResource {
             addTag(s.getId(), extendedView.getTags());
         }
 
-        return responseHandler.handle(s, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedSlb(s), hh.getMediaType());
     }
 
     @GET
@@ -230,7 +224,7 @@ public class SlbResource {
         try {
             archiveRepository.archiveSlb(archive);
         } catch (Exception ex) {
-            logger.warn("Try archive deleted slb failed. " + GenericSerializer.writeJson(archive, false), ex);
+            logger.warn("Try archive deleted slb-" + slbId + " failed.", ex);
         }
 
         try {
@@ -283,7 +277,7 @@ public class SlbResource {
         } catch (Exception ex) {
         }
 
-        return responseHandler.handle(slb, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedSlb(slb), hh.getMediaType());
     }
 
     @GET
@@ -332,7 +326,7 @@ public class SlbResource {
         } catch (Exception ex) {
         }
 
-        return responseHandler.handle(slb, hh.getMediaType());
+        return responseHandler.handle(new ExtendedView.ExtendedSlb(slb), hh.getMediaType());
     }
 
     private void setProperties(Long slbId, List<Property> properties) {

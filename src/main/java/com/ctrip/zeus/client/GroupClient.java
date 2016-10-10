@@ -3,13 +3,14 @@ package com.ctrip.zeus.client;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupList;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.support.ObjectJsonParser;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,30 +24,21 @@ public class GroupClient extends AbstractRestClient {
 
     public List<Group> getAll() {
         String res = getTarget().path("/api/groups").queryParam("type", "detail").request().headers(getDefaultHeaders()).get(String.class);
-        try {
-            return DefaultJsonParser.parse(GroupList.class, res).getGroups();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        GroupList result = ObjectJsonParser.parse(res, GroupList.class);
+        return result == null ? new ArrayList<Group>() : result.getGroups();
     }
 
     public Group get(String groupName) {
         String res = getTarget().path("/api/group").queryParam("groupName", groupName).queryParam("type", "detail").request(MediaType.APPLICATION_JSON)
                 .headers(getDefaultHeaders()).get(String.class);
-        try {
-            return DefaultJsonParser.parse(Group.class, res);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+        return ObjectJsonParser.parse(res, Group.class);
     }
 
     public List<Group> getGroupsByVsId(String vsId) {
         String res = getTarget().path("/api/groups").queryParam("vsId", vsId).request().headers(getDefaultHeaders()).get(String.class);
-        try {
-            return DefaultJsonParser.parse(GroupList.class, res).getGroups();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        GroupList result = ObjectJsonParser.parse(res, GroupList.class);
+        return result == null ? new ArrayList<Group>() : result.getGroups();
     }
 
     public Response add(Group group) {

@@ -1,15 +1,14 @@
 package com.ctrip.zeus.client;
 
-
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbList;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.support.ObjectJsonParser;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,21 +22,14 @@ public class SlbClient extends AbstractRestClient {
 
     public List<Slb> getAll() {
         String res = getTarget().path("/api/slbs").queryParam("type", "detail").request().headers(getDefaultHeaders()).get(String.class);
-        try {
-            return DefaultJsonParser.parse(SlbList.class, res).getSlbs();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        SlbList result = ObjectJsonParser.parse(res, SlbList.class);
+        return result == null ? new ArrayList<Slb>() : result.getSlbs();
     }
 
     public Slb get(String slbName) {
         String res = getTarget().path("/api/slb").queryParam("slbName", slbName).queryParam("type", "detail").request(MediaType.APPLICATION_JSON)
                 .headers(getDefaultHeaders()).get(String.class);
-        try {
-            return DefaultJsonParser.parse(Slb.class, res);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return ObjectJsonParser.parse(res, Slb.class);
     }
 
     public Response add(Slb slb) {

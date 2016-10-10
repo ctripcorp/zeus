@@ -146,7 +146,7 @@ public class ServiceTest extends AbstractServerTest {
                 .addSlbServer(new SlbServer().setIp("127.0.0.1").setHostName("localhost"));
         slbRepository.add(testVsSlb);
         VirtualServer vs = slbTracker.get("default").getVirtualServers().get(1);
-        vs.setSlbId(testVsSlb.getId());
+        vs.getSlbIds().set(0, testVsSlb.getId());
         virtualServerRepository.update(vs);
         ModelAssert.assertVirtualServerEquals(vs, virtualServerRepository.getByKey(new IdVersion(vs.getId(), vs.getVersion())));
     }

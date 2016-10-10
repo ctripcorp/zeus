@@ -2,12 +2,10 @@ package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.client.GroupClient;
 import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.xml.sax.SAXException;
@@ -158,6 +156,6 @@ public class DalParsingPerformanceTest {
     }
 
     private void parseJson(String data) throws IOException {
-        Assert.assertNotNull(DefaultJsonParser.parse(Group.class, data));
+        Assert.assertNotNull(ObjectJsonParser.parse(data, Group.class));
     }
 }

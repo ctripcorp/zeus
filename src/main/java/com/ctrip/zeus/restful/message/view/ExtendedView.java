@@ -4,6 +4,8 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.tag.entity.Property;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.netflix.config.DynamicBooleanProperty;
+import com.netflix.config.DynamicPropertyFactory;
 
 import java.util.List;
 
@@ -88,6 +90,9 @@ public interface ExtendedView<T> {
 
         @Override
         List<GroupVirtualServer> getGroupVirtualServers() {
+            for (GroupVirtualServer gvs : instance.getGroupVirtualServers()) {
+                ExtendedVs.renderVirtualServer(gvs.getVirtualServer());
+            }
             return instance.getGroupVirtualServers();
         }
 
@@ -118,6 +123,8 @@ public interface ExtendedView<T> {
     }
 
     class ExtendedVs extends VsView implements ExtendedView<VirtualServer> {
+        private static DynamicBooleanProperty n2nEnabled = DynamicPropertyFactory.getInstance().getBooleanProperty("slb.slb-vs-n2n.enabled", false);
+
         private List<String> tags;
         private List<Property> properties;
         private VirtualServer instance;
@@ -147,7 +154,26 @@ public interface ExtendedView<T> {
 
         @Override
         Long getSlbId() {
-            return instance.getSlbId();
+            if (n2nEnabled.get()) {
+                return null;
+            } else {
+                if (instance.getSlbId() == null && instance.getSlbIds().size() > 0) {
+                    instance.setSlbId(instance.getSlbIds().get(0));
+                }
+                return instance.getSlbId();
+            }
+        }
+
+        @Override
+        List<Long> getSlbIds() {
+            if (n2nEnabled.get()) {
+                if (instance.getSlbIds().size() == 0 && instance.getSlbId() != null) {
+                    instance.getSlbIds().add(instance.getSlbId());
+                }
+                return instance.getSlbIds();
+            } else {
+                return null;
+            }
         }
 
         @Override
@@ -188,6 +214,20 @@ public interface ExtendedView<T> {
         @Override
         public VirtualServer getInstance() {
             return null;
+        }
+
+        public static void renderVirtualServer(VirtualServer vs) {
+            if (n2nEnabled.get()) {
+                if (vs.getSlbIds().size() == 0 && vs.getSlbId() != null) {
+                    vs.getSlbIds().add(vs.getSlbId());
+                }
+                vs.setSlbId(null);
+            } else {
+                if (vs.getSlbId() == null && vs.getSlbIds().size() > 0) {
+                    vs.setSlbId(vs.getSlbIds().get(0));
+                }
+                vs.getSlbIds().clear();
+            }
         }
     }
 
@@ -251,6 +291,9 @@ public interface ExtendedView<T> {
 
         @Override
         List<VirtualServer> getVirtualServers() {
+            for (VirtualServer vs : instance.getVirtualServers()) {
+                ExtendedVs.renderVirtualServer(vs);
+            }
             return instance.getVirtualServers();
         }
 

@@ -57,7 +57,6 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public List<Slb> list(IdVersion[] keys) throws Exception {
-        List<Slb> result = new ArrayList<>();
         Long[] slbIds = new Long[keys.length];
         Integer[] hashes = new Integer[keys.length];
         String[] values = new String[keys.length];
@@ -66,30 +65,24 @@ public class SlbRepositoryImpl implements SlbRepository {
             values[i] = keys[i].toString();
             slbIds[i] = keys[i].getId();
         }
+
+        Map<Long, Slb> result = new HashMap<>();
         for (ArchiveSlbDo d : archiveSlbDao.findAllByIdVersion(hashes, values, ArchiveSlbEntity.READSET_FULL)) {
             Slb slb = ContentReaders.readSlbContent(d.getContent());
             slb.getVirtualServers().clear();
-            result.add(slb);
+            result.put(slb.getId(), slb);
         }
 
         Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryBySlbIds(slbIds);
         vsKeys.retainAll(virtualServerCriteriaQuery.queryAll(SelectionMode.OFFLINE_FIRST));
-        Map<Long, List<VirtualServer>> map = new HashMap<>();
         for (VirtualServer vs : virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()]))) {
-            List<VirtualServer> l = map.get(vs.getSlbId());
-            if (l == null) {
-                l = new ArrayList<>();
-                map.put(vs.getSlbId(), l);
-            }
-            l.add(vs);
-        }
-        for (Slb slb : result) {
-            List<VirtualServer> l = map.get(slb.getId());
-            if (l != null) {
-                slb.getVirtualServers().addAll(l);
+            for (Long slbId : vs.getSlbIds()) {
+                Slb slb = result.get(slbId);
+                if (slb != null) slb.addVirtualServer(vs);
             }
         }
-        return result;
+
+        return new ArrayList<>(result.values());
     }
 
     @Override
@@ -128,11 +121,11 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Override
     public Slb add(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
-        virtualServerModelValidator.validateVirtualServers(slb.getVirtualServers());
+        virtualServerModelValidator.unite(slb.getVirtualServers());
         autoFiller.autofill(slb);
         slbEntityManager.add(slb);
         for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            if (virtualServer.getSsl().booleanValue()) {
+            if (virtualServer.isSsl()) {
                 virtualServerRepository.installCertificate(virtualServer);
             }
         }
@@ -206,7 +199,7 @@ public class SlbRepositoryImpl implements SlbRepository {
     private void refreshVirtualServer(Slb slb) throws Exception {
         slb.getVirtualServers().clear();
         Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
-        range.retainAll(virtualServerCriteriaQuery.queryAll(SelectionMode.ONLINE_FIRST));
+        range.retainAll(virtualServerCriteriaQuery.queryAll(SelectionMode.OFFLINE_FIRST));
         slb.getVirtualServers().addAll(virtualServerRepository.listAll(range.toArray(new IdVersion[range.size()])));
     }
 }

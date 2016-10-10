@@ -47,9 +47,7 @@ public class VsDomainRelMaintainer extends AbstractMultiRelMaintainer<RelVsDomai
 
     @Override
     protected void setDo(VirtualServer object, Domain value, RelVsDomainDo target) {
-        target.setVsId(object.getId())
-                .setDomain(value.getName())
-                .setVsVersion(object.getVersion());
+        target.setVsId(object.getId()).setVsVersion(object.getVersion()).setDomain(value.getName());
     }
 
     @Override
@@ -78,12 +76,12 @@ public class VsDomainRelMaintainer extends AbstractMultiRelMaintainer<RelVsDomai
     }
 
     @Override
-    public void deleteRel(Long objectId) throws Exception {
+    public void clear(Long objectId) throws Exception {
         rVsDomainDao.deleteAllByVs(new RelVsDomainDo().setVsId(objectId));
     }
 
     @Override
-    public List<Domain> getRelations(VirtualServer object) throws Exception {
+    public List<Domain> get(VirtualServer object) throws Exception {
         return object.getDomains();
     }
 }

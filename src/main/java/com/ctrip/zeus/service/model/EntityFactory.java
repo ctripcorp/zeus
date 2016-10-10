@@ -24,6 +24,4 @@ public interface EntityFactory {
     Long[] getSlbIdsByIp(String ip, SelectionMode mode) throws Exception;
 
     Long[] getVsIdsBySlbId(Long slbId, SelectionMode mode) throws Exception;
-
-    Long[] getGroupIdsByVsIds(Long[] vsIds, SelectionMode mode) throws Exception;
 }

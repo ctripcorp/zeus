@@ -129,10 +129,10 @@ public class OperationResource {
         ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
         Set<Long> slbIds = new HashSet<>();
         for (VirtualServer vs : vsMap.getOnlineMapping().values()) {
-            slbIds.add(vs.getSlbId());
+            slbIds.addAll(vs.getSlbIds());
         }
         for (VirtualServer vs : vsMap.getOfflineMapping().values()) {
-            slbIds.add(vs.getSlbId());
+            slbIds.addAll(vs.getSlbIds());
         }
 
         List<OpsTask> tasks = new ArrayList<>();
@@ -669,7 +669,7 @@ public class OperationResource {
             if (tmp == null) {
                 tmp = vsMaping.getOfflineMapping().get(vsId);
             }
-            slbIds.add(tmp.getSlbId());
+            slbIds.addAll(tmp.getSlbIds());
         }
         //TODO flag for Healthy ops
         if (type.equals(TaskOpsType.HEALTHY_OPS)) {

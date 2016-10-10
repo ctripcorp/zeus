@@ -6,7 +6,7 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
-import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.service.model.handler.impl.ContentWriters;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -31,19 +31,19 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     public void archiveGroup(Group group) throws Exception {
         groupHistoryDao.insert(new GroupHistoryDo().setGroupId(group.getId()).setGroupName(group.getName()));
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setHash(0).setVersion(0)
-                .setContent(GenericSerializer.writeJson(group, false)));
+                .setContent(ContentWriters.write(group)));
     }
 
     @Override
     public void archiveSlb(Slb slb) throws Exception {
         archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setHash(0).setVersion(0)
-                .setContent(GenericSerializer.writeJson(slb, false)));
+                .setContent(ContentWriters.write(slb)));
     }
 
     @Override
     public void archiveVs(VirtualServer vs) throws Exception {
         archiveVsDao.insert(new MetaVsArchiveDo().setVsId(vs.getId()).setHash(0).setVersion(0)
-                .setContent(GenericSerializer.writeJson(vs, false)));
+                .setContent(ContentWriters.write(vs)));
     }
 
     @Override

@@ -7,7 +7,6 @@ import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.model.transform.DefaultJsonParser;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
 import com.ctrip.zeus.service.message.queue.MessageQueueService;
 import com.ctrip.zeus.service.message.queue.MessageType;
@@ -20,6 +19,7 @@ import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
+import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.google.common.base.Joiner;
@@ -266,7 +266,7 @@ public class GroupMemberResource {
             gsl = DefaultSaxParser.parseEntity(GroupServerList.class, groupServerList);
         } else {
             try {
-                gsl = DefaultJsonParser.parse(GroupServerList.class, groupServerList);
+                gsl = ObjectJsonParser.parse(groupServerList, GroupServerList.class);
             } catch (Exception e) {
                 throw new Exception("Group member list cannot be parsed.");
             }
@@ -298,13 +298,15 @@ public class GroupMemberResource {
             }
             List<OpsTask> tasks = new ArrayList<>();
             for (VirtualServer vs : vsMaping.getOnlineMapping().values()) {
-                OpsTask task = new OpsTask();
-                task.setCreateTime(new Date())
-                        .setGroupId(groupId)
-                        .setTargetSlbId(vs.getSlbId())
-                        .setOpsType(TaskOpsType.ACTIVATE_GROUP)
-                        .setVersion(offGroup.getVersion());
-                tasks.add(task);
+                for (Long slbId : vs.getSlbIds()) {
+                    OpsTask task = new OpsTask();
+                    task.setCreateTime(new Date())
+                            .setGroupId(groupId)
+                            .setTargetSlbId(slbId)
+                            .setOpsType(TaskOpsType.ACTIVATE_GROUP)
+                            .setVersion(offGroup.getVersion());
+                    tasks.add(task);
+                }
             }
             List<Long> taskIds = taskManager.addTask(tasks);
             taskManager.getResult(taskIds, apiTimeout.get());

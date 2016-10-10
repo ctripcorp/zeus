@@ -27,13 +27,8 @@ import java.util.List;
 @Component("taskService")
 public class TaskServiceImpl implements TaskService {
 
-    private static final DynamicIntProperty taskCheckStatusInterval = DynamicPropertyFactory.getInstance().getIntProperty("task.check.status.interval", 200);
-    private static DynamicIntProperty lockTimeout = DynamicPropertyFactory.getInstance().getIntProperty("lock.timeout", 5000);
-
     @Resource
     private TaskDao taskDao;
-    @Resource
-    private DbLockFactory dbLockFactory;
 
     private final Logger logger = LoggerFactory.getLogger(TaskServiceImpl.class);
 

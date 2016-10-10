@@ -16,32 +16,35 @@ import java.util.Set;
  * Time: 10:54 AM
  */
 public interface GroupStatusService {
-     /**
-      * Find all online groups status
-      * @return status list
-      * @throws Exception
-      */
-     List<GroupStatus> getAllOnlineGroupsStatus() throws Exception;
-
-     /**
-      * Find all online group status in the specific slb cluster
-      * @param slbId
-      * @return status list
-      * @throws Exception
-      */
-     List<GroupStatus> getOnlineGroupsStatusBySlbId(Long slbId) throws Exception;
-
     /**
-     * Find online group status by groupId
-     * @param groups groupId
-     * @param slbId slbId
+     * Find all online groups status
+     *
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOnlineGroupsStatus(Map<Long,Group> groups , Long slbId) throws Exception;
+    List<GroupStatus> getAllOnlineGroupsStatus() throws Exception;
+
+    /**
+     * Find all online group status in the specific slb cluster
+     *
+     * @param slbId
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getOnlineGroupsStatusBySlbId(Long slbId) throws Exception;
+
+    /**
+     * Find online group status by groupId
+     *
+     * @param groups groupId
+     * @return status list
+     * @throws Exception
+     */
+    List<GroupStatus> getOnlineGroupsStatus(Map<Long, Group> groups) throws Exception;
 
     /**
      * Find all online group status by groupIds and slb id
+     *
      * @param groupId groupId
      * @return status list
      * @throws Exception
@@ -50,6 +53,7 @@ public interface GroupStatusService {
 
     /**
      * Find all online groups status
+     *
      * @return status list
      * @throws Exception
      */
@@ -57,6 +61,7 @@ public interface GroupStatusService {
 
     /**
      * Find all online group status in the specific slb cluster
+     *
      * @param slbId
      * @return status list
      * @throws Exception
@@ -65,33 +70,27 @@ public interface GroupStatusService {
 
     /**
      * Find online group status by groupId
+     *
      * @param groupId groupId
      * @return status list
      * @throws Exception
      */
     GroupStatus getOfflineGroupStatus(Long groupId) throws Exception;
 
-        /**
+    /**
      * Find online group status by groupId
+     *
      * @param groupIds groupIds
      * @return status list
      * @throws Exception
      */
     List<GroupStatus> getOfflineGroupsStatus(Set<Long> groupIds) throws Exception;
 
-        /**
-     * Find online group status by groupId
-     * @param groupId groupId
-     * @return status list
-     * @throws Exception
-     */
-    GroupStatus getOfflineGroupStatus(Long groupId,Long slbId) throws Exception;
-
     /**
      * Find all online group status by groupIds and slb id
-     * @param slbId slbId
+     *
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOfflineGroupsStatus(Map<Long,Group> groups ,Map<Long,Group> onlineGroups , Long slbId) throws Exception;
+    List<GroupStatus> getOfflineGroupsStatus(Map<Long, Group> groups, Map<Long, Group> onlineGroups) throws Exception;
 }

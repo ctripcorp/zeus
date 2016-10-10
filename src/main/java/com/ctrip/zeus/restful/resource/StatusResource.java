@@ -12,7 +12,6 @@ import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.query.CriteriaQueryFactory;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.QueryEngine;
-import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.GroupStatusList;
@@ -42,8 +41,6 @@ public class StatusResource {
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
-    private SlbCriteriaQuery slbCriteriaQuery;
-    @Resource
     private ResponseHandler responseHandler;
     @Resource
     private GlobalJobDao globalJobDao;
@@ -57,15 +54,14 @@ public class StatusResource {
     public Response allGroupStatusInSlb(@Context HttpServletRequest request, @Context HttpHeaders hh,
                                         @TrimmedQueryParam("mode") final String mode,
                                         @Context UriInfo uriInfo) throws Exception {
-        List<GroupStatus> statusList = null;
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "group", SelectionMode.getMode(mode));
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
         Set<Long> groupIds = new HashSet<>();
-        for (IdVersion idv : searchKeys){
+        for (IdVersion idv : searchKeys) {
             groupIds.add(idv.getId());
         }
-        statusList = groupStatusService.getOfflineGroupsStatus(groupIds);
+        List<GroupStatus> statusList = groupStatusService.getOfflineGroupsStatus(groupIds);
         GroupStatusList result = new GroupStatusList();
         for (GroupStatus groupStatus : statusList) {
             result.addGroupStatus(groupStatus);
@@ -79,41 +75,25 @@ public class StatusResource {
     @Authorize(name = "getGroupStatus", uriGroupHint = -1)
     public Response groupStatus(@Context HttpServletRequest request, @Context HttpHeaders hh,
                                 @QueryParam("groupId") Long groupId,
-                                @QueryParam("groupName") String groupName,
-                                @QueryParam("slbId") Long slbId,
-                                @QueryParam("slbName") String slbName) throws Exception {
-        GroupStatus statusResult = null;
-
+                                @QueryParam("groupName") String groupName) throws Exception {
         if (groupId == null) {
             if (groupName != null) {
                 groupId = groupCriteriaQuery.queryByName(groupName);
             }
         }
-        if (null == groupId) {
-            throw new ValidationException("Group Id or Name not found!");
+        if (groupId == null) {
+            throw new ValidationException("Cannot find group by groupName " + groupName + ".");
         }
-        if (slbId == null) {
-            if (slbName != null) {
-                slbId = slbCriteriaQuery.queryByName(slbName);
-            }
-        }
-        if (null == slbId) {
-            GroupStatus status = groupStatusService.getOfflineGroupStatus(groupId);
-            if (status != null) {
-                statusResult = status;
-            } else {
-                throw new ValidationException("Not Found Group Status In Slb!");
-            }
-        } else {
-            GroupStatus res = groupStatusService.getOfflineGroupStatus(groupId, slbId);
-            if (res != null) {
-                statusResult = res;
-            } else {
-                throw new ValidationException("Not Found Group Status!");
-            }
+        IdVersion[] check = groupCriteriaQuery.queryByIdAndMode(groupId, SelectionMode.REDUNDANT);
+        if (check.length == 0) {
+            throw new ValidationException("Cannot find group by groupId " + groupId + ".");
         }
 
-        return responseHandler.handle(statusResult, hh.getMediaType());
+        GroupStatus status = groupStatusService.getOfflineGroupStatus(groupId);
+        if (status == null) {
+            throw new ValidationException("Not Found Group Status In Slb!");
+        }
+        return responseHandler.handle(status, hh.getMediaType());
     }
 
     @GET

@@ -43,13 +43,20 @@
                     ]]>
                 </statement>
             </query>
+            <query name="insert" type="INSERT" batch="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
             <query name="update" type="UPDATE" batch="true">
                 <param name="id"/>
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='slb-id'/> = ${slb-id},
-                        <FIELD name='vs-version'/> = ${vs-version}
+                    SET <FIELDS/>
                     WHERE <FIELD name='id'/> = ${id}
                     ]]>
                 </statement>

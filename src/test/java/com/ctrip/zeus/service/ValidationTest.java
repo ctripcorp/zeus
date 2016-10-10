@@ -168,8 +168,10 @@ public class ValidationTest extends AbstractSpringTest {
     @Test
     public void testValidateGroup_virtualServerNotExist() throws Exception {
         Slb slb = prepareSlb();
+        VirtualServer vs = new VirtualServer().setId(1024L);
+        vs.getSlbIds().add(10L);
         Group group = new Group().setName("testVirtualServerNotExist").setAppId("000000")
-                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(new VirtualServer().setId(1024L).setSlbId(10L)));
+                .addGroupVirtualServer(new GroupVirtualServer().setPath("/test").setVirtualServer(vs));
         try {
             groupRepository.add(group);
             Assert.assertTrue(false);

@@ -45,8 +45,8 @@ public class GroupEntityManager implements GroupSync {
 
         rGroupStatusDao.insertOrUpdate(new RelGroupStatusDo().setGroupId(group.getId()).setOfflineVersion(group.getVersion()));
 
-        groupVsRelMaintainer.addRel(group);
-        groupGsRelMaintainer.addRel(group);
+        groupVsRelMaintainer.insert(group);
+        groupGsRelMaintainer.insert(group);
     }
 
     @Override
@@ -77,8 +77,8 @@ public class GroupEntityManager implements GroupSync {
 
         rGroupStatusDao.insertOrUpdate(check.setOfflineVersion(group.getVersion()));
 
-        groupVsRelMaintainer.updateRel(group);
-        groupGsRelMaintainer.updateRel(group);
+        groupVsRelMaintainer.refreshOffline(group);
+        groupGsRelMaintainer.refreshOffline(group);
     }
 
     @Override
@@ -89,16 +89,16 @@ public class GroupEntityManager implements GroupSync {
         }
 
         Group[] array = groups.toArray(new Group[groups.size()]);
-        groupVsRelMaintainer.updateStatus(array);
-        groupGsRelMaintainer.updateStatus(array);
+        groupVsRelMaintainer.refreshOnline(array);
+        groupGsRelMaintainer.refreshOnline(array);
 
         rGroupStatusDao.updateOnlineVersionByGroup(dos, RGroupStatusEntity.UPDATESET_UPDATE_ONLINE_STATUS);
     }
 
     @Override
     public int delete(Long groupId) throws Exception {
-        groupVsRelMaintainer.deleteRel(groupId);
-        groupGsRelMaintainer.deleteRel(groupId);
+        groupVsRelMaintainer.clear(groupId);
+        groupGsRelMaintainer.clear(groupId);
         rGroupVgDao.deleteByGroup(new RelGroupVgDo().setGroupId(groupId));
         rGroupStatusDao.deleteAllByGroup(new RelGroupStatusDo().setGroupId(groupId));
         int count = groupDao.deleteById(new GroupDo().setId(groupId));

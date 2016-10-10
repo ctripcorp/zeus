@@ -23,6 +23,9 @@ public abstract class VsView {
     abstract Long getSlbId();
 
     @JsonView(ViewConstraints.Normal.class)
+    abstract List<Long> getSlbIds();
+
+    @JsonView(ViewConstraints.Normal.class)
     abstract Boolean getSsl();
 
     @JsonView(ViewConstraints.Normal.class)

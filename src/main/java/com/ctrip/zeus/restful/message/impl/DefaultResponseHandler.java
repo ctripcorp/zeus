@@ -5,6 +5,7 @@ import com.ctrip.zeus.restful.message.Message;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.response.entity.SuccessMessage;
 import com.ctrip.zeus.support.GenericSerializer;
+import com.ctrip.zeus.support.ObjectJsonWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -39,8 +40,7 @@ public class DefaultResponseHandler implements ResponseHandler {
                 return zr;
             }
             if (type.equals(MediaType.APPLICATION_JSON_TYPE)) {
-//                zr.setResponse(JSON.toJSONString(object));
-                zr.setResponse(GenericSerializer.writeJson(object).replace("%", "%%"));
+                zr.setResponse(ObjectJsonWriter.write(object));
                 return zr;
             }
             throw new ValidationException("Unaccepted media type " + type.getType() + ".");
