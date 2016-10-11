@@ -95,17 +95,17 @@ public class OperationResource {
     @Path("/upServer")
     @Authorize(name = "upDownServer")
     public Response upServer(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception {
-        return serverOps(hh, ip, true);
+        return serverOps(request, hh, ip, true);
     }
 
     @GET
     @Path("/downServer")
     @Authorize(name = "upDownServer")
     public Response downServer(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("ip") String ip) throws Exception {
-        return serverOps(hh, ip, false);
+        return serverOps(request, hh, ip, false);
     }
 
-    private Response serverOps(HttpHeaders hh, String serverip, boolean up) throws Exception {
+    private Response serverOps(HttpServletRequest request, HttpHeaders hh, String serverip, boolean up) throws Exception {
         Long[] groupIds = entityFactory.getGroupIdsByGroupServerIp(serverip, SelectionMode.REDUNDANT);
 
         if (groupIds == null || groupIds.length == 0) {
@@ -177,8 +177,11 @@ public class OperationResource {
                 ss.addGroupName(group.getName());
             }
         }
-
-        messageQueueService.produceMessage(MessageType.OpsServer, null, serverip);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), null, serverip);
+        } else {
+            messageQueueService.produceMessage(MessageType.OpsServer, null, serverip);
+        }
 
         return responseHandler.handle(ss, hh.getMediaType());
     }
@@ -228,7 +231,7 @@ public class OperationResource {
                 }
             }
         }
-        return memberOps(hh, groupId, _ips, true, TaskOpsType.MEMBER_OPS);
+        return memberOps(request, hh, groupId, _ips, true, TaskOpsType.MEMBER_OPS);
     }
 
     @GET
@@ -277,7 +280,7 @@ public class OperationResource {
             }
         }
 
-        return memberOps(hh, groupId, _ips, false, TaskOpsType.MEMBER_OPS);
+        return memberOps(request, hh, groupId, _ips, false, TaskOpsType.MEMBER_OPS);
     }
 
 
@@ -325,7 +328,7 @@ public class OperationResource {
                 }
             }
         }
-        return memberOps(hh, groupId, _ips, true, TaskOpsType.PULL_MEMBER_OPS);
+        return memberOps(request, hh, groupId, _ips, true, TaskOpsType.PULL_MEMBER_OPS);
     }
 
     @GET
@@ -372,7 +375,7 @@ public class OperationResource {
                 }
             }
         }
-        return memberOps(hh, groupId, _ips, false, TaskOpsType.PULL_MEMBER_OPS);
+        return memberOps(request, hh, groupId, _ips, false, TaskOpsType.PULL_MEMBER_OPS);
     }
 
     @GET
@@ -427,7 +430,7 @@ public class OperationResource {
         }
 
         if (healthyOpsActivate.get()) {
-            return memberOps(hh, groupId, _ips, true, TaskOpsType.HEALTHY_OPS);
+            return memberOps(request, hh, groupId, _ips, true, TaskOpsType.HEALTHY_OPS);
         } else {
             return healthyOps(hh, groupId, _ips, true);
         }
@@ -485,7 +488,7 @@ public class OperationResource {
             throw new ValidationException("Not found ip in group.GroupId:" + groupId + " ip:" + ips.toString());
         }
         if (healthyOpsActivate.get()) {
-            return memberOps(hh, groupId, _ips, false, TaskOpsType.HEALTHY_OPS);
+            return memberOps(request, hh, groupId, _ips, false, TaskOpsType.HEALTHY_OPS);
         } else {
             return healthyOps(hh, groupId, _ips, false);
         }
@@ -621,7 +624,7 @@ public class OperationResource {
         return responseHandler.handle("Certificates for vsId " + vsId + " are uninstalled.", hh.getMediaType());
     }
 
-    private Response memberOps(HttpHeaders hh, Long groupId, List<String> ips, boolean up, String type) throws Exception {
+    private Response memberOps(HttpServletRequest request, HttpHeaders hh, Long groupId, List<String> ips, boolean up, String type) throws Exception {
         Map<String, List<Boolean>> status = statusService.fetchGroupServerStatus(new Long[]{groupId});
         boolean skipOps = true;
         for (String ip : ips) {
@@ -701,14 +704,18 @@ public class OperationResource {
         GroupStatus groupStatus = groupStatusService.getOfflineGroupStatus(groupId);
         addHealthyProperty(groupStatus);
 
-        if (type.equals(TaskOpsType.HEALTHY_OPS)) {
-            messageQueueService.produceMessage(MessageType.OpsHealthy, groupId, null);
-        }
-        if (type.equals(TaskOpsType.PULL_MEMBER_OPS)) {
-            messageQueueService.produceMessage(MessageType.OpsPull, groupId, null);
-        }
-        if (type.equals(TaskOpsType.MEMBER_OPS)){
-            messageQueueService.produceMessage(MessageType.OpsMember, groupId, null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), groupId, null);
+        } else {
+            if (type.equals(TaskOpsType.HEALTHY_OPS)) {
+                messageQueueService.produceMessage(MessageType.OpsHealthy, groupId, null);
+            }
+            if (type.equals(TaskOpsType.PULL_MEMBER_OPS)) {
+                messageQueueService.produceMessage(MessageType.OpsPull, groupId, null);
+            }
+            if (type.equals(TaskOpsType.MEMBER_OPS)) {
+                messageQueueService.produceMessage(MessageType.OpsMember, groupId, null);
+            }
         }
 
 

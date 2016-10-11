@@ -62,7 +62,21 @@ public class MessageQueueServiceImpl implements MessageQueueService {
                 .setTargetId(targetId == null ? 0L : targetId)
                 .setTargetData(targetData == null ? "" : targetData);
         messageQueueDao.insert(messageQueueDo);
-        logger.info("[[messageType=" + type.toString() + ",messageStatus=produce]][MessageQueueService] Produce Message Success. type:" + type.toString() + ";targetId:" + targetId + ";targetData:" + targetData);
+        logger.info("[[messageType=" + type.toString() + ",messageStatus=produce]][MessageQueueService] Produce Message Success. type:"
+                + type.toString() + ";targetId:" + targetId + ";targetData:" + targetData);
+    }
+
+    @Override
+    public void produceMessage(String type, Long targetId, String targetData) throws Exception {
+        MessageQueueDo messageQueueDo = new MessageQueueDo();
+        messageQueueDo.setType(type)
+                .setCreateTime(new Date())
+                .setStatus("TODO")
+                .setTargetId(targetId == null ? 0L : targetId)
+                .setTargetData(targetData == null ? "" : targetData);
+        messageQueueDao.insert(messageQueueDo);
+        logger.info("[[messageType=" + type + ",messageStatus=produce]][MessageQueueService] Produce Message Success. type:" + type
+                + ";targetId:" + targetId + ";targetData:" + targetData);
     }
 
     public void fetchMessage() throws Exception {
@@ -115,64 +129,148 @@ public class MessageQueueServiceImpl implements MessageQueueService {
             logger.info("[[consumer=" + consumer.getClass().getSimpleName() + ",messageStatus=processing]][ConsumerExecutor] Consumer Started. Consumer:" + consumer.getClass().getSimpleName());
             try {
                 for (String type : messageMap.keySet()) {
-                    switch (MessageType.valueOf(type)) {
-                        case NewGroup:
-                            consumer.onNewGroup(messageMap.get(type));
-                            break;
-                        case UpdateGroup:
-                            consumer.onUpdateGroup(messageMap.get(type));
-                            break;
-                        case DeleteGroup:
-                            consumer.onDeleteGroup(messageMap.get(type));
-                            break;
-                        case NewVs:
-                            consumer.onNewVs(messageMap.get(type));
-                            break;
-                        case UpdateVs:
-                            consumer.onUpdateVs(messageMap.get(type));
-                            break;
-                        case DeleteVs:
-                            consumer.onDeleteVs(messageMap.get(type));
-                            break;
-                        case NewSlb:
-                            consumer.onNewSlb(messageMap.get(type));
-                            break;
-                        case UpdateSlb:
-                            consumer.onUpdateSlb(messageMap.get(type));
-                            break;
-                        case DeleteSlb:
-                            consumer.onDeleteSlb(messageMap.get(type));
-                            break;
-                        case OpsPull:
-                            consumer.onOpsPull(messageMap.get(type));
-                            break;
-                        case OpsMember:
-                            consumer.onOpsMember(messageMap.get(type));
-                            break;
-                        case OpsHealthy:
-                            consumer.onOpsHealthy(messageMap.get(type));
-                            break;
-                        case OpsServer:
-                            consumer.onOpsServer(messageMap.get(type));
-                            break;
-                        case ActivateGroup:
-                            consumer.onActivateGroup(messageMap.get(type));
-                            break;
-                        case ActivateVs:
-                            consumer.onActivateVs(messageMap.get(type));
-                            break;
-                        case ActivateSlb:
-                            consumer.onActivateSlb(messageMap.get(type));
-                            break;
-                        case DeactivateGroup:
-                            consumer.onDeactivateGroup(messageMap.get(type));
-                            break;
-                        case DeactivateVs:
-                            consumer.onDeactivateVs(messageMap.get(type));
-                            break;
-                        case DeactivateSlb:
-                            consumer.onDeactivateSlb(messageMap.get(type));
-                            break;
+                    MessageType messageType = null;
+                    try {
+                        messageType = MessageType.valueOf(type);
+                    } catch (Exception e) {
+                    }
+                    if (messageType != null) {
+                        switch (messageType) {
+                            case NewGroup:
+                                consumer.onNewGroup(messageMap.get(type));
+                                break;
+                            case UpdateGroup:
+                                consumer.onUpdateGroup(messageMap.get(type));
+                                break;
+                            case DeleteGroup:
+                                consumer.onDeleteGroup(messageMap.get(type));
+                                break;
+                            case NewVs:
+                                consumer.onNewVs(messageMap.get(type));
+                                break;
+                            case UpdateVs:
+                                consumer.onUpdateVs(messageMap.get(type));
+                                break;
+                            case DeleteVs:
+                                consumer.onDeleteVs(messageMap.get(type));
+                                break;
+                            case NewSlb:
+                                consumer.onNewSlb(messageMap.get(type));
+                                break;
+                            case UpdateSlb:
+                                consumer.onUpdateSlb(messageMap.get(type));
+                                break;
+                            case DeleteSlb:
+                                consumer.onDeleteSlb(messageMap.get(type));
+                                break;
+                            case OpsPull:
+                                consumer.onOpsPull(messageMap.get(type));
+                                break;
+                            case OpsMember:
+                                consumer.onOpsMember(messageMap.get(type));
+                                break;
+                            case OpsHealthy:
+                                consumer.onOpsHealthy(messageMap.get(type));
+                                break;
+                            case OpsServer:
+                                consumer.onOpsServer(messageMap.get(type));
+                                break;
+                            case ActivateGroup:
+                                consumer.onActivateGroup(messageMap.get(type));
+                                break;
+                            case ActivateVs:
+                                consumer.onActivateVs(messageMap.get(type));
+                                break;
+                            case ActivateSlb:
+                                consumer.onActivateSlb(messageMap.get(type));
+                                break;
+                            case DeactivateGroup:
+                                consumer.onDeactivateGroup(messageMap.get(type));
+                                break;
+                            case DeactivateVs:
+                                consumer.onDeactivateVs(messageMap.get(type));
+                                break;
+                            case DeactivateSlb:
+                                consumer.onDeactivateSlb(messageMap.get(type));
+                                break;
+                        }
+                    } else {
+                        switch (type){
+                            case "/api/group/new":
+                            case "/api/vgroup/new":
+                                consumer.onNewGroup(messageMap.get(type));
+                                break;
+                            case "/api/group/update":
+                            case "/api/group/addMember":
+                            case "/api/group/updateMember":
+                            case "/api/group/removeMember":
+                            case "/api/vgroup/update":
+                            case "/api/group/updateCheckUri":
+                            case "/api/group/bindVs":
+                            case "/api/group/unbindVs":
+                                consumer.onUpdateGroup(messageMap.get(type));
+                                break;
+                            case "/api/group/delete":
+                            case "/api/vgroup/delete":
+                                consumer.onDeleteGroup(messageMap.get(type));
+                                break;
+                            case "/api/vs/new":
+                                consumer.onNewVs(messageMap.get(type));
+                                break;
+                            case "/api/vs/update":
+                            case "/api/vs/addDomain":
+                            case "/api/vs/removeDomain":
+                                consumer.onUpdateVs(messageMap.get(type));
+                                break;
+                            case "/api/vs/delete":
+                                consumer.onDeleteVs(messageMap.get(type));
+                                break;
+                            case "/api/slb/new":
+                                consumer.onNewSlb(messageMap.get(type));
+                                break;
+                            case "/api/slb/update":
+                            case "/api/slb/addServer":
+                            case "/api/slb/removeServer":
+                                consumer.onUpdateSlb(messageMap.get(type));
+                                break;
+                            case "/api/slb/delete":
+                                consumer.onDeleteSlb(messageMap.get(type));
+                                break;
+                            case "/api/op/pullIn":
+                            case "/api/op/pullOut":
+                                consumer.onOpsPull(messageMap.get(type));
+                                break;
+                            case "/api/op/upMember":
+                            case "/api/op/downMember":
+                                consumer.onOpsMember(messageMap.get(type));
+                                break;
+                            case "/api/op/raise":
+                            case "/api/op/fall":
+                                consumer.onOpsHealthy(messageMap.get(type));
+                                break;
+                            case "/api/op/upServer":
+                            case "/api/op/downServer":
+                                consumer.onOpsServer(messageMap.get(type));
+                                break;
+                            case "/api/activate/group":
+                                consumer.onActivateGroup(messageMap.get(type));
+                                break;
+                            case "/api/activate/vs":
+                                consumer.onActivateVs(messageMap.get(type));
+                                break;
+                            case "/api/activate/slb":
+                                consumer.onActivateSlb(messageMap.get(type));
+                                break;
+                            case "/api/deactivate/group":
+                                consumer.onDeactivateGroup(messageMap.get(type));
+                                break;
+                            case "/api/deactivate/vs":
+                                consumer.onDeactivateVs(messageMap.get(type));
+                                break;
+                            case "/api/deactivate/slb":
+                                consumer.onDeactivateSlb(messageMap.get(type));
+                                break;
+                        }
                     }
                 }
             } catch (Exception e) {

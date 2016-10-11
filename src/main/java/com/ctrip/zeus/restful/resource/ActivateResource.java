@@ -6,6 +6,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.message.queue.MessageQueueService;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
@@ -56,6 +57,8 @@ public class ActivateResource {
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private MessageQueueService messageQueueService;
+    @Resource
+    private ConfigHandler configHandler;
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
 
@@ -112,7 +115,11 @@ public class ActivateResource {
         } catch (Exception ex) {
         }
         for (Long slbId : _slbIds) {
-            messageQueueService.produceMessage(MessageType.ActivateSlb, slbId, null);
+            if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+                messageQueueService.produceMessage(request.getRequestURI(), slbId, null);
+            } else {
+                messageQueueService.produceMessage(MessageType.ActivateSlb, slbId, null);
+            }
         }
         return responseHandler.handle(resultList, hh.getMediaType());
     }
@@ -235,7 +242,11 @@ public class ActivateResource {
         }
 
         for (Long id : _groupIds) {
-            messageQueueService.produceMessage(MessageType.ActivateGroup, id, null);
+            if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+                messageQueueService.produceMessage(request.getRequestURI(), id, null);
+            } else {
+                messageQueueService.produceMessage(MessageType.ActivateGroup, id, null);
+            }
         }
 
         return responseHandler.handle(resultList, hh.getMediaType());
@@ -312,8 +323,11 @@ public class ActivateResource {
             propertyBox.set("status", "activated", "vs", vsId);
         } catch (Exception ex) {
         }
-
-        messageQueueService.produceMessage(MessageType.ActivateVs, vsId, null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), vsId, null);
+        } else {
+            messageQueueService.produceMessage(MessageType.ActivateVs, vsId, null);
+        }
 
         return responseHandler.handle(resultList, hh.getMediaType());
     }

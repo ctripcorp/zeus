@@ -8,6 +8,7 @@ import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.model.transform.DefaultSaxParser;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.message.queue.MessageQueueService;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.query.filter.FilterSet;
@@ -60,6 +61,8 @@ public class GroupMemberResource {
     private GroupStatusService groupStatusService;
     @Resource
     private MessageQueueService messageQueueService;
+    @Resource
+    private ConfigHandler configHandler;
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
     private final int TIMEOUT = 1000;
@@ -155,8 +158,11 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
-
-        messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), group.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
+        }
         return responseHandler.handle("Successfully added group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -207,7 +213,11 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
-        messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), group.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
+        }
         return responseHandler.handle("Successfully updated group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
@@ -256,7 +266,11 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
-        messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), group.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
+        }
         return responseHandler.handle("Successfully removed " + Joiner.on(",").join(ips) + " from group with id " + groupId + ".", hh.getMediaType());
     }
 

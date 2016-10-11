@@ -7,6 +7,7 @@ import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.view.*;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.message.queue.MessageQueueService;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.query.*;
@@ -63,6 +64,8 @@ public class GroupResource {
     private GroupStatusService groupStatusService;
     @Resource
     private MessageQueueService messageQueueService;
+    @Resource
+    private ConfigHandler configHandler;
 
     private final String vGroupAppId = "VirtualGroup";
     private final int TIMEOUT = 1000;
@@ -240,7 +243,11 @@ public class GroupResource {
         }
 
         addHealthProperty(g.getId());
-        messageQueueService.produceMessage(MessageType.NewGroup, g.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), g.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.NewGroup, g.getId(), null);
+        }
 
         return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
     }
@@ -316,7 +323,11 @@ public class GroupResource {
         }
 
         addHealthProperty(g.getId());
-        messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), g.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
+        }
 
         return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
     }
@@ -375,8 +386,11 @@ public class GroupResource {
         } finally {
             lock.unlock();
         }
-        messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
-
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), g.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
+        }
         return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
     }
 
@@ -443,8 +457,11 @@ public class GroupResource {
         } finally {
             lock.unlock();
         }
-
-        messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), target.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
+        }
 
         return responseHandler.handle(new ExtendedView.ExtendedGroup(target), hh.getMediaType());
     }
@@ -492,7 +509,11 @@ public class GroupResource {
             lock.unlock();
         }
 
-        messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), target.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
+        }
 
         return responseHandler.handle(new ExtendedView.ExtendedGroup(target), hh.getMediaType());
     }
@@ -532,7 +553,11 @@ public class GroupResource {
         } catch (Exception ex) {
         }
 
-        messageQueueService.produceMessage(MessageType.DeleteGroup, groupId, null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), groupId, null);
+        } else {
+            messageQueueService.produceMessage(MessageType.DeleteGroup, groupId, null);
+        }
 
         return responseHandler.handle("Group is deleted.", hh.getMediaType());
     }
@@ -541,11 +566,13 @@ public class GroupResource {
     @Path("/vgroup/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Authorize(name = "deleteGroup")
-    public Response deleteVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, @QueryParam("groupId") Long groupId) throws Exception {
+    public Response deleteVGroup(@Context HttpHeaders hh, @Context HttpServletRequest
+            request, @QueryParam("groupId") Long groupId) throws Exception {
         if (groupId == null)
             throw new Exception("Query parameter - groupId is required.");
         Group archive = groupRepository.getById(groupId);
-        if (archive == null) throw new ValidationException("Virtual group cannot be found with id " + groupId + ".");
+        if (archive == null)
+            throw new ValidationException("Virtual group cannot be found with id " + groupId + ".");
         if (archive.isVirtual())
             throw new ValidationException("Group cannot be deleted. Use /group/delete instead.");
 

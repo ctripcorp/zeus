@@ -11,6 +11,7 @@ import com.ctrip.zeus.restful.message.view.ExtendedView;
 import com.ctrip.zeus.restful.message.view.ViewConstraints;
 import com.ctrip.zeus.restful.message.view.ViewDecorator;
 import com.ctrip.zeus.restful.message.view.VsListView;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.message.queue.MessageQueueService;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.query.CriteriaQueryFactory;
@@ -66,6 +67,8 @@ public class VirtualServerResource {
     private ViewDecorator viewDecorator;
     @Resource
     private MessageQueueService messageQueueService;
+    @Resource
+    private ConfigHandler configHandler;
 
     private final int TIMEOUT = 1000;
 
@@ -176,8 +179,11 @@ public class VirtualServerResource {
         if (extendedView.getTags() != null) {
             addTag(vs.getId(), extendedView.getTags());
         }
-
-        messageQueueService.produceMessage(MessageType.NewVs, vs.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.NewVs, vs.getId(), null);
+        }
 
         return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
 
@@ -219,7 +225,11 @@ public class VirtualServerResource {
             addTag(vs.getId(), extendedView.getTags());
         }
 
-        messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
+        }
 
         return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
     }
@@ -254,7 +264,11 @@ public class VirtualServerResource {
         } catch (Exception ex) {
         }
 
-        messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
+        }
 
         return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
     }
@@ -296,8 +310,11 @@ public class VirtualServerResource {
             }
         } catch (Exception ex) {
         }
-        messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
-
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), null);
+        } else {
+            messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
+        }
         return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
     }
 
@@ -328,9 +345,11 @@ public class VirtualServerResource {
             tagBox.clear("vs", vsId);
         } catch (Exception ex) {
         }
-
-        messageQueueService.produceMessage(MessageType.DeleteVs, vsId, null);
-
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueueService.produceMessage(request.getRequestURI(), vsId, null);
+        } else {
+            messageQueueService.produceMessage(MessageType.DeleteVs, vsId, null);
+        }
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
     }
 
