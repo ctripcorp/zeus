@@ -78,7 +78,6 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer add(VirtualServer virtualServer) throws Exception {
-        virtualServerModelValidator.validate(virtualServer);
         //TODO render for deprecated field
         if (virtualServer.getSlbId() != null) {
             if (!virtualServer.getSlbIds().contains(virtualServer.getSlbId())) {
@@ -86,6 +85,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             }
             virtualServer.setSlbId(null);
         }
+
+        virtualServerModelValidator.validate(virtualServer);
 
         Iterator<Long> iter = virtualServer.getSlbIds().iterator();
         Set<Long> uniq = new HashSet<>();
