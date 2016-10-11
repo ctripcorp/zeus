@@ -50,7 +50,8 @@ public class NginxResource {
             throw new ValidationException("Cannot find activated version of vs-" + vsId + ".");
         }
         VirtualServer vs = virtualServerRepository.getByKey(key[0]);
-        if (!vs.getSlbIds().contains(slbId)) {
+        // Deprecated field slb-id
+        if (!vs.getSlbIds().contains(slbId) && !vs.getSlbId().equals(slbId)) {
             throw new ValidationException("Activated version of vs-" + vsId + " is not related to slb-" + slbId + ".");
         }
 
