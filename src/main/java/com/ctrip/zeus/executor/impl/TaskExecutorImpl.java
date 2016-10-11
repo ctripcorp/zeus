@@ -209,7 +209,7 @@ public class TaskExecutorImpl implements TaskExecutor {
 
             //3.* in case of no need to update the config files.
             //only have operation for inactivated groups.
-            if (buildingVsIds.size() == 0 && deactivateVsOps.size() == 0 && softDeactivateVsOps.size() == 0) {
+            if (activateSlbOps.size() == 0 && buildingVsIds.size() == 0 && deactivateVsOps.size() == 0 && softDeactivateVsOps.size() == 0) {
                 performTasks(groupMap.getOfflineMapping());
                 setTaskResult(slbId, true, null);
                 return;
