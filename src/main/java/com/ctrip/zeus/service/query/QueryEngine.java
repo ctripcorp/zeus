@@ -112,9 +112,11 @@ public class QueryEngine {
                     tmp.removeAll(q.queryAllVGroups(mode));
                 }
             } else {
-                if (result != null && result.length > 0) {
+                if (result != null) {
                     tmp = Sets.newHashSet(result);
-                    tmp.retainAll(q.queryAllVGroups(mode));
+                    if (tmp.size() > 0) {
+                        tmp.retainAll(q.queryAllVGroups(mode));
+                    }
                 } else {
                     tmp = q.queryAllVGroups(mode);
                 }
