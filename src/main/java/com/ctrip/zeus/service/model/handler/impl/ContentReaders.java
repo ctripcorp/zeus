@@ -30,10 +30,19 @@ public class ContentReaders {
     }
 
     public static VirtualServer readVirtualServerContent(String content) throws IOException, SAXException {
+        VirtualServer vs;
         if (content.charAt(0) == '<') {
-            return DefaultSaxParser.parseEntity(VirtualServer.class, content);
+            vs = DefaultSaxParser.parseEntity(VirtualServer.class, content);
         } else {
-            return ObjectJsonParser.parse(content, VirtualServer.class);
+            vs = ObjectJsonParser.parse(content, VirtualServer.class);
         }
+        //TODO render for deprecated field
+        if (vs != null) {
+            if ((vs.getSlbIds() == null || vs.getSlbIds().isEmpty())
+                    && vs.getSlbId() != null) {
+                vs.getSlbIds().add(vs.getSlbId());
+            }
+        }
+        return vs;
     }
 }
