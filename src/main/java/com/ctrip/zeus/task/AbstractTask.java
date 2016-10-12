@@ -14,8 +14,8 @@ public abstract class AbstractTask implements Task {
 
     @PostConstruct
     private void init() {
-        taskManager2.add(this);
         start();
+        taskManager2.add(this);
     }
 
     public abstract void start();
