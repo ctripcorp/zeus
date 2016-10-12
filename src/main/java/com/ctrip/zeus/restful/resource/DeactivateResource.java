@@ -155,6 +155,7 @@ public class DeactivateResource {
             task.setCreateTime(new Date());
             task.setOpsType(TaskOpsType.DEACTIVATE_VS);
             task.setTargetSlbId(slbId);
+            deactivatingTask.add(task);
         }
         List<Long> taskIds = taskManager.addTask(deactivatingTask);
 
