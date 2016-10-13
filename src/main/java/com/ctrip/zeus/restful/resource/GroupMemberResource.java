@@ -23,6 +23,7 @@ import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
+import com.ctrip.zeus.util.MessageUtil;
 import com.google.common.base.Joiner;
 import com.netflix.config.DynamicLongProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -158,10 +159,11 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{group}, null,null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), group.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), group.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), slbMessageData);
         }
         return responseHandler.handle("Successfully added group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
@@ -213,10 +215,12 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
+
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{group}, null,null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), group.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), group.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), slbMessageData);
         }
         return responseHandler.handle("Successfully updated group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
@@ -266,10 +270,12 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
+
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{group}, null,null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), group.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), group.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateGroup, group.getId(), slbMessageData);
         }
         return responseHandler.handle("Successfully removed " + Joiner.on(",").join(ips) + " from group with id " + groupId + ".", hh.getMediaType());
     }

@@ -24,6 +24,7 @@ import com.ctrip.zeus.tag.PropertyBox;
 
 import com.ctrip.zeus.tag.entity.Property;
 import com.ctrip.zeus.tag.TagBox;
+import com.ctrip.zeus.util.MessageUtil;
 import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -243,10 +244,11 @@ public class GroupResource {
         }
 
         addHealthProperty(g.getId());
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{g}, null, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), g.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), g.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.NewGroup, g.getId(), null);
+            messageQueueService.produceMessage(MessageType.NewGroup, g.getId(), slbMessageData);
         }
 
         return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
@@ -323,10 +325,12 @@ public class GroupResource {
         }
 
         addHealthProperty(g.getId());
+
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{g}, null, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), g.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), g.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), slbMessageData);
         }
 
         return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
@@ -386,10 +390,11 @@ public class GroupResource {
         } finally {
             lock.unlock();
         }
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{g}, null, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), g.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), g.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateGroup, g.getId(), slbMessageData);
         }
         return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
     }
@@ -457,10 +462,12 @@ public class GroupResource {
         } finally {
             lock.unlock();
         }
+
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{target}, null, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), target.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), target.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), slbMessageData);
         }
 
         return responseHandler.handle(new ExtendedView.ExtendedGroup(target), hh.getMediaType());
@@ -509,10 +516,11 @@ public class GroupResource {
             lock.unlock();
         }
 
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{target}, null, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), target.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), target.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateGroup, target.getId(), slbMessageData);
         }
 
         return responseHandler.handle(new ExtendedView.ExtendedGroup(target), hh.getMediaType());
@@ -553,10 +561,12 @@ public class GroupResource {
         } catch (Exception ex) {
         }
 
+
+        String slbMessageData = MessageUtil.getMessageData(request, null, null, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), groupId, null);
+            messageQueueService.produceMessage(request.getRequestURI(), groupId, slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.DeleteGroup, groupId, null);
+            messageQueueService.produceMessage(MessageType.DeleteGroup, groupId, slbMessageData);
         }
 
         return responseHandler.handle("Group is deleted.", hh.getMediaType());

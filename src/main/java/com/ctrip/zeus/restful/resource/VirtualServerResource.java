@@ -25,6 +25,7 @@ import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
+import com.ctrip.zeus.util.MessageUtil;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.tag.TagBox;
 import com.ctrip.zeus.tag.entity.Property;
@@ -179,10 +180,11 @@ public class VirtualServerResource {
         if (extendedView.getTags() != null) {
             addTag(vs.getId(), extendedView.getTags());
         }
+        String slbMessageData = MessageUtil.getMessageData(request, null, new VirtualServer[]{vs}, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.NewVs, vs.getId(), null);
+            messageQueueService.produceMessage(MessageType.NewVs, vs.getId(), slbMessageData);
         }
 
         return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
@@ -225,10 +227,11 @@ public class VirtualServerResource {
             addTag(vs.getId(), extendedView.getTags());
         }
 
+        String slbMessageData = MessageUtil.getMessageData(request, null, new VirtualServer[]{vs}, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), slbMessageData);
         }
 
         return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
@@ -264,10 +267,11 @@ public class VirtualServerResource {
         } catch (Exception ex) {
         }
 
+        String slbMessageData = MessageUtil.getMessageData(request, null, new VirtualServer[]{vs}, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), slbMessageData);
         }
 
         return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
@@ -310,10 +314,12 @@ public class VirtualServerResource {
             }
         } catch (Exception ex) {
         }
+
+        String slbMessageData = MessageUtil.getMessageData(request, null, new VirtualServer[]{vs}, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), null);
+            messageQueueService.produceMessage(request.getRequestURI(), vs.getId(), slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), null);
+            messageQueueService.produceMessage(MessageType.UpdateVs, vs.getId(), slbMessageData);
         }
         return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
     }
@@ -345,10 +351,12 @@ public class VirtualServerResource {
             tagBox.clear("vs", vsId);
         } catch (Exception ex) {
         }
+
+        String slbMessageData = MessageUtil.getMessageData(request, null, null, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), vsId, null);
+            messageQueueService.produceMessage(request.getRequestURI(), vsId, slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.DeleteVs, vsId, null);
+            messageQueueService.produceMessage(MessageType.DeleteVs, vsId, slbMessageData);
         }
         return responseHandler.handle("Successfully deleted virtual server with id " + vsId + ".", hh.getMediaType());
     }

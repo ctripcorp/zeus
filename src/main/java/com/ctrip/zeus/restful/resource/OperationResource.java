@@ -26,6 +26,7 @@ import com.ctrip.zeus.status.entity.ServerStatus;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
+import com.ctrip.zeus.util.MessageUtil;
 import com.google.common.base.Joiner;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicLongProperty;
@@ -704,17 +705,16 @@ public class OperationResource {
         GroupStatus groupStatus = groupStatusService.getOfflineGroupStatus(groupId);
         addHealthyProperty(groupStatus);
 
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{offlineGroup}, null, null, ips.toArray(new String[ips.size()]), true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), groupId, null);
+            messageQueueService.produceMessage(request.getRequestURI(), groupId, slbMessageData);
         } else {
             if (type.equals(TaskOpsType.HEALTHY_OPS)) {
-                messageQueueService.produceMessage(MessageType.OpsHealthy, groupId, null);
-            }
-            if (type.equals(TaskOpsType.PULL_MEMBER_OPS)) {
-                messageQueueService.produceMessage(MessageType.OpsPull, groupId, null);
-            }
-            if (type.equals(TaskOpsType.MEMBER_OPS)) {
-                messageQueueService.produceMessage(MessageType.OpsMember, groupId, null);
+                messageQueueService.produceMessage(MessageType.OpsHealthy, groupId, slbMessageData);
+            } else if (type.equals(TaskOpsType.PULL_MEMBER_OPS)) {
+                messageQueueService.produceMessage(MessageType.OpsPull, groupId, slbMessageData);
+            } else if (type.equals(TaskOpsType.MEMBER_OPS)) {
+                messageQueueService.produceMessage(MessageType.OpsMember, groupId, slbMessageData);
             }
         }
 

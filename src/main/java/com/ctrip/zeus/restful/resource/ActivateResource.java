@@ -20,6 +20,7 @@ import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.task.entity.TaskResultList;
 import com.ctrip.zeus.util.AssertUtils;
 import com.google.common.base.Joiner;
+import com.ctrip.zeus.util.MessageUtil;
 import com.netflix.config.DynamicLongProperty;
 import com.netflix.config.DynamicPropertyFactory;
 import org.springframework.stereotype.Component;
@@ -114,11 +115,15 @@ public class ActivateResource {
             propertyBox.set("status", "activated", "slb", _slbIds.toArray(new Long[_slbIds.size()]));
         } catch (Exception ex) {
         }
+
+        String slbMessageData = MessageUtil.getMessageData(request, null, null,
+                slbModelStatusMapping.getOfflineMapping().values().toArray(new Slb[]{}), null, true);
+
         for (Long slbId : _slbIds) {
             if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-                messageQueueService.produceMessage(request.getRequestURI(), slbId, null);
+                messageQueueService.produceMessage(request.getRequestURI(), slbId, slbMessageData);
             } else {
-                messageQueueService.produceMessage(MessageType.ActivateSlb, slbId, null);
+                messageQueueService.produceMessage(MessageType.ActivateSlb, slbId, slbMessageData);
             }
         }
         return responseHandler.handle(resultList, hh.getMediaType());
@@ -241,11 +246,13 @@ public class ActivateResource {
         } catch (Exception ex) {
         }
 
+        String slbMessageData = MessageUtil.getMessageData(request,
+                mapping.getOfflineMapping().values().toArray(new Group[mapping.getOfflineMapping().size()]), null, null, null, true);
         for (Long id : _groupIds) {
             if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-                messageQueueService.produceMessage(request.getRequestURI(), id, null);
+                messageQueueService.produceMessage(request.getRequestURI(), id, slbMessageData);
             } else {
-                messageQueueService.produceMessage(MessageType.ActivateGroup, id, null);
+                messageQueueService.produceMessage(MessageType.ActivateGroup, id, slbMessageData);
             }
         }
 
@@ -323,10 +330,13 @@ public class ActivateResource {
             propertyBox.set("status", "activated", "vs", vsId);
         } catch (Exception ex) {
         }
+
+        String slbMessageData = MessageUtil.getMessageData(request, null,
+                new VirtualServer[]{vsMaping.getOfflineMapping().get(vsId)}, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), vsId, null);
+            messageQueueService.produceMessage(request.getRequestURI(), vsId, slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.ActivateVs, vsId, null);
+            messageQueueService.produceMessage(MessageType.ActivateVs, vsId, slbMessageData);
         }
 
         return responseHandler.handle(resultList, hh.getMediaType());
