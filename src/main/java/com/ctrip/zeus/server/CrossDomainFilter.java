@@ -1,4 +1,4 @@
-package com.ctrip.zeus.crossdomain;
+package com.ctrip.zeus.server;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -19,17 +19,17 @@ public class CrossDomainFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) servletRequest;
         final HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        String origin = request.getHeader(HeaderUtil.ORIGIN);
+        String origin = request.getHeader("Origin");
         if (origin != null) {
             // Client request header contains the origin header
-            response.setHeader(HeaderUtil.ALLOW_ORIGIN, origin);
-            response.setHeader(HeaderUtil.ALLOW_CREDENTIALS, HeaderUtil.HeaderValues.ALLOW_CREDENTIALS_TRUE);
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Access-Control-Allow-Credentials", "true");
 
-            String requestMethod = request.getHeader(HeaderUtil.REQUEST_METHOD);
-            String requestHeaders = request.getHeader(HeaderUtil.REQUEST_HEADERS);
-            if (request.getMethod().equals(HeaderUtil.OPTIONS_METHOD) && (requestMethod != null || requestHeaders != null)) {
-                response.setHeader(HeaderUtil.ALLOW_HEADERS, requestHeaders);
-                response.setHeader(HeaderUtil.ALLOW_METHODS, requestMethod);
+            String requestMethod = request.getHeader("Access-Control-Request-Method");
+            String requestHeaders = request.getHeader("Access-Control-Request-Headers");
+            if (request.getMethod().equals("Origin") && (requestMethod != null || requestHeaders != null)) {
+                response.setHeader("Access-Control-Allow-Headers", requestHeaders);
+                response.setHeader("Access-Control-Allow-Methods", requestMethod);
             }
         }
         filterChain.doFilter(request, response);
