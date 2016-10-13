@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 public class ExceptionAspect implements Ordered {
 
     private static DynamicBooleanProperty PrintStackTrace = DynamicPropertyFactory.getInstance().getBooleanProperty("slb.stack.trace", false);
+    private static DynamicBooleanProperty SendMessage = DynamicPropertyFactory.getInstance().getBooleanProperty("slb.exception.aspect.send.message", false);
 
     @Resource
     private ErrorResponseHandler errorResponseHandler;
@@ -81,6 +82,9 @@ public class ExceptionAspect implements Ordered {
     }
 
     private void sendMessage(JoinPoint point) {
+        if (!SendMessage.get()){
+            return;
+        }
         HttpServletRequest request = findRequestArg(point);
         String slbMessageData = MessageUtil.getMessageData(request, null, null, null, null, false);
         try {
