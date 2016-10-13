@@ -23,15 +23,16 @@ public class CrossDomainFilter implements Filter {
         if (origin != null) {
             // Client request header contains the origin header
             response.setHeader(HeaderUtil.ALLOW_ORIGIN, origin);
+            response.setHeader(HeaderUtil.ALLOW_CREDENTIALS, HeaderUtil.HeaderValues.ALLOW_CREDENTIALS_TRUE);
+
             String requestMethod = request.getHeader(HeaderUtil.REQUEST_METHOD);
             String requestHeaders = request.getHeader(HeaderUtil.REQUEST_HEADERS);
             if (request.getMethod().equals(HeaderUtil.OPTIONS_METHOD) && (requestMethod != null || requestHeaders != null)) {
                 response.setHeader(HeaderUtil.ALLOW_HEADERS, requestHeaders);
                 response.setHeader(HeaderUtil.ALLOW_METHODS, requestMethod);
-                response.setHeader(HeaderUtil.ALLOW_CREDENTIALS, HeaderUtil.HeaderValues.ALLOW_CREDENTIALS_TRUE);
             }
         }
-        filterChain.doFilter(request,response);
+        filterChain.doFilter(request, response);
     }
 
     @Override
