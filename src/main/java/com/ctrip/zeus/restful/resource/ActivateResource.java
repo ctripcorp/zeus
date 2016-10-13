@@ -247,7 +247,7 @@ public class ActivateResource {
         }
 
         String slbMessageData = MessageUtil.getMessageData(request,
-                mapping.getOfflineMapping().values().toArray(new Group[mapping.getOfflineMapping().size()]), null, null, null, true);
+                groupMap.getOfflineMapping().values().toArray(new Group[groupMap.getOfflineMapping().size()]), null, null, null, true);
         for (Long id : _groupIds) {
             if (configHandler.getEnable("use.new,message.queue.producer", false)) {
                 messageQueueService.produceMessage(request.getRequestURI(), id, slbMessageData);
@@ -332,7 +332,7 @@ public class ActivateResource {
         }
 
         String slbMessageData = MessageUtil.getMessageData(request, null,
-                new VirtualServer[]{vsMaping.getOfflineMapping().get(vsId)}, null, null, true);
+                new VirtualServer[]{vsMap.getOfflineMapping().get(vsId)}, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
             messageQueueService.produceMessage(request.getRequestURI(), vsId, slbMessageData);
         } else {

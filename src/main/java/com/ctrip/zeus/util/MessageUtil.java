@@ -25,7 +25,6 @@ public class MessageUtil {
         res.setQuery(request.getQueryString())
                 .setUri(request.getRequestURI())
                 .setSuccess(success)
-                .setUser(UserUtils.getUserName(request))
                 .setClientIp(getClientIP(request));
         if (groups != null && groups.length > 0) {
             for (Group group : groups) {

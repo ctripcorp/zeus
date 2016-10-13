@@ -1,11 +1,13 @@
 package com.ctrip.zeus.service.message.queue.consumers;
 
 import com.ctrip.zeus.queue.entity.Message;
+import com.ctrip.zeus.queue.entity.SlbMessageData;
 import com.ctrip.zeus.service.message.queue.AbstractConsumer;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.tag.PropertyBox;
+import com.ctrip.zeus.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -41,7 +43,10 @@ public class GroupHealthyConsumer extends AbstractConsumer {
         try {
             Set<Long> groupIds = new HashSet<>();
             for (Message msg : messages) {
-                groupIds.add(msg.getTargetId());
+                SlbMessageData data = MessageUtil.parserSlbMessageData(msg.getTargetData());
+                if (data != null && data.getSuccess()) {
+                    groupIds.add(msg.getTargetId());
+                }
             }
             List<GroupStatus> gses = groupStatusService.getOfflineGroupsStatus(groupIds);
             for (GroupStatus gs : gses) {

@@ -1,8 +1,11 @@
 package com.ctrip.zeus.service.aop;
 
 import com.ctrip.zeus.restful.message.impl.ErrorResponseHandler;
+import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.util.MessageUtil;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -13,6 +16,7 @@ import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import java.lang.reflect.InvocationTargetException;
 
@@ -27,6 +31,9 @@ public class ExceptionAspect implements Ordered {
 
     @Resource
     private ErrorResponseHandler errorResponseHandler;
+    @Resource
+    private MessageQueueService messageQueueService;
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Around("execution(* com.ctrip.zeus.restful.resource.*Resource.*(..))")
@@ -37,6 +44,7 @@ public class ExceptionAspect implements Ordered {
             return point.proceed();
         } catch (Throwable throwable) {
             logger.error(objectName + " throws an error when calling " + methodName + ".", throwable);
+            sendMessage(point);
             Throwable cause = (throwable instanceof InvocationTargetException) ? ((InvocationTargetException) throwable).getTargetException() : throwable;
             try {
                 StringBuilder builder = new StringBuilder();
@@ -66,8 +74,29 @@ public class ExceptionAspect implements Ordered {
         }
     }
 
+
     @Override
     public int getOrder() {
         return AspectOrder.InterceptException;
+    }
+
+    private void sendMessage(JoinPoint point) {
+        HttpServletRequest request = findRequestArg(point);
+        String slbMessageData = MessageUtil.getMessageData(request, null, null, null, null, false);
+        try {
+            messageQueueService.produceMessage(request.getRequestURI(), 0L, slbMessageData);
+        } catch (Throwable e) {
+            logger.error("Send Message Failed In Exception Aspect.", e);
+        }
+    }
+
+    private HttpServletRequest findRequestArg(JoinPoint point) {
+        Object[] args = point.getArgs();
+        for (Object arg : args) {
+            if (arg instanceof HttpServletRequest) {
+                return (HttpServletRequest) arg;
+            }
+        }
+        return null;
     }
 }
