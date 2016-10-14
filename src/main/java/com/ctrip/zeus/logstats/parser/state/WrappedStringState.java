@@ -82,6 +82,8 @@ public class WrappedStringState implements LogStatsState {
 
                 if (c == '\\') {
                     _escaping = !_escaping;
+                } else {
+                    sb.append(c);
                 }
             }
 

@@ -27,7 +27,7 @@ public class StateMachineParsingTest {
                 "server_port", "remote_user", "remote_addr", "http_x_forwarded_for",
                 "server_protocol", "http_user_agent", "http_cookie", "http_referer",
                 "status", "request_length", "bytes_sent", "request_time", "upstream_response_time",
-                "upstream_addr", "upstream_status", "proxy_host"};
+                "upstream_addr", "upstream_status", "upstream_name"};
         LineFormat lineFormat = new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate();
         String[] actualKeys = lineFormat.getKeys();
         Assert.assertArrayEquals(expectedKeys, actualKeys);
@@ -140,7 +140,7 @@ public class StateMachineParsingTest {
     @Test
     public void testJsonSerializer() {
         final String log = "[08/Mar/2016:15:31:39 +0800] a.com 0359 10.2.25.94 POST /Activity-Order-OrderService/api/xml/AutoOrder?format=json 80 - 10.2.28.241 10.2.42.237 HTTP/1.1 \"-\" \"-\" \"-\" 200 652 815 0.019 0.018 : 0.1 10.2.44.22:80 : 127.0.0.1:80 200 : 400 backend_6004";
-        String expectedJsonValue = "{\"time_local\":\"08/Mar/2016:15:31:39 +0800\",\"host\":\"a.com\",\"hostname\":\"0359\",\"server_addr\":\"10.2.25.94\",\"request_method\":\"POST\",\"request_uri\":\"/Activity-Order-OrderService/api/xml/AutoOrder\",\"server_port\":\"80\",\"remote_user\":\"-\",\"remote_addr\":\"10.2.28.241\",\"http_x_forwarded_for\":\"10.2.42.237\",\"server_protocol\":\"HTTP/1.1\",\"http_user_agent\":\"-\",\"http_cookie\":\"-\",\"http_referer\":\"-\",\"status\":\"200\",\"request_length\":\"652\",\"bytes_sent\":\"815\",\"request_time\":\"0.019\",\"upstream_response_time\":\"0.018 : 0.1\",\"upstream_addr\":\"10.2.44.22:80 : 127.0.0.1:80\",\"upstream_status\":\"200 : 400\",\"proxy_host\":\"backend_6004\"}";
+        String expectedJsonValue = "{\"time_local\":\"08/Mar/2016:15:31:39 +0800\",\"host\":\"a.com\",\"hostname\":\"0359\",\"server_addr\":\"10.2.25.94\",\"request_method\":\"POST\",\"request_uri\":\"/Activity-Order-OrderService/api/xml/AutoOrder\",\"server_port\":\"80\",\"remote_user\":\"-\",\"remote_addr\":\"10.2.28.241\",\"http_x_forwarded_for\":\"10.2.42.237\",\"server_protocol\":\"HTTP/1.1\",\"http_user_agent\":\"-\",\"http_cookie\":\"-\",\"http_referer\":\"-\",\"status\":\"200\",\"request_length\":\"652\",\"bytes_sent\":\"815\",\"request_time\":\"0.019\",\"upstream_response_time\":\"0.018 : 0.1\",\"upstream_addr\":\"10.2.44.22:80 : 127.0.0.1:80\",\"upstream_status\":\"200 : 400\",\"upstream_name\":\"backend_6004\"}";
 
         LineFormat lineFormat = new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate();
         final LogParser parser = new AccessLogStateMachineParser(lineFormat);
