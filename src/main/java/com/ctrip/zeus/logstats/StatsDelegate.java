@@ -6,4 +6,6 @@ package com.ctrip.zeus.logstats;
 public interface StatsDelegate<T> {
 
     void delegate(T input);
+
+    void delegate(String raw, T input);
 }

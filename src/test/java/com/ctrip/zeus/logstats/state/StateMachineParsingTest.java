@@ -74,7 +74,7 @@ public class StateMachineParsingTest {
     }
 
     @Test
-    public void testRealCases() {
+    public void testErrorRealCases() {
         LineFormat lineFormat = new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate();
         final LogParser parser = new AccessLogStateMachineParser(lineFormat);
         List<String> realCases = new ArrayList<>();
@@ -88,6 +88,30 @@ public class StateMachineParsingTest {
                 Assert.assertNotNull(kv.getValue());
             }
         }
+    }
+
+    @Test
+    public void testSuccessRealCases() {
+        LineFormat lineFormat = new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate();
+        final LogParser parser = new AccessLogStateMachineParser(lineFormat);
+
+        String status = "0";
+        List<String> realCases = new ArrayList<>();
+        realCases.add("[21/Jun/2016:09:00:05 +0800] trains.ctrip.com vms14890 10.8.211.25 POST /TrainBooking/Ajax/UI2IndexHandler.ashx 80 - 222.88.238.19 - HTTP/1.1 \"Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0)\" \"searchlist=searchlisttop=2; Session=smartlinkcode=U130026&smartlinklanguage=zh&SmartLinkKeyWord=&SmartLinkQuary=&SmartLinkHost=; adscityen=Nanyang; _bfa=1.1466470080946.9greo.1.1466470080946.1466470080946.1.10; _bfs=1.10; _ga=GA1.2.931298142.1466470084; _gat=1; appFloatCnt=4; __zpspc=9.1.1466470085.1466470185.4%232%7Cwww.baidu.com%7C%7C%7C12306%25E7%2581%25AB%25E8%25BD%25A6%25E7%25A5%25A8%25E7%25BD%2591%25E4%25B8%258A%25E8%25AE%25A2%25E7%25A5%25A8%25E5%25AE%2598%25E7%25BD%2591%7C%23; _jzqco=%7C%7C%7C%7C1466470114557%7C1.930272362.1466470085157.1466470139625.1466470185404.1466470139625.1466470185404.undefined.0.0.4.4; Union=AllianceID=4897&SID=130026&OUID=; _bfi=p1%3D108002%26p2%3D108012%26v1%3D10%26v2%3D9; ASP.NET_SessionSvc=MTAuOC45Mi4yNDF8OTA5MHxqaW5xaWFvfGRlZmF1bHR8MTQ0OTEzNzU1MjQ4Mg\" \"http://trains.ctrip.com/TrainBooking/Search.aspx?from=xian&to=wulumuqinan&day=14&number=&fromCn=\\xE8\\xA5\\xBF\\xE5\\xAE\\x89&toCn=\\xE4\\xB9\\x8C\\xE9\\xB2\\x81\\xE6\\x9C\\xA8\\xE9\\xBD\\x90\\xE5\\x8D\\x97&tj=1#\" 200 1406 223 0.010 0.010 10.8.46.173:80 200 backend_2087");
+        for (String rc : realCases) {
+            List<KeyValue> kvs = parser.parse(rc);
+            Assert.assertTrue(kvs.size() > 0);
+            for (KeyValue kv : kvs) {
+                System.out.println(kv.getKey() + ", " + kv.getValue());
+                Assert.assertNotNull(kv.getValue());
+
+                if (kv.getKey().equals("status")) {
+                    status = kv.getValue();
+                }
+            }
+        }
+
+        Assert.assertEquals("200", status);
     }
 
     @Test

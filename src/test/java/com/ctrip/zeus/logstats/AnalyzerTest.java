@@ -55,6 +55,11 @@ public class AnalyzerTest {
                                 count.incrementAndGet();
                                 System.out.println(toJsonString(input));
                             }
+
+                            @Override
+                            public void delegate(String raw, List<KeyValue> input) {
+
+                            }
                         })
                         .build();
 
@@ -125,6 +130,11 @@ public class AnalyzerTest {
                                 }
                                 System.out.println(value);
                             }
+
+                            @Override
+                            public void delegate(String raw, List<KeyValue> input) {
+
+                            }
                         });
 
         String trackingFilename = new File(accessLogUrl.getPath()).getParentFile().getAbsolutePath() + "/access-log-test-track.log";
@@ -190,6 +200,11 @@ public class AnalyzerTest {
                                 }
                                 System.out.println(toJsonString(input));
                             }
+
+                            @Override
+                            public void delegate(String raw, List<KeyValue> input) {
+
+                            }
                         });
 
         String trackingFilename = new File(accessLogUrl.getPath()).getParentFile().getAbsolutePath() + "/access-log-test-track.log";
@@ -239,6 +254,11 @@ public class AnalyzerTest {
                                 count.incrementAndGet();
                                 System.out.println(toJsonString(input));
                             }
+
+                            @Override
+                            public void delegate(String raw, List<KeyValue> input) {
+
+                            }
                         })
                         .build();
         LogStatsAnalyzer analyzer = new AccessLogStatsAnalyzer(config);
@@ -275,6 +295,11 @@ public class AnalyzerTest {
                                 Assert.assertTrue(input.size() > 0);
                                 count.incrementAndGet();
                                 System.out.println(toJsonString(input));
+                            }
+
+                            @Override
+                            public void delegate(String raw, List<KeyValue> input) {
+
                             }
                         }).build();
 
@@ -313,6 +338,11 @@ public class AnalyzerTest {
                                 Assert.assertTrue(input.size() > 0);
                                 count.incrementAndGet();
                                 System.out.println(toJsonString(input));
+                            }
+
+                            @Override
+                            public void delegate(String raw, List<KeyValue> input) {
+
                             }
                         }).build();
 
@@ -390,6 +420,11 @@ public class AnalyzerTest {
                         @Override
                         public void delegate(String input) {
                             trackerCount.incrementAndGet();
+                        }
+
+                        @Override
+                        public void delegate(String raw, String input) {
+
                         }
                     };
                     LogTracker tracker = builder.build().getLogTracker();
@@ -472,6 +507,11 @@ public class AnalyzerTest {
                                 @Override
                                 public void delegate(List<KeyValue> input) {
                                     readerCount.incrementAndGet();
+                                }
+
+                                @Override
+                                public void delegate(String raw, List<KeyValue> input) {
+
                                 }
                             });
                     File f = new File(logRotateTrackingFilename);

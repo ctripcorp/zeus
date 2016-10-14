@@ -55,30 +55,36 @@ public class WrappedStringState implements LogStatsState {
             char[] matcher = new char[]{Character.MIN_VALUE, Character.MIN_VALUE};
             StringBuilder sb = new StringBuilder();
             char c;
-            boolean _continue = false;
+            boolean _escaping = false;
             char[] source = ctxt.getSource();
             for (int i = ctxt.getCurrentIndex(); i < source.length; i++) {
                 c = source[i];
                 if (c == startSymbol) {
-                    if (!_continue && matcher[0] == Character.MIN_VALUE) {
+                    if (!_escaping && matcher[0] == Character.MIN_VALUE) {
                         matcher[0] = c;
                         continue;
                     }
                 }
                 if (c == endSymbol) {
-                    if (!_continue && matcher[0] == startSymbol) {
+                    if (!_escaping && matcher[0] == startSymbol) {
                         matcher[1] = c;
                         ctxt.proceed(i - ctxt.getCurrentIndex() + 1);
                         ctxt.addResult(name, sb.toString());
                         return;
                     }
                 }
-                if (c == '\\') {
-                    _continue = !_continue;
-                }
-                sb.append(c);
 
+                if (_escaping) {
+                    sb.append('\\' + c);
+                    _escaping = !_escaping;
+                    continue;
+                }
+
+                if (c == '\\') {
+                    _escaping = !_escaping;
+                }
             }
+
             if (matcher[0] == Character.MIN_VALUE || matcher[0] == Character.MIN_VALUE) {
                 ctxt.setState(StateMachineContext.ContextState.FAILURE);
                 return;

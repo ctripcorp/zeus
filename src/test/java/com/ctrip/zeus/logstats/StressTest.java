@@ -59,6 +59,11 @@ public class StressTest {
                             errorCount.incrementAndGet();
                         }
                     }
+
+                    @Override
+                    public void delegate(String raw, List<KeyValue> input) {
+
+                    }
                 });
 
         long now = System.nanoTime();

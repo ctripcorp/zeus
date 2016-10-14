@@ -71,7 +71,7 @@ public class AccessLogConsumers {
                                 List<KeyValue> result = logParser.parse(value);
                                 for (StatsDelegate d : delegator) {
                                     try {
-                                        d.delegate(result);
+                                        d.delegate(value, result);
                                     } catch(Exception ex){
                                         logger.error("Delegator of AccessLogConsumers throws an exception.", ex);
                                     }

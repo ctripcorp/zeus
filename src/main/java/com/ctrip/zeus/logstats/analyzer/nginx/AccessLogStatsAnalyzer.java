@@ -90,6 +90,11 @@ public class AccessLogStatsAnalyzer implements LogStatsAnalyzer {
                     }
                 }
             }
+
+            @Override
+            public void delegate(String raw, String input) {
+
+            }
         });
     }
 
