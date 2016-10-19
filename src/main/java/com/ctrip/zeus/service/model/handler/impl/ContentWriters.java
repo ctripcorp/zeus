@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
+import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
@@ -30,17 +31,29 @@ public class ContentWriters {
     }
 
     public static String writeVirtualServerContent(VirtualServer vs) {
+        //TODO switch option for deprecated fields
         if (!n2nPersistentEnabled.get()) {
-            if (vs.getSlbId() == null || vs.getSlbId().equals(0L)) {
-                if (vs.getSlbIds().size() == 1) {
-                    vs.setSlbId(vs.getSlbIds().get(0));
-                    vs.getSlbIds().clear();
+            VirtualServer tmp = new VirtualServer()
+                    .setId(vs.getId()).setName(vs.getName()).setVersion(vs.getVersion())
+                    .setSsl(vs.getSsl()).setPort(vs.getPort()).setSlbId(vs.getSlbId());
+            for (Long slbId : vs.getSlbIds()) {
+                tmp.getSlbIds().add(slbId);
+            }
+            for (Domain d : vs.getDomains()) {
+                tmp.getDomains().add(d);
+            }
+            if (tmp.getSlbId() == null || tmp.getSlbId().equals(0L)) {
+                if (tmp.getSlbIds().size() == 1) {
+                    tmp.setSlbId(vs.getSlbIds().get(0));
+                    tmp.getSlbIds().clear();
                 } else {
                     logger.error("Multiple slb relations are found on vs-" + vs.getId() + ".");
                 }
             }
+            return write(tmp);
+        } else {
+            return write(vs);
         }
-        return write(vs);
     }
 
     public static String writeGroupContent(Group g) {
