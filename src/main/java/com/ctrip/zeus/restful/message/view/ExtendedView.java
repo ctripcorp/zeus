@@ -123,7 +123,7 @@ public interface ExtendedView<T> {
     }
 
     class ExtendedVs extends VsView implements ExtendedView<VirtualServer> {
-        private static DynamicBooleanProperty n2nEnabled = DynamicPropertyFactory.getInstance().getBooleanProperty("slb.slb-vs-n2n.enabled", false);
+        private static DynamicBooleanProperty n2nViewEnabled = DynamicPropertyFactory.getInstance().getBooleanProperty("slb.slb-vs-n2n.view.enabled", false);
 
         private List<String> tags;
         private List<Property> properties;
@@ -154,7 +154,7 @@ public interface ExtendedView<T> {
 
         @Override
         Long getSlbId() {
-            if (n2nEnabled.get()) {
+            if (n2nViewEnabled.get()) {
                 return null;
             } else {
                 if (instance.getSlbId() == null && instance.getSlbIds().size() > 0) {
@@ -166,7 +166,7 @@ public interface ExtendedView<T> {
 
         @Override
         List<Long> getSlbIds() {
-            if (n2nEnabled.get()) {
+            if (n2nViewEnabled.get()) {
                 if (instance.getSlbIds().size() == 0 && instance.getSlbId() != null) {
                     instance.getSlbIds().add(instance.getSlbId());
                 }
@@ -217,7 +217,7 @@ public interface ExtendedView<T> {
         }
 
         public static void renderVirtualServer(VirtualServer vs) {
-            if (n2nEnabled.get()) {
+            if (n2nViewEnabled.get()) {
                 if (vs.getSlbIds().size() == 0 && vs.getSlbId() != null) {
                     vs.getSlbIds().add(vs.getSlbId());
                 }
