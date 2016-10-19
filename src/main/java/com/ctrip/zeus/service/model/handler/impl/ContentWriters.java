@@ -25,6 +25,7 @@ public class ContentWriters {
         objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.INDENT_OUTPUT, false)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
                 .setPropertyNamingStrategy(new LowerCaseWithHyphenStrategy());
     }
 
