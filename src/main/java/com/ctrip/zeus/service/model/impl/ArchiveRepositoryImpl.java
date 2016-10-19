@@ -31,19 +31,19 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     public void archiveGroup(Group group) throws Exception {
         groupHistoryDao.insert(new GroupHistoryDo().setGroupId(group.getId()).setGroupName(group.getName()));
         archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setHash(0).setVersion(0)
-                .setContent(ContentWriters.write(group)));
+                .setContent(ContentWriters.writeGroupContent(group)));
     }
 
     @Override
     public void archiveSlb(Slb slb) throws Exception {
         archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setHash(0).setVersion(0)
-                .setContent(ContentWriters.write(slb)));
+                .setContent(ContentWriters.writeSlbContent(slb)));
     }
 
     @Override
     public void archiveVs(VirtualServer vs) throws Exception {
         archiveVsDao.insert(new MetaVsArchiveDo().setVsId(vs.getId()).setHash(0).setVersion(0)
-                .setContent(ContentWriters.write(vs)));
+                .setContent(ContentWriters.writeVirtualServerContent(vs)));
     }
 
     @Override
