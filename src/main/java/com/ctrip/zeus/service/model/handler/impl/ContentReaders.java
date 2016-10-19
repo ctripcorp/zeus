@@ -41,6 +41,7 @@ public class ContentReaders {
             if ((vs.getSlbIds() == null || vs.getSlbIds().isEmpty())
                     && vs.getSlbId() != null) {
                 vs.getSlbIds().add(vs.getSlbId());
+                vs.setSlbId(null);
             }
         }
         return vs;
