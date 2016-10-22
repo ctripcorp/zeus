@@ -107,6 +107,11 @@ public class DefaultLogWatchService implements LogWatchService {
     }
 
     @Override
+    public void start() {
+        init();
+    }
+
+    @Override
     public void close() {
         try {
             watchService.close();

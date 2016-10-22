@@ -18,6 +18,8 @@ public interface LogWatchService {
 
     boolean avaiable();
 
+    void start();
+
     void close();
 
     String CREATE_EVENT = "ENTRY_CREATE";
