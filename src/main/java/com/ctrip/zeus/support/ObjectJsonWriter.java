@@ -8,6 +8,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import java.text.SimpleDateFormat;
+
 /**
  * Created by zhoumy on 2016/7/25.
  */
@@ -19,6 +21,7 @@ public class ObjectJsonWriter {
                 .configure(SerializationFeature.INDENT_OUTPUT, true)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
+                .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"))
                 .setPropertyNamingStrategy(new LowerCaseWithHyphenStrategy());
         objectMapper.addMixInAnnotations(ExtendedView.ExtendedGroup.class, GroupView.class);
         objectMapper.addMixInAnnotations(ExtendedView.ExtendedVs.class, VsView.class);

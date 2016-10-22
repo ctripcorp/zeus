@@ -1,7 +1,6 @@
 package com.ctrip.zeus.server;
 
 import com.ctrip.zeus.auth.impl.IPAuthenticationFilter;
-import com.ctrip.zeus.crossdomain.CrossDomainFilter;
 import com.ctrip.zeus.restful.resource.SlbResourcePackage;
 import com.ctrip.zeus.server.config.SlbAdminResourceConfig;
 import com.ctrip.zeus.startup.SpringInitializationNotifier;
@@ -14,7 +13,6 @@ import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
