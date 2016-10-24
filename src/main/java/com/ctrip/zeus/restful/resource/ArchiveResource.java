@@ -7,6 +7,7 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
+import com.ctrip.zeus.restful.message.view.ExtendedView;
 import com.ctrip.zeus.service.model.ArchiveRepository;
 import org.springframework.stereotype.Component;
 
@@ -53,7 +54,7 @@ public class ArchiveResource {
         if (archive == null) {
             return responseHandler.handle("Group archive of id " + groupId + " cannot be found.", hh.getMediaType());
         } else {
-            return responseHandler.handle(archive, hh.getMediaType());
+            return responseHandler.handle(new ExtendedView.ExtendedGroup(archive), hh.getMediaType());
         }
     }
 
@@ -71,7 +72,7 @@ public class ArchiveResource {
         if (archive == null) {
             return responseHandler.handle("Slb archive of id " + slbId + " cannot be found.", hh.getMediaType());
         } else {
-            return responseHandler.handle(archive, hh.getMediaType());
+            return responseHandler.handle(new ExtendedView.ExtendedSlb(archive), hh.getMediaType());
         }
     }
 
@@ -89,7 +90,7 @@ public class ArchiveResource {
         if (archive == null) {
             return responseHandler.handle("Virtual server archive of id " + vsId + " cannot be found.", hh.getMediaType());
         } else {
-            return responseHandler.handle(archive, hh.getMediaType());
+            return responseHandler.handle(new ExtendedView.ExtendedVs(archive), hh.getMediaType());
         }
     }
 }
