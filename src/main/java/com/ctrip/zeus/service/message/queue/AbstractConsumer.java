@@ -14,11 +14,11 @@ import java.util.List;
 public class AbstractConsumer implements Consumer {
 
     @Resource
-    private MessageQueueService messageQueueService;
+    private MessageQueue messageQueue;
 
     @PostConstruct
     private void init() {
-        messageQueueService.addConsummer(this);
+        messageQueue.addConsummer(this);
     }
 
     @Override

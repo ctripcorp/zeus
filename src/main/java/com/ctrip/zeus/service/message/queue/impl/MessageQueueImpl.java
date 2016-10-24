@@ -1,14 +1,15 @@
 package com.ctrip.zeus.service.message.queue.impl;
 
-import com.ctrip.zeus.dal.core.DefaultPageActiveDao;
 import com.ctrip.zeus.dal.core.MessageQueueDao;
 import com.ctrip.zeus.dal.core.MessageQueueDo;
 import com.ctrip.zeus.dal.core.MessageQueueEntity;
+import com.ctrip.zeus.lock.DbLockFactory;
+import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.queue.entity.Message;
 import com.ctrip.zeus.server.LocalInfoPack;
 import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.message.queue.Consumer;
-import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.service.message.queue.MessageQueue;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.support.C;
 import com.netflix.config.DynamicIntProperty;
@@ -27,12 +28,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by fanqq on 2016/9/6.
  */
-@Service("messageQueueService")
-public class MessageQueueServiceImpl implements MessageQueueService {
+@Service("messageQueue")
+public class MessageQueueImpl implements MessageQueue {
     @Resource
     private MessageQueueDao messageQueueDao;
     @Resource
     private ConfigHandler configHandler;
+    @Resource
+    private DbLockFactory dbLockFactory;
 
     private final DynamicIntProperty poolSize = DynamicPropertyFactory.getInstance().getIntProperty("message.queue.service.thread.pool.size", 10);
     private final DynamicIntProperty fetchInterval = DynamicPropertyFactory.getInstance().getIntProperty("message.queue.service.fetch.interval", 1000);
@@ -81,29 +84,38 @@ public class MessageQueueServiceImpl implements MessageQueueService {
 
     public void fetchMessage() throws Exception {
         Map<String, List<Message>> res = new HashMap<>();
-        List<MessageQueueDo> list = messageQueueDao.findByStatusAndAfterCreateTime("TODO", startTime, MessageQueueEntity.READSET_FULL);
-        if (list != null && list.size() > 0) {
-            logger.info("[MessageQueueService] Fetch Messages success. StartTime:" + startTime.toString() + ";count:" + list.size());
-            for (MessageQueueDo messageQueueDo : list) {
-                if (!res.containsKey(messageQueueDo.getType())) {
-                    res.put(messageQueueDo.getType(), new ArrayList<Message>());
+        DistLock lock = dbLockFactory.newLock("MessageQueue");
+        boolean isLocked = false;
+        try {
+            if (isLocked = lock.tryLock()) {
+                List<MessageQueueDo> list = messageQueueDao.findByStatusAndAfterCreateTime("TODO", startTime, MessageQueueEntity.READSET_FULL);
+                if (list != null && list.size() > 0) {
+                    logger.info("[MessageQueueService] Fetch Messages success. StartTime:" + startTime.toString() + ";count:" + list.size());
+                    for (MessageQueueDo messageQueueDo : list) {
+                        if (!res.containsKey(messageQueueDo.getType())) {
+                            res.put(messageQueueDo.getType(), new ArrayList<Message>());
+                        }
+                        res.get(messageQueueDo.getType()).add(C.toMessage(messageQueueDo));
+                        messageQueueDo.setStatus("DONE");
+                        messageQueueDo.setPerformer(LocalInfoPack.INSTANCE.getIp());
+                    }
+                    messageQueueDao.updateById(list.toArray(new MessageQueueDo[list.size()]), MessageQueueEntity.UPDATESET_FULL);
+                    startTime = list.get(list.size() - 1).getCreateTime();
+                    logger.info("[MessageQueueService] Finish Fetch Messages. message count:" + list.size());
                 }
-                res.get(messageQueueDo.getType()).add(C.toMessage(messageQueueDo));
-                messageQueueDo.setStatus("DONE");
-                messageQueueDo.setPerformer(LocalInfoPack.INSTANCE.getIp());
             }
-            messageQueueDao.updateById(list.toArray(new MessageQueueDo[list.size()]), MessageQueueEntity.UPDATESET_FULL);
-            startTime = list.get(list.size() - 1).getCreateTime();
-
-            logger.info("[MessageQueueService] Start process consumers.");
-            for (Consumer consumer : consumers) {
-                logger.info("[MessageQueueService] Invoke Consumer : " + consumer.getClass().getSimpleName());
-                if (configHandler.getEnable("message.consumer." + consumer.getClass().getSimpleName() + ".enable", true)) {
-                    executorService.execute(new ConsumerExecutor(consumer, res));
-                }
+        } finally {
+            if (isLocked) {
+                lock.unlock();
             }
+        }
 
-            logger.info("[MessageQueueService] Finish Fetch Messages. message count:" + list.size());
+        logger.info("[MessageQueueService] Start process consumers.");
+        for (Consumer consumer : consumers) {
+            logger.info("[MessageQueueService] Invoke Consumer : " + consumer.getClass().getSimpleName());
+            if (configHandler.getEnable("message.consumer." + consumer.getClass().getSimpleName() + ".enable", true)) {
+                executorService.execute(new ConsumerExecutor(consumer, res));
+            }
         }
     }
 
@@ -195,7 +207,7 @@ public class MessageQueueServiceImpl implements MessageQueueService {
                                 break;
                         }
                     } else {
-                        switch (type){
+                        switch (type) {
                             case "/api/group/new":
                             case "/api/vgroup/new":
                                 consumer.onNewGroup(messageMap.get(type));

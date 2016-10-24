@@ -1,13 +1,12 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.auth.Authorize;
-import com.ctrip.zeus.dal.core.StatusGroupServerDao;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.build.ConfigHandler;
-import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.service.message.queue.MessageQueue;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
@@ -84,7 +83,7 @@ public class OperationResource {
     @Resource
     private PropertyBox propertyBox;
     @Resource
-    private MessageQueueService messageQueueService;
+    private MessageQueue messageQueue;
 
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
@@ -179,9 +178,9 @@ public class OperationResource {
             }
         }
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), null, serverip);
+            messageQueue.produceMessage(request.getRequestURI(), null, serverip);
         } else {
-            messageQueueService.produceMessage(MessageType.OpsServer, null, serverip);
+            messageQueue.produceMessage(MessageType.OpsServer, null, serverip);
         }
 
         return responseHandler.handle(ss, hh.getMediaType());
@@ -707,14 +706,14 @@ public class OperationResource {
 
         String slbMessageData = MessageUtil.getMessageData(request, new Group[]{offlineGroup}, null, null, ips.toArray(new String[ips.size()]), true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), groupId, slbMessageData);
+            messageQueue.produceMessage(request.getRequestURI(), groupId, slbMessageData);
         } else {
             if (type.equals(TaskOpsType.HEALTHY_OPS)) {
-                messageQueueService.produceMessage(MessageType.OpsHealthy, groupId, slbMessageData);
+                messageQueue.produceMessage(MessageType.OpsHealthy, groupId, slbMessageData);
             } else if (type.equals(TaskOpsType.PULL_MEMBER_OPS)) {
-                messageQueueService.produceMessage(MessageType.OpsPull, groupId, slbMessageData);
+                messageQueue.produceMessage(MessageType.OpsPull, groupId, slbMessageData);
             } else if (type.equals(TaskOpsType.MEMBER_OPS)) {
-                messageQueueService.produceMessage(MessageType.OpsMember, groupId, slbMessageData);
+                messageQueue.produceMessage(MessageType.OpsMember, groupId, slbMessageData);
             }
         }
 

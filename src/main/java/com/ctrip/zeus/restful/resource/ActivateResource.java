@@ -7,7 +7,7 @@ import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.service.build.ConfigHandler;
-import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.service.message.queue.MessageQueue;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
@@ -57,7 +57,7 @@ public class ActivateResource {
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
-    private MessageQueueService messageQueueService;
+    private MessageQueue messageQueue;
     @Resource
     private ConfigHandler configHandler;
 
@@ -121,9 +121,9 @@ public class ActivateResource {
 
         for (Long slbId : _slbIds) {
             if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-                messageQueueService.produceMessage(request.getRequestURI(), slbId, slbMessageData);
+                messageQueue.produceMessage(request.getRequestURI(), slbId, slbMessageData);
             } else {
-                messageQueueService.produceMessage(MessageType.ActivateSlb, slbId, slbMessageData);
+                messageQueue.produceMessage(MessageType.ActivateSlb, slbId, slbMessageData);
             }
         }
         return responseHandler.handle(resultList, hh.getMediaType());
@@ -250,9 +250,9 @@ public class ActivateResource {
                 groupMap.getOfflineMapping().values().toArray(new Group[groupMap.getOfflineMapping().size()]), null, null, null, true);
         for (Long id : _groupIds) {
             if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-                messageQueueService.produceMessage(request.getRequestURI(), id, slbMessageData);
+                messageQueue.produceMessage(request.getRequestURI(), id, slbMessageData);
             } else {
-                messageQueueService.produceMessage(MessageType.ActivateGroup, id, slbMessageData);
+                messageQueue.produceMessage(MessageType.ActivateGroup, id, slbMessageData);
             }
         }
 
@@ -334,9 +334,9 @@ public class ActivateResource {
         String slbMessageData = MessageUtil.getMessageData(request, null,
                 new VirtualServer[]{vsMap.getOfflineMapping().get(vsId)}, null, null, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueueService.produceMessage(request.getRequestURI(), vsId, slbMessageData);
+            messageQueue.produceMessage(request.getRequestURI(), vsId, slbMessageData);
         } else {
-            messageQueueService.produceMessage(MessageType.ActivateVs, vsId, slbMessageData);
+            messageQueue.produceMessage(MessageType.ActivateVs, vsId, slbMessageData);
         }
 
         return responseHandler.handle(resultList, hh.getMediaType());

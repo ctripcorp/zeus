@@ -1,7 +1,7 @@
 package com.ctrip.zeus.service.aop;
 
 import com.ctrip.zeus.restful.message.impl.ErrorResponseHandler;
-import com.ctrip.zeus.service.message.queue.MessageQueueService;
+import com.ctrip.zeus.service.message.queue.MessageQueue;
 import com.ctrip.zeus.util.MessageUtil;
 import com.netflix.config.DynamicBooleanProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -33,7 +33,7 @@ public class ExceptionAspect implements Ordered {
     @Resource
     private ErrorResponseHandler errorResponseHandler;
     @Resource
-    private MessageQueueService messageQueueService;
+    private MessageQueue messageQueue;
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -88,7 +88,7 @@ public class ExceptionAspect implements Ordered {
         HttpServletRequest request = findRequestArg(point);
         String slbMessageData = MessageUtil.getMessageData(request, null, null, null, null, false);
         try {
-            messageQueueService.produceMessage(request.getRequestURI(), 0L, slbMessageData);
+            messageQueue.produceMessage(request.getRequestURI(), 0L, slbMessageData);
         } catch (Throwable e) {
             logger.error("Send Message Failed In Exception Aspect.", e);
         }

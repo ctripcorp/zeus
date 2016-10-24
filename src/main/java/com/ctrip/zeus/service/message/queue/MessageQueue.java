@@ -4,7 +4,7 @@ package com.ctrip.zeus.service.message.queue;
 /**
  * Created by fanqq on 2016/9/6.
  */
-public interface MessageQueueService {
+public interface MessageQueue {
 
     public void addConsummer(Consumer consumer);
 
