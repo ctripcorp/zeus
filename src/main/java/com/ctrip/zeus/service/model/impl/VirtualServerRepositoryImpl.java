@@ -78,6 +78,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer add(VirtualServer virtualServer) throws Exception {
+        virtualServer.setId(0L);
         //TODO render for deprecated field
         if (virtualServer.getSlbId() != null) {
             if (!virtualServer.getSlbIds().contains(virtualServer.getSlbId())) {

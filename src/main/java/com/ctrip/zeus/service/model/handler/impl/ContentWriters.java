@@ -1,9 +1,6 @@
 package com.ctrip.zeus.service.model.handler.impl;
 
-import com.ctrip.zeus.model.entity.Domain;
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.support.LowerCaseWithHyphenStrategy;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -57,6 +54,9 @@ public class ContentWriters {
     }
 
     public static String writeGroupContent(Group g) {
+        for (GroupVirtualServer e : g.getGroupVirtualServers()) {
+            e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
+        }
         return write(g);
     }
 
