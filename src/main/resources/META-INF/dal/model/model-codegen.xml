@@ -32,6 +32,7 @@
     <element name="value" value-type="long" type="list" names="slb-ids" xml-indent="true" />
     <element name="slb-id" value-type="long" />
     <element name="port" value-type="String" />
+    <element name="created-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
     <entity-ref name="domain" type="list" names="domains" xml-indent="true" />
   </entity>
   <entity name="domain">
@@ -45,6 +46,7 @@
     <element name="nginx-conf" value-type="String" />
     <element name="nginx-worker-processes" value-type="int" />
     <element name="status" value-type="String" />
+    <element name="created-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
     <entity-ref name="vip" type="list" names="vips" xml-indent="true" />
     <entity-ref name="slb-server" type="list" names="slb-servers" xml-indent="true" />
     <entity-ref name="virtual-server" type="list" names="virtual-servers" xml-indent="true" />
@@ -122,6 +124,7 @@
     <attribute name="version" value-type="int" />
     <attribute name="ssl" value-type="boolean" />
     <attribute name="virtual" value-type="boolean" />
+    <element name="created-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
     <entity-ref name="group-virtual-server" type="list" names="group-virtual-servers" xml-indent="true" />
     <entity-ref name="health-check" />
     <entity-ref name="load-balancing-method" />

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -86,6 +87,11 @@ public interface ExtendedView<T> {
         @Override
         List<GroupServer> getGroupServers() {
             return instance.getGroupServers();
+        }
+
+        @Override
+        Date getCreatedTime() {
+            return instance.getCreatedTime();
         }
 
         @Override
@@ -195,6 +201,11 @@ public interface ExtendedView<T> {
         @Override
         List<Domain> getDomains() {
             return instance.getDomains();
+        }
+
+        @Override
+        Date getCreatedTime() {
+            return instance.getCreatedTime();
         }
 
         @Override
@@ -311,6 +322,11 @@ public interface ExtendedView<T> {
                 ExtendedVs.renderVirtualServer(vs);
             }
             return instance.getVirtualServers();
+        }
+
+        @Override
+        Date getCreatedTime() {
+            return instance.getCreatedTime();
         }
 
         @Override

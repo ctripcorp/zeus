@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.Vip;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.fasterxml.jackson.annotation.JsonView;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -41,4 +42,7 @@ public abstract class SlbView {
 
     @JsonView(ViewConstraints.Detail.class)
     abstract List<VirtualServer> getVirtualServers();
+
+    @JsonView(ViewConstraints.Normal.class)
+    abstract Date getCreatedTime();
 }

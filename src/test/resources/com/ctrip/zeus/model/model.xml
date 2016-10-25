@@ -12,6 +12,7 @@
             <domain name="www.ctrip.com"/>
             <domain name="hotel.ctrip.com"/>
         </domains>
+        <created-time>2013-05-20 13:34:00</created-time>
     </virtual-server>
     <slb id="123456789012" name="default" version="1">
         <nginx-bin>/usr/local/nginx/bin</nginx-bin>
@@ -30,6 +31,7 @@
             <virtual-server/>
         </virtual-servers>
         <status>healthy</status>
+        <created-time>2013-05-20 13:34:00</created-time>
     </slb>
     <slb-list>
         <total>11</total>
@@ -109,6 +111,7 @@
             <group-server/>
             <group-server/>
         </group-servers>
+        <created-time>2013-05-20 13:34:00</created-time>
     </group>
     <group-list>
         <total>11</total>

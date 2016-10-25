@@ -64,6 +64,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         }
         for (ArchiveGroupDo d : archiveGroupDao.findAllByIdVersion(hashes, values, ArchiveGroupEntity.READSET_FULL)) {
             Group group = ContentReaders.readGroupContent(d.getContent());
+            group.setCreatedTime(d.getDataChangeLastTime());
             result.add(group);
         }
 
@@ -114,6 +115,7 @@ public class GroupRepositoryImpl implements GroupRepository {
             }
             autoFiller.autofill(result);
             hideVirtualValue(result);
+            result.setCreatedTime(d.getDataChangeLastTime());
             return result;
         }
         return null;

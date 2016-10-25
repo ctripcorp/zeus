@@ -3,6 +3,7 @@ package com.ctrip.zeus.restful.message.view;
 import com.ctrip.zeus.model.entity.Domain;
 import com.fasterxml.jackson.annotation.JsonView;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -33,4 +34,7 @@ public abstract class VsView {
 
     @JsonView(ViewConstraints.Normal.class)
     abstract List<Domain> getDomains();
+
+    @JsonView(ViewConstraints.Normal.class)
+    abstract Date getCreatedTime();
 }

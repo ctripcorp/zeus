@@ -59,6 +59,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         }
         for (MetaVsArchiveDo d : archiveVsDao.findAllByIdVersion(hashes, values, ArchiveVsEntity.READSET_FULL)) {
             VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
+            vs.setCreatedTime(d.getDateTimeLastChange());
             result.add(vs);
         }
         return result;
@@ -73,7 +74,13 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Override
     public VirtualServer getByKey(IdVersion key) throws Exception {
         MetaVsArchiveDo d = archiveVsDao.findByVsAndVersion(key.getId(), key.getVersion(), ArchiveVsEntity.READSET_FULL);
-        return d == null ? null : ContentReaders.readVirtualServerContent(d.getContent());
+        if (d == null) {
+            return null;
+        }
+
+        VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
+        vs.setCreatedTime(d.getDateTimeLastChange());
+        return vs;
     }
 
     @Override

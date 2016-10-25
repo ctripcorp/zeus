@@ -25,7 +25,7 @@ import java.util.*;
  * @date: 3/5/2015.
  */
 @Repository("slbRepository")
-public class SlbRepositoryImpl implements SlbRepository {
+public class    SlbRepositoryImpl implements SlbRepository {
     @Resource
     private NginxServerDao nginxServerDao;
     @Resource
@@ -70,6 +70,7 @@ public class SlbRepositoryImpl implements SlbRepository {
         for (ArchiveSlbDo d : archiveSlbDao.findAllByIdVersion(hashes, values, ArchiveSlbEntity.READSET_FULL)) {
             Slb slb = ContentReaders.readSlbContent(d.getContent());
             slb.getVirtualServers().clear();
+            slb.setCreatedTime(d.getDataChangeLastTime());
             result.put(slb.getId(), slb);
         }
 
@@ -100,6 +101,7 @@ public class SlbRepositoryImpl implements SlbRepository {
 
         Slb result = ContentReaders.readSlbContent(d.getContent());
         refreshVirtualServer(result);
+        result.setCreatedTime(d.getDataChangeLastTime());
 
         return result;
     }
@@ -110,6 +112,7 @@ public class SlbRepositoryImpl implements SlbRepository {
         if (d == null) return null;
 
         Slb result = ContentReaders.readSlbContent(d.getContent());
+        result.setCreatedTime(d.getDataChangeLastTime());
 
         if (!context.isLite()) {
             refreshVirtualServer(result);
