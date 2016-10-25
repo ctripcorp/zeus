@@ -44,7 +44,6 @@ public class MessageQueueImpl implements MessageQueue {
     private Date startTime = new Date();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private FetchThread fetchThread = new FetchThread();
-    DistLock lock = dbLockFactory.newLock("MessageQueue");
 
     @PostConstruct
     private void init() {
@@ -85,6 +84,7 @@ public class MessageQueueImpl implements MessageQueue {
 
     public void fetchMessage() throws Exception {
         Map<String, List<Message>> res = new HashMap<>();
+        DistLock lock = dbLockFactory.newLock("MessageQueue");
         boolean isLocked = false;
         try {
             if (isLocked = lock.tryLock()) {
