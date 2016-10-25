@@ -185,12 +185,12 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
         Map<Long, String> rVsDomain = new HashMap<>();
         for (VirtualServer vs : virtualServerRepository.listAll(searchKeys.toArray(new IdVersion[searchKeys.size()]))) {
             if (vs.getDomains().size() == 1) {
-                rVsDomain.put(vs.getId(), vs.getDomains().get(0).getName());
+                rVsDomain.put(vs.getId(), vs.getDomains().get(0).getName().toLowerCase());
             }
             if (vs.getDomains().size() > 1) {
                 String[] dd = new String[vs.getDomains().size()];
                 for (int i = 0; i < vs.getDomains().size(); i++) {
-                    dd[i] = vs.getDomains().get(i).getName();
+                    dd[i] = vs.getDomains().get(i).getName().toLowerCase();
                 }
                 Arrays.sort(dd);
                 rVsDomain.put(vs.getId(), Joiner.on("|").join(dd));
@@ -198,8 +198,9 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
         }
 
         Map<String, CertificateDo> rDomainCert = new HashMap<>();
+        //TODO find excluded cert
         for (CertificateDo d : certificateDao.findAllMaxByDomainAndState(rVsDomain.values().toArray(new String[rVsDomain.size()]), CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL)) {
-            rDomainCert.put(d.getDomain(), d);
+            rDomainCert.put(d.getDomain().toLowerCase(), d);
         }
 
         if (rVsDomain.size() > rDomainCert.size()) {
