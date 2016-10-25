@@ -5,7 +5,6 @@ import com.ctrip.zeus.service.Repository;
 import com.ctrip.zeus.service.model.impl.RepositoryContext;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -16,6 +15,8 @@ public interface SlbRepository extends Repository {
     List<Slb> list(Long[] slbIds) throws Exception;
 
     List<Slb> list(IdVersion[] keys) throws Exception;
+
+    Slb getById(Long slbId, RepositoryContext context) throws Exception;
 
     Slb getById(Long slbId) throws Exception;
 

@@ -60,7 +60,7 @@ public class EntityFactoryImpl implements EntityFactory {
             for (GroupVirtualServer e : g.getGroupVirtualServers()) {
                 e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
             }
-            autoFiller.autofillEmptyFields(g);
+            autoFiller.autofill(g);
             ref.put(d.getGroupId() + "," + d.getVersion(), g);
         }
 
@@ -152,7 +152,7 @@ public class EntityFactoryImpl implements EntityFactory {
             for (GroupVirtualServer e : g.getGroupVirtualServers()) {
                 e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
             }
-            autoFiller.autofillEmptyFields(g);
+            autoFiller.autofill(g);
             ref.put(d.getGroupId() + "," + d.getVersion(), g);
         }
 

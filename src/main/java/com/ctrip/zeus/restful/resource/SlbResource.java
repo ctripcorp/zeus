@@ -217,7 +217,10 @@ public class SlbResource {
         if (slbId == null) {
             throw new Exception("Query param - slbId is required.");
         }
-        Slb archive = slbRepository.getById(slbId);
+
+        RepositoryContext ctxt = new RepositoryContext();
+        ctxt.setLite(true);
+        Slb archive = slbRepository.getById(slbId, ctxt);
         if (archive == null) throw new ValidationException("Slb cannot be found with id " + slbId + ".");
 
         int count = slbRepository.delete(slbId);

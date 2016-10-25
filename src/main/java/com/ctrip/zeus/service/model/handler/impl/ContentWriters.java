@@ -54,9 +54,6 @@ public class ContentWriters {
     }
 
     public static String writeGroupContent(Group g) {
-        for (GroupVirtualServer e : g.getGroupVirtualServers()) {
-            e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
-        }
         return write(g);
     }
 

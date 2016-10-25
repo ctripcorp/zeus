@@ -145,6 +145,8 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     public void install(final Long slbId, List<String> ips) throws Exception {
+        if (slbId == null || slbId.equals(0L) || ips.size() == 0) return;
+
         final AtomicBoolean success = new AtomicBoolean(true);
         List<FutureTask<String>> reqQueue = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(ips.size() < 6 ? ips.size() : 6);

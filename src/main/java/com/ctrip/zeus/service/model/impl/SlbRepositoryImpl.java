@@ -25,7 +25,7 @@ import java.util.*;
  * @date: 3/5/2015.
  */
 @Repository("slbRepository")
-public class    SlbRepositoryImpl implements SlbRepository {
+public class SlbRepositoryImpl implements SlbRepository {
     @Resource
     private NginxServerDao nginxServerDao;
     @Resource
@@ -84,6 +84,14 @@ public class    SlbRepositoryImpl implements SlbRepository {
         }
 
         return new ArrayList<>(result.values());
+    }
+
+    @Override
+    public Slb getById(Long slbId, RepositoryContext context) throws Exception {
+        IdVersion[] key = slbCriteriaQuery.queryByIdAndMode(slbId, SelectionMode.OFFLINE_FIRST);
+        if (key.length == 0)
+            return null;
+        return getByKey(key[0], context);
     }
 
     @Override
@@ -146,8 +154,8 @@ public class    SlbRepositoryImpl implements SlbRepository {
     @Override
     public Slb update(Slb slb) throws Exception {
         slbModelValidator.validate(slb);
+        slb.getVirtualServers().clear();
         autoFiller.autofill(slb);
-        refreshVirtualServer(slb);
 
         Set<String> checkList = new HashSet<>();
         for (SlbServer ss : slb.getSlbServers()) {
@@ -202,7 +210,7 @@ public class    SlbRepositoryImpl implements SlbRepository {
     private void refreshVirtualServer(Slb slb) throws Exception {
         slb.getVirtualServers().clear();
         Set<IdVersion> range = virtualServerCriteriaQuery.queryBySlbId(slb.getId());
-        range.retainAll(virtualServerCriteriaQuery.queryAll(SelectionMode.OFFLINE_FIRST));
+        range.retainAll(virtualServerCriteriaQuery.queryAll(SelectionMode.ONLINE_FIRST));
         slb.getVirtualServers().addAll(virtualServerRepository.listAll(range.toArray(new IdVersion[range.size()])));
     }
 }
