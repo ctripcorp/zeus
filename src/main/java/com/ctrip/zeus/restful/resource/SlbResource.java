@@ -16,7 +16,6 @@ import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.impl.RepositoryContext;
 import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
@@ -219,9 +218,7 @@ public class SlbResource {
             throw new Exception("Query param - slbId is required.");
         }
 
-        RepositoryContext ctxt = new RepositoryContext();
-        ctxt.setLite(true);
-        Slb archive = slbRepository.getById(slbId, ctxt);
+        Slb archive = slbRepository.getById(slbId);
         if (archive == null) throw new ValidationException("Slb cannot be found with id " + slbId + ".");
 
         int count = slbRepository.delete(slbId);
@@ -261,10 +258,7 @@ public class SlbResource {
 
         Slb slb;
         try {
-            RepositoryContext ctxt = new RepositoryContext();
-            ctxt.setLite(true);
-
-            slb = slbRepository.getByKey(searchKey[0], ctxt);
+            slb = slbRepository.getByKey(searchKey[0]);
             for (SlbServer server : serverList.getSlbServers()) {
                 slb.addSlbServer(server);
             }
@@ -299,15 +293,12 @@ public class SlbResource {
 
         Slb slb;
         try {
-            RepositoryContext ctxt = new RepositoryContext();
-            ctxt.setLite(true);
-
             Set<String> servers = new HashSet<>();
             for (String s : ip.split(",")) {
                 servers.add(s);
             }
 
-            slb = slbRepository.getByKey(searchKey[0], ctxt);
+            slb = slbRepository.getByKey(searchKey[0]);
             Iterator<SlbServer> iter = slb.getSlbServers().iterator();
 
             while (iter.hasNext()) {
@@ -355,12 +346,6 @@ public class SlbResource {
 
     private void trim(Slb s) throws Exception {
         s.setName(trimIfNotNull(s.getName()));
-        for (VirtualServer virtualServer : s.getVirtualServers()) {
-            virtualServer.setName(trimIfNotNull(virtualServer.getName()));
-            for (Domain domain : virtualServer.getDomains()) {
-                domain.setName(trimIfNotNull(domain.getName()));
-            }
-        }
         for (SlbServer slbServer : s.getSlbServers()) {
             slbServer.setIp(trimIfNotNull(slbServer.getIp()));
             slbServer.setHostName(trimIfNotNull(slbServer.getHostName()));

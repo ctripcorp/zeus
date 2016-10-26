@@ -16,13 +16,9 @@ public interface SlbRepository extends Repository {
 
     List<Slb> list(IdVersion[] keys) throws Exception;
 
-    Slb getById(Long slbId, RepositoryContext context) throws Exception;
-
     Slb getById(Long slbId) throws Exception;
 
     Slb getByKey(IdVersion key) throws Exception;
-
-    Slb getByKey(IdVersion key, RepositoryContext context) throws Exception;
 
     Slb add(Slb slb) throws Exception;
 

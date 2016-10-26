@@ -61,7 +61,6 @@ public class ModelAssert {
         Assert.assertEquals(expected.getStatus(), actual.getStatus());
         Assert.assertEquals(expected.getSlbServers().size(), actual.getSlbServers().size());
         Assert.assertEquals(expected.getVips().size(), actual.getVips().size());
-        Assert.assertEquals(expected.getVirtualServers().size(), actual.getVirtualServers().size());
         Assert.assertEquals(expected.getVersion(), actual.getVersion());
     }
 }

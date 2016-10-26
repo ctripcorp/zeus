@@ -49,7 +49,6 @@
     <element name="created-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
     <entity-ref name="vip" type="list" names="vips" xml-indent="true" />
     <entity-ref name="slb-server" type="list" names="slb-servers" xml-indent="true" />
-    <entity-ref name="virtual-server" type="list" names="virtual-servers" xml-indent="true" />
   </entity>
   <entity name="vip">
     <attribute name="ip" value-type="String" />

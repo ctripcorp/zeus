@@ -2,7 +2,6 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.AbstractServerTest;
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.util.ModelAssert;
 import org.junit.*;
@@ -47,20 +46,30 @@ public class ServiceTest extends AbstractServerTest {
     }
 
     private void testAddSlbAndVses() throws Exception {
-        Slb slb = new Slb().setName("default").setStatus("TEST")
-                .addVip(new Vip().setIp("10.2.25.93"))
-                .addSlbServer(new SlbServer().setIp("10.2.25.93").setHostName("uat0358"))
-                .addSlbServer(new SlbServer().setIp("10.2.25.94").setHostName("uat0359"))
-                .addVirtualServer(new VirtualServer().setName("defaultSlbVs1").setSsl(false).setPort("80")
-                        .addDomain(new Domain().setName("defaultSlbVs1.ctrip.com")))
-                .addVirtualServer(new VirtualServer().setName("defaultSlbVs2").setSsl(false).setPort("80")
-                        .addDomain(new Domain().setName("defaultSlbVs2.ctrip.com")));
-        slbRepository.add(slb);
+        Slb default1 = new Slb().setName("default").setStatus("TEST")
+                .addVip(new Vip().setIp("127.0.25.93"))
+                .addSlbServer(new SlbServer().setIp("127.0.25.93").setHostName("uat0358"))
+                .addSlbServer(new SlbServer().setIp("127.0.25.94").setHostName("uat0359"));
+        slbRepository.add(default1);
+
+        VirtualServer vs1 = new VirtualServer().setName("defaultSlbVs1").setSsl(false).setPort("80")
+                .addDomain(new Domain().setName("defaultSlbVs1.ctrip.com"));
+        vs1.getSlbIds().add(default1.getId());
+        virtualServerRepository.add(vs1);
+
+        VirtualServer vs2 = new VirtualServer().setName("defaultSlbVs2").setSsl(false).setPort("80")
+                .addDomain(new Domain().setName("defaultSlbVs2.ctrip.com"));
+        vs2.getSlbIds().add(default1.getId());
+        virtualServerRepository.add(vs2);
 
         // fill expected data
-        ModelAssert.assertSlbEquals(slb, slbRepository.getByKey(new IdVersion(slb.getId(), slb.getVersion())));
-        slbTracker.put("default", slb);
-        for (VirtualServer vs : slb.getVirtualServers()) {
+        ModelAssert.assertSlbEquals(default1, slbRepository.getByKey(new IdVersion(default1.getId(), default1.getVersion())));
+        slbTracker.put("default", default1);
+
+        vsTracker.put(vs1.getName(), vs1);
+        vsTracker.put(vs2.getName(), vs2);
+
+        for (VirtualServer vs : vsTracker.values()) {
             vsTracker.put(vs.getName(), vs);
             ModelAssert.assertVirtualServerEquals(vs, virtualServerRepository.getByKey(new IdVersion(vs.getId(), vs.getVersion())));
         }
@@ -71,7 +80,6 @@ public class ServiceTest extends AbstractServerTest {
         Slb defaultSlb = slbTracker.get("default");
         Slb slb = slbRepository.getByKey(new IdVersion(defaultSlb.getId(), defaultSlb.getVersion()));
         Assert.assertNotNull(slb);
-        Assert.assertTrue(slb.getVirtualServers().size() == 2);
         Assert.assertTrue(slb.getSlbServers().size() == 2);
     }
 
@@ -79,7 +87,7 @@ public class ServiceTest extends AbstractServerTest {
     public void testUpdateSlb() throws Exception {
         Slb defaultSlb = slbTracker.get("default");
         Slb slb = slbRepository.getByKey(new IdVersion(defaultSlb.getId(), defaultSlb.getVersion()));
-        slb.getSlbServers().add(new SlbServer().setIp("10.2.25.95").setHostName("uat0360"));
+        slb.getSlbServers().add(new SlbServer().setIp("127.0.25.95").setHostName("uat0360"));
         slbRepository.update(slb);
 
         ModelAssert.assertSlbEquals(slb, slbRepository.getByKey(new IdVersion(slb.getId(), slb.getVersion())));
@@ -145,7 +153,8 @@ public class ServiceTest extends AbstractServerTest {
                 .addVip(new Vip().setIp("127.0.0.1"))
                 .addSlbServer(new SlbServer().setIp("127.0.0.1").setHostName("localhost"));
         slbRepository.add(testVsSlb);
-        VirtualServer vs = slbTracker.get("default").getVirtualServers().get(1);
+
+        VirtualServer vs = vsTracker.get("defaultSlbVs2");
         vs.getSlbIds().set(0, testVsSlb.getId());
         virtualServerRepository.update(vs);
         ModelAssert.assertVirtualServerEquals(vs, virtualServerRepository.getByKey(new IdVersion(vs.getId(), vs.getVersion())));
@@ -194,7 +203,7 @@ public class ServiceTest extends AbstractServerTest {
                 .setHealthCheck(new HealthCheck().setIntervals(2000).setFails(1).setPasses(1).setUri("/"))
                 .setLoadBalancingMethod(new LoadBalancingMethod().setType("roundrobin").setValue("test"))
                 .addGroupVirtualServer(new GroupVirtualServer().setPath("/" + groupName).setVirtualServer(new VirtualServer().setId(vsId)))
-                .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.201"))
-                .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("10.2.6.202"));
+                .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("127.0.6.201"))
+                .addGroupServer(new GroupServer().setPort(80).setWeight(1).setMaxFails(1).setFailTimeout(30).setHostName("0").setIp("127.0.6.202"));
     }
 }

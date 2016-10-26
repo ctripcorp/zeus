@@ -4,6 +4,7 @@ import com.ctrip.zeus.AbstractServerTest;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.SlbRepository;
+import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.nginx.CertificateConfig;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.nginx.CertificateTestService;
@@ -22,6 +23,8 @@ public class CertificateServiceTest extends AbstractServerTest {
     private CertificateService certificateService;
     @Resource
     private SlbRepository slbRepository;
+    @Resource
+    private VirtualServerRepository virtualServerRepository;
 
     @Test
     public void testUploadCertificate() throws Exception {
@@ -42,17 +45,15 @@ public class CertificateServiceTest extends AbstractServerTest {
 
     @Test
     public void testInstallCertificate() throws Exception {
-        Slb tmpSlb = new Slb().setName("testInstallCertificate").setVersion(1).setStatus("TEST")
+        Slb slb = new Slb().setName("testInstallCertificate").setVersion(1).setStatus("TEST")
                 .addVip(new Vip().setIp("127.0.0.1"))
-                .addSlbServer(new SlbServer().setIp("127.0.0.1").setHostName("LOCALHOST"))
-                .addSlbServer(new SlbServer().setIp("127.0.0.2").setHostName("LOCALHOST"))
-                .addSlbServer(new SlbServer().setIp("127.0.0.3").setHostName("LOCALHOST"))
-                .addSlbServer(new SlbServer().setIp("127.0.0.4").setHostName("LOCALHOST"))
-                .addSlbServer(new SlbServer().setIp("127.0.0.5").setHostName("LOCALHOST"))
-                .addVirtualServer(new VirtualServer().setName("www.testInstallCertificate.com_443").setSsl(true).setPort("443")
-                        .addDomain(new Domain().setName("www.testInstallCertificate.com")));
+                .addSlbServer(new SlbServer().setIp("127.0.0.1").setHostName("LOCALHOST"));
+        slb = slbRepository.add(slb);
+
+        VirtualServer vs = new VirtualServer().setName("www.testInstallCertificate.com_443").setSsl(true).setPort("443")
+                .addDomain(new Domain().setName("www.testInstallCertificate.com"));
         try {
-            tmpSlb = slbRepository.add(tmpSlb);
+            virtualServerRepository.add(vs);
             Assert.assertFalse(true);
         } catch (Exception ex) {
             Assert.assertTrue(ex instanceof ValidationException);
@@ -62,12 +63,13 @@ public class CertificateServiceTest extends AbstractServerTest {
         InputStream cert = this.getClass().getClassLoader().getResourceAsStream("com.ctrip.zeus.service/CertTest.crt");
         InputStream key = this.getClass().getClassLoader().getResourceAsStream("com.ctrip.zeus.service/CertTest.key");
         Long certId = certificateService.upload(cert, key, "www.testInstallCertificate.com", CertificateConfig.ONBOARD);
-        tmpSlb = slbRepository.add(tmpSlb);
-        Assert.assertNotNull(slbRepository.getById(tmpSlb.getId()));
+
+        virtualServerRepository.add(vs);
+        Assert.assertNotNull(virtualServerRepository.getById(vs.getId()));
 
         Assert.assertTrue(certificateService instanceof CertificateTestService);
         Set<String> ips = ((CertificateTestService) certificateService).getInstalledSlbServers(certId);
-        for (SlbServer slbServer : tmpSlb.getSlbServers()) {
+        for (SlbServer slbServer : slb.getSlbServers()) {
             ips.contains(slbServer.getIp());
         }
     }

@@ -79,62 +79,57 @@ public class ScenarioTest extends AbstractServerTest {
     @Test
     public void testMigrateVs() throws Exception {
         Counter.decrementAndGet();
-        Slb slb1 = slbRepository.getById(1L);
 
         VirtualServer testMigrate = new VirtualServer().setName("testMigrate.ctrip.com_80").setPort("80").setSsl(false).addDomain(new Domain().setName("testMigrate.ctrip.com"));
         testMigrate.getSlbIds().add(1L);
         virtualServerRepository.add(testMigrate);
-        Group groupOnMigrateVs = generateGroup("groupOnMigrateVs", testMigrate.getId());
-        groupRepository.add(groupOnMigrateVs);
 
         VirtualServer ref = virtualServerRepository.getById(testMigrate.getId());
         ModelAssert.assertVirtualServerEquals(testMigrate, ref);
 
-        ModelAssert.assertSlbEquals(slb1.addVirtualServer(testMigrate), slbRepository.getById(1L));
-
-
-        Slb slb2 = slbRepository.getById(2L);
         testMigrate.getSlbIds().set(0, 2L);
         virtualServerRepository.update(testMigrate);
         ref = virtualServerRepository.getById(testMigrate.getId());
 
         ModelAssert.assertVirtualServerEquals(ref, testMigrate);
 
-        slb1.getVirtualServers().remove(slb1.getVirtualServers().size() - 1);
-        ModelAssert.assertSlbEquals(slb1, slbRepository.getById(1L));
-        ModelAssert.assertSlbEquals(slb2.addVirtualServer(testMigrate), slbRepository.getById(2L));
-
-        Assert.assertEquals(2L, groupRepository.getById(groupOnMigrateVs.getId()).getGroupVirtualServers().get(0).getVirtualServer().getSlbIds().get(0).longValue());
-
-        groupRepository.delete(groupOnMigrateVs.getId());
         virtualServerRepository.delete(testMigrate.getId());
     }
 
 
     private void addSlbsAndVses() throws Exception {
         Slb default1 = new Slb().setName("default1").setStatus("TEST")
-                .addVip(new Vip().setIp("10.2.25.93"))
-                .addSlbServer(new SlbServer().setIp("10.2.25.93").setHostName("uat0358"))
-                .addSlbServer(new SlbServer().setIp("10.2.25.94").setHostName("uat0359"))
-                .addVirtualServer(new VirtualServer().setName("defaultSlbVs1").setSsl(false).setPort("80")
-                        .addDomain(new Domain().setName("defaultSlbVs1.ctrip.com")))
-                .addVirtualServer(new VirtualServer().setName("defaultSlbVs2").setSsl(false).setPort("80")
-                        .addDomain(new Domain().setName("defaultSlbVs2.ctrip.com")));
+                .addVip(new Vip().setIp("127.0.25.93"))
+                .addSlbServer(new SlbServer().setIp("127.0.25.93").setHostName("uat0358"))
+                .addSlbServer(new SlbServer().setIp("127.0.25.94").setHostName("uat0359"));
         slbRepository.add(default1);
+
+        VirtualServer vs1 = new VirtualServer().setName("defaultSlbVs1").setSsl(false).setPort("80")
+                .addDomain(new Domain().setName("defaultSlbVs1.ctrip.com"));
+        vs1.getSlbIds().add(default1.getId());
+        virtualServerRepository.add(vs1);
+
+        VirtualServer vs2 = new VirtualServer().setName("defaultSlbVs2").setSsl(false).setPort("80")
+                .addDomain(new Domain().setName("defaultSlbVs2.ctrip.com"));
+        vs2.getSlbIds().add(default1.getId());
+        virtualServerRepository.add(vs2);
+
         IdVersion[] vses = new IdVersion[2];
-        for (int i = 0; i < 2; i++) {
-            VirtualServer t = default1.getVirtualServers().get(i);
-            vses[i] = new IdVersion(t.getId(), t.getVersion());
-        }
+        vses[0] = new IdVersion(vs1.getId(), vs1.getVersion());
+        vses[1] = new IdVersion(vs2.getId(), vs2.getVersion());
         virtualServerRepository.updateStatus(vses);
+
         slbRepository.updateStatus(new IdVersion[]{new IdVersion(default1.getId(), default1.getVersion())});
 
         Slb default2 = new Slb().setName("default2").setStatus("TEST")
                 .addVip(new Vip().setIp("127.0.0.1"))
-                .addSlbServer(new SlbServer().setIp("127.0.0.1").setHostName("localhost"))
-                .addVirtualServer(new VirtualServer().setName("defaultSlbVs3").setSsl(false).setPort("80")
-                        .addDomain(new Domain().setName("defaultSlbVs3.ctrip.com")));
+                .addSlbServer(new SlbServer().setIp("127.0.0.1").setHostName("localhost"));
         slbRepository.add(default2);
+
+        VirtualServer vs3 = new VirtualServer().setName("defaultSlbVs3").setSsl(false).setPort("80")
+                .addDomain(new Domain().setName("defaultSlbVs3.ctrip.com"));
+        vs3.getSlbIds().add(default2.getId());
+        virtualServerRepository.add(vs3);
     }
 
     private void addGroups() throws Exception {

@@ -36,10 +36,6 @@ public class SlbEntityManager implements SlbSync {
 
         Long slbId = d.getId();
         slb.setId(slbId);
-        for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            virtualServer.getSlbIds().add(slbId);
-            virtualServerEntityManager.add(virtualServer);
-        }
 
         archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slbId).setVersion(slb.getVersion())
                 .setContent(ContentWriters.writeSlbContent(slb))

@@ -88,7 +88,6 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
         Map<Long, VirtualServer> onlineVses = new HashMap<>();
         for (int i = 1; i < 7; i++) {
             VirtualServer vs = new VirtualServer().setId(new Long(i)).addDomain(new Domain().setName("test" + i + "test.domain.com")).setPort("80");
-            slb.addVirtualServer(vs);
             onlineVses.put(vs.getId(), vs);
         }
         Map<Long, List<Group>> vsGroups = new HashMap<>();

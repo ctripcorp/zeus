@@ -108,7 +108,6 @@ public class EntityFactoryImpl implements EntityFactory {
         Map<String, Slb> ref = new HashMap<>();
         for (ArchiveSlbDo d : archiveSlbDao.findVersionizedByIds(slbIds, ArchiveSlbEntity.READSET_FULL)) {
             Slb slb = ContentReaders.readSlbContent(d.getContent());
-            slb.getVirtualServers().clear();
             ref.put(slb.getId() + "," + slb.getVersion(), slb);
         }
 

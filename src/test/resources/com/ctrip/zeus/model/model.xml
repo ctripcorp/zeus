@@ -26,10 +26,6 @@
             <slb-server slb-id="123456789012" ip="192.168.1.1" host-name="slb001"/>
             <slb-server slb-id="123456789012" ip="192.168.1.2" host-name="slb002"/>
         </slb-servers>
-        <virtual-servers>
-            <virtual-server/>
-            <virtual-server/>
-        </virtual-servers>
         <status>healthy</status>
         <created-time>2013-05-20 13:34:00</created-time>
     </slb>

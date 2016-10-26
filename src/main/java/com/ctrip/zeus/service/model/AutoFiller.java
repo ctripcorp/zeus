@@ -58,9 +58,6 @@ public class AutoFiller {
     public void autofill(Slb slb) throws Exception {
         slb.setNginxBin("/opt/app/nginx/sbin").setNginxConf("/opt/app/nginx/conf").setNginxWorkerProcesses(9)
                 .setStatus(slb.getStatus() == null ? "Default" : slb.getStatus());
-        for (VirtualServer virtualServer : slb.getVirtualServers()) {
-            autofill(virtualServer);
-        }
     }
 
     public void autofill(VirtualServer virtualServer) {

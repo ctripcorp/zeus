@@ -317,14 +317,6 @@ public interface ExtendedView<T> {
         }
 
         @Override
-        List<VirtualServer> getVirtualServers() {
-            for (VirtualServer vs : instance.getVirtualServers()) {
-                ExtendedVs.renderVirtualServer(vs);
-            }
-            return instance.getVirtualServers();
-        }
-
-        @Override
         Date getCreatedTime() {
             return instance.getCreatedTime();
         }

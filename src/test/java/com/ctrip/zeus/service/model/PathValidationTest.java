@@ -26,9 +26,11 @@ public class PathValidationTest extends AbstractServerTest {
     @Resource
     private SlbRepository slbRepository;
     @Resource
-    private RGroupVsDao rGroupVsDao;
+    private VirtualServerRepository virtualServerRepository;
     @Resource
     private GroupValidator groupModelValidator;
+    @Resource
+    private RGroupVsDao rGroupVsDao;
 
     private final String standardSuffix = "($|/|\\?)";
 
@@ -403,10 +405,13 @@ public class PathValidationTest extends AbstractServerTest {
         if (slb == null) {
             slb = new Slb().setName("default").setStatus("TEST")
                     .addVip(new Vip().setIp("10.2.25.93"))
-                    .addSlbServer(new SlbServer().setIp("10.2.25.93").setHostName("uat0358"))
-                    .addVirtualServer(new VirtualServer().setName("defaultSlbVs1").setSsl(false).setPort("80")
-                            .addDomain(new Domain().setName("defaultSlbVs1.ctrip.com")));
+                    .addSlbServer(new SlbServer().setIp("10.2.25.93").setHostName("uat0358"));
             slbRepository.add(slb);
+
+            VirtualServer vs = new VirtualServer().setName("defaultSlbVs1").setSsl(false).setPort("80")
+                    .addDomain(new Domain().setName("defaultSlbVs1.ctrip.com"));
+            vs.getSlbIds().add(slb.getId());
+            virtualServerRepository.add(vs);
 
             for (String path : existingPaths) {
                 rGroupVsDao.insert(new RelGroupVsDo().setGroupId(10).setVsId(1).setPath(path).setPriority(1000));
