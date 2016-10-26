@@ -77,10 +77,10 @@ public class GroupRepositoryImpl implements GroupRepository {
         Map<Long, VirtualServer> map = buildVsMapping(vsIds.toArray(new Long[vsIds.size()]));
 
         for (Group group : result) {
+            autoFiller.autofill(group);
             for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
                 groupVirtualServer.setVirtualServer(map.get(groupVirtualServer.getVirtualServer().getId()));
             }
-            autoFiller.autofill(group);
             hideVirtualValue(group);
         }
         return result;
@@ -126,7 +126,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         hideVirtualValue(group);
         groupEntityManager.add(group, false);
         syncMemberStatus(group);
-        return group;
+        return getByKey(new IdVersion(group.getId(), group.getVersion()));
     }
 
     @Override
@@ -147,7 +147,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         group.setVirtual(true);
         groupEntityManager.add(group, true);
         hideVirtualValue(group);
-        return group;
+        return getByKey(new IdVersion(group.getId(), group.getVersion()));
     }
 
     @Override
@@ -164,7 +164,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         hideVirtualValue(group);
         groupEntityManager.update(group);
         syncMemberStatus(group);
-        return group;
+        return getByKey(new IdVersion(group.getId(), group.getVersion()));
     }
 
     @Override
@@ -181,7 +181,7 @@ public class GroupRepositoryImpl implements GroupRepository {
         group.setVirtual(true);
         groupEntityManager.update(group);
         hideVirtualValue(group);
-        return group;
+        return getByKey(new IdVersion(group.getId(), group.getVersion()));
     }
 
     @Override
