@@ -78,9 +78,10 @@ public class VirtualServerResource {
     /**
      * @api {get} /api/vses: Request vs information
      * @apiName ListVirtualServers
-     * @apiGroup Vs
+     * @apiGroup VirtualServer
      * @apiParam {long[]} vsId          1,2,3
-     * @apiParam {string[]} vsName      a,b,c
+     * @apiParam {string[]} vsName      localhost,80
+     * @apiParam {string[]} fuzzyName   local,8
      * @apiParam {string[]} ip          reserved
      * @apiParam {string[]} domain      a.ctrip.com,b.ctrip.com
      * @apiParam {boolean} ssl          true/false
@@ -191,6 +192,24 @@ public class VirtualServerResource {
 
     }
 
+    /** @api {get} /api/vs/update: Update vs content
+     * @apiName UpdateVs
+     * @apiGroup VirtualServer
+     * @apiSuccess {VirtualServer} vs json object
+     * @apiExample {json} Usage:
+     *  {
+     *    "version" : 1,
+     *    "name" : "localhost_80",
+     *    "id" : 3,
+     *    "port" : "80",
+     *    "domains" : [ {
+     *      "name" : "localhost_80"
+     *    } ],
+     *    "ssl" : false,
+     *    "slb-ids" : [ 3 ],
+     *    "slb-id" : 3
+     *  }
+     */
     @POST
     @Path("/vs/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

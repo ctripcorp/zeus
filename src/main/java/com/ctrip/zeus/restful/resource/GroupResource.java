@@ -77,7 +77,8 @@ public class GroupResource {
      * @apiName ListGroups
      * @apiGroup Group
      * @apiParam {long[]} groupId       1,2,3
-     * @apiParam {string[]} groupName   a,b,c
+     * @apiParam {string[]} groupName   dev,localhost,test
+     * @apiParam {string[]} fuzzyName   de,local,te
      * @apiParam {string[]} appId       1001,1101,1100
      * @apiParam {string[]} ip          10.2.1.2,10.2.1.11
      * @apiParam {string} mode          get {online/offline/redundant} (redundant=online&offline) version
@@ -138,6 +139,63 @@ public class GroupResource {
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/group: Get group content
+     * @apiName GetSingleGroup
+     * @apiGroup Group
+     * @apiSuccess {Group} group json object
+     * @apiExample {json} Usage:
+     *  {
+     *    "id" : 1,
+     *    "name" : "sg_soho_dev_localhost_testservice",
+     *    "version" : 1,
+     *    "ssl" : false,
+     *    "app-id" : "999999",
+     *    "group-virtual-servers" : [ {
+     *      "path" : "~* ^/testservice",
+     *      "virtual-server" : {
+     *        "port" : "80",
+     *        "version" : 1,
+     *        "domains" : [ {
+     *          "name" : "localhost"
+     *        } ],
+     *        "ssl" : false,
+     *        "id" : 3,
+     *        "slb-id" : 3,
+     *        "slb-ids" : [ 3 ],
+     *        "name" : "localhost_80"
+     *      },
+     *      "rewrite" : "",
+     *      "priority" : 1000
+     *    } ],
+     *    "health-check" : {
+     *      "timeout" : 2000,
+     *      "uri" : "/slbhealthcheck.html",
+     *      "intervals" : 10000,
+     *      "fails" : 10,
+     *      "passes" : 3
+     *    },
+     *    "load-balancing-method" : {
+     *      "type" : "roundrobin",
+     *      "value" : "default"
+     *    },
+     *    "group-servers" : [ {
+     *      "port" : 8080,
+     *      "ip" : "127.0.0.1",
+     *      "host-name" : "PC1",
+     *      "weight" : 5,
+     *      "max-fails" : 0,
+     *      "fail-timeout" : 0
+     *    }, {
+     *      "port" : 8080,
+     *      "ip" : "127.0.0.2",
+     *      "host-name" : "PC2",
+     *      "weight" : 5,
+     *      "max-fails" : 0,
+     *      "fail-timeout" : 0
+     *    } ]
+     *  }
+     */
     @GET
     @Path("/group")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -286,6 +344,54 @@ public class GroupResource {
         return responseHandler.handle(g, hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/group/update: Update group content
+     * @apiName UpdateGroup
+     * @apiGroup Group
+     * @apiSuccess {Group} group json object
+     * @apiExample {json} Usage:
+     *  {
+     *    "id" : 1,
+     *    "name" : "sg_soho_dev_localhost_testservice",
+     *    "version" : 1,
+     *    "ssl" : false,
+     *    "app-id" : "999999",
+     *    "group-virtual-servers" : [ {
+     *      "path" : "~* ^/testservice",
+     *      "virtual-server" : {
+     *        "id" : 715
+     *      },
+     *      "rewrite" : "",
+     *      "priority" : 1000
+     *    } ],
+     *    "health-check" : {
+     *      "timeout" : 2000,
+     *      "uri" : "/slbhealthcheck.html",
+     *      "intervals" : 10000,
+     *      "fails" : 10,
+     *      "passes" : 3
+     *    },
+     *    "load-balancing-method" : {
+     *      "type" : "roundrobin",
+     *      "value" : "default"
+     *    },
+     *    "group-servers" : [ {
+     *      "port" : 8080,
+     *      "ip" : "127.0.0.1",
+     *      "host-name" : "PC1",
+     *      "weight" : 5,
+     *      "max-fails" : 0,
+     *      "fail-timeout" : 0
+     *    }, {
+     *      "port" : 8080,
+     *      "ip" : "127.0.0.2",
+     *      "host-name" : "PC2",
+     *      "weight" : 5,
+     *      "max-fails" : 0,
+     *      "fail-timeout" : 0
+     *    } ]
+     *  }
+     */
     @POST
     @Path("/group/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})

@@ -71,7 +71,8 @@ public class SlbResource {
      * @apiName ListSlbs
      * @apiGroup Slb
      * @apiParam {long[]} slbId         1,2,3
-     * @apiParam {string[]} slbName     a,b,c
+     * @apiParam {string[]} slbName     slb,dev
+     * @apiParam {string[]} fuzzyName   sl,d
      * @apiParam {string[]} ip          10.2.1.1,10.2.11.21
      * @apiParam {string[]} vip         not supported yet
      * @apiParam {string} mode          get {online/offline/redundant} (redundant=online&offline) version
