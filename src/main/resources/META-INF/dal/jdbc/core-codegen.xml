@@ -1514,6 +1514,7 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <index name="idx_datetime" members="datetime ASC" />
+    <index name="type_target_id_operation_user_name_client_ip_datetime_success" members="type ASC, target_id ASC, operation ASC, user_name ASC, client_ip ASC, datetime ASC, success ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

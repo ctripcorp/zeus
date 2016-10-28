@@ -28,18 +28,19 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE (CASE WHEN ${type} IS NULL OR <FIELD name='type'/> = ${type} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${target-id} IS NULL OR <FIELD name='target-id'/> = ${target-id} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${operation} IS NULL OR <FIELD name='operation'/> = ${operation} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${user-name} IS NULL OR <FIELD name='user-name'/> = ${user-name} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${client-ip} IS NULL OR <FIELD name='client-ip'/> = ${client-ip} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${from-datetime} IS NULL OR <FIELD name='datetime'/> >= ${from-datetime} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${to-datetime} IS NULL OR <FIELD name='datetime'/> <= ${to-datetime} THEN TRUE ELSE FALSE END)
+                    WHERE (${type} IS NULL OR <FIELD name='type'/> = ${type})
+                    AND (${target-id} IS NULL OR <FIELD name='target-id'/> = ${target-id})
+                    AND (${operation} IS NULL OR <FIELD name='operation'/> = ${operation})
+                    AND (${user-name} IS NULL OR <FIELD name='user-name'/> = ${user-name})
+                    AND (${client-ip} IS NULL OR <FIELD name='client-ip'/> = ${client-ip})
+                    AND (${from-datetime} IS NULL OR <FIELD name='datetime'/> >= ${from-datetime})
+                    AND (${to-datetime} IS NULL OR <FIELD name='datetime'/> <= ${to-datetime})
                     ORDER BY <FIELD name='datetime'/> DESC
                     LIMIT ${count}
                     ]]>
                 </statement>
             </query>
+
             <query name="find-by-options-with-success" type="SELECT" multiple="true">
                 <param name="type"/>
                 <param name="target-id"/>
@@ -54,13 +55,13 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE (CASE WHEN ${type} IS NULL OR <FIELD name='type'/> = ${type} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${target-id} IS NULL OR <FIELD name='target-id'/> = ${target-id} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${operation} IS NULL OR <FIELD name='operation'/> = ${operation} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${user-name} IS NULL OR <FIELD name='user-name'/> = ${user-name} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${client-ip} IS NULL OR <FIELD name='client-ip'/> = ${client-ip} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${from-datetime} IS NULL OR <FIELD name='datetime'/> >= ${from-datetime} THEN TRUE ELSE FALSE END)
-                    AND (CASE WHEN ${to-datetime} IS NULL OR <FIELD name='datetime'/> <= ${to-datetime} THEN TRUE ELSE FALSE END)
+                    WHERE (${type} IS NULL OR <FIELD name='type'/> = ${type})
+                    AND (${target-id} IS NULL OR <FIELD name='target-id'/> = ${target-id})
+                    AND (${operation} IS NULL OR <FIELD name='operation'/> = ${operation})
+                    AND (${user-name} IS NULL OR <FIELD name='user-name'/> = ${user-name})
+                    AND (${client-ip} IS NULL OR <FIELD name='client-ip'/> = ${client-ip})
+                    AND (${from-datetime} IS NULL OR <FIELD name='datetime'/> >= ${from-datetime})
+                    AND (${to-datetime} IS NULL OR <FIELD name='datetime'/> <= ${to-datetime})
                     AND <FIELD name='success'/> = ${success}
                     ORDER BY <FIELD name='datetime'/> DESC
                     LIMIT ${count}
