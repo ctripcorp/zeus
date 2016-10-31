@@ -96,32 +96,36 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
         virtualServerModelValidator.validate(virtualServer);
 
-        Iterator<Long> iter = virtualServer.getSlbIds().iterator();
-        Set<Long> uniq = new HashSet<>();
-        while (iter.hasNext()) {
-            Long slbId = iter.next();
-            if (!uniq.add(slbId)) {
-                iter.remove();
-                continue;
-            }
-
+        Set<Long> uniq = new HashSet<>(virtualServer.getSlbIds());
+        for (Long slbId : uniq) {
             if (!slbModelValidator.exists(slbId)) {
                 throw new ValidationException("Slb with id " + slbId + "does not exits.");
             }
-
-            Set<Long> retained = new HashSet<>();
-            for (IdVersion idVersion : virtualServerCriteriaQuery.queryBySlbId(slbId)) {
-                retained.add(idVersion.getId());
-            }
-            Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(retained.toArray(new Long[retained.size()]), SelectionMode.REDUNDANT);
-            List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
-            check.add(virtualServer);
-            virtualServerModelValidator.unite(check);
         }
 
+        String[] domains = new String[virtualServer.getDomains().size()];
+        for (int i = 0; i < virtualServer.getDomains().size(); i++) {
+            domains[i] = virtualServer.getDomains().get(i).getName();
+        }
+
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByDomains(domains);
+        List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
+        Iterator<VirtualServer> iter = check.iterator();
+        while (iter.hasNext()) {
+            VirtualServer tmp = iter.next();
+            boolean retained = false;
+            for (Long slbId : tmp.getSlbIds()) {
+                retained = uniq.contains(slbId);
+                if (retained) break;
+            }
+            if (!retained) iter.remove();
+        }
+        check.add(virtualServer);
+
+        virtualServerModelValidator.unite(check);
         virtualServerEntityManager.add(virtualServer);
 
-        if (virtualServer.getSsl()) {
+        if (virtualServer.isSsl()) {
             installCertificate(virtualServer);
         }
         return virtualServer;
@@ -142,36 +146,38 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
         virtualServerModelValidator.validate(virtualServer);
 
-        Iterator<Long> iter = virtualServer.getSlbIds().iterator();
-        Set<Long> uniq = new HashSet<>();
+        Set<Long> uniq = new HashSet<>(virtualServer.getSlbIds());
+        for (Long slbId : uniq) {
+            if (!slbModelValidator.exists(slbId)) {
+                throw new ValidationException("Slb with id " + slbId + "does not exits.");
+            }
+        }
+
+        String[] domains = new String[virtualServer.getDomains().size()];
+        for (int i = 0; i < virtualServer.getDomains().size(); i++) {
+            domains[i] = virtualServer.getDomains().get(i).getName();
+        }
+
+        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByDomains(domains);
+        List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
+        Iterator<VirtualServer> iter = check.iterator();
         while (iter.hasNext()) {
-            Long slbId = iter.next();
-            if (!uniq.add(slbId)) {
+            VirtualServer tmp = iter.next();
+            if (tmp.getId().equals(virtualServer.getId())) {
                 iter.remove();
                 continue;
             }
 
-            if (!slbModelValidator.exists(slbId)) {
-                throw new ValidationException("Slb with id " + slbId + "does not exits.");
+            boolean retained = false;
+            for (Long slbId : tmp.getSlbIds()) {
+                retained = uniq.contains(slbId);
+                if (retained) break;
             }
-
-            Set<Long> retained = new HashSet<>();
-            for (IdVersion idVersion : virtualServerCriteriaQuery.queryBySlbId(slbId)) {
-                retained.add(idVersion.getId());
-            }
-            Set<IdVersion> keys = virtualServerCriteriaQuery.queryByIdsAndMode(retained.toArray(new Long[retained.size()]), SelectionMode.REDUNDANT);
-            List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
-            Iterator<VirtualServer> vsIter = check.iterator();
-            while (vsIter.hasNext()) {
-                VirtualServer c = vsIter.next();
-                if (c.getId().equals(virtualServer.getId())) {
-                    vsIter.remove();
-                }
-            }
-            check.add(virtualServer);
-            virtualServerModelValidator.unite(check);
+            if (!retained) iter.remove();
         }
+        check.add(virtualServer);
 
+        virtualServerModelValidator.unite(check);
         virtualServerEntityManager.update(virtualServer);
 
         if (virtualServer.isSsl()) {

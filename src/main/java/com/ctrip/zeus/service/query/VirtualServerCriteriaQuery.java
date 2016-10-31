@@ -18,4 +18,6 @@ public interface VirtualServerCriteriaQuery extends CriteriaQuery {
     Set<IdVersion> queryBySlbIds(Long[] slbIds) throws Exception;
 
     Set<IdVersion> queryByDomain(String domain) throws Exception;
+
+    Set<IdVersion> queryByDomains(String[] domains) throws Exception;
 }

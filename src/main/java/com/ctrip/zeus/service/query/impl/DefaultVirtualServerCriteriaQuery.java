@@ -290,4 +290,13 @@ public class DefaultVirtualServerCriteriaQuery implements VirtualServerCriteriaQ
         }
         return result;
     }
+
+    @Override
+    public Set<IdVersion> queryByDomains(String[] domains) throws Exception {
+        Set<IdVersion> result = new HashSet<>();
+        for (RelVsDomainDo d : rVsDomainDao.findAllByDomains(domains, RVsDomainEntity.READSET_FULL)) {
+            result.add(new IdVersion(d.getVsId(), d.getVsVersion()));
+        }
+        return result;
+    }
 }
