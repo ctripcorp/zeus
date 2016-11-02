@@ -1,6 +1,7 @@
 package com.ctrip.zeus.restful.message.view;
 
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.service.query.sort.PropertySortable;
 import com.ctrip.zeus.tag.entity.Property;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -30,7 +31,7 @@ public interface ExtendedView<T> {
     @JsonIgnore
     T getInstance();
 
-    class ExtendedGroup extends GroupView implements ExtendedView<Group> {
+    class ExtendedGroup extends GroupView implements ExtendedView<Group>, PropertySortable {
         private List<String> tags;
         private List<Property> properties;
         private Group instance;
@@ -125,6 +126,37 @@ public interface ExtendedView<T> {
         @Override
         public Group getInstance() {
             return instance;
+        }
+
+        @Override
+        public boolean isSortable(String property) {
+            switch (property) {
+                case "id":
+                case "name":
+                case "status":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public Comparable getValue(String property) {
+            switch (property) {
+                case "id":
+                    return getId();
+                case "name":
+                    return getName();
+                case "status":
+                    for (Property p : getProperties()) {
+                        if (p.getName().equals("status")) {
+                            return p.getValue();
+                        }
+                    }
+                    return null;
+                default:
+                    return null;
+            }
         }
     }
 
