@@ -12,6 +12,9 @@ import com.ctrip.zeus.restful.message.view.ExtendedView;
 import com.ctrip.zeus.restful.message.view.SlbListView;
 import com.ctrip.zeus.restful.message.view.ViewConstraints;
 import com.ctrip.zeus.restful.message.view.ViewDecorator;
+import com.ctrip.zeus.service.build.ConfigHandler;
+import com.ctrip.zeus.service.message.queue.MessageQueue;
+import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
@@ -22,6 +25,7 @@ import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.tag.TagBox;
 import com.ctrip.zeus.tag.entity.Property;
+import com.ctrip.zeus.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -60,6 +64,10 @@ public class SlbResource {
     private TagBox tagBox;
     @Resource
     private ViewDecorator viewDecorator;
+    @Resource
+    private MessageQueue messageQueue;
+    @Resource
+    private ConfigHandler configHandler;
 
     private final int TIMEOUT = 1000;
 
@@ -169,6 +177,13 @@ public class SlbResource {
             addTag(s.getId(), extendedView.getTags());
         }
 
+        String slbMessageData = MessageUtil.getMessageData(request, null, null, new Slb[]{s}, null, true);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueue.produceMessage(request.getRequestURI(), s.getId(), slbMessageData);
+        } else {
+            messageQueue.produceMessage(MessageType.NewSlb, s.getId(), slbMessageData);
+        }
+
         return responseHandler.handle(new ExtendedView.ExtendedSlb(s), hh.getMediaType());
     }
 
@@ -206,6 +221,13 @@ public class SlbResource {
             addTag(s.getId(), extendedView.getTags());
         }
 
+        String slbMessageData = MessageUtil.getMessageData(request, null, null, new Slb[]{s}, null, true);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueue.produceMessage(request.getRequestURI(), s.getId(), slbMessageData);
+        } else {
+            messageQueue.produceMessage(MessageType.UpdateSlb, s.getId(), slbMessageData);
+        }
+
         return responseHandler.handle(new ExtendedView.ExtendedSlb(s), hh.getMediaType());
     }
 
@@ -238,6 +260,14 @@ public class SlbResource {
         }
 
         String message = count == 1 ? "Delete slb successfully." : "No deletion is needed.";
+
+        String slbMessageData = MessageUtil.getMessageData(request, null, null, new Slb[]{archive}, null, true);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueue.produceMessage(request.getRequestURI(), archive.getId(), slbMessageData);
+        } else {
+            messageQueue.produceMessage(MessageType.DeleteSlb, archive.getId(), slbMessageData);
+        }
+
         return responseHandler.handle(message, hh.getMediaType());
     }
 
@@ -273,6 +303,17 @@ public class SlbResource {
                 propertyBox.set("status", "toBeActivated", "slb", slbId);
             }
         } catch (Exception ex) {
+        }
+
+        String[]ips = new String[serverList.getSlbServers().size()];
+        for (int i = 0 ; i < ips.length ; i++){
+            ips[i] = serverList.getSlbServers().get(i).getIp();
+        }
+        String slbMessageData = MessageUtil.getMessageData(request, null, null, new Slb[]{slb}, ips, true);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueue.produceMessage(request.getRequestURI(), slb.getId(), slbMessageData);
+        } else {
+            messageQueue.produceMessage(MessageType.UpdateSlb, slb.getId(), slbMessageData);
         }
 
         return responseHandler.handle(new ExtendedView.ExtendedSlb(slb), hh.getMediaType());
@@ -319,6 +360,13 @@ public class SlbResource {
                 propertyBox.set("status", "toBeActivated", "slb", slbId);
             }
         } catch (Exception ex) {
+        }
+
+        String slbMessageData = MessageUtil.getMessageData(request, null, null, new Slb[]{slb}, new String[]{ip}, true);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueue.produceMessage(request.getRequestURI(), slb.getId(), slbMessageData);
+        } else {
+            messageQueue.produceMessage(MessageType.UpdateSlb, slb.getId(), slbMessageData);
         }
 
         return responseHandler.handle(new ExtendedView.ExtendedSlb(slb), hh.getMediaType());

@@ -159,7 +159,13 @@ public class GroupMemberResource {
         } finally {
             lock.unlock();
         }
-        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{group}, null,null, null, true);
+
+        String[] ips = new String[gsl.getGroupServers().size()];
+        for (int i = 0; i < ips.length; i++) {
+            ips[i] = gsl.getGroupServers().get(i).getIp();
+        }
+
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{group}, null, null, ips, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
             messageQueue.produceMessage(request.getRequestURI(), group.getId(), slbMessageData);
         } else {
@@ -216,7 +222,11 @@ public class GroupMemberResource {
             lock.unlock();
         }
 
-        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{group}, null,null, null, true);
+        String[] ips = new String[gsl.getGroupServers().size()];
+        for (int i = 0; i < ips.length; i++) {
+            ips[i] = gsl.getGroupServers().get(i).getIp();
+        }
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{group}, null, null, ips, true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
             messageQueue.produceMessage(request.getRequestURI(), group.getId(), slbMessageData);
         } else {
@@ -271,7 +281,7 @@ public class GroupMemberResource {
             lock.unlock();
         }
 
-        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{group}, null,null, null, true);
+        String slbMessageData = MessageUtil.getMessageData(request, new Group[]{group}, null, null, ips.toArray(new String[ips.size()]), true);
         if (configHandler.getEnable("use.new,message.queue.producer", false)) {
             messageQueue.produceMessage(request.getRequestURI(), group.getId(), slbMessageData);
         } else {
