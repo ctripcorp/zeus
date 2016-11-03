@@ -12,14 +12,14 @@ import java.util.*;
 public class SortEngine {
     Map<Class, Map<String, Method>> methodLoader = new HashMap<>();
 
-    public void sort(final String propertyName, PropertySortable[] input) {
+    public void sort(final String propertyName, PropertySortable[] input, final boolean asc) {
         Arrays.sort(input, new Comparator<PropertySortable>() {
             @Override
             public int compare(PropertySortable o1, PropertySortable o2) {
                 Comparable v1 = o1.getValue(propertyName);
                 Comparable v2 = o2.getValue(propertyName);
                 if (v1 != null && v2 != null) {
-                    return v1.compareTo(v2);
+                    return asc ? v1.compareTo(v2) : v2.compareTo(v1);
                 } else {
                     return 0;
                 }
@@ -27,7 +27,7 @@ public class SortEngine {
         });
     }
 
-    public <T> void sort(String propertyName, T[] input) {
+    public <T> void sort(String propertyName, T[] input, final boolean asc) {
         Map<String, Method> mCached = methodLoader.get(input.getClass().getComponentType());
         if (mCached == null) return;
         final Method m = mCached.get(propertyName);
@@ -39,7 +39,7 @@ public class SortEngine {
                 try {
                     Comparable v1 = (Comparable) m.invoke(o1);
                     Comparable v2 = (Comparable) m.invoke(o2);
-                    return v1.compareTo(v2);
+                    return asc ? v1.compareTo(v2) : v2.compareTo(v1);
                 } catch (IllegalAccessException e) {
                 } catch (InvocationTargetException e) {
                 }

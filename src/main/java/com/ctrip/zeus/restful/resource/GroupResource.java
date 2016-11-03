@@ -107,22 +107,22 @@ public class GroupResource {
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
         List<Group> result = groupRepository.list(searchKeys);
-        ExtendedView.ExtendedGroup[] viewList = new ExtendedView.ExtendedGroup[result.size()];
+        ExtendedView.ExtendedGroup[] viewArray = new ExtendedView.ExtendedGroup[result.size()];
 
         for (int i = 0; i < result.size(); i++) {
-            viewList[i] = new ExtendedView.ExtendedGroup(result.get(i));
+            viewArray[i] = new ExtendedView.ExtendedGroup(result.get(i));
         }
         if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
-            viewDecorator.decorate(viewList, "group");
+            viewDecorator.decorate(viewArray, "group");
         }
 
         if (queryRender.sortRequired()) {
-            sortEngine.sort(queryRender.getSortProperty(), viewList);
+            sortEngine.sort(queryRender.getSortProperty(), viewArray, queryRender.isAsc());
         }
 
-        GroupListView listView = new GroupListView();
-        for (int i = queryRender.getOffset(); i < queryRender.getOffset() + queryRender.getLimit(viewList.length); i++) {
-            listView.add(viewList[i]);
+        GroupListView listView = new GroupListView(result.size());
+        for (int i = queryRender.getOffset(); i < queryRender.getOffset() + queryRender.getLimit(viewArray.length); i++) {
+            listView.add(viewArray[i]);
         }
 
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
@@ -141,12 +141,23 @@ public class GroupResource {
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
-        GroupListView listView = new GroupListView();
-        for (Group group : groupRepository.list(searchKeys)) {
-            listView.add(new ExtendedView.ExtendedGroup(group));
+        List<Group> result = groupRepository.list(searchKeys);
+        ExtendedView.ExtendedGroup[] viewArray = new ExtendedView.ExtendedGroup[result.size()];
+
+        for (int i = 0; i < result.size(); i++) {
+            viewArray[i] = new ExtendedView.ExtendedGroup(result.get(i));
         }
         if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
-            viewDecorator.decorate(listView.getList(), "group");
+            viewDecorator.decorate(viewArray, "group");
+        }
+
+        if (queryRender.sortRequired()) {
+            sortEngine.sort(queryRender.getSortProperty(), viewArray, queryRender.isAsc());
+        }
+
+        GroupListView listView = new GroupListView(result.size());
+        for (int i = queryRender.getOffset(); i < queryRender.getOffset() + queryRender.getLimit(viewArray.length); i++) {
+            listView.add(viewArray[i]);
         }
 
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());

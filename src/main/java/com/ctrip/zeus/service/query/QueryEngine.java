@@ -110,7 +110,7 @@ public class QueryEngine {
     }
 
     public Boolean isAsc() {
-        return "asc".equals(order);
+        return !"desc".equals(order);
     }
 
     public String getSortProperty() {

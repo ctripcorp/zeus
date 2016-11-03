@@ -5,7 +5,5 @@ package com.ctrip.zeus.service.query.sort;
  */
 public interface PropertySortable {
 
-    boolean isSortable(String property);
-
     Comparable getValue(String property);
 }

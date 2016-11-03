@@ -23,14 +23,14 @@ public class SortEngineTest {
         for (int i = 0; i < 50; i++) {
             copy[i] = input[i];
         }
-        sortEngine.sort("null", input);
+        sortEngine.sort("null", input, true);
         for (int i = 0; i < 50; i++) {
             Assert.assertEquals(copy[i], input[i]);
         }
 
         String[] properties = new String[]{"aLong", "aLongWrapper", "aBoolean", "aString", "aDate"};
         for (String p : properties) {
-            sortEngine.sort(p, input);
+            sortEngine.sort(p, input, true);
             for (int i = 0; i < 49; i++) {
                 Assert.assertTrue(input[i].getValue(p).getClass().equals(input[i + 1].getValue(p).getClass()));
                 Assert.assertTrue("property:" + p + ", " + input[i].getValue(p) + " <= " + input[i + 1].getValue(p), input[i].getValue(p).compareTo(input[i + 1].getValue(p)) <= 0);
@@ -54,13 +54,13 @@ public class SortEngineTest {
         for (int i = 0; i < 50; i++) {
             copy[i] = input[i];
         }
-        sortEngine.sort("null", input);
+        sortEngine.sort("null", input, true);
         for (int i = 0; i < 50; i++) {
             Assert.assertEquals(copy[i], input[i]);
         }
 
         for (String p : properties) {
-            sortEngine.sort(p, input);
+            sortEngine.sort(p, input, true);
             Method m = PropertySortObject1.class.getMethod("get" + p.substring(0, 1).toUpperCase() + p.substring(1));
             for (int i = 0; i < 49; i++) {
                 Comparable v1 = (Comparable) m.invoke(input[i]);
@@ -87,20 +87,6 @@ public class SortEngineTest {
             rand.nextBytes(randByte);
             aString = new String(randByte);
             aDate = new Date();
-        }
-
-        @Override
-        public boolean isSortable(String property) {
-            switch (property) {
-                case "aLong":
-                case "aLongWrapper":
-                case "aBoolean":
-                case "aString":
-                case "aDate":
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         @Override

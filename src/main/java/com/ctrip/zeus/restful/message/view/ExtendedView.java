@@ -129,40 +129,32 @@ public interface ExtendedView<T> {
         }
 
         @Override
-        public boolean isSortable(String property) {
-            switch (property) {
-                case "id":
-                case "name":
-                case "status":
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        @Override
         public Comparable getValue(String property) {
             switch (property) {
                 case "id":
                     return getId();
                 case "name":
                     return getName();
-                case "status":
-                    if (getProperties() == null) return null;
-
-                    for (Property p : getProperties()) {
-                        if (p.getName().equals("status")) {
-                            return p.getValue();
-                        }
-                    }
-                    return null;
+                case "created-time":
+                    return getCreatedTime();
                 default:
+                    if (property.startsWith("property:")) {
+                        if (getProperties() == null) return null;
+
+                        String propName = property.substring("property:".length());
+                        for (Property p : getProperties()) {
+                            if (p.getName().equals(propName)) {
+                                return p.getValue();
+                            }
+                        }
+                        return null;
+                    }
                     return null;
             }
         }
     }
 
-    class ExtendedVs extends VsView implements ExtendedView<VirtualServer> {
+    class ExtendedVs extends VsView implements ExtendedView<VirtualServer>, PropertySortable {
         private static DynamicStringProperty n2nViewMode = DynamicPropertyFactory.getInstance().getStringProperty("slb.slb-vs-n2n.view.mode", "singular");
 
         private List<String> tags;
@@ -290,9 +282,38 @@ public interface ExtendedView<T> {
                     vs.getSlbIds().clear();
             }
         }
+
+        @Override
+        public Comparable getValue(String property) {
+            switch (property) {
+                case "id":
+                    return getId();
+                case "name":
+                    return getName();
+                case "domain":
+                    return getDomains().size() > 0 ? getDomains().get(0).getName() : null;
+                case "ssl":
+                    return getSsl();
+                case "created-time":
+                    return getCreatedTime();
+                default:
+                    if (property.startsWith("property:")) {
+                        if (getProperties() == null) return null;
+
+                        String propName = property.substring("property:".length());
+                        for (Property p : getProperties()) {
+                            if (p.getName().equals(propName)) {
+                                return p.getValue();
+                            }
+                        }
+                        return null;
+                    }
+                    return null;
+            }
+        }
     }
 
-    class ExtendedSlb extends SlbView implements ExtendedView<Slb> {
+    class ExtendedSlb extends SlbView implements ExtendedView<Slb>, PropertySortable {
         private List<String> tags;
         private List<Property> properties;
         private Slb instance;
@@ -377,7 +398,32 @@ public interface ExtendedView<T> {
 
         @Override
         public Slb getInstance() {
-            return null;
+            return instance;
+        }
+
+        @Override
+        public Comparable getValue(String property) {
+            switch (property) {
+                case "id":
+                    return getId();
+                case "name":
+                    return getName();
+                case "created-time":
+                    return getCreatedTime();
+                default:
+                    if (property.startsWith("property:")) {
+                        if (getProperties() == null) return null;
+
+                        String propName = property.substring("property:".length());
+                        for (Property p : getProperties()) {
+                            if (p.getName().equals(propName)) {
+                                return p.getValue();
+                            }
+                        }
+                        return null;
+                    }
+                    return null;
+            }
         }
     }
 }

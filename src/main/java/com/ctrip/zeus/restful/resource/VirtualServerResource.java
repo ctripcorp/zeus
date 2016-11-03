@@ -23,6 +23,7 @@ import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.ctrip.zeus.service.query.sort.SortEngine;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.util.MessageUtil;
@@ -71,6 +72,8 @@ public class VirtualServerResource {
     @Resource
     private ConfigHandler configHandler;
 
+    private SortEngine sortEngine = new SortEngine();
+
     private final int TIMEOUT = 1000;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -108,12 +111,23 @@ public class VirtualServerResource {
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
-        VsListView listView = new VsListView();
-        for (VirtualServer vs : virtualServerRepository.listAll(searchKeys)) {
-            listView.add(new ExtendedView.ExtendedVs(vs));
+        List<VirtualServer> result = virtualServerRepository.listAll(searchKeys);
+        ExtendedView.ExtendedVs[] viewArray = new ExtendedView.ExtendedVs[result.size()];
+
+        for (int i = 0; i < result.size(); i++) {
+            viewArray[i] = new ExtendedView.ExtendedVs(result.get(i));
         }
         if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
-            viewDecorator.decorate(listView.getList(), "vs");
+            viewDecorator.decorate(viewArray, "vs");
+        }
+
+        if (queryRender.sortRequired()) {
+            sortEngine.sort(queryRender.getSortProperty(), viewArray, queryRender.isAsc());
+        }
+
+        VsListView listView = new VsListView(result.size());
+        for (int i = queryRender.getOffset(); i < queryRender.getOffset() + queryRender.getLimit(viewArray.length); i++) {
+            listView.add(viewArray[i]);
         }
 
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
@@ -192,23 +206,24 @@ public class VirtualServerResource {
 
     }
 
-    /** @api {get} /api/vs/update: Update vs content
+    /**
+     * @api {get} /api/vs/update: Update vs content
      * @apiName UpdateVs
      * @apiGroup VirtualServer
      * @apiSuccess {VirtualServer} vs json object
      * @apiExample {json} Usage:
-     *  {
-     *    "version" : 1,
-     *    "name" : "localhost_80",
-     *    "id" : 3,
-     *    "port" : "80",
-     *    "domains" : [ {
-     *      "name" : "localhost_80"
-     *    } ],
-     *    "ssl" : false,
-     *    "slb-ids" : [ 3 ],
-     *    "slb-id" : 3
-     *  }
+     * {
+     * "version" : 1,
+     * "name" : "localhost_80",
+     * "id" : 3,
+     * "port" : "80",
+     * "domains" : [ {
+     * "name" : "localhost_80"
+     * } ],
+     * "ssl" : false,
+     * "slb-ids" : [ 3 ],
+     * "slb-id" : 3
+     * }
      */
     @POST
     @Path("/vs/update")
