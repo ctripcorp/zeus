@@ -70,7 +70,6 @@ public class GroupResource {
 
     private final SortEngine sortEngine = new SortEngine();
 
-    private final String vGroupAppId = "VirtualGroup";
     private final int TIMEOUT = 1000;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -332,7 +331,7 @@ public class GroupResource {
     public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody,
                               @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
-        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true).setAppId(vGroupAppId);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true);
         trim(g);
 
         Long checkId = groupCriteriaQuery.queryByName(g.getName());
@@ -462,7 +461,7 @@ public class GroupResource {
     public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody
             , @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
-        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true).setAppId(vGroupAppId);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true);
         trim(g);
 
         DistLock lock = dbLockFactory.newLock(g.getId() + "_updateGroup");
