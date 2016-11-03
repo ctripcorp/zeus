@@ -3,7 +3,7 @@ package com.ctrip.zeus.service.model;
 import com.ctrip.zeus.AbstractServerTest;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.util.ModelAssert;
+import com.ctrip.zeus.service.model.util.ModelAssert;
 import org.junit.*;
 
 import javax.annotation.Resource;

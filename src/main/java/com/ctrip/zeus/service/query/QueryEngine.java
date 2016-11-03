@@ -18,6 +18,11 @@ public class QueryEngine {
     private String alias;
     private final SelectionMode mode;
 
+    private Integer offset;
+    private Integer limit;
+    private String order;
+    private String sortProperty;
+
     private final GroupQueryCommand groupQueryCommand = new GroupQueryCommand();
     private final VsQueryCommand vsQueryCommand = new VsQueryCommand();
     private final SlbQueryCommand slbQueryCommand = new SlbQueryCommand();
@@ -68,9 +73,48 @@ public class QueryEngine {
             next = tmp;
         }
 
+        for (String[] e : curr) {
+            switch (e[0]) {
+                case "order":
+                    order = e[1];
+                    break;
+                case "limit":
+                    limit = Integer.parseInt(e[1]);
+                    break;
+                case "offset":
+                    offset = Integer.parseInt(e[1]);
+                    break;
+                case "sort":
+                    sortProperty = e[1];
+                    break;
+                default:
+                    break;
+            }
+        }
+
         if (!skipable && curr.size() > 0) {
             throw new ValidationException("Unsupported params " + Joiner.on(",").join(curr));
         }
+    }
+
+    public boolean sortRequired() {
+        return order != null || sortProperty != null;
+    }
+
+    public int getOffset() {
+        return offset == null ? 0 : offset;
+    }
+
+    public int getLimit(int max) {
+        return limit == null ? ((offset == null) ? max : max - offset) : limit;
+    }
+
+    public Boolean isAsc() {
+        return !"desc".equals(order);
+    }
+
+    public String getSortProperty() {
+        return sortProperty == null ? "id" : sortProperty;
     }
 
     public IdVersion[] run(CriteriaQueryFactory criteriaQueryFactory) throws Exception {

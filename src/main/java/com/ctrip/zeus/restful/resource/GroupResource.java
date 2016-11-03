@@ -14,6 +14,7 @@ import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.query.sort.SortEngine;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
@@ -67,7 +68,8 @@ public class GroupResource {
     @Resource
     private ConfigHandler configHandler;
 
-    private final String vGroupAppId = "VirtualGroup";
+    private final SortEngine sortEngine = new SortEngine();
+
     private final int TIMEOUT = 1000;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -104,12 +106,23 @@ public class GroupResource {
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
-        GroupListView listView = new GroupListView();
-        for (Group group : groupRepository.list(searchKeys)) {
-            listView.add(new ExtendedView.ExtendedGroup(group));
+        List<Group> result = groupRepository.list(searchKeys);
+        ExtendedView.ExtendedGroup[] viewArray = new ExtendedView.ExtendedGroup[result.size()];
+
+        for (int i = 0; i < result.size(); i++) {
+            viewArray[i] = new ExtendedView.ExtendedGroup(result.get(i));
         }
         if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
-            viewDecorator.decorate(listView.getList(), "group");
+            viewDecorator.decorate(viewArray, "group");
+        }
+
+        if (queryRender.sortRequired()) {
+            sortEngine.sort(queryRender.getSortProperty(), viewArray, queryRender.isAsc());
+        }
+
+        GroupListView listView = new GroupListView(result.size());
+        for (int i = queryRender.getOffset(); i < queryRender.getOffset() + queryRender.getLimit(viewArray.length); i++) {
+            listView.add(viewArray[i]);
         }
 
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
@@ -128,12 +141,23 @@ public class GroupResource {
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
-        GroupListView listView = new GroupListView();
-        for (Group group : groupRepository.list(searchKeys)) {
-            listView.add(new ExtendedView.ExtendedGroup(group));
+        List<Group> result = groupRepository.list(searchKeys);
+        ExtendedView.ExtendedGroup[] viewArray = new ExtendedView.ExtendedGroup[result.size()];
+
+        for (int i = 0; i < result.size(); i++) {
+            viewArray[i] = new ExtendedView.ExtendedGroup(result.get(i));
         }
         if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
-            viewDecorator.decorate(listView.getList(), "group");
+            viewDecorator.decorate(viewArray, "group");
+        }
+
+        if (queryRender.sortRequired()) {
+            sortEngine.sort(queryRender.getSortProperty(), viewArray, queryRender.isAsc());
+        }
+
+        GroupListView listView = new GroupListView(result.size());
+        for (int i = queryRender.getOffset(); i < queryRender.getOffset() + queryRender.getLimit(viewArray.length); i++) {
+            listView.add(viewArray[i]);
         }
 
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
@@ -318,7 +342,7 @@ public class GroupResource {
     public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody,
                               @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
-        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true).setAppId(vGroupAppId);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true);
         trim(g);
 
         Long checkId = groupCriteriaQuery.queryByName(g.getName());
@@ -448,7 +472,7 @@ public class GroupResource {
     public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody
             , @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
-        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true).setAppId(vGroupAppId);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true);
         trim(g);
 
         DistLock lock = dbLockFactory.newLock(g.getId() + "_updateGroup");

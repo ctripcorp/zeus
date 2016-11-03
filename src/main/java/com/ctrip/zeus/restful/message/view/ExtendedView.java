@@ -1,6 +1,7 @@
 package com.ctrip.zeus.restful.message.view;
 
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.service.query.sort.PropertySortable;
 import com.ctrip.zeus.tag.entity.Property;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -30,7 +31,7 @@ public interface ExtendedView<T> {
     @JsonIgnore
     T getInstance();
 
-    class ExtendedGroup extends GroupView implements ExtendedView<Group> {
+    class ExtendedGroup extends GroupView implements ExtendedView<Group>, PropertySortable {
         private List<String> tags;
         private List<Property> properties;
         private Group instance;
@@ -126,9 +127,34 @@ public interface ExtendedView<T> {
         public Group getInstance() {
             return instance;
         }
+
+        @Override
+        public Comparable getValue(String property) {
+            switch (property) {
+                case "id":
+                    return getId();
+                case "name":
+                    return getName();
+                case "created-time":
+                    return getCreatedTime();
+                default:
+                    if (property.startsWith("property:")) {
+                        if (getProperties() == null) return null;
+
+                        String propName = property.substring("property:".length());
+                        for (Property p : getProperties()) {
+                            if (p.getName().equals(propName)) {
+                                return p.getValue();
+                            }
+                        }
+                        return null;
+                    }
+                    return null;
+            }
+        }
     }
 
-    class ExtendedVs extends VsView implements ExtendedView<VirtualServer> {
+    class ExtendedVs extends VsView implements ExtendedView<VirtualServer>, PropertySortable {
         private static DynamicStringProperty n2nViewMode = DynamicPropertyFactory.getInstance().getStringProperty("slb.slb-vs-n2n.view.mode", "singular");
 
         private List<String> tags;
@@ -256,9 +282,38 @@ public interface ExtendedView<T> {
                     vs.getSlbIds().clear();
             }
         }
+
+        @Override
+        public Comparable getValue(String property) {
+            switch (property) {
+                case "id":
+                    return getId();
+                case "name":
+                    return getName();
+                case "domain":
+                    return getDomains().size() > 0 ? getDomains().get(0).getName() : null;
+                case "ssl":
+                    return getSsl();
+                case "created-time":
+                    return getCreatedTime();
+                default:
+                    if (property.startsWith("property:")) {
+                        if (getProperties() == null) return null;
+
+                        String propName = property.substring("property:".length());
+                        for (Property p : getProperties()) {
+                            if (p.getName().equals(propName)) {
+                                return p.getValue();
+                            }
+                        }
+                        return null;
+                    }
+                    return null;
+            }
+        }
     }
 
-    class ExtendedSlb extends SlbView implements ExtendedView<Slb> {
+    class ExtendedSlb extends SlbView implements ExtendedView<Slb>, PropertySortable {
         private List<String> tags;
         private List<Property> properties;
         private Slb instance;
@@ -343,7 +398,32 @@ public interface ExtendedView<T> {
 
         @Override
         public Slb getInstance() {
-            return null;
+            return instance;
+        }
+
+        @Override
+        public Comparable getValue(String property) {
+            switch (property) {
+                case "id":
+                    return getId();
+                case "name":
+                    return getName();
+                case "created-time":
+                    return getCreatedTime();
+                default:
+                    if (property.startsWith("property:")) {
+                        if (getProperties() == null) return null;
+
+                        String propName = property.substring("property:".length());
+                        for (Property p : getProperties()) {
+                            if (p.getName().equals(propName)) {
+                                return p.getValue();
+                            }
+                        }
+                        return null;
+                    }
+                    return null;
+            }
         }
     }
 }

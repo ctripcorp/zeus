@@ -20,6 +20,7 @@ import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.*;
+import com.ctrip.zeus.service.query.sort.SortEngine;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
@@ -69,6 +70,7 @@ public class SlbResource {
     @Resource
     private ConfigHandler configHandler;
 
+    private SortEngine sortEngine = new SortEngine();
     private final int TIMEOUT = 1000;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -105,12 +107,23 @@ public class SlbResource {
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
-        SlbListView listView = new SlbListView();
-        for (Slb slb : slbRepository.list(searchKeys)) {
-            listView.add(new ExtendedView.ExtendedSlb(slb));
+        List<Slb> result = slbRepository.list(searchKeys);
+        ExtendedView.ExtendedSlb[] viewArray = new ExtendedView.ExtendedSlb[result.size()];
+
+        for (int i = 0; i < result.size(); i++) {
+            viewArray[i] = new ExtendedView.ExtendedSlb(result.get(i));
         }
         if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
-            viewDecorator.decorate(listView.getList(), "slb");
+            viewDecorator.decorate(viewArray, "slb");
+        }
+
+        if (queryRender.sortRequired()) {
+            sortEngine.sort(queryRender.getSortProperty(), viewArray, queryRender.isAsc());
+        }
+
+        SlbListView listView = new SlbListView(result.size());
+        for (int i = queryRender.getOffset(); i < queryRender.getOffset() + queryRender.getLimit(viewArray.length); i++) {
+            listView.add(viewArray[i]);
         }
 
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());

@@ -10,9 +10,17 @@ import java.util.List;
  */
 public class ListView<T extends ExtendedView> {
     private List<T> list = new ArrayList<>();
+    private Integer total;
+
+    public ListView() {
+    }
+
+    public ListView(int total) {
+        this.total = total;
+    }
 
     public int getTotal() {
-        return list.size();
+        return total == null ? list.size() : total;
     }
 
     @JsonIgnore
