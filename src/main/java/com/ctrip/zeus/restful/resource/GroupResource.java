@@ -14,6 +14,7 @@ import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.query.sort.SortEngine;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
@@ -67,6 +68,8 @@ public class GroupResource {
     @Resource
     private ConfigHandler configHandler;
 
+    private final SortEngine sortEngine = new SortEngine();
+
     private final String vGroupAppId = "VirtualGroup";
     private final int TIMEOUT = 1000;
 
@@ -104,12 +107,23 @@ public class GroupResource {
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
-        GroupListView listView = new GroupListView();
-        for (Group group : groupRepository.list(searchKeys)) {
-            listView.add(new ExtendedView.ExtendedGroup(group));
+        List<Group> result = groupRepository.list(searchKeys);
+        ExtendedView.ExtendedGroup[] viewList = new ExtendedView.ExtendedGroup[result.size()];
+
+        for (int i = 0; i < result.size(); i++) {
+            viewList[i] = new ExtendedView.ExtendedGroup(result.get(i));
         }
         if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
-            viewDecorator.decorate(listView.getList(), "group");
+            viewDecorator.decorate(viewList, "group");
+        }
+
+        if (queryRender.sortRequired()) {
+            sortEngine.sort(queryRender.getSortProperty(), viewList);
+        }
+
+        GroupListView listView = new GroupListView();
+        for (int i = queryRender.getOffset(); i < queryRender.getOffset() + queryRender.getLimit(viewList.length); i++) {
+            listView.add(viewList[i]);
         }
 
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());

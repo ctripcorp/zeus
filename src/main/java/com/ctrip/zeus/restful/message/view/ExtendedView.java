@@ -148,6 +148,8 @@ public interface ExtendedView<T> {
                 case "name":
                     return getName();
                 case "status":
+                    if (getProperties() == null) return null;
+
                     for (Property p : getProperties()) {
                         if (p.getName().equals("status")) {
                             return p.getValue();
