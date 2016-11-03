@@ -16,7 +16,13 @@ public class SortEngine {
         Arrays.sort(input, new Comparator<PropertySortable>() {
             @Override
             public int compare(PropertySortable o1, PropertySortable o2) {
-                return o1.getValue(propertyName).compareTo(o2.getValue(propertyName));
+                Comparable v1 = o1.getValue(propertyName);
+                Comparable v2 = o2.getValue(propertyName);
+                if (v1 != null && v2 != null) {
+                    return v1.compareTo(v2);
+                } else {
+                    return 0;
+                }
             }
         });
     }
@@ -69,8 +75,10 @@ public class SortEngine {
         if (m.getParameterTypes().length > 0) {
             throw new ValidationException("Parameter count mismatched in " + m.getName() + ".");
         }
+
+        if (m.getReturnType().isPrimitive()) return;
         if (!Comparable.class.isAssignableFrom(m.getReturnType())) {
-            throw new ValidationException("Returned value from " + m.getName() + " is not sortable.");
+            throw new ValidationException("Returned value from " + m.getName() + " is neither primitive nor sortable.");
         }
     }
 }
