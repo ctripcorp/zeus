@@ -1,4 +1,4 @@
-package com.ctrip.zeus.util;
+package com.ctrip.zeus.service.model.util;
 
 import com.ctrip.zeus.model.entity.*;
 import org.junit.Assert;
@@ -31,7 +31,7 @@ public class ModelAssert {
             Assert.assertEquals(expected.getRewrite(), actual.getRewrite());
         }
         Assert.assertEquals(expected.getPriority() == null ? 1000 : expected.getPriority().intValue(), actual.getPriority().intValue());
-        assertVirtualServerEquals(expected.getVirtualServer(), actual.getVirtualServer());
+        Assert.assertEquals(expected.getVirtualServer().getId(), actual.getVirtualServer().getId());
     }
 
     public static void assertVirtualServerEquals(VirtualServer expected, VirtualServer actual) {

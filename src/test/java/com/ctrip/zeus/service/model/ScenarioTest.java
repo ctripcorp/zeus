@@ -2,7 +2,7 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.AbstractServerTest;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.util.ModelAssert;
+import com.ctrip.zeus.service.model.util.ModelAssert;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
