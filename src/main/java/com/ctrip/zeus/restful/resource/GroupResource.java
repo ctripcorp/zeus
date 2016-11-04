@@ -301,7 +301,11 @@ public class GroupResource {
     public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody,
                         @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
-        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(null);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class);
+        if (g == null) {
+            throw new ValidationException("Invalid post entity. Fail to parse json to group.");
+        }
+        g.setVirtual(null);
         trim(g);
 
         Long checkId = groupCriteriaQuery.queryByName(g.getName());
@@ -342,7 +346,11 @@ public class GroupResource {
     public Response addVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody,
                               @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
-        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class);
+        if (g == null) {
+            throw new ValidationException("Invalid post entity. Fail to parse json to virtual group.");
+        }
+        g.setVirtual(true);
         trim(g);
 
         Long checkId = groupCriteriaQuery.queryByName(g.getName());
@@ -423,7 +431,11 @@ public class GroupResource {
     public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody,
                            @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
-        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(null);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class);
+        if (g == null) {
+            throw new ValidationException("Invalid post entity. Fail to parse json to group.");
+        }
+        g.setVirtual(null);
         trim(g);
 
         IdVersion[] check = groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.OFFLINE_FIRST);
@@ -472,7 +484,11 @@ public class GroupResource {
     public Response updateVGroup(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody
             , @QueryParam("force") Boolean force) throws Exception {
         ExtendedView.ExtendedGroup extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedGroup.class);
-        Group g = ObjectJsonParser.parse(requestBody, Group.class).setVirtual(true);
+        Group g = ObjectJsonParser.parse(requestBody, Group.class);
+        if (g == null) {
+            throw new ValidationException("Invalid post entity. Fail to parse json to virtual group.");
+        }
+        g.setVirtual(true);
         trim(g);
 
         DistLock lock = dbLockFactory.newLock(g.getId() + "_updateGroup");

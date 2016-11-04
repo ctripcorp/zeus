@@ -179,6 +179,9 @@ public class VirtualServerResource {
                                      @Context HttpServletRequest request, String requestBody) throws Exception {
         ExtendedView.ExtendedVs extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedVs.class);
         VirtualServer vs = ObjectJsonParser.parse(requestBody, VirtualServer.class);
+        if (vs == null) {
+            throw new ValidationException("Invalid post entity. Fail to parse json to virtual server.");
+        }
         trim(vs);
 
         vs = virtualServerRepository.add(vs);
@@ -233,6 +236,9 @@ public class VirtualServerResource {
                                         @Context HttpServletRequest request, String requestBody) throws Exception {
         ExtendedView.ExtendedVs extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedVs.class);
         VirtualServer vs = ObjectJsonParser.parse(requestBody, VirtualServer.class);
+        if (vs == null) {
+            throw new ValidationException("Invalid post entity. Fail to parse json to virtual server.");
+        }
         trim(vs);
 
         IdVersion[] check = virtualServerCriteriaQuery.queryByIdAndMode(vs.getId(), SelectionMode.OFFLINE_FIRST);

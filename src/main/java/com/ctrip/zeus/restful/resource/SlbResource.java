@@ -173,6 +173,9 @@ public class SlbResource {
     public Response add(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody) throws Exception {
         ExtendedView.ExtendedSlb extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedSlb.class);
         Slb s = ObjectJsonParser.parse(requestBody, Slb.class);
+        if (s == null) {
+            throw new ValidationException("Invalid post entity. Fail to parse json to slb.");
+        }
         trim(s);
 
         s = slbRepository.add(s);
@@ -207,6 +210,9 @@ public class SlbResource {
     public Response update(@Context HttpHeaders hh, @Context HttpServletRequest request, String requestBody) throws Exception {
         ExtendedView.ExtendedSlb extendedView = ObjectJsonParser.parse(requestBody, ExtendedView.ExtendedSlb.class);
         Slb s = ObjectJsonParser.parse(requestBody, Slb.class);
+        if (s == null) {
+            throw new ValidationException("Invalid post entity. Fail to parse json to slb.");
+        }
         trim(s);
 
         IdVersion[] check = slbCriteriaQuery.queryByIdAndMode(s.getId(), SelectionMode.OFFLINE_FIRST);
