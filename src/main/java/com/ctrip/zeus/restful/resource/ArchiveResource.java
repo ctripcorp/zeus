@@ -10,6 +10,7 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.restful.message.view.ExtendedView;
 import com.ctrip.zeus.service.model.ArchiveRepository;
+import com.ctrip.zeus.service.model.VirtualServerRepository;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -31,6 +32,8 @@ import javax.ws.rs.core.Response;
 public class ArchiveResource {
     @Resource
     private ArchiveRepository archiveRepository;
+    @Resource
+    private VirtualServerRepository virtualServerRepository;
     @Resource
     private ResponseHandler responseHandler;
 
@@ -56,7 +59,7 @@ public class ArchiveResource {
             return responseHandler.handle("Group archive of id " + groupId + " cannot be found.", hh.getMediaType());
         } else {
             for (GroupVirtualServer e : archive.getGroupVirtualServers()) {
-                VirtualServer v = archiveRepository.getVsArchive(e.getVirtualServer().getId(), e.getVirtualServer().getVersion());
+                VirtualServer v = virtualServerRepository.getById(e.getVirtualServer().getId());
                 if (v != null) {
                     e.setVirtualServer(v);
                 }
