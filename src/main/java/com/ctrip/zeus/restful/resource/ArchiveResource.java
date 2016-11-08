@@ -3,6 +3,7 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
+import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
@@ -54,6 +55,12 @@ public class ArchiveResource {
         if (archive == null) {
             return responseHandler.handle("Group archive of id " + groupId + " cannot be found.", hh.getMediaType());
         } else {
+            for (GroupVirtualServer e : archive.getGroupVirtualServers()) {
+                VirtualServer v = archiveRepository.getVsArchive(e.getVirtualServer().getId(), e.getVirtualServer().getVersion());
+                if (v != null) {
+                    e.setVirtualServer(v);
+                }
+            }
             return responseHandler.handle(new ExtendedView.ExtendedGroup(archive), hh.getMediaType());
         }
     }
