@@ -116,7 +116,7 @@ public class SlbRepositoryImpl implements SlbRepository {
         }
 
         slbEntityManager.update(slb);
-        certificateService.install(slb.getId(), new ArrayList<>(checkList));
+        certificateService.install(slb.getId(), new ArrayList<>(checkList), false);
 
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()

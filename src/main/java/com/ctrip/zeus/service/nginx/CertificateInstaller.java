@@ -13,7 +13,9 @@ public interface CertificateInstaller {
 
     void localUninstall(Long vsId) throws Exception;
 
-    void localBatchInstall(Long slbId) throws Exception;
+    void localBatchInstall(Long slbId, boolean overwriteIfExist) throws Exception;
+
+    boolean defaultExists();
 
     boolean exists(Long vsId);
 }

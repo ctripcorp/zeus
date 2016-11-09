@@ -16,7 +16,6 @@ import javax.ws.rs.core.Response;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by zhoumy on 2015/10/29.
@@ -33,96 +32,82 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     public Long getCertificateOnBoard(String[] domains) throws Exception {
         CertificateDo value;
-        String[] searchRange = getDomainSearchRange(domains);
-        String domainValue;
-        boolean state = CertificateConfig.ONBOARD;
-        if (searchRange.length == 0)
-            throw new ValidationException("Domain info is not found when searching certificate.");
-        if (searchRange.length == 1) {
-            domainValue = searchRange[0];
-            value = certificateDao.findMaxByDomainAndState(domainValue, state, CertificateEntity.READSET_FULL);
-        } else {
-            List<CertificateDo> check = certificateDao.grossByDomainAndState(searchRange, state, CertificateEntity.READSET_FULL);
-            if (check.isEmpty())
-                throw new ValidationException("Cannot find corresponding certificate.");
-            if (check.size() > 1) {
-                throw new ValidationException("Multiple certificates found referring the domain list.");
-            }
-            domainValue = check.get(0).getDomain();
-            value = certificateDao.findMaxByDomainAndState(domainValue, state, CertificateEntity.READSET_FULL);
+        String searchKey = Joiner.on("|").join(domains);
+
+        value = certificateDao.findMaxByDomainAndState(searchKey, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
+        if (value == null) {
+            throw new ValidationException("Cannot find corresponding certificate referring domain " + searchKey + ".");
         }
-        if (value == null)
-            throw new ValidationException("Cannot find corresponding certificate referring domain " + domainValue + ".");
         return value.getId();
     }
 
     @Override
+    public Long update(Long certId, boolean state) throws Exception {
+        CertificateDo c = certificateDao.findById(certId, CertificateEntity.READSET_FULL);
+        if (c == null) {
+            throw new ValidationException("certificate cannot be found with the given id=" + certId + ".");
+        }
+        CertificateDo prev = certificateDao.findMaxByDomainAndState(c.getDomain(), state, CertificateEntity.READSET_ID_VERSION);
+
+        c.setState(state);
+        certificateDao.updateStateById(c, CertificateEntity.UPDATESET_FULL);
+
+        return prev == null ? 0L : prev.getId();
+    }
+
+    @Override
     public Long upload(InputStream cert, InputStream key, String domain, boolean state) throws Exception {
-        if (cert == null || key == null)
+        if (cert == null || key == null) {
             throw new ValidationException("Cert or key file is null.");
-        CertificateDo max = certificateDao.findMaxByDomainAndState(domain, state, CertificateEntity.READSET_FULL);
-        if (max != null)
-            throw new ValidationException("Certificate exists.");
-        CertificateDo d = new CertificateDo()
-                .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state).setVersion(1);
+        }
+        List<CertificateDo> certs = certificateDao.findAllByDomain(domain, CertificateEntity.READSET_ID_VERSION);
+        if (certs.size() > 0) {
+            throw new ValidationException("Certificate exists. Duplicate upload request is rejected.");
+        }
+        CertificateDo d = new CertificateDo().setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state).setVersion(1);
         certificateDao.insert(d);
         return d.getId();
     }
 
     @Override
     public Long upgrade(InputStream cert, InputStream key, String domain, boolean state) throws Exception {
-        if (cert == null || key == null)
+        if (cert == null || key == null) {
             throw new ValidationException("Cert or key file is null.");
-        CertificateDo max = certificateDao.findMaxByDomainAndState(domain, state, CertificateEntity.READSET_FULL);
-        if (max == null)
+        }
+        List<CertificateDo> certs = certificateDao.findAllByDomain(domain, CertificateEntity.READSET_ID_VERSION);
+        if (certs.size() == 0) {
             throw new ValidationException("No history has found. No need to upgrade.");
-        CertificateDo d = new CertificateDo()
-                .setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state).setVersion(max.getVersion() + 1);
+        }
+        int maxVersion = -1;
+        for (CertificateDo c : certs) {
+            int v = c.getVersion();
+            maxVersion = maxVersion < v ? v : maxVersion;
+        }
+        CertificateDo d = new CertificateDo().setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state).setVersion(maxVersion + 1);
         certificateDao.insert(d);
         return d.getId();
     }
 
     @Override
-    public void install(final Long vsId, List<String> ips, final Long certId) throws Exception {
-        List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
+    public void install(final Long vsId, List<String> ips, final Long certId, boolean overwriteIfExist) throws Exception {
         Set<String> check = new HashSet<>();
-        for (RelCertSlbServerDo d : dos) {
-            check.add(d.getIp() + "#" + vsId + "#" + d.getCertId());
+        if (!overwriteIfExist) {
+            for (RelCertSlbServerDo d : rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL)) {
+                check.add(d.getIp() + "#" + vsId + "#" + d.getCertId());
+            }
         }
 
-        final AtomicBoolean success = new AtomicBoolean(true);
-        List<FutureTask<String>> reqQueue = new ArrayList<>();
+        List<FutureTask<CertTaskResponse>> reqQueue = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(ips.size() < 6 ? ips.size() : 6);
         try {
             for (final String ip : ips) {
-                if (check.contains(ip + "#" + vsId + "#" + certId)) continue;
-
-                reqQueue.add(new FutureTask<>(new Callable<String>() {
+                if (check.contains(ip + "#" + vsId + "#" + certId)) {
+                    continue;
+                }
+                reqQueue.add(new CertManageTask(ip, new Long[]{vsId, certId}, new CertClientOperation() {
                     @Override
-                    public String call() {
-                        CertSyncClient c = new CertSyncClient("http://" + ip + ":8099");
-                        Response res;
-                        try {
-                            res = c.requestInstall(vsId, certId);
-                        } catch (Exception ex) {
-                            success.set(false);
-                            logger.error(ip + ":" + "Fail to get response. ", ex);
-                            return ip + ":" + "Fail to get response.\n";
-                        }
-                        if (res.getStatus() / 100 > 2)
-                            res = c.requestInstall(vsId, certId);
-                        if (res.getStatus() / 100 > 2) {
-                            success.set(false);
-                            try {
-                                String error = ip + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity());
-                                logger.error(error);
-                                return error + "\n";
-                            } catch (IOException e) {
-                                logger.error(ip + ":" + "Unable to parse the response entity.", e);
-                                return ip + ":" + "Unable to parse the response entity.\n";
-                            }
-                        }
-                        return ip + ":" + "success.";
+                    public Response call(CertSyncClient c, Long[] args) {
+                        return c.requestInstall(args[0], args[1]);
                     }
                 }));
             }
@@ -130,13 +115,15 @@ public class CertificateServiceImpl implements CertificateService {
                 executor.execute(futureTask);
             }
 
+            boolean succ = true;
             String message = "";
-            for (FutureTask futureTask : reqQueue) {
-                message += futureTask.get(3000, TimeUnit.MILLISECONDS);
+            for (FutureTask<CertTaskResponse> futureTask : reqQueue) {
+                CertTaskResponse tr = futureTask.get(3000, TimeUnit.MILLISECONDS);
+                succ &= tr.success;
+                message += String.format("%s(%s)", tr.ip, tr.success);
             }
-
-            if (!success.get()) {
-                throw new Exception(message);
+            if (!succ) {
+                throw new Exception("Fail to install certificate on slb servers. " + message);
             }
         } finally {
             executor.shutdown();
@@ -144,40 +131,17 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
-    public void install(final Long slbId, List<String> ips) throws Exception {
+    public void install(final Long slbId, List<String> ips, final boolean overwriteIfExist) throws Exception {
         if (slbId == null || slbId.equals(0L) || ips.size() == 0) return;
 
-        final AtomicBoolean success = new AtomicBoolean(true);
-        List<FutureTask<String>> reqQueue = new ArrayList<>();
+        List<FutureTask<CertTaskResponse>> reqQueue = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(ips.size() < 6 ? ips.size() : 6);
         try {
             for (final String ip : ips) {
-                reqQueue.add(new FutureTask<>(new Callable<String>() {
+                reqQueue.add(new CertManageTask(ip, new Long[]{slbId}, new CertClientOperation() {
                     @Override
-                    public String call() {
-                        CertSyncClient c = new CertSyncClient("http://" + ip + ":8099");
-                        Response res;
-                        try {
-                            res = c.requestBatchInstall(slbId);
-                        } catch (Exception ex) {
-                            success.set(false);
-                            logger.error(ip + ":" + "Fail to get response. ", ex);
-                            return ip + ":" + "Fail to get response.\n";
-                        }
-                        if (res.getStatus() / 100 > 2)
-                            res = c.requestBatchInstall(slbId);
-                        if (res.getStatus() / 100 > 2) {
-                            success.set(false);
-                            try {
-                                String error = ip + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity());
-                                logger.error(error);
-                                return error + "\n";
-                            } catch (IOException e) {
-                                logger.error(ip + ":" + "Unable to parse the response entity.", e);
-                                return ip + ":" + "Unable to parse the response entity.\n";
-                            }
-                        }
-                        return ip + ":" + "success.";
+                    public Response call(CertSyncClient c, Long[] args) {
+                        return c.requestBatchInstall(args[0], overwriteIfExist);
                     }
                 }));
             }
@@ -185,13 +149,15 @@ public class CertificateServiceImpl implements CertificateService {
                 executor.execute(futureTask);
             }
 
+            boolean succ = true;
             String message = "";
-            for (FutureTask futureTask : reqQueue) {
-                message += futureTask.get(3000, TimeUnit.MILLISECONDS);
+            for (FutureTask<CertTaskResponse> futureTask : reqQueue) {
+                CertTaskResponse tr = futureTask.get(3000, TimeUnit.MILLISECONDS);
+                succ &= tr.success;
+                message += String.format("%s(%s)", tr.ip, tr.success);
             }
-
-            if (!success.get()) {
-                throw new Exception(message);
+            if (!succ) {
+                throw new Exception("Fail to install certificate on slb servers. " + message);
             }
         } finally {
             executor.shutdown();
@@ -199,78 +165,122 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
-    public void uninstallIfRecalled(final Long vsId, List<String> ips) throws Exception {
+    public void replaceAndInstall(Long prevCertId, Long currCertId) throws Exception {
+        if (currCertId == null || currCertId == 0L) {
+            throw new ValidationException("Certificate to replace is empty.");
+        }
+
+        Map<Long, Set<String>> reinstallingServers = new HashMap<>();
+        if (prevCertId != null && prevCertId != 0L) {
+            for (RelCertSlbServerDo e : rCertificateSlbServerDao.findByCert(prevCertId, RCertificateSlbServerEntity.READSET_FULL)) {
+                Set<String> v = reinstallingServers.get(e.getVsId());
+                if (v == null) {
+                    v = new HashSet<>();
+                    reinstallingServers.put(e.getVsId(), v);
+                }
+                v.add(e.getIp());
+            }
+        }
+        for (RelCertSlbServerDo e : rCertificateSlbServerDao.findByCert(currCertId, RCertificateSlbServerEntity.READSET_FULL)) {
+            Set<String> v = reinstallingServers.get(e.getVsId());
+            if (v == null) {
+                v = new HashSet<>();
+                reinstallingServers.put(e.getVsId(), v);
+            }
+            v.add(e.getIp());
+        }
+
+        for (Map.Entry<Long, Set<String>> e : reinstallingServers.entrySet()) {
+            install(e.getKey(), new ArrayList<>(e.getValue()), currCertId, true);
+        }
+    }
+
+    @Override
+    public void uninstall(final Long vsId, List<String> ips) throws Exception {
         Map<String, RelCertSlbServerDo> abandoned = new HashMap<>();
         for (RelCertSlbServerDo d : rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL)) {
             if (ips.contains(d.getIp()))
                 abandoned.put(d.getIp(), d);
         }
 
-        final AtomicBoolean success = new AtomicBoolean(true);
-        List<FutureTask<String>> reqQueue = new ArrayList<>();
+        List<FutureTask<CertTaskResponse>> reqQueue = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(ips.size() < 6 ? ips.size() : 6);
         try {
             for (final Map.Entry<String, RelCertSlbServerDo> entry : abandoned.entrySet()) {
-                reqQueue.add(new FutureTask<>(new Callable<String>() {
+                reqQueue.add(new CertManageTask(entry.getKey(), new Long[]{vsId}, new CertClientOperation() {
                     @Override
-                    public String call() {
-                        CertSyncClient c = new CertSyncClient("http://" + entry.getKey() + ":8099");
-                        Response res;
-                        try {
-                            res = c.requestUninstall(vsId);
-                        } catch (Exception ex) {
-                            success.set(false);
-                            logger.error(entry.getKey() + ":" + "Fail to get response. ", ex);
-                            return entry.getKey() + ":" + "Fail to get response.\n";
-                        }
-                        if (res.getStatus() / 100 > 2)
-                            res = c.requestUninstall(vsId);
-                        if (res.getStatus() / 100 > 2) {
-                            success.set(false);
-                            try {
-                                String error = entry.getKey() + ":" + IOUtils.inputStreamStringify((InputStream) res.getEntity());
-                                logger.error(error);
-                                return error + "\n";
-                            } catch (IOException e) {
-                                logger.error(entry.getKey() + ":" + "Unable to parse the response entity.", e);
-                                return entry.getKey() + ":" + "Unable to parse the response entity.\n";
-                            }
-                        }
-                        return entry.getKey() + ":" + "success";
+                    public Response call(CertSyncClient c, Long[] args) {
+                        return c.requestUninstall(args[0]);
                     }
                 }));
                 for (FutureTask futureTask : reqQueue) {
                     executor.execute(futureTask);
                 }
+            }
+            boolean succ = true;
+            String message = "";
+            for (FutureTask<CertTaskResponse> futureTask : reqQueue) {
+                CertTaskResponse tr = futureTask.get(3000, TimeUnit.MILLISECONDS);
+                succ &= tr.success;
+                message += String.format("%s(%s)", tr.ip, tr.success);
+            }
 
-                String message = "";
-                for (FutureTask futureTask : reqQueue) {
-                    message += futureTask.get(30000, TimeUnit.MILLISECONDS);
-                }
-
-                if (!success.get()) {
-                    throw new Exception(message);
-                } else {
-                    rCertificateSlbServerDao.deleteAllById(entry.getValue());
-                }
+            if (!succ) {
+                throw new Exception("Fail to uninstall certificate from slb servers. " + message);
+            } else {
+                rCertificateSlbServerDao.deleteById(abandoned.values().toArray(new RelCertSlbServerDo[abandoned.size()]));
             }
         } finally {
             executor.shutdown();
         }
     }
 
-    private String[] getDomainSearchRange(String[] domains) {
-        if (domains.length <= 1)
-            return domains;
-        else {
-            Arrays.sort(domains);
-//            String[] values = new String[domains.length + 1];
-            String[] values = new String[1];
-            values[0] = Joiner.on("|").join(domains);
-//            for (int i = 1; i < values.length; i++) {
-//                values[i] = domains[i - 1];
-//            }
-            return values;
+    interface CertClientOperation {
+        Response call(CertSyncClient c, Long[] args);
+    }
+
+    private class CertManageTask extends FutureTask<CertTaskResponse> {
+
+        CertManageTask(final String ip, final Long[] args, final CertClientOperation op) {
+            this(new Callable<CertTaskResponse>() {
+                @Override
+                public CertTaskResponse call() throws Exception {
+                    CertSyncClient c = new CertSyncClient("http://" + ip + ":8099");
+                    Response res;
+                    try {
+                        res = op.call(c, args);
+                    } catch (Exception ex) {
+                        logger.error("Fail to send out install certificate request to " + ip + ".", ex);
+                        return new CertTaskResponse(false, ip);
+                    }
+
+                    if (res.getStatus() / 100 == 2) {
+                        return new CertTaskResponse(true, ip);
+                    } else {
+                        try {
+                            String responseEntity = IOUtils.inputStreamStringify((InputStream) res.getEntity());
+                            logger.error("Fail to install certificate on " + ip + ". " + responseEntity);
+                        } catch (IOException ex) {
+                            logger.error("Fail to install certificate on " + ip + ". An unexpected error occurred when stringifying response.", ex);
+                        }
+                        return new CertTaskResponse(false, ip);
+                    }
+                }
+            });
+        }
+
+        CertManageTask(Callable<CertTaskResponse> callable) {
+            super(callable);
+        }
+    }
+
+    class CertTaskResponse {
+        boolean success;
+        String ip;
+
+        CertTaskResponse(boolean success, String ip) {
+            this.success = success;
+            this.ip = ip;
         }
     }
 
@@ -279,16 +289,16 @@ public class CertificateServiceImpl implements CertificateService {
             super(url);
         }
 
-        public Response requestInstall(Long vsId, Long certId) {
-            return getTarget().path("/api/op/installcerts").queryParam("vsId", vsId).queryParam("certId", certId).request().get();
+        Response requestInstall(Long vsId, Long certId) {
+            return getTarget().path("/api/cert/install").queryParam("vsId", vsId).queryParam("certId", certId).request().get();
         }
 
-        public Response requestUninstall(Long vsId) {
-            return getTarget().path("/api/op/uninstallcerts").queryParam("vsId", vsId).request().get();
+        Response requestUninstall(Long vsId) {
+            return getTarget().path("/api/cert/uninstall").queryParam("vsId", vsId).request().get();
         }
 
-        public Response requestBatchInstall(Long slbId) {
-            return getTarget().path("/api/op/cert/batchInstall").queryParam("slbId", slbId).request().headers(getDefaultHeaders()).get();
+        Response requestBatchInstall(Long slbId, boolean force) {
+            return getTarget().path("/api/cert/batchInstall").queryParam("slbId", slbId).queryParam("force", force).request().headers(getDefaultHeaders()).get();
         }
     }
 }

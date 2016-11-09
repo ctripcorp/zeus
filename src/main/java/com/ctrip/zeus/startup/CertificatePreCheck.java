@@ -24,11 +24,13 @@ public class CertificatePreCheck implements PreCheck {
 
     @Override
     public boolean ready() {
-        try {
-            certificateInstaller.installDefault();
-        } catch (Exception e) {
-            logger.error("Fail to install default certificate.", e);
-            return false;
+        if (!certificateInstaller.defaultExists()) {
+            try {
+                certificateInstaller.installDefault();
+            } catch (Exception e) {
+                logger.error("Fail to install default certificate.", e);
+                return false;
+            }
         }
 
         long slbId = 0L;
@@ -44,7 +46,7 @@ public class CertificatePreCheck implements PreCheck {
 
         try {
             if (slbId != 0L) {
-                certificateInstaller.localBatchInstall(slbId);
+                certificateInstaller.localBatchInstall(slbId, false);
             }
             return true;
         } catch (Exception e) {

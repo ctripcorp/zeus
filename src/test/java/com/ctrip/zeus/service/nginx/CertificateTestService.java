@@ -23,7 +23,7 @@ public class CertificateTestService extends CertificateServiceImpl {
     private CertificateInstaller certificateInstaller;
 
     @Override
-    public void install(final Long vsId, List<String> ips, final Long certId) throws Exception {
+    public void install(final Long vsId, List<String> ips, final Long certId, boolean overwriteIfExist) throws Exception {
         List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
         Set<String> check = new HashSet<>();
         for (RelCertSlbServerDo d : dos) {
