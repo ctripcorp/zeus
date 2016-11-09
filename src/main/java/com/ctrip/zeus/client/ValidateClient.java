@@ -6,6 +6,9 @@ import jersey.repackaged.com.google.common.cache.CacheBuilder;
 import jersey.repackaged.com.google.common.cache.CacheLoader;
 import jersey.repackaged.com.google.common.cache.LoadingCache;
 
+import javax.ws.rs.core.Response;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -33,8 +36,23 @@ public class ValidateClient extends AbstractRestClient {
     }
 
     public SlbValidateResponse slbValidate(Long slbId) throws Exception {
-        String responseStr = getTarget().path("/api/validate/slb").queryParam("slbId", slbId)
-                .request().headers(getDefaultHeaders()).get(String.class);
-        return ObjectJsonParser.parse(responseStr, SlbValidateResponse.class);
+        Response response = getTarget().path("/api/validate/slb").queryParam("slbId", slbId)
+                .request().headers(getDefaultHeaders()).get();
+        InputStream in = (InputStream) response.getEntity();
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
+        byte[] bytes = new byte[256];
+        int i;
+        while ((i = in.read(bytes)) != -1) {
+            bs.write(bytes, 0, i);
+        }
+        if (response.getStatus() / 100 == 2) {
+            return ObjectJsonParser.parse(bs.toString(), SlbValidateResponse.class);
+        } else {
+            SlbValidateResponse res = new SlbValidateResponse();
+            res.setSlbId(slbId)
+                    .setSucceed(false)
+                    .setMsg(bs.toString());
+            return res;
+        }
     }
 }
