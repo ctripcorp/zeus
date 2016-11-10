@@ -43,6 +43,15 @@ public class CertificateResource {
     @Resource
     private ResponseHandler responseHandler;
 
+    /**
+     * @api {post} /api/cert/upload: Upload certificate if and only if the domain does not have any history certificates
+     * @apiName UploadCertificate
+     * @apiGroup Certificate
+     * @apiParam {Long}     domain      domain name of the certificate. Use '|' to join multiple domain values as a whole.
+     * @apiParam {FormData} cert        cert file
+     * @apiParam {FormData} key         key file
+     * @apiSuccess {String} message     success message
+     */
     @POST
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -62,6 +71,16 @@ public class CertificateResource {
         return responseHandler.handle("Certificates uploaded. Virtual server creation is permitted.", hh.getMediaType());
     }
 
+    /**
+     * @api {post} /api/cert/upgrade: Upgrade certificate if history certificate exists of the domain
+     * @apiName UpgradeCertificate
+     * @apiGroup Certificate
+     * @apiParam {Long}     domain      domain name of the certificate. Use '|' to join multiple domain values as a whole.
+     * @apiParam {Boolean}  greyscale   [optional] greyscale upgrading certificate. If this parameter is used, set the certificate as the canary version. Activation is required for on board use.
+     * @apiParam {FormData} cert        cert file
+     * @apiParam {FormData} key         key file
+     * @apiSuccess {String} message     success message with the newly uploaded certificate
+     */
     @POST
     @Path("/upgrade")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -82,6 +101,13 @@ public class CertificateResource {
         return responseHandler.handle("Certificate uploaded. Install new certificate with cert-id: " + certId + ".", hh.getMediaType());
     }
 
+    /**
+     * @api {post} /api/cert/activate: Activate canary certificate
+     * @apiName ActivateCertificate
+     * @apiGroup Certificate
+     * @apiParam {Long}     certId      id of certificate to be activated
+     * @apiSuccess {String} message     success message
+     */
     @GET
     @Path("/activate")
     public Response activateCertificate(@Context HttpServletRequest request,
@@ -92,18 +118,29 @@ public class CertificateResource {
         return responseHandler.handle("Successfully update certificate state to onboard. Previous", hh.getMediaType());
     }
 
+    /**
+     * @api {post} /api/cert/activate: Activate canary certificate
+     * @apiName ActivateCertificate
+     * @apiGroup Certificate
+     * @apiParam {Long}     certId      id of certificate to be installed
+     * @apiParam {Long}     vsId        virtual server that the certificate will be installed for
+     * @apiParam {String[]} ip          [optional] specify slb servers that the certificate will be installed. The other parameter greyscale=true is required if this parameter is set.
+     * @apiParam {Boolean}  greyscale   [optional] greyscale installing certificate. The other parameter ip must be specified if this parameter is set to true.
+     * @apiParam {Boolean}  force       [optional] force to overwrite the certificate file if exists
+     * @apiSuccess {String} message     success message
+     */
     @GET
     @Path("/remoteInstall")
     public Response remoteInstall(@Context HttpServletRequest request,
                                   @Context HttpHeaders hh,
                                   @QueryParam("certId") Long certId,
                                   @QueryParam("vsId") Long vsId,
-                                  @QueryParam("ips") List<String> greyscaleIps,
+                                  @QueryParam("ip") List<String> greyscaleIps,
                                   @QueryParam("greyscale") Boolean greyscale,
                                   @QueryParam("force") Boolean force) throws Exception {
 
-        if (certId == null) {
-            throw new ValidationException("Query param certId is required.");
+        if (certId == null || vsId == null) {
+            throw new ValidationException("Query param certId, vsId is required.");
         }
         List<String> installingIps = null;
 
