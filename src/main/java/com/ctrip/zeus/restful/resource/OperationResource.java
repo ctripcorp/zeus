@@ -30,7 +30,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -482,12 +484,14 @@ public class OperationResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Authorize(name = "uploadCerts")
     @Deprecated
-    public Response uploadCertAlias(@Context HttpServletRequest request,
-                                    @Context HttpHeaders hh,
-                                    @FormDataParam("cert") InputStream cert,
-                                    @FormDataParam("key") InputStream key,
-                                    @QueryParam("domain") String domain) throws Exception {
-        return Response.temporaryRedirect(new URI("/cert/upload")).build();
+    public void uploadCertAlias(@Context HttpServletRequest request,
+                                @Context HttpServletResponse response,
+                                @Context HttpHeaders hh,
+                                @FormDataParam("cert") InputStream cert,
+                                @FormDataParam("key") InputStream key,
+                                @QueryParam("domain") String domain) throws Exception {
+        RequestDispatcher dispatcher = request.getServletContext().getRequestDispatcher("/api/cert/upload");
+        dispatcher.forward(request, response);
     }
 
     private Response healthyOps(HttpHeaders hh, Long groupId, List<String> ips, boolean b) throws Exception {
