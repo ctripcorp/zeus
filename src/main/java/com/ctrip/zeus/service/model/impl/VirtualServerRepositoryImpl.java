@@ -16,6 +16,7 @@ import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
 import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -203,7 +204,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         for (int i = 0; i < domains.length; i++) {
             domains[i] = vsDomains.get(i).getName();
         }
-        Long certId = certificateService.getCertificateOnBoard(domains);
+        String dd = Joiner.on("|").join(domains);
+        Long certId = certificateService.getCertificateOnBoard(dd);
         certificateService.install(virtualServer.getId(), ips, certId, true);
     }
 

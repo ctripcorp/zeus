@@ -127,9 +127,36 @@ public class CertificateResource {
     public Response remoteInstallDefault(@Context HttpServletRequest request,
                                          @Context HttpHeaders hh,
                                          @QueryParam("slbId") Long slbId,
+                                         @QueryParam("domain") String domain,
                                          @QueryParam("force") Boolean force) throws Exception {
+        if (slbId == null) {
+            throw new ValidationException("Query Param slbId is required.");
+        }
+        IdVersion[] searchKeys = slbCriteriaQuery.queryByIdAndMode(slbId, SelectionMode.REDUNDANT);
+
+        Set<String> ips = new HashSet<>();
+        for (Slb s : slbRepository.list(searchKeys)) {
+            for (SlbServer ss : s.getSlbServers()) {
+                ips.add(ss.getIp());
+            }
+        }
+        Long certId = certificateService.getCertificateOnBoard(domain);
+
+        certificateService.installDefault(certId, new ArrayList<>(ips), force != null && force);
+        return responseHandler.handle("Successfully installed default certificate.", hh.getMediaType());
+    }
+
+    @GET
+    @Path("/default/localInstall")
+    public Response localInstallDefault(@Context HttpServletRequest request,
+                                        @Context HttpHeaders hh,
+                                        @QueryParam("certId") Long certId,
+                                        @QueryParam("force") Boolean force) throws Exception {
         if ((force != null && force) || !certificateInstaller.defaultExists()) {
-            certificateInstaller.installDefault();
+            if (certId == null) {
+                throw new ValidationException("Query param certId is required.");
+            }
+            certificateInstaller.installDefault(certId);
             return responseHandler.handle("Default certificate is (re-)installed. Activate slb to take effect.", hh.getMediaType());
         }
         return responseHandler.handle("Default certificate exists. No need to update.", hh.getMediaType());
@@ -149,7 +176,7 @@ public class CertificateResource {
     }
 
     @GET
-    @Path("/batchInstall")
+    @Path("/localBatchInstall")
     public Response batchInstall(@Context HttpServletRequest request,
                                  @Context HttpHeaders hh,
                                  @QueryParam("slbId") Long slbId,
@@ -162,7 +189,7 @@ public class CertificateResource {
     }
 
     @GET
-    @Path("/uninstall")
+    @Path("/localUninstall")
     public Response uninstallCerts(@Context HttpServletRequest request,
                                    @Context HttpHeaders hh,
                                    @QueryParam("vsId") Long vsId) throws Exception {

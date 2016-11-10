@@ -6,12 +6,12 @@ import com.ctrip.zeus.dal.core.RelCertSlbServerDo;
 import com.ctrip.zeus.service.nginx.impl.CertificateServiceImpl;
 
 import javax.annotation.Resource;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by zhoumy on 2015/11/5.
@@ -24,28 +24,28 @@ public class CertificateTestService extends CertificateServiceImpl {
 
     @Override
     public void install(final Long vsId, List<String> ips, final Long certId, boolean overwriteIfExist) throws Exception {
-        List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
         Set<String> check = new HashSet<>();
-        for (RelCertSlbServerDo d : dos) {
-            check.add(d.getIp() + "#" + vsId + "#" + d.getCertId());
+        if (!overwriteIfExist) {
+            List<RelCertSlbServerDo> dos = rCertificateSlbServerDao.findByVs(vsId, RCertificateSlbServerEntity.READSET_FULL);
+            for (RelCertSlbServerDo d : dos) {
+                check.add(d.getIp() + "#" + vsId + "#" + d.getCertId());
+            }
         }
 
-        final AtomicBoolean success = new AtomicBoolean(true);
-        List<FutureTask<String>> reqQueue = new ArrayList<>();
+        List<FutureTask<CertTaskResponse>> reqQueue = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(ips.size() < 6 ? ips.size() : 6);
         try {
             for (final String ip : ips) {
                 if (check.contains(ip + "#" + vsId + "#" + certId)) continue;
-
-                reqQueue.add(new FutureTask<>(new Callable<String>() {
+                reqQueue.add(new CertManageTask(ip, new Long[]{vsId}, new CertClientOperation() {
                     @Override
-                    public String call() {
+                    public Response call(CertSyncClient c, Long[] args) {
                         try {
                             certificateInstaller.localInstall(vsId, certId);
+                            return Response.status(200).build();
                         } catch (Exception e) {
-                            return "failure";
+                            return Response.status(500).build();
                         }
-                        return "success";
                     }
                 }));
             }
@@ -53,13 +53,14 @@ public class CertificateTestService extends CertificateServiceImpl {
                 executor.execute(futureTask);
             }
 
-            String message = "";
-            for (FutureTask futureTask : reqQueue) {
-                message += futureTask.get(3000, TimeUnit.MILLISECONDS);
+            boolean succ = true;
+            for (FutureTask<CertTaskResponse> futureTask : reqQueue) {
+                CertTaskResponse tr = futureTask.get(3000, TimeUnit.MILLISECONDS);
+                succ &= tr.getSuccess();
             }
 
-            if (!success.get()) {
-                throw new Exception(message);
+            if (!succ) {
+                throw new Exception("Certificate installation failed.");
             }
         } finally {
             executor.shutdown();

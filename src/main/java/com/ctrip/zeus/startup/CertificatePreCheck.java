@@ -3,6 +3,7 @@ package com.ctrip.zeus.startup;
 import com.ctrip.zeus.server.LocalInfoPack;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.nginx.CertificateInstaller;
+import com.ctrip.zeus.service.nginx.CertificateService;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,8 @@ public class CertificatePreCheck implements PreCheck {
     private Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
     @Resource
+    private CertificateService certificateService;
+    @Resource
     private CertificateInstaller certificateInstaller;
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
@@ -26,7 +29,8 @@ public class CertificatePreCheck implements PreCheck {
     public boolean ready() {
         if (!certificateInstaller.defaultExists()) {
             try {
-                certificateInstaller.installDefault();
+                Long certId = certificateService.getCertificateOnBoard("_localhost");
+                certificateInstaller.installDefault(certId);
             } catch (Exception e) {
                 logger.error("Fail to install default certificate.", e);
                 return false;

@@ -45,7 +45,7 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
     }
 
     @Override
-    public void installDefault() throws Exception {
+    public void installDefault(Long certId) throws Exception {
         createSslPath();
 
         String defaultPath = config.getDefaultCertInstallDir();
@@ -54,7 +54,7 @@ public class DefaultCertificateInstaller implements CertificateInstaller {
             f.mkdirs();
         }
 
-        CertificateDo cert = certificateDao.findMaxByDomainAndState(config.getDefaultDomain(), CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
+        CertificateDo cert = certificateDao.findById(certId, CertificateEntity.READSET_FULL);
         if (cert == null) {
             logger.error("Could not find default certificate to install.");
             return;

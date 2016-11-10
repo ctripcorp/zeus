@@ -30,13 +30,14 @@ public class CertificateServiceImpl implements CertificateService {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
-    public Long getCertificateOnBoard(String[] domains) throws Exception {
-        CertificateDo value;
-        String searchKey = Joiner.on("|").join(domains);
+    public Long getCertificateOnBoard(String domain) throws Exception {
+        String[] searchKey = domain.split("\\|");
+        Arrays.sort(searchKey);
+        domain = Joiner.on("|").join(searchKey);
 
-        value = certificateDao.findMaxByDomainAndState(searchKey, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
+        CertificateDo value = certificateDao.findMaxByDomainAndState(domain, CertificateConfig.ONBOARD, CertificateEntity.READSET_FULL);
         if (value == null) {
-            throw new ValidationException("Cannot find corresponding certificate referring domain " + searchKey + ".");
+            throw new ValidationException("Cannot find corresponding certificate referring domain " + domain + ".");
         }
         return value.getId();
     }
@@ -60,9 +61,13 @@ public class CertificateServiceImpl implements CertificateService {
         if (cert == null || key == null) {
             throw new ValidationException("Cert or key file is null.");
         }
+        String[] searchKey = domain.split("\\|");
+        Arrays.sort(searchKey);
+        domain = Joiner.on("|").join(searchKey);
+
         List<CertificateDo> certs = certificateDao.findAllByDomain(domain, CertificateEntity.READSET_ID_VERSION);
         if (certs.size() > 0) {
-            throw new ValidationException("Certificate exists. Duplicate upload request is rejected.");
+            throw new ValidationException("Certificate exists. Duplicate upload request is rejected. Reference domain=" + domain + ".");
         }
         CertificateDo d = new CertificateDo().setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state).setVersion(1);
         certificateDao.insert(d);
@@ -74,9 +79,13 @@ public class CertificateServiceImpl implements CertificateService {
         if (cert == null || key == null) {
             throw new ValidationException("Cert or key file is null.");
         }
+        String[] searchKey = domain.split("\\|");
+        Arrays.sort(searchKey);
+        domain = Joiner.on("|").join(searchKey);
+
         List<CertificateDo> certs = certificateDao.findAllByDomain(domain, CertificateEntity.READSET_ID_VERSION);
         if (certs.size() == 0) {
-            throw new ValidationException("No history has found. No need to upgrade.");
+            throw new ValidationException("No history has found. No need to upgrade. Reference domain=" + domain + ".");
         }
         int maxVersion = -1;
         for (CertificateDo c : certs) {
@@ -86,6 +95,38 @@ public class CertificateServiceImpl implements CertificateService {
         CertificateDo d = new CertificateDo().setCert(IOUtils.getBytes(cert)).setKey(IOUtils.getBytes(key)).setDomain(domain).setState(state).setVersion(maxVersion + 1);
         certificateDao.insert(d);
         return d.getId();
+    }
+
+    @Override
+    public void installDefault(final Long certId, List<String> ips, final boolean overwriteIfExist) throws Exception {
+        List<FutureTask<CertTaskResponse>> reqQueue = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(ips.size() < 6 ? ips.size() : 6);
+        try {
+            for (String ip : ips) {
+                reqQueue.add(new CertManageTask(ip, null, new CertClientOperation() {
+                    @Override
+                    public Response call(CertSyncClient c, Long[] args) {
+                        return c.requestInstallDefault(certId, overwriteIfExist);
+                    }
+                }));
+            }
+            for (FutureTask futureTask : reqQueue) {
+                executor.execute(futureTask);
+            }
+
+            boolean succ = true;
+            String message = "";
+            for (FutureTask<CertTaskResponse> futureTask : reqQueue) {
+                CertTaskResponse tr = futureTask.get(3000, TimeUnit.MILLISECONDS);
+                succ &= tr.success;
+                message += String.format("%s(%s)", tr.ip, tr.success);
+            }
+            if (!succ) {
+                throw new Exception("Fail to install default certificate on slb servers. " + message);
+            }
+        } finally {
+            executor.shutdown();
+        }
     }
 
     @Override
@@ -235,13 +276,13 @@ public class CertificateServiceImpl implements CertificateService {
         }
     }
 
-    interface CertClientOperation {
+    protected interface CertClientOperation {
         Response call(CertSyncClient c, Long[] args);
     }
 
-    private class CertManageTask extends FutureTask<CertTaskResponse> {
+    protected class CertManageTask extends FutureTask<CertTaskResponse> {
 
-        CertManageTask(final String ip, final Long[] args, final CertClientOperation op) {
+        public CertManageTask(final String ip, final Long[] args, final CertClientOperation op) {
             this(new Callable<CertTaskResponse>() {
                 @Override
                 public CertTaskResponse call() throws Exception {
@@ -274,7 +315,7 @@ public class CertificateServiceImpl implements CertificateService {
         }
     }
 
-    class CertTaskResponse {
+    protected class CertTaskResponse {
         boolean success;
         String ip;
 
@@ -282,23 +323,31 @@ public class CertificateServiceImpl implements CertificateService {
             this.success = success;
             this.ip = ip;
         }
+
+        public boolean getSuccess() {
+            return success;
+        }
     }
 
-    private static class CertSyncClient extends AbstractRestClient {
+    protected static class CertSyncClient extends AbstractRestClient {
         protected CertSyncClient(String url) {
             super(url);
         }
 
+        Response requestInstallDefault(Long certId, boolean force) {
+            return getTarget().path("/api/cert/default/localInstall").queryParam("certId", certId).queryParam("force", force).request().get();
+        }
+
         Response requestInstall(Long vsId, Long certId) {
-            return getTarget().path("/api/cert/install").queryParam("vsId", vsId).queryParam("certId", certId).request().get();
+            return getTarget().path("/api/cert/localInstall").queryParam("vsId", vsId).queryParam("certId", certId).request().get();
         }
 
         Response requestUninstall(Long vsId) {
-            return getTarget().path("/api/cert/uninstall").queryParam("vsId", vsId).request().get();
+            return getTarget().path("/api/cert/localUninstall").queryParam("vsId", vsId).request().get();
         }
 
         Response requestBatchInstall(Long slbId, boolean force) {
-            return getTarget().path("/api/cert/batchInstall").queryParam("slbId", slbId).queryParam("force", force).request().headers(getDefaultHeaders()).get();
+            return getTarget().path("/api/cert/localBatchInstall").queryParam("slbId", slbId).queryParam("force", force).request().headers(getDefaultHeaders()).get();
         }
     }
 }

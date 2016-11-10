@@ -8,13 +8,15 @@ import java.util.List;
  */
 public interface CertificateService {
 
-    Long getCertificateOnBoard(String[] domains) throws Exception;
+    Long getCertificateOnBoard(String domain) throws Exception;
 
     Long update(Long certId, boolean state) throws Exception;
 
     Long upload(InputStream cert, InputStream key, String domain, boolean state) throws Exception;
 
     Long upgrade(InputStream cert, InputStream key, String domain, boolean state) throws Exception;
+
+    void installDefault(Long certId, List<String> ips, boolean overwriteIfExist) throws Exception;
 
     void install(Long vsId, List<String> ips, Long certId, boolean overwriteIfExist) throws Exception;
 

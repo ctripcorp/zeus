@@ -7,7 +7,7 @@ public interface CertificateInstaller {
 
     CertificateConfig getConfig();
 
-    void installDefault() throws Exception;
+    void installDefault(Long certId) throws Exception;
 
     String localInstall(Long vsId, Long certId) throws Exception;
 
