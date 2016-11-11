@@ -73,13 +73,13 @@ public class GroupRepositoryImpl implements GroupRepository {
             result.add(group);
         }
 
-        if (repositoryContext.isLite()) {
-            for (Group group : result) {
-                for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
-                    groupVirtualServer.setVirtualServer(new VirtualServer().setId(groupVirtualServer.getVirtualServer().getId()));
-                }
-            }
-        } else {
+
+        for (Group group : result) {
+            autoFiller.autofill(group);
+            hideVirtualValue(group);
+        }
+
+        if (!repositoryContext.isLite()) {
             Set<Long> vsIds = new HashSet<>();
             for (Group group : result) {
                 for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
@@ -93,12 +93,6 @@ public class GroupRepositoryImpl implements GroupRepository {
                 }
             }
         }
-
-        for (Group group : result) {
-            autoFiller.autofill(group);
-            hideVirtualValue(group);
-        }
-
         return result;
     }
 
@@ -126,12 +120,9 @@ public class GroupRepositoryImpl implements GroupRepository {
 
         Group result = ContentReaders.readGroupContent(d.getContent());
         autoFiller.autofill(result);
+        hideVirtualValue(result);
 
-        if (repositoryContext.isLite()) {
-            for (GroupVirtualServer e : result.getGroupVirtualServers()) {
-                e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
-            }
-        } else {
+        if (!repositoryContext.isLite()) {
             Set<Long> vsIds = new HashSet<>();
             for (GroupVirtualServer e : result.getGroupVirtualServers()) {
                 vsIds.add(e.getVirtualServer().getId());
@@ -143,7 +134,6 @@ public class GroupRepositoryImpl implements GroupRepository {
             }
         }
 
-        hideVirtualValue(result);
         result.setCreatedTime(d.getDataChangeLastTime());
         return result;
     }
