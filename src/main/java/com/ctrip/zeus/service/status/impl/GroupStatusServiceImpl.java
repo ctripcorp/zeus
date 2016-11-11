@@ -89,7 +89,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         if (groups.getOfflineMapping() == null || groups.getOfflineMapping().size() == 0) {
             return result;
         }
-        result = getOfflineGroupsStatus(groups.getOfflineMapping(), groups.getOnlineMapping());
+        result = getOfflineGroupsStatus(groups);
         return result;
     }
 
@@ -115,7 +115,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
             return result;
         }
 
-        List<GroupStatus> list = getOfflineGroupsStatus(groupMap.getOfflineMapping(), groupMap.getOnlineMapping());
+        List<GroupStatus> list = getOfflineGroupsStatus(groupMap);
         if (list.size() > 0) {
             result = list.get(0);
         }
@@ -129,7 +129,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
         if (map.getOfflineMapping() == null || map.getOfflineMapping().size() == 0) {
             return result;
         }
-        result = getOfflineGroupsStatus(map.getOfflineMapping(), map.getOnlineMapping());
+        result = getOfflineGroupsStatus(map);
         return result;
     }
 
@@ -160,7 +160,7 @@ public class GroupStatusServiceImpl implements GroupStatusService {
                 boolean serverUp = !allDownServers.contains(gs.getIp());
                 boolean pullIn = memberStatus.get(key).get(StatusOffset.PULL_OPS);
                 boolean raise = memberStatus.get(key).get(StatusOffset.HEALTHY);
-                boolean up =  memberUp && serverUp && pullIn && raise;
+                boolean up = memberUp && serverUp && pullIn && raise;
 
                 groupServerStatus.setServer(serverUp);
                 groupServerStatus.setMember(memberUp);
@@ -176,8 +176,11 @@ public class GroupStatusServiceImpl implements GroupStatusService {
     }
 
     @Override
-    public List<GroupStatus> getOfflineGroupsStatus(Map<Long, Group> groups, Map<Long, Group> onlineGroups) throws Exception {
+    public List<GroupStatus> getOfflineGroupsStatus(ModelStatusMapping<Group> groupMap) throws Exception {
         List<GroupStatus> res = new ArrayList<>();
+
+        Map<Long, Group> groups = groupMap.getOfflineMapping();
+        Map<Long, Group> onlineGroups = groupMap.getOnlineMapping();
 
         Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<String> allDownServers = statusService.findAllDownServers();

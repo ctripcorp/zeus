@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.status;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.model.ModelStatusMapping;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.GroupStatusList;
@@ -92,5 +93,5 @@ public interface GroupStatusService {
      * @return status list
      * @throws Exception
      */
-    List<GroupStatus> getOfflineGroupsStatus(Map<Long, Group> groups, Map<Long, Group> onlineGroups) throws Exception;
+    List<GroupStatus> getOfflineGroupsStatus(ModelStatusMapping<Group> groupMap) throws Exception;
 }

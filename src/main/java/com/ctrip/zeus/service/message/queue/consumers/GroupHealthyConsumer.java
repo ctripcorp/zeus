@@ -39,6 +39,26 @@ public class GroupHealthyConsumer extends AbstractConsumer {
         addHealthProperty(messages);
     }
 
+    @Override
+    public void onOpsPull(List<Message> messages) {
+        addHealthProperty(messages);
+    }
+
+    @Override
+    public void onOpsMember(List<Message> messages) {
+        addHealthProperty(messages);
+    }
+
+    @Override
+    public void onOpsServer(List<Message> messages) {
+        addHealthProperty(messages);
+    }
+
+    @Override
+    public void onOpsHealthy(List<Message> messages) {
+        addHealthProperty(messages);
+    }
+
     protected void addHealthProperty(List<Message> messages) {
         try {
             Set<Long> groupIds = new HashSet<>();

@@ -703,7 +703,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
         }
 
-        boolean healthyActivateFlag = healthyOpsActivate.get() && configHandler.getEnable("healthy.operation.active", slbId, null, null, false);
+        boolean healthyActivateFlag = healthyOpsActivate.get();
         Set<String> result = new HashSet<>();
         for (String key : memberStatus.keySet()) {
             List<Boolean> status = memberStatus.get(key);
