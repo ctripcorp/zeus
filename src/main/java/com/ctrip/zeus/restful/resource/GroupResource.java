@@ -14,6 +14,7 @@ import com.ctrip.zeus.service.query.*;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.model.impl.RepositoryContext;
 import com.ctrip.zeus.service.query.sort.SortEngine;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
@@ -106,7 +107,7 @@ public class GroupResource {
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
-        List<Group> result = groupRepository.list(searchKeys);
+        List<Group> result = groupRepository.list(searchKeys, new RepositoryContext(ViewConstraints.INFO.equalsIgnoreCase(type), SelectionMode.getMode(mode)));
         ExtendedView.ExtendedGroup[] viewArray = new ExtendedView.ExtendedGroup[result.size()];
 
         for (int i = 0; i < result.size(); i++) {
@@ -141,7 +142,7 @@ public class GroupResource {
         queryRender.init(true);
         IdVersion[] searchKeys = queryRender.run(criteriaQueryFactory);
 
-        List<Group> result = groupRepository.list(searchKeys);
+        List<Group> result = groupRepository.list(searchKeys, new RepositoryContext(ViewConstraints.INFO.equalsIgnoreCase(type), SelectionMode.getMode(mode)));
         ExtendedView.ExtendedGroup[] viewArray = new ExtendedView.ExtendedGroup[result.size()];
 
         for (int i = 0; i < result.size(); i++) {
@@ -242,7 +243,7 @@ public class GroupResource {
         }
 
         GroupListView listView = new GroupListView();
-        for (Group group : groupRepository.list(searchKeys)) {
+        for (Group group : groupRepository.list(searchKeys, new RepositoryContext(ViewConstraints.INFO.equalsIgnoreCase(type), SelectionMode.getMode(mode)))) {
             listView.add(new ExtendedView.ExtendedGroup(group));
         }
         if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
@@ -279,7 +280,7 @@ public class GroupResource {
         }
 
         GroupListView listView = new GroupListView();
-        for (Group group : groupRepository.list(searchKeys)) {
+        for (Group group : groupRepository.list(searchKeys, new RepositoryContext(ViewConstraints.INFO.equalsIgnoreCase(type), SelectionMode.getMode(mode)))) {
             listView.add(new ExtendedView.ExtendedGroup(group));
         }
         if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {

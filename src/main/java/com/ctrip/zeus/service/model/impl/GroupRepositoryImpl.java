@@ -55,6 +55,11 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public List<Group> list(IdVersion[] keys) throws Exception {
+        return list(keys, new RepositoryContext(false, SelectionMode.OFFLINE_FIRST));
+    }
+
+    @Override
+    public List<Group> list(IdVersion[] keys, RepositoryContext repositoryContext) throws Exception {
         List<Group> result = new ArrayList<>();
         Integer[] hashes = new Integer[keys.length];
         String[] values = new String[keys.length];
@@ -68,21 +73,32 @@ public class GroupRepositoryImpl implements GroupRepository {
             result.add(group);
         }
 
-        Set<Long> vsIds = new HashSet<>();
-        for (Group group : result) {
-            for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
-                vsIds.add(groupVirtualServer.getVirtualServer().getId());
+        if (repositoryContext.isLite()) {
+            for (Group group : result) {
+                for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
+                    groupVirtualServer.setVirtualServer(new VirtualServer().setId(groupVirtualServer.getVirtualServer().getId()));
+                }
+            }
+        } else {
+            Set<Long> vsIds = new HashSet<>();
+            for (Group group : result) {
+                for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
+                    vsIds.add(groupVirtualServer.getVirtualServer().getId());
+                }
+            }
+            Map<Long, VirtualServer> map = buildVsMapping(vsIds.toArray(new Long[vsIds.size()]), repositoryContext.getSelectionMode());
+            for (Group group : result) {
+                for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
+                    groupVirtualServer.setVirtualServer(map.get(groupVirtualServer.getVirtualServer().getId()));
+                }
             }
         }
-        Map<Long, VirtualServer> map = buildVsMapping(vsIds.toArray(new Long[vsIds.size()]));
 
         for (Group group : result) {
             autoFiller.autofill(group);
-            for (GroupVirtualServer groupVirtualServer : group.getGroupVirtualServers()) {
-                groupVirtualServer.setVirtualServer(map.get(groupVirtualServer.getVirtualServer().getId()));
-            }
             hideVirtualValue(group);
         }
+
         return result;
     }
 
@@ -96,26 +112,40 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group getByKey(IdVersion key) throws Exception {
-        if (groupModelValidator.exists(key.getId()) || vGroupValidator.exists(key.getId())) {
-            ArchiveGroupDo d = archiveGroupDao.findByGroupAndVersion(key.getId(), key.getVersion(), ArchiveGroupEntity.READSET_FULL);
-            if (d == null) return null;
-            Group result = ContentReaders.readGroupContent(d.getContent());
-            autoFiller.autofill(result);
+        return getByKey(key, new RepositoryContext(false, SelectionMode.OFFLINE_FIRST));
+    }
 
+    @Override
+    public Group getByKey(IdVersion key, RepositoryContext repositoryContext) throws Exception {
+        if (!groupModelValidator.exists(key.getId()) && !vGroupValidator.exists(key.getId())) {
+            return null;
+        }
+
+        ArchiveGroupDo d = archiveGroupDao.findByGroupAndVersion(key.getId(), key.getVersion(), ArchiveGroupEntity.READSET_FULL);
+        if (d == null) return null;
+
+        Group result = ContentReaders.readGroupContent(d.getContent());
+        autoFiller.autofill(result);
+
+        if (repositoryContext.isLite()) {
+            for (GroupVirtualServer e : result.getGroupVirtualServers()) {
+                e.setVirtualServer(new VirtualServer().setId(e.getVirtualServer().getId()));
+            }
+        } else {
             Set<Long> vsIds = new HashSet<>();
             for (GroupVirtualServer e : result.getGroupVirtualServers()) {
                 vsIds.add(e.getVirtualServer().getId());
             }
-            Map<Long, VirtualServer> map = buildVsMapping(vsIds.toArray(new Long[vsIds.size()]));
+            Map<Long, VirtualServer> map = buildVsMapping(vsIds.toArray(new Long[vsIds.size()]), repositoryContext.getSelectionMode());
 
             for (GroupVirtualServer e : result.getGroupVirtualServers()) {
                 e.setVirtualServer(map.get(e.getVirtualServer().getId()));
             }
-            hideVirtualValue(result);
-            result.setCreatedTime(d.getDataChangeLastTime());
-            return result;
         }
-        return null;
+
+        hideVirtualValue(result);
+        result.setCreatedTime(d.getDataChangeLastTime());
+        return result;
     }
 
     @Override
@@ -243,8 +273,8 @@ public class GroupRepositoryImpl implements GroupRepository {
         group.setVirtual(null);
     }
 
-    private Map<Long, VirtualServer> buildVsMapping(Long[] vsIds) throws Exception {
-        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, SelectionMode.ONLINE_FIRST);
+    private Map<Long, VirtualServer> buildVsMapping(Long[] vsIds, SelectionMode selectionMode) throws Exception {
+        Set<IdVersion> vsKeys = virtualServerCriteriaQuery.queryByIdsAndMode(vsIds, selectionMode);
         Map<Long, VirtualServer> map = Maps.uniqueIndex(
                 virtualServerRepository.listAll(vsKeys.toArray(new IdVersion[vsKeys.size()])),
                 new Function<VirtualServer, Long>() {

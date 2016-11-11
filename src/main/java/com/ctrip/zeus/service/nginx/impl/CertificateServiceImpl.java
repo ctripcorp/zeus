@@ -335,15 +335,15 @@ public class CertificateServiceImpl implements CertificateService {
         }
 
         Response requestInstallDefault(Long certId, boolean force) {
-            return getTarget().path("/api/cert/default/localInstall").queryParam("certId", certId).queryParam("force", force).request().get();
+            return getTarget().path("/api/cert/default/localInstall").queryParam("certId", certId).queryParam("force", force).request().headers(getDefaultHeaders()).get();
         }
 
         Response requestInstall(Long vsId, Long certId) {
-            return getTarget().path("/api/cert/localInstall").queryParam("vsId", vsId).queryParam("certId", certId).request().get();
+            return getTarget().path("/api/cert/localInstall").queryParam("vsId", vsId).queryParam("certId", certId).request().headers(getDefaultHeaders()).get();
         }
 
         Response requestUninstall(Long vsId) {
-            return getTarget().path("/api/cert/localUninstall").queryParam("vsId", vsId).request().get();
+            return getTarget().path("/api/cert/localUninstall").queryParam("vsId", vsId).request().headers(getDefaultHeaders()).get();
         }
 
         Response requestBatchInstall(Long slbId, boolean force) {

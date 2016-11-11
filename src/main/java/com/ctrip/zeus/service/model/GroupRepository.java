@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.service.Repository;
+import com.ctrip.zeus.service.model.impl.RepositoryContext;
 
 import java.util.List;
 import java.util.Set;
@@ -16,9 +17,13 @@ public interface GroupRepository extends Repository {
 
     List<Group> list(IdVersion[] keys) throws Exception;
 
+    List<Group> list(IdVersion[] keys, RepositoryContext repositoryContext) throws Exception;
+
     Group getById(Long id) throws Exception;
 
     Group getByKey(IdVersion key) throws Exception;
+
+    Group getByKey(IdVersion key, RepositoryContext repositoryContext) throws Exception;
 
     Group add(Group group, boolean escapedPathValidation) throws Exception;
 
