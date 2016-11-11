@@ -106,7 +106,7 @@ public class QueryEngine {
     }
 
     public int getLimit(int max) {
-        return limit == null ? ((offset == null) ? max : max - offset) : limit;
+        return limit == null ? ((offset == null) ? max : max - offset) : (limit > max ? max : limit);
     }
 
     public Boolean isAsc() {
