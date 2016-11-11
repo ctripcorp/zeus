@@ -179,7 +179,6 @@ public class OperationResource {
                              @QueryParam("groupName") String groupName,
                              @QueryParam("ip") List<String> ips,
                              @QueryParam("batch") Boolean batch) throws Exception {
-        List<String> _ips = new ArrayList<>();
         if (groupId == null) {
             if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
@@ -189,7 +188,7 @@ public class OperationResource {
         }
         batch = batch == null ? false : batch;
 
-        return memberOps(request, hh, groupId, _ips, batch, true, TaskOpsType.MEMBER_OPS);
+        return memberOps(request, hh, groupId, ips, batch, true, TaskOpsType.MEMBER_OPS);
     }
 
     @GET
@@ -201,7 +200,6 @@ public class OperationResource {
                                @QueryParam("groupName") String groupName,
                                @QueryParam("ip") List<String> ips,
                                @QueryParam("batch") Boolean batch) throws Exception {
-        List<String> _ips = new ArrayList<>();
         if (groupId == null) {
             if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
@@ -212,7 +210,7 @@ public class OperationResource {
 
         batch = batch == null ? false : batch;
 
-        return memberOps(request, hh, groupId, _ips, batch, false, TaskOpsType.MEMBER_OPS);
+        return memberOps(request, hh, groupId, ips, batch, false, TaskOpsType.MEMBER_OPS);
     }
 
     @GET
@@ -224,7 +222,6 @@ public class OperationResource {
                            @QueryParam("groupName") String groupName,
                            @QueryParam("ip") List<String> ips,
                            @QueryParam("batch") Boolean batch) throws Exception {
-        List<String> _ips = new ArrayList<>();
         if (groupId == null) {
             if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
@@ -233,7 +230,7 @@ public class OperationResource {
             }
         }
         batch = batch == null ? false : batch;
-        return memberOps(request, hh, groupId, _ips, batch, true, TaskOpsType.PULL_MEMBER_OPS);
+        return memberOps(request, hh, groupId, ips, batch, true, TaskOpsType.PULL_MEMBER_OPS);
     }
 
     @GET
@@ -245,7 +242,6 @@ public class OperationResource {
                             @QueryParam("groupName") String groupName,
                             @QueryParam("ip") List<String> ips,
                             @QueryParam("batch") Boolean batch) throws Exception {
-        List<String> _ips = new ArrayList<>();
         if (groupId == null) {
             if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
@@ -254,7 +250,7 @@ public class OperationResource {
             }
         }
         batch = batch == null ? false : batch;
-        return memberOps(request, hh, groupId, _ips, batch, false, TaskOpsType.PULL_MEMBER_OPS);
+        return memberOps(request, hh, groupId, ips, batch, false, TaskOpsType.PULL_MEMBER_OPS);
     }
 
     @GET
@@ -266,7 +262,6 @@ public class OperationResource {
                           @QueryParam("groupName") String groupName,
                           @QueryParam("ip") List<String> ips,
                           @QueryParam("batch") Boolean batch) throws Exception {
-        List<String> _ips = new ArrayList<>();
         if (groupId == null) {
             if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
@@ -281,9 +276,9 @@ public class OperationResource {
 
         batch = batch == null ? false : batch;
         if (healthyOpsActivate.get()) {
-            return memberOps(request, hh, groupId, _ips, batch, true, TaskOpsType.HEALTHY_OPS);
+            return memberOps(request, hh, groupId, ips, batch, true, TaskOpsType.HEALTHY_OPS);
         } else {
-            return healthyOps(hh, groupId, _ips, true);
+            return healthyOps(hh, groupId, ips, true);
         }
     }
 
@@ -296,7 +291,6 @@ public class OperationResource {
                          @QueryParam("groupName") String groupName,
                          @QueryParam("ip") List<String> ips,
                          @QueryParam("batch") Boolean batch) throws Exception {
-        List<String> _ips = new ArrayList<>();
         if (groupId == null) {
             if (groupName == null) {
                 throw new ValidationException("Group Id or Name not found!");
@@ -306,9 +300,9 @@ public class OperationResource {
         }
         batch = batch == null ? false : batch;
         if (healthyOpsActivate.get()) {
-            return memberOps(request, hh, groupId, _ips, batch, false, TaskOpsType.HEALTHY_OPS);
+            return memberOps(request, hh, groupId, ips, batch, false, TaskOpsType.HEALTHY_OPS);
         } else {
-            return healthyOps(hh, groupId, _ips, false);
+            return healthyOps(hh, groupId, ips, false);
         }
     }
 
