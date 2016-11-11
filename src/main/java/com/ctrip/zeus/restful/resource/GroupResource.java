@@ -378,7 +378,7 @@ public class GroupResource {
     }
 
     /**
-     * @api {get} /api/group/update: Update group content
+     * @api {post} /api/group/update: Update group content
      * @apiName UpdateGroup
      * @apiGroup Group
      * @apiSuccess {Group} group json object

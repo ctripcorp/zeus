@@ -210,7 +210,7 @@ public class VirtualServerResource {
     }
 
     /**
-     * @api {get} /api/vs/update: Update vs content
+     * @api {post} /api/vs/update: Update vs content
      * @apiName UpdateVs
      * @apiGroup VirtualServer
      * @apiSuccess {VirtualServer} vs json object

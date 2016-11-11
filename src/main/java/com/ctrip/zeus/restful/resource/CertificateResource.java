@@ -44,7 +44,8 @@ public class CertificateResource {
     private ResponseHandler responseHandler;
 
     /**
-     * @api {post} /api/cert/upload: Upload certificate if and only if the domain does not have any history certificates
+     * @api {post} /api/cert/upload: Upload certificate
+     * @apiDescription Upload certificate if and only if the domain does not have any history certificates.
      * @apiName UploadCertificate
      * @apiGroup Certificate
      * @apiParam {Long}     domain      domain name of the certificate. Use '|' to join multiple domain values as a whole.
@@ -72,7 +73,8 @@ public class CertificateResource {
     }
 
     /**
-     * @api {post} /api/cert/upgrade: Upgrade certificate if history certificate exists of the domain
+     * @api {post} /api/cert/upgrade: Upgrade certificate
+     * @apiDescription Upgrade certificate if history certificate exists for the domain. An extra installation of virtual server is required for the new certificate to take effect.
      * @apiName UpgradeCertificate
      * @apiGroup Certificate
      * @apiParam {Long}     domain      domain name of the certificate. Use '|' to join multiple domain values as a whole.
@@ -102,7 +104,7 @@ public class CertificateResource {
     }
 
     /**
-     * @api {post} /api/cert/activate: Activate canary certificate
+     * @api {get} /api/cert/activate: Activate canary certificate
      * @apiName ActivateCertificate
      * @apiGroup Certificate
      * @apiParam {Long}     certId      id of certificate to be activated
@@ -119,7 +121,7 @@ public class CertificateResource {
     }
 
     /**
-     * @api {post} /api/cert/activate: Activate canary certificate
+     * @api {get} /api/cert/remoteInstall: Install certificate for virtual server
      * @apiName ActivateCertificate
      * @apiGroup Certificate
      * @apiParam {Long}     certId      id of certificate to be installed
@@ -159,6 +161,15 @@ public class CertificateResource {
         return responseHandler.handle("Certificates uploaded. Re-activate the virtual server to take effect.", hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/cert/default/remoteInstall: Install default certificate for slb
+     * @apiName RemoteInstallDefaultCertificate
+     * @apiGroup Certificate
+     * @apiParam {Long}     slbId       id of slb to (re-)install default certificate
+     * @apiParam {String}   domain      domain of slb's default server
+     * @apiParam {Boolean}  force       [optional] force to overwrite the certificate file if exists
+     * @apiSuccess {String} message     success message
+     */
     @GET
     @Path("/default/remoteInstall")
     public Response remoteInstallDefault(@Context HttpServletRequest request,
