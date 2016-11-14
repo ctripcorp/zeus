@@ -305,6 +305,7 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                         slb_id = values(slb_id),
+                        version = values(version),
                         <FIELD name="data-change-last-time"/> = NOW()
                     ]]>
                 </statement>
