@@ -64,6 +64,10 @@ public class LocationConf {
 
                 if (configHandler.getEnable("location.gzip", slbId, vsId, groupId, false)) {
                     confWriter.writeCommand("gzip", "on");
+                    confWriter.writeCommand("gzip_types", configHandler.getStringValue("location.gzip.types",slbId,vsId,groupId,"text/html"));
+                    confWriter.writeCommand("gzip_min_length", configHandler.getStringValue("location.gzip.min.length",slbId,vsId,groupId,"100"));
+                    confWriter.writeCommand("gzip_comp_level", configHandler.getStringValue("location.gzip.comp.level",slbId,vsId,groupId,"1"));
+                    confWriter.writeCommand("gzip_buffers", configHandler.getStringValue("location.gzip.buffers",slbId,vsId,groupId,"16 8k"));
                 }
 
                 // write proxy configuration
