@@ -69,14 +69,15 @@ public class GroupHealthyConsumer extends AbstractConsumer {
                 }
             }
             List<GroupStatus> gses = groupStatusService.getOfflineGroupsStatus(groupIds);
-            int upCount = 0;
-            int healthCount = 0;
-            int pullInCount = 0;
-            int memberUpCount = 0;
-            int serverUpCount = 0;
-            int allServerCount = gses.size();
 
             for (GroupStatus gs : gses) {
+                int upCount = 0;
+                int healthCount = 0;
+                int pullInCount = 0;
+                int memberUpCount = 0;
+                int serverUpCount = 0;
+                int allServerCount = gs.getGroupServerStatuses().size();
+
                 for (GroupServerStatus gss : gs.getGroupServerStatuses()) {
                     if (gss.getServer() && gss.getHealthy() && gss.getPull() && gss.getMember()) {
                         upCount += 1;
@@ -86,16 +87,16 @@ public class GroupHealthyConsumer extends AbstractConsumer {
                         memberUpCount += 1;
                         continue;
                     }
-                    if (gss.getServer()){
+                    if (gss.getServer()) {
                         serverUpCount += 1;
                     }
-                    if (gss.getHealthy()){
+                    if (gss.getHealthy()) {
                         healthCount += 1;
                     }
-                    if (gss.getPull()){
+                    if (gss.getPull()) {
                         pullInCount += 1;
                     }
-                    if (gss.getMember()){
+                    if (gss.getMember()) {
                         memberUpCount += 1;
                     }
                 }

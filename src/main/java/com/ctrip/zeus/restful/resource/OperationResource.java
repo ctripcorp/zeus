@@ -453,29 +453,36 @@ public class OperationResource {
         ArrayList<Long> upHealthy = new ArrayList<>();
         ArrayList<Long> upUnhealthy = new ArrayList<>();
         ArrayList<Long> upBroken = new ArrayList<>();
-        int upCount = 0;
         ArrayList<Long> healthHealthy = new ArrayList<>();
         ArrayList<Long> healthUnhealthy = new ArrayList<>();
         ArrayList<Long> healthBroken = new ArrayList<>();
-        int healthCount = 0;
         ArrayList<Long> pullInHealthy = new ArrayList<>();
         ArrayList<Long> pullInUnhealthy = new ArrayList<>();
         ArrayList<Long> pullInBroken = new ArrayList<>();
-        int pullInCount = 0;
         ArrayList<Long> memberUpHealthy = new ArrayList<>();
         ArrayList<Long> memberUpUnhealthy = new ArrayList<>();
         ArrayList<Long> memberUpBroken = new ArrayList<>();
-        int memberUpCount = 0;
         ArrayList<Long> serverUpHealthy = new ArrayList<>();
         ArrayList<Long> serverUpUnhealthy = new ArrayList<>();
         ArrayList<Long> serverUpBroken = new ArrayList<>();
-        int serverUpCount = 0;
-        int allServerCount = gses.size();
+
 
         for (GroupStatus gs : gses) {
+            int upCount = 0;
+            int healthCount = 0;
+            int pullInCount = 0;
+            int memberUpCount = 0;
+            int serverUpCount = 0;
+            int allServerCount = gs.getGroupServerStatuses().size();
+
             for (GroupServerStatus gss : gs.getGroupServerStatuses()) {
                 if (gss.getServer() && gss.getHealthy() && gss.getPull() && gss.getMember()) {
                     upCount += 1;
+                    serverUpCount += 1;
+                    healthCount += 1;
+                    pullInCount += 1;
+                    memberUpCount += 1;
+                    continue;
                 }
                 if (gss.getServer()) {
                     serverUpCount += 1;
@@ -530,49 +537,49 @@ public class OperationResource {
         if (healthBroken.size() > 0) {
             propertyBox.set("healthCheckHealthy", "broken", "group", healthBroken.toArray(new Long[]{}));
         }
-        if (healthHealthy.size() > 0){
+        if (healthHealthy.size() > 0) {
             propertyBox.set("healthCheckHealthy", "healthy", "group", healthHealthy.toArray(new Long[]{}));
         }
-        if (healthUnhealthy.size() > 0){
+        if (healthUnhealthy.size() > 0) {
             propertyBox.set("healthCheckHealthy", "unhealthy", "group", healthUnhealthy.toArray(new Long[]{}));
         }
         if (pullInBroken.size() > 0) {
             propertyBox.set("pullHealthy", "broken", "group", pullInBroken.toArray(new Long[]{}));
         }
-        if (pullInHealthy.size() > 0){
+        if (pullInHealthy.size() > 0) {
             propertyBox.set("pullHealthy", "healthy", "group", pullInHealthy.toArray(new Long[]{}));
         }
-        if (pullInUnhealthy.size() > 0){
+        if (pullInUnhealthy.size() > 0) {
             propertyBox.set("pullHealthy", "unhealthy", "group", pullInUnhealthy.toArray(new Long[]{}));
         }
         if (memberUpBroken.size() > 0) {
             propertyBox.set("memberHealthy", "broken", "group", memberUpBroken.toArray(new Long[]{}));
         }
-        if (memberUpHealthy.size() > 0){
+        if (memberUpHealthy.size() > 0) {
             propertyBox.set("memberHealthy", "healthy", "group", memberUpHealthy.toArray(new Long[]{}));
         }
-        if (memberUpUnhealthy.size() > 0){
+        if (memberUpUnhealthy.size() > 0) {
             propertyBox.set("memberHealthy", "unhealthy", "group", memberUpUnhealthy.toArray(new Long[]{}));
         }
         if (serverUpBroken.size() > 0) {
             propertyBox.set("serverHealthy", "broken", "group", serverUpBroken.toArray(new Long[]{}));
         }
-        if (serverUpHealthy.size() > 0){
+        if (serverUpHealthy.size() > 0) {
             propertyBox.set("serverHealthy", "healthy", "group", serverUpHealthy.toArray(new Long[]{}));
         }
-        if (serverUpUnhealthy.size() > 0){
+        if (serverUpUnhealthy.size() > 0) {
             propertyBox.set("serverHealthy", "unhealthy", "group", serverUpUnhealthy.toArray(new Long[]{}));
         }
         if (upBroken.size() > 0) {
             propertyBox.set("healthy", "broken", "group", upBroken.toArray(new Long[]{}));
         }
-        if (upHealthy.size() > 0){
+        if (upHealthy.size() > 0) {
             propertyBox.set("healthy", "healthy", "group", upHealthy.toArray(new Long[]{}));
         }
-        if (upUnhealthy.size() > 0){
+        if (upUnhealthy.size() > 0) {
             propertyBox.set("healthy", "unhealthy", "group", upUnhealthy.toArray(new Long[]{}));
         }
-            return responseHandler.handle("Success.", hh.getMediaType());
+        return responseHandler.handle("Success.", hh.getMediaType());
     }
 
 }
