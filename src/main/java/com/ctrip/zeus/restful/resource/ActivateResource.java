@@ -248,7 +248,7 @@ public class ActivateResource {
 
         String slbMessageData = MessageUtil.getMessageData(request,
                 groupMap.getOfflineMapping().values().toArray(new Group[groupMap.getOfflineMapping().size()]), null, null, null, true);
-        for (Long id : _groupIds) {
+        for (Long id : groupMap.getOfflineMapping().keySet()) {
             if (configHandler.getEnable("use.new,message.queue.producer", false)) {
                 messageQueue.produceMessage(request.getRequestURI(), id, slbMessageData);
             } else {

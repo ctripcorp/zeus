@@ -5,8 +5,12 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskManager;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
+import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
+import com.ctrip.zeus.service.build.ConfigHandler;
+import com.ctrip.zeus.service.message.queue.MessageQueue;
+import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
@@ -14,6 +18,7 @@ import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
 import com.ctrip.zeus.task.entity.TaskResult;
 import com.ctrip.zeus.task.entity.TaskResultList;
+import com.ctrip.zeus.util.MessageUtil;
 import com.google.common.base.Joiner;
 import com.netflix.config.DynamicLongProperty;
 import com.netflix.config.DynamicPropertyFactory;
@@ -48,6 +53,10 @@ public class DeactivateResource {
     private EntityFactory entityFactory;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private MessageQueue messageQueue;
+    @Resource
+    private ConfigHandler configHandler;
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
 
@@ -123,6 +132,17 @@ public class DeactivateResource {
             propertyBox.set("status", "deactivated", "group", groupMap.getOnlineMapping().keySet().toArray(new Long[groupMap.getOnlineMapping().size()]));
         } catch (Exception ex) {
         }
+
+        String slbMessageData = MessageUtil.getMessageData(request,
+                groupMap.getOfflineMapping().values().toArray(new Group[groupMap.getOfflineMapping().size()]), null, null, null, true);
+        for (Long id : groupMap.getOfflineMapping().keySet()) {
+            if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+                messageQueue.produceMessage(request.getRequestURI(), id, slbMessageData);
+            } else {
+                messageQueue.produceMessage(MessageType.DeactivateGroup, id, slbMessageData);
+            }
+        }
+
         return responseHandler.handle(resultList, hh.getMediaType());
     }
 
@@ -171,6 +191,15 @@ public class DeactivateResource {
             propertyBox.set("status", "deactivated", "vs", vsId);
         } catch (Exception ex) {
         }
+
+        String slbMessageData = MessageUtil.getMessageData(request, null,
+                new VirtualServer[]{vsMap.getOfflineMapping().get(vsId)}, null, null, true);
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueue.produceMessage(request.getRequestURI(), vsId, slbMessageData);
+        } else {
+            messageQueue.produceMessage(MessageType.DeactivateVs, vsId, slbMessageData);
+        }
+
         return responseHandler.handle(resultList, hh.getMediaType());
     }
 
@@ -231,6 +260,15 @@ public class DeactivateResource {
             propertyBox.set("status", "deactivated", "slb", slbId);
         } catch (Exception ex) {
         }
-        return responseHandler.handle(slbRepository.getById(slbId), hh.getMediaType());
+        Slb slb = slbRepository.getById(slbId);
+        String slbMessageData = MessageUtil.getMessageData(request, null, null,
+                new Slb[]{slb}, null, true);
+
+        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
+            messageQueue.produceMessage(request.getRequestURI(), slbId, slbMessageData);
+        } else {
+            messageQueue.produceMessage(MessageType.DeactivateSlb, slbId, slbMessageData);
+        }
+        return responseHandler.handle(slb, hh.getMediaType());
     }
 }
