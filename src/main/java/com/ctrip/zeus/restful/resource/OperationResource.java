@@ -444,6 +444,137 @@ public class OperationResource {
         return responseHandler.handle(groupStatus, hh.getMediaType());
     }
 
+    @GET
+    @Path("/fillStatusData")
+    public Response fillData(@Context HttpServletRequest request,
+                             @Context HttpHeaders hh) throws Exception {
+        List<GroupStatus> gses = groupStatusService.getAllOfflineGroupsStatus();
+
+        ArrayList<Long> upHealthy = new ArrayList<>();
+        ArrayList<Long> upUnhealthy = new ArrayList<>();
+        ArrayList<Long> upBroken = new ArrayList<>();
+        int upCount = 0;
+        ArrayList<Long> healthHealthy = new ArrayList<>();
+        ArrayList<Long> healthUnhealthy = new ArrayList<>();
+        ArrayList<Long> healthBroken = new ArrayList<>();
+        int healthCount = 0;
+        ArrayList<Long> pullInHealthy = new ArrayList<>();
+        ArrayList<Long> pullInUnhealthy = new ArrayList<>();
+        ArrayList<Long> pullInBroken = new ArrayList<>();
+        int pullInCount = 0;
+        ArrayList<Long> memberUpHealthy = new ArrayList<>();
+        ArrayList<Long> memberUpUnhealthy = new ArrayList<>();
+        ArrayList<Long> memberUpBroken = new ArrayList<>();
+        int memberUpCount = 0;
+        ArrayList<Long> serverUpHealthy = new ArrayList<>();
+        ArrayList<Long> serverUpUnhealthy = new ArrayList<>();
+        ArrayList<Long> serverUpBroken = new ArrayList<>();
+        int serverUpCount = 0;
+        int allServerCount = gses.size();
+
+        for (GroupStatus gs : gses) {
+            for (GroupServerStatus gss : gs.getGroupServerStatuses()) {
+                if (gss.getServer() && gss.getHealthy() && gss.getPull() && gss.getMember()) {
+                    upCount += 1;
+                }
+                if (gss.getServer()) {
+                    serverUpCount += 1;
+                }
+                if (gss.getHealthy()) {
+                    healthCount += 1;
+                }
+                if (gss.getPull()) {
+                    pullInCount += 1;
+                }
+                if (gss.getMember()) {
+                    memberUpCount += 1;
+                }
+            }
+            if (upCount == allServerCount) {
+                upHealthy.add(gs.getGroupId());
+            } else if (upCount == 0) {
+                upBroken.add(gs.getGroupId());
+            } else {
+                upUnhealthy.add(gs.getGroupId());
+            }
+
+            if (serverUpCount == allServerCount) {
+                serverUpHealthy.add(gs.getGroupId());
+            } else if (serverUpCount == 0) {
+                serverUpBroken.add(gs.getGroupId());
+            } else {
+                serverUpUnhealthy.add(gs.getGroupId());
+            }
+            if (memberUpCount == allServerCount) {
+                memberUpHealthy.add(gs.getGroupId());
+            } else if (memberUpCount == 0) {
+                memberUpBroken.add(gs.getGroupId());
+            } else {
+                memberUpUnhealthy.add(gs.getGroupId());
+            }
+            if (pullInCount == allServerCount) {
+                pullInHealthy.add(gs.getGroupId());
+            } else if (pullInCount == 0) {
+                pullInBroken.add(gs.getGroupId());
+            } else {
+                pullInUnhealthy.add(gs.getGroupId());
+            }
+            if (healthCount == allServerCount) {
+                healthHealthy.add(gs.getGroupId());
+            } else if (healthCount == 0) {
+                healthBroken.add(gs.getGroupId());
+            } else {
+                healthUnhealthy.add(gs.getGroupId());
+            }
+        }
+        if (healthBroken.size() > 0) {
+            propertyBox.set("healthCheckHealthy", "broken", "group", healthBroken.toArray(new Long[]{}));
+        }
+        if (healthHealthy.size() > 0){
+            propertyBox.set("healthCheckHealthy", "healthy", "group", healthHealthy.toArray(new Long[]{}));
+        }
+        if (healthUnhealthy.size() > 0){
+            propertyBox.set("healthCheckHealthy", "unhealthy", "group", healthUnhealthy.toArray(new Long[]{}));
+        }
+        if (pullInBroken.size() > 0) {
+            propertyBox.set("pullHealthy", "broken", "group", pullInBroken.toArray(new Long[]{}));
+        }
+        if (pullInHealthy.size() > 0){
+            propertyBox.set("pullHealthy", "healthy", "group", pullInHealthy.toArray(new Long[]{}));
+        }
+        if (pullInUnhealthy.size() > 0){
+            propertyBox.set("pullHealthy", "unhealthy", "group", pullInUnhealthy.toArray(new Long[]{}));
+        }
+        if (memberUpBroken.size() > 0) {
+            propertyBox.set("memberHealthy", "broken", "group", memberUpBroken.toArray(new Long[]{}));
+        }
+        if (memberUpHealthy.size() > 0){
+            propertyBox.set("memberHealthy", "healthy", "group", memberUpHealthy.toArray(new Long[]{}));
+        }
+        if (memberUpUnhealthy.size() > 0){
+            propertyBox.set("memberHealthy", "unhealthy", "group", memberUpUnhealthy.toArray(new Long[]{}));
+        }
+        if (serverUpBroken.size() > 0) {
+            propertyBox.set("serverHealthy", "broken", "group", serverUpBroken.toArray(new Long[]{}));
+        }
+        if (serverUpHealthy.size() > 0){
+            propertyBox.set("serverHealthy", "healthy", "group", serverUpHealthy.toArray(new Long[]{}));
+        }
+        if (serverUpUnhealthy.size() > 0){
+            propertyBox.set("serverHealthy", "unhealthy", "group", serverUpUnhealthy.toArray(new Long[]{}));
+        }
+        if (upBroken.size() > 0) {
+            propertyBox.set("healthy", "broken", "group", upBroken.toArray(new Long[]{}));
+        }
+        if (upHealthy.size() > 0){
+            propertyBox.set("healthy", "healthy", "group", upHealthy.toArray(new Long[]{}));
+        }
+        if (upUnhealthy.size() > 0){
+            propertyBox.set("healthy", "unhealthy", "group", upUnhealthy.toArray(new Long[]{}));
+        }
+            return responseHandler.handle("Success.", hh.getMediaType());
+    }
+
 }
 
 

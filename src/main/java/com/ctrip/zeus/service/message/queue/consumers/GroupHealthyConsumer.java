@@ -69,22 +69,71 @@ public class GroupHealthyConsumer extends AbstractConsumer {
                 }
             }
             List<GroupStatus> gses = groupStatusService.getOfflineGroupsStatus(groupIds);
+            int upCount = 0;
+            int healthCount = 0;
+            int pullInCount = 0;
+            int memberUpCount = 0;
+            int serverUpCount = 0;
+            int allServerCount = gses.size();
+
             for (GroupStatus gs : gses) {
-                boolean health = true;
-                boolean unhealth = true;
                 for (GroupServerStatus gss : gs.getGroupServerStatuses()) {
                     if (gss.getServer() && gss.getHealthy() && gss.getPull() && gss.getMember()) {
-                        unhealth = false;
-                    } else {
-                        health = false;
+                        upCount += 1;
+                        serverUpCount += 1;
+                        healthCount += 1;
+                        pullInCount += 1;
+                        memberUpCount += 1;
+                        continue;
+                    }
+                    if (gss.getServer()){
+                        serverUpCount += 1;
+                    }
+                    if (gss.getHealthy()){
+                        healthCount += 1;
+                    }
+                    if (gss.getPull()){
+                        pullInCount += 1;
+                    }
+                    if (gss.getMember()){
+                        memberUpCount += 1;
                     }
                 }
-                if (health) {
+                if (upCount == allServerCount) {
                     propertyBox.set("healthy", "healthy", "group", gs.getGroupId());
-                } else if (unhealth) {
+                } else if (upCount == 0) {
                     propertyBox.set("healthy", "broken", "group", gs.getGroupId());
                 } else {
                     propertyBox.set("healthy", "unhealthy", "group", gs.getGroupId());
+                }
+
+                if (serverUpCount == allServerCount) {
+                    propertyBox.set("serverHealthy", "healthy", "group", gs.getGroupId());
+                } else if (serverUpCount == 0) {
+                    propertyBox.set("serverHealthy", "broken", "group", gs.getGroupId());
+                } else {
+                    propertyBox.set("serverHealthy", "unhealthy", "group", gs.getGroupId());
+                }
+                if (memberUpCount == allServerCount) {
+                    propertyBox.set("memberHealthy", "healthy", "group", gs.getGroupId());
+                } else if (memberUpCount == 0) {
+                    propertyBox.set("memberHealthy", "broken", "group", gs.getGroupId());
+                } else {
+                    propertyBox.set("memberHealthy", "unhealthy", "group", gs.getGroupId());
+                }
+                if (pullInCount == allServerCount) {
+                    propertyBox.set("pullHealthy", "healthy", "group", gs.getGroupId());
+                } else if (pullInCount == 0) {
+                    propertyBox.set("pullHealthy", "broken", "group", gs.getGroupId());
+                } else {
+                    propertyBox.set("pullHealthy", "unhealthy", "group", gs.getGroupId());
+                }
+                if (healthCount == allServerCount) {
+                    propertyBox.set("healthCheckHealthy", "healthy", "group", gs.getGroupId());
+                } else if (healthCount == 0) {
+                    propertyBox.set("healthCheckHealthy", "broken", "group", gs.getGroupId());
+                } else {
+                    propertyBox.set("healthCheckHealthy", "unhealthy", "group", gs.getGroupId());
                 }
             }
         } catch (Exception e) {
