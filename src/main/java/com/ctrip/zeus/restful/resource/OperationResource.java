@@ -450,21 +450,21 @@ public class OperationResource {
                              @Context HttpHeaders hh) throws Exception {
         List<GroupStatus> gses = groupStatusService.getAllOfflineGroupsStatus();
 
-        ArrayList<Long> upHealthy = new ArrayList<>();
-        ArrayList<Long> upUnhealthy = new ArrayList<>();
-        ArrayList<Long> upBroken = new ArrayList<>();
-        ArrayList<Long> healthHealthy = new ArrayList<>();
-        ArrayList<Long> healthUnhealthy = new ArrayList<>();
-        ArrayList<Long> healthBroken = new ArrayList<>();
-        ArrayList<Long> pullInHealthy = new ArrayList<>();
-        ArrayList<Long> pullInUnhealthy = new ArrayList<>();
-        ArrayList<Long> pullInBroken = new ArrayList<>();
-        ArrayList<Long> memberUpHealthy = new ArrayList<>();
-        ArrayList<Long> memberUpUnhealthy = new ArrayList<>();
-        ArrayList<Long> memberUpBroken = new ArrayList<>();
-        ArrayList<Long> serverUpHealthy = new ArrayList<>();
-        ArrayList<Long> serverUpUnhealthy = new ArrayList<>();
-        ArrayList<Long> serverUpBroken = new ArrayList<>();
+        HashSet<Long> upHealthy = new HashSet<>();
+        HashSet<Long> upUnhealthy = new HashSet<>();
+        HashSet<Long> upBroken = new HashSet<>();
+        HashSet<Long> healthHealthy = new HashSet<>();
+        HashSet<Long> healthUnhealthy = new HashSet<>();
+        HashSet<Long> healthBroken = new HashSet<>();
+        HashSet<Long> pullInHealthy = new HashSet<>();
+        HashSet<Long> pullInUnhealthy = new HashSet<>();
+        HashSet<Long> pullInBroken = new HashSet<>();
+        HashSet<Long> memberUpHealthy = new HashSet<>();
+        HashSet<Long> memberUpUnhealthy = new HashSet<>();
+        HashSet<Long> memberUpBroken = new HashSet<>();
+        HashSet<Long> serverUpHealthy = new HashSet<>();
+        HashSet<Long> serverUpUnhealthy = new HashSet<>();
+        HashSet<Long> serverUpBroken = new HashSet<>();
 
 
         for (GroupStatus gs : gses) {
