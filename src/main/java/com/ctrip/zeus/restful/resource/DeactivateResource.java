@@ -159,7 +159,9 @@ public class DeactivateResource {
                 groupIds.add(key.getId());
             }
             relatedGroupIds.retainAll(groupCriteriaQuery.queryByIdsAndMode(groupIds.toArray(new Long[groupIds.size()]), SelectionMode.ONLINE_EXCLUSIVE));
-            throw new ValidationException("Activated groups are found related to Vs[" + vsId + "].");
+            if (relatedGroupIds.size() > 0) {
+                throw new ValidationException("Activated groups are found related to Vs[" + vsId + "].");
+            }
         }
 
         ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(new Long[]{vsId});
