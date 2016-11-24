@@ -55,6 +55,10 @@ public class LocationConf {
                     writeVirtualLocation(confWriter, e.getPath(), group);
                     continue;
                 }
+                if (configHandler.getEnable("socket.io.group", null, null, groupId, false)) {
+                    writeSocketIOGroup(confWriter, e.getPath(), group, upstreamName);
+                    continue;
+                }
 
                 // if group is not virtual
                 confWriter.writeLocationStart(e.getPath());
@@ -64,10 +68,10 @@ public class LocationConf {
 
                 if (configHandler.getEnable("location.gzip", slbId, vsId, groupId, false)) {
                     confWriter.writeCommand("gzip", "on");
-                    confWriter.writeCommand("gzip_types", configHandler.getStringValue("location.gzip.types",slbId,vsId,groupId,"text/html"));
-                    confWriter.writeCommand("gzip_min_length", configHandler.getStringValue("location.gzip.min.length",slbId,vsId,groupId,"100"));
-                    confWriter.writeCommand("gzip_comp_level", configHandler.getStringValue("location.gzip.comp.level",slbId,vsId,groupId,"1"));
-                    confWriter.writeCommand("gzip_buffers", configHandler.getStringValue("location.gzip.buffers",slbId,vsId,groupId,"16 8k"));
+                    confWriter.writeCommand("gzip_types", configHandler.getStringValue("location.gzip.types", slbId, vsId, groupId, "text/html"));
+                    confWriter.writeCommand("gzip_min_length", configHandler.getStringValue("location.gzip.min.length", slbId, vsId, groupId, "100"));
+                    confWriter.writeCommand("gzip_comp_level", configHandler.getStringValue("location.gzip.comp.level", slbId, vsId, groupId, "1"));
+                    confWriter.writeCommand("gzip_buffers", configHandler.getStringValue("location.gzip.buffers", slbId, vsId, groupId, "16 8k"));
                 }
 
                 // write proxy configuration
@@ -119,6 +123,26 @@ public class LocationConf {
                 confWriter.writeLocationEnd();
             }
         }
+    }
+
+    private void writeSocketIOGroup(ConfWriter confWriter, String path, Group group, String upstreamName) {
+        confWriter.writeLocationStart(path);
+        confWriter.writeCommand("proxy_set_header", "Upgrade $http_upgrade");
+        confWriter.writeCommand("proxy_set_header", "Connection \"upgrade\"");
+        confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
+        confWriter.writeCommand("proxy_set_header", "Host $host");
+        confWriter.writeCommand("proxy_http_version", "1.1");
+        confWriter.writeCommand("proxy_set_header", "X-Real-IP $remote_addr");
+        // set upstream value
+        confWriter.writeCommand("set", "$upstream " + upstreamName);
+        confWriter.writeCommand("set", LogFormat.VAR_UPSTREAM_NAME + " " + upstreamName);
+        if (group.isSsl()) {
+            confWriter.writeCommand("proxy_pass", "https://$upstream");
+        } else {
+            confWriter.writeCommand("proxy_pass", "http://$upstream");
+        }
+
+        confWriter.writeLocationEnd();
     }
 
     private static void writeVirtualLocation(ConfWriter confWriter, String path, Group group) throws Exception {

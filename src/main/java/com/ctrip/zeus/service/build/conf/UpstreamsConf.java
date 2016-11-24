@@ -89,6 +89,12 @@ public class UpstreamsConf {
             return;
         }
         AssertUtils.assertNotNull(group.getId(), "groupId not found!");
+
+        if (configHandler.getEnable("socket.io.group", null, null, groupId, false)) {
+            writeSocketIOUpstream(confWriter, group, groupServers, vs, allDownServers, allUpGroupServers);
+            return;
+        }
+
         confWriter.writeUpstreamStart(UpstreamPrefix + group.getId());
 
         String lbMethod = LBMethod.getMethod(group.getLoadBalancingMethod().getType()).getValue();
@@ -111,6 +117,19 @@ public class UpstreamsConf {
             confWriter.writeCommand("keepalive_timeout", configHandler.getStringValue("upstream.keepAlive.timeout", slbId, vsId, groupId, "110") + "s");
         }
 
+        confWriter.writeUpstreamEnd();
+    }
+
+    private void writeSocketIOUpstream(ConfWriter confWriter, Group group, List<GroupServer> groupServers, VirtualServer vs, Set<String> allDownServers, Set<String> allUpGroupServers) throws Exception {
+        confWriter.writeUpstreamStart(UpstreamPrefix + group.getId());
+        confWriter.writeLine("ip_hash;");
+        for (GroupServer server : groupServers) {
+            validate(server, vs.getId());
+            String ip = server.getIp();
+
+            boolean down = allDownServers.contains(ip) || !allUpGroupServers.contains(group.getId() + "_" + ip);
+            confWriter.writeUpstreamServer(ip, server.getPort(), server.getWeight(), server.getMaxFails(), server.getFailTimeout(), down);
+        }
         confWriter.writeUpstreamEnd();
     }
 
