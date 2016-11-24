@@ -38,7 +38,11 @@ public class ServerConf {
         }
 
         confWriter.writeServerStart();
-        confWriter.writeCommand("listen", vs.getPort());
+        if (vs.isSsl() && configHandler.getEnable("http.version.2", slbId, vsId, null, false)) {
+            writeHttp2Configs(confWriter, slbId, vs);
+        } else {
+            confWriter.writeCommand("listen", vs.getPort());
+        }
         confWriter.writeCommand("server_name", getServerNames(vs));
         confWriter.writeCommand("ignore_invalid_headers", "off");
         confWriter.writeCommand("proxy_http_version", "1.1");
@@ -83,6 +87,46 @@ public class ServerConf {
 
         confWriter.writeServerEnd();
         return confWriter.getValue();
+    }
+
+    private void writeHttp2Configs(ConfWriter confWriter, Long slbId, VirtualServer vs) throws Exception {
+        confWriter.writeCommand("listen", vs.getPort() + " http2");
+        String config = configHandler.getStringValue("http2.http2_chunk_size", slbId, vs.getId(), null, null);
+        if (config != null) {
+            confWriter.writeCommand("http2_chunk_size", config);
+        }
+        config = configHandler.getStringValue("http2.http2_body_preread_size", slbId, vs.getId(), null, null);
+        if (config != null) {
+            confWriter.writeCommand("http2_body_preread_size", config);
+        }
+        config = configHandler.getStringValue("http2.http2_idle_timeout", slbId, vs.getId(), null, null);
+        if (config != null) {
+            confWriter.writeCommand("http2_idle_timeout", config);
+        }
+        config = configHandler.getStringValue("http2.http2_max_concurrent_streams", slbId, vs.getId(), null, null);
+        if (config != null) {
+            confWriter.writeCommand("http2_max_concurrent_streams", config);
+        }
+        config = configHandler.getStringValue("http2.http2_max_field_size", slbId, vs.getId(), null, null);
+        if (config != null) {
+            confWriter.writeCommand("http2_max_field_size", config);
+        }
+        config = configHandler.getStringValue("http2.http2_max_header_size", slbId, vs.getId(), null, null);
+        if (config != null) {
+            confWriter.writeCommand("http2_max_header_size", config);
+        }
+        config = configHandler.getStringValue("http2.http2_max_requests", slbId, vs.getId(), null, null);
+        if (config != null) {
+            confWriter.writeCommand("http2_max_requests", config);
+        }
+        config = configHandler.getStringValue("http2.http2_recv_buffer_size", slbId, vs.getId(), null, null);
+        if (config != null) {
+            confWriter.writeCommand("http2_recv_buffer_size", config);
+        }
+        config = configHandler.getStringValue("http2.http2_recv_timeout", slbId, vs.getId(), null, null);
+        if (config != null) {
+            confWriter.writeCommand("http2_recv_timeout", config);
+        }
     }
 
     private String getProtocols(Long slbId, Long vsId) throws Exception {
