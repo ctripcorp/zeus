@@ -66,6 +66,8 @@ public class LocationConf {
                     confWriter.writeCommand("client_max_body_size", configHandler.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "2") + "m");
                 }
 
+                confWriter.writeCommand("client_body_buffer_size", configHandler.getStringValue("location.client.body.buffer.size", slbId, vsId, groupId, "16k"));
+
                 if (configHandler.getEnable("location.gzip", slbId, vsId, groupId, false)) {
                     confWriter.writeCommand("gzip", "on");
                     confWriter.writeCommand("gzip_types", configHandler.getStringValue("location.gzip.types", slbId, vsId, groupId, "text/html"));
