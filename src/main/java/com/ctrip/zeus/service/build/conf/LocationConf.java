@@ -75,7 +75,12 @@ public class LocationConf {
                 }
 
                 // write proxy configuration
-                confWriter.writeCommand("proxy_request_buffering", "off");
+                if (vs.isSsl() && configHandler.getEnable("http.version.2", slbId, vsId, null, false)) {
+                    confWriter.writeCommand("proxy_request_buffering", "on");
+                } else {
+                    confWriter.writeCommand("proxy_request_buffering", "off");
+                }
+
                 confWriter.writeCommand("proxy_next_upstream", "off");
 
                 confWriter.writeCommand("proxy_set_header", "Host $host");
