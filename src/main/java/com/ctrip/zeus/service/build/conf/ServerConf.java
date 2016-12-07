@@ -38,7 +38,7 @@ public class ServerConf {
         }
 
         confWriter.writeServerStart();
-        if (vs.isSsl() && configHandler.getEnable("http.version.2", null, null, null, false)) {
+        if (vs.isSsl() && configHandler.getEnable("http.version.2", slbId, null, null, false)) {
             writeHttp2Configs(confWriter, slbId, vs);
         } else {
             confWriter.writeCommand("listen", vs.getPort());
@@ -169,14 +169,18 @@ public class ServerConf {
         confWriter.writeServerEnd();
     }
 
-    public void writeDefaultServers(ConfWriter confWriter) {
+    public void writeDefaultServers(ConfWriter confWriter, Long slbId) throws Exception {
         confWriter.writeServerStart();
         confWriter.writeCommand("listen", "*:80 default_server");
         locationConf.writeDefaultLocations(confWriter);
         confWriter.writeServerEnd();
 
         confWriter.writeServerStart();
-        confWriter.writeCommand("listen", "*:443 default_server");
+        if (configHandler.getEnable("default.server.http.version.2", slbId, null, null, false)) {
+            confWriter.writeCommand("listen", "*:443 http2 default_server");
+        }else {
+            confWriter.writeCommand("listen", "*:443 default_server");
+        }
         confWriter.writeCommand("ssl", "on");
         confWriter.writeCommand("ssl_certificate", SSL_PATH + "default/ssl.crt");
         confWriter.writeCommand("ssl_certificate_key", SSL_PATH + "default/ssl.key");

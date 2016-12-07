@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.build.conf;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.service.build.ConfigHandler;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.Resource;
 
 /**
@@ -51,12 +52,15 @@ public class NginxConf {
         confWriter.writeCommand("check_shm_size", configHandler.getStringValue("checkShmSize", slbId, null, null, "32") + "M");
         confWriter.writeCommand("client_max_body_size", "2m");
         confWriter.writeCommand("ignore_invalid_headers", "off");
+        if (configHandler.getEnable("proxy.request.buffering.nginx.conf.off", slbId, null, null, false)) {
+            confWriter.writeCommand("proxy_request_buffering", "off");
+        }
 
         confWriter.writeCommand("req_status_zone", ShmZoneName + " \"$hostname/$proxy_host\" 20M");
 
         serverConf.writeCheckStatusServer(confWriter, ShmZoneName, slbId);
         serverConf.writeDyupsServer(confWriter, slbId);
-        serverConf.writeDefaultServers(confWriter);
+        serverConf.writeDefaultServers(confWriter, slbId);
 
         confWriter.writeCommand("include", "upstreams/*.conf");
         confWriter.writeCommand("include", "vhosts/*.conf");

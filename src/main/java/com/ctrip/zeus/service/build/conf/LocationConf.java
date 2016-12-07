@@ -89,9 +89,10 @@ public class LocationConf {
                 }
 
                 // write proxy configuration
-                if (vs.isSsl() && configHandler.getEnable("http.version.2", null, null, null, false)) {
+                if (configHandler.getEnable("default.server.http.version.2", slbId, null, null, false)
+                        || configHandler.getEnable("http.version.2", slbId, null, null, false)) {
                     confWriter.writeCommand("proxy_request_buffering", "on");
-                } else {
+                } else if (configHandler.getEnable("proxy.request.buffering.off", slbId, vsId, groupId, true)){
                     confWriter.writeCommand("proxy_request_buffering", "off");
                 }
 
