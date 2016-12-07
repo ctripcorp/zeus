@@ -38,6 +38,18 @@ public class LocationConf {
             .append("      ngx.req.set_header(\"X-Forwarded-For\", ngx.var.remote_addr )\n")
             .append("  end\n")
             .append("end'").toString();
+    private final String newSetHeaderLuaScripts = new StringBuilder(500)
+            .append("'\n")
+            .append("  local headers = ngx.req.get_headers();\n")
+            .append("  if ngx.var.inWhite ~= \"true\" or headers[\"X-Forwarded-For\"] == nil then\n")
+            .append("    if (headers[\"True-Client-Ip\"] ~= nil) then\n")
+            .append("      ngx.req.clear_header(\"X-Forwarded-For\")\n")
+            .append("      ngx.req.set_header(\"X-Forwarded-For\", headers[\"True-Client-IP\"])\n")
+            .append("    else\n")
+            .append("      ngx.req.clear_header(\"X-Forwarded-For\")\n")
+            .append("      ngx.req.set_header(\"X-Forwarded-For\", ngx.var.remote_addr )\n")
+            .append("  end\n")
+            .append("end'").toString();
 
     public void write(ConfWriter confWriter, Slb slb, VirtualServer vs, Group group) throws Exception {
         Long slbId = slb.getId();
@@ -103,8 +115,11 @@ public class LocationConf {
                             configHandler.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
                             .writeCommand("set", "$inWhite \"true\"")
                             .writeIfEnd();
-
-                    confWriter.writeCommand("rewrite_by_lua", setHeaderLuaScripts);
+                    if (configHandler.getEnable("new_xff_header", slbId, vsId, groupId, false)) {
+                        confWriter.writeCommand("rewrite_by_lua", newSetHeaderLuaScripts);
+                    } else {
+                        confWriter.writeCommand("rewrite_by_lua", setHeaderLuaScripts);
+                    }
                 } else {
                     confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
                 }
