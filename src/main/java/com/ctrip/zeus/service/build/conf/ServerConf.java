@@ -38,7 +38,7 @@ public class ServerConf {
         }
 
         confWriter.writeServerStart();
-        if (vs.isSsl() && configHandler.getEnable("http.version.2", slbId, vsId, null, false)) {
+        if (vs.isSsl() && configHandler.getEnable("http.version.2", null, null, null, false)) {
             writeHttp2Configs(confWriter, slbId, vs);
         } else {
             confWriter.writeCommand("listen", vs.getPort());
