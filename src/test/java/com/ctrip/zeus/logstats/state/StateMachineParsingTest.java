@@ -8,6 +8,12 @@ import com.ctrip.zeus.logstats.parser.AccessLogRegexParser;
 import com.ctrip.zeus.logstats.parser.AccessLogStateMachineParser;
 import com.ctrip.zeus.logstats.parser.KeyValue;
 import com.ctrip.zeus.logstats.parser.LogParser;
+import com.ctrip.zeus.logstats.parser.state.AccessLogContext;
+import com.ctrip.zeus.logstats.parser.state.AccessLogStateMachine;
+import com.ctrip.zeus.logstats.parser.state.LogStatsStateMachine;
+import com.ctrip.zeus.logstats.parser.state.extended.IpState;
+import com.ctrip.zeus.logstats.parser.state.extended.UpstreamState;
+import com.ctrip.zeus.logstats.parser.state.extended.XForwardForStateMachine;
 import com.ctrip.zeus.service.build.conf.LogFormat;
 import com.google.common.collect.Lists;
 import org.junit.Assert;
@@ -74,11 +80,35 @@ public class StateMachineParsingTest {
     }
 
     @Test
+    public void testXForwardForParser() {
+        LogStatsStateMachine m = new XForwardForStateMachine(new IpState("x-forward-for"));
+        AccessLogContext c = new AccessLogContext("127.0.0.1, 127.0.0.2, 127.0.0.3");
+        m.transduce(c);
+        Assert.assertTrue(c.getResult().size() == 1);
+        Assert.assertEquals("127.0.0.1, 127.0.0.2, 127.0.0.3", c.getResult().get(0).getValue());
+    }
+
+    @Test
+    public void testUpstreamParser() {
+        AccessLogStateMachine m = new AccessLogStateMachine(new UpstreamState("upstream"));
+        List<AccessLogContext> upstreamCases = new ArrayList<>();
+        upstreamCases.add(new AccessLogContext("192.168.1.1:80, 192.168.1.2:80, unix:/tmp/sock : 192.168.10.1:80, 192.168.10.2:80"));
+        upstreamCases.add(new AccessLogContext("-"));
+        upstreamCases.add(new AccessLogContext("unix:/tmp/sock : 192.168.10.1:80"));
+        upstreamCases.add(new AccessLogContext(", 127.0.0.1"));
+        upstreamCases.add(new AccessLogContext("-, 127.0.0.1"));
+        for (AccessLogContext c : upstreamCases) {
+            m.transduce(c);
+            Assert.assertEquals(1, c.getResult().size());
+        }
+    }
+
+    @Test
     public void testErrorRealCases() {
         LineFormat lineFormat = new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate();
         final LogParser parser = new AccessLogStateMachineParser(lineFormat);
         List<String> realCases = new ArrayList<>();
-        realCases.add("[01/Jun/2016:09:00:13 +0800] ws.mobile.qiche.localhost.com svr5153hw1288 127.8.0.7 GET /index.php?param=/api/home&method=product.recommendBus&isNewVersion=1&from=%E6%B8%A9%E5%B7%9E&to=%E6%B8%A9%E5%B7%9E&date=2016-06-01&channel=tieyou&partner=tieyou.app 80 - 127.28.56.26 - HTTP/1.1 \"-\" \"-\" \"-\" 200 268 362 0.045 -, -, 0.045 127.8.169.162:80, 127.8.169.164:80, 127.8.177.23:80 -, -, 200 backend_441");
+
         realCases.add("--");
         for (String rc : realCases) {
             List<KeyValue> kvs = parser.parse(rc);
@@ -91,27 +121,24 @@ public class StateMachineParsingTest {
     }
 
     @Test
-    public void testSuccessRealCases() {
+    public void testRealCases() {
         LineFormat lineFormat = new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate();
         final LogParser parser = new AccessLogStateMachineParser(lineFormat);
 
-        String status = "0";
         List<String> realCases = new ArrayList<>();
         realCases.add("[21/Jun/2016:09:00:05 +0800] trains.localhost.com svr14890 127.8.211.25 POST /TrainBooking/Ajax/UI2IndexHandler.ashx 80 - 222.88.238.19 - HTTP/1.1 \"Mozilla/5.0 (compatible; MSIE 127.0; Windows NT 6.2; Trident/6.0)\" \"searchlist=searchlisttop=2; Session=smartlinkcode=U130026&smartlinklanguage=zh&SmartLinkKeyWord=&SmartLinkQuary=&SmartLinkHost=; adscityen=Nanyang; _bfa=1.1466470080946.9greo.1.1466470080946.1466470080946.1.127; _bfs=1.127; _ga=GA1.2.931298142.1466470084; _gat=1; appFloatCnt=4; __zpspc=9.1.1466470085.1466470185.4%232%7Cwww.baidu.com%7C%7C%7C12306%25E7%2581%25AB%25E8%25BD%25A6%25E7%25A5%25A8%25E7%25BD%2591%25E4%25B8%258A%25E8%25AE%25A2%25E7%25A5%25A8%25E5%25AE%2598%25E7%25BD%2591%7C%23; _jzqco=%7C%7C%7C%7C1466470114557%7C1.930272362.1466470085157.1466470139625.1466470185404.1466470139625.1466470185404.undefined.0.0.4.4; Union=AllianceID=4897&SID=130026&OUID=; _bfi=p1%3D1278002%26p2%3D1278012%26v1%3D127%26v2%3D9; ASP.NET_SessionSvc=MTAuOC45Mi4yNDF8OTA5MHxqaW5xaWFvfGRlZmF1bHR8MTQ0OTEzNzU1MjQ4Mg\" \"http://trains.localhost.com/TrainBooking/Search.aspx?from=xian&to=wulumuqinan&day=14&number=&fromCn=\\xE8\\xA5\\xBF\\xE5\\xAE\\x89&toCn=\\xE4\\xB9\\x8C\\xE9\\xB2\\x81\\xE6\\x9C\\xA8\\xE9\\xBD\\x90\\xE5\\x8D\\x97&tj=1#\" 200 1406 223 0.0127 0.0127 127.8.46.173:80 200 backend_07");
+        realCases.add("[01/Jun/2016:09:00:13 +0800] ws.mobile.qiche.localhost.com svr5153hw1288 127.8.0.7 GET /index.php?param=/api/home&method=product.recommendBus&isNewVersion=1&from=%E6%B8%A9%E5%B7%9E&to=%E6%B8%A9%E5%B7%9E&date=2016-06-01&channel=tieyou&partner=tieyou.app 80 - 127.28.56.26 - HTTP/1.1 \"-\" \"-\" \"-\" 200 268 362 0.045 -, -, 0.045 127.8.169.162:80, 127.8.169.164:80, 127.8.177.23:80 -, -, 200 backend_441");
+        realCases.add("[08/Dec/2016:11:07:07 +0800] test.reserved.localhost.com uat0361 10.2.25.83 GET /slb/test 80 - 10.32.21.25 - HTTP/1.1 \"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36\" \"_bfa=1.1481079026000.4cxbxj.1.1481094580041.1481106875118.5.12; _bfi=p1%3D88890106%26p2%3D0%26v1%3D12%26v2%3D0\" \"-\" 502 576 732 0.007 -, 0.006 , 10.2.25.95:8888 -, 200 backend_3");
+        realCases.add("[05/Dec/2016:20:00:42 +0800] gateway.m.fws.qa.nt.localhost.com qatetools0069 10.2.21.33 POST /restapi/soa2/10933/hotel/product/ambitustravelcity?subEnv=fat369&_fxpcqlniredt=09031029110001555996 443 - 10.32.151.13 - HTTP/2.0 \"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36\" \"GUID=09031029110001555996; Union=OUID=&AllianceID=4897&SID=179120&SourceID=3516&Expires=1481520330480; cticket=3CE58C7655C0138B3F8763C1549BB73DCC951D5D8D7F727EC384DB54D6021C0B; DUID=F14EA3739FE77E920CB83F6CFDFBD1F6; IsNonUser=F; _abtest_userid=974d988c-9aa6-4b30-a345-ffb5fdfaa1f2; _ga=GA1.2.2000995266.1480907610; _gat=1\" \"https://w-hotel-m.fat369.qa.nt.localhost.com/webapp/hotel/travelaround/?cityid=1&cname=%E5%8C%97%E4%BA%AC\" 499 449 0 29.563 - 10.2.38.40:8080 - backend_3873");
         for (String rc : realCases) {
+            System.out.println(rc);
             List<KeyValue> kvs = parser.parse(rc);
             Assert.assertTrue(kvs.size() > 0);
             for (KeyValue kv : kvs) {
                 System.out.println(kv.getKey() + ", " + kv.getValue());
                 Assert.assertNotNull(kv.getValue());
-
-                if (kv.getKey().equals("status")) {
-                    status = kv.getValue();
-                }
             }
         }
-
-        Assert.assertEquals("200", status);
     }
 
     @Test

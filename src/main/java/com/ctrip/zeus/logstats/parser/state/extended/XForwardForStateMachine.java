@@ -11,10 +11,16 @@ public class XForwardForStateMachine implements LogStatsStateMachine {
 
     private final LogStatsState xforwardState;
     private final Transition transition;
+    private final String[] emptyMarker;
 
     public XForwardForStateMachine(LogStatsState xforwardState) {
+        this(xforwardState, new String[]{"", "-"});
+    }
+
+    public XForwardForStateMachine(LogStatsState xforwardState, String[] emptyMarker) {
         this.xforwardState = xforwardState;
         this.transition = new XForwardTransition();
+        this.emptyMarker = emptyMarker == null ? new String[0] : emptyMarker;
     }
 
     @Override
@@ -54,14 +60,17 @@ public class XForwardForStateMachine implements LogStatsStateMachine {
         public LogStatsState transit(LogStatsState state, StateMachineContext ctxt) {
             if (xforwardState.getName().equals(state.getName())) {
                 String v = ctxt.peekLastParsedValue();
-                if (!"-".equals(v) && !"".equals(v)) {
-                    char[] paralSplitter = ctxt.delay(2);
-                    if (paralSplitter[0] == ',' && paralSplitter[1] == ' ') {
-                        ctxt.proceed(2);
-                        return xforwardState;
-                    } else {
+                for (String m : emptyMarker) {
+                    if (m.equals(v)) {
                         return null;
                     }
+                }
+                char[] paralSplitter = ctxt.delay(2);
+                if (paralSplitter[0] == ',' && paralSplitter[1] == ' ') {
+                    ctxt.proceed(2);
+                    return xforwardState;
+                } else {
+                    return null;
                 }
             }
             return null;
