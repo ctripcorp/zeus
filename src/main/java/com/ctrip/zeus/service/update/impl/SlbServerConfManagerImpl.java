@@ -7,6 +7,7 @@ import com.ctrip.zeus.model.entity.DyUpstreamOpsData;
 import com.ctrip.zeus.nginx.entity.ConfFile;
 import com.ctrip.zeus.nginx.entity.NginxConfEntry;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
+import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.build.NginxConfService;
 import com.ctrip.zeus.service.commit.CommitMergeService;
 import com.ctrip.zeus.service.commit.CommitService;
@@ -47,6 +48,8 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
     private CommitMergeService commitMergeService;
     @Resource
     private UpstreamConfPicker upstreamConfPicker;
+    @Resource
+    private ConfigHandler configHandler;
 
     private final Logger logger = LoggerFactory.getLogger(SlbServerConfManagerImpl.class);
     private static DynamicIntProperty maxSpan = DynamicPropertyFactory.getInstance().getIntProperty("commit.max.span", 10);
@@ -95,6 +98,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                 }
                 //3.3 refresh config
                 logger.info("[[refresh=true]]Refresh Nginx Conf. Reload: " + needReload);
+                nginxConf = http2ConfCheck(nginxConf);
                 NginxResponse res = nginxService.refresh(nginxConf, entry, needReload);
                 //3.3.1 if failed, set need refresh flag and return result.
                 if (!res.getSucceed()) {
@@ -168,6 +172,7 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
                     logger.info("[[taskId=" + taskId + "]]Start Update Conf of task. taskId: " + taskId);
                 }
                 //4.5 update nginx configs
+                nginxConf = http2ConfCheck(nginxConf);
                 List<NginxResponse> responses = nginxService.update(nginxConf, entry, new HashSet<>(commit.getVsIds()), cleanSet, dyUpstreamOpsDatas, reload, test, dyups);
                 //4.6 check response, if failed. set need refresh flag.
                 for (NginxResponse r : responses) {
@@ -185,6 +190,19 @@ public class SlbServerConfManagerImpl implements SlbServerConfManager {
         //5. update server version
         confVersionService.updateSlbServerCurrentVersion(slbId, ip, slbVersion);
         return response.setServerIp(ip).setSucceed(true).setOutMsg("update success.");
+    }
+
+    private String http2ConfCheck(String nginxConf) throws Exception {
+        String result = nginxConf;
+        if (configHandler.getEnable("http.version.2.bastion",null,null,null,false)){
+            if (result.contains("listen *:443 default_server")){
+                result = result.replace("listen *:443 default_server","listen *:443 http2 default_server");
+            }
+            if (result.contains("proxy_request_buffering off")){
+                result = result.replace("proxy_request_buffering off","proxy_request_buffering on");
+            }
+        }
+        return result;
     }
 
     private void randomSortUpstreamServers(DyUpstreamOpsData[] dyUpstreamOpsDatas) {
