@@ -8,7 +8,6 @@ import com.ctrip.zeus.lock.DistLock;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.NginxResponse;
 import com.ctrip.zeus.service.build.BuildService;
-import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.commit.CommitService;
 import com.ctrip.zeus.service.commit.util.CommitType;
 import com.ctrip.zeus.service.model.*;
@@ -60,8 +59,6 @@ public class TaskExecutorImpl implements TaskExecutor {
     private ConfVersionService confVersionService;
     @Resource
     private CommitService commitService;
-    @Resource
-    private ConfigHandler configHandler;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -337,8 +334,49 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
         }
 
+
+        Set<Long> _buildingGroupIds = new HashSet<>(activateGroupOps.keySet());
+
+        // groups with 2~n vses which share the current target slb-id(cond1)
+        // while 1~(n-1) of those vses are involved in any vs-ops(cond2)
+        // must be rebuilt for the need of regenerating concat upstream filename
+        for (Group g : currOnlineGroups.values()) {
+            if (g.getGroupVirtualServers().size() <= 1) continue;
+            boolean cond1 = false;
+            boolean cond2 = false;
+            for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
+                if (deactivateVsOps.keySet().contains(gvs.getVirtualServer().getId()) ||
+                        softDeactivateVsOps.keySet().contains(gvs.getVirtualServer().getId())) {
+                    cond1 = true;
+                } else if (nxOnlineVses.containsKey(gvs.getVirtualServer().getId())) {
+                    cond2 = true;
+                }
+            }
+
+            if (cond1 && cond2) {
+                _buildingGroupIds.add(g.getId());
+            }
+        }
+        for (Group g : nxOnlineGroups.values()) {
+            if (g.getGroupVirtualServers().size() <= 1) continue;
+            boolean cond1 = false;
+            boolean cond2 = false;
+            for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
+                if (activateVsOps.keySet().contains(gvs.getVirtualServer().getId())) {
+                    cond1 = true;
+                } else if (nxOnlineVses.containsKey(gvs.getVirtualServer().getId())) {
+                    cond2 = true;
+                }
+            }
+
+            if (cond1 && cond2) {
+                _buildingGroupIds.add(g.getId());
+            }
+        }
+
+
         Set<Long> _buildingVsIds = new HashSet<>();
-        for (Long gid : activateGroupOps.keySet()) {
+        for (Long gid : _buildingGroupIds) {
             Group currVersion = currOnlineGroups.get(gid);
             if (currVersion != null) {
                 for (GroupVirtualServer gvs : currVersion.getGroupVirtualServers()) {
