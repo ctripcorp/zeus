@@ -488,6 +488,25 @@ CREATE TABLE IF NOT EXISTS `group_slb` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table message_queue
+DROP TABLE IF EXISTS `message_queue`;
+CREATE TABLE IF NOT EXISTS `message_queue` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `performer` varchar(128) DEFAULT NULL COMMENT 'p',
+  `type` varchar(128) NOT NULL DEFAULT 'unknown' COMMENT 'type',
+  `target_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'tid',
+  `target_data` varchar(2048) NOT NULL DEFAULT '0' COMMENT 'td',
+  `status` varchar(128) NOT NULL DEFAULT 'unknow' COMMENT 'status',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'ct',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'dt',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `status_create_time` (`status`,`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='message_queue';
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table nginx_conf
 DROP TABLE IF EXISTS `nginx_conf`;
 CREATE TABLE IF NOT EXISTS `nginx_conf` (
@@ -529,9 +548,9 @@ CREATE TABLE IF NOT EXISTS `nginx_conf_server` (
 DROP TABLE IF EXISTS `nginx_conf_slb`;
 CREATE TABLE IF NOT EXISTS `nginx_conf_slb` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
-  `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb id',
-  `version` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb conf version',
-  `content` mediumtext NOT NULL COMMENT 'conf content',
+  `slb_id` bigint(20) NOT NULL COMMENT 'slb id',
+  `version` bigint(20) NOT NULL COMMENT 'slb conf version',
+  `content` mediumblob NOT NULL COMMENT 'conf content',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
   UNIQUE KEY `slb_id_version` (`slb_id`,`version`),
@@ -663,6 +682,55 @@ CREATE TABLE IF NOT EXISTS `report` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table report_queue
+DROP TABLE IF EXISTS `report_queue`;
+CREATE TABLE IF NOT EXISTS `report_queue` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `target_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'target id',
+  `topic` int(11) NOT NULL DEFAULT '-1' COMMENT 'topic group',
+  `state` bit(1) NOT NULL DEFAULT b'0' COMMENT 'result',
+  `description` varchar(255) DEFAULT '0' COMMENT 'description',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_idx_topic_target` (`topic`,`target_id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `state` (`state`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='report queue for meta data insertion/update/deletion';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table role
+DROP TABLE IF EXISTS `role`;
+CREATE TABLE IF NOT EXISTS `role` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `name` varchar(128) NOT NULL DEFAULT 'unknow' COMMENT 'name',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'DataChange_LastTime',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='role';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table role_resource
+DROP TABLE IF EXISTS `role_resource`;
+CREATE TABLE IF NOT EXISTS `role_resource` (
+  `role_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'r',
+  `type` varchar(128) NOT NULL DEFAULT 'unknow' COMMENT 't',
+  `data_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'o',
+  `operation` varchar(2048) NOT NULL DEFAULT '0',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'DataChange_LastTime',
+  UNIQUE KEY `role_id_type_data_id` (`role_id`,`type`,`data_id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `role_id` (`role_id`),
+  KEY `role_id_type` (`role_id`,`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='role_resource';
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table r_certificate_slb_server
 DROP TABLE IF EXISTS `r_certificate_slb_server`;
 CREATE TABLE IF NOT EXISTS `r_certificate_slb_server` (
@@ -749,18 +817,19 @@ CREATE TABLE IF NOT EXISTS `r_group_vs` (
 
 
 -- Dumping structure for table r_slb_slb_server
-DROP TABLE IF EXISTS `r_slb_slb_server`;
-CREATE TABLE IF NOT EXISTS `r_slb_slb_server` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
-  `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb_id',
-  `ip` varchar(200) NOT NULL DEFAULT '0' COMMENT 'slb_server ip',
-  `slb_version` int(11) NOT NULL DEFAULT '0' COMMENT 'slb version',
-  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+DROP TABLE IF EXISTS `slb_virtual_server`;
+CREATE TABLE IF NOT EXISTS `slb_virtual_server` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `slb_id` bigint(20) NOT NULL DEFAULT '0',
+  `name` varchar(200) NOT NULL DEFAULT '0',
+  `port` varchar(200) NOT NULL DEFAULT '0',
+  `is_ssl` bit(1) NOT NULL DEFAULT b'0',
+  `created_time` timestamp NULL DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT '0' COMMENT 'version',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `DataChange_LastTime` (`DataChange_LastTime`),
-  KEY `slb_id` (`slb_id`),
-  KEY `ip` (`ip`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='relation table of slb and slb server';
+  KEY `idx_DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
 
@@ -1065,6 +1134,67 @@ CREATE TABLE IF NOT EXISTS `task` (
   KEY `DataChange_LastTime` (`DataChange_LastTime`),
   KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='task queue';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table task_execute_record
+DROP TABLE IF EXISTS `task_execute_record`;
+CREATE TABLE IF NOT EXISTS `task_execute_record` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `task_key` varchar(128) NOT NULL DEFAULT 'UNKNOW' COMMENT 'task key',
+  `last_execute_time` bigint(20) NOT NULL DEFAULT '0' COMMENT 'last execute time',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'DataChange_LastTime',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `task_key` (`task_key`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='task_execute_record';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table user
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE IF NOT EXISTS `user` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `name` varchar(128) NOT NULL DEFAULT 'unknow' COMMENT 'name',
+  `email` varchar(128) DEFAULT 'unknow' COMMENT 'email',
+  `bu` varchar(128) DEFAULT 'unknow' COMMENT 'bu',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'DataChange_LastTime',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='user';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table user_resource
+DROP TABLE IF EXISTS `user_resource`;
+CREATE TABLE IF NOT EXISTS `user_resource` (
+  `user_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'u',
+  `type` varchar(128) NOT NULL DEFAULT 'unknow' COMMENT 't',
+  `data_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'r',
+  `operation` varchar(2048) NOT NULL DEFAULT '0',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'DataChange_LastTime',
+  UNIQUE KEY `user_id_type_data_id` (`user_id`,`type`,`data_id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `user_id` (`user_id`),
+  KEY `user_id_type` (`user_id`,`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='user_resource';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table user_role
+DROP TABLE IF EXISTS `user_role`;
+CREATE TABLE IF NOT EXISTS `user_role` (
+  `user_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'u',
+  `role_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'r',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'DataChange_LastTime',
+  UNIQUE KEY `user_id_role_id` (`user_id`,`role_id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='user_role';
 
 -- Data exporting was unselected.
 

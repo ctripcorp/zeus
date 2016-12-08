@@ -146,7 +146,7 @@ public class CertificateResource {
         }
         List<String> installingIps = null;
 
-        boolean greyscaledRequired = (greyscale != null && greyscale) || greyscaleIps != null;
+        boolean greyscaledRequired = (greyscale != null && greyscale) || (greyscaleIps != null && greyscaleIps.size() > 0);
         if (greyscaledRequired) {
             if (greyscale == null) {
                 throw new ValidationException("Query param greyscale=true is required for greyscale upgrading certificate.");

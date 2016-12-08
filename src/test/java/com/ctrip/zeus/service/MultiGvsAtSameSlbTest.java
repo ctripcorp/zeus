@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service;
 
 import com.ctrip.zeus.AbstractServerTest;
+import com.ctrip.zeus.commit.entity.ConfSlbVersion;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.nginx.entity.ConfFile;
@@ -10,6 +11,7 @@ import com.ctrip.zeus.nginx.entity.Vhosts;
 import com.ctrip.zeus.nginx.transform.DefaultJsonParser;
 import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.build.NginxConfService;
+import com.ctrip.zeus.service.version.ConfVersionService;
 import com.ctrip.zeus.support.GenericSerializer;
 import com.ctrip.zeus.util.CompressUtils;
 import com.google.common.collect.Lists;
@@ -17,10 +19,8 @@ import com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -51,11 +51,13 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
     private BuildService buildService;
     @Resource
     private NginxConfService nginxConfService;
+    @Resource
+    private ConfVersionService confVersionService;
 
     private static boolean inited = false;
 
     @Before
-    public void setCurrentVersion() throws DalException, IOException {
+    public void setCurrentVersion() throws Exception {
         if (inited) return;
         buildInfoDao.insert(new BuildInfoDo().setSlbId(1L).setPendingTicket(2).setCurrentTicket(1));
         nginxConfDao.insert(new NginxConfDo().setSlbId(1L).setVersion(1).setContent("nginx.conf"));
@@ -79,6 +81,7 @@ public class MultiGvsAtSameSlbTest extends AbstractServerTest {
 
         nginxConfSlbDao.insert(new NginxConfSlbDo().setSlbId(1L).setVersion(1)
                 .setContent(CompressUtils.compress(GenericSerializer.writeJson(currentConf))));
+        confVersionService.addConfSlbVersion(new ConfSlbVersion().setSlbId(1L).setCurrentVersion(1L).setPreviousVersion(0L));
         inited = true;
     }
 
