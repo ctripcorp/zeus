@@ -91,7 +91,7 @@ public class LocationConf {
                 // write proxy configuration
                 if (configHandler.getEnable("default.server.http.version.2", slbId, null, null, false)
                         || configHandler.getEnable("http.version.2", slbId, null, null, false)) {
-                    confWriter.writeCommand("proxy_request_buffering", "on");
+//                    confWriter.writeCommand("proxy_request_buffering", "on");
                 } else if (configHandler.getEnable("proxy.request.buffering.off", slbId, vsId, groupId, true)){
                     confWriter.writeCommand("proxy_request_buffering", "off");
                 }
