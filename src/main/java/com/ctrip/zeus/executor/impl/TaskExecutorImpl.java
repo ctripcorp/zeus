@@ -427,7 +427,9 @@ public class TaskExecutorImpl implements TaskExecutor {
                 Long vsId = gvs.getVirtualServer().getId();
 
                 if (buildingGroupRequired) {
-                    buildingVsIds.add(vsId);
+                    if (!buildingVsIds.contains(vsId)) {
+                        buildingVsIds.add(vsId);
+                    }
                 }
 
                 if (deactivateGroupOps.containsKey(groupId)
