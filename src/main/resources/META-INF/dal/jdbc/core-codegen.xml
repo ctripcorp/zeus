@@ -498,7 +498,7 @@
     <member name="version" field="version" value-type="long" length="19" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" />
     <member name="vs-ids" field="vs_ids" value-type="String" length="4096" />
-    <member name="group-ids" field="group_ids" value-type="String" length="4096" />
+    <member name="group-ids" field="group_ids" value-type="String" length="10240" />
     <member name="task-ids" field="task_ids" value-type="String" length="4096" />
     <member name="cleanvs-ids" field="cleanvs_ids" value-type="String" length="4096" />
     <member name="type" field="type" value-type="String" length="45" />
@@ -1515,6 +1515,11 @@
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <index name="idx_datetime" members="datetime ASC" />
     <index name="type_target_id_operation_user_name_client_ip_datetime_success" members="type ASC, target_id ASC, operation ASC, user_name ASC, client_ip ASC, datetime ASC, success ASC" />
+    <index name="target_id" members="target_id ASC" />
+    <index name="operation" members="operation ASC" />
+    <index name="user_name" members="user_name ASC" />
+    <index name="client_ip" members="client_ip ASC" />
+    <index name="success" members="success ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>
@@ -2419,6 +2424,46 @@
     <primary-key name="PRIMARY" members="id" />
     <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <index name="idx_group_id" members="group_id ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
+  <entity name="status-check-count-slb" table="status_check_count_slb" alias="sccs">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="slb-id" field="slb_id" value-type="long" length="19" nullable="false" />
+    <member name="count" field="count" value-type="int" length="10" nullable="false" />
+    <member name="data-set" field="data_set" value-type="String" length="255" nullable="false" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="slb_id" unique="true" members="slb_id ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

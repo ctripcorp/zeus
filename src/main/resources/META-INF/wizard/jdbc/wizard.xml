@@ -74,6 +74,7 @@
          <table name="default_page_active"/>
          <table name="default_page_file"/>
          <table name="default_page_server_active"/>
+         <table name="status_check_count_slb"/>
       </group>
    </jdbc>
 </wizard>

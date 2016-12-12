@@ -252,7 +252,7 @@
         </query-defs>
     </entity>
     <entity name="status-health-check" table="status_health_check" alias="sas" do-class="StatusHealthCheckDo">
-         <var name="names" value-type="String[]"/>
+        <var name="names" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
@@ -306,6 +306,79 @@
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='data-change-last-time'/> < ${data-change-last-time}
                     LIMIT 1000
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="status-check-count-slb" table="status_check_count_slb" alias="sccs" do-class="StatusCheckCountSlbDo">
+        <readsets>
+            <readset name="DATASET_EXCLUDED">
+                <member name="id"/>
+                <member name="slb-id"/>
+                <member name="count"/>
+                <member name="data-change-last-time"/>
+            </readset>
+        </readsets>
+        <var name="num" value-type="Integer"/>
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> IN <IN>${ids}<IN/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert" type="INSERT" batch="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="update" type="UPDATE" batch="true">
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET count = values(count),
+                        data_set = ${data-set}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                      AND <FIELD name='data-change-last-time'/> <= ${data-change-last-time}
+                    ]]>
+                </statement>
+            </query>
+            <query name="count-increment" type="UPDATE" batch="true">
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET count = count + ${num},
+                        data_set = ${data-set}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                      AND <FIELD name='data-change-last-time'/> <= ${data-change-last-time}
+                    ]]>
+                </statement>
+            </query>
+            <query name="count-decrement" type="UPDATE" batch="true">
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET count = count - ${num},
+                        data_set = ${data-set}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                      AND <FIELD name='data-change-last-time'/> <= ${data-change-last-time}
                     ]]>
                 </statement>
             </query>

@@ -4,6 +4,8 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.dal.core.GlobalJobDao;
 import com.ctrip.zeus.dal.core.GlobalJobDo;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.model.entity.SlbGroupCheckFailureEntity;
+import com.ctrip.zeus.model.entity.SlbGroupCheckFailureEntityList;
 import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
@@ -15,6 +17,8 @@ import com.ctrip.zeus.service.query.QueryEngine;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.GroupStatusList;
+import com.ctrip.zeus.task.check.SlbCheckStatusRollingMachine;
+import com.ctrip.zeus.util.CircularArray;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -26,6 +30,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.*;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -46,6 +51,8 @@ public class StatusResource {
     private GlobalJobDao globalJobDao;
     @Resource
     private CriteriaQueryFactory criteriaQueryFactory;
+    @Resource
+    private SlbCheckStatusRollingMachine slbCheckStatusRollingMachine;
 
     @GET
     @Path("/groups")
@@ -94,6 +101,38 @@ public class StatusResource {
             throw new ValidationException("Not Found Group Status In Slb!");
         }
         return responseHandler.handle(status, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/check/slb")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getSingleSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                              @QueryParam("slbId") Long slbId) throws Exception {
+        CircularArray<Integer> count = slbCheckStatusRollingMachine.getCheckFailureCount(slbId);
+        if (count == null) {
+            throw new ValidationException("Cannot find check result count of slb " + slbId + ".");
+        }
+        SlbGroupCheckFailureEntity entity = new SlbGroupCheckFailureEntity().setSlbId(slbId);
+        for (Integer c : count) {
+            entity.addFailureCount(c);
+        }
+        return responseHandler.handle(entity, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/check/slbs")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh) throws Exception {
+        SlbGroupCheckFailureEntityList list = new SlbGroupCheckFailureEntityList();
+        for (Map.Entry<Long, CircularArray<Integer>> e : slbCheckStatusRollingMachine.getCheckFailureCount().entrySet()) {
+            SlbGroupCheckFailureEntity entity = new SlbGroupCheckFailureEntity().setSlbId(e.getKey());
+            for (Integer c : e.getValue()) {
+                entity.addFailureCount(c);
+            }
+            list.addSlbGroupCheckFailureEntity(entity);
+        }
+        list.setTotal(list.getSlbGroupCheckFailureEntities().size());
+        return responseHandler.handle(list, hh.getMediaType());
     }
 
     @GET

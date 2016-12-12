@@ -123,6 +123,19 @@
         <version>1</version>
     </archive>
 
+    <slb-group-check-failure-entity-list>
+        <total>3</total>
+        <slb-group-check-failure-entity/>
+        <slb-group-check-failure-entity/>
+        <slb-group-check-failure-entity/>
+    </slb-group-check-failure-entity-list>
+    <slb-group-check-failure-entity>
+        <slb-id>12345678912</slb-id>
+        <failure-count>1</failure-count>
+        <failure-count>2</failure-count>
+        <failure-count>3</failure-count>
+    </slb-group-check-failure-entity>
+
     <member-action>
         <group-name>group002</group-name>
         <ip>192.68.1</ip>
