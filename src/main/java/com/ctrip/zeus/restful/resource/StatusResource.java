@@ -136,6 +136,19 @@ public class StatusResource {
     }
 
     @GET
+    @Path("/check/refresh")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                        @QueryParam("slbId") Long slbId) throws Exception {
+        if (slbId == null) {
+            throw new ValidationException("Query param slbId is required.");
+        }
+        List<GroupStatus> groupStatuses = groupStatusService.getOfflineGroupsStatusBySlbId(slbId);
+        slbCheckStatusRollingMachine.refresh(slbId, groupStatuses);
+        return responseHandler.handle("Successfully refreshed slb check count data.", hh.getMediaType());
+    }
+
+    @GET
     @Path("/job/unlock")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response jobUnlock(@Context HttpServletRequest request, @Context HttpHeaders hh,

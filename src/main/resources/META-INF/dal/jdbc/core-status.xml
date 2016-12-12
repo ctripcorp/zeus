@@ -341,11 +341,14 @@
                     ]]>
                 </statement>
             </query>
-            <query name="insert" type="INSERT" batch="true">
+            <query name="insert-or-update" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
+                    ON DUPLICATE KEY UPDATE
+                        count = values(count),
+                        data_set = ${data-set}
                     ]]>
                 </statement>
             </query>
@@ -356,7 +359,6 @@
                     SET count = values(count),
                         data_set = ${data-set}
                     WHERE <FIELD name='slb-id'/> = ${slb-id}
-                      AND <FIELD name='data-change-last-time'/> <= ${data-change-last-time}
                     ]]>
                 </statement>
             </query>
@@ -367,7 +369,6 @@
                     SET count = count + ${num},
                         data_set = ${data-set}
                     WHERE <FIELD name='slb-id'/> = ${slb-id}
-                      AND <FIELD name='data-change-last-time'/> <= ${data-change-last-time}
                     ]]>
                 </statement>
             </query>
@@ -378,7 +379,6 @@
                     SET count = count - ${num},
                         data_set = ${data-set}
                     WHERE <FIELD name='slb-id'/> = ${slb-id}
-                      AND <FIELD name='data-change-last-time'/> <= ${data-change-last-time}
                     ]]>
                 </statement>
             </query>
