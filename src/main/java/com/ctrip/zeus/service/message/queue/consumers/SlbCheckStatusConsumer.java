@@ -4,7 +4,6 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.queue.entity.*;
-import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.message.queue.AbstractConsumer;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
@@ -34,8 +33,6 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
     @Resource
     private GroupStatusService groupStatusService;
     @Resource
-    private ConfigHandler configHandler;
-    @Resource
     private ArchiveRepository archiveRepository;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
@@ -48,12 +45,7 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
 
     @PostConstruct
     public void init() {
-        try {
-            if (configHandler.getEnable("message.queue", null, null, null, true)) {
-                slbCheckStatusRollingMachine.enable(true);
-            }
-        } catch (Exception e) {
-        }
+        slbCheckStatusRollingMachine.enable(true, this);
     }
 
     @Override
@@ -186,6 +178,16 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
             }
         } catch (Exception e) {
             logger.error("Fail to get offline groups status of groups " + Joiner.on(",").join(groupIds) + ".");
+        }
+    }
+
+    public void refresh(Set<Long> slbIds) {
+        for (Long slbId : slbIds) {
+            try {
+                slbCheckStatusRollingMachine.refresh(slbId, groupStatusService.getOfflineGroupsStatusBySlbId(slbId));
+            } catch (Exception e) {
+                logger.error("Fail to get offline groups status by slb " + slbId + ".");
+            }
         }
     }
 }

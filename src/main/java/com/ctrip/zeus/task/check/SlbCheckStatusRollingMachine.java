@@ -4,12 +4,14 @@ package com.ctrip.zeus.task.check;
 import com.ctrip.zeus.dal.core.StatusCheckCountSlbDao;
 import com.ctrip.zeus.dal.core.StatusCheckCountSlbDo;
 import com.ctrip.zeus.dal.core.StatusCheckCountSlbEntity;
+import com.ctrip.zeus.service.message.queue.consumers.SlbCheckStatusConsumer;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.task.AbstractTask;
 import com.ctrip.zeus.util.CircularArray;
 import com.ctrip.zeus.util.CompressUtils;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -33,6 +35,8 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
     private final Map<Long, CircularArray<Integer>> slbCheckFailureRollingCounter = new HashMap<>();
     private final Map<Long, DataSetTimeWrapper> groupCacheBySlb = new HashMap<>();
 
+    private SlbCheckStatusConsumer master;
+
     private final int bitmask;
     private final int failureId;
 
@@ -42,7 +46,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
     private boolean enabled;
 
     public SlbCheckStatusRollingMachine() {
-        this(0x000F, HC, false);
+        this(0x1, HC, false);
     }
 
     public SlbCheckStatusRollingMachine(int bitmask, int failureId, boolean enabled) {
@@ -54,7 +58,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
     private void init() throws Exception {
         slbCheckFailureRollingCounter.clear();
         for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAll(StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED)) {
-            CircularArray<Integer> v = new CircularArray<>(10);
+            CircularArray<Integer> v = new CircularArray<>(10, Integer.class);
             slbCheckFailureRollingCounter.put(e.getSlbId(), v);
             v.add(e.getCount());
         }
@@ -65,16 +69,35 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         return 10000;
     }
 
-    public CircularArray<Integer> getCheckFailureCount(Long slbId) {
-        return slbCheckFailureRollingCounter.get(slbId);
+    public List<Integer> getCheckFailureCount(Long slbId) {
+        CircularArray<Integer> values = slbCheckFailureRollingCounter.get(slbId);
+        if (values == null)
+            return new ArrayList<>();
+        ArrayList<Integer> result = Lists.newArrayList(slbCheckFailureRollingCounter.get(slbId).getAll());
+        try {
+            StatusCheckCountSlbDo d = statusCheckCountSlbDao.findBySlb(slbId, StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED);
+            result.add(d.getCount());
+        } catch (DalException e) {
+        }
+        return result;
     }
 
-    public Map<Long, CircularArray<Integer>> getCheckFailureCount() {
-        return slbCheckFailureRollingCounter;
+    public Map<Long, List<Integer>> getCheckFailureCount() {
+        Map<Long, List<Integer>> result = new HashMap<>();
+        try {
+            for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAll(StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED)) {
+                ArrayList<Integer> v = Lists.newArrayList(slbCheckFailureRollingCounter.get(e.getSlbId()).getAll());
+                result.put(e.getSlbId(), v);
+                v.add(e.getCount());
+            }
+        } catch (DalException e) {
+        }
+        return result;
     }
 
-    public void enable(boolean flag) {
+    public void enable(boolean flag, SlbCheckStatusConsumer master) {
         this.enabled = flag;
+        this.master = master;
     }
 
     @Override
@@ -100,7 +123,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAll(StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED)) {
             CircularArray<Integer> v = slbCheckFailureRollingCounter.get(e.getSlbId());
             if (v == null) {
-                v = new CircularArray<>(10);
+                v = new CircularArray<>(10, Integer.class);
                 slbCheckFailureRollingCounter.put(e.getSlbId(), v);
             }
             v.add(e.getCount());
@@ -113,10 +136,10 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
     }
 
     protected int bitwiseStatus(GroupServerStatus ss) {
-        int val3 = ss.getPull() ? 0 : 1;
-        int val2 = ss.getServer() ? 0 : 1;
-        int val1 = ss.getMember() ? 0 : 1;
-        int val0 = ss.getHealthy() ? 0 : 1;
+        int val3 = ss.getPull() ? 1 : 0;
+        int val2 = ss.getServer() ? 1 : 0;
+        int val1 = ss.getMember() ? 1 : 0;
+        int val0 = ss.getHealthy() ? 1 : 0;
         return val0 | (val1 << 1) | (val2 << 2) | (val3 << 3);
     }
 
@@ -143,7 +166,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         }
         try {
             List<StatusCheckCountSlbDo> toUpdate = new ArrayList<>();
-            updateIfExpired(tmpGroupCache.keySet(), groupCacheBySlb);
+            updateIfExpired(tmpGroupCache.keySet());
             for (Long slbId : tmpGroupCache.keySet()) {
                 DataSetTimeWrapper v = groupCacheBySlb.get(slbId);
                 Set<Long> dataSet = v.unmodifiableDataSet();
@@ -156,12 +179,12 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
                 if (!dataSet.equals(v.groupIds)) {
                     tmpGroupCache.put(slbId, dataSet);
                     toUpdate.add(new StatusCheckCountSlbDo().setSlbId(slbId).setCount(dataSet.size())
-                            .setDataSet(new String(CompressUtils.compress(Joiner.on(",").join(dataSet)))));
+                            .setDataSet(dataSetStringify(dataSet)));
                 }
             }
 
 
-            statusCheckCountSlbDao.update((StatusCheckCountSlbDo[]) toUpdate.toArray(), StatusCheckCountSlbEntity.UPDATESET_FULL);
+            statusCheckCountSlbDao.update(toUpdate.toArray(new StatusCheckCountSlbDo[toUpdate.size()]), StatusCheckCountSlbEntity.UPDATESET_FULL);
             for (StatusCheckCountSlbDo e : toUpdate) {
                 groupCacheBySlb.get(e.getSlbId()).update(tmpGroupCache.get(e.getSlbId()));
             }
@@ -184,7 +207,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         }
 
         try {
-            updateIfExpired(slbIds, groupCacheBySlb);
+            updateIfExpired(slbIds);
             for (Long slbId : slbIds) {
                 DataSetTimeWrapper v = groupCacheBySlb.get(slbId);
                 Set<Long> dataSet = v.unmodifiableDataSet();
@@ -192,11 +215,11 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
 
                 if (failed && dataSet.add(groupId)) {
                     statusCheckCountSlbDao.countIncrement(new StatusCheckCountSlbDo().setSlbId(slbId).setNum(1)
-                            .setDataSet(new String(CompressUtils.compress(Joiner.on(",").join(dataSet)))), StatusCheckCountSlbEntity.UPDATESET_FULL);
+                            .setDataSet(dataSetStringify(dataSet)), StatusCheckCountSlbEntity.UPDATESET_FULL);
                 }
                 if (!failed && dataSet.remove(groupId)) {
                     statusCheckCountSlbDao.countDecrement(new StatusCheckCountSlbDo().setSlbId(slbId).setNum(1)
-                            .setDataSet(new String(CompressUtils.compress(Joiner.on(",").join(dataSet)))), StatusCheckCountSlbEntity.UPDATESET_FULL);
+                            .setDataSet(dataSetStringify(dataSet)), StatusCheckCountSlbEntity.UPDATESET_FULL);
                 }
                 v.update(dataSet);
             }
@@ -207,9 +230,13 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         }
     }
 
+    protected String dataSetStringify(Set<Long> dataSet) throws IOException {
+        return CompressUtils.compressToGzippedBase64String(Joiner.on(",").join(dataSet));
+    }
+
     public void clear(Set<Long> slbIds, Long groupId) {
         try {
-            updateIfExpired(slbIds, groupCacheBySlb);
+            updateIfExpired(slbIds);
             for (Long slbId : slbIds) {
                 DataSetTimeWrapper v = groupCacheBySlb.get(slbId);
                 Set<Long> dataSet = v.unmodifiableDataSet();
@@ -217,7 +244,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
 
                 if (dataSet.remove(groupId)) {
                     statusCheckCountSlbDao.countDecrement(new StatusCheckCountSlbDo().setSlbId(slbId).setNum(1)
-                            .setDataSet(new String(CompressUtils.compress(Joiner.on(",").join(dataSet)))), StatusCheckCountSlbEntity.UPDATESET_FULL);
+                            .setDataSet(dataSetStringify(dataSet)), StatusCheckCountSlbEntity.UPDATESET_FULL);
                     v.update(dataSet);
                 }
             }
@@ -228,32 +255,34 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         }
     }
 
-    private void updateIfExpired(Set<Long> slbIds, Map<Long, DataSetTimeWrapper> cache) {
+    protected void updateIfExpired(Set<Long> slbIds) {
         List<Long> expired = new ArrayList<>();
         try {
-            for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAllBySlb(slbIds.toArray((Long[]) slbIds.toArray()), StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED)) {
-                DataSetTimeWrapper v = cache.get(e.getSlbId());
-                if (v == null) expired.add(e.getSlbId());
+            for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAllBySlb(slbIds.toArray(slbIds.toArray(new Long[slbIds.size()])), StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED)) {
+                DataSetTimeWrapper v = groupCacheBySlb.get(e.getSlbId());
+                if (v == null) {
+                    expired.add(e.getSlbId());
+                    continue;
+                }
                 if (e.getDataChangeLastTime().compareTo(v.timestamp) > 0) expired.add(e.getSlbId());
             }
 
-            for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAllBySlb((Long[]) expired.toArray(), StatusCheckCountSlbEntity.READSET_FULL)) {
+            for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAllBySlb(expired.toArray(expired.toArray(new Long[expired.size()])), StatusCheckCountSlbEntity.READSET_FULL)) {
                 Set<Long> groupSet = new HashSet<>();
                 if (e.getDataSet() != null) {
-                    String dataset = new String(CompressUtils.decompress(e.getDataSet().getBytes()));
-                    for (String s : dataset.split(",")) {
-                        groupSet.add(Long.parseLong(s));
+                    String dataset = CompressUtils.decompressGzippedBase64String(e.getDataSet());
+                    if (!dataset.isEmpty()) {
+                        for (String s : dataset.split(",")) {
+                            groupSet.add(Long.parseLong(s));
+                        }
                     }
                 }
-                cache.put(e.getSlbId(), new DataSetTimeWrapper(groupSet, e.getDataChangeLastTime()));
+                groupCacheBySlb.put(e.getSlbId(), new DataSetTimeWrapper(groupSet, e.getDataChangeLastTime()));
             }
 
-            if (!cache.keySet().containsAll(slbIds)) {
+            if (!groupCacheBySlb.keySet().containsAll(slbIds)) {
                 HashSet<Long> diff = new HashSet<>(slbIds);
-                diff.removeAll(cache.keySet());
-                for (Long slbId : diff) {
-                    refresh(slbId, new ArrayList<GroupStatus>());
-                }
+                master.refresh(diff);
             }
         } catch (DalException e) {
         } catch (IOException e) {
@@ -272,7 +301,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
             }
         }
         statusCheckCountSlbDao.insertOrUpdate(new StatusCheckCountSlbDo().setSlbId(slbId).setCount(failureGroupIds.size())
-                .setDataSet(new String(CompressUtils.compress(Joiner.on(",").join(failureGroupIds)))));
+                .setDataSet(dataSetStringify(failureGroupIds)));
         groupCacheBySlb.put(slbId, new DataSetTimeWrapper(failureGroupIds, new Date()));
     }
 

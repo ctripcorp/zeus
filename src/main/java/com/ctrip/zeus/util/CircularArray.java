@@ -8,13 +8,14 @@ import java.util.*;
  */
 public class CircularArray<T> implements Iterable<T> {
     private final LinkedList<T> buckets;
+    private final Class<T> tClass;
     private final int length;
     private T lastEntry;
-    private Map<String, Long[]> lastReqStatus;
 
-    public CircularArray(int length) {
+    public CircularArray(int length, Class<T> tClass) {
         buckets = new LinkedList<>();
         this.length = length + 1;
+        this.tClass = tClass;
     }
 
     public void add(T entry) {
@@ -26,7 +27,15 @@ public class CircularArray<T> implements Iterable<T> {
     }
 
     public T[] getAll() {
-        return (T[]) Array.newInstance(buckets.getClass().getComponentType(), length);
+        T[] result = (T[]) Array.newInstance(tClass, length);
+        int i = 0;
+        Iterator<T> iter = buckets.iterator();
+        while (iter.hasNext() && i < result.length) {
+            T e = iter.next();
+            result[i] = e;
+            i++;
+        }
+        return result;
     }
 
     public int size() {

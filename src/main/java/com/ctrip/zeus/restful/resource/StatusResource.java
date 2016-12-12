@@ -108,7 +108,7 @@ public class StatusResource {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getSingleSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh,
                                               @QueryParam("slbId") Long slbId) throws Exception {
-        CircularArray<Integer> count = slbCheckStatusRollingMachine.getCheckFailureCount(slbId);
+        List<Integer> count = slbCheckStatusRollingMachine.getCheckFailureCount(slbId);
         if (count == null) {
             throw new ValidationException("Cannot find check result count of slb " + slbId + ".");
         }
@@ -124,7 +124,7 @@ public class StatusResource {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh) throws Exception {
         SlbGroupCheckFailureEntityList list = new SlbGroupCheckFailureEntityList();
-        for (Map.Entry<Long, CircularArray<Integer>> e : slbCheckStatusRollingMachine.getCheckFailureCount().entrySet()) {
+        for (Map.Entry<Long, List<Integer>> e : slbCheckStatusRollingMachine.getCheckFailureCount().entrySet()) {
             SlbGroupCheckFailureEntity entity = new SlbGroupCheckFailureEntity().setSlbId(e.getKey());
             for (Integer c : e.getValue()) {
                 entity.addFailureCount(c);

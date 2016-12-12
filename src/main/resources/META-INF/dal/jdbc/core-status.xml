@@ -331,13 +331,23 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-slb" type="SELECT">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all-by-slb" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
-                    WHERE <FIELD name='slb-id'/> IN <IN>${ids}<IN/>
+                    WHERE <FIELD name='slb-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>
@@ -347,7 +357,7 @@
                     INSERT INTO <TABLE/>(<FIELDS/>)
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
-                        count = values(count),
+                        count = ${count},
                         data_set = ${data-set}
                     ]]>
                 </statement>
@@ -356,7 +366,7 @@
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET count = values(count),
+                    SET count = ${count},
                         data_set = ${data-set}
                     WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
