@@ -52,7 +52,10 @@ public class NginxConf {
         confWriter.writeCommand("check_shm_size", configHandler.getStringValue("checkShmSize", slbId, null, null, "32") + "M");
         confWriter.writeCommand("client_max_body_size", "2m");
         confWriter.writeCommand("ignore_invalid_headers", "off");
-        if (configHandler.getEnable("proxy.request.buffering.nginx.conf.off", slbId, null, null, false)) {
+        if (configHandler.getEnable("default.server.http.version.2", slbId, null, null, false)
+                || configHandler.getEnable("http.version.2", slbId, null, null, false)) {
+            //nothing
+        } else if (configHandler.getEnable("proxy.request.buffering.nginx.conf.off", slbId, null, null, false)) {
             confWriter.writeCommand("proxy_request_buffering", "off");
         }
 
