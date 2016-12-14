@@ -55,8 +55,6 @@ public class OperationLogResource {
             toDate = sdf.parse(to);
         }
         OperationLogDataList result = operationLogService.find(type,targetId,op,user,clientIp,success,fromDate,toDate,count);
-        String a = String.format(OperationLogDataList.JSON,result);
-        System.out.print(a);
         return responseHandler.handle(result,hh.getMediaType());
     }
 }
