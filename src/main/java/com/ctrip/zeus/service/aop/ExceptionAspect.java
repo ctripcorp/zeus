@@ -96,12 +96,18 @@ public class ExceptionAspect implements Ordered {
         if (!SendMessage.get()) {
             return;
         }
+
+        String msg = message;
+        if (message.length() > 512){
+            msg = message.substring(0,512);
+        }
+
         HttpServletRequest request = findRequestArg(point);
         SlbMessageData res = new SlbMessageData();
         res.setQuery(request.getQueryString())
                 .setUri(request.getRequestURI())
                 .setSuccess(false)
-                .setErrorMessage(message)
+                .setErrorMessage(msg)
                 .setClientIp(MessageUtil.getClientIP(request));
         Long id = 0L;
         if (request.getMethod().equalsIgnoreCase("POST")) {
