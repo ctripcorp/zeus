@@ -7,6 +7,7 @@ import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.task.AbstractTask;
 import com.ctrip.zeus.util.CircularArray;
 import com.google.common.base.Joiner;
+import jersey.repackaged.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -33,7 +34,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
     private final int bitmask;
     private final int failureId;
 
-    private final static int HC = 1;
+    private final static int HC = 0;
 
     private final AtomicBoolean initFlag = new AtomicBoolean(false);
     private boolean enabled;
@@ -48,11 +49,6 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         this.enabled = enabled;
     }
 
-    @Override
-    public long getInterval() {
-        return 10000;
-    }
-
     public CircularArray<Integer> getCheckFailureCount(Long slbId) {
         try {
             StatusCheckCountSlbDo e = statusCheckCountSlbDao.findBySlb(slbId, StatusCheckCountSlbEntity.READSET_FULL);
@@ -63,6 +59,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
                 result.add(Integer.parseInt(s));
             }
             result.add(e.getCount());
+            return result;
         } catch (DalException e) {
             logger.error("Db exception from listing status check count by slb.", e);
         }
@@ -121,13 +118,13 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
             Iterator<StatusCheckCountSlbDo> iter = list.iterator();
             while (iter.hasNext()) {
                 StatusCheckCountSlbDo e = iter.next();
-                if (now - e.getDataChangeLastTime().getTime() >= getInterval()) {
+                if (now - e.getDataSetTimestamp() >= getInterval()) {
                     CircularArray<Integer> data = new CircularArray<>(10, Integer.class);
                     for (String s : e.getDataSet().split(",")) {
                         data.add(Integer.parseInt(s));
                     }
                     data.add(e.getCount());
-                    e.setDataSet(Joiner.on(",").join(data.getAll()));
+                    e.setDataSet(Joiner.on(",").join(data.getAll())).setDataSetTimestamp(now);
                 } else {
                     iter.remove();
                 }
@@ -189,24 +186,30 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
             }
 
             if (affectedSlbIds.size() > 0) {
-                syncSlbCheckCount(affectedSlbIds.toArray(new Long[affectedSlbIds.size()]), 0);
+                syncSlbCheckCount(affectedSlbIds, 0);
             }
         } catch (DalException e) {
             logger.error("Db exception from migrating group status across slbs.", e);
         }
     }
 
-    private void syncSlbCheckCount(Long[] slbIds, int statusValue) throws DalException {
-        StatusCheckCountSlbDo[] checkCounts = new StatusCheckCountSlbDo[slbIds.length];
-        List<StatsGroupSlbDo> countResult = statsGroupSlbDao.countBySlbAndStatus(slbIds, statusValue, StatsGroupSlbEntity.READSET_COUNT);
-        for (int i = 0; i < checkCounts.length; i++) {
+    private void syncSlbCheckCount(Set<Long> slbIds, int statusValue) throws DalException {
+        StatusCheckCountSlbDo[] checkCounts = new StatusCheckCountSlbDo[slbIds.size()];
+        List<StatsGroupSlbDo> countResult = statsGroupSlbDao.countBySlbAndStatus(slbIds.toArray(new Long[slbIds.size()]), statusValue, StatsGroupSlbEntity.READSET_COUNT);
+        int i = 0;
+        for (; i < countResult.size(); i++) {
             StatsGroupSlbDo e = countResult.get(i);
             checkCounts[i] = new StatusCheckCountSlbDo().setSlbId(e.getSlbId()).setCount(e.getCount());
+            slbIds.remove(e.getSlbId());
+        }
+        for (Long slbId : slbIds) {
+            checkCounts[i] = new StatusCheckCountSlbDo().setSlbId(slbId).setCount(0);
+            i++;
         }
         int[] returnedValue = statusCheckCountSlbDao.updateCountBySlb(checkCounts, StatusCheckCountSlbEntity.UPDATESET_FULL);
-        for (int i = 0; i < returnedValue.length; i++) {
-            if (returnedValue[i] == 0) {
-                StatusCheckCountSlbDo e = checkCounts[i];
+        for (int j = 0; j < returnedValue.length; j++) {
+            if (returnedValue[j] == 0) {
+                StatusCheckCountSlbDo e = checkCounts[j];
                 e.setDataSet(e.getCount() + "").setDataSetTimestamp(System.currentTimeMillis());
                 statusCheckCountSlbDao.insert(e);
             }
@@ -219,12 +222,13 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         try {
             List<StatsGroupSlbDo> updateList = statsGroupSlbDao.findAllByGroup(groupId, StatsGroupSlbEntity.READSET_FULL);
             Iterator<StatsGroupSlbDo> iter = updateList.iterator();
-            List<Long> affectingSlbIds = new ArrayList<>();
+            Set<Long> affectingSlbIds = new HashSet<>();
             while (iter.hasNext()) {
                 StatsGroupSlbDo e = iter.next();
                 if (e.getValStatus() == statusValue) {
                     iter.remove();
                 } else {
+                    e.setValStatus(statusValue);
                     affectingSlbIds.add(e.getSlbId());
                 }
             }
@@ -232,7 +236,7 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
                 statsGroupSlbDao.updateStatusById(updateList.toArray(new StatsGroupSlbDo[updateList.size()]), StatsGroupSlbEntity.UPDATESET_FULL);
             }
             if (affectingSlbIds.size() > 0) {
-                syncSlbCheckCount(affectingSlbIds.toArray(new Long[affectingSlbIds.size()]), 0);
+                syncSlbCheckCount(affectingSlbIds, 0);
             }
         } catch (DalException e) {
             logger.error("An unexpected error occurred when updating group status.", e);
@@ -253,13 +257,13 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
     public void clear(Long groupId) {
         try {
             List<StatsGroupSlbDo> removeList = statsGroupSlbDao.findAllByGroup(groupId, StatsGroupSlbEntity.READSET_FULL);
-            Long[] slbIds = new Long[removeList.size()];
+            Set<Long> slbIds = new HashSet<>(removeList.size());
             for (int i = 0; i < removeList.size(); i++) {
-                slbIds[i] = removeList.get(i).getSlbId();
+                slbIds.add(removeList.get(i).getSlbId());
             }
             statsGroupSlbDao.deleteByGroup(new StatsGroupSlbDo().setGroupId(groupId));
 
-            syncSlbCheckCount(slbIds, 0);
+            syncSlbCheckCount(slbIds, failureId);
         } catch (DalException e) {
             logger.error("An unexpected error occurred when clearing group from slbs.", e);
         }
@@ -278,17 +282,18 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
                 updateList.add(e);
             }
         }
+        statsGroupSlbDao.updateStatusById(updateList.toArray(new StatsGroupSlbDo[updateList.size()]), StatsGroupSlbEntity.UPDATESET_FULL);
 
         if (groupStatusValue.size() > 0) {
             StatsGroupSlbDo[] addList = new StatsGroupSlbDo[groupStatusValue.size()];
             int i = 0;
             for (Map.Entry<Long, Integer> e : groupStatusValue.entrySet()) {
                 addList[i] = new StatsGroupSlbDo().setGroupId(e.getKey()).setSlbId(slbId).setValStatus(e.getValue());
+                i++;
             }
             statsGroupSlbDao.insert(addList);
         }
-        statsGroupSlbDao.updateStatusById(updateList.toArray(new StatsGroupSlbDo[updateList.size()]), StatsGroupSlbEntity.UPDATESET_FULL);
 
-        syncSlbCheckCount(new Long[]{slbId}, 0);
+        syncSlbCheckCount(Sets.newHashSet(slbId), 0);
     }
 }

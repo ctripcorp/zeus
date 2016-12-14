@@ -330,6 +330,7 @@
                     FROM <TABLE/>
                     WHERE <FIELD name='val-status'/> = ${val-status}
                       AND <FIELD name='slb-id'/> IN <IN>${ids}</IN>
+                    GROUP BY slb_id
                     ]]>
                 </statement>
             </query>

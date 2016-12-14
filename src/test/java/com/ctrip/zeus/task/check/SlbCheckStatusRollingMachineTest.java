@@ -44,11 +44,8 @@ public class SlbCheckStatusRollingMachineTest extends AbstractServerTest {
 
         slbCheckStatusRollingMachine.enable(true, new SlbCheckStatusConsumerInjector(data));
 
-        long timestamp = System.currentTimeMillis();
         slbCheckStatusRollingMachine.run();
 
-        Assert.assertTrue(statusCheckCountSlbDao.findBySlb(1L, StatusCheckCountSlbEntity.READSET_FULL).getDataSetTimestamp() < timestamp);
-        Assert.assertTrue(statusCheckCountSlbDao.findBySlb(2L, StatusCheckCountSlbEntity.READSET_FULL).getDataSetTimestamp() > timestamp);
         CircularArray<Integer> c1 = slbCheckStatusRollingMachine.getCheckFailureCount(1L);
         CircularArray<Integer> c2 = slbCheckStatusRollingMachine.getCheckFailureCount(2L);
         Assert.assertEquals(1, c1.getLast().intValue());
@@ -57,12 +54,10 @@ public class SlbCheckStatusRollingMachineTest extends AbstractServerTest {
         //test update rolling counter
         d1.setCount(2).setDataSet("1,1").setDataSetTimestamp(d1.getDataSetTimestamp() - 60000L);
         statusCheckCountSlbDao.updateDataSetById(d1, StatusCheckCountSlbEntity.UPDATESET_FULL);
+        statusCheckCountSlbDao.updateCountBySlb(d1, StatusCheckCountSlbEntity.UPDATESET_FULL);
 
-        timestamp = System.currentTimeMillis();
         slbCheckStatusRollingMachine.run();
 
-        Assert.assertTrue(statusCheckCountSlbDao.findBySlb(1L, StatusCheckCountSlbEntity.READSET_FULL).getDataSetTimestamp() > timestamp);
-        Assert.assertTrue(statusCheckCountSlbDao.findBySlb(2L, StatusCheckCountSlbEntity.READSET_FULL).getDataSetTimestamp() < timestamp);
         c1 = slbCheckStatusRollingMachine.getCheckFailureCount(1L);
         c2 = slbCheckStatusRollingMachine.getCheckFailureCount(2L);
         Assert.assertEquals(2, c1.getAll()[c1.size() - 2].intValue());
@@ -101,10 +96,9 @@ public class SlbCheckStatusRollingMachineTest extends AbstractServerTest {
         }
 
         //test remove
-        CircularArray<Integer> c1 = slbCheckStatusRollingMachine.getCheckFailureCount(1L);
-        int c1Last = c1 == null ? 0 : c1.getLast();
-        slbCheckStatusRollingMachine.migrate(Sets.newHashSet(1L), e);
-        Assert.assertEquals(c1Last + 1, c1.getLast().intValue());
+        slbCheckStatusRollingMachine.migrate(Sets.newHashSet(11L), e);
+        CircularArray<Integer> c11 = slbCheckStatusRollingMachine.getCheckFailureCount(11L);
+        Assert.assertEquals(1, c11.getLast().intValue());
         c3 = slbCheckStatusRollingMachine.getCheckFailureCount(3L);
         c4 = slbCheckStatusRollingMachine.getCheckFailureCount(4L);
         Assert.assertEquals(0, c3.getLast().intValue());
@@ -113,8 +107,8 @@ public class SlbCheckStatusRollingMachineTest extends AbstractServerTest {
         //test inconsistent group status
         e = generateGroupStatus(3L, true);
         slbCheckStatusRollingMachine.migrate(Sets.newHashSet(1L), e);
-        c1 = slbCheckStatusRollingMachine.getCheckFailureCount(1L);
-        Assert.assertEquals(c1Last, c1.getLast().intValue());
+        c11 = slbCheckStatusRollingMachine.getCheckFailureCount(1L);
+        Assert.assertEquals(0, c11.getLast().intValue());
     }
 
     @Test
@@ -124,12 +118,8 @@ public class SlbCheckStatusRollingMachineTest extends AbstractServerTest {
         slbCheckStatusRollingMachine.migrate(Sets.newHashSet(5L, 6L), e);
         slbCheckStatusRollingMachine.migrate(Sets.newHashSet(5L, 6L), generateGroupStatus(6L, false));
 
-        long timestamp = System.currentTimeMillis();
-
         slbCheckStatusRollingMachine.update(e);
 
-        Assert.assertTrue(statusCheckCountSlbDao.findBySlb(5L, StatusCheckCountSlbEntity.READSET_FULL).getDataSetTimestamp() < timestamp);
-        Assert.assertTrue(statusCheckCountSlbDao.findBySlb(6L, StatusCheckCountSlbEntity.READSET_FULL).getDataSetTimestamp() < timestamp);
         CircularArray<Integer> c5 = slbCheckStatusRollingMachine.getCheckFailureCount(5L);
         CircularArray<Integer> c6 = slbCheckStatusRollingMachine.getCheckFailureCount(6L);
         Assert.assertEquals(2, c5.getLast().intValue());
@@ -178,6 +168,13 @@ public class SlbCheckStatusRollingMachineTest extends AbstractServerTest {
                     Assert.assertFalse(true);
                 }
             }
+        }
+
+        @Override
+        public void consistentCheck(Set<Long> slbIds) {
+            Set<Long> tmp = new HashSet<>(data.keySet());
+            tmp.removeAll(slbIds);
+            refresh(tmp);
         }
     }
 

@@ -27,7 +27,7 @@ public class CircularArray<T> implements Iterable<T> {
     }
 
     public T[] getAll() {
-        T[] result = (T[]) Array.newInstance(tClass, length);
+        T[] result = (T[]) Array.newInstance(tClass, buckets.size() < length ? buckets.size() : length);
         int i = 0;
         Iterator<T> iter = buckets.iterator();
         while (iter.hasNext() && i < result.length) {
