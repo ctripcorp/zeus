@@ -244,6 +244,14 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.SnapServerGroupDao"/>
     </bean>
 
+    <bean id="statsGroupSlbDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.StatsGroupSlbDao"/>
+    </bean>
+
+    <bean id="statusCheckCountSlbDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.StatusCheckCountSlbDao"/>
+    </bean>
+
     <bean id="statusGroupServerDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.StatusGroupServerDao"/>
     </bean>

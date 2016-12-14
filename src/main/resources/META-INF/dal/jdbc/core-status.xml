@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
-    <entity name="status-group-server" table="status_group_server" alias="sas" do-class="StatusGroupServerDo">
+    <entity name="status-group-server" table="status_group_server" alias="sgs2" do-class="StatusGroupServerDo">
         <var name="reset" value-type="Integer"/>
         <var name="virtual-server-ids" value-type="Long[]"/>
         <var name="ips" value-type="String[]"/>
@@ -252,7 +252,7 @@
         </query-defs>
     </entity>
     <entity name="status-health-check" table="status_health_check" alias="sas" do-class="StatusHealthCheckDo">
-         <var name="names" value-type="String[]"/>
+        <var name="names" value-type="String[]"/>
         <query-defs>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
@@ -306,6 +306,150 @@
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='data-change-last-time'/> < ${data-change-last-time}
                     LIMIT 1000
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="stats-group-slb" table="stats_group_slb" alias="sgs" do-class="StatsGroupSlbDo">
+        <member name="count" value-type="int" select-expr="COUNT(*)" all="false"/>
+        <readsets>
+            <readset name="COUNT">
+                <member name="slb-id"/>
+                <member name="count"/>
+            </readset>
+        </readsets>
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="count-by-slb-and-status" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="val-status"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='val-status'/> = ${val-status}
+                      AND <FIELD name='slb-id'/> IN <IN>${ids}</IN>
+                    GROUP BY slb_id
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert" type="INSERT" batch="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-status-by-id" type="UPDATE" batch="true">
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='val-status'/> = ${val-status}
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-status-by-group" type="UPDATE" batch="true">
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='val-status'/> = ${val-status}
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-id" type="DELETE" batch="true">
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-group" type="DELETE">
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
+    <entity name="status-check-count-slb" table="status_check_count_slb" alias="sccs" do-class="StatusCheckCountSlbDo">
+        <var name="ids" value-type="Long[]"/>
+        <readsets>
+            <readset name="SLB_ONLY">
+                <member name="slb-id"/>
+            </readset>
+        </readsets>
+        <query-defs>
+            <query name="find-all" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-slb" type="SELECT">
+                <param name="slb-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-slb" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='slb-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-data-set-by-id" type="UPDATE" batch="true">
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET data_set = ${data-set},
+                        data_set_timestamp = ${data-set-timestamp}
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update-count-by-slb" type="UPDATE" batch="true">
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET count = ${count}
+                    WHERE <FIELD name='slb-id'/> = ${slb-id}
                     ]]>
                 </statement>
             </query>

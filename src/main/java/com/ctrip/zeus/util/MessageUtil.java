@@ -8,6 +8,9 @@ import com.ctrip.zeus.queue.entity.SlbData;
 import com.ctrip.zeus.queue.entity.SlbMessageData;
 import com.ctrip.zeus.queue.entity.VsData;
 import com.ctrip.zeus.queue.transform.DefaultJsonParser;
+import com.ctrip.zeus.support.ObjectJsonParser;
+import com.ctrip.zeus.support.ObjectJsonWriter;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +49,19 @@ public class MessageUtil {
                 res.addIp(ip);
             }
         }
-        return String.format(SlbMessageData.JSON, res);
+        try {
+            return ObjectJsonWriter.write(res);
+        } catch (Exception e) {
+            logger.warn("Write Message Data Fail." + res.toString(), e);
+            return null;
+        }
     }
 
     public static SlbMessageData parserSlbMessageData(String res) {
         try {
             if (res == null) return null;
-            return DefaultJsonParser.parse(SlbMessageData.class, res);
-        } catch (IOException e) {
+            return ObjectJsonParser.parse(res, SlbMessageData.class);
+        } catch (Exception e) {
             logger.warn("Parser Slb Message Data Failed. Message:" + res, e);
             return null;
         }

@@ -4,6 +4,8 @@ import com.ctrip.zeus.auth.Authorize;
 import com.ctrip.zeus.dal.core.GlobalJobDao;
 import com.ctrip.zeus.dal.core.GlobalJobDo;
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.model.entity.SlbGroupCheckFailureEntity;
+import com.ctrip.zeus.model.entity.SlbGroupCheckFailureEntityList;
 import com.ctrip.zeus.restful.message.QueryParamRender;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
@@ -12,9 +14,12 @@ import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.query.CriteriaQueryFactory;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.QueryEngine;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.GroupStatusList;
+import com.ctrip.zeus.task.check.SlbCheckStatusRollingMachine;
+import com.ctrip.zeus.util.CircularArray;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -26,6 +31,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.*;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -41,11 +47,15 @@ public class StatusResource {
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
+    @Resource
     private ResponseHandler responseHandler;
     @Resource
     private GlobalJobDao globalJobDao;
     @Resource
     private CriteriaQueryFactory criteriaQueryFactory;
+    @Resource
+    private SlbCheckStatusRollingMachine slbCheckStatusRollingMachine;
 
     @GET
     @Path("/groups")
@@ -94,6 +104,47 @@ public class StatusResource {
             throw new ValidationException("Not Found Group Status In Slb!");
         }
         return responseHandler.handle(status, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/check/slbs")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                        @QueryParam("slbId") String slbId) throws Exception {
+        SlbGroupCheckFailureEntityList list = new SlbGroupCheckFailureEntityList();
+        Set<Long> slbIds = new HashSet<>();
+        if (slbId == null) {
+            for (IdVersion e : slbCriteriaQuery.queryAll(SelectionMode.OFFLINE_FIRST)) {
+                slbIds.add(e.getId());
+            }
+        } else {
+            for (String s : slbId.split(",")) {
+                slbIds.add(Long.parseLong(s));
+            }
+        }
+
+        for (Map.Entry<Long, CircularArray<Integer>> e : slbCheckStatusRollingMachine.getCheckFailureCount(slbIds).entrySet()) {
+            SlbGroupCheckFailureEntity entity = new SlbGroupCheckFailureEntity().setSlbId(e.getKey());
+            for (Integer c : e.getValue()) {
+                entity.addFailureCount(c);
+            }
+            list.addSlbGroupCheckFailureEntity(entity);
+        }
+        list.setTotal(list.getSlbGroupCheckFailureEntities().size());
+        return responseHandler.handle(list, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/check/refresh")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response getSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                        @QueryParam("slbId") Long slbId) throws Exception {
+        if (slbId == null) {
+            throw new ValidationException("Query param slbId is required.");
+        }
+        List<GroupStatus> groupStatuses = groupStatusService.getOfflineGroupsStatusBySlbId(slbId);
+        slbCheckStatusRollingMachine.refresh(slbId, groupStatuses);
+        return responseHandler.handle("Successfully refreshed slb check count data.", hh.getMediaType());
     }
 
     @GET

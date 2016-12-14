@@ -305,7 +305,7 @@ public class MessageQueueImpl implements MessageQueue {
                     return;
                 }
                 try {
-                    if (configHandler.getEnable("message.queue", null, null, null, false)) {
+                    if (configHandler.getEnable("message.queue", null, null, null, true)) {
                         fetchMessage();
                     }
                 } catch (Throwable e) {
