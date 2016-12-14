@@ -2,18 +2,17 @@ package com.ctrip.zeus.service.message.queue.consumers;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.queue.entity.*;
 import com.ctrip.zeus.service.message.queue.AbstractConsumer;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.task.check.SlbCheckStatusRollingMachine;
 import com.ctrip.zeus.util.MessageUtil;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,13 +32,11 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
     @Resource
     private GroupStatusService groupStatusService;
     @Resource
-    private ArchiveRepository archiveRepository;
-    @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
-    private VirtualServerRepository virtualServerRepository;
-    @Resource
     private GroupRepository groupRepository;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
 
     private static Logger logger = LoggerFactory.getLogger(SlbCheckStatusConsumer.class);
 
@@ -54,13 +51,7 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
             if (m.getTargetId() != null && m.getTargetId() > 0L) {
                 Long groupId = m.getTargetId();
                 try {
-                    Group g = groupRepository.getById(groupId);
-                    Set<Long> slbIds = new HashSet<>();
-                    for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
-                        slbIds.addAll(gvs.getVirtualServer().getSlbIds());
-                    }
-                    GroupStatus groupStatus = groupStatusService.getOfflineGroupStatus(groupId);
-                    slbCheckStatusRollingMachine.update(slbIds, groupStatus);
+                    migrateGroup(groupId, groupStatusService.getOfflineGroupStatus(groupId));
                 } catch (Exception e) {
                     logger.error("Fail to get offline group status of group " + groupId + ".");
                 }
@@ -73,41 +64,21 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
         for (Message m : messages) {
             SlbMessageData d = MessageUtil.parserSlbMessageData(m.getTargetData());
             if (d != null && d.getSuccess()) {
-                GroupData g = d.getGroupDatas().get(0);
+                Long groupId = m.getTargetId();
                 try {
-                    Group curr = archiveRepository.getGroupArchive(g.getId(), g.getVersion());
-                    Group prev = archiveRepository.getGroupArchive(g.getId(), g.getVersion() - 1);
-
-                    Long[] currVsIds = new Long[curr.getGroupVirtualServers().size()];
-                    Long[] prevVsIds = new Long[prev.getGroupVirtualServers().size()];
-                    for (int i = 0; i < curr.getGroupVirtualServers().size(); i++) {
-                        currVsIds[i] = curr.getGroupVirtualServers().get(i).getVirtualServer().getId();
-                    }
-                    for (int i = 0; i < prev.getGroupVirtualServers().size(); i++) {
-                        prevVsIds[i] = prev.getGroupVirtualServers().get(i).getVirtualServer().getId();
-                    }
-
-                    Arrays.sort(currVsIds);
-                    Arrays.sort(prevVsIds);
-                    if (Arrays.equals(currVsIds, prevVsIds)) return;
-
-                    Set<Long> currSlbIds = new HashSet<>();
-                    Set<Long> prevSlbIds = new HashSet<>();
-                    for (VirtualServer vs : virtualServerRepository.listAll(currVsIds)) {
-                        currSlbIds.addAll(vs.getSlbIds());
-                    }
-                    for (VirtualServer vs : virtualServerRepository.listAll(prevVsIds)) {
-                        prevSlbIds.addAll(vs.getSlbIds());
-                    }
-                    if (currSlbIds.equals(prevSlbIds)) return;
-
-                    List<GroupStatus> list = new ArrayList<>();
-                    list.add(groupStatusService.getOfflineGroupStatus(g.getId()));
-                    slbCheckStatusRollingMachine.migrate(prevSlbIds, currSlbIds, Sets.newHashSet(m.getTargetId()), list);
+                    migrateGroup(groupId, groupStatusService.getOfflineGroupStatus(groupId));
                 } catch (Exception e) {
                 }
             }
         }
+    }
+
+    private void migrateGroup(Long groupId, GroupStatus groupStatus) throws Exception {
+        Set<Long> slbIds = new HashSet<>();
+        for (GroupVirtualServer gvs : groupRepository.getById(groupId).getGroupVirtualServers()) {
+            slbIds.addAll(gvs.getVirtualServer().getSlbIds());
+        }
+        slbCheckStatusRollingMachine.migrate(slbIds, groupStatus);
     }
 
     @Override
@@ -115,15 +86,7 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
         for (Message m : messages) {
             SlbMessageData d = MessageUtil.parserSlbMessageData(m.getTargetData());
             if (d != null && d.getSuccess()) {
-                try {
-                    Set<Long> slbIds = new HashSet<>();
-                    Group g = archiveRepository.getGroupArchive(m.getTargetId(), 0);
-                    for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
-                        slbIds.addAll(gvs.getVirtualServer().getSlbIds());
-                    }
-                    slbCheckStatusRollingMachine.clear(slbIds, m.getTargetId());
-                } catch (Exception e) {
-                }
+                slbCheckStatusRollingMachine.clear(m.getTargetId());
             }
         }
     }
@@ -133,22 +96,18 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
         for (Message m : messages) {
             SlbMessageData d = MessageUtil.parserSlbMessageData(m.getTargetData());
             if (d != null && d.getSuccess()) {
-                VsData vs = d.getVsDatas().get(0);
+                Set<Long> groupIds = new HashSet<>();
                 try {
-                    VirtualServer curr = archiveRepository.getVsArchive(vs.getId(), vs.getVersion());
-                    VirtualServer prev = archiveRepository.getVsArchive(vs.getId(), vs.getVersion() - 1);
-
-                    Set<Long> currSlbIdArray = new HashSet<>(curr.getSlbIds().size());
-                    Set<Long> prevSlbIdArray = new HashSet<>(prev.getSlbIds().size());
-
-                    if (currSlbIdArray.equals(prevSlbIdArray)) return;
-
-                    Set<Long> groupIds = new HashSet<>();
-                    for (IdVersion k : groupCriteriaQuery.queryByVsId(vs.getId())) {
-                        groupIds.add(k.getId());
+                    for (IdVersion e : groupCriteriaQuery.queryByVsId(m.getTargetId())) {
+                        groupIds.add(e.getId());
                     }
-                    List<GroupStatus> groupStatuses = groupStatusService.getOfflineGroupsStatus(groupIds);
-                    slbCheckStatusRollingMachine.migrate(prevSlbIdArray, currSlbIdArray, groupIds, groupStatuses);
+                    Map<Long, GroupStatus> groupStatusByGroup = new HashMap<>();
+                    for (GroupStatus groupStatus : groupStatusService.getOfflineGroupsStatus(groupIds)) {
+                        groupStatusByGroup.put(groupStatus.getGroupId(), groupStatus);
+                    }
+                    for (Group group : groupRepository.list(groupIds.toArray(new Long[groupIds.size()]))) {
+                        migrateGroup(group.getId(), groupStatusByGroup.get(group.getId()));
+                    }
                 } catch (Exception e) {
                 }
             }
@@ -174,11 +133,23 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
                 groups.put(g.getId(), slbIds);
             }
             for (GroupStatus gs : groupStatusService.getOfflineGroupsStatus(groupIds)) {
-                slbCheckStatusRollingMachine.update(groups.get(gs.getGroupId()), gs);
+                slbCheckStatusRollingMachine.update(gs);
             }
         } catch (Exception e) {
-            logger.error("Fail to get offline groups status of groups " + Joiner.on(",").join(groupIds) + ".");
+            logger.error("Fail to get offline group status of groups " + Joiner.on(",").join(groupIds) + ".");
         }
+    }
+
+    public void consistentCheck(Set<Long> slbIds) {
+        Set<Long> totalSlbIds = new HashSet<>();
+        try {
+            for (IdVersion key : slbCriteriaQuery.queryAll(SelectionMode.OFFLINE_FIRST)) {
+                slbIds.add(key.getId());
+            }
+            totalSlbIds.removeAll(slbIds);
+        } catch (Exception e) {
+        }
+        refresh(totalSlbIds);
     }
 
     public void refresh(Set<Long> slbIds) {

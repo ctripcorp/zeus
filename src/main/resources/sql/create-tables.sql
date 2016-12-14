@@ -20,6 +20,7 @@ DROP TABLE IF EXISTS `app_info`;
 CREATE TABLE IF NOT EXISTS `app_info` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `app_id` varchar(50) NOT NULL DEFAULT '' COMMENT 'app_id',
+  `app_name` varchar(128) NOT NULL DEFAULT '' COMMENT 'app_name',
   `sbu` varchar(128) NOT NULL DEFAULT '' COMMENT 'sbu',
   `sbu_english_name` varchar(256) NOT NULL DEFAULT '' COMMENT 'sbuEnglishName',
   `owner` varchar(256) NOT NULL DEFAULT '' COMMENT 'owner',
@@ -30,6 +31,38 @@ CREATE TABLE IF NOT EXISTS `app_info` (
   UNIQUE KEY `app_id` (`app_id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='app_info';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table app_slb
+DROP TABLE IF EXISTS `app_slb`;
+CREATE TABLE IF NOT EXISTS `app_slb` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slbid',
+  `app_id` varchar(128) NOT NULL DEFAULT 'unknown' COMMENT 'appid',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'DataChange_LastTime',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `slb_id_app_id` (`slb_id`,`app_id`),
+  KEY `app_id` (`app_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='app_slb';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table app_vs
+DROP TABLE IF EXISTS `app_vs`;
+CREATE TABLE IF NOT EXISTS `app_vs` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `vs_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'vid',
+  `app_id` varchar(128) NOT NULL DEFAULT 'unknown' COMMENT 'appid',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'DataChange_LastTime',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `vs_id_app_id` (`vs_id`,`app_id`),
+  KEY `app_id` (`app_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='app_vs';
 
 -- Data exporting was unselected.
 
@@ -1036,13 +1069,32 @@ CREATE TABLE IF NOT EXISTS `snap_server_group` (
 -- Data exporting was unselected.
 
 
+-- Dumping structure for table stats_group_slb
+DROP TABLE IF EXISTS `stats_group_slb`;
+CREATE TABLE IF NOT EXISTS `stats_group_slb` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `group_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'group id',
+  `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb id',
+  `val_status` int(11) NOT NULL DEFAULT '0' COMMENT 'status value',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `group_id` (`group_id`),
+  KEY `slb_id` (`slb_id`),
+  KEY `val_status` (`val_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='table to store group related statistics by slb';
+
+-- Data exporting was unselected.
+
+
 -- Dumping structure for table status_check_count_slb
 DROP TABLE IF EXISTS `status_check_count_slb`;
 CREATE TABLE IF NOT EXISTS `status_check_count_slb` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
   `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb id',
   `count` int(11) NOT NULL DEFAULT '0' COMMENT 'count',
-  `data_set` varchar(255) NOT NULL DEFAULT '0' COMMENT 'group data set',
+  `data_set` varchar(10240) NOT NULL DEFAULT '0' COMMENT 'group data set',
+  `data_set_timestamp` bigint(20) DEFAULT NULL COMMENT 'data set last modified time',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
   PRIMARY KEY (`id`),
   UNIQUE KEY `slb_id` (`slb_id`),

@@ -14,6 +14,7 @@ import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.query.CriteriaQueryFactory;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.QueryEngine;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.status.GroupStatusService;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.status.entity.GroupStatusList;
@@ -45,6 +46,8 @@ public class StatusResource {
     private GroupStatusService groupStatusService;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
     private ResponseHandler responseHandler;
     @Resource
@@ -104,27 +107,23 @@ public class StatusResource {
     }
 
     @GET
-    @Path("/check/slb")
-    @Produces({MediaType.APPLICATION_JSON})
-    public Response getSingleSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh,
-                                              @QueryParam("slbId") Long slbId) throws Exception {
-        List<Integer> count = slbCheckStatusRollingMachine.getCheckFailureCount(slbId);
-        if (count == null) {
-            throw new ValidationException("Cannot find check result count of slb " + slbId + ".");
-        }
-        SlbGroupCheckFailureEntity entity = new SlbGroupCheckFailureEntity().setSlbId(slbId);
-        for (Integer c : count) {
-            entity.addFailureCount(c);
-        }
-        return responseHandler.handle(entity, hh.getMediaType());
-    }
-
-    @GET
     @Path("/check/slbs")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh) throws Exception {
+    public Response getSlbCheckFailures(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                        @QueryParam("slbId") String slbId) throws Exception {
         SlbGroupCheckFailureEntityList list = new SlbGroupCheckFailureEntityList();
-        for (Map.Entry<Long, List<Integer>> e : slbCheckStatusRollingMachine.getCheckFailureCount().entrySet()) {
+        Set<Long> slbIds = new HashSet<>();
+        if (slbId == null) {
+            for (IdVersion e : slbCriteriaQuery.queryAll(SelectionMode.OFFLINE_FIRST)) {
+                slbIds.add(e.getId());
+            }
+        } else {
+            for (String s : slbId.split(",")) {
+                slbIds.add(Long.parseLong(s));
+            }
+        }
+
+        for (Map.Entry<Long, CircularArray<Integer>> e : slbCheckStatusRollingMachine.getCheckFailureCount(slbIds).entrySet()) {
             SlbGroupCheckFailureEntity entity = new SlbGroupCheckFailureEntity().setSlbId(e.getKey());
             for (Integer c : e.getValue()) {
                 entity.addFailureCount(c);

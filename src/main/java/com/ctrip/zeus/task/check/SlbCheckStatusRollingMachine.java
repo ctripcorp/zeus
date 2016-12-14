@@ -1,24 +1,18 @@
 package com.ctrip.zeus.task.check;
 
-
-import com.ctrip.zeus.dal.core.StatusCheckCountSlbDao;
-import com.ctrip.zeus.dal.core.StatusCheckCountSlbDo;
-import com.ctrip.zeus.dal.core.StatusCheckCountSlbEntity;
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.service.message.queue.consumers.SlbCheckStatusConsumer;
 import com.ctrip.zeus.status.entity.GroupServerStatus;
 import com.ctrip.zeus.status.entity.GroupStatus;
 import com.ctrip.zeus.task.AbstractTask;
 import com.ctrip.zeus.util.CircularArray;
-import com.ctrip.zeus.util.CompressUtils;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,11 +23,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class SlbCheckStatusRollingMachine extends AbstractTask {
     @Resource
     private StatusCheckCountSlbDao statusCheckCountSlbDao;
+    @Resource
+    private StatsGroupSlbDao statsGroupSlbDao;
 
     private final static Logger logger = LoggerFactory.getLogger(SlbCheckStatusRollingMachine.class);
-
-    private final Map<Long, CircularArray<Integer>> slbCheckFailureRollingCounter = new HashMap<>();
-    private final Map<Long, DataSetTimeWrapper> groupCacheBySlb = new HashMap<>();
 
     private SlbCheckStatusConsumer master;
 
@@ -55,42 +48,43 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         this.enabled = enabled;
     }
 
-    private void init() throws Exception {
-        slbCheckFailureRollingCounter.clear();
-        for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAll(StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED)) {
-            CircularArray<Integer> v = new CircularArray<>(10, Integer.class);
-            slbCheckFailureRollingCounter.put(e.getSlbId(), v);
-            v.add(e.getCount());
-        }
-    }
-
     @Override
     public long getInterval() {
         return 10000;
     }
 
-    public List<Integer> getCheckFailureCount(Long slbId) {
-        CircularArray<Integer> values = slbCheckFailureRollingCounter.get(slbId);
-        if (values == null)
-            return new ArrayList<>();
-        ArrayList<Integer> result = Lists.newArrayList(slbCheckFailureRollingCounter.get(slbId).getAll());
+    public CircularArray<Integer> getCheckFailureCount(Long slbId) {
         try {
-            StatusCheckCountSlbDo d = statusCheckCountSlbDao.findBySlb(slbId, StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED);
-            result.add(d.getCount());
+            StatusCheckCountSlbDo e = statusCheckCountSlbDao.findBySlb(slbId, StatusCheckCountSlbEntity.READSET_FULL);
+            if (e == null) return null;
+
+            CircularArray<Integer> result = new CircularArray<>(10, Integer.class);
+            for (String s : e.getDataSet().split(",")) {
+                result.add(Integer.parseInt(s));
+            }
+            result.add(e.getCount());
         } catch (DalException e) {
+            logger.error("Db exception from listing status check count by slb.", e);
         }
-        return result;
+        return null;
     }
 
-    public Map<Long, List<Integer>> getCheckFailureCount() {
-        Map<Long, List<Integer>> result = new HashMap<>();
+    public Map<Long, CircularArray<Integer>> getCheckFailureCount(Set<Long> slbIds) {
+        Map<Long, CircularArray<Integer>> result = new HashMap<>();
         try {
-            for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAll(StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED)) {
-                ArrayList<Integer> v = Lists.newArrayList(slbCheckFailureRollingCounter.get(e.getSlbId()).getAll());
-                result.put(e.getSlbId(), v);
-                v.add(e.getCount());
+            for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAll(StatusCheckCountSlbEntity.READSET_FULL)) {
+                if (slbIds.contains(e.getSlbId())) {
+                    CircularArray<Integer> v = new CircularArray<>(10, Integer.class);
+                    result.put(e.getSlbId(), v);
+
+                    for (String s : e.getDataSet().split(",")) {
+                        v.add(Integer.parseInt(s));
+                    }
+                    v.add(e.getCount());
+                }
             }
         } catch (DalException e) {
+            logger.error("Db exception from listing status check count of all.", e);
         }
         return result;
     }
@@ -106,33 +100,47 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
     }
 
     @Override
-    public void run() throws Exception {
+    public void run() {
         if (!enabled) return;
 
         if (initFlag.compareAndSet(false, true)) {
+            Set<Long> slbIds = new HashSet<>();
             try {
-                init();
-                return;
-            } catch (Exception e) {
-                initFlag.compareAndSet(true, false);
-                logger.error("Fail to initialize group check status by slb.", e);
-                return;
+                for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAll(StatusCheckCountSlbEntity.READSET_SLB_ONLY)) {
+                    slbIds.add(e.getSlbId());
+                }
+            } catch (DalException e) {
+                logger.error("Db exception from listing slb-id from status collection.", e);
             }
+            master.consistentCheck(slbIds);
         }
 
-        for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAll(StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED)) {
-            CircularArray<Integer> v = slbCheckFailureRollingCounter.get(e.getSlbId());
-            if (v == null) {
-                v = new CircularArray<>(10, Integer.class);
-                slbCheckFailureRollingCounter.put(e.getSlbId(), v);
+        long now = System.currentTimeMillis();
+        try {
+            List<StatusCheckCountSlbDo> list = statusCheckCountSlbDao.findAll(StatusCheckCountSlbEntity.READSET_FULL);
+            Iterator<StatusCheckCountSlbDo> iter = list.iterator();
+            while (iter.hasNext()) {
+                StatusCheckCountSlbDo e = iter.next();
+                if (now - e.getDataChangeLastTime().getTime() >= getInterval()) {
+                    CircularArray<Integer> data = new CircularArray<>(10, Integer.class);
+                    for (String s : e.getDataSet().split(",")) {
+                        data.add(Integer.parseInt(s));
+                    }
+                    data.add(e.getCount());
+                    e.setDataSet(Joiner.on(",").join(data.getAll()));
+                } else {
+                    iter.remove();
+                }
             }
-            v.add(e.getCount());
+            statusCheckCountSlbDao.updateDataSetById(list.toArray(new StatusCheckCountSlbDo[list.size()]), StatusCheckCountSlbEntity.UPDATESET_FULL);
+        } catch (DalException e) {
+            logger.error("Db exception from maintain count array value.", e);
         }
     }
 
     @Override
     public void stop() {
-        slbCheckFailureRollingCounter.clear();
+
     }
 
     protected int bitwiseStatus(GroupServerStatus ss) {
@@ -143,184 +151,144 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         return val0 | (val1 << 1) | (val2 << 2) | (val3 << 3);
     }
 
-    public void migrate(Set<Long> prevSlbIds, Set<Long> currSlbIds, Set<Long> totalGroupIds, List<GroupStatus> groupStatuses) {
-        Set<Long> failureGroupIds = new HashSet<>();
-        for (GroupStatus groupStatus : groupStatuses) {
-            totalGroupIds.add(groupStatus.getGroupId());
-            for (GroupServerStatus ss : groupStatus.getGroupServerStatuses()) {
-                int val = bitwiseStatus(ss);
-                if ((bitmask & val) == failureId) {
-                    failureGroupIds.add(groupStatus.getGroupId());
-                    break;
-                }
-            }
-        }
+    public void migrate(Set<Long> targetSlbIds, GroupStatus groupStatus) {
+        Long groupId = groupStatus.getGroupId();
+        int statusValue = statusValue(groupStatus);
 
-        Set<Long> obj = new HashSet<>();
-        Map<Long, Set<Long>> tmpGroupCache = new HashMap<>();
-        for (Long slbId : prevSlbIds) {
-            tmpGroupCache.put(slbId, obj);
-        }
-        for (Long slbId : currSlbIds) {
-            tmpGroupCache.put(slbId, obj);
-        }
+        Set<Long> affectedSlbIds = new HashSet<>();
+
         try {
-            List<StatusCheckCountSlbDo> toUpdate = new ArrayList<>();
-            updateIfExpired(tmpGroupCache.keySet());
-            for (Long slbId : tmpGroupCache.keySet()) {
-                DataSetTimeWrapper v = groupCacheBySlb.get(slbId);
-                Set<Long> dataSet = v.unmodifiableDataSet();
-                if (prevSlbIds.contains(slbId)) {
-                    dataSet.removeAll(totalGroupIds);
+            boolean shouldUpdate = false;
+            List<StatsGroupSlbDo> removeList = new ArrayList<>();
+            for (StatsGroupSlbDo e : statsGroupSlbDao.findAllByGroup(groupId, StatsGroupSlbEntity.READSET_FULL)) {
+                if (!targetSlbIds.remove(e.getSlbId())) {
+                    shouldUpdate = true;
+                    affectedSlbIds.add(e.getSlbId());
+                    removeList.add(e);
+                    continue;
                 }
-                if (currSlbIds.contains(slbId)) {
-                    dataSet.addAll(failureGroupIds);
-                }
-                if (!dataSet.equals(v.groupIds)) {
-                    tmpGroupCache.put(slbId, dataSet);
-                    toUpdate.add(new StatusCheckCountSlbDo().setSlbId(slbId).setCount(dataSet.size())
-                            .setDataSet(dataSetStringify(dataSet)));
+                if (e.getValStatus() != statusValue) {
+                    shouldUpdate = true;
+                    affectedSlbIds.add(e.getSlbId());
                 }
             }
 
+            if (removeList.size() > 0) {
+                statsGroupSlbDao.deleteById(removeList.toArray(new StatsGroupSlbDo[removeList.size()]));
+            }
+            if (shouldUpdate) {
+                statsGroupSlbDao.updateStatusByGroup(new StatsGroupSlbDo().setGroupId(groupId).setValStatus(statusValue), StatsGroupSlbEntity.UPDATESET_FULL);
+            }
+            if (targetSlbIds.size() > 0) {
+                affectedSlbIds.addAll(targetSlbIds);
+                List<StatsGroupSlbDo> addList = new ArrayList<>();
+                for (Long slbId : targetSlbIds) {
+                    addList.add(new StatsGroupSlbDo().setGroupId(groupId).setSlbId(slbId).setValStatus(statusValue));
+                }
+                statsGroupSlbDao.insert(addList.toArray(new StatsGroupSlbDo[addList.size()]));
+            }
 
-            statusCheckCountSlbDao.update(toUpdate.toArray(new StatusCheckCountSlbDo[toUpdate.size()]), StatusCheckCountSlbEntity.UPDATESET_FULL);
-            for (StatusCheckCountSlbDo e : toUpdate) {
-                groupCacheBySlb.get(e.getSlbId()).update(tmpGroupCache.get(e.getSlbId()));
+            if (affectedSlbIds.size() > 0) {
+                syncSlbCheckCount(affectedSlbIds.toArray(new Long[affectedSlbIds.size()]), 0);
             }
         } catch (DalException e) {
-            logger.error("An unexpected error occurred when migrating group status count.", e);
-        } catch (IOException e) {
-            logger.error("An unexpected error occurred when migrating group status count.", e);
+            logger.error("Db exception from migrating group status across slbs.", e);
         }
     }
 
-    public void update(Set<Long> slbIds, GroupStatus groupStatus) {
+    private void syncSlbCheckCount(Long[] slbIds, int statusValue) throws DalException {
+        StatusCheckCountSlbDo[] checkCounts = new StatusCheckCountSlbDo[slbIds.length];
+        List<StatsGroupSlbDo> countResult = statsGroupSlbDao.countBySlbAndStatus(slbIds, statusValue, StatsGroupSlbEntity.READSET_COUNT);
+        for (int i = 0; i < checkCounts.length; i++) {
+            StatsGroupSlbDo e = countResult.get(i);
+            checkCounts[i] = new StatusCheckCountSlbDo().setSlbId(e.getSlbId()).setCount(e.getCount());
+        }
+        int[] returnedValue = statusCheckCountSlbDao.updateCountBySlb(checkCounts, StatusCheckCountSlbEntity.UPDATESET_FULL);
+        for (int i = 0; i < returnedValue.length; i++) {
+            if (returnedValue[i] == 0) {
+                StatusCheckCountSlbDo e = checkCounts[i];
+                e.setDataSet(e.getCount() + "").setDataSetTimestamp(System.currentTimeMillis());
+                statusCheckCountSlbDao.insert(e);
+            }
+        }
+    }
+
+    public void update(GroupStatus groupStatus) {
         Long groupId = groupStatus.getGroupId();
+        int statusValue = statusValue(groupStatus);
+        try {
+            List<StatsGroupSlbDo> updateList = statsGroupSlbDao.findAllByGroup(groupId, StatsGroupSlbEntity.READSET_FULL);
+            Iterator<StatsGroupSlbDo> iter = updateList.iterator();
+            List<Long> affectingSlbIds = new ArrayList<>();
+            while (iter.hasNext()) {
+                StatsGroupSlbDo e = iter.next();
+                if (e.getValStatus() == statusValue) {
+                    iter.remove();
+                } else {
+                    affectingSlbIds.add(e.getSlbId());
+                }
+            }
+            if (updateList.size() > 0) {
+                statsGroupSlbDao.updateStatusById(updateList.toArray(new StatsGroupSlbDo[updateList.size()]), StatsGroupSlbEntity.UPDATESET_FULL);
+            }
+            if (affectingSlbIds.size() > 0) {
+                syncSlbCheckCount(affectingSlbIds.toArray(new Long[affectingSlbIds.size()]), 0);
+            }
+        } catch (DalException e) {
+            logger.error("An unexpected error occurred when updating group status.", e);
+        }
+    }
+
+    protected int statusValue(GroupStatus groupStatus) {
         boolean failed = false;
         for (GroupServerStatus ss : groupStatus.getGroupServerStatuses()) {
             int val = bitwiseStatus(ss);
             if ((bitmask & val) == failureId) {
                 failed = true;
-                break;
             }
         }
-
-        try {
-            updateIfExpired(slbIds);
-            for (Long slbId : slbIds) {
-                DataSetTimeWrapper v = groupCacheBySlb.get(slbId);
-                Set<Long> dataSet = v.unmodifiableDataSet();
-
-
-                if (failed && dataSet.add(groupId)) {
-                    statusCheckCountSlbDao.countIncrement(new StatusCheckCountSlbDo().setSlbId(slbId).setNum(1)
-                            .setDataSet(dataSetStringify(dataSet)), StatusCheckCountSlbEntity.UPDATESET_FULL);
-                }
-                if (!failed && dataSet.remove(groupId)) {
-                    statusCheckCountSlbDao.countDecrement(new StatusCheckCountSlbDo().setSlbId(slbId).setNum(1)
-                            .setDataSet(dataSetStringify(dataSet)), StatusCheckCountSlbEntity.UPDATESET_FULL);
-                }
-                v.update(dataSet);
-            }
-        } catch (DalException e) {
-            logger.error("An unexpected error occurred when updating group status count.", e);
-        } catch (IOException e) {
-            logger.error("An unexpected error occurred when updating group status count.", e);
-        }
+        return failed ? 0 : 1;
     }
 
-    protected String dataSetStringify(Set<Long> dataSet) throws IOException {
-        return CompressUtils.compressToGzippedBase64String(Joiner.on(",").join(dataSet));
-    }
-
-    public void clear(Set<Long> slbIds, Long groupId) {
+    public void clear(Long groupId) {
         try {
-            updateIfExpired(slbIds);
-            for (Long slbId : slbIds) {
-                DataSetTimeWrapper v = groupCacheBySlb.get(slbId);
-                Set<Long> dataSet = v.unmodifiableDataSet();
-
-
-                if (dataSet.remove(groupId)) {
-                    statusCheckCountSlbDao.countDecrement(new StatusCheckCountSlbDo().setSlbId(slbId).setNum(1)
-                            .setDataSet(dataSetStringify(dataSet)), StatusCheckCountSlbEntity.UPDATESET_FULL);
-                    v.update(dataSet);
-                }
+            List<StatsGroupSlbDo> removeList = statsGroupSlbDao.findAllByGroup(groupId, StatsGroupSlbEntity.READSET_FULL);
+            Long[] slbIds = new Long[removeList.size()];
+            for (int i = 0; i < removeList.size(); i++) {
+                slbIds[i] = removeList.get(i).getSlbId();
             }
+            statsGroupSlbDao.deleteByGroup(new StatsGroupSlbDo().setGroupId(groupId));
+
+            syncSlbCheckCount(slbIds, 0);
         } catch (DalException e) {
             logger.error("An unexpected error occurred when clearing group from slbs.", e);
-        } catch (IOException e) {
-            logger.error("An unexpected error occurred when clearing group from slbs.", e);
         }
     }
 
-    protected void updateIfExpired(Set<Long> slbIds) {
-        List<Long> expired = new ArrayList<>();
-        try {
-            for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAllBySlb(slbIds.toArray(slbIds.toArray(new Long[slbIds.size()])), StatusCheckCountSlbEntity.READSET_DATASET_EXCLUDED)) {
-                DataSetTimeWrapper v = groupCacheBySlb.get(e.getSlbId());
-                if (v == null) {
-                    expired.add(e.getSlbId());
-                    continue;
-                }
-                if (e.getDataChangeLastTime().compareTo(v.timestamp) > 0) expired.add(e.getSlbId());
-            }
-
-            for (StatusCheckCountSlbDo e : statusCheckCountSlbDao.findAllBySlb(expired.toArray(expired.toArray(new Long[expired.size()])), StatusCheckCountSlbEntity.READSET_FULL)) {
-                Set<Long> groupSet = new HashSet<>();
-                if (e.getDataSet() != null) {
-                    String dataset = CompressUtils.decompressGzippedBase64String(e.getDataSet());
-                    if (!dataset.isEmpty()) {
-                        for (String s : dataset.split(",")) {
-                            groupSet.add(Long.parseLong(s));
-                        }
-                    }
-                }
-                groupCacheBySlb.put(e.getSlbId(), new DataSetTimeWrapper(groupSet, e.getDataChangeLastTime()));
-            }
-
-            if (!groupCacheBySlb.keySet().containsAll(slbIds)) {
-                HashSet<Long> diff = new HashSet<>(slbIds);
-                master.refresh(diff);
-            }
-        } catch (DalException e) {
-        } catch (IOException e) {
-        }
-    }
-
-    public void refresh(Long slbId, List<GroupStatus> groupStatuses) throws IOException, DalException {
-        Set<Long> failureGroupIds = new HashSet<>();
+    public void refresh(Long slbId, List<GroupStatus> groupStatuses) throws DalException {
+        Map<Long, Integer> groupStatusValue = new HashMap<>();
         for (GroupStatus groupStatus : groupStatuses) {
-            for (GroupServerStatus ss : groupStatus.getGroupServerStatuses()) {
-                int val = bitwiseStatus(ss);
-                if ((bitmask & val) == failureId) {
-                    failureGroupIds.add(groupStatus.getGroupId());
-                    break;
-                }
+            groupStatusValue.put(groupStatus.getGroupId(), statusValue(groupStatus));
+        }
+        List<StatsGroupSlbDo> updateList = new ArrayList<>();
+        for (StatsGroupSlbDo e : statsGroupSlbDao.findAllByGroups(groupStatusValue.keySet().toArray(new Long[groupStatusValue.size()]), StatsGroupSlbEntity.READSET_FULL)) {
+            if (slbId.equals(e.getSlbId())) {
+                Integer v = groupStatusValue.remove(e.getGroupId());
+                e.setValStatus(v);
+                updateList.add(e);
             }
         }
-        statusCheckCountSlbDao.insertOrUpdate(new StatusCheckCountSlbDo().setSlbId(slbId).setCount(failureGroupIds.size())
-                .setDataSet(dataSetStringify(failureGroupIds)));
-        groupCacheBySlb.put(slbId, new DataSetTimeWrapper(failureGroupIds, new Date()));
-    }
 
-    private class DataSetTimeWrapper {
-        Set<Long> groupIds;
-        Date timestamp;
-
-        public DataSetTimeWrapper(Set<Long> groupIds, Date timestamp) {
-            this.groupIds = groupIds;
-            this.timestamp = timestamp;
+        if (groupStatusValue.size() > 0) {
+            StatsGroupSlbDo[] addList = new StatsGroupSlbDo[groupStatusValue.size()];
+            int i = 0;
+            for (Map.Entry<Long, Integer> e : groupStatusValue.entrySet()) {
+                addList[i] = new StatsGroupSlbDo().setGroupId(e.getKey()).setSlbId(slbId).setValStatus(e.getValue());
+            }
+            statsGroupSlbDao.insert(addList);
         }
+        statsGroupSlbDao.updateStatusById(updateList.toArray(new StatsGroupSlbDo[updateList.size()]), StatsGroupSlbEntity.UPDATESET_FULL);
 
-        Set<Long> unmodifiableDataSet() {
-            return new HashSet<>(groupIds);
-        }
-
-        void update(Set<Long> groupIds) {
-            this.groupIds = groupIds;
-            timestamp = new Date();
-        }
+        syncSlbCheckCount(new Long[]{slbId}, 0);
     }
 }

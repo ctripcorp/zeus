@@ -20,7 +20,7 @@ public class CircularArray<T> implements Iterable<T> {
 
     public void add(T entry) {
         buckets.add(entry);
-        if (buckets.size() == length) {
+        while (buckets.size() > length) {
             buckets.removeFirst();
         }
         lastEntry = entry;
@@ -44,6 +44,10 @@ public class CircularArray<T> implements Iterable<T> {
 
     public void clear() {
         buckets.clear();
+    }
+
+    public T getLast() {
+        return lastEntry;
     }
 
     @Override
