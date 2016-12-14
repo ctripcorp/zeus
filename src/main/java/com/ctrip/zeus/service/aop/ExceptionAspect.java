@@ -103,17 +103,75 @@ public class ExceptionAspect implements Ordered {
                 .setSuccess(false)
                 .setErrorMessage(message)
                 .setClientIp(MessageUtil.getClientIP(request));
-        String postData = getPostBody(request, point);
         Long id = 0L;
-        if (postData != null) {
-            id = parserId(request, postData, res);
-            logger.warn("[[postFail=true]]Post Failed Request Body. Body:" + postData);
+        if (request.getMethod().equalsIgnoreCase("POST")) {
+            String postData = getPostBody(request, point);
+            if (postData != null) {
+                id = parserId(request, postData, res);
+                logger.warn("[[postFail=true]]Post Failed Request Body. Body:" + postData);
+            }
+        } else {
+            id = parserIdFromQuery(request);
         }
         try {
             messageQueue.produceMessage(request.getRequestURI(), id, ObjectJsonWriter.write(res));
         } catch (Throwable e) {
             logger.error("Send Message Failed In Exception Aspect.", e);
         }
+    }
+
+    private Long parserIdFromQuery(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String query = request.getQueryString();
+        if (query == null || query.isEmpty()) {
+            return 0L;
+        }
+        String[] querys = query.split("&");
+        String key = null;
+
+        if (querys.length == 0) {
+            return 0L;
+        }
+
+        switch (uri) {
+            case "/api/op/pullIn":
+            case "/api/op/pullOut":
+            case "/api/op/raise":
+            case "/api/op/fall":
+            case "/api/op/upMember":
+            case "/api/op/downMember":
+            case "/api/activate/group":
+            case "/api/group/unbindVs":
+            case "/api/group/delete":
+                key = "groupId";
+                break;
+            case "/api/activate/slb":
+            case "/api/slb/delete":
+            case "/api/slb/removeServer":
+                key = "slbId";
+                break;
+            case "/api/activate/vs":
+            case "/api/vs/addDomain":
+            case "/api/vs/removeDomain":
+            case "/api/vs/delete":
+                key = "vsId";
+                break;
+            default:
+                key = "id";
+        }
+        for (String tmp : querys) {
+            if (tmp.startsWith(key)) {
+                String[] d = tmp.split("=");
+                if (d.length == 2) {
+                    try {
+                        return Long.parseLong(d[1]);
+                    } catch (Exception e) {
+                        logger.warn("Parser id from query failed. Query:" + tmp);
+                    }
+                }
+            }
+        }
+        return 0L;
     }
 
     private HttpServletRequest findRequestArg(JoinPoint point) {
