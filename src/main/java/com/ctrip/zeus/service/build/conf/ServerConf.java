@@ -63,7 +63,7 @@ public class ServerConf {
             confWriter.writeCommand("ssl_certificate_key", SSL_PATH + vsId + "/ssl.key");
             confWriter.writeCommand("ssl_protocols", getProtocols(slbId, vsId));
             confWriter.writeCommand("ssl_prefer_server_ciphers", configHandler.getStringValue("ssl.prefer.server.ciphers", slbId, vsId, null, "on"));
-            confWriter.writeCommand("ssl_ciphers", configHandler.getStringValue("ssl.ciphers", slbId, vsId, null, "EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;"));
+            confWriter.writeCommand("ssl_ciphers", configHandler.getStringValue("ssl.ciphers", slbId, vsId, null, "EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5"));
 
             confWriter.writeCommand("ssl_session_cache", configHandler.getStringValue("ssl.session.cache", slbId, vsId, null, "shared:SSL:20m"));
             confWriter.writeCommand("ssl_session_timeout", configHandler.getStringValue("ssl.session.cache.timeout", slbId, vsId, null, "180m"));
