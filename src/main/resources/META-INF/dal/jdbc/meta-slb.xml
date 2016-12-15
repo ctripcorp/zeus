@@ -85,6 +85,16 @@
     </entity>
     <entity name="archive-slb" table="archive_slb" alias="as3" do-class="ArchiveSlbDo">
         <member name="created-time" field="created_time" value-type="Date" insert-expr="now()"/>
+        <readsets>
+            <readset name="IDONLY">
+                <member name="id"/>
+            </readset>
+            <readset name="CONTENT_EXCLUDED">
+                <member name="id"/>
+                <member name="version"/>
+                <member name="data-change-last-time"/>
+            </readset>
+        </readsets>
         <var name="ids" value-type="Long[]"/>
         <var name="hashes" value-type="Integer[]"/>
         <var name="id-version-array" value-type="String[]"/>

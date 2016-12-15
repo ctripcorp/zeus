@@ -8,7 +8,9 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
+import com.ctrip.zeus.restful.message.view.ArchiveList;
 import com.ctrip.zeus.restful.message.view.ExtendedView;
+import com.ctrip.zeus.service.model.Archive;
 import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
 import org.springframework.stereotype.Component;
@@ -23,6 +25,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 /**
  * Created by zhoumy on 2016/5/17.
@@ -66,6 +69,54 @@ public class ArchiveResource {
             }
             return responseHandler.handle(new ExtendedView.ExtendedGroup(archive), hh.getMediaType());
         }
+    }
+
+    @GET
+    @Path("/group/list")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response listArchiveGroup(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                     @QueryParam("groupId") Long groupId) throws Exception {
+
+        if (groupId == null) {
+            throw new ValidationException("Query parameter - groupId is required.");
+        }
+        List<Archive<Group>> list = archiveRepository.getAllGroupArchives(groupId);
+        ArchiveList<Group> archiveList = new ArchiveList<>();
+        archiveList.setTotal(list.size());
+        archiveList.setArchives(list);
+        return responseHandler.handle(archiveList, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/vs/list")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response listArchiveVs(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                  @QueryParam("vsId") Long vsId) throws Exception {
+
+        if (vsId == null) {
+            throw new ValidationException("Query parameter - vsId is required.");
+        }
+        List<Archive<VirtualServer>> list = archiveRepository.getAllVsArchives(vsId);
+        ArchiveList<VirtualServer> archiveList = new ArchiveList<>();
+        archiveList.setTotal(list.size());
+        archiveList.setArchives(list);
+        return responseHandler.handle(archiveList, hh.getMediaType());
+    }
+
+    @GET
+    @Path("/slb/list")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response listArchiveSlb(@Context HttpHeaders hh, @Context HttpServletRequest request,
+                                   @QueryParam("slbId") Long slbId) throws Exception {
+
+        if (slbId == null) {
+            throw new ValidationException("Query parameter - slbId is required.");
+        }
+        List<Archive<Slb>> list = archiveRepository.getAllSlbArchives(slbId);
+        ArchiveList<Slb> archiveList = new ArchiveList<>();
+        archiveList.setTotal(list.size());
+        archiveList.setArchives(list);
+        return responseHandler.handle(archiveList, hh.getMediaType());
     }
 
     @GET

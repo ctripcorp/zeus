@@ -117,12 +117,6 @@
         </groups>
     </group-list>
 
-    <archive>
-        <id>12345678901</id>
-        <content>groupXmlString</content>
-        <version>1</version>
-    </archive>
-
     <slb-group-check-failure-entity-list>
         <total>3</total>
         <slb-group-check-failure-entity/>

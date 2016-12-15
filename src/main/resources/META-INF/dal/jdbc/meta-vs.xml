@@ -9,6 +9,11 @@
             <readset name="IDONLY">
                 <member name="id"/>
             </readset>
+            <readset name="CONTENT_EXCLUDED">
+                <member name="id"/>
+                <member name="version"/>
+                <member name="date-time-last-change"/>
+            </readset>
         </readsets>
         <query-defs>
             <!--These queries are particularly designed for batch selection required task executors-->
@@ -72,6 +77,16 @@
                     VALUES(<VALUES/>)
                     ON DUPLICATE KEY UPDATE
                     content = values(content)
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-vs" type="SELECT" multiple="true">
+                <param name="vs-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> = ${vs-id}
                     ]]>
                 </statement>
             </query>

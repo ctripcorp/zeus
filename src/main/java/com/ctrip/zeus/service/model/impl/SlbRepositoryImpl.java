@@ -59,9 +59,12 @@ public class SlbRepositoryImpl implements SlbRepository {
 
         List<Slb> result = new ArrayList<>();
         for (ArchiveSlbDo d : archiveSlbDao.findAllByIdVersion(hashes, values, ArchiveSlbEntity.READSET_FULL)) {
-            Slb slb = ContentReaders.readSlbContent(d.getContent());
-            slb.setCreatedTime(d.getDataChangeLastTime());
-            result.add(slb);
+            try {
+                Slb slb = ContentReaders.readSlbContent(d.getContent());
+                slb.setCreatedTime(d.getDataChangeLastTime());
+                result.add(slb);
+            } catch (Exception e) {
+            }
         }
 
         return result;

@@ -59,9 +59,12 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             values[i] = keys[i].toString();
         }
         for (MetaVsArchiveDo d : archiveVsDao.findAllByIdVersion(hashes, values, ArchiveVsEntity.READSET_FULL)) {
-            VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
-            vs.setCreatedTime(d.getDateTimeLastChange());
-            result.add(vs);
+            try {
+                VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
+                vs.setCreatedTime(d.getDateTimeLastChange());
+                result.add(vs);
+            } catch (Exception e) {
+            }
         }
         return result;
     }

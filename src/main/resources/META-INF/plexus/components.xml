@@ -19,6 +19,15 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>archive-commit</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>archive_commit</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>archive-group</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -614,6 +623,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.AppInfoDao</role>
 			<implementation>com.ctrip.zeus.dal.core.AppInfoDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.ArchiveCommitDao</role>
+			<implementation>com.ctrip.zeus.dal.core.ArchiveCommitDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

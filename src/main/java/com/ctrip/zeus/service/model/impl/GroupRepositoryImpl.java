@@ -68,11 +68,13 @@ public class GroupRepositoryImpl implements GroupRepository {
             values[i] = keys[i].toString();
         }
         for (ArchiveGroupDo d : archiveGroupDao.findAllByIdVersion(hashes, values, ArchiveGroupEntity.READSET_FULL)) {
-            Group group = ContentReaders.readGroupContent(d.getContent());
-            group.setCreatedTime(d.getDataChangeLastTime());
-            result.add(group);
+            try {
+                Group group = ContentReaders.readGroupContent(d.getContent());
+                group.setCreatedTime(d.getDataChangeLastTime());
+                result.add(group);
+            } catch (Exception e) {
+            }
         }
-
 
         for (Group group : result) {
             autoFiller.autofill(group);

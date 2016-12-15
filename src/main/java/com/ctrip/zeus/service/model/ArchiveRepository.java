@@ -4,6 +4,8 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 
+import java.util.List;
+
 /**
  * Created by zhoumy on 2016/5/17.
  */
@@ -22,4 +24,10 @@ public interface ArchiveRepository {
     Slb getSlbArchive(Long id, int version) throws Exception;
 
     VirtualServer getVsArchive(Long id, int version) throws Exception;
+
+    List<Archive<Group>> getAllGroupArchives(Long id) throws Exception;
+
+    List<Archive<Slb>> getAllSlbArchives(Long id) throws Exception;
+
+    List<Archive<VirtualServer>> getAllVsArchives(Long id) throws Exception;
 }

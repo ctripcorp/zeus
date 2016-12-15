@@ -44,6 +44,49 @@
       </query>
     </query-defs>
   </entity>
+  <entity name="archive-commit" table="archive_commit" alias="ac">
+    <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="archive-id" field="archive_id" value-type="long" length="19" nullable="false" />
+    <member name="type" field="type" value-type="int" length="10" nullable="false" />
+    <member name="ref-id" field="ref_id" value-type="long" length="19" nullable="false" />
+    <member name="author" field="author" value-type="String" length="255" />
+    <member name="message" field="message" value-type="String" length="255" />
+    <member name="data-change-last-time" field="DataChange_LastTime" value-type="Date" nullable="false" />
+    <var name="key-id" value-type="long" key-member="id" />
+    <primary-key name="PRIMARY" members="id" />
+    <index name="archive_id_type" unique="true" members="archive_id ASC, type ASC" />
+    <index name="DataChange_LastTime" members="DataChange_LastTime ASC" />
+    <index name="ref_id" members="ref_id ASC" />
+    <readsets>
+      <readset name="FULL" all="true" />
+    </readsets>
+    <updatesets>
+      <updateset name="FULL" all="true" />
+    </updatesets>
+    <query-defs>
+      <query name="find-by-PK" type="SELECT">
+        <param name="key-id" />
+        <statement><![CDATA[SELECT <FIELDS/>
+        FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="insert" type="INSERT">
+        <statement><![CDATA[INSERT INTO <TABLE/>(<FIELDS/>)
+        VALUES(<VALUES/>)]]></statement>
+      </query>
+      <query name="update-by-PK" type="UPDATE">
+        <param name="key-id" />
+        <statement><![CDATA[UPDATE <TABLE/>
+        SET <FIELDS/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+      <query name="delete-by-PK" type="DELETE">
+        <param name="key-id" />
+        <statement><![CDATA[DELETE FROM <TABLE/>
+        WHERE <FIELD name='id'/> = ${key-id}]]></statement>
+      </query>
+    </query-defs>
+  </entity>
   <entity name="archive-group" table="archive_group" alias="ag">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="group-id" field="group_id" value-type="long" length="19" nullable="false" />

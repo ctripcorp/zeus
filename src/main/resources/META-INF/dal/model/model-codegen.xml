@@ -15,7 +15,6 @@
     <entity-ref name="group-server-list" />
     <entity-ref name="group" />
     <entity-ref name="group-list" />
-    <entity-ref name="archive" />
     <entity-ref name="slb-group-check-failure-entity-list" />
     <entity-ref name="slb-group-check-failure-entity" />
     <entity-ref name="member-action" />
@@ -145,11 +144,6 @@
   <entity name="group-list">
     <element name="total" value-type="int" />
     <entity-ref name="group" type="list" names="groups" xml-indent="true" />
-  </entity>
-  <entity name="archive">
-    <element name="id" value-type="long" />
-    <element name="content" value-type="String" />
-    <element name="version" value-type="int" />
   </entity>
   <entity name="slb-group-check-failure-entity-list">
     <element name="total" value-type="int" />

@@ -133,6 +133,11 @@
             <readset name="IDONLY">
                 <member name="id"/>
             </readset>
+            <readset name="CONTENT_EXCLUDED">
+                <member name="id"/>
+                <member name="version"/>
+                <member name="data-change-last-time"/>
+            </readset>
         </readsets>
         <query-defs>
             <!--These queries are particularly designed for batch selection required task executors-->
@@ -196,6 +201,16 @@
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> = ${group-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-group" type="SELECT" multiple="true">
+                <param name="group-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
                     WHERE <FIELD name='group-id'/> = ${group-id}
                     ]]>
                 </statement>
