@@ -324,8 +324,8 @@ public class SlbResource {
         } catch (Exception ex) {
         }
 
-        String[]ips = new String[serverList.getSlbServers().size()];
-        for (int i = 0 ; i < ips.length ; i++){
+        String[] ips = new String[serverList.getSlbServers().size()];
+        for (int i = 0; i < ips.length; i++) {
             ips[i] = serverList.getSlbServers().get(i).getIp();
         }
         String slbMessageData = MessageUtil.getMessageData(request, null, null, new Slb[]{slb}, ips, true);
@@ -365,11 +365,9 @@ public class SlbResource {
                 SlbServer server = iter.next();
                 if (servers.contains(server.getIp())) {
                     iter.remove();
-                    break;
                 }
             }
             slb = slbRepository.update(slb);
-
         } finally {
             lock.unlock();
         }

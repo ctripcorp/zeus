@@ -205,6 +205,7 @@ public class ActivateResource {
             tmp.addAll(offlineRelatedVsIds);
             tmp.addAll(onlineRelatedVsIds);
 
+            Map<Long, OpsTask> activateTasks = new HashMap<>();
             for (Long vsId : tmp) {
                 VirtualServer vs = vsMap.getOnlineMapping().get(vsId);
                 if (onlineRelatedVsIds.contains(vsId) && !offlineRelatedVsIds.contains(vsId)) {
@@ -220,16 +221,19 @@ public class ActivateResource {
                     }
                 } else {
                     for (Long slbId : vs.getSlbIds()) {
-                        OpsTask task = new OpsTask();
-                        task.setGroupId(e.getKey())
-                                .setTargetSlbId(slbId)
-                                .setOpsType(TaskOpsType.ACTIVATE_GROUP)
-                                .setVersion(offlineVersion.getVersion())
-                                .setCreateTime(new Date());
-                        tasks.add(task);
+                        if (activateTasks.get(slbId) == null) {
+                            OpsTask task = new OpsTask();
+                            task.setGroupId(e.getKey())
+                                    .setTargetSlbId(slbId)
+                                    .setOpsType(TaskOpsType.ACTIVATE_GROUP)
+                                    .setVersion(offlineVersion.getVersion())
+                                    .setCreateTime(new Date());
+                            activateTasks.put(slbId, task);
+                        }
                     }
                 }
             }
+            tasks.addAll(activateTasks.values());
         }
         List<Long> taskIds = taskManager.addTask(tasks);
 
