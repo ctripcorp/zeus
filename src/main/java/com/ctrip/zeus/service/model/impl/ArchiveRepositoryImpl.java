@@ -91,16 +91,24 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     @Override
     public List<Archive<Group>> getAllGroupArchives(Long id) throws Exception {
         List<ArchiveGroupDo> archives = archiveGroupDao.findAllByGroup(id, ArchiveGroupEntity.READSET_CONTENT_EXCLUDED);
-        Map<Long, ArchiveGroupDo> archiveById = new HashMap<>(archives.size());
-        for (ArchiveGroupDo d : archives) {
-            archiveById.put(d.getId(), d);
+        Long[] archiveIds = new Long[archives.size()];
+        for (int i = 0; i < archives.size(); i++) {
+            archiveIds[i] = archives.get(i).getId();
         }
 
+        Map<Long, ArchiveCommitDo> commitByArchiveId = new HashMap<>();
+        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, Archive.GROUP, ArchiveCommitEntity.READSET_FULL)) {
+            commitByArchiveId.put(d.getArchiveId(), d);
+        }
         List<Archive<Group>> result = new ArrayList<>(archives.size());
-        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveById.keySet().toArray(new Long[archiveById.size()]), Archive.GROUP, ArchiveCommitEntity.READSET_FULL)) {
-            Archive<Group> e = new Archive<Group>().setId(id).setAuthor(d.getAuthor()).setCommitMessage(d.getMessage())
-                    .setVersion(archiveById.get(d.getArchiveId()).getVersion()).setCreatedTime(archiveById.get(d.getArchiveId()).getDataChangeLastTime());
-            result.add(e);
+        for (ArchiveGroupDo e : archives) {
+            Archive<Group> r = new Archive<Group>().setId(e.getGroupId()).setVersion(e.getVersion()).setCreatedTime(e.getDataChangeLastTime());
+            result.add(r);
+
+            ArchiveCommitDo c = commitByArchiveId.get(e.getId());
+            if (c != null) {
+                r.setAuthor(c.getAuthor()).setCommitMessage(c.getMessage());
+            }
         }
         return result;
     }
@@ -108,16 +116,24 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     @Override
     public List<Archive<Slb>> getAllSlbArchives(Long id) throws Exception {
         List<ArchiveSlbDo> archives = archiveSlbDao.findAllBySlb(id, ArchiveSlbEntity.READSET_CONTENT_EXCLUDED);
-        Map<Long, ArchiveSlbDo> archiveById = new HashMap<>(archives.size());
-        for (ArchiveSlbDo d : archives) {
-            archiveById.put(d.getId(), d);
+        Long[] archiveIds = new Long[archives.size()];
+        for (int i = 0; i < archives.size(); i++) {
+            archiveIds[i] = archives.get(i).getId();
         }
 
+        Map<Long, ArchiveCommitDo> commitByArchiveId = new HashMap<>();
+        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, Archive.SLB, ArchiveCommitEntity.READSET_FULL)) {
+            commitByArchiveId.put(d.getArchiveId(), d);
+        }
         List<Archive<Slb>> result = new ArrayList<>(archives.size());
-        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveById.keySet().toArray(new Long[archiveById.size()]), Archive.SLB, ArchiveCommitEntity.READSET_FULL)) {
-            Archive<Slb> e = new Archive<Slb>().setId(id).setAuthor(d.getAuthor()).setCommitMessage(d.getMessage())
-                    .setVersion(archiveById.get(d.getArchiveId()).getVersion()).setCreatedTime(archiveById.get(d.getArchiveId()).getDataChangeLastTime());
-            result.add(e);
+        for (ArchiveSlbDo e : archives) {
+            Archive<Slb> r = new Archive<Slb>().setId(e.getSlbId()).setVersion(e.getVersion()).setCreatedTime(e.getDataChangeLastTime());
+            result.add(r);
+
+            ArchiveCommitDo c = commitByArchiveId.get(e.getId());
+            if (c != null) {
+                r.setAuthor(c.getAuthor()).setCommitMessage(c.getMessage());
+            }
         }
         return result;
     }
@@ -125,16 +141,24 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     @Override
     public List<Archive<VirtualServer>> getAllVsArchives(Long id) throws Exception {
         List<MetaVsArchiveDo> archives = archiveVsDao.findByVs(id, ArchiveVsEntity.READSET_CONTENT_EXCLUDED);
-        Map<Long, MetaVsArchiveDo> archiveById = new HashMap<>(archives.size());
-        for (MetaVsArchiveDo d : archives) {
-            archiveById.put(d.getId(), d);
+        Long[] archiveIds = new Long[archives.size()];
+        for (int i = 0; i < archives.size(); i++) {
+            archiveIds[i] = archives.get(i).getId();
         }
 
+        Map<Long, ArchiveCommitDo> commitByArchiveId = new HashMap<>();
+        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, Archive.VS, ArchiveCommitEntity.READSET_FULL)) {
+            commitByArchiveId.put(d.getArchiveId(), d);
+        }
         List<Archive<VirtualServer>> result = new ArrayList<>(archives.size());
-        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveById.keySet().toArray(new Long[archiveById.size()]), Archive.VS, ArchiveCommitEntity.READSET_FULL)) {
-            Archive<VirtualServer> e = new Archive<VirtualServer>().setId(id).setAuthor(d.getAuthor()).setCommitMessage(d.getMessage())
-                    .setVersion(archiveById.get(d.getArchiveId()).getVersion()).setCreatedTime(archiveById.get(d.getArchiveId()).getDateTimeLastChange());
-            result.add(e);
+        for (MetaVsArchiveDo e : archives) {
+            Archive<VirtualServer> r = new Archive<VirtualServer>().setId(e.getVsId()).setVersion(e.getVersion()).setCreatedTime(e.getDateTimeLastChange());
+            result.add(r);
+
+            ArchiveCommitDo c = commitByArchiveId.get(e.getId());
+            if (c != null) {
+                r.setAuthor(c.getAuthor()).setCommitMessage(c.getMessage());
+            }
         }
         return result;
     }

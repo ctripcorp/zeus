@@ -41,7 +41,7 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
     private static Logger logger = LoggerFactory.getLogger(SlbCheckStatusConsumer.class);
 
     @PostConstruct
-    public void init() {
+    private void init() {
         slbCheckStatusRollingMachine.enable(true, this);
     }
 
