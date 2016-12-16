@@ -225,21 +225,6 @@ public class TaskExecutorImpl implements TaskExecutor {
                 });
             }
 
-            //4. build config
-            //4.1 get allDownServers
-            Set<String> allDownServers = getAllDownServer();
-            //4.2 allUpGroupServers
-            Set<String> allUpGroupServers = getAllUpGroupServers(buildingVsIds, nxOnlineGroups, slbId);
-            //4.3 build config
-            buildVersion = buildService.build(nxOnlineSlb, nxOnlineVses, buildingVsIds, deactivateVsOps.keySet(),
-                    groupReferrerOfBuildingVs, allDownServers, allUpGroupServers);
-
-            //5. push config
-            //5.1 need reload?
-            boolean needReload = activateSlbOps.size() > 0
-                    || activateGroupOps.size() > 0 || deactivateGroupOps.size() > 0 || softDeactivateGroupOps.size() > 0
-                    || activateVsOps.size() > 0 || deactivateVsOps.size() > 0 || softDeactivateVsOps.size() > 0;
-
             //5.2 push config to all slb servers. reload if needed.
             //5.2.1 remove deactivate vs ids from need build vses
             Set<Long> cleanVsIds = new HashSet<>();
@@ -247,6 +232,21 @@ public class TaskExecutorImpl implements TaskExecutor {
             cleanVsIds.addAll(softDeactivateVsOps.keySet());
 
             buildingVsIds.removeAll(cleanVsIds);
+
+            //4. build config
+            //4.1 get allDownServers
+            Set<String> allDownServers = getAllDownServer();
+            //4.2 allUpGroupServers
+            Set<String> allUpGroupServers = getAllUpGroupServers(buildingVsIds, nxOnlineGroups, slbId);
+            //4.3 build config
+            buildVersion = buildService.build(nxOnlineSlb, nxOnlineVses, buildingVsIds, cleanVsIds,
+                    groupReferrerOfBuildingVs, allDownServers, allUpGroupServers);
+
+            //5. push config
+            //5.1 need reload?
+            boolean needReload = activateSlbOps.size() > 0
+                    || activateGroupOps.size() > 0 || deactivateGroupOps.size() > 0 || softDeactivateGroupOps.size() > 0
+                    || activateVsOps.size() > 0 || deactivateVsOps.size() > 0 || softDeactivateVsOps.size() > 0;
 
             if (writeEnable.get()) {
                 //5.2.2 update slb current version

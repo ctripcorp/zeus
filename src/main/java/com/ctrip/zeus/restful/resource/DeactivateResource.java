@@ -246,6 +246,51 @@ public class DeactivateResource {
     }
 
     @GET
+    @Path("/soft/vs")
+    public Response activateVirtualServer(@Context HttpServletRequest request,
+                                          @Context HttpHeaders hh,
+                                          @QueryParam("vsId") Long vsId,
+                                          @QueryParam("slbId") Long slbId) throws Exception {
+        if (vsId == null || slbId == null) {
+            throw new ValidationException("Query param vsId, slbId are required.");
+        }
+        ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(new Long[]{vsId});
+        VirtualServer offlineVersion = vsMap.getOfflineMapping().get(vsId);
+        if (offlineVersion == null) {
+            throw new ValidationException("Cannot find vs by id " + vsId + ".");
+        }
+
+        authService.authValidate(UserUtils.getUserName(request), ResourceOperationType.ACTIVATE, ResourceDataType.Vs, vsId);
+
+        ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(new Long[]{slbId});
+        Slb slb = slbMap.getOnlineMapping().get(slbId);
+        if (slb == null) {
+            throw new Exception("Slb " + slbId + " is found deactivated.");
+        }
+
+        List<OpsTask> tasks = new ArrayList<>();
+        OpsTask task = new OpsTask();
+        task.setSlbVirtualServerId(vsId)
+                .setTargetSlbId(slbId)
+                .setVersion(offlineVersion.getVersion())
+                .setOpsType(TaskOpsType.SOFT_DEACTIVATE_VS)
+                .setCreateTime(new Date());
+        tasks.add(task);
+
+        List<Long> taskIds = taskManager.addTask(tasks);
+
+        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
+
+        TaskResultList resultList = new TaskResultList();
+        for (TaskResult t : results) {
+            resultList.addTaskResult(t);
+        }
+        resultList.setTotal(results.size());
+
+        return responseHandler.handle(resultList, hh.getMediaType());
+    }
+
+    @GET
     @Path("/slb")
     @Authorize(name = "activate")
     public Response deactivateSlb(@Context HttpServletRequest request,
