@@ -144,7 +144,7 @@ public class SlbCheckStatusConsumer extends AbstractConsumer {
         Set<Long> totalSlbIds = new HashSet<>();
         try {
             for (IdVersion key : slbCriteriaQuery.queryAll(SelectionMode.OFFLINE_FIRST)) {
-                slbIds.add(key.getId());
+                totalSlbIds.add(key.getId());
             }
             totalSlbIds.removeAll(slbIds);
         } catch (Exception e) {

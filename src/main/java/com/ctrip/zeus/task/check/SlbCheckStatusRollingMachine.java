@@ -278,8 +278,9 @@ public class SlbCheckStatusRollingMachine extends AbstractTask {
         for (StatsGroupSlbDo e : statsGroupSlbDao.findAllByGroups(groupStatusValue.keySet().toArray(new Long[groupStatusValue.size()]), StatsGroupSlbEntity.READSET_FULL)) {
             if (slbId.equals(e.getSlbId())) {
                 Integer v = groupStatusValue.remove(e.getGroupId());
-                e.setValStatus(v);
-                updateList.add(e);
+                if (e.getValStatus() != v) {
+                    updateList.add(e);
+                }
             }
         }
         statsGroupSlbDao.updateStatusById(updateList.toArray(new StatsGroupSlbDo[updateList.size()]), StatsGroupSlbEntity.UPDATESET_FULL);
