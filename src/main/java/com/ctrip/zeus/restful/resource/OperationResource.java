@@ -83,6 +83,14 @@ public class OperationResource {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * @api {get} /api/op/upServer: Mark up a server
+     * @apiDescription Mark up server action will take effect on a physical server. It will set server status to 'up' to all nesting SLB groups.
+     * @apiName MarkUpServer
+     * @apiGroup Operation
+     * @apiParam {String} ip            server ip address
+     * @apiSuccess {ServerStatus}       server status
+     */
     @GET
     @Path("/upServer")
     @Authorize(name = "upDownServer")
@@ -90,6 +98,14 @@ public class OperationResource {
         return serverOps(request, hh, ip, true);
     }
 
+    /**
+     * @api {get} /api/op/downServer: Mark down a server
+     * @apiDescription Mark down server action will take effect on a physical server. It will set server status to 'down' to all nesting SLB groups.
+     * @apiName MarkDownServer
+     * @apiGroup Operation
+     * @apiParam {String} ip            server ip address
+     * @apiSuccess {ServerStatus}       server status
+     */
     @GET
     @Path("/downServer")
     @Authorize(name = "upDownServer")
@@ -170,6 +186,17 @@ public class OperationResource {
         return responseHandler.handle(ss, hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/op/upMember: Mark up group member(s)
+     * @apiDescription Mark up group member action will take effect only on a single group. It will set member status to 'up' on the specified group.
+     * @apiName MarkUpMember
+     * @apiGroup Operation
+     * @apiParam {Long} groupId         id of the target group whose member needs to be marked up
+     * @apiParam {String} groupName     name of the target group whose member needs to be marked up
+     * @apiParam {StringList} ip        group member ip address(es)
+     * @apiParam {Boolean} batch        if multiple group members needs to be marked up, batch value must be explicitly set to true
+     * @apiSuccess {GroupServerStatusList}   member statuses by group
+     */
     @GET
     @Path("/upMember")
     @Authorize(name = "upDownMember")
@@ -191,6 +218,17 @@ public class OperationResource {
         return memberOps(request, hh, groupId, ips, batch, true, TaskOpsType.MEMBER_OPS);
     }
 
+    /**
+     * @api {get} /api/op/downMember: Mark down group member(s)
+     * @apiDescription Mark down group member action will take effect only on a single group. It will set member status to 'down' on the specified group.
+     * @apiName MarkDownMember
+     * @apiGroup Operation
+     * @apiParam {Long} groupId         id of the target group whose member needs to be marked down
+     * @apiParam {String} groupName     name of the target group whose member needs to be marked down
+     * @apiParam {StringList} ip        group member ip address(es)
+     * @apiParam {Boolean} batch        if multiple group members needs to be marked down, batch value must be explicitly set to true
+     * @apiSuccess {GroupServerStatusList}   member statuses by group
+     */
     @GET
     @Path("/downMember")
     @Authorize(name = "upDownMember")
@@ -213,6 +251,17 @@ public class OperationResource {
         return memberOps(request, hh, groupId, ips, batch, false, TaskOpsType.MEMBER_OPS);
     }
 
+    /**
+     * @api {get} /api/op/pullIn: Pull in group member(s)
+     * @apiDescription Pull in group member action will take effect only on a single group. It will set pull status to 'up' on the specified group.
+     * @apiName PullInMember
+     * @apiGroup Operation
+     * @apiParam {Long} groupId         id of the target group whose member needs to be pulled in
+     * @apiParam {String} groupName     name of the target group whose member needs to be pulled in
+     * @apiParam {StringList} ip        group member ip address(es)
+     * @apiParam {Boolean} batch        if multiple group members needs to be pulled in, batch value must be explicitly set to true
+     * @apiSuccess {GroupServerStatusList}   member statuses by group
+     */
     @GET
     @Path("/pullIn")
     @Authorize(name = "upDownMember")
@@ -233,6 +282,17 @@ public class OperationResource {
         return memberOps(request, hh, groupId, ips, batch, true, TaskOpsType.PULL_MEMBER_OPS);
     }
 
+    /**
+     * @api {get} /api/op/pullOut: Pull out group member(s)
+     * @apiDescription Pull out group member action will take effect only on a single group. It will set pull status to 'down' on the specified group.
+     * @apiName PullOutMember
+     * @apiGroup Operation
+     * @apiParam {Long} groupId         id of the target group whose member needs to be pulled out
+     * @apiParam {String} groupName     name of the target group whose member needs to be pulled out
+     * @apiParam {StringList} ip        group member ip address(es)
+     * @apiParam {Boolean} batch        if multiple group members needs to be pulled out, batch value must be explicitly set to true
+     * @apiSuccess {GroupServerStatusList}   member statuses by group
+     */
     @GET
     @Path("/pullOut")
     @Authorize(name = "upDownMember")
