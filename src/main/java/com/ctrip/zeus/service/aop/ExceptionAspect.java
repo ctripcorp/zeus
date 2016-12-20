@@ -106,6 +106,7 @@ public class ExceptionAspect implements Ordered {
         SlbMessageData res = new SlbMessageData();
         res.setQuery(request.getQueryString())
                 .setUri(request.getRequestURI())
+                .setDescription(MessageUtil.getDescriptionFromQuery(request.getQueryString()))
                 .setSuccess(false)
                 .setErrorMessage(msg)
                 .setClientIp(MessageUtil.getClientIP(request));

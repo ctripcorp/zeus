@@ -17,6 +17,7 @@
     <element name="query" value-type="String" />
     <element name="user" value-type="String" />
     <element name="client-ip" value-type="String" />
+    <element name="description" value-type="String" />
     <element name="error-message" value-type="String" />
     <element name="success" value-type="boolean" />
     <element name="ip" value-type="String" type="list" names="ips" />

@@ -12,6 +12,7 @@
         <query>abc=abc</query>
         <user>ff</user>
         <client-ip>10.2.2.2</client-ip>
+        <description>type</description>
         <error-message>10.2.2.2</error-message>
         <success>true</success>
         <group-data>
