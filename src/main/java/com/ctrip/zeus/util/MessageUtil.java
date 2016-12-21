@@ -63,6 +63,9 @@ public class MessageUtil {
     }
 
     public static String getDescriptionFromQuery(String query) {
+        if (query == null){
+            return null;
+        }
         String[] qs = query.split("&");
         String description = null;
         for (String tmp : qs) {
