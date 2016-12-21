@@ -98,7 +98,7 @@ public class LocationConf {
 
                 confWriter.writeCommand("proxy_next_upstream", "off");
 
-                confWriter.writeCommand("proxy_set_header", "Host $host");
+                confWriter.writeCommand("proxy_set_header", "Host " + configHandler.getStringValue("location.proxy.header.host", null, null, groupId, "$host"));
                 confWriter.writeCommand("proxy_set_header", "X-Real-IP $remote_addr");
 
                 if (configHandler.getEnable("location.upstream.keepAlive", slbId, vsId, groupId, false)) {
