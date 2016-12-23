@@ -190,7 +190,19 @@ public class ServerConf {
         confWriter.writeCommand("ssl", "on");
         confWriter.writeCommand("ssl_certificate", SSL_PATH + "default/ssl.crt");
         confWriter.writeCommand("ssl_certificate_key", SSL_PATH + "default/ssl.key");
+        confWriter.writeCommand("ssl_protocols", getDefaultServerProtocols(slbId));
         locationConf.writeDefaultLocations(confWriter);
         confWriter.writeServerEnd();
+    }
+
+    private String getDefaultServerProtocols(Long slbId) throws Exception {
+        String result = "TLSv1 TLSv1.1 TLSv1.2";
+        if (configHandler.getEnable("default.server.ssl.protocol.sslv2", slbId, null, null, false)) {
+            result += " SSLv2";
+        }
+        if (configHandler.getEnable("default.server.ssl.protocol.sslv3", slbId, null, null, false)) {
+            result += " SSLv3";
+        }
+        return result;
     }
 }
