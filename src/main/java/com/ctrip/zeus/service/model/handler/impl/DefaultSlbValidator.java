@@ -71,7 +71,7 @@ public class DefaultSlbValidator implements SlbValidator {
                 }
             }
             if (check.size() == 0)
-                return;
+                continue;
             check.remove(slb.getId());
             if (check.size() > 0) {
                 throw new ValidationException("Slb server " + slbServer.getIp() + " exists in the system. Unique server ip is required.");

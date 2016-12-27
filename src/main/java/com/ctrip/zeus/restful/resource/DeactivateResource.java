@@ -260,8 +260,6 @@ public class DeactivateResource {
             throw new ValidationException("Cannot find vs by id " + vsId + ".");
         }
 
-        authService.authValidate(UserUtils.getUserName(request), ResourceOperationType.ACTIVATE, ResourceDataType.Vs, vsId);
-
         ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(new Long[]{slbId});
         Slb slb = slbMap.getOnlineMapping().get(slbId);
         if (slb == null) {
