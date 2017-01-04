@@ -413,7 +413,7 @@ public class OperationResource {
         } else if (memberIps != null && memberIps.size() > 0) {
             for (String ip : memberIps) {
                 if (groupMemberIps.contains(ip)) {
-                    ips.addAll(memberIps);
+                    ips.add(ip);
                 }
             }
         }
