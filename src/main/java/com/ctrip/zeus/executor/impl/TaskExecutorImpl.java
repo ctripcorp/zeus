@@ -473,10 +473,13 @@ public class TaskExecutorImpl implements TaskExecutor {
     }
 
     private void taskExecutorLog(Long slbId, long cost) {
+        if (tasks == null || tasks.size() == 0 ){
+            return;
+        }
         StringBuilder sb = new StringBuilder(256);
-        sb.append("SlbId: " + slbId).append("\n");
-        sb.append("TaskCount: " + tasks.size()).append("\n");
-        sb.append("Cost: " + cost).append("\n");
+        sb.append("SlbId: ").append(slbId).append("\n");
+        sb.append("TaskCount: ").append(tasks.size()).append("\n");
+        sb.append("Cost: ").append(cost).append("\n");
         sb.append("Tasks:").append("[\n");
         for (OpsTask task : tasks) {
             sb.append("{");
