@@ -1,4 +1,40 @@
 <model>
+    <!-- ################### core meta data ################### -->
+    <group id="123456789012" name="gateway" app-id="app921822" version="1" ssl="false" virtual="true">
+        <group-virtual-servers>
+            <group-virtual-server/>
+            <group-virtual-server/>
+        </group-virtual-servers>
+        <health-check intervals="10" fails="2" passes="2" timeout="1000">
+            <uri>/health-check</uri>
+        </health-check>
+        <load-balancing-method type="round-robin|least-conn|ip-hash|hash">
+            <value>uri</value>
+        </load-balancing-method>
+        <group-servers>
+            <group-server/>
+            <group-server/>
+        </group-servers>
+        <rule-set>
+            <rule/>
+            <rule/>
+        </rule-set>
+        <created-time>2013-05-20 13:34:00</created-time>
+    </group>
+    <group-virtual-server priority="0">
+        <path>/hotel</path>
+        <rewrite>^/regex</rewrite>
+        <redirect>/fullurl</redirect>
+        <virtual-server/>
+    </group-virtual-server>
+    <group-server port="80" weight="5" max-fails="5" fail-timeout="30">
+        <host-name>local</host-name>
+        <ip>192.168.1.11</ip>
+        <rule-set>
+            <rule/>
+            <rule/>
+        </rule-set>
+    </group-server>
     <virtual-server name="vs001" id="123456789012" ssl="true" version="1">
         <!--deprecated field slb-id-->
         <slb-id>123456789012</slb-id>
@@ -12,6 +48,10 @@
             <domain name="www.ctrip.com"/>
             <domain name="hotel.ctrip.com"/>
         </domains>
+        <rule-set>
+            <rule/>
+            <rule/>
+        </rule-set>
         <created-time>2013-05-20 13:34:00</created-time>
     </virtual-server>
     <slb id="123456789012" name="default" version="1">
@@ -27,8 +67,54 @@
             <slb-server slb-id="123456789012" ip="192.168.1.2" host-name="slb002"/>
         </slb-servers>
         <status>healthy</status>
+        <rule-set>
+            <rule/>
+            <rule/>
+        </rule-set>
         <created-time>2013-05-20 13:34:00</created-time>
     </slb>
+    <rule>
+        <name>timeout</name>
+        <type>1</type>
+        <version>1</version>
+        <data>abcde</data>
+        <phase>before_abc</phase>
+    </rule>
+    <traffic-policy>
+        <id>123456789012</id>
+        <path>/hotel</path>
+        <controls>
+            <traffic-control/>
+            <traffic-control/>
+        </controls>
+    </traffic-policy>
+    <traffic-control>
+        <group/>
+        <weight>1</weight>
+    </traffic-control>
+    <!-- ################### core meta data ################### -->
+
+    <group-list>
+        <total>11</total>
+        <groups>
+            <group/>
+            <group/>
+        </groups>
+    </group-list>
+    <group-server-list>
+        <groupId>123456789012</groupId>
+        <version>5</version>
+        <total>5</total>
+        <group-servers>
+            <group-server/>
+            <group-server/>
+        </group-servers>
+    </group-server-list>
+    <virtual-server-list>
+        <total>12</total>
+        <virtual-server/>
+        <virtual-server/>
+    </virtual-server-list>
     <slb-list>
         <total>11</total>
         <slbs>
@@ -36,6 +122,22 @@
             <slb/>
         </slbs>
     </slb-list>
+
+    <group-vs-bound>
+        <vs-id>123456789012</vs-id>
+        <priority>1000</priority>
+        <path>/hotel</path>
+        <rewrite>^/regex</rewrite>
+        <redirect>/fullurl</redirect>
+    </group-vs-bound>
+    <group-vs-bound-list>
+        <group-id>123456789012</group-id>
+        <bounds>
+            <group-vs-bound/>
+            <group-vs-bound/>
+        </bounds>
+    </group-vs-bound-list>
+
     <slb-release-info id="123456789012" name="default" version="1234567890123">
         <slb-servers-info>
             <slb-server-release-info ip="192.168.1.1" host-name="slb001" version="1234567890123"/>
@@ -52,70 +154,6 @@
 
     <server-war-info commitId="default">
     </server-war-info>
-    <virtual-server-list>
-        <total>12</total>
-        <virtual-server/>
-        <virtual-server/>
-    </virtual-server-list>
-
-    <group-vs-bound-list>
-        <group-id>123456789012</group-id>
-        <bounds>
-            <group-vs-bound/>
-            <group-vs-bound/>
-        </bounds>
-    </group-vs-bound-list>
-    <group-vs-bound>
-        <vs-id>123456789012</vs-id>
-        <priority>1000</priority>
-        <path>/hotel</path>
-        <rewrite>^/regex</rewrite>
-        <redirect>/fullurl</redirect>
-    </group-vs-bound>
-
-    <group-virtual-server priority="0">
-        <path>/hotel</path>
-        <rewrite>^/regex</rewrite>
-        <redirect>/fullurl</redirect>
-        <virtual-server/>
-    </group-virtual-server>
-    <group-server port="80" weight="5" max-fails="5" fail-timeout="30">
-        <host-name>local</host-name>
-        <ip>192.168.1.11</ip>
-    </group-server>
-    <group-server-list>
-        <groupId>123456789012</groupId>
-        <version>5</version>
-        <total>5</total>
-        <group-servers>
-            <group-server/>
-            <group-server/>
-        </group-servers>
-    </group-server-list>
-    <group id="123456789012" name="gateway" app-id="app921822" version="1" ssl="false" virtual="true">
-        <group-virtual-servers>
-            <group-virtual-server/>
-            <group-virtual-server/>
-        </group-virtual-servers>
-        <health-check intervals="10" fails="2" passes="2" timeout="1000">
-            <uri>/health-check</uri>
-        </health-check>
-        <load-balancing-method type="round-robin|least-conn|ip-hash|hash">
-            <value>uri</value>
-        </load-balancing-method>
-        <group-servers>
-            <group-server/>
-            <group-server/>
-        </group-servers>
-        <created-time>2013-05-20 13:34:00</created-time>
-    </group>
-    <group-list>
-        <total>11</total>
-        <groups>
-            <group/>
-            <group/>
-        </groups>
-    </group-list>
 
     <slb-group-check-failure-entity-list>
         <total>3</total>
