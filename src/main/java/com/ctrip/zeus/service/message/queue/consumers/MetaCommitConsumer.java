@@ -7,6 +7,7 @@ import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.queue.entity.*;
 import com.ctrip.zeus.service.message.queue.AbstractConsumer;
 import com.ctrip.zeus.service.model.Archive;
+import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.util.MessageUtil;
 import com.google.common.base.Joiner;
@@ -47,7 +48,7 @@ public class MetaCommitConsumer extends AbstractConsumer {
                         ArchiveGroupDo d0 = archiveGroupDao.findByGroupAndVersion(gd.getId(), gd.getVersion() - 1, ArchiveGroupEntity.READSET_FULL);
                         ArchiveGroupDo d = archiveGroupDao.findByGroupAndVersion(gd.getId(), gd.getVersion(), ArchiveGroupEntity.READSET_FULL);
                         List<String> description = diff(Group.class, ContentReaders.readGroupContent(d0.getContent()), ContentReaders.readGroupContent(d.getContent()));
-                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(Archive.GROUP).setRefId(gd.getId()).setAuthor(m.getPerformer()).setMessage("Update " + Joiner.on(",").join(description)));
+                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(MetaType.GROUP.getId()).setRefId(gd.getId()).setAuthor(m.getPerformer()).setMessage("Update " + Joiner.on(",").join(description)));
                     } catch (DalException e) {
                     } catch (SAXException e) {
                     } catch (IOException e) {
@@ -65,7 +66,7 @@ public class MetaCommitConsumer extends AbstractConsumer {
                 for (GroupData gd : data.getGroupDatas()) {
                     try {
                         ArchiveGroupDo d = archiveGroupDao.findByGroupAndVersion(gd.getId(), gd.getVersion(), ArchiveGroupEntity.READSET_IDONLY);
-                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(Archive.GROUP).setRefId(gd.getId()).setAuthor(m.getPerformer()).setMessage("Create"));
+                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(MetaType.GROUP.getId()).setRefId(gd.getId()).setAuthor(m.getPerformer()).setMessage("Create"));
                     } catch (DalException e) {
                     }
                 }
@@ -80,7 +81,7 @@ public class MetaCommitConsumer extends AbstractConsumer {
             if (data != null && data.getSuccess()) {
                 for (GroupData gd : data.getGroupDatas()) {
                     try {
-                        archiveCommitDao.deleteByRefAndType(new ArchiveCommitDo().setRefId(gd.getId()).setType(Archive.GROUP));
+                        archiveCommitDao.deleteByRefAndType(new ArchiveCommitDo().setRefId(gd.getId()).setType(MetaType.GROUP.getId()));
                     } catch (DalException e) {
                     }
                 }
@@ -98,7 +99,7 @@ public class MetaCommitConsumer extends AbstractConsumer {
                         MetaVsArchiveDo d0 = archiveVsDao.findByVsAndVersion(vd.getId(), vd.getVersion() - 1, ArchiveVsEntity.READSET_FULL);
                         MetaVsArchiveDo d = archiveVsDao.findByVsAndVersion(vd.getId(), vd.getVersion(), ArchiveVsEntity.READSET_FULL);
                         List<String> description = diff(VirtualServer.class, ContentReaders.readVirtualServerContent(d0.getContent()), ContentReaders.readVirtualServerContent(d.getContent()));
-                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(Archive.VS).setRefId(vd.getId()).setAuthor(m.getPerformer()).setMessage("Update " + Joiner.on(",").join(description)));
+                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(MetaType.VS.getId()).setRefId(vd.getId()).setAuthor(m.getPerformer()).setMessage("Update " + Joiner.on(",").join(description)));
                     } catch (DalException e) {
                     } catch (SAXException e) {
                     } catch (IOException e) {
@@ -116,7 +117,7 @@ public class MetaCommitConsumer extends AbstractConsumer {
                 for (VsData vd : data.getVsDatas()) {
                     try {
                         MetaVsArchiveDo d = archiveVsDao.findByVsAndVersion(vd.getId(), vd.getVersion(), ArchiveVsEntity.READSET_IDONLY);
-                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(Archive.VS).setRefId(vd.getId()).setAuthor(m.getPerformer()).setMessage("Create"));
+                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(MetaType.VS.getId()).setRefId(vd.getId()).setAuthor(m.getPerformer()).setMessage("Create"));
                     } catch (DalException e) {
                     }
                 }
@@ -131,7 +132,7 @@ public class MetaCommitConsumer extends AbstractConsumer {
             if (data != null && data.getSuccess()) {
                 for (VsData vd : data.getVsDatas()) {
                     try {
-                        archiveCommitDao.deleteByRefAndType(new ArchiveCommitDo().setRefId(vd.getId()).setType(Archive.VS));
+                        archiveCommitDao.deleteByRefAndType(new ArchiveCommitDo().setRefId(vd.getId()).setType(MetaType.VS.getId()));
                     } catch (DalException e) {
                     }
                 }
@@ -147,7 +148,7 @@ public class MetaCommitConsumer extends AbstractConsumer {
                 for (SlbData sd : data.getSlbDatas()) {
                     try {
                         ArchiveSlbDo d = archiveSlbDao.findBySlbAndVersion(sd.getId(), sd.getVersion(), ArchiveSlbEntity.READSET_IDONLY);
-                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(Archive.SLB).setRefId(sd.getId()).setAuthor(m.getPerformer()).setMessage("Create"));
+                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(MetaType.SLB.getId()).setRefId(sd.getId()).setAuthor(m.getPerformer()).setMessage("Create"));
                     } catch (DalException e) {
                     }
                 }
@@ -165,7 +166,7 @@ public class MetaCommitConsumer extends AbstractConsumer {
                         ArchiveSlbDo d0 = archiveSlbDao.findBySlbAndVersion(sd.getId(), sd.getVersion() - 1, ArchiveSlbEntity.READSET_FULL);
                         ArchiveSlbDo d = archiveSlbDao.findBySlbAndVersion(sd.getId(), sd.getVersion(), ArchiveSlbEntity.READSET_FULL);
                         List<String> description = diff(Slb.class, ContentReaders.readSlbContent(d0.getContent()), ContentReaders.readSlbContent(d.getContent()));
-                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(Archive.SLB).setRefId(sd.getId()).setAuthor(m.getPerformer()).setMessage("Update " + Joiner.on(",").join(description)));
+                        archiveCommitDao.insert(new ArchiveCommitDo().setArchiveId(d.getId()).setType(MetaType.SLB.getId()).setRefId(sd.getId()).setAuthor(m.getPerformer()).setMessage("Update " + Joiner.on(",").join(description)));
                     } catch (DalException e) {
                     } catch (SAXException e) {
                     } catch (IOException e) {
@@ -182,7 +183,7 @@ public class MetaCommitConsumer extends AbstractConsumer {
             if (data != null && data.getSuccess()) {
                 for (SlbData sd : data.getSlbDatas()) {
                     try {
-                        archiveCommitDao.deleteByRefAndType(new ArchiveCommitDo().setRefId(sd.getId()).setType(Archive.SLB));
+                        archiveCommitDao.deleteByRefAndType(new ArchiveCommitDo().setRefId(sd.getId()).setType(MetaType.SLB.getId()));
                     } catch (DalException e) {
                     }
                 }

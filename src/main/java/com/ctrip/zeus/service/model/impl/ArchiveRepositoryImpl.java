@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.Archive;
 import com.ctrip.zeus.service.model.ArchiveRepository;
+import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.ContentWriters;
 import org.springframework.stereotype.Repository;
@@ -97,7 +98,7 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
         }
 
         Map<Long, ArchiveCommitDo> commitByArchiveId = new HashMap<>();
-        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, Archive.GROUP, ArchiveCommitEntity.READSET_FULL)) {
+        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, MetaType.GROUP.getId(), ArchiveCommitEntity.READSET_FULL)) {
             commitByArchiveId.put(d.getArchiveId(), d);
         }
         List<Archive<Group>> result = new ArrayList<>(archives.size());
@@ -122,7 +123,7 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
         }
 
         Map<Long, ArchiveCommitDo> commitByArchiveId = new HashMap<>();
-        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, Archive.SLB, ArchiveCommitEntity.READSET_FULL)) {
+        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, MetaType.SLB.getId(), ArchiveCommitEntity.READSET_FULL)) {
             commitByArchiveId.put(d.getArchiveId(), d);
         }
         List<Archive<Slb>> result = new ArrayList<>(archives.size());
@@ -147,7 +148,7 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
         }
 
         Map<Long, ArchiveCommitDo> commitByArchiveId = new HashMap<>();
-        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, Archive.VS, ArchiveCommitEntity.READSET_FULL)) {
+        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, MetaType.VS.getId(), ArchiveCommitEntity.READSET_FULL)) {
             commitByArchiveId.put(d.getArchiveId(), d);
         }
         List<Archive<VirtualServer>> result = new ArrayList<>(archives.size());
