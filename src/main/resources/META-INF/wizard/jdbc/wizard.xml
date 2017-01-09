@@ -77,6 +77,7 @@
          <table name="status_check_count_slb"/>
          <table name="stats_group_slb"/>
          <table name="archive_commit"/>
+         <table name="rule"/>
       </group>
    </jdbc>
 </wizard>

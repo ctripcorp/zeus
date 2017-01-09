@@ -1,5 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
+    <entity name="rule" table="rule" alias="r2" do-class="RuleDo">
+        <var name="ids" value-type="Long[]"/>
+        <query-defs>
+            <query name="find-all-by-target-and-type" type="SELECT" multiple="true">
+                <param name="target-id"/>
+                <param name="target-type"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='target-id'/> = ${target-id}
+                        AND <FIELD name='target-type'/> = ${target-type}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-targets-and-type" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <param name="target-type"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='target-id'/> IN <IN>${ids}</IN>
+                        AND <FIELD name='target-type'/> = ${target-type}
+                    ]]>
+                </statement>
+            </query>
+            <query name="insert" type="INSERT" batch="true">
+                <statement>
+                    <![CDATA[
+                    INSERT INTO <TABLE/>(<FIELDS/>)
+                    VALUES(<VALUES/>)
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete" type="DELETE">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
     <entity name="group-server" table="group_server" alias="ass" do-class="GroupServerDo">
         <query-defs>
             <query name="insert" type="INSERT">
