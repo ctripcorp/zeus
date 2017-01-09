@@ -27,6 +27,28 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-name-and-type" type="SELECT" multiple="true">
+                <param name="name"/>
+                <param name="target-type"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='name'/> = ${name}
+                        AND <FIELD name='target-type'/> = ${target-type}
+                    ]]>
+                </statement>
+            </query>
+            <query name="update" type="UPDATE" batch="true">
+                <statement>
+                    <![CDATA[
+                    UPDATE <TABLE/>
+                    SET <FIELD name='value'/> = ${value},
+                        <FIELD name='phase'/> = ${phase},
+                    WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
@@ -35,12 +57,22 @@
                     ]]>
                 </statement>
             </query>
-            <query name="delete" type="DELETE">
-                <param name="ids"/>
+            <query name="delete" type="DELETE" batch="true">
                 <statement>
                     <![CDATA[
                     DELETE FROM <TABLE/>
-                    WHERE <FIELD name='id'/> IN <IN>${ids}</IN>
+                    WHERE <FIELD name='id'/> = ${ids}
+                    ]]>
+                </statement>
+            </query>
+            <query name="delete-by-target-and-type" type="DELETE">
+                <param name="target-id"/>
+                <param name="target-type"/>
+                <statement>
+                    <![CDATA[
+                    DELETE FROM <TABLE/>
+                    WHERE <FIELD name='target-id'/> = ${target-id}
+                        AND <FIELD name='target-type'/> = ${target-type}
                     ]]>
                 </statement>
             </query>
