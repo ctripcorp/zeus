@@ -7,6 +7,7 @@
     <entity-ref name="virtual-server" />
     <entity-ref name="slb" />
     <entity-ref name="rule" />
+    <entity-ref name="policy-virtual-server" />
     <entity-ref name="traffic-policy" />
     <entity-ref name="traffic-control" />
     <entity-ref name="group-list" />
@@ -112,10 +113,17 @@
     <attribute name="ip" value-type="String" />
     <attribute name="host-name" value-type="String" />
   </entity>
-  <entity name="traffic-policy">
-    <element name="id" value-type="long" />
+  <entity name="policy-virtual-server">
     <element name="path" value-type="String" />
+    <element name="priority" value-type="int" />
+    <entity-ref name="virtual-server" />
+  </entity>
+  <entity name="traffic-policy">
+    <attribute name="id" value-type="long" />
+    <attribute name="version" value-type="int" />
+    <entity-ref name="policy-virtual-server" type="list" names="policy-virtual-servers" xml-indent="true" />
     <entity-ref name="traffic-control" type="list" names="controls" xml-indent="true" />
+    <entity-ref name="rule" type="list" names="rule-set" xml-indent="true" />
   </entity>
   <entity name="traffic-control">
     <element name="weight" value-type="int" />

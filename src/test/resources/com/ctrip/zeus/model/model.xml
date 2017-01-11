@@ -80,13 +80,24 @@
         <data>abcde</data>
         <phase>before_abc</phase>
     </rule>
-    <traffic-policy>
-        <id>123456789012</id>
-        <path>/hotel</path>
+    <policy-virtual-server>
+        <path>/abc</path>
+        <priority>1</priority>
+        <virtual-server/>
+    </policy-virtual-server>
+    <traffic-policy id="123456789012" version="1">
+        <policy-virtual-servers>
+            <policy-virtual-server/>
+            <policy-virtual-server/>
+        </policy-virtual-servers>
         <controls>
             <traffic-control/>
             <traffic-control/>
         </controls>
+        <rule-set>
+            <rule/>
+            <rule/>
+        </rule-set>
     </traffic-policy>
     <traffic-control>
         <group/>

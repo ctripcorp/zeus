@@ -208,6 +208,14 @@
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RSlbStatusDao"/>
     </bean>
 
+    <bean id="rTrafficPolicyGroupDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RTrafficPolicyGroupDao"/>
+    </bean>
+
+    <bean id="rTrafficPolicyVsDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RTrafficPolicyVsDao"/>
+    </bean>
+
     <bean id="ruleDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.RuleDao"/>
     </bean>
@@ -282,6 +290,10 @@
 
     <bean id="taskDao" factory-bean="daoFactory" factory-method="getDao">
         <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.TaskDao"/>
+    </bean>
+
+    <bean id="trafficPolicyDao" factory-bean="daoFactory" factory-method="getDao">
+        <constructor-arg type="java.lang.Class" value="com.ctrip.zeus.dal.core.TrafficPolicyDao"/>
     </bean>
 
 </beans>
