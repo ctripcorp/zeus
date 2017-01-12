@@ -31,11 +31,13 @@ public class PathValidationTest extends AbstractServerTest {
     private GroupValidator groupModelValidator;
     @Resource
     private RGroupVsDao rGroupVsDao;
+    @Resource
+    private PathValidator pathValidator;
 
     private final String standardSuffix = "($|/|\\?)";
 
     @Test
-    public void testExtractPath() throws ValidationException {
+    public void testExtractUriFromRegexPath() throws ValidationException {
         String normalValue1 = "abc($|/|\\?)";
         String normalValue2 = "abc";
         String normalValue3 = "/abc";
@@ -51,33 +53,33 @@ public class PathValidationTest extends AbstractServerTest {
         String root3 = "~* ^/";
         String root4 = "~* ^\"/\"";
         String root5 = "~* \"^/\"";
-        Assert.assertEquals("abc($|/|\\?)", extractValue(normalValue1));
-        Assert.assertEquals("abc", extractValue(normalValue2));
-        Assert.assertEquals("abc", extractValue(normalValue3));
-        Assert.assertEquals("abc", extractValue(normalValue4));
-        Assert.assertEquals("abc", extractValue(normalValue5));
-        Assert.assertEquals("abc", extractValue(normalValue6));
-        Assert.assertEquals("abc($|/|\\?)", extractValue(normalValue7));
-        Assert.assertEquals("abc", extractValue(creepyValue1));
-        Assert.assertEquals("\\\"abc\\\"", extractValue(creepyValue2));
-        Assert.assertEquals("members($|/|\\?)|membersite($|/|\\?)", extractValue(creepyValue3));
-        Assert.assertEquals("/", extractValue(root1));
-        Assert.assertEquals("/", extractValue(root2));
-        Assert.assertEquals("/", extractValue(root3));
-        Assert.assertEquals("/", extractValue(root4));
-        Assert.assertEquals("/", extractValue(root5));
+        Assert.assertEquals("abc($|/|\\?)", extractUri(normalValue1));
+        Assert.assertEquals("abc", extractUri(normalValue2));
+        Assert.assertEquals("abc", extractUri(normalValue3));
+        Assert.assertEquals("abc", extractUri(normalValue4));
+        Assert.assertEquals("abc", extractUri(normalValue5));
+        Assert.assertEquals("abc", extractUri(normalValue6));
+        Assert.assertEquals("abc($|/|\\?)", extractUri(normalValue7));
+        Assert.assertEquals("abc", extractUri(creepyValue1));
+        Assert.assertEquals("\\\"abc\\\"", extractUri(creepyValue2));
+        Assert.assertEquals("members($|/|\\?)|membersite($|/|\\?)", extractUri(creepyValue3));
+        Assert.assertEquals("/", extractUri(root1));
+        Assert.assertEquals("/", extractUri(root2));
+        Assert.assertEquals("/", extractUri(root3));
+        Assert.assertEquals("/", extractUri(root4));
+        Assert.assertEquals("/", extractUri(root5));
     }
 
     @Test
     public void testPathUtils() throws ValidationException {
         String s1 = "abcdefg";
         String s2 = "abc";
-        String s3 = extractValue("ABCDefghij($|/|\\?)");
+        String s3 = extractUri("ABCDefghij($|/|\\?)");
         String s4 = "我爱中国";
-        String s5 = extractValue("我($|/|\\?)");
+        String s5 = extractUri("我($|/|\\?)");
         String s6 = "我爱中国中国爱我";
 
-        String s7 = extractValue("bcdef($|/|\\?)");
+        String s7 = extractUri("bcdef($|/|\\?)");
         String s8 = "爱";
 
         String s9 = "~* \"^/members($|/|\\?)|membersite($|/|\\?)\"";
@@ -112,7 +114,7 @@ public class PathValidationTest extends AbstractServerTest {
         Pattern p = Pattern.compile("^((\\w|-)+/?)(\\$|\\\\\\?)?");
         List<String> r;
         try {
-            r = tmp.regexLevelSplit(s1, 1);
+            r = pathValidator.splitParallelPaths(s1, 1);
             Assert.assertEquals(3, r.size());
             Assert.assertEquals("Thingstodo-Order-OrderService$", r.get(0));
             Assert.assertEquals("Thingstodo-Order-OrderService/", r.get(1));
@@ -126,7 +128,7 @@ public class PathValidationTest extends AbstractServerTest {
         }
 
         try {
-            r = tmp.regexLevelSplit(s2, 1);
+            r = pathValidator.splitParallelPaths(s2, 1);
             Assert.assertEquals(6, r.size());
             Assert.assertTrue(p.matcher(r.get(0)).matches());
             Assert.assertFalse(p.matcher(r.get(1)).matches());
@@ -135,7 +137,7 @@ public class PathValidationTest extends AbstractServerTest {
         }
 
         try {
-            r = tmp.regexLevelSplit(s3, 1);
+            r = pathValidator.splitParallelPaths(s3, 1);
             Assert.assertEquals(12, r.size());
             Assert.assertEquals("restapi$", r.get(0));
             Assert.assertEquals("restapi/", r.get(1));
@@ -148,7 +150,7 @@ public class PathValidationTest extends AbstractServerTest {
         }
 
         try {
-            r = tmp.regexLevelSplit(s4, 1);
+            r = pathValidator.splitParallelPaths(s4, 1);
             Assert.assertEquals(6, r.size());
             Assert.assertEquals("members$", r.get(0));
             Assert.assertEquals("members/", r.get(1));
@@ -419,7 +421,8 @@ public class PathValidationTest extends AbstractServerTest {
         }
     }
 
-    private static String extractValue(String path) throws ValidationException {
-        return DefaultGroupValidator.extractValue(path);
+    private static String extractUri(String path) throws ValidationException {
+        path = PathUtils.pathReformat(path);
+        return PathUtils.extractUriIgnoresFirstDelimiter(path);
     }
 }

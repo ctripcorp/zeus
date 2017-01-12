@@ -7,17 +7,14 @@ import com.ctrip.zeus.model.entity.GroupServer;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.PathRewriteParser;
+import com.ctrip.zeus.service.model.PathValidator;
 import com.ctrip.zeus.service.model.handler.GroupServerValidator;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
-import com.ctrip.zeus.util.PathUtils;
-import com.google.common.collect.Sets;
 import org.springframework.stereotype.Component;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Created by zhoumy on 2015/6/29.
@@ -29,18 +26,17 @@ public class DefaultGroupValidator implements GroupValidator {
     @Resource
     private GroupServerValidator groupServerModelValidator;
     @Resource
+    private PathValidator pathValidator;
+    @Resource
     private RGroupVsDao rGroupVsDao;
     @Resource
     private RGroupVgDao rGroupVgDao;
     @Resource
     private RGroupStatusDao rGroupStatusDao;
     @Resource
+    private RTrafficPolicyGroupDao rTrafficPolicyGroupDao;
+    @Resource
     private GroupDao groupDao;
-
-    private final Set<String> pathPrefixModifier = Sets.newHashSet("=", "~", "~*", "^~");
-    private final String standardSuffix = "($|/|\\?)";
-    private final String[] standardSuffixIdentifier = new String[]{"$", "/", "\\?"};
-    private final Pattern basicPathPath = Pattern.compile("^((\\w|-)+/?)(\\$|\\\\\\?)?");
 
     @Override
     public boolean exists(Long targetId) throws Exception {
@@ -55,18 +51,23 @@ public class DefaultGroupValidator implements GroupValidator {
 
     @Override
     public void checkVersion(Group target) throws Exception {
-        GroupDo check = groupDao.findById(target.getId(), GroupEntity.READSET_FULL);
-        if (check == null)
-            throw new ValidationException("Group with id " + target.getId() + " does not exists.");
-        if (!target.getVersion().equals(check.getVersion()))
-            throw new ValidationException("Newer Group version is detected.");
+        RelGroupStatusDo check = rGroupStatusDao.findByGroup(target.getId(), RGroupStatusEntity.READSET_FULL);
+        if (check.getOfflineVersion() > target.getVersion()) {
+            throw new ValidationException("Newer version is detected.");
+        }
+        if (check.getOfflineVersion() != target.getVersion()) {
+            throw new ValidationException("Incompatible version.");
+        }
     }
 
     @Override
     public void removable(Long targetId) throws Exception {
         RelGroupStatusDo check = rGroupStatusDao.findByGroup(targetId, RGroupStatusEntity.READSET_FULL);
         if (check.getOnlineVersion() != 0) {
-            throw new ValidationException("Group must be deactivated before deletion.");
+            throw new ValidationException("Group that you tried to delete is still active.");
+        }
+        if (rTrafficPolicyGroupDao.findByGroup(targetId, RTrafficPolicyGroupEntity.READSET_FULL).size() > 0) {
+            throw new ValidationException("Group that you tried to delete has one or more traffic policy dependency.");
         }
     }
 
@@ -74,11 +75,11 @@ public class DefaultGroupValidator implements GroupValidator {
     public void validate(Group target, boolean escapePathValidation) throws Exception {
         if (target.getName() == null || target.getName().isEmpty()
                 || target.getAppId() == null || target.getAppId().isEmpty()) {
-            throw new ValidationException("Group name and app id are required.");
+            throw new ValidationException("Field `name` and `app-id` are not allowed empty.");
         }
-        if (target.getHealthCheck() != null) {
-            if (target.getHealthCheck().getUri() == null || target.getHealthCheck().getUri().isEmpty())
-                throw new ValidationException("Health check path cannot be empty.");
+        if (target.getHealthCheck() != null
+                && (target.getHealthCheck().getUri() == null || target.getHealthCheck().getUri().isEmpty())) {
+            throw new ValidationException("Field `health-check` is missing `uri` value.");
         }
         validateGroupVirtualServers(target.getId(), target.getGroupVirtualServers(), escapePathValidation);
         validateGroupServers(target.getGroupServers());
@@ -87,324 +88,67 @@ public class DefaultGroupValidator implements GroupValidator {
     @Override
     public void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers, boolean escapePathValidation) throws Exception {
         if (groupVirtualServers == null || groupVirtualServers.size() == 0)
-            throw new ValidationException("No virtual server is found bound to this group.");
-        if (groupId == null)
-            groupId = 0L;
-        GroupVirtualServer dummy = new GroupVirtualServer();
-        Map<Long, GroupVirtualServer> addingGvs = new HashMap<>();
+            throw new ValidationException("Group is missing `group-virtual-server` field.");
+        if (groupId == null) groupId = 0L;
 
+        Map<Long, PathValidator.LocationEntry> groupEntriesByVs = validateAndBuildLocationEntry(groupId, groupVirtualServers, escapePathValidation);
+
+        if (escapePathValidation || groupEntriesByVs.size() == 0) return;
+
+
+        Map<Long, List<PathValidator.LocationEntry>> retainedGroupEntriesByVs = new HashMap<>();
+        for (RelGroupVsDo e : rGroupVsDao.findAllByVses(groupEntriesByVs.keySet().toArray(new Long[groupEntriesByVs.size()]), RGroupVsEntity.READSET_FULL)) {
+            List<PathValidator.LocationEntry> entryList = retainedGroupEntriesByVs.get(e.getVsId());
+            if (entryList == null) {
+                entryList = new ArrayList<>();
+                retainedGroupEntriesByVs.put(e.getVsId(), entryList);
+            }
+            entryList.add(new PathValidator.LocationEntry().setVsId(e.getVsId()).setEntryId(e.getGroupId()).setPath(e.getPath()).setPriority(e.getPriority() == 0 ? 1000 : e.getPriority()));
+        }
+
+        for (Map.Entry<Long, PathValidator.LocationEntry> e : groupEntriesByVs.entrySet()) {
+            pathValidator.checkOverlapRestriction(e.getKey(), e.getValue(), retainedGroupEntriesByVs.get(e.getKey()));
+        }
+
+        // reset values if auto-reorder("priority" : null) is enabled
+        for (GroupVirtualServer e : groupVirtualServers) {
+            Long vsId = e.getVirtualServer().getId();
+            e.setVirtualServer(new VirtualServer().setId(vsId));
+            PathValidator.LocationEntry ref = groupEntriesByVs.get(vsId);
+            e.setPath(ref.getPath());
+            if (e.getPriority() == null) {
+                e.setPriority(ref.getPriority());
+            } else if (!e.getPriority().equals(ref.getPriority())) {
+                throw new ValidationException("Group that you tries to create/modify may cause path prefix-overlap problem with other groups on virtual-server " + e.getVirtualServer().getId() + ". Recommend priority will be " + ref + ".");
+            }
+        }
+    }
+
+    private Map<Long, PathValidator.LocationEntry> validateAndBuildLocationEntry(Long groupId, List<GroupVirtualServer> groupVirtualServers, boolean escapePathValidation) throws Exception {
+        Map<Long, PathValidator.LocationEntry> groupEntriesByVs = new HashMap<>();
         for (GroupVirtualServer gvs : groupVirtualServers) {
             if (gvs.getRewrite() != null && !gvs.getRewrite().isEmpty()) {
                 if (!PathRewriteParser.validate(gvs.getRewrite())) {
-                    throw new ValidationException("Invalid rewrite value.");
+                    throw new ValidationException("Invalid `rewrite` field value. \"rewrite\" : " + gvs.getRewrite() + ".");
                 }
             }
 
-            VirtualServer vs = gvs.getVirtualServer();
-            if (!virtualServerModelValidator.exists(vs.getId())) {
-                throw new ValidationException("Virtual server with id " + vs.getId() + " does not exist.");
+            VirtualServer currentVs = gvs.getVirtualServer();
+            if (!virtualServerModelValidator.exists(currentVs.getId())) {
+                throw new ValidationException("Field `group-virtual-server` is requesting a combination to an non-existing virtual-server. \"vs-id\" : " + currentVs.getId() + ".");
             }
-            if (addingGvs.containsKey(vs.getId())) {
-                throw new ValidationException("Group and virtual server is an unique combination.");
-            } else {
-                addingGvs.put(vs.getId(), dummy);
-            }
-
-            if (!escapePathValidation) {
-                doPathValidationAndMapping(addingGvs, gvs);
+            if (groupEntriesByVs.containsKey(currentVs.getId())) {
+                throw new ValidationException("Group can have and only have one combination to the same virtual-server. \"vs-id\" : " + currentVs.getId() + ".");
+            } else if (!escapePathValidation) {
+                PathValidator.LocationEntry le = new PathValidator.LocationEntry().setVsId(currentVs.getId()).setEntryId(groupId).setPath(gvs.getPath()).setPriority(gvs.getPriority());
+                groupEntriesByVs.put(currentVs.getId(), le);
             }
         }
-
-        if (escapePathValidation || addingGvs.size() == 0) return;
-
-        Map<Long, List<RelGroupVsDo>> retainedGvs = new HashMap<>();
-        for (RelGroupVsDo e : rGroupVsDao.findAllByVses(addingGvs.keySet().toArray(new Long[addingGvs.size()]), RGroupVsEntity.READSET_FULL)) {
-            List<RelGroupVsDo> relsOfVs = retainedGvs.get(e.getVsId());
-            if (relsOfVs == null) {
-                relsOfVs = new ArrayList<>();
-                retainedGvs.put(e.getVsId(), relsOfVs);
-            }
-            relsOfVs.add(e);
-        }
-        checkPathOverlappingAcrossVs(groupId, addingGvs, retainedGvs);
-
-        // reset priority after auto reorder enabled(priority is originally null)
-        for (GroupVirtualServer e : groupVirtualServers) {
-            Integer ref = addingGvs.get(e.getVirtualServer().getId()).getPriority();
-            if (e.getPriority() == null) {
-                e.setPriority(ref);
-            } else if (e.getPriority().intValue() != ref.intValue()) {
-                throw new ValidationException("Potential path overlapping problem exists at vs-" + e.getVirtualServer().getId() + ". Recommend priority is " + ref + ".");
-            }
-        }
+        return groupEntriesByVs;
     }
 
     @Override
     public void validateGroupServers(List<GroupServer> groupServers) throws Exception {
         groupServerModelValidator.validateGroupServers(groupServers);
-    }
-
-    private void doPathValidationAndMapping(Map<Long, GroupVirtualServer> mappingResult, GroupVirtualServer gvs) throws ValidationException {
-        if (gvs.getPath() == null || gvs.getPath().isEmpty()) {
-            throw new ValidationException("Path cannot be empty.");
-        }
-        List<String> pathValues = new ArrayList<>(2);
-        for (String pv : gvs.getPath().split(" ", 0)) {
-            if (pv.isEmpty()) continue;
-            if (pathValues.size() == 2)
-                throw new ValidationException("Invalid path, too many whitespace modifiers is found.");
-
-            pathValues.add(pv);
-        }
-        if (pathValues.size() == 2) {
-            if (!pathPrefixModifier.contains(pathValues.get(0))) {
-                throw new ValidationException("Invalid path, invalid prefix modifier is found.");
-            }
-            // format path value
-            gvs.setPath(pathValues.get(0) + " " + pathValues.get(1));
-        }
-
-        String path = extractValue(gvs.getPath());
-        if ("/".equals(path)) {
-            if ("/".equals(gvs.getPath())) {
-                mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -2000 : gvs.getPriority()));
-            } else {
-                mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(gvs.getPath()).setPriority(gvs.getPriority() == null ? -1000 : gvs.getPriority()));
-            }
-        } else {
-            mappingResult.put(gvs.getVirtualServer().getId(), new GroupVirtualServer().setPath(path).setPriority(gvs.getPriority() == null ? 1000 : gvs.getPriority()));
-        }
-    }
-
-    private void checkPathOverlappingAcrossVs(Long groupId, Map<Long, GroupVirtualServer> addingGvs, Map<Long, List<RelGroupVsDo>> retainedGvs) throws ValidationException {
-        Set<RelGroupVsDo> overlappedEntries = new HashSet<>();
-        for (Map.Entry<Long, GroupVirtualServer> e : addingGvs.entrySet()) {
-            GroupVirtualServer addingEntry = e.getValue();
-            if (addingEntry == null) {
-                throw new ValidationException("Unexpected path validation is reached. Related group and vs: " + groupId + ", " + e.getKey());
-            }
-
-            String addingPath = addingEntry.getPath();
-            try {
-                addingPath = extractValue(addingPath);
-            } catch (ValidationException ex) {
-            }
-
-            boolean addingPathIsRoot = "/".equals(addingPath);
-            List<String> addingPathMembers = new ArrayList<>();
-            if (!addingPathIsRoot) {
-                addingPathMembers = regexLevelSplit(addingPath, 1);
-                if (addingPathMembers.size() == 0) addingPathMembers.add(addingPath);
-//                for (String pathMember : addingPathMembers) {
-//                    if (!basicPathPath.matcher(pathMember).matches()) {
-//                        throw new ValidationException("Invalid characters are found in sub path " + pathMember + ".");
-//                    }
-//                }
-            } else {
-                addingPathMembers.add(addingPath);
-            }
-
-            List<RelGroupVsDo> relsOfVs = retainedGvs.get(e.getKey());
-            if (relsOfVs == null) continue;
-
-            for (RelGroupVsDo retainedEntry : relsOfVs) {
-                if (groupId.equals(retainedEntry.getGroupId())) continue;
-                if (retainedEntry.getPriority() == 0) retainedEntry.setPriority(1000);
-
-                String retainedPath = retainedEntry.getPath();
-                try {
-                    retainedPath = extractValue(retainedEntry.getPath());
-                } catch (ValidationException ex) {
-                }
-
-                boolean retainedPathIsRoot = "/".equals(retainedPath);
-                List<String> retainedPathMembers = new ArrayList<>();
-                if (!retainedPathIsRoot) {
-                    retainedPathMembers = regexLevelSplit(retainedPath, 1);
-                    if (retainedPathMembers.size() == 0) retainedPathMembers.add(retainedPath);
-                } else {
-                    retainedPathMembers.add(retainedPath);
-                }
-
-                // check if root path is completely equivalent, otherwise escape comparing with root path
-                if (addingPathIsRoot && retainedPathIsRoot) {
-                    if (retainedEntry.getPath().equals(addingEntry.getPath())) {
-                        overlappedEntries.add(retainedEntry);
-                    }
-                    continue;
-                }
-
-                for (String ap : addingPathMembers) {
-                    for (String rp : retainedPathMembers) {
-                        if (addingPathIsRoot && addingEntry.getPriority() >= retainedEntry.getPriority()) {
-                            addingEntry.setPriority(retainedEntry.getPriority() - 100);
-                            continue;
-                        }
-                        if (retainedPathIsRoot && addingEntry.getPriority() <= retainedEntry.getPriority()) {
-                            addingEntry.setPriority(retainedEntry.getPriority() + 100);
-                            continue;
-                        }
-
-                        int ol = PathUtils.prefixOverlapped(ap, rp, standardSuffix);
-                        switch (ol) {
-                            case -1:
-                                break;
-                            case 0:
-                                overlappedEntries.add(retainedEntry);
-                                break;
-                            case 1:
-                                if (addingEntry.getPriority() == null || addingEntry.getPriority() <= retainedEntry.getPriority()) {
-                                    addingEntry.setPriority(retainedEntry.getPriority() + 100);
-                                }
-                                break;
-                            case 2:
-                                if (addingEntry.getPriority() == null || addingEntry.getPriority() >= retainedEntry.getPriority()) {
-                                    addingEntry.setPriority(retainedEntry.getPriority() - 100);
-                                }
-                                break;
-                            default:
-                                throw new NotImplementedException();
-                        }
-                    }
-                }
-            }
-        }
-
-        if (overlappedEntries.size() > 0) {
-            StringBuilder sb = new StringBuilder();
-            for (RelGroupVsDo d : overlappedEntries) {
-                sb.append(d.getVsId() + "(" + d.getPath() + ")");
-            }
-            throw new ValidationException("Path is prefix-overlapped across virtual server " + sb.toString() + ".");
-        }
-    }
-
-    // expose api for testing
-    public static String extractValue(String path) throws ValidationException {
-        int idxPrefix = 0;
-        int idxModifier = 0;
-        boolean quote = false;
-
-        char[] pathArray = path.toCharArray();
-        for (char c : pathArray) {
-            if (c == '"') {
-                quote = true;
-                idxPrefix++;
-            } else if (c == ' ') {
-                idxPrefix++;
-                idxModifier = idxPrefix;
-            } else if (c == '^' || c == '~' || c == '=' || c == '*') {
-                idxPrefix++;
-            } else if (c == '/') {
-                idxPrefix++;
-                if (!quote && idxPrefix < pathArray.length && pathArray[idxPrefix] == '"') {
-                    quote = true;
-                    idxPrefix++;
-                }
-                break;
-            } else {
-                break;
-            }
-        }
-
-        if (quote && !path.endsWith("\"")) {
-            throw new ValidationException("Path should end up with quote if regex quotation is used. Path=" + path + ".");
-        }
-        int idxSuffix = quote ? path.length() - 1 : path.length();
-        if (idxPrefix == idxSuffix) {
-            if (path.charAt(idxSuffix - 1) == '/') {
-                return "/";
-            } else {
-                throw new ValidationException("Path could not be validated. Path=" + path + ".");
-            }
-        }
-        idxPrefix = idxPrefix < idxSuffix ?
-                (idxModifier > idxPrefix ? idxModifier : idxPrefix) : idxModifier;
-        return path.substring(idxPrefix, idxSuffix);
-    }
-
-    private List<String> restrictAndDecorate(String path, boolean appendSuffix) throws ValidationException {
-        if (path == null || path.isEmpty()) throw new ValidationException("Get empty path when trying to decorate.");
-        List<String> subPaths = new ArrayList<>();
-        StringBuilder pb = new StringBuilder();
-        char[] pp = path.toCharArray();
-        int startIdx, endIdx;
-        startIdx = 0;
-        endIdx = pp.length - 1;
-        if (pp[startIdx] == '(' && pp[endIdx] == ')') {
-            startIdx++;
-            endIdx--;
-        }
-
-        for (int i = startIdx; i <= endIdx; i++) {
-            switch (pp[i]) {
-                case '|':
-                    if (appendSuffix) {
-                        String p = pb.toString();
-                        pb.setLength(0);
-                        for (String s : standardSuffixIdentifier) {
-                            subPaths.add(p + s);
-                        }
-                    }
-                    break;
-                default:
-                    pb.append(pp[i]);
-                    break;
-            }
-        }
-
-        if (pb.length() > 0) {
-            String p = pb.toString();
-            pb.setLength(0);
-            if (appendSuffix) {
-                for (String s : standardSuffixIdentifier) {
-                    subPaths.add(p + s);
-                }
-            } else {
-                subPaths.add(p);
-            }
-        }
-
-        if (subPaths.size() == 0) {
-            for (String s : standardSuffixIdentifier) {
-                subPaths.add(path + s);
-            }
-        }
-
-        return subPaths;
-    }
-
-    public List<String> regexLevelSplit(String path, int depth) throws ValidationException {
-        List<String> pathMembers = new ArrayList<>();
-        if (depth > 1) {
-            throw new ValidationException("Function regexLevelSplit only support first level split.");
-        }
-        int fromIdx, idxSuffix;
-        fromIdx = idxSuffix = 0;
-        while ((idxSuffix = path.indexOf(standardSuffix, fromIdx)) != -1) {
-            if (fromIdx > 0) {
-                if (path.charAt(fromIdx) == '|') {
-                    fromIdx++;
-                    pathMembers.addAll(restrictAndDecorate(path.substring(fromIdx, idxSuffix), true));
-                } else {
-                    String prev = pathMembers.get(pathMembers.size() - 1);
-
-                    List<String> subPaths = restrictAndDecorate(prev + path.substring(fromIdx, idxSuffix + 8), true);
-                    pathMembers.set(pathMembers.size() - 1, subPaths.get(0));
-                    for (int i = 1; i < subPaths.size(); i++) {
-                        pathMembers.add(pathMembers.get(i));
-                    }
-                }
-            } else {
-                pathMembers.addAll(restrictAndDecorate(path.substring(0, idxSuffix), true));
-            }
-            fromIdx = idxSuffix + 8;
-        }
-
-        if (pathMembers.size() == 0) {
-            pathMembers.addAll(restrictAndDecorate(path, false));
-        }
-
-        return pathMembers;
     }
 }
