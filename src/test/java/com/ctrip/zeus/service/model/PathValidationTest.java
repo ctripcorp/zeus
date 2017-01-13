@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -182,7 +183,6 @@ public class PathValidationTest extends AbstractServerTest {
     @Test
     public void testAddNormalPath() {
         String path = "~* ^/normal($|/|\\?)";
-        String regexRoot = "~* /";
 
         List<GroupVirtualServer> array = new ArrayList<>();
         array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
@@ -190,15 +190,6 @@ public class PathValidationTest extends AbstractServerTest {
             groupModelValidator.validateGroupVirtualServers(100L, array, false);
             Assert.assertTrue(array.get(0).getPriority().intValue() == 1000);
             Assert.assertEquals(path, array.get(0).getPath());
-        } catch (Exception e) {
-            Assert.assertTrue(false);
-        }
-
-        array.get(0).setPriority(null).setPath(regexRoot);
-        try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertEquals(-1000, array.get(0).getPriority().intValue());
-            Assert.assertEquals(regexRoot, array.get(0).getPath());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -271,12 +262,43 @@ public class PathValidationTest extends AbstractServerTest {
             Assert.assertTrue(false);
         }
 
+        try {
+            RelGroupVsDo root = new RelGroupVsDo().setGroupId(10).setVsId(1).setPath("/").setPriority(-1000);
+            rGroupVsDao.insert(root);
+
+            try {
+                array.get(0).setPriority(null);
+                groupModelValidator.validateGroupVirtualServers(100L, array, false);
+                Assert.assertTrue(array.get(0).getPriority().intValue() == -900);
+            } catch (Exception e) {
+                Assert.assertTrue(false);
+            }
+
+            array.get(0).setPath("/").setPriority(-1100);
+            try {
+                groupModelValidator.validateGroupVirtualServers(100L, array, false);
+                Assert.assertTrue(false);
+            } catch (Exception e) {
+                Assert.assertTrue(e instanceof ValidationException);
+            }
+            rGroupVsDao.delete(root);
+        } catch (DalException e) {
+            Assert.assertTrue(false);
+        }
+
+        array.get(0).setPath("/").setPriority(null);
+        try {
+            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            Assert.assertTrue(array.get(0).getPriority().intValue() == -1100);
+        } catch (Exception e) {
+            Assert.assertTrue(false);
+        }
+
         testAddNormalPath();
     }
 
     @Test
     public void testUnconventionalPath() {
-        String root = "/";
         String startWith = "^/CommentAdmin";
         String noStart = "baik";
         String noAlphabetic = "/123";
@@ -286,13 +308,7 @@ public class PathValidationTest extends AbstractServerTest {
         String noMeaningSuffix = "~* \"^/members($|/|\\?)membersite($|/|\\?)\"";
 
         List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setPath(root).setVirtualServer(new VirtualServer().setId(1L)));
-
-        try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-        } catch (Exception e) {
-            Assert.assertTrue(false);
-        }
+        array.add(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)));
 
         try {
             array.get(0).setPriority(null).setPath(success);
@@ -389,7 +405,8 @@ public class PathValidationTest extends AbstractServerTest {
     @Before
     public void check() throws Exception {
         Slb slb = slbRepository.getById(1L);
-        Set<String> existingPaths = Sets.newHashSet("~* ^/CommentAdmin/", "~* ^/baike($|/|\\?)",
+        Set<String> existingPaths = Sets.newHashSet("~* ^/CommentAdmin/",
+                "~* ^/baike($|/|\\?)",
                 "~* ^/123likectrip($|/|\\?)",
                 "~* ^/linkservice($|/|\\?)", "~* ^/linkservice/link($|/|\\?)",
                 "~* ^/tour-marketingservice($|/|\\?)", "~* ^/tour-MarketingServiceConfig($|/|\\?)",

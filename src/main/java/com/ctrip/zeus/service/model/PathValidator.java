@@ -16,67 +16,51 @@ public class PathValidator {
     private static final String standardSuffix = "($|/|\\?)";
     private static final String[] standardSuffixIdentifier = new String[]{"$", "/"};
 
-    public LocationEntry checkOverlapRestriction(Long vsId, LocationEntry addingEntry, List<LocationEntry> retainedEntries) throws ValidationException {
-        if (addingEntry == null) {
+    public LocationEntry checkOverlapRestriction(Long vsId, LocationEntry insertEntry, List<LocationEntry> currentEntrySet) throws ValidationException {
+        if (insertEntry == null) {
             throw new NullPointerException("Null location entry value when executing path overlap check.");
         }
-        addingEntry.setPath(PathUtils.pathReformat(addingEntry.getPath()));
+        insertEntry.setPath(PathUtils.pathReformat(insertEntry.getPath()));
 
-        if (retainedEntries == null || retainedEntries.size() == 0) return addingEntry;
+        if (currentEntrySet == null || currentEntrySet.size() == 0) return insertEntry;
 
-        String addingUri = PathUtils.extractUriIgnoresFirstDelimiter(addingEntry.path);
 
-        boolean addingRootUri = "/".equals(addingUri);
+        String insertUri = PathUtils.extractUriIgnoresFirstDelimiter(insertEntry.path);
+        boolean insertRootUri = "/".equals(insertUri);
 
-        List<String> addingPathMembers = new ArrayList<>();
-        if (!addingRootUri) {
-            addingEntry.setPriority(addingEntry.getPriority() == null ? 1000 : addingEntry.getPriority());
-            addingPathMembers = splitParallelPaths(addingUri, 1);
-            if (addingPathMembers.size() == 0) addingPathMembers.add(addingUri);
-        } else {
-            boolean exactRootUri = "/".equals(addingEntry.getPath());
-            addingEntry.setPriority(addingEntry.getPriority() == null ? (exactRootUri ? -1100 : -1000) : addingEntry.getPriority());
-            addingPathMembers.add(addingUri);
-        }
+        List<String> insertPathMembers = getPathCandidates(insertEntry, insertUri, insertRootUri);
 
         Set<LocationEntry> overlappedEntries = new HashSet<>();
-        for (LocationEntry retainedEntry : retainedEntries) {
-            if (addingEntry.getEntryId().equals(retainedEntry.getEntryId())) continue;
-            if (retainedEntry.getPriority() == null || retainedEntry.getPriority().equals(0)) {
-                retainedEntry.setPriority(1000);
-            }
+        for (LocationEntry entryNode : currentEntrySet) {
+            if (insertEntry.getEntryId().equals(entryNode.getEntryId())) continue;
 
-            String retainedUri = retainedEntry.getPath();
+            String entryNodeUri = entryNode.getPath();
             try {
-                retainedUri = PathUtils.extractUriIgnoresFirstDelimiter(retainedEntry.getPath());
+                entryNodeUri = PathUtils.extractUriIgnoresFirstDelimiter(entryNode.getPath());
             } catch (ValidationException ex) {
             }
+            entryNode.setPriority((entryNode.getPriority() != null && entryNode.getPriority().equals(0)) ? null : entryNode.getPriority());
+            boolean rootUri = "/".equals(entryNodeUri);
 
-            boolean retainedRootUri = "/".equals(retainedUri);
-            List<String> retainedPathMembers = new ArrayList<>();
-            if (!retainedRootUri) {
-                retainedPathMembers = splitParallelPaths(retainedUri, 1);
-                if (retainedPathMembers.size() == 0) retainedPathMembers.add(retainedUri);
-            } else {
-                retainedPathMembers.add(retainedUri);
-            }
-
-            // check if root path is completely equivalent, otherwise escape comparing with root path
-            if (addingRootUri && retainedRootUri) {
-                if (retainedEntry.getPath().equals(addingEntry.getPath())) {
-                    overlappedEntries.add(retainedEntry);
+            // compare root uri explicitly
+            if (insertRootUri && rootUri) {
+                if (entryNode.getPath().equals(insertEntry.getPath())) {
+                    overlappedEntries.add(entryNode);
+                } else {
+                    insertEntry.setPriority("/".equals(entryNode.getPath()) ? entryNode.getPriority() + 100 : entryNode.getPriority() - 100);
                 }
                 continue;
             }
 
-            for (String ap : addingPathMembers) {
+            List<String> retainedPathMembers = getPathCandidates(entryNode, entryNodeUri, rootUri);
+            for (String ap : insertPathMembers) {
                 for (String rp : retainedPathMembers) {
-                    if (addingRootUri && addingEntry.getPriority() >= retainedEntry.getPriority()) {
-                        addingEntry.setPriority(retainedEntry.getPriority() - 100);
+                    if (insertRootUri && insertEntry.getPriority() >= entryNode.getPriority()) {
+                        insertEntry.setPriority(entryNode.getPriority() - 100);
                         continue;
                     }
-                    if (retainedRootUri && addingEntry.getPriority() <= retainedEntry.getPriority()) {
-                        addingEntry.setPriority(retainedEntry.getPriority() + 100);
+                    if (rootUri && insertEntry.getPriority() <= entryNode.getPriority()) {
+                        insertEntry.setPriority(entryNode.getPriority() + 100);
                         continue;
                     }
 
@@ -85,16 +69,16 @@ public class PathValidator {
                         case -1:
                             break;
                         case 0:
-                            overlappedEntries.add(retainedEntry);
+                            overlappedEntries.add(entryNode);
                             break;
                         case 1:
-                            if (addingEntry.getPriority() <= retainedEntry.getPriority()) {
-                                addingEntry.setPriority(retainedEntry.getPriority() + 100);
+                            if (insertEntry.getPriority() <= entryNode.getPriority()) {
+                                insertEntry.setPriority(entryNode.getPriority() + 100);
                             }
                             break;
                         case 2:
-                            if (addingEntry.getPriority() >= retainedEntry.getPriority()) {
-                                addingEntry.setPriority(retainedEntry.getPriority() - 100);
+                            if (insertEntry.getPriority() >= entryNode.getPriority()) {
+                                insertEntry.setPriority(entryNode.getPriority() - 100);
                             }
                             break;
                         default:
@@ -111,7 +95,21 @@ public class PathValidator {
             }
             throw new ValidationException("Path that you tried to add is prefix-overlapped over existing entries: [ " + Joiner.on(",").join(entryIds) + " at vs " + vsId + ".");
         }
-        return addingEntry;
+        return insertEntry;
+    }
+
+    private List<String> getPathCandidates(LocationEntry locationEntry, String refinedUri, boolean isRootUri) throws ValidationException {
+        List<String> pathCandidates = new ArrayList<>();
+        if (!isRootUri) {
+            locationEntry.setPriority(locationEntry.getPriority() == null ? 1000 : locationEntry.getPriority());
+            pathCandidates = splitParallelPaths(refinedUri, 1);
+            if (pathCandidates.size() == 0) pathCandidates.add(refinedUri);
+        } else {
+            boolean exactRootUri = "/".equals(locationEntry.getPath());
+            locationEntry.setPriority(locationEntry.getPriority() == null ? (exactRootUri ? -1100 : -1000) : locationEntry.getPriority());
+            pathCandidates.add(refinedUri);
+        }
+        return pathCandidates;
     }
 
     public List<String> splitParallelPaths(String path, int depth) throws ValidationException {
