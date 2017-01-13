@@ -6,7 +6,6 @@ import com.ctrip.zeus.dal.core.RelGroupVsDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
-import com.ctrip.zeus.service.model.handler.impl.DefaultGroupValidator;
 import com.ctrip.zeus.util.PathUtils;
 import com.google.common.collect.Sets;
 import org.junit.Assert;
@@ -110,26 +109,23 @@ public class PathValidationTest extends AbstractServerTest {
         String s3 = "(restapi|html5|market|webapp)($|/|\\?)";
         String s4 = "members($|/|\\?)|membersite($|/|\\?)";
 
-        DefaultGroupValidator tmp = (DefaultGroupValidator) groupModelValidator;
-        Pattern p = Pattern.compile("^((\\w|-)+/?)(\\$|\\\\\\?)?");
+        Pattern p = Pattern.compile("^((\\w|-)+/?)(\\$)?");
         List<String> r;
         try {
             r = pathValidator.splitParallelPaths(s1, 1);
-            Assert.assertEquals(3, r.size());
+            Assert.assertEquals(2, r.size());
             Assert.assertEquals("Thingstodo-Order-OrderService$", r.get(0));
             Assert.assertEquals("Thingstodo-Order-OrderService/", r.get(1));
-            Assert.assertEquals("Thingstodo-Order-OrderService\\?", r.get(2));
 
             Assert.assertTrue(p.matcher(r.get(0)).matches());
             Assert.assertTrue(p.matcher(r.get(1)).matches());
-            Assert.assertTrue(p.matcher(r.get(2)).matches());
         } catch (ValidationException e) {
             Assert.assertTrue(false);
         }
 
         try {
             r = pathValidator.splitParallelPaths(s2, 1);
-            Assert.assertEquals(6, r.size());
+            Assert.assertEquals(4, r.size());
             Assert.assertTrue(p.matcher(r.get(0)).matches());
             Assert.assertFalse(p.matcher(r.get(1)).matches());
         } catch (ValidationException e) {
@@ -138,26 +134,22 @@ public class PathValidationTest extends AbstractServerTest {
 
         try {
             r = pathValidator.splitParallelPaths(s3, 1);
-            Assert.assertEquals(12, r.size());
+            Assert.assertEquals(8, r.size());
             Assert.assertEquals("restapi$", r.get(0));
             Assert.assertEquals("restapi/", r.get(1));
-            Assert.assertEquals("restapi\\?", r.get(2));
-            Assert.assertEquals("html5$", r.get(3));
-            Assert.assertEquals("html5/", r.get(4));
-            Assert.assertEquals("html5\\?", r.get(5));
+            Assert.assertEquals("html5$", r.get(2));
+            Assert.assertEquals("html5/", r.get(3));
         } catch (ValidationException e) {
             Assert.assertTrue(false);
         }
 
         try {
             r = pathValidator.splitParallelPaths(s4, 1);
-            Assert.assertEquals(6, r.size());
+            Assert.assertEquals(4, r.size());
             Assert.assertEquals("members$", r.get(0));
             Assert.assertEquals("members/", r.get(1));
-            Assert.assertEquals("members\\?", r.get(2));
-            Assert.assertEquals("membersite$", r.get(3));
-            Assert.assertEquals("membersite/", r.get(4));
-            Assert.assertEquals("membersite\\?", r.get(5));
+            Assert.assertEquals("membersite$", r.get(2));
+            Assert.assertEquals("membersite/", r.get(3));
         } catch (ValidationException e) {
             Assert.assertTrue(false);
         }

@@ -14,7 +14,7 @@ import java.util.*;
 @Service("pathValidator")
 public class PathValidator {
     private static final String standardSuffix = "($|/|\\?)";
-    private static final String[] standardSuffixIdentifier = new String[]{"$", "/", "\\?"};
+    private static final String[] standardSuffixIdentifier = new String[]{"$", "/"};
 
     public LocationEntry checkOverlapRestriction(Long vsId, LocationEntry addingEntry, List<LocationEntry> retainedEntries) throws ValidationException {
         if (addingEntry == null) {
