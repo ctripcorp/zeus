@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.exceptions.ValidationException;
+import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.util.PathUtils;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,8 @@ public class PathValidator {
 
         Set<LocationEntry> overlappedEntries = new HashSet<>();
         for (LocationEntry entryNode : currentEntrySet) {
-            if (insertEntry.getEntryId().equals(entryNode.getEntryId())) continue;
+            if (insertEntry.getEntryId().equals(entryNode.getEntryId())
+                    && insertEntry.getEntryType().equals(entryNode.getEntryType())) continue;
 
             String entryNodeUri = entryNode.getPath();
             try {
@@ -89,11 +91,11 @@ public class PathValidator {
         }
 
         if (overlappedEntries.size() > 0) {
-            List<Long> entryIds = new ArrayList<>();
+            List<LocationEntry> entries = new ArrayList<>();
             for (LocationEntry e : overlappedEntries) {
-                entryIds.add(e.getEntryId());
+                entries.add(e);
             }
-            throw new ValidationException("Path that you tried to add is prefix-overlapped over existing entries: [ " + Joiner.on(",").join(entryIds) + " at vs " + vsId + ".");
+            throw new ValidationException("Path that you tried to add is prefix-overlapped over existing entries: [ " + Joiner.on(",").join(entries) + " at vs " + vsId + ".");
         }
         return insertEntry;
     }
@@ -201,6 +203,7 @@ public class PathValidator {
     public static class LocationEntry {
         Long vsId;
         Long entryId;
+        MetaType entryType;
         String path;
         Integer priority;
 
@@ -222,6 +225,15 @@ public class PathValidator {
             return this;
         }
 
+        public MetaType getEntryType() {
+            return entryType;
+        }
+
+        public LocationEntry setEntryType(MetaType entryType) {
+            this.entryType = entryType;
+            return this;
+        }
+
         public String getPath() {
             return path;
         }
@@ -238,6 +250,11 @@ public class PathValidator {
         public LocationEntry setPriority(Integer priority) {
             this.priority = priority;
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return entryType.toString() + "-" + entryId;
         }
     }
 

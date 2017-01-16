@@ -8,10 +8,11 @@ import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.PathValidator;
+import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.handler.GroupServerValidator;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
-import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import org.springframework.stereotype.Component;
+import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -22,19 +23,21 @@ import java.util.*;
 @Component("groupModelValidator")
 public class DefaultGroupValidator implements GroupValidator {
     @Resource
-    private VirtualServerValidator virtualServerModelValidator;
+    private SlbVirtualServerDao slbVirtualServerDao;
     @Resource
     private GroupServerValidator groupServerModelValidator;
     @Resource
     private PathValidator pathValidator;
+    @Resource
+    private RTrafficPolicyVsDao rTrafficPolicyVsDao;
+    @Resource
+    private RTrafficPolicyGroupDao rTrafficPolicyGroupDao;
     @Resource
     private RGroupVsDao rGroupVsDao;
     @Resource
     private RGroupVgDao rGroupVgDao;
     @Resource
     private RGroupStatusDao rGroupStatusDao;
-    @Resource
-    private RTrafficPolicyGroupDao rTrafficPolicyGroupDao;
     @Resource
     private GroupDao groupDao;
 
@@ -50,8 +53,11 @@ public class DefaultGroupValidator implements GroupValidator {
     }
 
     @Override
-    public void checkVersion(Group target) throws Exception {
+    public void checkVersionForUpdate(Group target) throws Exception {
         RelGroupStatusDo check = rGroupStatusDao.findByGroup(target.getId(), RGroupStatusEntity.READSET_FULL);
+        if (check == null) {
+            throw new ValidationException("Group that you tries to update does not exist.");
+        }
         if (check.getOfflineVersion() > target.getVersion()) {
             throw new ValidationException("Newer version is detected.");
         }
@@ -63,6 +69,8 @@ public class DefaultGroupValidator implements GroupValidator {
     @Override
     public void removable(Long targetId) throws Exception {
         RelGroupStatusDo check = rGroupStatusDao.findByGroup(targetId, RGroupStatusEntity.READSET_FULL);
+        if (check == null) return;
+
         if (check.getOnlineVersion() != 0) {
             throw new ValidationException("Group that you tried to delete is still active.");
         }
@@ -91,60 +99,104 @@ public class DefaultGroupValidator implements GroupValidator {
             throw new ValidationException("Group is missing `group-virtual-server` field.");
         if (groupId == null) groupId = 0L;
 
-        Map<Long, PathValidator.LocationEntry> groupEntriesByVs = validateAndBuildLocationEntry(groupId, groupVirtualServers, escapePathValidation);
-
-        if (escapePathValidation || groupEntriesByVs.size() == 0) return;
-
-
-        Map<Long, List<PathValidator.LocationEntry>> retainedGroupEntriesByVs = new HashMap<>();
-        for (RelGroupVsDo e : rGroupVsDao.findAllByVses(groupEntriesByVs.keySet().toArray(new Long[groupEntriesByVs.size()]), RGroupVsEntity.READSET_FULL)) {
-            List<PathValidator.LocationEntry> entryList = retainedGroupEntriesByVs.get(e.getVsId());
-            if (entryList == null) {
-                entryList = new ArrayList<>();
-                retainedGroupEntriesByVs.put(e.getVsId(), entryList);
+        Long[] vsIds = new Long[groupVirtualServers.size()];
+        for (int i = 0; i < groupVirtualServers.size(); i++) {
+            GroupVirtualServer e = groupVirtualServers.get(i);
+            vsIds[i] = e.getVirtualServer().getId();
+            if (e.getRewrite() != null && !e.getRewrite().isEmpty()) {
+                if (!PathRewriteParser.validate(e.getRewrite())) {
+                    throw new ValidationException("Invalid `rewrite` field value. \"rewrite\" : " + e.getRewrite() + ".");
+                }
             }
-            entryList.add(new PathValidator.LocationEntry().setVsId(e.getVsId()).setEntryId(e.getGroupId()).setPath(e.getPath()).setPriority(e.getPriority() == 0 ? 1000 : e.getPriority()));
+        }
+        Arrays.sort(vsIds);
+        Long prev = vsIds[0];
+        for (int i = 1; i < vsIds.length; i++) {
+            if (prev.equals(vsIds[i])) {
+                throw new ValidationException("Group can have and only have one combination to the same virtual-server. \"vs-id\" : " + vsIds[i] + ".");
+            }
+            prev = vsIds[i];
         }
 
-        for (Map.Entry<Long, PathValidator.LocationEntry> e : groupEntriesByVs.entrySet()) {
-            pathValidator.checkOverlapRestriction(e.getKey(), e.getValue(), retainedGroupEntriesByVs.get(e.getKey()));
+        if (slbVirtualServerDao.findAllByIds(vsIds, SlbVirtualServerEntity.READSET_IDONLY).size() != vsIds.length) {
+            throw new ValidationException("Field `group-virtual-server` is requesting combination to a non-existing virtual-server.");
         }
 
-        // reset values if auto-reorder("priority" : null) is enabled
+        Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
+        compareAndBuildCurrentLocationEntries(groupId, vsIds, groupVirtualServers, escapePathValidation ? null : currentLocationEntriesByVs);
+
+        // reformat path if validation is processed
+        // fulfill priority if auto-reorder("priority" : null) is enabled
         for (GroupVirtualServer e : groupVirtualServers) {
             Long vsId = e.getVirtualServer().getId();
             e.setVirtualServer(new VirtualServer().setId(vsId));
-            PathValidator.LocationEntry ref = groupEntriesByVs.get(vsId);
-            e.setPath(ref.getPath());
-            if (e.getPriority() == null) {
-                e.setPriority(ref.getPriority());
-            } else if (!e.getPriority().equals(ref.getPriority())) {
-                throw new ValidationException("Group that you tries to create/modify may cause path prefix-overlap problem with other groups on virtual-server " + e.getVirtualServer().getId() + ". Recommend priority will be " + ref + ".");
+            if (escapePathValidation) {
+                if (e.getPriority() == null) {
+                    throw new ValidationException("Field `priority` cannot be empty if validation is escaped.");
+                }
+            } else {
+                PathValidator.LocationEntry insertEntry = new PathValidator.LocationEntry().setEntryId(groupId).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(e.getPath()).setPriority(e.getPriority());
+                pathValidator.checkOverlapRestriction(vsId, insertEntry, currentLocationEntriesByVs.get(vsId));
+                if (e.getPriority() == null) {
+                    // auto reorder and reformat
+                    e.setPriority(insertEntry.getPriority());
+                    e.setPath(insertEntry.getPath());
+                } else {
+                    // check priority and reformat
+                    if (!e.getPriority().equals(insertEntry.getPriority())) {
+                        throw new ValidationException("Group that you tries to create/modify may cause path prefix-overlap problem with other entries on virtual-server " + vsId + ". Recommend priority will be " + insertEntry.getPriority() + ".");
+                    }
+                    e.setPath(insertEntry.getPath());
+                }
             }
         }
     }
 
-    private Map<Long, PathValidator.LocationEntry> validateAndBuildLocationEntry(Long groupId, List<GroupVirtualServer> groupVirtualServers, boolean escapePathValidation) throws Exception {
-        Map<Long, PathValidator.LocationEntry> groupEntriesByVs = new HashMap<>();
-        for (GroupVirtualServer gvs : groupVirtualServers) {
-            if (gvs.getRewrite() != null && !gvs.getRewrite().isEmpty()) {
-                if (!PathRewriteParser.validate(gvs.getRewrite())) {
-                    throw new ValidationException("Invalid `rewrite` field value. \"rewrite\" : " + gvs.getRewrite() + ".");
+    private void compareAndBuildCurrentLocationEntries(Long groupId, Long[] vsIds, List<GroupVirtualServer> groupVirtualServers, Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs) throws DalException, ValidationException {
+        List<Long> relatedPolicies = new ArrayList<>();
+        for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findAllByGroups(new Long[]{groupId}, RTrafficPolicyGroupEntity.READSET_FULL)) {
+            relatedPolicies.add(e.getPolicyId());
+        }
+
+        Integer[] priorities = new Integer[vsIds.length];
+        String[] paths = new String[vsIds.length];
+        for (GroupVirtualServer e : groupVirtualServers) {
+            int i = Arrays.binarySearch(vsIds, e.getVirtualServer().getId());
+            priorities[i] = e.getPriority();
+            paths[i] = e.getPath();
+        }
+
+        for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findByVsesAndPolicyVersion(vsIds, RTrafficPolicyVsEntity.READSET_FULL)) {
+            if (relatedPolicies.contains(e.getPolicyId())) {
+                int i = Arrays.binarySearch(vsIds, e.getVsId());
+                if (priorities[i] != null && priorities[i] > e.getPriority()) {
+                    throw new ValidationException("Group has higher `priority` than its traffic policy " + e.getPolicyId() + " on vs " + e.getVsId() + ".");
+                }
+                if (!paths[i].equals(e.getPath())) {
+                    throw new ValidationException("Group has different `path` from its traffic policy " + e.getPolicyId() + " on vs " + e.getVsId() + ".");
                 }
             }
-
-            VirtualServer currentVs = gvs.getVirtualServer();
-            if (!virtualServerModelValidator.exists(currentVs.getId())) {
-                throw new ValidationException("Field `group-virtual-server` is requesting a combination to an non-existing virtual-server. \"vs-id\" : " + currentVs.getId() + ".");
-            }
-            if (groupEntriesByVs.containsKey(currentVs.getId())) {
-                throw new ValidationException("Group can have and only have one combination to the same virtual-server. \"vs-id\" : " + currentVs.getId() + ".");
-            } else if (!escapePathValidation) {
-                PathValidator.LocationEntry le = new PathValidator.LocationEntry().setVsId(currentVs.getId()).setEntryId(groupId).setPath(gvs.getPath()).setPriority(gvs.getPriority());
-                groupEntriesByVs.put(currentVs.getId(), le);
+            if (currentLocationEntriesByVs != null) {
+                List<PathValidator.LocationEntry> v = currentLocationEntriesByVs.get(e.getVsId());
+                if (v == null) {
+                    v = new ArrayList<>();
+                    currentLocationEntriesByVs.put(e.getVsId(), v);
+                }
+                v.add(new PathValidator.LocationEntry().setEntryId(e.getPolicyId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(e.getVsId()).setPath(e.getPath()).setPriority(e.getPriority()));
             }
         }
-        return groupEntriesByVs;
+
+        if (currentLocationEntriesByVs != null) {
+            for (RelGroupVsDo e : rGroupVsDao.findByVsesAndGroupOfflineVersion(vsIds, RGroupVsEntity.READSET_FULL)) {
+                if (e.getGroupId() == groupId) continue;
+                List<PathValidator.LocationEntry> v = currentLocationEntriesByVs.get(e.getVsId());
+                if (v == null) {
+                    v = new ArrayList<>();
+                    currentLocationEntriesByVs.put(e.getVsId(), v);
+                }
+                v.add(new PathValidator.LocationEntry().setVsId(e.getVsId()).setEntryId(e.getGroupId()).setPath(e.getPath()).setEntryType(MetaType.GROUP).setPriority(e.getPriority() == 0 ? 1000 : e.getPriority()));
+            }
+        }
     }
 
     @Override

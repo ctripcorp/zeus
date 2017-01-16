@@ -74,6 +74,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-vses-and-group-offline-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN r_group_status rgs
+                    ON rgv2.group_id = rgs.group_id AND rgv2.group_version = rgs.offline_version
+                    WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[

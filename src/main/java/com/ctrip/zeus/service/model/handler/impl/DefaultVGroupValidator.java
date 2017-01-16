@@ -37,8 +37,8 @@ public class DefaultVGroupValidator implements VGroupValidator {
     }
 
     @Override
-    public void checkVersion(Group target) throws Exception {
-        groupModelValidator.checkVersion(target);
+    public void checkVersionForUpdate(Group target) throws Exception {
+        groupModelValidator.checkVersionForUpdate(target);
     }
 
     @Override

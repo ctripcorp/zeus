@@ -80,7 +80,7 @@ public class DefaultSlbValidator implements SlbValidator {
     }
 
     @Override
-    public void checkVersion(Slb target) throws Exception {
+    public void checkVersionForUpdate(Slb target) throws Exception {
         SlbDo check = slbDao.findById(target.getId(), SlbEntity.READSET_FULL);
         if (check == null)
             throw new ValidationException("Slb with id " + target.getId() + " does not exist.");

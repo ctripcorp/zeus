@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entities do-package="com.ctrip.zeus.dal.core" gen="true" do-class-suffix="Do">
     <entity name="r-traffic-policy-group" table="r_traffic_policy_group" alias="rtpg">
+        <var name="ids" value-type="Long[]"/>
         <var name="hashes" value-type="Integer[]"/>
         <query-defs>
             <query name="find-all-by-hash" type="SELECT" multiple="true">
@@ -10,6 +11,36 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='hash'/> IN <IN>${hashes}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-groups" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='group-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-policy-version" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN traffic_policy tp
+                    ON rtpg.policy_id = tp.id AND rtpg.policy_version=tp.version
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-groups-and-policy-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN traffic_policy tp
+                    ON rtpg.policy_id = tp.id AND rtpg.policy_version=tp.version
+                    WHERE <FIELD name='group-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>
             </query>
@@ -105,6 +136,26 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/>
+                    WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-all-by-policy-version" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN traffic_policy tp
+                    ON rtpg.policy_id = tp.id AND rtpg.policy_version=tp.version
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-vses-and-policy-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN traffic_policy tp
+                    ON rtpg.policy_id = tp.id AND rtpg.policy_version = tp.version
                     WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>
