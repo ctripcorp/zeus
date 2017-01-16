@@ -80,7 +80,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/> INNER JOIN r_group_status rgs
-                    ON rgv2.group_id = rgs.group_id AND rgv2.group_version = rgs.offline_version
+                    ON <FIELD name='group-id'/> = rgs.group_id AND <FIELD name='group-version'/> = rgs.offline_version
                     WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>

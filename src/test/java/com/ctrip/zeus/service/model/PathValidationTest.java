@@ -1,7 +1,9 @@
 package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.AbstractServerTest;
+import com.ctrip.zeus.dal.core.RGroupStatusDao;
 import com.ctrip.zeus.dal.core.RGroupVsDao;
+import com.ctrip.zeus.dal.core.RelGroupStatusDo;
 import com.ctrip.zeus.dal.core.RelGroupVsDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
@@ -31,6 +33,8 @@ public class PathValidationTest extends AbstractServerTest {
     private GroupValidator groupModelValidator;
     @Resource
     private RGroupVsDao rGroupVsDao;
+    @Resource
+    private RGroupStatusDao rGroupStatusDao;
     @Resource
     private PathValidator pathValidator;
 
@@ -263,7 +267,7 @@ public class PathValidationTest extends AbstractServerTest {
         }
 
         try {
-            RelGroupVsDo root = new RelGroupVsDo().setGroupId(10).setVsId(1).setPath("/").setPriority(-1000);
+            RelGroupVsDo root = new RelGroupVsDo().setGroupId(10).setGroupVersion(1).setVsId(1).setPath("/").setPriority(-1000);
             rGroupVsDao.insert(root);
 
             try {
@@ -425,8 +429,9 @@ public class PathValidationTest extends AbstractServerTest {
             virtualServerRepository.add(vs);
 
             for (String path : existingPaths) {
-                rGroupVsDao.insert(new RelGroupVsDo().setGroupId(10).setVsId(1).setPath(path).setPriority(1000));
+                rGroupVsDao.insert(new RelGroupVsDo().setGroupId(10).setGroupVersion(1).setVsId(1).setPath(path).setPriority(1000));
             }
+            rGroupStatusDao.insert(new RelGroupStatusDo().setGroupId(10).setOfflineVersion(1));
         }
     }
 

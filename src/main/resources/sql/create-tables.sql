@@ -1,11 +1,12 @@
 -- --------------------------------------------------------
+-- Host:                         pub.mysql.db.dev.sh.ctripcorp.com
 -- Server version:               5.6.12-log - MySQL Community Server (GPL)
 -- Server OS:                    Linux
--- HeidiSQL Version:             8.3.0.4694
+-- HeidiSQL Version:             9.3.0.4984
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET NAMES utf8 */;
+/*!40101 SET NAMES utf8mb4 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 
@@ -63,6 +64,25 @@ CREATE TABLE IF NOT EXISTS `app_vs` (
   KEY `vs_id_app_id` (`vs_id`,`app_id`),
   KEY `app_id` (`app_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='app_vs';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table archive_commit
+DROP TABLE IF EXISTS `archive_commit`;
+CREATE TABLE IF NOT EXISTS `archive_commit` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `archive_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'archive id',
+  `type` int(11) NOT NULL DEFAULT '0' COMMENT 'archive type',
+  `ref_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'ref meta primary key',
+  `author` varchar(255) DEFAULT NULL COMMENT 'author',
+  `message` varchar(255) DEFAULT NULL COMMENT 'commit message',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `archive_id_type` (`archive_id`,`type`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `ref_id` (`ref_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='table for archive commit message';
 
 -- Data exporting was unselected.
 
@@ -258,7 +278,7 @@ CREATE TABLE IF NOT EXISTS `commit` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary',
   `version` bigint(20) DEFAULT NULL COMMENT 'version',
   `slb_id` bigint(20) DEFAULT NULL COMMENT 'slb id',
-  `vs_ids` varchar(4096) CHARACTER SET latin1 DEFAULT NULL COMMENT 'vs ids',
+  `vs_ids` varchar(8124) CHARACTER SET latin1 DEFAULT NULL COMMENT 'vs ids',
   `group_ids` varchar(10240) CHARACTER SET latin1 DEFAULT NULL COMMENT 'group ids',
   `task_ids` varchar(4096) CHARACTER SET latin1 DEFAULT NULL COMMENT 'task ids',
   `cleanvs_ids` varchar(4096) CHARACTER SET latin1 DEFAULT NULL COMMENT 'cleanvs ids',
@@ -371,7 +391,8 @@ CREATE TABLE IF NOT EXISTS `dist_lock` (
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'update time',
   PRIMARY KEY (`id`),
   UNIQUE KEY `lock_key` (`lock_key`),
-  KEY `idx_DataChange_LastTime` (`DataChange_LastTime`)
+  KEY `idx_DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `server` (`server`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='distribution lock';
 
 -- Data exporting was unselected.
@@ -711,7 +732,7 @@ DROP TABLE IF EXISTS `report`;
 CREATE TABLE IF NOT EXISTS `report` (
   `group_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'group primary key',
   `status` int(11) NOT NULL DEFAULT '0' COMMENT 'status',
-  `description` varchar(255) NOT NULL DEFAULT '0' COMMENT 'status description',
+  `description` varchar(255) DEFAULT '0' COMMENT 'status description',
   `reported_version` int(11) NOT NULL DEFAULT '0' COMMENT 'the version reported',
   `current_version` int(11) NOT NULL DEFAULT '0' COMMENT 'the version to report',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'data changed timestamp',
@@ -772,6 +793,28 @@ CREATE TABLE IF NOT EXISTS `role_resource` (
   KEY `role_id` (`role_id`),
   KEY `role_id_type` (`role_id`,`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='role_resource';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table rule
+DROP TABLE IF EXISTS `rule`;
+CREATE TABLE IF NOT EXISTS `rule` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `name` varchar(50) NOT NULL DEFAULT '0' COMMENT 'rule name',
+  `type` int(11) NOT NULL DEFAULT '0' COMMENT 'dynamic/package',
+  `target_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'rule target id',
+  `target_type` int(11) NOT NULL DEFAULT '0' COMMENT 'rule target type',
+  `value` varchar(255) DEFAULT NULL COMMENT 'rule value if exists',
+  `phase` int(11) NOT NULL DEFAULT '0' COMMENT 'phase for rule to be injected',
+  `version` int(11) NOT NULL DEFAULT '0' COMMENT 'rule version',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `target_id_target_type` (`target_id`,`target_type`),
+  KEY `version` (`version`),
+  KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='rule for config generation';
 
 -- Data exporting was unselected.
 
@@ -893,6 +936,47 @@ CREATE TABLE IF NOT EXISTS `r_slb_status` (
   KEY `online_version` (`online_version`),
   KEY `offline_version` (`offline_version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='slb status table';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table r_traffic_policy_group
+DROP TABLE IF EXISTS `r_traffic_policy_group`;
+CREATE TABLE IF NOT EXISTS `r_traffic_policy_group` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `group_id` bigint(20) NOT NULL DEFAULT '0',
+  `policy_id` bigint(20) NOT NULL DEFAULT '0',
+  `policy_version` int(11) NOT NULL DEFAULT '0',
+  `weight` int(11) NOT NULL DEFAULT '0',
+  `hash` int(11) NOT NULL DEFAULT '0',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `policy_id_policy_version` (`policy_id`,`policy_version`),
+  KEY `group_id` (`group_id`),
+  KEY `hash` (`hash`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='table for traffic policy and group relationship maintenance';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table r_traffic_policy_vs
+DROP TABLE IF EXISTS `r_traffic_policy_vs`;
+CREATE TABLE IF NOT EXISTS `r_traffic_policy_vs` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `vs_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'vs id',
+  `policy_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'traffic policy id',
+  `policy_version` int(11) NOT NULL DEFAULT '0' COMMENT 'traffic policy verion',
+  `path` varchar(4096) NOT NULL DEFAULT '0' COMMENT 'path',
+  `priority` int(11) NOT NULL DEFAULT '1000' COMMENT 'priority',
+  `hash` int(11) NOT NULL DEFAULT '0' COMMENT 'hash',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+  PRIMARY KEY (`id`),
+  KEY `vs_id` (`vs_id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `policy_id_policy_version` (`policy_id`,`policy_version`),
+  KEY `hash` (`hash`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='table for traffic policy and vs relationship maintenance';
 
 -- Data exporting was unselected.
 
@@ -1093,7 +1177,7 @@ CREATE TABLE IF NOT EXISTS `status_check_count_slb` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
   `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb id',
   `count` int(11) NOT NULL DEFAULT '0' COMMENT 'count',
-  `data_set` varchar(10240) NOT NULL DEFAULT '0' COMMENT 'group data set',
+  `data_set` varchar(255) NOT NULL DEFAULT '0' COMMENT 'group data set',
   `data_set_timestamp` bigint(20) DEFAULT NULL COMMENT 'data set last modified time',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
   PRIMARY KEY (`id`),
@@ -1213,7 +1297,8 @@ CREATE TABLE IF NOT EXISTS `task` (
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
   PRIMARY KEY (`id`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`),
-  KEY `idx_create_time` (`create_time`)
+  KEY `idx_create_time` (`create_time`),
+  KEY `status_target_slb_id` (`status`,`target_slb_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='task queue';
 
 -- Data exporting was unselected.
@@ -1230,6 +1315,24 @@ CREATE TABLE IF NOT EXISTS `task_execute_record` (
   UNIQUE KEY `task_key` (`task_key`),
   KEY `DataChange_LastTime` (`DataChange_LastTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='task_execute_record';
+
+-- Data exporting was unselected.
+
+
+-- Dumping structure for table traffic_policy
+DROP TABLE IF EXISTS `traffic_policy`;
+CREATE TABLE IF NOT EXISTS `traffic_policy` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `version` int(11) NOT NULL DEFAULT '0' COMMENT 'lastest version',
+  `nx_active_version` int(11) NOT NULL DEFAULT '0' COMMENT 'offline version',
+  `active_version` int(11) NOT NULL DEFAULT '0' COMMENT 'online verion',
+  `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modified time',
+  PRIMARY KEY (`id`),
+  KEY `DataChange_LastTime` (`DataChange_LastTime`),
+  KEY `version` (`version`),
+  KEY `nx_active_version` (`nx_active_version`),
+  KEY `active_version` (`active_version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='table for traffic policy and version status';
 
 -- Data exporting was unselected.
 

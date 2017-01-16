@@ -29,7 +29,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/> INNER JOIN traffic_policy tp
-                    ON rtpg.policy_id = tp.id AND rtpg.policy_version=tp.version
+                    ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.version
                     ]]>
                 </statement>
             </query>
@@ -39,7 +39,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/> INNER JOIN traffic_policy tp
-                    ON rtpg.policy_id = tp.id AND rtpg.policy_version=tp.version
+                    ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.version
                     WHERE <FIELD name='group-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>
@@ -145,7 +145,7 @@
                     <![CDATA[
                     SELECT <FIELDS/>
                     FROM <TABLE/> INNER JOIN traffic_policy tp
-                    ON rtpg.policy_id = tp.id AND rtpg.policy_version=tp.version
+                    ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.version
                     ]]>
                 </statement>
             </query>
@@ -154,8 +154,9 @@
                 <statement>
                     <![CDATA[
                     SELECT <FIELDS/>
-                    FROM <TABLE/> INNER JOIN traffic_policy tp
-                    ON rtpg.policy_id = tp.id AND rtpg.policy_version = tp.version
+                    FROM <TABLE/>
+                    INNER JOIN traffic_policy tp
+                    ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.version
                     WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>
