@@ -37,7 +37,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
 
     @Override
     public void validate(TrafficPolicy target) throws Exception {
-
+        validate(target, false);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                     throw new ValidationException("Field `priority` cannot be empty if validation is escaped.");
                 }
             } else {
-                PathValidator.LocationEntry insertEntry = new PathValidator.LocationEntry().setEntryId(target.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(e.getPath()).setPriority(e.getPriority());
+                PathValidator.LocationEntry insertEntry = new PathValidator.LocationEntry().setEntryId(target.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(e.getPath()).setPriority(e.getPriority() == null ? 1000 : e.getPriority());
                 pathValidator.checkOverlapRestriction(vsId, insertEntry, currentLocationEntriesByVs.get(vsId));
                 if (e.getPriority() == null) {
                     e.setPriority(insertEntry.getPriority());
@@ -87,13 +87,13 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         // Check if traffic-policy is unique for every group-vs pair
         List<Long> policies = new ArrayList<>();
         for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findByGroupsAndPolicyVersion(groupIds, RTrafficPolicyGroupEntity.READSET_FULL)) {
-            if (e.getPolicyId() == trafficPolicyId) continue;
+            if (trafficPolicyId != null && e.getPolicyId() == trafficPolicyId) continue;
             policies.add(e.getPolicyId());
         }
 
         for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findByVsesAndPolicyVersion(vsIds, RTrafficPolicyVsEntity.READSET_FULL)) {
-            if (e.getPolicyId() == trafficPolicyId) continue;
-            if (policies.indexOf(e.getPolicyId()) > 0) {
+            if (trafficPolicyId != null && e.getPolicyId() == trafficPolicyId) continue;
+            if (policies.indexOf(e.getPolicyId()) >= 0) {
                 throw new ValidationException("Another traffic policy " + e.getId() + " has occupied one of the traffic-controls on vs " + e.getVsId() + ".");
             }
             if (currentLocationEntriesByVs != null) {
@@ -106,8 +106,8 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
             }
         }
 
-        for (RelGroupVsDo e : rGroupVsDao.findAllByVses(vsIds, RGroupVsEntity.READSET_FULL)) {
-            if (Arrays.binarySearch(groupIds, e.getGroupId()) > 0) continue;
+        for (RelGroupVsDo e : rGroupVsDao.findByVsesAndGroupOfflineVersion(vsIds, RGroupVsEntity.READSET_FULL)) {
+            if (Arrays.binarySearch(groupIds, e.getGroupId()) >= 0) continue;
 
             if (currentLocationEntriesByVs != null) {
                 List<PathValidator.LocationEntry> v = currentLocationEntriesByVs.get(e.getVsId());
@@ -128,6 +128,9 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
             }
             prev = groupIds[i];
         }
+        if (groupIds.length <= 1) {
+            throw new ValidationException("Traffic policy that you tries to create/modify does not have enough traffic-controls.");
+        }
 
         prev = vsIds[0];
         for (int i = 1; i < vsIds.length; i++) {
@@ -143,7 +146,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
             int i = Arrays.binarySearch(groupIds, e.getGroupId());
             int j = Arrays.binarySearch(vsIds, e.getVsId());
             if (i >= 0 && j >= 0) {
-                if (versions[i] < e.getGroupVersion()) {
+                if (versions[i] <= e.getGroupVersion()) {
                     versions[i] = e.getGroupVersion();
                     combinations[i][j] = e;
                 }

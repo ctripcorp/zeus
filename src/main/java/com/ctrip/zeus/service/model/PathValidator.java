@@ -95,7 +95,7 @@ public class PathValidator {
             for (LocationEntry e : overlappedEntries) {
                 entries.add(e);
             }
-            throw new ValidationException("Path that you tried to add is prefix-overlapped over existing entries: [ " + Joiner.on(",").join(entries) + " at vs " + vsId + ".");
+            throw new ValidationException("Path that you tried to add/update is completely equivalent to existing entries: [ " + Joiner.on(",").join(entries) + " at vs " + vsId + ".");
         }
         return insertEntry;
     }

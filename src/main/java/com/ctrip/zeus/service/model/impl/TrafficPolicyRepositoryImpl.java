@@ -105,7 +105,7 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
             throw new ValidationException("Traffic policy " + trafficPolicy.getId() + " that you tried to update does not exists.");
         }
 
-        tpd.setVersion(tpd.getVersion() + 1).setActiveVersion(tpd.getActiveVersion()).setNxActiveVersion(tpd.getVersion() + 1);
+        tpd.setVersion(tpd.getVersion() + 1).setActiveVersion(tpd.getActiveVersion()).setNxActiveVersion(tpd.getVersion());
         trafficPolicyDao.updateById(tpd, TrafficPolicyEntity.UPDATESET_FULL);
         trafficPolicy.setId(tpd.getId()).setVersion(tpd.getVersion());
 
