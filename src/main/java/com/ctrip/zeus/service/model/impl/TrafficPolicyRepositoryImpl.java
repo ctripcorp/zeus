@@ -127,7 +127,7 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
         RTrafficPolicyVsDo[] tpvd = new RTrafficPolicyVsDo[trafficPolicy.getPolicyVirtualServers().size()];
         for (int i = 0; i < trafficPolicy.getPolicyVirtualServers().size(); i++) {
             PolicyVirtualServer pvs = trafficPolicy.getPolicyVirtualServers().get(i);
-            tpvd[i] = new RTrafficPolicyVsDo().setPolicyId(tpd.getId()).setPolicyVersion(tpd.getVersion()).setPolicyVersion(hashCode)
+            tpvd[i] = new RTrafficPolicyVsDo().setPolicyId(tpd.getId()).setPolicyVersion(tpd.getVersion()).setHash(hashCode)
                     .setVsId(pvs.getVirtualServer().getId()).setPath(pvs.getPath()).setPriority(pvs.getPriority());
         }
         rTrafficPolicyVsDao.insert(tpvd);

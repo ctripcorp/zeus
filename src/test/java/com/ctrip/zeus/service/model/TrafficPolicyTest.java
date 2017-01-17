@@ -7,6 +7,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.TrafficPolicyValidator;
 import com.ctrip.zeus.util.AssertUtils;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.junit.Assert;
 import org.junit.Test;
 import org.unidal.dal.jdbc.DalException;
@@ -168,6 +169,39 @@ public class TrafficPolicyTest extends AbstractServerTest {
         }
     }
 
+    @Test
+    public void testRepository() throws DalException {
+        rGroupStatusDao.insert(new RelGroupStatusDo().setGroupId(21).setOfflineVersion(1).setOnlineVersion(1));
+        rGroupStatusDao.insert(new RelGroupStatusDo().setGroupId(22).setOfflineVersion(2).setOnlineVersion(1));
+
+        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(21).setVsId(1).setGroupVersion(1).setPath("~* ^/v21($|/|\\?)").setPriority(1000));
+        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(22).setVsId(2).setGroupVersion(1).setPath("~* ^/v21($|/|\\?)").setPriority(1000));
+        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(22).setVsId(2).setGroupVersion(2).setPath("~* ^/v21($|/|\\?)").setPriority(1000));
+
+        TrafficPolicy object = new TrafficPolicy().setVersion(1)
+                .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/v21($|/|\\?)").setPriority(1200))
+                .addTrafficControl(new TrafficControl().setGroup(new Group().setId(11L)).setWeight(50))
+                .addTrafficControl(new TrafficControl().setGroup(new Group().setId(22L)).setWeight(50));
+        try {
+            object = trafficPolicyRepository.add(object);
+            TrafficPolicy copy = trafficPolicyRepository.getById(object.getId());
+            assertEquals(object, copy);
+
+            object = trafficPolicyRepository.update(object);
+            Assert.assertEquals(1, trafficPolicyRepository.list().size());
+            assertEquals(object, trafficPolicyRepository.getById(object.getId()));
+            assertEquals(copy, trafficPolicyRepository.getByKey(new IdVersion(object.getId(), copy.getVersion())));
+
+            trafficPolicyRepository.delete(object.getId());
+            Assert.assertNull(trafficPolicyRepository.getById(object.getId()));
+            Assert.assertNull(trafficPolicyDao.findById(object.getId(), TrafficPolicyEntity.READSET_FULL));
+            Assert.assertEquals(0, rTrafficPolicyVsDao.findByPolicy(object.getId(), object.getVersion(), RTrafficPolicyVsEntity.READSET_FULL).size());
+            Assert.assertEquals(0, rTrafficPolicyGroupDao.findByPolicy(object.getId(), object.getVersion(), RTrafficPolicyGroupEntity.READSET_FULL).size());
+        } catch (Exception e) {
+        }
+
+    }
+
     private void assertValidationFailed(Group object, String message) {
         try {
             groupModelValidator.validateGroupVirtualServers(object.getId(), object.getGroupVirtualServers(), false);
@@ -194,4 +228,27 @@ public class TrafficPolicyTest extends AbstractServerTest {
         }
     }
 
+    private void assertEquals(TrafficPolicy o1, TrafficPolicy o2) {
+        Assert.assertEquals(o1.getId(), o2.getId());
+        Assert.assertEquals(o1.getPolicyVirtualServers().size(), o2.getPolicyVirtualServers().size());
+        Assert.assertEquals(o1.getControls().size(), o2.getControls().size());
+        Assert.assertEquals(o1.getVersion(), o2.getVersion());
+
+        boolean result = true;
+        for (int i = 0; i < o1.getPolicyVirtualServers().size(); i++) {
+            PolicyVirtualServer v1 = o1.getPolicyVirtualServers().get(i);
+            PolicyVirtualServer v2 = o2.getPolicyVirtualServers().get(i);
+            result &= (v1.getPath().equals(v2.getPath()));
+            result &= (v1.getPriority().equals(v2.getPriority()));
+            result &= (v1.getVirtualServer().getId().equals(v2.getVirtualServer().getId()));
+        }
+
+        for (int i = 0; i < o1.getControls().size(); i++) {
+            TrafficControl c1 = o1.getControls().get(i);
+            TrafficControl c2 = o2.getControls().get(i);
+            result &= (c1.getGroup().getId().equals(c2.getGroup().getId()));
+            result &= (c1.getWeight().equals(c2.getWeight()));
+        }
+        Assert.assertTrue(result);
+    }
 }
