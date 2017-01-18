@@ -166,18 +166,18 @@ public class PathValidationTest extends AbstractServerTest {
         String samePath = "~* ^/linkservice($|/|\\?)";
         String partialPath = "~* ^/members($|/|\\?)";
 
-        List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setPath(samePath).setVirtualServer(new VirtualServer().setId(1L)));
+        Group object = new Group().setId(100L);
+        object.addGroupVirtualServer(new GroupVirtualServer().setPath(samePath).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            groupModelValidator.validateGroupVirtualServers(object, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
         }
 
-        array.get(0).setPriority(null).setPath(partialPath);
+        object.getGroupVirtualServers().get(0).setPriority(null).setPath(partialPath);
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            groupModelValidator.validateGroupVirtualServers(object, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
@@ -188,12 +188,12 @@ public class PathValidationTest extends AbstractServerTest {
     public void testAddNormalPath() {
         String path = "~* ^/normal($|/|\\?)";
 
-        List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
+        Group object = new Group().setId(100L);
+        object.addGroupVirtualServer(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(array.get(0).getPriority().intValue() == 1000);
-            Assert.assertEquals(path, array.get(0).getPath());
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertTrue(object.getGroupVirtualServers().get(0).getPriority() == 1000);
+            Assert.assertEquals(path, object.getGroupVirtualServers().get(0).getPath());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -202,19 +202,20 @@ public class PathValidationTest extends AbstractServerTest {
     @Test
     public void testAddOverlappingPath() {
         String path = "~* ^/linkservice/config($|/|\\?)";
-        List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
+
+        Group object = new Group().setId(100L);
+        object.addGroupVirtualServer(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(array.get(0).getPriority().intValue() == 1100);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertTrue(object.getGroupVirtualServers().get(0).getPriority() == 1100);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
 
         try {
-            array.get(0).setPriority(2000);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(array.get(0).getPriority().intValue() == 2000);
+            object.getGroupVirtualServers().get(0).setPriority(2000);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertTrue(object.getGroupVirtualServers().get(0).getPriority() == 2000);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -223,11 +224,12 @@ public class PathValidationTest extends AbstractServerTest {
     @Test
     public void testUpdatePath() {
         String path = "~* ^/baike($|/|\\?)";
-        List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
+
+        Group object = new Group().setId(10L);
+        object.addGroupVirtualServer(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(10L, array, false);
-            Assert.assertEquals("~* ^/baike($|/|\\?)", array.get(0).getPath());
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertEquals("~* ^/baike($|/|\\?)", object.getGroupVirtualServers().get(0).getPath());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -236,11 +238,12 @@ public class PathValidationTest extends AbstractServerTest {
     @Test
     public void testAddUpperCasePath() {
         String path = "~* ^/BAIKE/CONFIG($|/|\\?)";
-        List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
+
+        Group object = new Group().setId(100L);
+        object.addGroupVirtualServer(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(array.get(0).getPriority().intValue() == 1100);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertTrue(object.getGroupVirtualServers().get(0).getPriority() == 1100);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -249,19 +252,20 @@ public class PathValidationTest extends AbstractServerTest {
     @Test
     public void testAddRootPath() {
         String path = "~* /";
-        List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setPath(path).setPriority(1000).setVirtualServer(new VirtualServer().setId(1L)));
+
+        Group object = new Group().setId(100L);
+        object.addGroupVirtualServer(new GroupVirtualServer().setPath(path).setPriority(1000).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            groupModelValidator.validateGroupVirtualServers(object, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
         }
 
-        array.get(0).setPriority(null);
+        object.getGroupVirtualServers().get(0).setPriority(null);
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(array.get(0).getPriority().intValue() == -1000);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertTrue(object.getGroupVirtualServers().get(0).getPriority() == -1000);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -271,16 +275,16 @@ public class PathValidationTest extends AbstractServerTest {
             rGroupVsDao.insert(root);
 
             try {
-                array.get(0).setPriority(null);
-                groupModelValidator.validateGroupVirtualServers(100L, array, false);
-                Assert.assertTrue(array.get(0).getPriority().intValue() == -900);
+                object.getGroupVirtualServers().get(0).setPriority(null);
+                groupModelValidator.validateGroupVirtualServers(object, false);
+                Assert.assertTrue(object.getGroupVirtualServers().get(0).getPriority() == -900);
             } catch (Exception e) {
                 Assert.assertTrue(false);
             }
 
-            array.get(0).setPath("/").setPriority(-1100);
+            object.getGroupVirtualServers().get(0).setPath("/").setPriority(-1100);
             try {
-                groupModelValidator.validateGroupVirtualServers(100L, array, false);
+                groupModelValidator.validateGroupVirtualServers(object, false);
                 Assert.assertTrue(false);
             } catch (Exception e) {
                 Assert.assertTrue(e instanceof ValidationException);
@@ -290,10 +294,10 @@ public class PathValidationTest extends AbstractServerTest {
             Assert.assertTrue(false);
         }
 
-        array.get(0).setPath("/").setPriority(null);
+        object.getGroupVirtualServers().get(0).setPath("/").setPriority(null);
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(array.get(0).getPriority().intValue() == -1100);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertTrue(object.getGroupVirtualServers().get(0).getPriority() == -1100);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
@@ -311,67 +315,67 @@ public class PathValidationTest extends AbstractServerTest {
         String specialCase = "~* \"^/(thematic|topic)\"";
         String noMeaningSuffix = "~* \"^/members($|/|\\?)membersite($|/|\\?)\"";
 
-        List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)));
+        Group object = new Group().setId(100L);
+        object.addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)));
 
         try {
-            array.get(0).setPriority(null).setPath(success);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            object.getGroupVirtualServers().get(0).setPriority(null).setPath(success);
+            groupModelValidator.validateGroupVirtualServers(object, false);
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
 
         try {
-            array.get(0).setPriority(null).setPath(startWith);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertEquals(900, array.get(0).getPriority().intValue());
+            object.getGroupVirtualServers().get(0).setPriority(null).setPath(startWith);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertEquals(900, object.getGroupVirtualServers().get(0).getPriority().intValue());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
 
         try {
-            array.get(0).setPriority(null).setPath(noStart);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertEquals(900, array.get(0).getPriority().intValue());
+            object.getGroupVirtualServers().get(0).setPriority(null).setPath(noStart);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertEquals(900, object.getGroupVirtualServers().get(0).getPriority().intValue());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
 
         try {
-            array.get(0).setPath(noAlphabetic);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertEquals(900, array.get(0).getPriority().intValue());
+            object.getGroupVirtualServers().get(0).setPath(noAlphabetic);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertEquals(900, object.getGroupVirtualServers().get(0).getPriority().intValue());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }
 
         try {
-            array.get(0).setPath(empty);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertTrue(false);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof ValidationException);
-        }
-
-        try {
-            array.get(0).setPath(specialCase);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertEquals(900, array.get(0).getPriority().intValue());
-        } catch (Exception e) {
-            Assert.assertTrue(false);
-        }
-
-        try {
-            array.get(0).setPath(noMeaningSuffix);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            object.getGroupVirtualServers().get(0).setPath(empty);
+            groupModelValidator.validateGroupVirtualServers(object, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
         }
 
         try {
-            array.get(0).setPriority(null).setPath(noMeaningSuffix);
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            object.getGroupVirtualServers().get(0).setPath(specialCase);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertEquals(900, object.getGroupVirtualServers().get(0).getPriority().intValue());
+        } catch (Exception e) {
+            Assert.assertTrue(false);
+        }
+
+        try {
+            object.getGroupVirtualServers().get(0).setPath(noMeaningSuffix);
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ValidationException);
+        }
+
+        try {
+            object.getGroupVirtualServers().get(0).setPriority(null).setPath(noMeaningSuffix);
+            groupModelValidator.validateGroupVirtualServers(object, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
         }
@@ -380,27 +384,28 @@ public class PathValidationTest extends AbstractServerTest {
     @Test
     public void testRegexExpression() {
         String path = "~* ^/ regex($|/|\\?)";
-        List<GroupVirtualServer> array = new ArrayList<>();
-        array.add(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
+
+        Group object = new Group().setId(100L);
+        object.addGroupVirtualServer(new GroupVirtualServer().setPath(path).setVirtualServer(new VirtualServer().setId(1L)));
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            groupModelValidator.validateGroupVirtualServers(object, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
         }
 
-        array.get(0).setPath("~= /regex");
+        object.getGroupVirtualServers().get(0).setPath("~= /regex");
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
+            groupModelValidator.validateGroupVirtualServers(object, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ValidationException);
         }
 
-        array.get(0).setPath("=    /exact   ");
+        object.getGroupVirtualServers().get(0).setPath("=    /exact   ");
         try {
-            groupModelValidator.validateGroupVirtualServers(100L, array, false);
-            Assert.assertEquals("= /exact", array.get(0).getPath());
+            groupModelValidator.validateGroupVirtualServers(object, false);
+            Assert.assertEquals("= /exact", object.getGroupVirtualServers().get(0).getPath());
         } catch (Exception e) {
             Assert.assertTrue(false);
         }

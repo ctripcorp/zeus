@@ -13,7 +13,7 @@ public interface GroupValidator extends ModelValidator<Group> {
 
     void validate(Group target, boolean escapePathValidation) throws Exception;
 
-    void validateGroupVirtualServers(Long groupId, List<GroupVirtualServer> groupVirtualServers, boolean escapePathValidation) throws Exception;
+    void validateGroupVirtualServers(Group target, boolean escapePathValidation) throws Exception;
 
     void validateGroupServers(List<GroupServer> groupServers) throws Exception;
 }

@@ -28,12 +28,13 @@ public class PathValidator {
 
         String insertUri = PathUtils.extractUriIgnoresFirstDelimiter(insertEntry.path);
         boolean insertRootUri = "/".equals(insertUri);
+        insertEntry.setPriority(insertEntry.getPriority() == null ? (insertRootUri ? ("/".equals(insertEntry.getPath()) ? -1100 : -1000) : 1000) : insertEntry.getPriority());
 
         List<String> insertPathMembers = getPathCandidates(insertEntry, insertUri, insertRootUri);
 
         Set<LocationEntry> overlappedEntries = new HashSet<>();
         for (LocationEntry entryNode : currentEntrySet) {
-            if (insertEntry.getEntryId().equals(entryNode.getEntryId())
+            if ((insertEntry.getEntryId() != null && insertEntry.equals(entryNode.getEntryId()))
                     && insertEntry.getEntryType().equals(entryNode.getEntryType())) continue;
 
             String entryNodeUri = entryNode.getPath();

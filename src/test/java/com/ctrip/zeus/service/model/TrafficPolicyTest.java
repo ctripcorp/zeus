@@ -162,7 +162,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
 
         /********* case 6 *********/
         try {
-            groupModelValidator.validateGroupVirtualServers(object1.getId(), object1.getGroupVirtualServers(), false);
+            groupModelValidator.validateGroupVirtualServers(object1, false);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.assertTrue(false);
@@ -204,7 +204,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
 
     private void assertValidationFailed(Group object, String message) {
         try {
-            groupModelValidator.validateGroupVirtualServers(object.getId(), object.getGroupVirtualServers(), false);
+            groupModelValidator.validateGroupVirtualServers(object, false);
             Assert.assertTrue(false);
         } catch (Exception e) {
             System.out.println("Expected: " + message + ", Actual: " + e.getMessage());

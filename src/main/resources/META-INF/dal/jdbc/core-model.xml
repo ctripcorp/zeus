@@ -24,15 +24,6 @@
                     ]]>
                 </statement>
             </query>
-            <query name="find-all-by-policy-version" type="SELECT" multiple="true">
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/> INNER JOIN traffic_policy tp
-                    ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.version
-                    ]]>
-                </statement>
-            </query>
             <query name="find-by-groups-and-policy-version" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>
@@ -40,6 +31,17 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/> INNER JOIN traffic_policy tp
                     ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.version
+                    WHERE <FIELD name='group-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-groups-and-policy-active-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN traffic_policy tp
+                    ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.active_version
                     WHERE <FIELD name='group-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>
@@ -159,6 +161,18 @@
                     FROM <TABLE/>
                     INNER JOIN traffic_policy tp
                     ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.version
+                    WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-vses-and-policy-active-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN traffic_policy tp
+                    ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.active_version
                     WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
                     ]]>
                 </statement>

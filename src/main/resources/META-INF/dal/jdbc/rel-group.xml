@@ -85,6 +85,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-vses-and-group-online-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN r_group_status rgs
+                    ON <FIELD name='group-id'/> = rgs.group_id AND <FIELD name='group-version'/> = rgs.online_version
+                    WHERE <FIELD name='vs-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="insert" type="INSERT" batch="true">
                 <statement>
                     <![CDATA[
