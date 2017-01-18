@@ -206,7 +206,18 @@
         </query-defs>
     </entity>
     <entity name="traffic-policy" table="traffic_policy" alias="tp">
+        <var name="ids" value-type="Long[]"/>
         <query-defs>
+            <query name="find-all-by-ids" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="find-all" type="SELECT" multiple="true">
                 <statement>
                     <![CDATA[

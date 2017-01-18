@@ -21,5 +21,7 @@ public interface TrafficPolicyRepository {
 
     TrafficPolicy update(TrafficPolicy trafficPolicy) throws Exception;
 
+    void updateActiveStatus(IdVersion[] trafficPolicies) throws Exception;
+
     void delete(Long id) throws Exception;
 }

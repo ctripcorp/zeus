@@ -5,14 +5,12 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.TrafficPolicyRepository;
+import com.ctrip.zeus.service.model.VersionUtils;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2017/1/11.
@@ -114,6 +112,20 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
         return trafficPolicy;
     }
 
+    @Override
+    public void updateActiveStatus(IdVersion[] trafficPolicies) throws Exception {
+        Long[] ids = new Long[trafficPolicies.length];
+        for (int i = 0; i < trafficPolicies.length; i++) {
+            ids[i] = trafficPolicies[i].getId();
+        }
+        List<TrafficPolicyDo> tpd = trafficPolicyDao.findAllByIds(ids, TrafficPolicyEntity.READSET_FULL);
+        for (TrafficPolicyDo e : tpd) {
+            int i = Arrays.binarySearch(ids, e.getId());
+            e.setActiveVersion(trafficPolicies[i].getVersion());
+        }
+        trafficPolicyDao.updateById(tpd.toArray(new TrafficPolicyDo[tpd.size()]), TrafficPolicyEntity.UPDATESET_FULL);
+    }
+
     private void maintainRelations(TrafficPolicy trafficPolicy, TrafficPolicyDo tpd) throws DalException {
         int hashCode = getHashCode(tpd.getId(), tpd.getVersion());
         RTrafficPolicyGroupDo[] tpgd = new RTrafficPolicyGroupDo[trafficPolicy.getControls().size()];
@@ -142,6 +154,6 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
     }
 
     private static int getHashCode(Long id, int version) {
-        return id.hashCode() * 31 + version;
+        return VersionUtils.getHash(id, version);
     }
 }
