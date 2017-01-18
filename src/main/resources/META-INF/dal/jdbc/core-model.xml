@@ -206,6 +206,11 @@
         </query-defs>
     </entity>
     <entity name="traffic-policy" table="traffic_policy" alias="tp">
+        <readsets>
+            <readset name="IDONLY">
+                <member name="id"/>
+            </readset>
+        </readsets>
         <var name="ids" value-type="Long[]"/>
         <query-defs>
             <query name="find-all-by-ids" type="SELECT" multiple="true">
@@ -233,6 +238,26 @@
                     SELECT <FIELDS/>
                     FROM <TABLE/>
                     WHERE <FIELD name='id'/> = ${id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-name" type="SELECT">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='name'/> = ${name}
+                    ]]>
+                </statement>
+            </query>
+            <query name="search-by-name" type="SELECT" multiple="true">
+                <param name="name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='name'/> like ${name}
                     ]]>
                 </statement>
             </query>

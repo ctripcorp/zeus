@@ -2977,6 +2977,7 @@
   </entity>
   <entity name="traffic-policy" table="traffic_policy" alias="tp">
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
+    <member name="name" field="name" value-type="String" length="255" nullable="false" />
     <member name="version" field="version" value-type="int" length="10" nullable="false" />
     <member name="nx-active-version" field="nx_active_version" value-type="int" length="10" nullable="false" />
     <member name="active-version" field="active_version" value-type="int" length="10" nullable="false" />
@@ -2987,6 +2988,7 @@
     <index name="version" members="version ASC" />
     <index name="nx_active_version" members="nx_active_version ASC" />
     <index name="active_version" members="active_version ASC" />
+    <index name="name" members="name ASC" />
     <readsets>
       <readset name="FULL" all="true" />
     </readsets>

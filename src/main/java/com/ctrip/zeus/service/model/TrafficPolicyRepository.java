@@ -19,7 +19,11 @@ public interface TrafficPolicyRepository {
 
     TrafficPolicy add(TrafficPolicy trafficPolicy) throws Exception;
 
+    TrafficPolicy add(TrafficPolicy trafficPolicy, boolean force) throws Exception;
+
     TrafficPolicy update(TrafficPolicy trafficPolicy) throws Exception;
+
+    TrafficPolicy update(TrafficPolicy trafficPolicy, boolean force) throws Exception;
 
     void updateActiveStatus(IdVersion[] trafficPolicies) throws Exception;
 

@@ -1323,6 +1323,7 @@ CREATE TABLE IF NOT EXISTS `task_execute_record` (
 DROP TABLE IF EXISTS `traffic_policy`;
 CREATE TABLE IF NOT EXISTS `traffic_policy` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
+  `name` VARCHAR(255) NOT NULL DEFAULT 'null' COMMENT 'policy name',
   `version` int(11) NOT NULL DEFAULT '0' COMMENT 'lastest version',
   `nx_active_version` int(11) NOT NULL DEFAULT '0' COMMENT 'offline version',
   `active_version` int(11) NOT NULL DEFAULT '0' COMMENT 'online verion',

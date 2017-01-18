@@ -41,7 +41,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
 
     @Test
     public void testTrafficPolicyValidation() throws DalException {
-        TrafficPolicy object = new TrafficPolicy().setVersion(1)
+        TrafficPolicy object = new TrafficPolicy().setName("name").setVersion(1)
                 .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/v1($|/|\\?)").setPriority(1200))
                 .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(2L)).setPath("~* ^/v2($|/|\\?)").setPriority(1200))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(1L)).setWeight(50))
@@ -76,7 +76,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
         rGroupVsDao.update(d0, RGroupVsEntity.UPDATESET_FULL);
 
         /********* case 4 *********/
-        TrafficPolicyDo d1 = new TrafficPolicyDo().setVersion(1).setNxActiveVersion(1);
+        TrafficPolicyDo d1 = new TrafficPolicyDo().setName("d1").setVersion(1).setNxActiveVersion(1);
         trafficPolicyDao.insert(d1);
         RTrafficPolicyGroupDo d2 = new RTrafficPolicyGroupDo().setGroupId(1L).setPolicyId(d1.getId()).setPolicyVersion(1).setWeight(50);
         rTrafficPolicyGroupDao.insert(d2);
@@ -118,7 +118,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
         rGroupVsDao.insert(new RelGroupVsDo().setGroupId(12).setGroupVersion(1).setVsId(v1.getId()).setPath("~* ^/v11($|/|\\?)").setPriority(1000));
         rGroupVsDao.insert(new RelGroupVsDo().setGroupId(12).setGroupVersion(1).setVsId(v2.getId()).setPath("~* ^/v12($|/|\\?)").setPriority(1000));
 
-        TrafficPolicyDo d0 = new TrafficPolicyDo().setVersion(1).setNxActiveVersion(1);
+        TrafficPolicyDo d0 = new TrafficPolicyDo().setName("d0").setVersion(1).setNxActiveVersion(1);
         trafficPolicyDao.insert(d0);
         rTrafficPolicyVsDao.insert(new RTrafficPolicyVsDo().setPolicyId(d0.getId()).setPolicyVersion(1).setVsId(v1.getId()).setPath("~* ^/v11($|/|\\?)").setPriority(1100));
         rTrafficPolicyGroupDao.insert(new RTrafficPolicyGroupDo().setPolicyId(d0.getId()).setPolicyVersion(1).setGroupId(11).setWeight(50));
@@ -148,7 +148,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
         assertValidationFailed(object, "path is totally equivalent to another group");
 
         /********* case 5 *********/
-        TrafficPolicyDo d1 = new TrafficPolicyDo().setVersion(1).setNxActiveVersion(1);
+        TrafficPolicyDo d1 = new TrafficPolicyDo().setName("d1").setVersion(1).setNxActiveVersion(1);
         trafficPolicyDao.insert(d1);
         RTrafficPolicyVsDo d2 = new RTrafficPolicyVsDo().setPolicyId(d1.getId()).setPolicyVersion(1).setVsId(v1.getId()).setPath("~* ^/v13/v12($|/|\\?)").setPriority(1000);
         rTrafficPolicyVsDao.insert(d2);
@@ -178,7 +178,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
         rGroupVsDao.insert(new RelGroupVsDo().setGroupId(22).setVsId(2).setGroupVersion(1).setPath("~* ^/v21($|/|\\?)").setPriority(1000));
         rGroupVsDao.insert(new RelGroupVsDo().setGroupId(22).setVsId(2).setGroupVersion(2).setPath("~* ^/v21($|/|\\?)").setPriority(1000));
 
-        TrafficPolicy object = new TrafficPolicy().setVersion(1)
+        TrafficPolicy object = new TrafficPolicy().setName("name").setVersion(1)
                 .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/v21($|/|\\?)").setPriority(1200))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(11L)).setWeight(50))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(22L)).setWeight(50));

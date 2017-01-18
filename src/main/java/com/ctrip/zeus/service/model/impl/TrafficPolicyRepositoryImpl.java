@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.TrafficPolicyRepository;
 import com.ctrip.zeus.service.model.VersionUtils;
+import com.ctrip.zeus.service.model.handler.TrafficPolicyValidator;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
@@ -23,6 +24,8 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
     private RTrafficPolicyGroupDao rTrafficPolicyGroupDao;
     @Resource
     private RTrafficPolicyVsDao rTrafficPolicyVsDao;
+    @Resource
+    private TrafficPolicyValidator trafficPolicyValidator;
 
     @Override
     public List<TrafficPolicy> list() throws Exception {
@@ -87,7 +90,14 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
 
     @Override
     public TrafficPolicy add(TrafficPolicy trafficPolicy) throws Exception {
-        TrafficPolicyDo tpd = new TrafficPolicyDo().setVersion(1).setActiveVersion(-1).setNxActiveVersion(1);
+        return add(trafficPolicy, false);
+    }
+
+    @Override
+    public TrafficPolicy add(TrafficPolicy trafficPolicy, boolean force) throws Exception {
+        trafficPolicyValidator.validate(trafficPolicy, force);
+
+        TrafficPolicyDo tpd = new TrafficPolicyDo().setName(trafficPolicy.getName()).setVersion(1).setActiveVersion(-1).setNxActiveVersion(1);
         trafficPolicyDao.insert(tpd);
         trafficPolicy.setId(tpd.getId()).setVersion(tpd.getVersion());
 
@@ -98,12 +108,19 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
 
     @Override
     public TrafficPolicy update(TrafficPolicy trafficPolicy) throws Exception {
+        return update(trafficPolicy, false);
+    }
+
+    @Override
+    public TrafficPolicy update(TrafficPolicy trafficPolicy, boolean force) throws Exception {
+        trafficPolicyValidator.validate(trafficPolicy, force);
+
         TrafficPolicyDo tpd = trafficPolicyDao.findById(trafficPolicy.getId(), TrafficPolicyEntity.READSET_FULL);
         if (tpd == null) {
             throw new ValidationException("Traffic policy " + trafficPolicy.getId() + " that you tried to update does not exists.");
         }
 
-        tpd.setVersion(tpd.getVersion() + 1).setActiveVersion(tpd.getActiveVersion()).setNxActiveVersion(tpd.getVersion());
+        tpd.setName(trafficPolicy.getName()).setVersion(tpd.getVersion() + 1).setActiveVersion(tpd.getActiveVersion()).setNxActiveVersion(tpd.getVersion());
         trafficPolicyDao.updateById(tpd, TrafficPolicyEntity.UPDATESET_FULL);
         trafficPolicy.setId(tpd.getId()).setVersion(tpd.getVersion());
 

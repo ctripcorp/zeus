@@ -58,6 +58,14 @@ public class QueryEngine {
         sequenceController[4] = propertyCommand;
     }
 
+    public void readToCommand(QueryCommand command) {
+        Queue<String[]> curr = new LinkedList<>(params);
+        while (!curr.isEmpty()) {
+            String[] e = curr.poll();
+            command.add(e[0], e[1]);
+        }
+    }
+
     public void init(boolean skipable) throws ValidationException {
         Queue<String[]> curr = new LinkedList<>(params);
         Queue<String[]> next = new LinkedList<>();

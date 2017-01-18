@@ -45,6 +45,14 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
 
     @Override
     public void validate(TrafficPolicy target, boolean escapePathValidation) throws Exception {
+        if (target.getName() == null) {
+            throw new ValidationException("Field `name` is empty.");
+        }
+        TrafficPolicyDo nameCheck = trafficPolicyDao.findByName(target.getName(), TrafficPolicyEntity.READSET_FULL);
+        if (nameCheck != null) {
+            throw new ValidationException("Traffic policy is requesting a name " + target.getName() + " which has been taken by an existing policy " + nameCheck.getId() + ".");
+        }
+
         Long[] groupIds = new Long[target.getControls().size()];
         for (int i = 0; i < target.getControls().size(); i++) {
             groupIds[i] = target.getControls().get(i).getGroup().getId();
