@@ -354,7 +354,7 @@ public class DefaultGroupValidator implements GroupValidator {
             List<RelGroupVsDo> gvsList = gvsListByVsId.get(vsId);
             if (gvsList != null) {
                 for (RelGroupVsDo e : gvsList) {
-                    if (e.getGroupId() == target.getId()) continue;
+                    if (target.getId() != null && e.getGroupId() == target.getId()) continue;
                     putArrayEntryValue(currentLocationEntriesByVs, e.getVsId(), new PathValidator.LocationEntry().setVsId(e.getVsId()).setEntryId(e.getGroupId()).setPath(e.getPath()).setEntryType(MetaType.GROUP).setPriority(e.getPriority() == 0 ? 1000 : e.getPriority()));
                 }
             }

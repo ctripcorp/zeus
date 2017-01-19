@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.TrafficPolicy;
 import com.ctrip.zeus.model.entity.VirtualServer;
 
 import java.util.List;
@@ -17,6 +18,8 @@ public interface ArchiveRepository {
 
     void archiveVs(VirtualServer vs) throws Exception;
 
+    void archivePolicy(TrafficPolicy trafficPolicy) throws Exception;
+
     Group getGroupArchive(Long id, int version) throws Exception;
 
     Group getGroupArchive(String name, int version) throws Exception;
@@ -24,6 +27,8 @@ public interface ArchiveRepository {
     Slb getSlbArchive(Long id, int version) throws Exception;
 
     VirtualServer getVsArchive(Long id, int version) throws Exception;
+
+    TrafficPolicy getPolicyArchive(Long id, String name) throws Exception;
 
     List<Archive<Group>> getAllGroupArchives(Long id) throws Exception;
 

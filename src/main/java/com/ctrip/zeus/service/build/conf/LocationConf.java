@@ -1,9 +1,6 @@
 package com.ctrip.zeus.service.build.conf;
 
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.model.PathRewriteParser;
 import org.slf4j.Logger;
@@ -12,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author:xingchaowang
@@ -38,18 +37,53 @@ public class LocationConf {
             .append("      ngx.req.set_header(\"X-Forwarded-For\", ngx.var.remote_addr )\n")
             .append("  end\n")
             .append("end'").toString();
-    private final String newSetHeaderLuaScripts = new StringBuilder(500)
-            .append("'\n")
-            .append("  local headers = ngx.req.get_headers();\n")
-            .append("  if ngx.var.inWhite ~= \"true\" or headers[\"X-Forwarded-For\"] == nil then\n")
-            .append("    if (headers[\"True-Client-Ip\"] ~= nil) then\n")
-            .append("      ngx.req.clear_header(\"X-Forwarded-For\")\n")
-            .append("      ngx.req.set_header(\"X-Forwarded-For\", headers[\"True-Client-IP\"])\n")
-            .append("    else\n")
-            .append("      ngx.req.clear_header(\"X-Forwarded-For\")\n")
-            .append("      ngx.req.set_header(\"X-Forwarded-For\", ngx.var.remote_addr )\n")
-            .append("  end\n")
-            .append("end'").toString();
+
+    public void write(ConfWriter confWriter, Slb slb, VirtualServer vs, TrafficPolicy trafficPolicy) throws Exception {
+        for (PolicyVirtualServer pvs : trafficPolicy.getPolicyVirtualServers()) {
+            if (vs.getId().equals(pvs.getVirtualServer().getId())) {
+                confWriter.writeLocationStart(pvs.getPath());
+                confWriter.writeCommand("content_by_lua", generateTrafficControlScript(trafficPolicy.getControls()));
+                confWriter.writeLocationEnd();
+            }
+        }
+        for (TrafficControl c : trafficPolicy.getControls()) {
+            //TODO how to name named location?
+            write(confWriter, slb, vs, c.getGroup());
+        }
+    }
+
+    protected String generateTrafficControlScript(List<TrafficControl> controls) {
+        double totalWeight = 0.0;
+        TreeMap<Double, Long> controlOrder = new TreeMap<>();
+        for (TrafficControl c : controls) {
+            controlOrder.put(c.getWeight().doubleValue(), c.getGroup().getId());
+            totalWeight += c.getWeight().doubleValue();
+        }
+
+        StringBuilder controlScript = new StringBuilder();
+        controlScript.append("'\n")
+                .append("  local r = math.random()\n");
+
+        double prevWeight = 0.0, w;
+        Map.Entry<Double, Long> curr = controlOrder.pollFirstEntry();
+        w = curr.getKey() + prevWeight;
+        controlScript.append("  if (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r < " + String.format("%.2f", w / totalWeight) + ") then\n")
+                //TODO how to name named location?
+                .append("    ngx.exec(\"@group" + curr.getValue() + "\")\n");
+        prevWeight += curr.getKey();
+        curr = controlOrder.pollFirstEntry();
+        while (curr != null) {
+            w = curr.getKey() + prevWeight;
+            controlScript.append("  elseif (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r " + (w == totalWeight ? "<= " : "< ") + String.format("%.2f", w / totalWeight) + ") then\n")
+                    //TODO how to name named location?
+                    .append("    ngx.exec(\"@group" + curr.getValue() + "\")\n");
+            prevWeight = w;
+            curr = controlOrder.pollFirstEntry();
+        }
+
+        controlScript.append("  end\n';");
+        return controlScript.toString();
+    }
 
     public void write(ConfWriter confWriter, Slb slb, VirtualServer vs, Group group) throws Exception {
         Long slbId = slb.getId();
@@ -116,11 +150,7 @@ public class LocationConf {
                             configHandler.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
                             .writeCommand("set", "$inWhite \"true\"")
                             .writeIfEnd();
-                    if (configHandler.getEnable("new_xff_header", slbId, vsId, groupId, false)) {
-                        confWriter.writeCommand("rewrite_by_lua", newSetHeaderLuaScripts);
-                    } else {
-                        confWriter.writeCommand("rewrite_by_lua", setHeaderLuaScripts);
-                    }
+                    confWriter.writeCommand("rewrite_by_lua", setHeaderLuaScripts);
                 } else {
                     confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
                 }

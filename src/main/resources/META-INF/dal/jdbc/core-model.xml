@@ -284,6 +284,30 @@
             </query>
         </query-defs>
     </entity>
+    <entity name="archive-traffic-policy" table="archive_traffic_policy" alias="atp" do-class="ArchiveTrafficPolicyDo">
+        <query-defs>
+            <query name="find-by-policy-id" type="SELECT">
+                <param name="policy-id"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='policy-id'/> = ${policy-id}
+                    ]]>
+                </statement>
+            </query>
+            <query name="find-by-policy-name" type="SELECT">
+                <param name="policy-name"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    WHERE <FIELD name='policy-name'/> = ${policy-name}
+                    ]]>
+                </statement>
+            </query>
+        </query-defs>
+    </entity>
     <entity name="rule" table="rule" alias="r2" do-class="RuleDo">
         <var name="ids" value-type="Long[]"/>
         <query-defs>

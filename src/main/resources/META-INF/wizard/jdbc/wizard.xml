@@ -81,6 +81,7 @@
          <table name="traffic_policy"/>
          <table name="r_traffic_policy_vs"/>
          <table name="r_traffic_policy_group"/>
+         <table name="archive_traffic_policy"/>
       </group>
    </jdbc>
 </wizard>

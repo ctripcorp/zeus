@@ -9,6 +9,7 @@ import com.ctrip.zeus.restful.message.view.ExtendedView;
 import com.ctrip.zeus.restful.message.view.TrafficPolicyListView;
 import com.ctrip.zeus.restful.message.view.ViewConstraints;
 import com.ctrip.zeus.restful.message.view.ViewDecorator;
+import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.TrafficPolicyRepository;
@@ -42,6 +43,8 @@ public class TrafficPolicyResource {
     private TrafficPolicyQuery trafficPolicyQuery;
     @Resource
     private TrafficPolicyRepository trafficPolicyRepository;
+    @Resource
+    private ArchiveRepository archiveRepository;
     @Resource
     private PropertyBox propertyBox;
     @Resource
@@ -145,6 +148,7 @@ public class TrafficPolicyResource {
         if (policyId == null) {
             throw new ValidationException("Query parameter - policyId is not provided or could not be found by query.");
         }
+        TrafficPolicy result = trafficPolicyRepository.getById(policyId);
         trafficPolicyRepository.delete(policyId);
         try {
             propertyBox.clear("policy", policyId);
@@ -154,6 +158,7 @@ public class TrafficPolicyResource {
             tagBox.clear("policy", policyId);
         } catch (Exception ex) {
         }
+        archiveRepository.archivePolicy(result);
         return responseHandler.handle("Traffic policy " + policyId + " is deleted.", hh.getMediaType());
     }
 
