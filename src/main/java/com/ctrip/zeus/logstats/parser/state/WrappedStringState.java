@@ -60,7 +60,7 @@ public class WrappedStringState implements LogStatsState {
             for (int i = ctxt.getCurrentIndex(); i < source.length; i++) {
                 c = source[i];
                 if (c == startSymbol) {
-                    if (!_escaping && matcher[0] == Character.MIN_VALUE) {
+                    if (sb.length() == 0 && !_escaping && matcher[0] == Character.MIN_VALUE) {
                         matcher[0] = c;
                         continue;
                     }

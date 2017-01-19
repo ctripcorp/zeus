@@ -110,6 +110,7 @@ public class StateMachineParsingTest {
         List<String> realCases = new ArrayList<>();
 
         realCases.add("--");
+        realCases.add("[17/Jan/2017:14:02:18 +0800] m.localhost.com svr40315 127.8.110.51 GET /html5/flight/empty.html?allianceID=\\xB2\\x99 \\xE2\\x80 \\xE9\\x86 (16) 80 - 220.202.153.40 - HTTP/1.1 \"Mozilla/5.0\" \"-\" 400 1322 2602 0.008 0.001 : 0.007 10.8.161.147:80 : 10.15.211.2:80 400 : 200 backend_5270");
         for (String rc : realCases) {
             List<KeyValue> kvs = parser.parse(rc);
             Assert.assertTrue(kvs.size() == 0);

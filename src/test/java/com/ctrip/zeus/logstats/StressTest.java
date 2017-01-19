@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class StressTest {
     public static void main(String[] args) throws IOException {
-        final File accessLogFile = new File("D:/opt/logs/nginx/access.log");
+        final File accessLogFile = new File("D:/opt/logs/nginx/access_1.log");
         final AtomicLong errorCount = new AtomicLong();
         final AtomicLong succCount = new AtomicLong();
         final int analyzerWorkers = 2;
@@ -45,6 +45,11 @@ public class StressTest {
                 .registerLogStatsDelegator(new StatsDelegate<List<KeyValue>>() {
                     @Override
                     public void delegate(List<KeyValue> input) {
+
+                    }
+
+                    @Override
+                    public void delegate(String raw, List<KeyValue> input) {
                         if (input != null && input.size() > 0) {
                             try {
                                 dateFormat.get().parse(input.get(0).getValue());
@@ -58,11 +63,6 @@ public class StressTest {
                         } else {
                             errorCount.incrementAndGet();
                         }
-                    }
-
-                    @Override
-                    public void delegate(String raw, List<KeyValue> input) {
-
                     }
                 });
 
@@ -100,9 +100,9 @@ public class StressTest {
     }
 
     public static String formatFileSize(long size) {
-        if(size <= 0) return "0";
-        final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };
-        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
-        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+        if (size <= 0) return "0";
+        final String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 }
