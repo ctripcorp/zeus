@@ -31,9 +31,7 @@ public class BuildServiceImpl implements BuildService {
     @Resource
     private UpstreamsConf upstreamsConf;
     @Resource
-    ConfGroupSlbActiveDao confGroupSlbActiveDao;
-    @Resource
-    ConfVersionService confVersionService;
+    private ConfVersionService confVersionService;
     @Resource
     private NginxConfBuilder nginxConfigBuilder;
     @Resource
@@ -43,23 +41,23 @@ public class BuildServiceImpl implements BuildService {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Override
-    public Long build(Slb onlineSlb,
-                      Map<Long, VirtualServer> onlineVses,
-                      Set<Long> needBuildVses,
-                      Set<Long> deactivateVses,
-                      Map<Long, List<Group>> vsGroups,
-                      Set<String> allDownServers,
-                      Set<String> allUpGroupServers) throws Exception {
-        int version = buildInfoService.getTicket(onlineSlb.getId());
-        Long currentVersion = confVersionService.getSlbCurrentVersion(onlineSlb.getId());//buildInfoService.getCurrentTicket(onlineSlb.getId());
+    public Long build(Slb nxOnlineSlb,
+                      Map<Long, VirtualServer> nxOnlineVses,
+                      Set<Long> buildingVsIds,
+                      Set<Long> clearingVsIds,
+                      Map<Long, List<TrafficPolicy>> policiesByVsId,
+                      Map<Long, List<Group>> groupsByVsId,
+                      Set<String> serversToBeMarkedDown,
+                      Set<String> groupMembersToBeMarkedUp) throws Exception {
+        int version = buildInfoService.getTicket(nxOnlineSlb.getId());
+        Long currentVersion = confVersionService.getSlbCurrentVersion(nxOnlineSlb.getId());
 
-        String conf = nginxConfigBuilder.generateNginxConf(onlineSlb);
+        String conf = nginxConfigBuilder.generateNginxConf(nxOnlineSlb);
 
-        nginxConfDao.insert(new NginxConfDo().setSlbId(onlineSlb.getId()).setContent(conf).setVersion(version));
-        logger.info("Nginx Conf build success! slbId: " + onlineSlb.getId() + ", version: " + version);
+        nginxConfDao.insert(new NginxConfDo().setSlbId(nxOnlineSlb.getId()).setContent(conf).setVersion(version));
+        logger.info("Nginx Conf build success! slbId: " + nxOnlineSlb.getId() + ", version: " + version);
 
-        NginxConfSlbDo d = nginxConfSlbDao.findBySlbAndVersion(onlineSlb.getId(), currentVersion, NginxConfSlbEntity.READSET_FULL);
+        NginxConfSlbDo d = nginxConfSlbDao.findBySlbAndVersion(nxOnlineSlb.getId(), currentVersion, NginxConfSlbEntity.READSET_FULL);
         // init current conf entry in case of generating conf file for entirely new cluster
         NginxConfEntry currentConfEntry = new NginxConfEntry().setUpstreams(new Upstreams()).setVhosts(new Vhosts());
         if (d != null) {
@@ -68,20 +66,20 @@ public class BuildServiceImpl implements BuildService {
 
         NginxConfEntry nextConfEntry = new NginxConfEntry().setUpstreams(new Upstreams()).setVhosts(new Vhosts());
         Set<String> fileTrack = new HashSet<>();
-        for (Long vsId : needBuildVses) {
-            if (deactivateVses.contains(vsId)) {
+        for (Long vsId : buildingVsIds) {
+            if (clearingVsIds.contains(vsId)) {
                 continue;
             }
-            VirtualServer virtualServer = onlineVses.get(vsId);
-            List<Group> groups = vsGroups.get(vsId);
+            VirtualServer virtualServer = nxOnlineVses.get(vsId);
+            List<Group> groups = groupsByVsId.get(vsId);
             if (groups == null) {
                 groups = new ArrayList<>();
             }
 
-            String serverConf = nginxConfigBuilder.generateServerConf(onlineSlb, virtualServer, groups);
+            String serverConf = nginxConfigBuilder.generateServerConf(nxOnlineSlb, virtualServer, policiesByVsId.get(vsId), groups);
             nextConfEntry.getVhosts().addConfFile(new ConfFile().setName("" + virtualServer.getId()).setContent(serverConf));
 
-            List<ConfFile> list = nginxConfigBuilder.generateUpstreamsConf(onlineVses.keySet(), virtualServer, groups, allDownServers, allUpGroupServers, fileTrack);
+            List<ConfFile> list = nginxConfigBuilder.generateUpstreamsConf(nxOnlineVses.keySet(), virtualServer, groups, serversToBeMarkedDown, groupMembersToBeMarkedUp, fileTrack);
             for (ConfFile cf : list) {
                 nextConfEntry.getUpstreams().addConfFile(cf);
             }
@@ -90,7 +88,7 @@ public class BuildServiceImpl implements BuildService {
         for (ConfFile cf : currentConfEntry.getVhosts().getFiles()) {
             try {
                 Long vsId = Long.parseLong(cf.getName());
-                if (deactivateVses.contains(vsId) || needBuildVses.contains(vsId)) {
+                if (clearingVsIds.contains(vsId) || buildingVsIds.contains(vsId)) {
                     continue;
                 } else {
                     nextConfEntry.getVhosts().addConfFile(cf);
@@ -114,7 +112,7 @@ public class BuildServiceImpl implements BuildService {
                     logger.warn("Unable to extract vs id information from upstream file: " + cf.getName() + ".");
                     continue;
                 }
-                if (deactivateVses.contains(vsId) || needBuildVses.contains(vsId)) {
+                if (clearingVsIds.contains(vsId) || buildingVsIds.contains(vsId)) {
                     if (add) add = false;
                 }
             }
@@ -122,11 +120,10 @@ public class BuildServiceImpl implements BuildService {
                 nextConfEntry.getUpstreams().addConfFile(cf);
             }
         }
-        nginxConfSlbDao.insert(new NginxConfSlbDo().setSlbId(onlineSlb.getId()).setVersion(version)
+        nginxConfSlbDao.insert(new NginxConfSlbDo().setSlbId(nxOnlineSlb.getId()).setVersion(version)
                 .setContent(CompressUtils.compress(GenericSerializer.writeJson(nextConfEntry, false))));
-        return (long)version;
+        return (long) version;
     }
-
 
     public DyUpstreamOpsData buildUpstream(Long slbId,
                                            VirtualServer virtualServer,

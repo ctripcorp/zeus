@@ -38,18 +38,10 @@ public class LocationConf {
             .append("  end\n")
             .append("end'").toString();
 
-    public void write(ConfWriter confWriter, Slb slb, VirtualServer vs, TrafficPolicy trafficPolicy) throws Exception {
-        for (PolicyVirtualServer pvs : trafficPolicy.getPolicyVirtualServers()) {
-            if (vs.getId().equals(pvs.getVirtualServer().getId())) {
-                confWriter.writeLocationStart(pvs.getPath());
-                confWriter.writeCommand("content_by_lua", generateTrafficControlScript(trafficPolicy.getControls()));
-                confWriter.writeLocationEnd();
-            }
-        }
-        for (TrafficControl c : trafficPolicy.getControls()) {
-            //TODO how to name named location?
-            write(confWriter, slb, vs, c.getGroup());
-        }
+    public void write(ConfWriter confWriter, Slb slb, VirtualServer vs, TrafficPolicy trafficPolicy, PolicyVirtualServer policyOnVs) {
+        confWriter.writeLocationStart(policyOnVs.getPath());
+        confWriter.writeCommand("content_by_lua", generateTrafficControlScript(trafficPolicy.getControls()));
+        confWriter.writeLocationEnd();
     }
 
     protected String generateTrafficControlScript(List<TrafficControl> controls) {
@@ -68,14 +60,12 @@ public class LocationConf {
         Map.Entry<Double, Long> curr = controlOrder.pollFirstEntry();
         w = curr.getKey() + prevWeight;
         controlScript.append("  if (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r < " + String.format("%.2f", w / totalWeight) + ") then\n")
-                //TODO how to name named location?
                 .append("    ngx.exec(\"@group" + curr.getValue() + "\")\n");
         prevWeight += curr.getKey();
         curr = controlOrder.pollFirstEntry();
         while (curr != null) {
             w = curr.getKey() + prevWeight;
             controlScript.append("  elseif (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r " + (w == totalWeight ? "<= " : "< ") + String.format("%.2f", w / totalWeight) + ") then\n")
-                    //TODO how to name named location?
                     .append("    ngx.exec(\"@group" + curr.getValue() + "\")\n");
             prevWeight = w;
             curr = controlOrder.pollFirstEntry();
@@ -85,97 +75,91 @@ public class LocationConf {
         return controlScript.toString();
     }
 
-    public void write(ConfWriter confWriter, Slb slb, VirtualServer vs, Group group) throws Exception {
+    public void write(ConfWriter confWriter, Slb slb, VirtualServer vs, Group group, GroupVirtualServer groupOnVs, boolean isNamedLocation) throws Exception {
         Long slbId = slb.getId();
         Long vsId = vs.getId();
         Long groupId = group.getId();
 
-        for (GroupVirtualServer e : group.getGroupVirtualServers()) {
-            if (e.getVirtualServer().getId().longValue() == vs.getId().longValue()) {
-                String upstreamName = "backend_" + group.getId();
+        String upstreamName = "backend_" + groupId;
 
-                // TODO confirm path is not empty
-
-                // if group is virtual
-                if (group.isVirtual()) {
-                    writeVirtualLocation(confWriter, e.getPath(), group);
-                    continue;
-                }
-                if (configHandler.getEnable("socket.io.group", null, null, groupId, false)) {
-                    writeSocketIOGroup(confWriter, e.getPath(), group, upstreamName);
-                    continue;
-                }
-
-                // if group is not virtual
-                confWriter.writeLocationStart(e.getPath());
-                if (configHandler.getEnable("location.client.max.body.size", slbId, vsId, groupId, false)) {
-                    confWriter.writeCommand("client_max_body_size", configHandler.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "2") + "m");
-                }
-
-                confWriter.writeCommand("client_body_buffer_size", configHandler.getStringValue("location.client.body.buffer.size", slbId, vsId, groupId, "16k"));
-
-                if (configHandler.getEnable("location.gzip", slbId, vsId, groupId, false)) {
-                    confWriter.writeCommand("gzip", "on");
-                    confWriter.writeCommand("gzip_types", configHandler.getStringValue("location.gzip.types", slbId, vsId, groupId, "text/html"));
-                    confWriter.writeCommand("gzip_min_length", configHandler.getStringValue("location.gzip.min.length", slbId, vsId, groupId, "100"));
-                    confWriter.writeCommand("gzip_comp_level", configHandler.getStringValue("location.gzip.comp.level", slbId, vsId, groupId, "1"));
-                    confWriter.writeCommand("gzip_buffers", configHandler.getStringValue("location.gzip.buffers", slbId, vsId, groupId, "16 8k"));
-                }
-
-                // write proxy configuration
-                if (configHandler.getEnable("default.server.http.version.2", slbId, null, null, false)
-                        || configHandler.getEnable("http.version.2", slbId, null, null, false)) {
-//                    confWriter.writeCommand("proxy_request_buffering", "on");
-                } else if (configHandler.getEnable("proxy.request.buffering.off", slbId, vsId, groupId, true)) {
-                    confWriter.writeCommand("proxy_request_buffering", "off");
-                }
-
-                confWriter.writeCommand("proxy_next_upstream", "off");
-
-                confWriter.writeCommand("proxy_set_header", "Host " + configHandler.getStringValue("location.proxy.header.host", null, null, groupId, "$host"));
-                confWriter.writeCommand("proxy_set_header", "X-Real-IP $remote_addr");
-
-                if (configHandler.getEnable("location.upstream.keepAlive", slbId, vsId, groupId, false)) {
-                    confWriter.writeCommand("proxy_set_header", "Connection \"\"");
-                }
-                String proxyReadTimeout = "location.proxy.readTimeout";
-                if (configHandler.getEnable(proxyReadTimeout, slbId, vsId, groupId, true)) {
-                    String readTimeout = configHandler.getStringValue(proxyReadTimeout, slbId, vsId, groupId, "60");
-                    confWriter.writeCommand("proxy_read_timeout", readTimeout + "s");
-                }
-
-                // write x-forward-for configuration
-                if (configHandler.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {
-                    confWriter.writeIfStart("$remote_addr ~* \"" +
-                            configHandler.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
-                            .writeCommand("set", "$inWhite \"true\"")
-                            .writeIfEnd();
-                    confWriter.writeCommand("rewrite_by_lua", setHeaderLuaScripts);
-                } else {
-                    confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
-                }
-
-                // write error page configuration if defined
-                if (configHandler.getEnable("location.errorPage", slbId, vsId, groupId, false)) {
-                    confWriter.writeCommand("proxy_intercept_errors", "on");
-                }
-
-                // set upstream value
-                confWriter.writeCommand("set", "$upstream " + upstreamName);
-                confWriter.writeCommand("set", LogFormat.VAR_UPSTREAM_NAME + " " + upstreamName);
-
-                addBastionCommand(confWriter, upstreamName, slbId, vsId, groupId);
-
-                //rewrite should be after $upstream
-                addRewriteCommand(confWriter, vs, group);
-                if (group.isSsl()) {
-                    confWriter.writeCommand("proxy_pass", "https://$upstream");
-                } else {
-                    confWriter.writeCommand("proxy_pass", "http://$upstream");
-                }
-                confWriter.writeLocationEnd();
-            }
+        // if group is virtual
+        if (group.isVirtual()) {
+            writeVirtualLocation(confWriter, groupOnVs.getPath(), group);
+            return;
         }
+
+        if (configHandler.getEnable("socket.io.group", null, null, groupId, false)) {
+            writeSocketIOGroup(confWriter, groupOnVs.getPath(), group, upstreamName);
+            return;
+        }
+
+        // if group is not virtual
+        confWriter.writeLocationStart(isNamedLocation ? "@group_" + groupId : groupOnVs.getPath());
+        if (configHandler.getEnable("location.client.max.body.size", slbId, vsId, groupId, false)) {
+            confWriter.writeCommand("client_max_body_size", configHandler.getStringValue("location.client.max.body.size", slbId, vsId, groupId, "2") + "m");
+        }
+
+        confWriter.writeCommand("client_body_buffer_size", configHandler.getStringValue("location.client.body.buffer.size", slbId, vsId, groupId, "16k"));
+
+        if (configHandler.getEnable("location.gzip", slbId, vsId, groupId, false)) {
+            confWriter.writeCommand("gzip", "on");
+            confWriter.writeCommand("gzip_types", configHandler.getStringValue("location.gzip.types", slbId, vsId, groupId, "text/html"));
+            confWriter.writeCommand("gzip_min_length", configHandler.getStringValue("location.gzip.min.length", slbId, vsId, groupId, "100"));
+            confWriter.writeCommand("gzip_comp_level", configHandler.getStringValue("location.gzip.comp.level", slbId, vsId, groupId, "1"));
+            confWriter.writeCommand("gzip_buffers", configHandler.getStringValue("location.gzip.buffers", slbId, vsId, groupId, "16 8k"));
+        }
+
+        // write proxy configuration
+        if (configHandler.getEnable("default.server.http.version.2", slbId, null, null, false)
+                || configHandler.getEnable("http.version.2", slbId, null, null, false)) {
+        } else if (configHandler.getEnable("proxy.request.buffering.off", slbId, vsId, groupId, true)) {
+            confWriter.writeCommand("proxy_request_buffering", "off");
+        }
+
+        confWriter.writeCommand("proxy_next_upstream", "off");
+
+        confWriter.writeCommand("proxy_set_header", "Host " + configHandler.getStringValue("location.proxy.header.host", null, null, groupId, "$host"));
+        confWriter.writeCommand("proxy_set_header", "X-Real-IP $remote_addr");
+
+        if (configHandler.getEnable("location.upstream.keepAlive", slbId, vsId, groupId, false)) {
+            confWriter.writeCommand("proxy_set_header", "Connection \"\"");
+        }
+        String proxyReadTimeout = "location.proxy.readTimeout";
+        if (configHandler.getEnable(proxyReadTimeout, slbId, vsId, groupId, true)) {
+            String readTimeout = configHandler.getStringValue(proxyReadTimeout, slbId, vsId, groupId, "60");
+            confWriter.writeCommand("proxy_read_timeout", readTimeout + "s");
+        }
+
+        // write x-forward-for configuration
+        if (configHandler.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {
+            confWriter.writeIfStart("$remote_addr ~* \"" +
+                    configHandler.getStringValue("location.x-forwarded-for.white.list", slbId, vsId, groupId, "172\\..*|192\\.168.*|10\\..*") + "\"")
+                    .writeCommand("set", "$inWhite \"true\"")
+                    .writeIfEnd();
+            confWriter.writeCommand("rewrite_by_lua", setHeaderLuaScripts);
+        } else {
+            confWriter.writeCommand("proxy_set_header", "X-Forwarded-For $proxy_add_x_forwarded_for");
+        }
+
+        // write error page configuration if defined
+        if (configHandler.getEnable("location.errorPage", slbId, vsId, groupId, false)) {
+            confWriter.writeCommand("proxy_intercept_errors", "on");
+        }
+
+        // set upstream value
+        confWriter.writeCommand("set", "$upstream " + upstreamName);
+        confWriter.writeCommand("set", LogFormat.VAR_UPSTREAM_NAME + " " + upstreamName);
+
+        addBastionCommand(confWriter, upstreamName, slbId, vsId, groupId);
+
+        //rewrite should be after $upstream
+        addRewriteCommand(confWriter, vs, group);
+        if (group.isSsl()) {
+            confWriter.writeCommand("proxy_pass", "https://$upstream");
+        } else {
+            confWriter.writeCommand("proxy_pass", "http://$upstream");
+        }
+        confWriter.writeLocationEnd();
     }
 
     private void writeSocketIOGroup(ConfWriter confWriter, String path, Group group, String upstreamName) {
@@ -354,4 +338,6 @@ public class LocationConf {
         confWriter.writeLine("return 404 \"Not Found!\";");
         confWriter.writeLocationEnd();
     }
+
+
 }

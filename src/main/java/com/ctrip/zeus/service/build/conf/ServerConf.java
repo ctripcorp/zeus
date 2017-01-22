@@ -1,16 +1,16 @@
 package com.ctrip.zeus.service.build.conf;
 
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.Domain;
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author:xingchaowang
@@ -26,7 +26,8 @@ public class ServerConf {
     public static final String SSL_PATH = "/data/nginx/ssl/";
     private static final String ZONENAME = "proxy_zone";
 
-    public String generate(Slb slb, VirtualServer vs, List<Group> groups) throws Exception {
+    public String generate(Slb slb, VirtualServer vs, List<TrafficPolicy> policies, List<Group> groups,
+                           Map<String, Object> objectOnVsReferrer) throws Exception {
         Long slbId = slb.getId();
         Long vsId = vs.getId();
 
@@ -76,10 +77,7 @@ public class ServerConf {
 
         confWriter.writeCommand("req_status", ZONENAME);
 
-        //add locations
-        for (Group group : groups) {
-            locationConf.write(confWriter, slb, vs, group);
-        }
+        generateLocations(slb, vs, objectOnVsReferrer, policies, groups, vsId, confWriter);
 
         if (configHandler.getEnable("server.errorPage", slbId, vsId, null, false)) {
             boolean useNew = configHandler.getEnable("server.errorPage.use.new", slbId, vsId, null, true);
@@ -93,6 +91,69 @@ public class ServerConf {
 
         confWriter.writeServerEnd();
         return confWriter.getValue();
+    }
+
+    private void generateLocations(Slb slb, VirtualServer vs, Map<String, Object> objectOnVsReferrer, List<TrafficPolicy> policies, List<Group> groups, Long vsId, ConfWriter confWriter) throws Exception {
+        //add locations
+        Set<Long> namedLocations = new HashSet<>();
+
+        int gIdx = 0;
+        int pIdx = 0;
+        int _firstGroup = 0, _firstPolicy = 1, _firstGvs = 2, _firstPvs = 3;
+        Object[] first = new Object[4];
+        while (gIdx < groups.size() && pIdx < policies.size()) {
+            Group g;
+            TrafficPolicy p;
+            GroupVirtualServer gvs;
+            PolicyVirtualServer pvs;
+            if (first[_firstGroup] == null) {
+                g = groups.get(gIdx);
+                gvs = (GroupVirtualServer) objectOnVsReferrer.get("gvs-" + groups.get(gIdx).getId());
+            } else {
+                g = (Group) first[_firstGroup];
+                gvs = (GroupVirtualServer) first[_firstGvs];
+            }
+            if (first[_firstPolicy] == null) {
+                p = policies.get(pIdx);
+                pvs = (PolicyVirtualServer) objectOnVsReferrer.get("pvs-" + groups.get(pIdx).getId());
+            } else {
+                p = (TrafficPolicy) first[_firstPolicy];
+                pvs = (PolicyVirtualServer) first[_firstPvs];
+            }
+            if (pvs.getPriority() - gvs.getPriority() >= 0) {
+                locationConf.write(confWriter, slb, vs, p, pvs);
+                for (TrafficControl c : p.getControls()) {
+                    namedLocations.add(c.getGroup().getId());
+                }
+                pIdx++;
+                p = null;
+                pvs = null;
+            } else {
+                locationConf.write(confWriter, slb, vs, g, gvs, namedLocations.contains(g.getId()));
+                gIdx++;
+                g = null;
+                gvs = null;
+            }
+            first[_firstGroup] = g;
+            first[_firstGvs] = gvs;
+            first[_firstPolicy] = p;
+            first[_firstPvs] = pvs;
+        }
+        while (pIdx < policies.size()) {
+            TrafficPolicy p = policies.get(pIdx);
+            PolicyVirtualServer pvs = (PolicyVirtualServer) objectOnVsReferrer.get("pvs-" + groups.get(pIdx).getId() + "," + vsId);
+            locationConf.write(confWriter, slb, vs, p, pvs);
+            for (TrafficControl c : p.getControls()) {
+                namedLocations.add(c.getGroup().getId());
+            }
+            pIdx++;
+        }
+        while (gIdx < groups.size()) {
+            Group g = groups.get(gIdx);
+            GroupVirtualServer gvs = (GroupVirtualServer) objectOnVsReferrer.get("gvs-" + groups.get(gIdx).getId() + "," + vsId);
+            locationConf.write(confWriter, slb, vs, g, gvs, namedLocations.contains(g.getId()));
+            gIdx++;
+        }
     }
 
     private void writeHttp2Configs(ConfWriter confWriter, Long slbId, VirtualServer vs) throws Exception {
