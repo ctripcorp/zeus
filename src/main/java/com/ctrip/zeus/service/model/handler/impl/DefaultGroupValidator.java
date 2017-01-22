@@ -2,10 +2,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupServer;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.PathValidator;
 import com.ctrip.zeus.service.model.common.MetaType;
@@ -165,6 +162,36 @@ public class DefaultGroupValidator implements GroupValidator {
     }
 
     @Override
+    public void validateForMerge(Long[] toBeMergedItems, Long vsId, Map<Long, Group> groupRef, Map<Long, TrafficPolicy> policyRef, boolean escapePathValidation) throws Exception {
+        Map<Long, List<PathValidator.LocationEntry>> locationEntries = new HashMap<>();
+        Set<Long> groupsAsTrafficControl = new HashSet<>();
+        for (TrafficPolicy p : policyRef.values()) {
+            for (PolicyVirtualServer pvs : p.getPolicyVirtualServers()) {
+                if (pvs.getVirtualServer().getId().equals(vsId)) {
+                    putArrayEntryValue(locationEntries, vsId, new PathValidator.LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
+                }
+            }
+            for (TrafficControl c : p.getControls()) {
+                groupsAsTrafficControl.add(c.getGroup().getId());
+            }
+        }
+        for (Group g : groupRef.values()) {
+            if (groupsAsTrafficControl.contains(g.getId())) continue;
+
+            for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
+                if (gvs.getVirtualServer().getId().equals(vsId)) {
+                    putArrayEntryValue(locationEntries, vsId, new PathValidator.LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
+                }
+            }
+        }
+
+        for (Long i : toBeMergedItems) {
+            Group g = groupRef.get(i);
+            validatePathPriority(g, escapePathValidation, locationEntries);
+        }
+    }
+
+    @Override
     public void validateGroupVirtualServers(Group target, boolean escapePathValidation) throws Exception {
         if (target.getGroupVirtualServers() == null || target.getGroupVirtualServers().size() == 0)
             throw new ValidationException("Group is missing `group-virtual-server` field.");
@@ -256,57 +283,6 @@ public class DefaultGroupValidator implements GroupValidator {
                     throw new ValidationException("Group that you tries to create/modify may cause path prefix-overlap problem with other entries on virtual-server " + vsId + ". Recommend priority will be " + insertEntry.getPriority() + ".");
                 }
                 e.setPath(insertEntry.getPath());
-            }
-        }
-    }
-
-    private void compareAndBuildCurrentLocationEntries(Long groupId, Long[] vsIds, List<GroupVirtualServer> groupVirtualServers, Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs) throws DalException, ValidationException {
-        List<Long> relatedPolicies = new ArrayList<>();
-        for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findAllByGroups(new Long[]{groupId}, RTrafficPolicyGroupEntity.READSET_FULL)) {
-            relatedPolicies.add(e.getPolicyId());
-        }
-
-        Integer[] priorities = new Integer[vsIds.length];
-        String[] paths = new String[vsIds.length];
-        for (GroupVirtualServer e : groupVirtualServers) {
-            int i = Arrays.binarySearch(vsIds, e.getVirtualServer().getId());
-            priorities[i] = e.getPriority();
-            paths[i] = e.getPath();
-        }
-
-        for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findAllByPolicyVersion(relatedPolicies.toArray(new Long[relatedPolicies.size()]), RTrafficPolicyVsEntity.READSET_FULL)) {
-            int i = Arrays.binarySearch(vsIds, e.getVsId());
-            if (i < 0) {
-                throw new ValidationException("Group is missing combination on vs " + e.getVsId() + " referring its traffic policy " + e.getPolicyId() + ".");
-            }
-            if (priorities[i] != null && priorities[i] > e.getPriority()) {
-                throw new ValidationException("Group has higher `priority` than its traffic policy " + e.getPolicyId() + " on vs " + e.getVsId() + ".");
-            }
-            if (!paths[i].equals(e.getPath())) {
-                throw new ValidationException("Group has different `path` from its traffic policy " + e.getPolicyId() + " on vs " + e.getVsId() + ".");
-            }
-        }
-
-        if (currentLocationEntriesByVs != null) {
-            for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findByVsesAndPolicyVersion(vsIds, RTrafficPolicyVsEntity.READSET_FULL)) {
-                if (relatedPolicies.indexOf(e.getPolicyId()) < 0) {
-                    List<PathValidator.LocationEntry> v = currentLocationEntriesByVs.get(e.getVsId());
-                    if (v == null) {
-                        v = new ArrayList<>();
-                        currentLocationEntriesByVs.put(e.getVsId(), v);
-                    }
-                    v.add(new PathValidator.LocationEntry().setEntryId(e.getPolicyId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(e.getVsId()).setPath(e.getPath()).setPriority(e.getPriority()));
-                }
-            }
-
-            for (RelGroupVsDo e : rGroupVsDao.findByVsesAndGroupOfflineVersion(vsIds, RGroupVsEntity.READSET_FULL)) {
-                if (e.getGroupId() == groupId) continue;
-                List<PathValidator.LocationEntry> v = currentLocationEntriesByVs.get(e.getVsId());
-                if (v == null) {
-                    v = new ArrayList<>();
-                    currentLocationEntriesByVs.put(e.getVsId(), v);
-                }
-                v.add(new PathValidator.LocationEntry().setVsId(e.getVsId()).setEntryId(e.getGroupId()).setPath(e.getPath()).setEntryType(MetaType.GROUP).setPriority(e.getPriority() == 0 ? 1000 : e.getPriority()));
             }
         }
     }

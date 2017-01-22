@@ -2,10 +2,7 @@ package com.ctrip.zeus.service.model.handler.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.model.entity.PolicyVirtualServer;
-import com.ctrip.zeus.model.entity.TrafficControl;
-import com.ctrip.zeus.model.entity.TrafficPolicy;
-import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.PathValidator;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.common.MetaType;
@@ -86,10 +83,40 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         compareAndBuildCurrentLocationEntries(target, groupIds, vsIds, policyListByGroupId, pvsListByVsId, gvsListByVsId,
                 escapePathValidation ? null : currentLocationEntriesByVs);
 
-        validatePathOverlap(target, escapePathValidation, currentLocationEntriesByVs);
+        validatePathPriority(target, escapePathValidation, currentLocationEntriesByVs);
     }
 
-    private void validatePathOverlap(TrafficPolicy target, boolean escapePathValidation, Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs) throws ValidationException {
+    @Override
+    public void validateForMerge(Long[] toBeMergedItems, Long vsId, Map<Long, Group> groupRef, Map<Long, TrafficPolicy> policyRef, boolean escapePathValidation) throws Exception {
+        Map<Long, List<PathValidator.LocationEntry>> locationEntries = new HashMap<>();
+        Set<Long> groupsAsTrafficControl = new HashSet<>();
+        for (TrafficPolicy p : policyRef.values()) {
+            for (PolicyVirtualServer pvs : p.getPolicyVirtualServers()) {
+                if (pvs.getVirtualServer().getId().equals(vsId)) {
+                    putArrayEntryValue(locationEntries, vsId, new PathValidator.LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
+                }
+            }
+            for (TrafficControl c : p.getControls()) {
+                groupsAsTrafficControl.add(c.getGroup().getId());
+            }
+        }
+        for (Group g : groupRef.values()) {
+            if (groupsAsTrafficControl.contains(g.getId())) continue;
+
+            for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
+                if (gvs.getVirtualServer().getId().equals(vsId)) {
+                    putArrayEntryValue(locationEntries, vsId, new PathValidator.LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
+                }
+            }
+        }
+
+        for (Long i : toBeMergedItems) {
+            TrafficPolicy p = policyRef.get(i);
+            validatePathPriority(p, escapePathValidation, locationEntries);
+        }
+    }
+
+    private void validatePathPriority(TrafficPolicy target, boolean escapePathValidation, Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs) throws ValidationException {
         for (PolicyVirtualServer e : target.getPolicyVirtualServers()) {
             Long vsId = e.getVirtualServer().getId();
             e.setVirtualServer(new VirtualServer().setId(vsId));
@@ -179,7 +206,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
             compareAndBuildCurrentLocationEntries(e, g, v, policyListByGroupId, pvsListByVsId, gvsListByVsId,
                     escapedPathValidation ? null : currentLocationEntriesByVs);
 
-            validatePathOverlap(e, escapedPathValidation, currentLocationEntriesByVs);
+            validatePathPriority(e, escapedPathValidation, currentLocationEntriesByVs);
         }
     }
 
