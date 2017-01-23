@@ -8,6 +8,7 @@ import com.ctrip.zeus.service.model.PathValidator;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.handler.GroupServerValidator;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
+import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 import org.unidal.dal.jdbc.DalException;
 
@@ -163,31 +164,56 @@ public class DefaultGroupValidator implements GroupValidator {
 
     @Override
     public void validateForMerge(Long[] toBeMergedItems, Long vsId, Map<Long, Group> groupRef, Map<Long, TrafficPolicy> policyRef, boolean escapePathValidation) throws Exception {
-        Map<Long, List<PathValidator.LocationEntry>> locationEntries = new HashMap<>();
-        Set<Long> groupsAsTrafficControl = new HashSet<>();
+        Map<Long, Long> policiesByGroupId = new HashMap<>();
+        Map<Long, PathValidator.LocationEntry> policyEntriesById = new HashMap<>();
         for (TrafficPolicy p : policyRef.values()) {
             for (PolicyVirtualServer pvs : p.getPolicyVirtualServers()) {
                 if (pvs.getVirtualServer().getId().equals(vsId)) {
-                    putArrayEntryValue(locationEntries, vsId, new PathValidator.LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
+                    policyEntriesById.put(p.getId(), new PathValidator.LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
                 }
             }
             for (TrafficControl c : p.getControls()) {
-                groupsAsTrafficControl.add(c.getGroup().getId());
+                policiesByGroupId.put(c.getGroup().getId(), p.getId());
             }
         }
-        for (Group g : groupRef.values()) {
-            if (groupsAsTrafficControl.contains(g.getId())) continue;
+        Set<Long> groupAsPolicies = new HashSet<>(policiesByGroupId.keySet());
+        groupAsPolicies.removeAll(groupRef.keySet());
+        if (groupAsPolicies.size() > 0) {
+            throw new ValidationException("Group " + Joiner.on(",").join(groupAsPolicies) + " is missing combination on vs " + vsId + ".");
+        }
+        for (Long i : toBeMergedItems) {
+            Long id = policiesByGroupId.get(i);
+            PathValidator.LocationEntry e = policyEntriesById.get(id);
+            if (e == null) continue;
 
+            Group g = groupRef.get(i);
             for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
                 if (gvs.getVirtualServer().getId().equals(vsId)) {
-                    putArrayEntryValue(locationEntries, vsId, new PathValidator.LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
+                    if (e.getPriority() < gvs.getPriority()) {
+                        throw new ValidationException("Group has higher `priority` than its traffic policy " + e.getEntryId() + " on vs " + vsId + ".");
+                    }
+                    if (!e.getPath().equals(gvs.getPath())) {
+                        throw new ValidationException("Group has different `path` from its traffic policy " + e.getEntryId() + " on vs " + vsId + ".");
+                    }
+                }
+            }
+        }
+
+        Map<Long, List<PathValidator.LocationEntry>> locationEntries = new HashMap<>();
+        ArrayList<PathValidator.LocationEntry> values = new ArrayList<>(policyEntriesById.values());
+        locationEntries.put(vsId, values);
+        for (Group g : groupRef.values()) {
+            if (policiesByGroupId.containsKey(g.getId())) continue;
+            for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
+                if (gvs.getVirtualServer().getId().equals(vsId)) {
+                    values.add(new PathValidator.LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
                 }
             }
         }
 
         for (Long i : toBeMergedItems) {
-            Group g = groupRef.get(i);
-            validatePathPriority(g, escapePathValidation, locationEntries);
+            if (policiesByGroupId.containsKey(i)) continue;
+            validatePathPriority(groupRef.get(i), escapePathValidation, locationEntries);
         }
     }
 

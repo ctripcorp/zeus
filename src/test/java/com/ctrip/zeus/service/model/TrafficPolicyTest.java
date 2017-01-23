@@ -13,6 +13,8 @@ import org.junit.Test;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by zhoumy on 2017/1/16.
@@ -170,6 +172,47 @@ public class TrafficPolicyTest extends AbstractServerTest {
     }
 
     @Test
+    public void testValidationForMergedData() {
+        Map<Long, Group> groupRef = new HashMap<>();
+        Map<Long, TrafficPolicy> policyRef = new HashMap<>();
+        groupRef.put(1L, new Group().setId(1L).addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1000)));
+        groupRef.put(2L, new Group().setId(2L).addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1000)));
+        groupRef.put(3L, new Group().setId(3L).addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path/overlap").setPriority(1100)));
+
+        policyRef.put(1L, new TrafficPolicy().setId(1L).addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1050))
+                .addTrafficControl(new TrafficControl().setGroup(new Group().setId(1L)))
+                .addTrafficControl(new TrafficControl().setGroup(new Group().setId(2L))));
+        policyRef.put(2L, new TrafficPolicy().setId(2L).addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1050))
+                .addTrafficControl(new TrafficControl().setGroup(new Group().setId(1L)))
+                .addTrafficControl(new TrafficControl().setGroup(new Group().setId(2L))));
+
+        assertValidationFailed(new Long[]{1L}, 1L, groupRef, policyRef, "vs-traffic-control combination is not unique");
+        policyRef.remove(2L);
+
+        try {
+            trafficPolicyValidator.validateForMerge(new Long[]{1L}, 1L, groupRef, policyRef, false);
+            groupModelValidator.validateForMerge(new Long[]{1L}, 1L, groupRef, policyRef, false);
+            groupModelValidator.validateForMerge(new Long[]{3L}, 1L, groupRef, policyRef, false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.assertTrue(false);
+        }
+
+        groupRef.remove(2L);
+        assertValidationFailed(new Long[]{1L}, 1L, groupRef, policyRef, "missing group on vs");
+        try {
+            groupModelValidator.validateForMerge(new Long[]{1L}, 1L, groupRef, policyRef, false);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            System.out.println("GroupModelValidator expected: missing group on vs, Actual: " + e.getMessage());
+            if (!(e instanceof ValidationException)) {
+                e.printStackTrace();
+                Assert.assertTrue(false);
+            }
+        }
+    }
+
+    @Test
     public void testRepository() throws DalException {
         rGroupStatusDao.insert(new RelGroupStatusDo().setGroupId(21).setOfflineVersion(1).setOnlineVersion(1));
         rGroupStatusDao.insert(new RelGroupStatusDo().setGroupId(22).setOfflineVersion(2).setOnlineVersion(1));
@@ -200,6 +243,19 @@ public class TrafficPolicyTest extends AbstractServerTest {
         } catch (Exception e) {
         }
 
+    }
+
+    private void assertValidationFailed(Long[] items, Long vsId, Map<Long, Group> groupRef, Map<Long, TrafficPolicy> policyRef, String message) {
+        try {
+            trafficPolicyValidator.validateForMerge(items, vsId, groupRef, policyRef, false);
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            System.out.println("TrafficPolicyValidator expected: " + message + ", Actual: " + e.getMessage());
+            if (!(e instanceof ValidationException)) {
+                e.printStackTrace();
+                Assert.assertTrue(false);
+            }
+        }
     }
 
     private void assertValidationFailed(Group object, String message) {

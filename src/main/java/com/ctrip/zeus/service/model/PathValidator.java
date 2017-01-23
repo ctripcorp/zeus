@@ -34,7 +34,7 @@ public class PathValidator {
 
         Set<LocationEntry> overlappedEntries = new HashSet<>();
         for (LocationEntry entryNode : currentEntrySet) {
-            if ((insertEntry.getEntryId() != null && insertEntry.equals(entryNode.getEntryId()))
+            if ((insertEntry.getEntryId() != null && insertEntry.getEntryId().equals(entryNode.getEntryId()))
                     && insertEntry.getEntryType().equals(entryNode.getEntryType())) continue;
 
             String entryNodeUri = entryNode.getPath();

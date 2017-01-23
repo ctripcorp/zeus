@@ -7,11 +7,13 @@ import com.ctrip.zeus.dal.core.RGroupVgEntity;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.GroupVirtualServer;
+import com.ctrip.zeus.model.entity.TrafficPolicy;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VGroupValidator;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Map;
 
 /**
  * Created by zhoumy on 2015/11/23.
@@ -49,6 +51,11 @@ public class DefaultVGroupValidator implements VGroupValidator {
     @Override
     public void removable(Long targetId) throws Exception {
         groupModelValidator.removable(targetId);
+    }
+
+    @Override
+    public void validateForMerge(Long[] toBeMergedItems, Long vsId, Map<Long, Group> groupRef, Map<Long, TrafficPolicy> policyRef, boolean escapePathValidation) throws Exception {
+
     }
 
     @Override

@@ -40,6 +40,11 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     }
 
     @Override
+    public void validateForMerge(Long[] toBeMergedItems, Long slbId, Map<Long, VirtualServer> vsRef) {
+
+    }
+
+    @Override
     public boolean isActivated(Long vsId) throws Exception {
         RelVsStatusDo e = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
         return e != null && e.getOnlineVersion() != 0;
@@ -100,6 +105,16 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
                 domain.setName(name);
             }
         }
+    }
+
+    @Override
+    public void validateForActivate(VirtualServer[] toBeActivatedItems, boolean escapedPathValidation) throws Exception {
+
+    }
+
+    @Override
+    public void checkVersionForUpdate(VirtualServer target) throws Exception {
+
     }
 
     private Set<String> getPortWhiteList() {

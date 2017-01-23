@@ -1,22 +1,18 @@
 package com.ctrip.zeus.service.model.handler;
 
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.VirtualServer;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zhoumy on 2015/9/24.
  */
-public interface VirtualServerValidator {
+public interface VirtualServerValidator extends ModelValidator<VirtualServer> {
 
-    boolean exists(Long vsId) throws Exception;
+    void validateForMerge(Long[] toBeMergedItems, Long slbId, Map<Long, VirtualServer> vsRef);
 
     boolean isActivated(Long vsId) throws Exception;
 
     void unite(List<VirtualServer> virtualServers) throws Exception;
-
-    void removable(Long vsId) throws Exception;
-
-    void validate(VirtualServer virtualServer) throws ValidationException;
 }

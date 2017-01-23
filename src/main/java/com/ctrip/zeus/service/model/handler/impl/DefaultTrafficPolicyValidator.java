@@ -61,6 +61,13 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
             vsIds[i] = target.getPolicyVirtualServers().get(i).getVirtualServer().getId();
         }
         Arrays.sort(vsIds);
+        Long prev = vsIds[0];
+        for (int i = 1; i < vsIds.length; i++) {
+            if (prev.equals(vsIds[i])) {
+                throw new ValidationException("Traffic policy that you tries to create/modify declares the same vs " + prev + " more than once.");
+            }
+            prev = vsIds[i];
+        }
 
         Map<Long, List<RelGroupVsDo>> gvsListByVsId = new HashMap<>();
         for (RelGroupVsDo e : rGroupVsDao.findByVsesAndGroupOfflineVersion(vsIds, RGroupVsEntity.READSET_FULL)) {
@@ -88,28 +95,63 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
 
     @Override
     public void validateForMerge(Long[] toBeMergedItems, Long vsId, Map<Long, Group> groupRef, Map<Long, TrafficPolicy> policyRef, boolean escapePathValidation) throws Exception {
-        Map<Long, List<PathValidator.LocationEntry>> locationEntries = new HashMap<>();
-        Set<Long> groupsAsTrafficControl = new HashSet<>();
+        Map<Long, PathValidator.LocationEntry> groupEntriesById = new HashMap<>();
+        Set<Long> groupAsTrafficControl = new HashSet<>();
         for (TrafficPolicy p : policyRef.values()) {
-            for (PolicyVirtualServer pvs : p.getPolicyVirtualServers()) {
-                if (pvs.getVirtualServer().getId().equals(vsId)) {
-                    putArrayEntryValue(locationEntries, vsId, new PathValidator.LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
-                }
-            }
             for (TrafficControl c : p.getControls()) {
-                groupsAsTrafficControl.add(c.getGroup().getId());
+                if (!groupAsTrafficControl.add(c.getGroup().getId())) {
+                    throw new ValidationException("Another traffic policy " + c.getGroup().getId() + " has occupied one of the traffic-controls on vs " + vsId + ".");
+                }
             }
         }
         for (Group g : groupRef.values()) {
-            if (groupsAsTrafficControl.contains(g.getId())) continue;
-
+            if (groupAsTrafficControl.contains(g.getId())) continue;
             for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
                 if (gvs.getVirtualServer().getId().equals(vsId)) {
-                    putArrayEntryValue(locationEntries, vsId, new PathValidator.LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
+                    groupEntriesById.put(g.getId(), new PathValidator.LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
                 }
             }
         }
 
+        for (Long i : toBeMergedItems) {
+            TrafficPolicy p = policyRef.get(i);
+            String path = null;
+            Integer priority = Integer.MAX_VALUE;
+            for (PolicyVirtualServer pvs : p.getPolicyVirtualServers()) {
+                if (pvs.getVirtualServer().getId().equals(vsId)) {
+                    path = pvs.getPath();
+                    priority = pvs.getPriority();
+                }
+            }
+            for (TrafficControl c : p.getControls()) {
+                Group e = groupRef.get(c.getGroup().getId());
+                if (e == null) {
+                    throw new ValidationException("Group " + c.getGroup().getId() + " is missing combination on vs " + vsId + ".");
+                }
+                for (GroupVirtualServer gvs : e.getGroupVirtualServers()) {
+                    if (gvs.getVirtualServer().getId().equals(vsId)) {
+                        if (gvs.getPriority() > priority) {
+                            throw new ValidationException("Traffic policy has lower `priority` than its control item " + c.getGroup().getId() + " on vs " + vsId + ".");
+                        }
+                        if (!gvs.getPath().equals(path)) {
+                            throw new ValidationException("Traffic policy and its control item " + c.getGroup().getId() + " does not have the same `path` value on vs " + vsId + ".");
+                        }
+                    }
+                }
+            }
+
+        }
+
+        Map<Long, List<PathValidator.LocationEntry>> locationEntries = new HashMap<>();
+        ArrayList<PathValidator.LocationEntry> values = new ArrayList<>(groupEntriesById.values());
+        locationEntries.put(vsId, values);
+        for (TrafficPolicy p : policyRef.values()) {
+            for (PolicyVirtualServer pvs : p.getPolicyVirtualServers()) {
+                if (pvs.getVirtualServer().getId().equals(vsId)) {
+                    values.add(new PathValidator.LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
+                }
+            }
+        }
         for (Long i : toBeMergedItems) {
             TrafficPolicy p = policyRef.get(i);
             validatePathPriority(p, escapePathValidation, locationEntries);
@@ -229,14 +271,6 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         }
         if (groupIds.length <= 1) {
             throw new ValidationException("Traffic policy that you tries to create/modify does not have enough traffic-controls.");
-        }
-
-        prev = vsIds[0];
-        for (int i = 1; i < vsIds.length; i++) {
-            if (prev.equals(vsIds[i])) {
-                throw new ValidationException("Traffic policy that you tries to create/modify declares the same vs " + prev + " more than once.");
-            }
-            prev = vsIds[i];
         }
 
         int[] versions = new int[groupIds.length];

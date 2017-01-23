@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -101,5 +102,10 @@ public class DefaultSlbValidator implements SlbValidator {
         if (rSlbStatusDao.findBySlb(slbId, RSlbStatusEntity.READSET_FULL).getOnlineVersion() != 0) {
             throw new ValidationException("Slb must be deactivated before deletion.");
         }
+    }
+
+    @Override
+    public void validateForMerge(Long[] toBeMergedItems, Map<Long, Slb> slbRef) throws Exception {
+
     }
 }
