@@ -505,20 +505,18 @@ public class GroupResource {
             lock.unlock();
         }
 
+        if (extendedView.getProperties() != null) {
+            setProperties(g.getId(), extendedView.getProperties());
+        }
+        if (extendedView.getTags() != null) {
+            addTag(g.getId(), extendedView.getTags());
+        }
 
         try {
             if (groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
                 propertyBox.set("status", "toBeActivated", "group", g.getId());
             }
         } catch (Exception ex) {
-        }
-
-        if (extendedView.getProperties() != null) {
-            setProperties(g.getId(), extendedView.getProperties());
-        }
-
-        if (extendedView.getTags() != null) {
-            addTag(g.getId(), extendedView.getTags());
         }
 
         addHealthProperty(g.getId());
