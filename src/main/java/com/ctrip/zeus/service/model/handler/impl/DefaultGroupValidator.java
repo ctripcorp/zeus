@@ -117,7 +117,7 @@ public class DefaultGroupValidator implements GroupValidator {
             Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
             compareAndBuildCurrentLocationEntries(e, v, policyListByGroupId, pvsListByVsId, gvsListByVsId, currentLocationEntriesByVs);
 
-            validatePathPriority(e, false, null);
+            validatePathPriority(e, false, currentLocationEntriesByVs);
         }
     }
 

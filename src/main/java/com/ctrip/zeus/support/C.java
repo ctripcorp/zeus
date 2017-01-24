@@ -128,7 +128,7 @@ public class C {
                 .setFailCause(opsTask.getFailCause())
                 .setIpList(opsTask.getIpList())
                 .setGroupId(opsTask.getGroupId() == null ? 0 : opsTask.getGroupId())
-                .setGroupId(opsTask.getPolicyId() == null ? 0 : opsTask.getPolicyId())
+                .setPolicyId(opsTask.getPolicyId() == null ? 0 : opsTask.getPolicyId())
                 .setOpsType(opsTask.getOpsType())
                 .setResources(opsTask.getResources())
                 .setSlbVirtualServerId(opsTask.getSlbVirtualServerId() == null ? 0 : opsTask.getSlbVirtualServerId())

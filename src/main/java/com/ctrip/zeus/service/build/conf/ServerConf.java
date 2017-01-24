@@ -141,7 +141,7 @@ public class ServerConf {
         }
         while (pIdx < policies.size()) {
             TrafficPolicy p = policies.get(pIdx);
-            PolicyVirtualServer pvs = (PolicyVirtualServer) objectOnVsReferrer.get("pvs-" + groups.get(pIdx).getId() + "," + vsId);
+            PolicyVirtualServer pvs = (PolicyVirtualServer) objectOnVsReferrer.get("pvs-" + groups.get(pIdx).getId());
             locationConf.write(confWriter, slb, vs, p, pvs);
             for (TrafficControl c : p.getControls()) {
                 namedLocations.add(c.getGroup().getId());
@@ -150,7 +150,7 @@ public class ServerConf {
         }
         while (gIdx < groups.size()) {
             Group g = groups.get(gIdx);
-            GroupVirtualServer gvs = (GroupVirtualServer) objectOnVsReferrer.get("gvs-" + groups.get(gIdx).getId() + "," + vsId);
+            GroupVirtualServer gvs = (GroupVirtualServer) objectOnVsReferrer.get("gvs-" + groups.get(gIdx).getId());
             locationConf.write(confWriter, slb, vs, g, gvs, namedLocations.contains(g.getId()));
             gIdx++;
         }
