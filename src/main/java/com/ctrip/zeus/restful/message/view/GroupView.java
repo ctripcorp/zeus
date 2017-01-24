@@ -29,10 +29,10 @@ public abstract class GroupView {
     @JsonView(ViewConstraints.Normal.class)
     abstract Integer getVersion();
 
-    @JsonView(ViewConstraints.Normal.class)
+    @JsonView(ViewConstraints.Detail.class)
     abstract HealthCheck getHealthCheck();
 
-    @JsonView(ViewConstraints.Normal.class)
+    @JsonView(ViewConstraints.Detail.class)
     abstract LoadBalancingMethod getLoadBalancingMethod();
 
     @JsonView(ViewConstraints.Normal.class)

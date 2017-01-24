@@ -123,6 +123,40 @@ public class GroupMemberResource {
         return responseHandler.handle(groupServerList, hh.getMediaType());
     }
 
+    /**
+     * @api {post} /api/group/addMember: [Write] Add group server
+     * @apiName AddMember
+     * @apiGroup Member
+     * @apiSuccess (Success 200) {String} message   success message
+     * @apiParam (Parameter) {boolean} [online=false]               add group servers to its offline (and online) version
+     * @apiParam (RequestEntity) {long} group-id                    the group to be modified
+     * @apiParam (RequestEntity) {GroupServer[]} group-servers      group servers to be added
+     * @apiParam (GroupServer) {Integer} port               server port
+     * @apiParam (GroupServer) {String} ip                  server ip
+     * @apiParam (GroupServer) {String} host-name server    host name
+     * @apiParam (GroupServer) {Integer} [weight]           [readonly]
+     * @apiParam (GroupServer) {Integer} [max-fails=0]      exclude server from proxying if max_fails count exceeds the latch for fails_timeout interval, disabled if values 0
+     * @apiParam (GroupServer) {Integer} [fails-timeout=0]  disabled by default
+     * @apiParamExample {json} Sample Request:
+     *  {
+     *    "group-id" : 1,
+     *    "group-servers" : [ {
+     *      "port" : 8080,
+     *      "ip" : "127.0.0.1",
+     *      "host-name" : "PC1",
+     *      "weight" : 5,
+     *      "max-fails" : 0,
+     *      "fail-timeout" : 0
+     *    }, {
+     *      "port" : 8080,
+     *      "ip" : "127.0.0.2",
+     *      "host-name" : "PC2",
+     *      "weight" : 5,
+     *      "max-fails" : 0,
+     *      "fail-timeout" : 0
+     *    } ]
+     *  }
+     */
     @POST
     @Path("/group/addMember")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -235,6 +269,15 @@ public class GroupMemberResource {
         return responseHandler.handle("Successfully updated group servers to group with id " + gsl.getGroupId() + ".", hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/group/removeMember: [Write] Remove group server
+     * @apiName RemoveMember
+     * @apiGroup Member
+     * @apiSuccess (Success 200) {String} message   success message
+     * @apiParam {boolean} [online=false]   add group servers to its offline (and online) version
+     * @apiParam {long} groupId             the group to be modified
+     * @apiParam {string[]} ip              group servers to be removed
+     */
     @GET
     @Path("/group/removeMember")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
