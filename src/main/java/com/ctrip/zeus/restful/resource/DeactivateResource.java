@@ -363,7 +363,7 @@ public class DeactivateResource {
     @Authorize(name = "deactivate")
     public Response deactivatePolicy(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("policyId") List<Long> policyIds) throws Exception {
 
-        ModelStatusMapping<TrafficPolicy> tpMap = entityFactory.getTrafficPolicies(policyIds.toArray(new Long[]{}));
+        ModelStatusMapping<TrafficPolicy> tpMap = entityFactory.getPoliciesByIds(policyIds.toArray(new Long[]{}));
 
         if (!tpMap.getOnlineMapping().keySet().containsAll(policyIds)) {
             throw new ValidationException("Have inactivated policy in " + Joiner.on(",").join(policyIds));

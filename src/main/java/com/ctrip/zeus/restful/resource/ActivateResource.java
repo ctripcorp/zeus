@@ -373,7 +373,7 @@ public class ActivateResource {
         if (policyId == null || policyId <= 0) {
             throw new ValidationException("Invalidate Parameter policy.");
         }
-        ModelStatusMapping<TrafficPolicy> trafficPolicyMap = entityFactory.getTrafficPolicies(new Long[]{policyId});
+        ModelStatusMapping<TrafficPolicy> trafficPolicyMap = entityFactory.getPoliciesByIds(new Long[]{policyId});
         if (trafficPolicyMap.getOfflineMapping().size() == 0) {
             throw new ValidationException("Not Found Policy By Id. Policy Id:" + policyId);
         }

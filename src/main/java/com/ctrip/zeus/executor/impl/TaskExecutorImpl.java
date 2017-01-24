@@ -11,7 +11,12 @@ import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.commit.CommitService;
 import com.ctrip.zeus.service.commit.util.CommitType;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.model.handler.GroupValidator;
+import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.model.handler.TrafficPolicyValidator;
+import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
 import com.ctrip.zeus.service.nginx.NginxService;
+import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.status.StatusOffset;
 import com.ctrip.zeus.service.status.StatusService;
 import com.ctrip.zeus.service.task.TaskService;
@@ -55,6 +60,16 @@ public class TaskExecutorImpl implements TaskExecutor {
     private StatusService statusService;
     @Resource
     private NginxService nginxService;
+    @Resource
+    private SlbCriteriaQuery slbCriteriaQuery;
+    @Resource
+    private SlbValidator slbModelValidator;
+    @Resource
+    private GroupValidator groupValidator;
+    @Resource
+    private TrafficPolicyValidator trafficPolicyValidator;
+    @Resource
+    private VirtualServerValidator virtualServerValidator;
     @Resource
     private ConfVersionService confVersionService;
     @Resource
@@ -236,6 +251,10 @@ public class TaskExecutorImpl implements TaskExecutor {
                 return;
             }
 
+            //4. validate
+            validateModels(nxOnlineSlb, buildingVsIds, nxOnlineGroups, nxOnlineTpes,
+                    nxOnlineVses, groupReferrerOfBuildingVs, policyReferrerOfBuildingVs);
+
             //5.2 push config to all slb servers. reload if needed.
             //5.2.1 remove deactivate vs ids from need build vses
             Set<Long> cleanVsIds = new HashSet<>();
@@ -287,6 +306,51 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     }
 
+    private void validateModels(Slb nxOnlineSlb, Set<Long> buildingVsIds, Map<Long, Group> nxOnlineGroups,
+                                Map<Long, TrafficPolicy> nxOnlineTpes, Map<Long, VirtualServer> nxOnlineVses,
+                                Map<Long, List<Group>> groupReferrerOfBuildingVs,
+                                Map<Long, List<TrafficPolicy>> policyReferrerOfBuildingVs) throws Exception {
+        if (activateSlbOps.size() > 0) {
+            Set<Long> slbIds = slbCriteriaQuery.queryAll();
+            ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(slbIds.toArray(new Long[slbIds.size()]));
+            Map<Long, Slb> map = slbMap.getOnlineMapping();
+            map.put(nxOnlineSlb.getId(), nxOnlineSlb);
+            try {
+                slbModelValidator.validateForMerge(new Long[]{nxOnlineSlb.getId()}, map);
+            } catch (Exception e) {
+                setTaskFail(activateSlbOps.get(nxOnlineSlb.getId()), "Invalidate version for online. SlbId:" + nxOnlineSlb.getId() + ";cause:" + e.getMessage());
+                logger.error("Invalidate version for online. SlbId:" + nxOnlineSlb.getId() + ";cause:" + e.getMessage(), e);
+            }
+        }
+        if (buildingVsIds.size() > 0) {
+            for (Long vsId : buildingVsIds) {
+                List<Group> groups = groupReferrerOfBuildingVs.get(vsId);
+                List<TrafficPolicy> policies = policyReferrerOfBuildingVs.get(vsId);
+                if (groups != null && groups.size() > 0) {
+                    Long[] tmp = new Long[groups.size()];
+                    for (int i = 0; i < groups.size(); i++) {
+                        tmp[i] = groups.get(i).getId();
+                    }
+                    groupValidator.validateForMerge(tmp, vsId, nxOnlineGroups, nxOnlineTpes, false);
+                }
+                if (policies != null && policies.size() > 0) {
+                    Long[] tmp = new Long[policies.size()];
+                    for (int i = 0; i < policies.size(); i++) {
+                        tmp[i] = policies.get(i).getId();
+                    }
+                    trafficPolicyValidator.validateForMerge(tmp, vsId, nxOnlineGroups, nxOnlineTpes, false);
+                }
+            }
+        }
+        if (activateVsOps.size() > 0) {
+            Set<Long> vsIds = new HashSet<>();
+            for (OpsTask t : activateVsOps.values()) {
+                vsIds.add(t.getSlbVirtualServerId());
+            }
+            virtualServerValidator.validateForMerge(vsIds.toArray(new Long[vsIds.size()]), nxOnlineSlb.getId(), nxOnlineVses);
+        }
+    }
+
     private ModelStatusMapping<Slb> mapSlbVersionAndRevise(Long slbId, Collection<OpsTask> activateSlbTask) throws Exception {
         ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(new Long[]{slbId});
         Slb offlineSlb = slbMap.getOfflineMapping().get(slbId);
@@ -332,7 +396,7 @@ public class TaskExecutorImpl implements TaskExecutor {
     }
 
     private ModelStatusMapping<TrafficPolicy> mapPolicyVersionAndRevise(Set<Long> vsIds, Collection<OpsTask> activatePolicyTask) throws Exception {
-        ModelStatusMapping<TrafficPolicy> tpMap = entityFactory.getTrafficPolicies(vsIds.toArray(new Long[vsIds.size()]));
+        ModelStatusMapping<TrafficPolicy> tpMap = entityFactory.getPoliciesByVsIds(vsIds.toArray(new Long[vsIds.size()]));
         Map<Long, TrafficPolicy> offlineGroups = tpMap.getOfflineMapping();
         List<IdVersion> revisedVersion = new ArrayList<>();
         for (OpsTask task : activatePolicyTask) {
