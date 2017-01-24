@@ -113,6 +113,11 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     }
 
     @Override
+    public void validateForDeactivate(Long[] toBeDeactivatedItems) throws Exception {
+
+    }
+
+    @Override
     public void checkVersionForUpdate(VirtualServer target) throws Exception {
 
     }

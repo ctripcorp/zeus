@@ -1,6 +1,7 @@
 package com.ctrip.zeus.service.query.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.model.entity.TrafficPolicy;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.SelectionMode;
@@ -130,7 +131,19 @@ public class DefaultTrafficPolicyCriteriaQuery implements TrafficPolicyQuery {
                         }
                         return result;
                     }
-                }).build(IdVersion.class).run();
+                }).build(IdVersion.class).run(new ResultHandler<IdVersion, IdVersion>() {
+                    @Override
+                    public IdVersion[] handle(Set<IdVersion> result) throws Exception {
+                        if (result == null) return null;
+                        if (result.size() == 0) return new IdVersion[0];
+                        Set<Long> ids = new HashSet<>();
+                        for (IdVersion e : result) {
+                            ids.add(e.getId());
+                        }
+                        result.retainAll(queryByIdsAndMode(ids.toArray(new Long[ids.size()]), mode));
+                        return result.toArray(new IdVersion[result.size()]);
+                    }
+                });
 
         return result;
     }

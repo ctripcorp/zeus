@@ -86,6 +86,11 @@ public class DefaultSlbValidator implements SlbValidator {
     }
 
     @Override
+    public void validateForDeactivate(Long[] toBeDeactivatedItems) throws Exception {
+
+    }
+
+    @Override
     public void checkVersionForUpdate(Slb target) throws Exception {
         SlbDo check = slbDao.findById(target.getId(), SlbEntity.READSET_FULL);
         if (check == null)

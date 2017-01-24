@@ -122,10 +122,17 @@ public class DefaultGroupValidator implements GroupValidator {
     }
 
     @Override
+    public void validateForDeactivate(Long[] toBeDeactivatedItems) throws Exception {
+        for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findByGroupsAndPolicyActiveVersion(toBeDeactivatedItems, RTrafficPolicyGroupEntity.READSET_FULL)) {
+            throw new ValidationException("Group that you try to deactivate is hold by an online traffic policy " + e.getPolicyId() + ".");
+        }
+    }
+
+    @Override
     public void checkVersionForUpdate(Group target) throws Exception {
         RelGroupStatusDo check = rGroupStatusDao.findByGroup(target.getId(), RGroupStatusEntity.READSET_FULL);
         if (check == null) {
-            throw new ValidationException("Group that you tries to update does not exist.");
+            throw new ValidationException("Group that you try to update does not exist.");
         }
         if (check.getOfflineVersion() > target.getVersion()) {
             throw new ValidationException("Newer version is detected.");
@@ -306,7 +313,7 @@ public class DefaultGroupValidator implements GroupValidator {
             } else {
                 // check priority and reformat
                 if (!e.getPriority().equals(insertEntry.getPriority())) {
-                    throw new ValidationException("Group that you tries to create/modify may cause path prefix-overlap problem with other entries on virtual-server " + vsId + ". Recommend priority will be " + insertEntry.getPriority() + ".");
+                    throw new ValidationException("Group that you try to create/modify may cause path prefix-overlap problem with other entries on virtual-server " + vsId + ". Recommend priority will be " + insertEntry.getPriority() + ".");
                 }
                 e.setPath(insertEntry.getPath());
             }

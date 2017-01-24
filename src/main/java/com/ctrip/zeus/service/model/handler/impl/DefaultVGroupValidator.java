@@ -44,6 +44,11 @@ public class DefaultVGroupValidator implements VGroupValidator {
     }
 
     @Override
+    public void validateForDeactivate(Long[] toBeDeactivatedItems) throws Exception {
+
+    }
+
+    @Override
     public void checkVersionForUpdate(Group target) throws Exception {
         groupModelValidator.checkVersionForUpdate(target);
     }

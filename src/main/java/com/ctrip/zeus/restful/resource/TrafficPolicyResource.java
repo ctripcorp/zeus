@@ -70,6 +70,9 @@ public class TrafficPolicyResource {
         queryRender.readToCommand(cmd);
 
         IdVersion[] searchKeys = trafficPolicyQuery.queryByCommand(cmd, SelectionMode.getMode(mode));
+        if (searchKeys == null) {
+            searchKeys = trafficPolicyQuery.queryAll(SelectionMode.getMode(mode)).toArray(new IdVersion[]{});
+        }
         List<TrafficPolicy> result = trafficPolicyRepository.list(searchKeys);
 
         List<ExtendedView.ExtendedTrafficPolicy> viewArray = new ArrayList<>(result.size());
@@ -132,6 +135,13 @@ public class TrafficPolicyResource {
         if (extendedView.getTags() != null) {
             addTag(p.getId(), extendedView.getTags());
         }
+        try {
+            if (trafficPolicyQuery.queryByIdAndMode(p.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
+                propertyBox.set("status", "toBeActivated", "policy", p.getId());
+            }
+        } catch (Exception ex) {
+        }
+
         return responseHandler.handle(p, hh.getMediaType());
     }
 

@@ -29,6 +29,8 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
     private RGroupVsDao rGroupVsDao;
     @Resource
     private PathValidator pathValidator;
+    @Resource
+    private RGroupStatusDao rGroupStatusDao;
 
     @Override
     public boolean exists(Long targetId) throws Exception {
@@ -73,6 +75,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         for (RelGroupVsDo e : rGroupVsDao.findByVsesAndGroupOfflineVersion(vsIds, RGroupVsEntity.READSET_FULL)) {
             putArrayEntryValue(gvsListByVsId, e.getVsId(), e);
         }
+        validatePolicyControls(target, groupIds, vsIds, gvsListByVsId);
 
         Map<Long, List<RTrafficPolicyVsDo>> pvsListByVsId = new HashMap<>();
         for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findByVsesAndPolicyVersion(vsIds, RTrafficPolicyVsEntity.READSET_FULL)) {
@@ -83,8 +86,6 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findByGroupsAndPolicyVersion(groupIds, RTrafficPolicyGroupEntity.READSET_FULL)) {
             putArrayEntryValue(policyListByGroupId, e.getGroupId(), e);
         }
-
-        validatePolicyControls(target, groupIds, vsIds, gvsListByVsId);
 
         Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
         compareAndBuildCurrentLocationEntries(target, groupIds, vsIds, policyListByGroupId, pvsListByVsId, gvsListByVsId,
@@ -199,6 +200,13 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
             policies[i] = e.getId();
             hashes[i] = VersionUtils.getHash(e.getId(), e.getVersion());
         }
+        Long[] groupIds = groupLookup.toArray(new Long[groupLookup.size()]);
+        for (RelGroupStatusDo e : rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL)) {
+            if (e.getOnlineVersion() < 0) {
+                throw new ValidationException("Group " + e.getGroupId() + " has not been activated.");
+            }
+        }
+
         Long[] vsIds = vsLookup.toArray(new Long[vsLookup.size()]);
 
         Map<Long, List<RelGroupVsDo>> gvsListByVsId = new HashMap<>();
@@ -219,7 +227,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         }
 
         Map<Long, List<RTrafficPolicyGroupDo>> policyListByGroupId = new HashMap<>();
-        for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findByGroupsAndPolicyActiveVersion(groupLookup.toArray(new Long[groupLookup.size()]), RTrafficPolicyGroupEntity.READSET_FULL)) {
+        for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findByGroupsAndPolicyActiveVersion(groupIds, RTrafficPolicyGroupEntity.READSET_FULL)) {
             if (Arrays.binarySearch(policies, e.getPolicyId()) >= 0) continue;
             putArrayEntryValue(policyListByGroupId, e.getGroupId(), e);
         }
@@ -252,6 +260,11 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         }
     }
 
+    @Override
+    public void validateForDeactivate(Long[] toBeDeactivatedItems) throws Exception {
+
+    }
+
     private <T> void putArrayEntryValue(Map<Long, List<T>> map, Long key, T e) {
         List<T> v = map.get(key);
         if (v == null) {
@@ -265,12 +278,15 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         Long prev = groupIds[0];
         for (int i = 1; i < groupIds.length; i++) {
             if (prev.equals(groupIds[i])) {
-                throw new ValidationException("Traffic policy that you tries to create/modify declares the same group " + prev + " more than once.");
+                throw new ValidationException("Traffic policy that you try to create/modify declares the same group " + prev + " more than once.");
             }
             prev = groupIds[i];
         }
         if (groupIds.length <= 1) {
-            throw new ValidationException("Traffic policy that you tries to create/modify does not have enough traffic-controls.");
+            throw new ValidationException("Traffic policy that you try to create/modify does not have enough traffic-controls.");
+        }
+        if (rGroupStatusDao.findByGroups(groupIds, RGroupStatusEntity.READSET_FULL).size() != groupIds.length) {
+            throw new ValidationException("Traffic policy that you try to create/modify contains group that does not exist.");
         }
 
         int[] versions = new int[groupIds.length];
@@ -355,7 +371,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
     public void checkVersionForUpdate(TrafficPolicy target) throws Exception {
         TrafficPolicyDo d = trafficPolicyDao.findById(target.getId(), TrafficPolicyEntity.READSET_FULL);
         if (d == null) {
-            throw new ValidationException("Traffic policy that you tries to update does not exist.");
+            throw new ValidationException("Traffic policy that you try to update does not exist.");
         }
         if (d.getVersion() > target.getVersion()) {
             throw new ValidationException("Newer version is detected.");
@@ -369,7 +385,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
     public void removable(Long targetId) throws Exception {
         TrafficPolicyDo d = trafficPolicyDao.findById(targetId, TrafficPolicyEntity.READSET_FULL);
         if (d != null && d.getActiveVersion() > 0) {
-            throw new ValidationException("Traffic policy that you tried to delete is still active.");
+            throw new ValidationException("Traffic policy that you try to delete is still active.");
         }
     }
 
