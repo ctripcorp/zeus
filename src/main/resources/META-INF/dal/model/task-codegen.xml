@@ -10,6 +10,7 @@
     <element name="id" value-type="long" />
     <element name="slb-id" value-type="long" />
     <element name="group-id" value-type="long" />
+    <element name="policy-id" value-type="long" />
     <element name="ops-type" value-type="String" />
     <element name="ip-list" value-type="String" />
     <element name="up" value-type="boolean" />

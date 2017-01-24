@@ -2972,6 +2972,7 @@
     <member name="id" field="id" value-type="long" length="19" nullable="false" key="true" auto-increment="true" />
     <member name="ops-type" field="ops_type" value-type="String" length="50" nullable="false" />
     <member name="group-id" field="group_id" value-type="long" length="19" />
+    <member name="policy-id" field="policy_id" value-type="long" length="19" />
     <member name="slb-id" field="slb_id" value-type="long" length="19" />
     <member name="slb-virtual-server-id" field="slb_virtual_server_id" value-type="long" length="19" />
     <member name="ip-list" field="ip_list" value-type="String" length="4096" />
