@@ -5,6 +5,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.PathValidator;
+import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.handler.GroupServerValidator;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
@@ -114,7 +115,7 @@ public class DefaultGroupValidator implements GroupValidator {
                 v[i] = e.getGroupVirtualServers().get(i).getVirtualServer().getId();
             }
 
-            Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
+            Map<Long, List<LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
             compareAndBuildCurrentLocationEntries(e, v, policyListByGroupId, pvsListByVsId, gvsListByVsId, currentLocationEntriesByVs);
 
             validatePathPriority(e, false, currentLocationEntriesByVs);
@@ -172,11 +173,11 @@ public class DefaultGroupValidator implements GroupValidator {
     @Override
     public void validateForMerge(Long[] toBeMergedItems, Long vsId, Map<Long, Group> groupRef, Map<Long, TrafficPolicy> policyRef, boolean escapePathValidation) throws Exception {
         Map<Long, Long> policiesByGroupId = new HashMap<>();
-        Map<Long, PathValidator.LocationEntry> policyEntriesById = new HashMap<>();
+        Map<Long, LocationEntry> policyEntriesById = new HashMap<>();
         for (TrafficPolicy p : policyRef.values()) {
             for (PolicyVirtualServer pvs : p.getPolicyVirtualServers()) {
                 if (pvs.getVirtualServer().getId().equals(vsId)) {
-                    policyEntriesById.put(p.getId(), new PathValidator.LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
+                    policyEntriesById.put(p.getId(), new LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
                 }
             }
             for (TrafficControl c : p.getControls()) {
@@ -190,7 +191,7 @@ public class DefaultGroupValidator implements GroupValidator {
         }
         for (Long i : toBeMergedItems) {
             Long id = policiesByGroupId.get(i);
-            PathValidator.LocationEntry e = policyEntriesById.get(id);
+            LocationEntry e = policyEntriesById.get(id);
             if (e == null) continue;
 
             Group g = groupRef.get(i);
@@ -206,14 +207,14 @@ public class DefaultGroupValidator implements GroupValidator {
             }
         }
 
-        Map<Long, List<PathValidator.LocationEntry>> locationEntries = new HashMap<>();
-        ArrayList<PathValidator.LocationEntry> values = new ArrayList<>(policyEntriesById.values());
+        Map<Long, List<LocationEntry>> locationEntries = new HashMap<>();
+        ArrayList<LocationEntry> values = new ArrayList<>(policyEntriesById.values());
         locationEntries.put(vsId, values);
         for (Group g : groupRef.values()) {
             if (policiesByGroupId.containsKey(g.getId())) continue;
             for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
                 if (gvs.getVirtualServer().getId().equals(vsId)) {
-                    values.add(new PathValidator.LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
+                    values.add(new LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
                 }
             }
         }
@@ -285,13 +286,13 @@ public class DefaultGroupValidator implements GroupValidator {
             putArrayEntryValue(gvsListByVsId, e.getVsId(), e);
         }
 
-        Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
+        Map<Long, List<LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
         compareAndBuildCurrentLocationEntries(target, vsIds, policyListByGroupId, pvsListByVsId, gvsListByVsId, currentLocationEntriesByVs);
 
         validatePathPriority(target, escapePathValidation, currentLocationEntriesByVs);
     }
 
-    private void validatePathPriority(Group target, boolean escapePathValidation, Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs) throws ValidationException {
+    private void validatePathPriority(Group target, boolean escapePathValidation, Map<Long, List<LocationEntry>> currentLocationEntriesByVs) throws ValidationException {
         // reformat path if validation is processed
         // fulfill priority if auto-reorder("priority" : null) is enabled
         for (GroupVirtualServer e : target.getGroupVirtualServers()) {
@@ -304,7 +305,7 @@ public class DefaultGroupValidator implements GroupValidator {
                 continue;
             }
 
-            PathValidator.LocationEntry insertEntry = new PathValidator.LocationEntry().setEntryId(target.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(e.getPath()).setPriority(e.getPriority());
+            LocationEntry insertEntry = new LocationEntry().setEntryId(target.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(e.getPath()).setPriority(e.getPriority());
             pathValidator.checkOverlapRestriction(vsId, insertEntry, currentLocationEntriesByVs.get(vsId));
             if (e.getPriority() == null) {
                 // auto reorder and reformat
@@ -324,7 +325,7 @@ public class DefaultGroupValidator implements GroupValidator {
                                                        Map<Long, List<RTrafficPolicyVsDo>> policyListByGroupId,
                                                        Map<Long, List<RTrafficPolicyVsDo>> pvsListByVsId,
                                                        Map<Long, List<RelGroupVsDo>> gvsListByVsId,
-                                                       Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs) throws DalException, ValidationException {
+                                                       Map<Long, List<LocationEntry>> currentLocationEntriesByVs) throws DalException, ValidationException {
         GroupVirtualServer[] gvs = new GroupVirtualServer[vsIds.length];
         for (GroupVirtualServer e : target.getGroupVirtualServers()) {
             int i = Arrays.binarySearch(vsIds, e.getVirtualServer().getId());
@@ -355,7 +356,7 @@ public class DefaultGroupValidator implements GroupValidator {
             if (pvsList != null) {
                 for (RTrafficPolicyVsDo e : pvsList) {
                     if (groupRelatedPolicies.indexOf(e.getPolicyId()) < 0) {
-                        putArrayEntryValue(currentLocationEntriesByVs, e.getVsId(), new PathValidator.LocationEntry().setEntryId(e.getPolicyId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(e.getVsId()).setPath(e.getPath()).setPriority(e.getPriority()));
+                        putArrayEntryValue(currentLocationEntriesByVs, e.getVsId(), new LocationEntry().setEntryId(e.getPolicyId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(e.getVsId()).setPath(e.getPath()).setPriority(e.getPriority()));
                     }
                 }
             }
@@ -364,7 +365,7 @@ public class DefaultGroupValidator implements GroupValidator {
             if (gvsList != null) {
                 for (RelGroupVsDo e : gvsList) {
                     if (target.getId() != null && e.getGroupId() == target.getId()) continue;
-                    putArrayEntryValue(currentLocationEntriesByVs, e.getVsId(), new PathValidator.LocationEntry().setVsId(e.getVsId()).setEntryId(e.getGroupId()).setPath(e.getPath()).setEntryType(MetaType.GROUP).setPriority(e.getPriority() == 0 ? 1000 : e.getPriority()));
+                    putArrayEntryValue(currentLocationEntriesByVs, e.getVsId(), new LocationEntry().setVsId(e.getVsId()).setEntryId(e.getGroupId()).setPath(e.getPath()).setEntryType(MetaType.GROUP).setPriority(e.getPriority() == 0 ? 1000 : e.getPriority()));
                 }
             }
         }// end of vsIds iteration

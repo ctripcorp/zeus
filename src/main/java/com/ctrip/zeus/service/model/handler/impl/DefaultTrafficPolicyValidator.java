@@ -5,6 +5,7 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.PathValidator;
 import com.ctrip.zeus.service.model.VersionUtils;
+import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.handler.TrafficPolicyValidator;
 import com.google.common.collect.Sets;
@@ -87,7 +88,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
             putArrayEntryValue(policyListByGroupId, e.getGroupId(), e);
         }
 
-        Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
+        Map<Long, List<LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
         compareAndBuildCurrentLocationEntries(target, groupIds, vsIds, policyListByGroupId, pvsListByVsId, gvsListByVsId,
                 escapePathValidation ? null : currentLocationEntriesByVs);
 
@@ -96,7 +97,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
 
     @Override
     public void validateForMerge(Long[] toBeMergedItems, Long vsId, Map<Long, Group> groupRef, Map<Long, TrafficPolicy> policyRef, boolean escapePathValidation) throws Exception {
-        Map<Long, PathValidator.LocationEntry> groupEntriesById = new HashMap<>();
+        Map<Long, LocationEntry> groupEntriesById = new HashMap<>();
         Set<Long> groupAsTrafficControl = new HashSet<>();
         for (TrafficPolicy p : policyRef.values()) {
             for (TrafficControl c : p.getControls()) {
@@ -109,7 +110,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
             if (groupAsTrafficControl.contains(g.getId())) continue;
             for (GroupVirtualServer gvs : g.getGroupVirtualServers()) {
                 if (gvs.getVirtualServer().getId().equals(vsId)) {
-                    groupEntriesById.put(g.getId(), new PathValidator.LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
+                    groupEntriesById.put(g.getId(), new LocationEntry().setEntryId(g.getId()).setEntryType(MetaType.GROUP).setVsId(vsId).setPath(gvs.getPath()).setPriority(gvs.getPriority()));
                 }
             }
         }
@@ -143,13 +144,13 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
 
         }
 
-        Map<Long, List<PathValidator.LocationEntry>> locationEntries = new HashMap<>();
-        ArrayList<PathValidator.LocationEntry> values = new ArrayList<>(groupEntriesById.values());
+        Map<Long, List<LocationEntry>> locationEntries = new HashMap<>();
+        ArrayList<LocationEntry> values = new ArrayList<>(groupEntriesById.values());
         locationEntries.put(vsId, values);
         for (TrafficPolicy p : policyRef.values()) {
             for (PolicyVirtualServer pvs : p.getPolicyVirtualServers()) {
                 if (pvs.getVirtualServer().getId().equals(vsId)) {
-                    values.add(new PathValidator.LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
+                    values.add(new LocationEntry().setEntryId(p.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(pvs.getPath()).setPriority(pvs.getPriority()));
                 }
             }
         }
@@ -159,7 +160,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         }
     }
 
-    private void validatePathPriority(TrafficPolicy target, boolean escapePathValidation, Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs) throws ValidationException {
+    private void validatePathPriority(TrafficPolicy target, boolean escapePathValidation, Map<Long, List<LocationEntry>> currentLocationEntriesByVs) throws ValidationException {
         for (PolicyVirtualServer e : target.getPolicyVirtualServers()) {
             Long vsId = e.getVirtualServer().getId();
             e.setVirtualServer(new VirtualServer().setId(vsId));
@@ -168,7 +169,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                     throw new ValidationException("Field `priority` cannot be empty if validation is escaped.");
                 }
             } else {
-                PathValidator.LocationEntry insertEntry = new PathValidator.LocationEntry().setEntryId(target.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(e.getPath()).setPriority(e.getPriority() == null ? 1000 : e.getPriority());
+                LocationEntry insertEntry = new LocationEntry().setEntryId(target.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(vsId).setPath(e.getPath()).setPriority(e.getPriority() == null ? 1000 : e.getPriority());
                 pathValidator.checkOverlapRestriction(vsId, insertEntry, currentLocationEntriesByVs.get(vsId));
                 if (e.getPriority() == null) {
                     e.setPriority(insertEntry.getPriority());
@@ -252,7 +253,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
 
             validatePolicyControls(e, g, v, gvsListByVsId);
 
-            Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
+            Map<Long, List<LocationEntry>> currentLocationEntriesByVs = new HashMap<>();
             compareAndBuildCurrentLocationEntries(e, g, v, policyListByGroupId, pvsListByVsId, gvsListByVsId,
                     escapedPathValidation ? null : currentLocationEntriesByVs);
 
@@ -329,7 +330,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                                                        Map<Long, List<RTrafficPolicyGroupDo>> policiesByGroupId,
                                                        Map<Long, List<RTrafficPolicyVsDo>> pvsListByVsId,
                                                        Map<Long, List<RelGroupVsDo>> gvsListByVsId,
-                                                       Map<Long, List<PathValidator.LocationEntry>> currentLocationEntriesByVs) throws ValidationException {
+                                                       Map<Long, List<LocationEntry>> currentLocationEntriesByVs) throws ValidationException {
         // Check if traffic-policy is unique for every group-vs pair
         Set<Long> tmp = Sets.newHashSet(groupIds);
         tmp.retainAll(policiesByGroupId.keySet());
@@ -351,7 +352,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                     throw new ValidationException("Another traffic policy " + e.getId() + " has occupied one of the traffic-controls on vs " + e.getVsId() + ".");
                 }
                 if (currentLocationEntriesByVs != null) {
-                    putArrayEntryValue(currentLocationEntriesByVs, e.getVsId(), new PathValidator.LocationEntry().setEntryId(e.getPolicyId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(e.getVsId()).setPath(e.getPath()).setPriority(e.getPriority()));
+                    putArrayEntryValue(currentLocationEntriesByVs, e.getVsId(), new LocationEntry().setEntryId(e.getPolicyId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(e.getVsId()).setPath(e.getPath()).setPriority(e.getPriority()));
                 }
             }
         }
@@ -362,7 +363,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
 
             for (RelGroupVsDo e : gvsList) {
                 if (Arrays.binarySearch(groupIds, e.getGroupId()) >= 0) continue;
-                putArrayEntryValue(currentLocationEntriesByVs, e.getVsId(), new PathValidator.LocationEntry().setEntryId(e.getGroupId()).setEntryType(MetaType.GROUP).setVsId(e.getVsId()).setPath(e.getPath()).setPriority(e.getPriority()));
+                putArrayEntryValue(currentLocationEntriesByVs, e.getVsId(), new LocationEntry().setEntryId(e.getGroupId()).setEntryType(MetaType.GROUP).setVsId(e.getVsId()).setPath(e.getPath()).setPriority(e.getPriority()));
             }
         }
     }

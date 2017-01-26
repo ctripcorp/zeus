@@ -1,7 +1,10 @@
 package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.service.model.common.MetaType;
+import com.ctrip.zeus.service.model.common.LocationEntry;
+import com.ctrip.zeus.service.model.common.ValidationContext;
+import com.ctrip.zeus.service.model.grammar.GrammarException;
+import com.ctrip.zeus.service.model.grammar.PathParseHandler;
 import com.ctrip.zeus.service.model.grammar.PathUtils;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Service;
@@ -17,16 +20,193 @@ public class PathValidator {
     private static final String standardSuffix = "($|/|\\?)";
     private static final String[] standardSuffixIdentifier = new String[]{"$", "/"};
 
+    private static final String ROOT = "/";
+    private PathParseHandler pathParseHandler;
+
+    public PathValidator() {
+        pathParseHandler = new PathParseHandler();
+    }
+
+    public void checkOverlapRestricition(List<LocationEntry> locationEntries, ValidationContext context) {
+        if (locationEntries.size() == 0) return;
+        if (context == null) context = new ValidationContext();
+
+        List<Node> _locationEntries = new ArrayList<>(locationEntries.size());
+        for (LocationEntry e : locationEntries) {
+            Node n = (Node) e;
+            analyzeLocationEntry(context, n);
+            _locationEntries.add(n);
+        }
+
+        int size = _locationEntries.size();
+        short[][] visited = new short[size][size];
+        for (int i = 0; i < size; i++) {
+            for (int j = i + 1; j < size; j++) {
+                Node e1 = _locationEntries.get(i);
+                Node e2 = _locationEntries.get(j);
+                if (e1.getPathValues() == null || e2.getPathValues() == null) {
+                    visited[i][j] = -2;
+                }
+                boolean rendered = false;
+                for (String s1 : e1.getPathValues()) {
+                    for (String s2 : e2.getPathValues()) {
+                        try {
+                            rendered = rendered || renderPriority(e1, e2, s1, s2);
+                        } catch (ValidationException e) {
+                            visited[i][j] = -1;
+                            visited[i][i] = -1;
+                        }
+                    }
+                }
+                visited[i][j] = rendered ? (short) 1 : (short) 0;
+            }
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (visited[i][i] != -1) {
+                _locationEntries.get(i).adjust();
+                continue;
+            }
+
+            Node e1 = _locationEntries.get(i);
+            context.error(e1.getEntryId(), e1.getEntryType(), "Cannot adjust path priority and may cause path overlap.");
+            for (int j = i + 1; j < size; j++) {
+                if (visited[i][i] + visited[i][j] == 0) {
+                    Node e2 = _locationEntries.get(j);
+                    context.error(e2.getEntryId(), e2.getEntryType(), "Cannot adjust path priority and may cause path overlap.");
+                }
+            }
+        }
+    }
+
+    private void analyzeLocationEntry(ValidationContext context, Node e) {
+        String[] v;
+        try {
+            v = pathParseHandler.parse(e.getPath());
+        } catch (GrammarException e1) {
+            context.error(e.getEntryId(), e.getEntryType(), e1.getMessage());
+            return;
+        }
+        if (v == null || v.length == 0) {
+            context.error(e.getEntryId(), e.getEntryType(), "No valid path.");
+        }
+        for (String p : v) {
+            if (ROOT.equals(p)) {
+                if (v.length > 1) {
+                    context.error(e.getEntryId(), e.getEntryType(), "Root path cannot share location entries with other patterns.");
+                    return;
+                } else {
+                    e.setRoot(true);
+                }
+            }
+        }
+        e.setPathValues(v);
+        e.setModifiable(e.getPriority() == null);
+        if (!e.isRoot()) {
+            e.setPriority(e.getPriority() == null ? 1000 : e.getPriority());
+        } else if (e.getPath().equals(ROOT)) {
+            e.setPriority(e.getPriority() == null ? -1000 : e.getPriority());
+        } else {
+            e.setPriority(e.getPriority() == null ? -1100 : e.getPriority());
+        }
+    }
+
+    private boolean renderPriority(Node e1, Node e2, String s1, String s2) throws ValidationException {
+        switch (PathUtils.prefixOverlaps(s1, s2)) {
+            case -1:
+                return false;
+            case 0:
+                throw new ValidationException("The two path being compared are completely equivalent.");
+            case 1:
+                if (!e1.reduceRange(Integer.MIN_VALUE, e2.getPriority())) {
+                    if (!e2.reduceRange(e1.getPriority(), Integer.MAX_VALUE)) {
+                        throw new ValidationException("Path priority range cannot be reduced anymore.");
+                    }
+                }
+                return true;
+            case 2:
+                if (!e1.reduceRange(e2.getPriority(), Integer.MAX_VALUE)) {
+                    if (!e2.reduceRange(Integer.MIN_VALUE, e2.getPriority())) {
+                        throw new RuntimeException("Path priority range cannot be reduced anymore.");
+                    }
+                }
+                return true;
+        }
+        return false;
+    }
+
+    public static class Node extends LocationEntry {
+        boolean root;
+        boolean modifiable = false;
+
+        String[] pathValues;
+
+        int floor = Integer.MAX_VALUE;
+        int ceiling = Integer.MIN_VALUE;
+
+        public void setModifiable(boolean modifiable) {
+            this.modifiable = modifiable;
+        }
+
+        String[] getPathValues() {
+            return pathValues;
+        }
+
+        void setPathValues(String[] pathValues) {
+            this.pathValues = pathValues;
+        }
+
+        boolean isRoot() {
+            return root;
+        }
+
+        void setRoot(boolean root) {
+            this.root = root;
+        }
+
+        boolean reduceRange(int floor, int ceiling) {
+            if (modifiable) {
+                if (floor > this.ceiling || ceiling < this.floor) return false;
+                this.floor = this.floor < floor ? floor : this.floor;
+                this.ceiling = this.ceiling > ceiling ? ceiling : this.ceiling;
+                return true;
+            }
+            return false;
+        }
+
+        void adjust() {
+            if (!modifiable) return;
+
+            if (floor < 1000 && ceiling > 1000) {
+                setPriority(1000);
+                return;
+            }
+
+            if (ceiling == Integer.MAX_VALUE) {
+                ceiling = floor + 100;
+            }
+            if (floor == Integer.MIN_VALUE) {
+                floor = ceiling - 100;
+            }
+            setPriority((ceiling + floor) / 2);
+        }
+    }
+
+    @Deprecated
     public LocationEntry checkOverlapRestriction(Long vsId, LocationEntry insertEntry, List<LocationEntry> currentEntrySet) throws ValidationException {
         if (insertEntry == null) {
             throw new NullPointerException("Null location entry value when executing path overlap check.");
         }
-        insertEntry.setPath(PathUtils.pathReformat(insertEntry.getPath()));
+        try {
+            insertEntry.setPath(PathUtils.pathReformat(insertEntry.getPath()));
+        } catch (GrammarException e) {
+            throw new ValidationException(e.getMessage());
+        }
 
         if (currentEntrySet == null || currentEntrySet.size() == 0) return insertEntry;
 
 
-        String insertUri = PathUtils.extractUriIgnoresFirstDelimiter(insertEntry.path);
+        String insertUri = PathUtils.extractUriIgnoresFirstDelimiter(insertEntry.getPath());
         boolean insertRootUri = "/".equals(insertUri);
         insertEntry.setPriority(insertEntry.getPriority() == null ? (insertRootUri ? ("/".equals(insertEntry.getPath()) ? -1100 : -1000) : 1000) : insertEntry.getPriority());
 
@@ -115,6 +295,7 @@ public class PathValidator {
         return pathCandidates;
     }
 
+    @Deprecated
     public List<String> splitParallelPaths(String path, int depth) throws ValidationException {
         List<String> pathMembers = new ArrayList<>();
         if (depth > 1) {
@@ -199,122 +380,5 @@ public class PathValidator {
         }
 
         return subPaths;
-    }
-
-    public static class LocationEntry {
-        Long vsId;
-        Long entryId;
-        MetaType entryType;
-        String path;
-        Integer priority;
-
-        public Long getVsId() {
-            return vsId;
-        }
-
-        public LocationEntry setVsId(Long vsId) {
-            this.vsId = vsId;
-            return this;
-        }
-
-        public Long getEntryId() {
-            return entryId;
-        }
-
-        public LocationEntry setEntryId(Long entryId) {
-            this.entryId = entryId;
-            return this;
-        }
-
-        public MetaType getEntryType() {
-            return entryType;
-        }
-
-        public LocationEntry setEntryType(MetaType entryType) {
-            this.entryType = entryType;
-            return this;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public LocationEntry setPath(String path) {
-            this.path = path;
-            return this;
-        }
-
-        public Integer getPriority() {
-            return priority;
-        }
-
-        public LocationEntry setPriority(Integer priority) {
-            this.priority = priority;
-            return this;
-        }
-
-        @Override
-        public String toString() {
-            return entryType.toString() + "-" + entryId;
-        }
-    }
-
-    class Node {
-        String first;
-        String last;
-        List<Node> middle;
-    }
-
-    //TODO use graph
-    private int buildPathGraph(char[] pathArray, Node parent, int startIdx, int depth) throws ValidationException {
-        if (pathArray == null) return -1;
-        if (startIdx >= pathArray.length) return startIdx;
-        if (depth > 10)
-            throw new ValidationException("Too deep recursive sub-paths are found. Path validation rejected.");
-
-        StringBuilder pathBuilder = new StringBuilder();
-        Node current = new Node();
-        int i = startIdx;
-
-        for (; i < pathArray.length; i++) {
-            switch (pathArray[i]) {
-                case '(':
-                    if (pathBuilder.length() > 0) {
-                        current.first = pathBuilder.toString();
-                        pathBuilder.setLength(0);
-                        i = buildPathGraph(pathArray, current, i, depth + 1);
-                    }
-                    break;
-                case ')':
-                    if (pathBuilder.length() > 0) {
-                        current.last = pathBuilder.toString();
-                        pathBuilder.setLength(0);
-                    }
-                    parent.middle.add(current);
-                    return i;
-                case '|':
-                    if (current.middle.size() > 0) {
-                        throw new ValidationException("Ambiguous regex path is detected. \"path\" : " + new String(pathArray));
-                    }
-                    if (pathBuilder.length() > 0) {
-                        current.first = pathBuilder.toString();
-                        pathBuilder.setLength(0);
-                        parent.middle.add(current);
-                        current = new Node();
-                    }
-                    break;
-                default:
-                    pathBuilder.append(pathArray[i]);
-                    break;
-            }
-        }
-
-        if (pathBuilder.length() > 0) {
-            current.last = pathBuilder.toString();
-            pathBuilder.setLength(0);
-        }
-
-        parent.middle.add(current);
-        return i;
     }
 }
