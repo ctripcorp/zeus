@@ -7,6 +7,7 @@ import com.ctrip.zeus.dal.core.RelGroupStatusDo;
 import com.ctrip.zeus.dal.core.RelGroupVsDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.service.model.grammar.GrammarException;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.grammar.PathUtils;
 import com.google.common.collect.Sets;
@@ -18,6 +19,7 @@ import org.unidal.dal.jdbc.DalException;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 /**
@@ -40,7 +42,7 @@ public class PathValidationTest extends AbstractServerTest {
     private final String standardSuffix = "($|/|\\?)";
 
     @Test
-    public void testExtractUriFromRegexPath() throws ValidationException {
+    public void testExtractUriFromRegexPath() throws Exception {
         String normalValue1 = "abc($|/|\\?)";
         String normalValue2 = "abc";
         String normalValue3 = "/abc";
@@ -74,7 +76,7 @@ public class PathValidationTest extends AbstractServerTest {
     }
 
     @Test
-    public void testPathUtils() throws ValidationException {
+    public void testPathUtils() throws Exception {
         String s1 = "abcdefg";
         String s2 = "abc";
         String s3 = extractUri("ABCDefghij($|/|\\?)");
@@ -439,7 +441,7 @@ public class PathValidationTest extends AbstractServerTest {
         }
     }
 
-    private static String extractUri(String path) throws ValidationException {
+    private static String extractUri(String path) throws Exception {
         path = PathUtils.pathReformat(path);
         return PathUtils.extractUriIgnoresFirstDelimiter(path);
     }

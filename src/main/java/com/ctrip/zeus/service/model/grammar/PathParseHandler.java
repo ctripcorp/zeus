@@ -28,7 +28,7 @@ public class PathParseHandler {
 
     public String[] parse(String path) throws GrammarException {
         try {
-            return pathLookupCache.get(path.toCharArray());
+            return pathLookupCache.get(extractUriIgnoresFirstDelimiter(PathUtils.pathReformat(path).toCharArray()));
         } catch (ExecutionException e) {
             if (e.getCause() instanceof GrammarException) {
                 throw (GrammarException) e.getCause();
@@ -42,6 +42,48 @@ public class PathParseHandler {
         List<String> root = new ArrayList<>();
         enumeratePathValues(path, root, 0, 0, '\0');
         return root.toArray(new String[root.size()]);
+    }
+
+    public static char[] extractUriIgnoresFirstDelimiter(char[] path) throws GrammarException {
+        int idxPrefix = 0;
+        int idxModifier = 0;
+        boolean quote = false;
+
+        for (char c : path) {
+            if (c == '"') {
+                quote = true;
+                idxPrefix++;
+            } else if (c == ' ') {
+                idxPrefix++;
+                idxModifier = idxPrefix;
+            } else if (c == '^' || c == '~' || c == '=' || c == '*') {
+                idxPrefix++;
+            } else if (c == '/') {
+                idxPrefix++;
+                if (!quote && idxPrefix < path.length && path[idxPrefix] == '"') {
+                    quote = true;
+                    idxPrefix++;
+                }
+                break;
+            } else {
+                break;
+            }
+        }
+
+        if (quote && path[path.length - 1] != '\"') {
+            throw new GrammarException("Missing end quote. " + "\"path\" : \"" + path + "\"");
+        }
+        int idxSuffix = quote ? path.length - 1 : path.length;
+        if (idxPrefix == idxSuffix) {
+            if (path[idxSuffix - 1] == '/') {
+                return new char[]{'/'};
+            } else {
+                throw new GrammarException("Invalid uri after extraction. " + "\"path\" : \"" + path + "\"");
+            }
+        }
+        idxPrefix = idxPrefix < idxSuffix ?
+                (idxModifier > idxPrefix ? idxModifier : idxPrefix) : idxModifier;
+        return Arrays.copyOfRange(path, idxPrefix, idxSuffix);
     }
 
     private int enumeratePathValues(char[] pathArray, List<String> prefix, int start, int depth, char startSymbol) throws GrammarException {

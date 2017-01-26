@@ -62,28 +62,29 @@ public class PathUtils {
         return len1 > len2 ? 1 : 2;
     }
 
-    public static String pathReformat(String path) throws ValidationException {
+    public static String pathReformat(String path) throws GrammarException {
         int offset = 0;
         String[] pathValues = new String[2];
         for (String pv : path.split(" ", 0)) {
             if (pv.isEmpty()) continue;
             if (offset >= 2) {
-                throw new ValidationException("Invalid number of path modifiers. Path reformat fails.");
+                throw new GrammarException("Invalid number of path modifiers. Path reformat fails.");
             }
             pathValues[offset] = pv;
             offset++;
         }
         if (offset == 0) {
-            throw new ValidationException("Empty path value. Path reformat fails.");
+            throw new GrammarException("Empty path value. Path reformat fails.");
         }
 
         if (offset == 2 && !pathPrefixModifier.contains(pathValues[0])) {
-            throw new ValidationException("Invalid path modifier. Path reformat fails.");
+            throw new GrammarException("Invalid path modifier. Path reformat fails.");
         }
 
         // format path value
         return offset == 1 ? pathValues[0] : pathValues[0] + " " + pathValues[1];
     }
+
 
     public static String extractUriIgnoresFirstDelimiter(String path) throws ValidationException {
         int idxPrefix = 0;

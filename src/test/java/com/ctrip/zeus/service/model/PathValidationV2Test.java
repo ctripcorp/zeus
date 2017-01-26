@@ -16,7 +16,7 @@ import java.util.List;
 public class PathValidationV2Test {
 
     @Test
-    public void testExtractUriFromRegexPath() throws ValidationException {
+    public void testExtractUriFromRegexPath() throws Exception {
         String normalValue1 = "abc($|/|\\?)";
         String normalValue2 = "abc";
         String normalValue3 = "/abc";
@@ -49,9 +49,9 @@ public class PathValidationV2Test {
         Assert.assertEquals("/", extractUri(root5));
     }
 
-    private static String extractUri(String path) throws ValidationException {
-        path = PathUtils.pathReformat(path);
-        return PathUtils.extractUriIgnoresFirstDelimiter(path);
+    private static String extractUri(String path) throws Exception {
+        PathUtils.pathReformat(path);
+        return new String(PathParseHandler.extractUriIgnoresFirstDelimiter(path.toCharArray()));
     }
 
     @Test
