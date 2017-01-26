@@ -1,4 +1,4 @@
-package com.ctrip.zeus.util;
+package com.ctrip.zeus.service.model.grammar;
 
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.google.common.collect.Sets;
@@ -12,6 +12,7 @@ public class PathUtils {
     private static final Set<String> pathPrefixModifier = Sets.newHashSet("=", "~", "~*", "^~");
 
     // 0 equivalent 1 higher priority 2 lower priority
+    @Deprecated
     public static int prefixOverlapped(String path1, String path2, String stopFlag) {
         int i = 0;
         int idxPath1Suffix = path1.lastIndexOf(stopFlag);
@@ -32,6 +33,33 @@ public class PathUtils {
             return (idxPath1Suffix == idxPath2Suffix) ? 0 : (idxPath1Suffix > idxPath2Suffix ? 1 : 2);
         }
         return len1 < len2 ? 2 : 1;
+    }
+
+
+    /**
+     * @param path1
+     * @param path2
+     * @return the value -1 if path1 and path2 are logically non relevant;
+     * the value 0 if path1 and path2 is lexicographically equivalent;
+     * the value 1 if path1 overlaps path2;
+     * the value 2 if path1 is overlapped by path2.
+     */
+    public static int prefixOverlaps(String path1, String path2) {
+        int i = 0;
+
+        int len1 = path1.length();
+        int len2 = path2.length();
+        while (i < len1 && i < len2) {
+            if (path1.charAt(i) == path2.charAt(i) || Character.toLowerCase(path1.charAt(i)) == Character.toLowerCase(path2.charAt(i))) {
+                i++;
+            } else {
+                return -1;
+            }
+        }
+        if (len1 == len2) {
+            return 0;
+        }
+        return len1 > len2 ? 1 : 2;
     }
 
     public static String pathReformat(String path) throws ValidationException {
@@ -57,7 +85,6 @@ public class PathUtils {
         return offset == 1 ? pathValues[0] : pathValues[0] + " " + pathValues[1];
     }
 
-    // expose api for testing
     public static String extractUriIgnoresFirstDelimiter(String path) throws ValidationException {
         int idxPrefix = 0;
         int idxModifier = 0;

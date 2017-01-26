@@ -1,6 +1,6 @@
 package com.ctrip.zeus.service.model;
 
-import com.ctrip.zeus.service.model.handler.RewriteParseHandler;
+import com.ctrip.zeus.service.model.grammar.RewriteParseHandler;
 import com.ctrip.zeus.service.model.handler.impl.ParseException;
 
 import java.util.ArrayList;

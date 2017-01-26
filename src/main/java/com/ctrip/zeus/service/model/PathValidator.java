@@ -2,7 +2,7 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.model.common.MetaType;
-import com.ctrip.zeus.util.PathUtils;
+import com.ctrip.zeus.service.model.grammar.PathUtils;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Service;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
