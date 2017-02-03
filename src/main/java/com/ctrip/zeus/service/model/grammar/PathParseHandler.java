@@ -12,8 +12,8 @@ import java.util.concurrent.TimeUnit;
  * Created by zhoumy on 2017/1/24.
  */
 public class PathParseHandler {
-    private static final char[] StandardSuffixPattern = "($|/|\\?)".toCharArray();
-    private static final List<String> StandardSuffixIdentifier = Arrays.asList("$", "/");
+    private static final char[] STANDARD_SUFFIX_PATTERN = "($|/|\\?)".toCharArray();
+    private static final List<String> STANDARD_SUFFIX = Arrays.asList("$", "/");
 
     private LoadingCache<char[], String[]> pathLookupCache = CacheBuilder.newBuilder()
             .maximumSize(5000)
@@ -108,8 +108,8 @@ public class PathParseHandler {
             switch (pathArray[i]) {
                 case '(': {
                     List<String> subRoot;
-                    if (Arrays.equals(StandardSuffixPattern, Arrays.copyOfRange(pathArray, i, i + 8))) {
-                        subRoot = StandardSuffixIdentifier;
+                    if (Arrays.equals(STANDARD_SUFFIX_PATTERN, Arrays.copyOfRange(pathArray, i, i + 8))) {
+                        subRoot = STANDARD_SUFFIX;
                         i = i + 7;
                     } else {
                         subRoot = new ArrayList<>();

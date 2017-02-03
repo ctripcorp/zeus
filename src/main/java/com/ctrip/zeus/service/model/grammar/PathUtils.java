@@ -45,13 +45,14 @@ public class PathUtils {
      * the value 2 if path1 is overlapped by path2.
      */
     public static int prefixOverlaps(String path1, String path2) {
-        int i = 0;
-
+        int i = path1.startsWith("/") ? 1 : 0;
+        int j = path2.startsWith("/") ? 1 : 0;
         int len1 = path1.length();
         int len2 = path2.length();
-        while (i < len1 && i < len2) {
-            if (path1.charAt(i) == path2.charAt(i) || Character.toLowerCase(path1.charAt(i)) == Character.toLowerCase(path2.charAt(i))) {
+        while (i < len1 && j < len2) {
+            if (path1.charAt(i) == path2.charAt(j) || Character.toLowerCase(path1.charAt(i)) == Character.toLowerCase(path2.charAt(j))) {
                 i++;
+                j++;
             } else {
                 return -1;
             }
@@ -85,7 +86,7 @@ public class PathUtils {
         return offset == 1 ? pathValues[0] : pathValues[0] + " " + pathValues[1];
     }
 
-
+    @Deprecated
     public static String extractUriIgnoresFirstDelimiter(String path) throws ValidationException {
         int idxPrefix = 0;
         int idxModifier = 0;
