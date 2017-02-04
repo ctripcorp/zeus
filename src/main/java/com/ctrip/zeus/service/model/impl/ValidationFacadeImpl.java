@@ -6,8 +6,10 @@ import com.ctrip.zeus.service.model.PathRewriteParser;
 import com.ctrip.zeus.service.model.ValidationFacade;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
+import com.ctrip.zeus.service.model.handler.VsEntryQuery;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +21,9 @@ import java.util.Set;
 @Service("validationFacade")
 public class ValidationFacadeImpl implements ValidationFacade {
     private static final String ERROR_TYPE = "FIELD_VALIDATION";
+
+    @Resource
+    private VsEntryQuery vsEntryQuery;
 
     @Override
     public void validateGroup(Group group, ValidationContext context) {
@@ -66,6 +71,8 @@ public class ValidationFacadeImpl implements ValidationFacade {
             }
             prev = vsIds[i];
         }
+
+        vsEntryQuery.getLocationEntriesByVs(vsIds);
     }
 
     private void validateMembers(List<GroupServer> servers) throws ValidationException {
@@ -103,7 +110,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
     }
 
     @Override
-    public void validateEntriesOnVs(Long vsId, ValidationContext context) {
+    public void validateEntriesOnVs(Long vsId, Set<Group> groups, Set<TrafficPolicy> policies, ValidationContext context) {
 
     }
 }
