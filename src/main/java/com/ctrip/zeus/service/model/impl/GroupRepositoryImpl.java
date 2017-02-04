@@ -6,6 +6,7 @@ import com.ctrip.zeus.dal.core.ArchiveGroupEntity;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.VGroupValidator;
@@ -38,6 +39,8 @@ public class GroupRepositoryImpl implements GroupRepository {
     private AutoFiller autoFiller;
     @Resource
     private GroupValidator groupModelValidator;
+    @Resource
+    private ValidationFacade validationFacade;
     @Resource
     private VGroupValidator vGroupValidator;
     @Resource
@@ -143,7 +146,15 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public Group add(Group group, boolean escapedPathValidation) throws Exception {
         group.setId(0L);
-        groupModelValidator.validate(group, escapedPathValidation);
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateGroup(group, context);
+        if (escapedPathValidation) {
+            //TODO filter by error type
+        } else {
+            if (context.getErrorGroups().contains(group.getId())) {
+                throw new ValidationException(context.getGroupErrorReason(group.getId()));
+            }
+        }
         autoFiller.autofill(group);
         hideVirtualValue(group);
         groupEntityManager.add(group, false);
@@ -181,7 +192,15 @@ public class GroupRepositoryImpl implements GroupRepository {
     public Group update(Group group, boolean escapedPathValidation) throws Exception {
         if (!groupModelValidator.exists(group.getId()))
             throw new ValidationException("Group with id " + group.getId() + " does not exist.");
-        groupModelValidator.validate(group, escapedPathValidation);
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateGroup(group, context);
+        if (escapedPathValidation) {
+            //TODO filter by error type
+        } else {
+            if (context.getErrorGroups().contains(group.getId())) {
+                throw new ValidationException(context.getGroupErrorReason(group.getId()));
+            }
+        }
         autoFiller.autofill(group);
         hideVirtualValue(group);
         groupEntityManager.update(group);

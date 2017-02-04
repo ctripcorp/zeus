@@ -24,6 +24,10 @@ public class ValidationContext {
         return errorGroups.keySet();
     }
 
+    public String getGroupErrorReason(Long groupId) {
+        return errorGroups.get(groupId);
+    }
+
     public Set<Long> getErrorPolicies() {
         return errorPolicies.keySet();
     }

@@ -4,6 +4,7 @@ import com.ctrip.zeus.AbstractServerTest;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.model.handler.TrafficPolicyValidator;
 import com.ctrip.zeus.util.AssertUtils;
@@ -31,6 +32,8 @@ public class TrafficPolicyTest extends AbstractServerTest {
     private TrafficPolicyValidator trafficPolicyValidator;
     @Resource
     private GroupValidator groupModelValidator;
+    @Resource
+    private ValidationFacade validationFacade;
     @Resource
     private TrafficPolicyDao trafficPolicyDao;
     @Resource
@@ -163,10 +166,12 @@ public class TrafficPolicyTest extends AbstractServerTest {
         rTrafficPolicyVsDao.deleteByPK(d2);
 
         /********* case 6 *********/
-        try {
-            groupModelValidator.validateGroupVirtualServers(object1, false);
-        } catch (Exception e) {
-            e.printStackTrace();
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateGroup(object1, context);
+        if (context.getErrors().size() > 0) {
+            for (Map.Entry<String, String> r : context.getErrors().entrySet()) {
+                System.out.printf("%-10s : %s\n", r.getKey(), r.getValue());
+            }
             Assert.assertTrue(false);
         }
     }
@@ -259,16 +264,18 @@ public class TrafficPolicyTest extends AbstractServerTest {
     }
 
     private void assertValidationFailed(Group object, String message) {
-        try {
-            groupModelValidator.validateGroupVirtualServers(object, false);
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateGroup(object, context);
+        if (context.getErrors().size() == 0) {
             Assert.assertTrue(false);
-        } catch (Exception e) {
-            System.out.println("Expected: " + message + ", Actual: " + e.getMessage());
-            if (!(e instanceof ValidationException)) {
-                e.printStackTrace();
-                Assert.assertTrue(false);
+        }
+        System.out.print("Expected: " + message + ", Actual: ");
+        if (context.getErrors().size() > 0) {
+            for (Map.Entry<String, String> r : context.getErrors().entrySet()) {
+                System.out.printf("%s-%s\n", r.getKey(), r.getValue());
             }
         }
+        System.out.print("\n");
     }
 
     private void assertValidationFailed(TrafficPolicy object, String message) {

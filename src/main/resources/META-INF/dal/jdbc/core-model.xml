@@ -58,6 +58,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-by-policy-and-policy-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN traffic_policy tp
+                    ON <FIELD name='policy-id'/> = tp.id AND <FIELD name='policy-version'/> = tp.version
+                    WHERE <FIELD name='policy-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-group" type="SELECT" multiple="true">
                 <param name="group-id"/>
                 <statement>
