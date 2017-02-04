@@ -140,7 +140,7 @@ public class PathValidator {
             case -1:
                 return false;
             case 0:
-                throw new ValidationException("The two path being compared are completely equivalent.");
+                throw new ValidationException("The two path being compared are completely equivalent. `path`=" + s1);
             case 1:
                 if (!e1.reduceRange(e2.getPriority(), Integer.MAX_VALUE)) {
                     if (!e2.reduceRange(Integer.MIN_VALUE, e1.getPriority())) {
