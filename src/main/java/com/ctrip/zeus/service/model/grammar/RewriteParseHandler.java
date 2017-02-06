@@ -1,10 +1,6 @@
 package com.ctrip.zeus.service.model.grammar;
 
 
-import com.ctrip.zeus.service.model.handler.impl.ParseException;
-import com.ctrip.zeus.service.model.handler.impl.ParserState;
-import com.ctrip.zeus.service.model.handler.impl.Tokenizer;
-
 import java.util.List;
 
 /**
