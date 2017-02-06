@@ -110,6 +110,8 @@ public class LocationConf {
                     confWriter.writeCommand("proxy_read_timeout", readTimeout + "s");
                 }
 
+                writeSlbUrlCheck(confWriter, slbId, vsId, groupId);
+
                 // write x-forward-for configuration
                 if (configHandler.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {
                     confWriter.writeIfStart("$remote_addr ~* \"" +
@@ -145,6 +147,14 @@ public class LocationConf {
                 }
                 confWriter.writeLocationEnd();
             }
+        }
+    }
+
+    private void writeSlbUrlCheck(ConfWriter confWriter, Long slbId, Long vsId, Long groupId) throws Exception {
+        if (configHandler.getEnable("slb.url.check.flag", slbId, vsId, groupId, false)) {
+            confWriter.writeIfStart("$http_" + configHandler.getStringValue("slb.url.check.header.name", "thisfieldusedforslburlcheck") + " = \"true\"");
+            confWriter.writeCommand("return", " 200 \"GroupId=" + groupId + "\"");
+            confWriter.writeIfEnd();
         }
     }
 
