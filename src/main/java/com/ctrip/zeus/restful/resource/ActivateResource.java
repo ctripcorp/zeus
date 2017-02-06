@@ -137,7 +137,10 @@ public class ActivateResource {
     @GET
     @Path("/group")
     @Authorize(name = "activate")
-    public Response activateGroup(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") List<Long> groupIds, @QueryParam("groupName") List<String> groupNames) throws Exception {
+    public Response activateGroup(@Context HttpServletRequest request, @Context HttpHeaders hh,
+                                  @QueryParam("groupId") List<Long> groupIds,
+                                  @QueryParam("force") Boolean force,
+                                  @QueryParam("groupName") List<String> groupNames) throws Exception {
         Set<Long> _groupIds = new HashSet<>();
 
         if (groupIds != null && !groupIds.isEmpty()) {
@@ -221,6 +224,7 @@ public class ActivateResource {
                                 .setSlbVirtualServerId(vsId)
                                 .setOpsType(TaskOpsType.SOFT_DEACTIVATE_GROUP)
                                 .setVersion(offlineVersion.getVersion())
+                                .setSkipValidate(force == null ? false : force)
                                 .setCreateTime(new Date());
                         tasks.add(task);
                     }
@@ -232,6 +236,7 @@ public class ActivateResource {
                                     .setTargetSlbId(slbId)
                                     .setOpsType(TaskOpsType.ACTIVATE_GROUP)
                                     .setVersion(offlineVersion.getVersion())
+                                    .setSkipValidate(force == null ? false : force)
                                     .setCreateTime(new Date());
                             activateTasks.put(slbId, task);
                         }
@@ -356,7 +361,8 @@ public class ActivateResource {
     @Authorize(name = "activate")
     public Response activatePolicy(@Context HttpServletRequest request,
                                    @Context HttpHeaders hh,
-                                   @QueryParam("policy") Long policyId) throws Exception {
+                                   @QueryParam("policy") Long policyId,
+                                   @QueryParam("force") Boolean force) throws Exception {
         if (policyId == null || policyId <= 0) {
             throw new ValidationException("Invalidate Parameter policy.");
         }
@@ -402,6 +408,7 @@ public class ActivateResource {
                             .setSlbVirtualServerId(vsId)
                             .setOpsType(TaskOpsType.SOFT_DEACTIVATE_POLICY)
                             .setVersion(toActivateObj.getVersion())
+                            .setSkipValidate(force == null ? false : force)
                             .setCreateTime(new Date());
                     tasks.add(task);
                 }
@@ -413,6 +420,7 @@ public class ActivateResource {
                                 .setTargetSlbId(slbId)
                                 .setOpsType(TaskOpsType.ACTIVATE_POLICY)
                                 .setVersion(toActivateObj.getVersion())
+                                .setSkipValidate(force == null ? false : force)
                                 .setCreateTime(new Date());
                         activateTasks.put(slbId, task);
                     }
