@@ -292,7 +292,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
     }
 
     @Override
-    public void validateSlb(Slb slb, ValidationContext context) {
+    public void validateSlb(Long slb, Map<Long, Slb> slbMap, ValidationContext context) {
 
     }
 

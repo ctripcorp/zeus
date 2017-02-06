@@ -10,7 +10,6 @@ import com.ctrip.zeus.service.message.queue.MessageQueue;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
-import com.ctrip.zeus.service.model.handler.TrafficPolicyValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.tag.PropertyBox;
@@ -53,8 +52,6 @@ public class DeactivateResource {
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
-    private TrafficPolicyValidator trafficPolicyValidator;
-    @Resource
     private GroupValidator groupValidator;
     @Resource
     private MessageQueue messageQueue;
@@ -84,8 +81,6 @@ public class DeactivateResource {
         }
         Long[] gids = _groupIds.toArray(new Long[]{});
         ModelStatusMapping<Group> groupMap = entityFactory.getGroupsByIds(gids);
-
-        groupValidator.validateForDeactivate(gids);
 
         _groupIds.removeAll(groupMap.getOnlineMapping().keySet());
         if (_groupIds.size() > 0) {
@@ -376,8 +371,6 @@ public class DeactivateResource {
         if (!tpMap.getOnlineMapping().keySet().containsAll(policyIds)) {
             throw new ValidationException("Have inactivated policy in " + Joiner.on(",").join(policyIds));
         }
-
-        trafficPolicyValidator.validateForDeactivate(policyIds.toArray(new Long[]{}));
 
         Set<Long> vsIds = new HashSet<>();
         for (Map.Entry<Long, TrafficPolicy> e : tpMap.getOnlineMapping().entrySet()) {
