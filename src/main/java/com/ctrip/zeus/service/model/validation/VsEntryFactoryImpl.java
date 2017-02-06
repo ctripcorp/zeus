@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.model.handler.impl;
+package com.ctrip.zeus.service.model.validation;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
@@ -7,7 +7,7 @@ import com.ctrip.zeus.service.model.common.ErrorType;
 import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
-import com.ctrip.zeus.service.model.handler.VsEntryFactory;
+import com.ctrip.zeus.service.model.validation.VsEntryFactory;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 

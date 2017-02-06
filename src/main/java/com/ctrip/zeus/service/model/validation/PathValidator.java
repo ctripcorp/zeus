@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.model;
+package com.ctrip.zeus.service.model.validation;
 
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.model.common.LocationEntry;

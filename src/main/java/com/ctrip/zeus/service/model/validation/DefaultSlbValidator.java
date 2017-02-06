@@ -1,11 +1,11 @@
-package com.ctrip.zeus.service.model.handler.impl;
+package com.ctrip.zeus.service.model.validation;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.model.validation.SlbValidator;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;

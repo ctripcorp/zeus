@@ -6,6 +6,7 @@ import com.ctrip.zeus.model.entity.GroupVirtualServer;
 import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
+import com.ctrip.zeus.service.model.validation.PathValidator;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.util.TimerUtils;
 

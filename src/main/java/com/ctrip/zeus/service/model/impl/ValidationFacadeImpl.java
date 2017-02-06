@@ -2,14 +2,15 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.PathRewriteParser;
-import com.ctrip.zeus.service.model.PathValidator;
 import com.ctrip.zeus.service.model.ValidationFacade;
 import com.ctrip.zeus.service.model.common.ErrorType;
 import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
-import com.ctrip.zeus.service.model.handler.VsEntryFactory;
+import com.ctrip.zeus.service.model.validation.GroupValidator;
+import com.ctrip.zeus.service.model.validation.PathValidator;
+import com.ctrip.zeus.service.model.validation.TrafficPolicyValidator;
+import com.ctrip.zeus.service.model.validation.VsEntryFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -24,35 +25,18 @@ public class ValidationFacadeImpl implements ValidationFacade {
     private VsEntryFactory vsEntryFactory;
     @Resource
     private PathValidator pathValidator;
+    @Resource
+    private GroupValidator groupModelValidator;
+    @Resource
+    private TrafficPolicyValidator trafficPolicyValidator;
 
     @Override
     public void validateGroup(Group group, ValidationContext context) {
-        if (group.getName() == null || group.getName().isEmpty()
-                || group.getAppId() == null || group.getAppId().isEmpty()) {
-            context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, "Field `name` and `app-id` are not allowed empty.");
-            return;
-        }
-
-        if (group.getHealthCheck() != null
-                && (group.getHealthCheck().getUri() == null || group.getHealthCheck().getUri().isEmpty())) {
-            context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, "Field `health-check` is missing `uri` value.");
-            return;
-        }
-
-        try {
-            if (group.isVirtual() && (group.getGroupServers() != null && group.getGroupServers().size() > 0)) {
-                context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, "Field `group-servers` is not allowed if group is virtual type.");
-                return;
-            }
-            validateMembers(group.getGroupServers());
-        } catch (ValidationException e) {
-            context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, e.getMessage());
-            return;
-        }
+        groupModelValidator.validateFields(group, context);
 
         Map<Long, GroupVirtualServer> groupOnVses;
         try {
-            groupOnVses = validateGroupOnVses(group.getGroupVirtualServers(), group.isVirtual());
+            groupOnVses = groupModelValidator.validateGroupOnVses(group.getGroupVirtualServers(), group.isVirtual());
         } catch (ValidationException e) {
             context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, e.getMessage());
             return;
@@ -65,7 +49,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
         } catch (Exception e) {
         }
         try {
-            validatePolicyRestriction(groupOnVses, policyEntries);
+            groupModelValidator.validatePolicyRestriction(groupOnVses, policyEntries);
         } catch (ValidationException e) {
             context.error(group.getId(), MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, e.getMessage());
             return;
@@ -94,80 +78,12 @@ public class ValidationFacadeImpl implements ValidationFacade {
         }
     }
 
-    private Map<Long, GroupVirtualServer> validateGroupOnVses(List<GroupVirtualServer> groupOnVses, boolean virtual) throws ValidationException {
-        if (groupOnVses == null || groupOnVses.size() == 0)
-            throw new ValidationException("Group is missing `group-virtual-server` field.");
-
-        Map<Long, GroupVirtualServer> result = new HashMap<>();
-        for (int i = 0; i < groupOnVses.size(); i++) {
-            GroupVirtualServer e = groupOnVses.get(i);
-            if (e.getRewrite() != null && !e.getRewrite().isEmpty()) {
-                if (!PathRewriteParser.validate(e.getRewrite())) {
-                    throw new ValidationException("Invalid `rewrite` field value. \"rewrite\" : " + e.getRewrite() + ".");
-                }
-            }
-            GroupVirtualServer prev = result.put(e.getVirtualServer().getId(), e);
-            if (prev != null) {
-                throw new ValidationException("Group can have and only have one combination to the same virtual-server. \"vs-id\" : " + e.getVirtualServer().getId() + ".");
-            }
-            if (virtual && e.getRedirect() == null) {
-                throw new ValidationException("Field `redirect` is not allowed empty if group is virtual type.");
-            }
-        }
-        return result;
-    }
-
-    private void validatePolicyRestriction(Map<Long, GroupVirtualServer> groupOnVses, List<LocationEntry> policyEntries) throws ValidationException {
-        if (policyEntries == null || policyEntries.size() == 0) return;
-
-        for (LocationEntry e : policyEntries) {
-            Long vsId = e.getVsId();
-            GroupVirtualServer gvs = groupOnVses.get(vsId);
-            if (gvs == null) {
-                throw new ValidationException("Group is missing combination on vs " + vsId + " referring its traffic policy " + e.getEntryId() + ".");
-            }
-            if (gvs.getPriority() == null) {
-                throw new ValidationException("Group with policies requires priority to be explicitly set.");
-            }
-            if (gvs.getPriority() > e.getPriority()) {
-                throw new ValidationException("Group has higher `priority` than its traffic policy " + e.getEntryId() + " on vs " + vsId + ".");
-            }
-            if (!gvs.getPath().equals(e.getPath())) {
-                throw new ValidationException("Group and its traffic policy " + e.getEntryId() + " do not have the same `path` value on vs " + vsId + ".");
-            }
-        }
-    }
-
-    private void validateMembers(List<GroupServer> servers) throws ValidationException {
-        if (servers == null || servers.size() == 0) return;
-
-        Set<byte[]> unique = new HashSet<>();
-        for (GroupServer s : servers) {
-            if (s.getIp() == null || s.getIp().isEmpty() || s.getPort() == null) {
-                throw new ValidationException("Group server ip and port cannot be null.");
-            }
-            byte[] ip = s.getIp().getBytes();
-            byte[] v = new byte[ip.length + 2];
-            for (int i = 2; i < v.length; i++) {
-                v[i] = ip[i - 2];
-            }
-            v[1] = ':';
-            v[0] = s.getPort().byteValue();
-            if (!unique.add(v)) {
-                throw new ValidationException("Duplicate combination of ip and port " + s.getIp() + ":" + s.getPort() + " is found in group server list.");
-            }
-        }
-    }
-
     @Override
     public void validatePolicy(TrafficPolicy policy, ValidationContext context) {
-        if (policy.getName() == null) {
-            context.error(policy.getId(), MetaType.TRAFFIC_POLICY, ErrorType.FIELD_VALIDATION, "Field `name` is empty.");
-        }
-
+        trafficPolicyValidator.validateFields(policy, context);
         Long[] controlIds;
         try {
-            controlIds = validatePolicyControl(policy);
+            controlIds = trafficPolicyValidator.validatePolicyControl(policy);
         } catch (ValidationException e) {
             context.error(policy.getId(), MetaType.TRAFFIC_POLICY, ErrorType.FIELD_VALIDATION, e.getMessage());
             return;
@@ -176,7 +92,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
         try {
             Map<Long, List<LocationEntry>> groupEntries = vsEntryFactory.getGroupEntriesByVs(controlIds);
             Map<Long, List<LocationEntry>> groupRelatedPolicyEntries = vsEntryFactory.getGroupRelatedPolicyEntriesByVs(controlIds);
-            policyOnVses = validatePolicyOnVses(policy.getId(), controlIds, groupEntries, policy.getPolicyVirtualServers(), groupRelatedPolicyEntries);
+            policyOnVses = trafficPolicyValidator.validatePolicyOnVses(policy.getId(), controlIds, groupEntries, policy.getPolicyVirtualServers(), groupRelatedPolicyEntries, null);
         } catch (Exception e) {
             context.error(policy.getId(), MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, e.getMessage());
             return;
@@ -205,86 +121,6 @@ public class ValidationFacadeImpl implements ValidationFacade {
         }
     }
 
-    private Long[] validatePolicyControl(TrafficPolicy policy) throws ValidationException {
-        Long[] groupIds = new Long[policy.getControls().size()];
-        for (int i = 0; i < policy.getControls().size(); i++) {
-            groupIds[i] = policy.getControls().get(i).getGroup().getId();
-        }
-        Arrays.sort(groupIds);
-        Long prev = groupIds[0];
-        for (int i = 1; i < groupIds.length; i++) {
-            if (prev.equals(groupIds[i])) {
-                throw new ValidationException("Traffic policy that you try to create/modify declares the same group " + prev + " more than once.");
-            }
-            prev = groupIds[i];
-        }
-        if (groupIds.length <= 1) {
-            throw new ValidationException("Traffic policy that you try to create/modify does not have enough traffic-controls.");
-        }
-        return groupIds;
-    }
-
-    private Map<Long, PolicyVirtualServer> validatePolicyOnVses(Long policyId, Long[] controlIds, Map<Long, List<LocationEntry>> groupEntries, List<PolicyVirtualServer> policyOnVses, Map<Long, List<LocationEntry>> groupRelatedPolicyEntries) throws ValidationException {
-        return validatePolicyOnVses(policyId, controlIds, groupEntries, policyOnVses, groupRelatedPolicyEntries, null);
-    }
-
-    private Map<Long, PolicyVirtualServer> validatePolicyOnVses(Long policyId, Long[] controlIds,
-                                                                Map<Long, List<LocationEntry>> groupEntries, List<PolicyVirtualServer> policyOnVses,
-                                                                Map<Long, List<LocationEntry>> groupRelatedPolicyEntries,
-                                                                ValidationContext context) throws ValidationException {
-        ValidationContext _context = context == null ? new ValidationContext() : context;
-
-        Map<Long, PolicyVirtualServer> result = new HashMap<>();
-        int i = 0;
-        int[] visited = new int[controlIds.length];
-        for (PolicyVirtualServer e : policyOnVses) {
-            Long vsId = e.getVirtualServer().getId();
-            List<LocationEntry> another = groupRelatedPolicyEntries.get(vsId);
-            if (another != null && another.size() > 0) {
-                for (LocationEntry ee : another) {
-                    if (!ee.getEntryId().equals(policyId)) {
-                        String error = "Some other traffic policies have occupied traffic-controls on vs " + vsId + ".";
-                        _context.error(policyId, MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, error);
-                        _context.error(ee.getEntryId(), MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, error);
-                        if (context == null) throw new ValidationException(error);
-                    }
-                }
-            }
-            i++;
-            for (LocationEntry ee : groupEntries.get(vsId)) {
-                int j = Arrays.binarySearch(controlIds, ee.getEntryId());
-                if (j < 0) continue;
-                visited[j] = i;
-                if (e.getPriority() < ee.getPriority()) {
-                    String error = "Traffic policy has lower `priority` than its control item " + controlIds[j] + " on vs " + vsId + ".";
-                    _context.error(policyId, MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, error);
-                    _context.error(controlIds[j], MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, error);
-                    if (context == null) throw new ValidationException(error);
-                }
-                if (!e.getPath().equals(ee.getPath())) {
-                    String error = "Traffic policy and its control item " + controlIds[j] + " does not have the same `path` value on vs " + vsId + ".";
-                    _context.error(policyId, MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, error);
-                    _context.error(controlIds[j], MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, error);
-                    if (context == null) throw new ValidationException(error);
-                }
-            }
-            for (int k = 0; k < visited.length; k++) {
-                if (visited[k] != i) {
-                    String error = "Group " + controlIds[k] + " is missing combination on vs " + vsId + ".";
-                    _context.error(policyId, MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, error);
-                    _context.error(controlIds[k], MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, error);
-                    if (context == null) throw new ValidationException(error);
-                }
-            }
-            PolicyVirtualServer prev = result.put(vsId, e);
-            if (prev != null) {
-                String error = "Traffic policy can have and only have one combination to the same virtual-server. \"vs-id\" : " + e.getVirtualServer().getId() + ".";
-                _context.error(policyId, MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, error);
-                if (context == null) throw new ValidationException(error);
-            }
-        }
-        return result;
-    }
 
     @Override
     public void validateVs(VirtualServer vs, ValidationContext context) {
@@ -313,7 +149,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
                 List<GroupVirtualServer> gvsToBeChecked = new ArrayList<>(1);
                 gvsToBeChecked.add(target);
                 try {
-                    validateGroupOnVses(gvsToBeChecked, group.isVirtual());
+                    groupModelValidator.validateGroupOnVses(gvsToBeChecked, group.isVirtual());
                 } catch (ValidationException e) {
                     context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, e.getMessage());
                 }
@@ -328,7 +164,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
         for (TrafficPolicy policy : policies) {
             Long[] controlIds;
             try {
-                controlIds = validatePolicyControl(policy);
+                controlIds = trafficPolicyValidator.validatePolicyControl(policy);
             } catch (ValidationException e) {
                 context.error(policy.getId(), MetaType.TRAFFIC_POLICY, ErrorType.FIELD_VALIDATION, e.getMessage());
                 break;
@@ -358,7 +194,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
                 List<PolicyVirtualServer> _pvsToBeChecked = new ArrayList<>(1);
                 _pvsToBeChecked.add(target);
                 try {
-                    validatePolicyOnVses(policy.getId(), controlIds, groupEntriesByVs, _pvsToBeChecked, _groupRelatedPolicyEntry, context);
+                    trafficPolicyValidator.validatePolicyOnVses(policy.getId(), controlIds, groupEntriesByVs, _pvsToBeChecked, _groupRelatedPolicyEntry, context);
                 } catch (ValidationException e) {
                     context.error(policy.getId(), MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, e.getMessage());
                 }

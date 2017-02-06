@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.model.handler;
+package com.ctrip.zeus.service.model.validation;
 
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Group;

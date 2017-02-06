@@ -6,7 +6,7 @@ import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.handler.SlbSync;
-import com.ctrip.zeus.service.model.handler.SlbValidator;
+import com.ctrip.zeus.service.model.validation.SlbValidator;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.nginx.CertificateService;

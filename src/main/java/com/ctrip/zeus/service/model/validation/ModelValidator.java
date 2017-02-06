@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.model.handler;
+package com.ctrip.zeus.service.model.validation;
 
 /**
  * Created by zhoumy on 2015/9/24.

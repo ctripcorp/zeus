@@ -1,9 +1,8 @@
-package com.ctrip.zeus.service.model.handler;
+package com.ctrip.zeus.service.model.validation;
 
 import com.ctrip.zeus.model.entity.VirtualServer;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by zhoumy on 2015/9/24.

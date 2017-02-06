@@ -6,6 +6,7 @@ import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.model.grammar.GrammarException;
 import com.ctrip.zeus.service.model.grammar.PathParseHandler;
 import com.ctrip.zeus.service.model.grammar.PathUtils;
+import com.ctrip.zeus.service.model.validation.PathValidator;
 import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;

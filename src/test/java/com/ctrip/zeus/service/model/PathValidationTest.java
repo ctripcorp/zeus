@@ -7,9 +7,9 @@ import com.ctrip.zeus.dal.core.RelGroupStatusDo;
 import com.ctrip.zeus.dal.core.RelGroupVsDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
-import com.ctrip.zeus.service.model.grammar.GrammarException;
-import com.ctrip.zeus.service.model.handler.GroupValidator;
+import com.ctrip.zeus.service.model.validation.GroupValidator;
 import com.ctrip.zeus.service.model.grammar.PathUtils;
+import com.ctrip.zeus.service.model.validation.PathValidator;
 import com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,7 +19,6 @@ import org.unidal.dal.jdbc.DalException;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 /**
