@@ -9,7 +9,6 @@ import com.ctrip.zeus.service.build.ConfigHandler;
 import com.ctrip.zeus.service.message.queue.MessageQueue;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
-import com.ctrip.zeus.service.model.handler.GroupValidator;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.tag.PropertyBox;
@@ -51,8 +50,6 @@ public class DeactivateResource {
     private EntityFactory entityFactory;
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
-    @Resource
-    private GroupValidator groupValidator;
     @Resource
     private MessageQueue messageQueue;
     @Resource

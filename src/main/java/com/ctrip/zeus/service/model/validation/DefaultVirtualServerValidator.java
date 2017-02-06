@@ -35,11 +35,6 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     }
 
     @Override
-    public boolean exists(Long vsId) throws Exception {
-        return slbVirtualServerDao.findByPK(vsId, SlbVirtualServerEntity.READSET_FULL) != null;
-    }
-
-    @Override
     public boolean isActivated(Long vsId) throws Exception {
         RelVsStatusDo e = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
         return e != null && e.getOnlineVersion() != 0;

@@ -90,4 +90,9 @@ public class DefaultSlbValidator implements SlbValidator {
             throw new ValidationException("Slb must be deactivated before deletion.");
         }
     }
+
+    @Override
+    public void exists(Long[] slbId) throws Exception {
+
+    }
 }

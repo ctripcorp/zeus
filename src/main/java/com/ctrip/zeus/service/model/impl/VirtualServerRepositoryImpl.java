@@ -3,7 +3,6 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.ArchiveVsDao;
 import com.ctrip.zeus.dal.core.ArchiveVsEntity;
 import com.ctrip.zeus.dal.core.MetaVsArchiveDo;
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.SelectionMode;
@@ -101,11 +100,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         virtualServerModelValidator.validate(virtualServer);
 
         Set<Long> uniq = new HashSet<>(virtualServer.getSlbIds());
-        for (Long slbId : uniq) {
-            if (!slbModelValidator.exists(slbId)) {
-                throw new ValidationException("Slb with id " + slbId + "does not exits.");
-            }
-        }
+        slbModelValidator.exists(uniq.toArray(new Long[uniq.size()]));
 
         String[] domains = new String[virtualServer.getDomains().size()];
         for (int i = 0; i < virtualServer.getDomains().size(); i++) {
@@ -137,9 +132,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer update(VirtualServer virtualServer) throws Exception {
-        if (!virtualServerModelValidator.exists(virtualServer.getId())) {
-            throw new ValidationException("Virtual server with id " + virtualServer.getId() + " does not exist.");
-        }
+        virtualServerModelValidator.checkRestrictionForUpdate(virtualServer);
         //TODO render for deprecated field
         if (virtualServer.getSlbId() != null) {
             if (!virtualServer.getSlbIds().contains(virtualServer.getSlbId())) {
@@ -151,11 +144,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         virtualServerModelValidator.validate(virtualServer);
 
         Set<Long> uniq = new HashSet<>(virtualServer.getSlbIds());
-        for (Long slbId : uniq) {
-            if (!slbModelValidator.exists(slbId)) {
-                throw new ValidationException("Slb with id " + slbId + "does not exits.");
-            }
-        }
+        slbModelValidator.exists(uniq.toArray(new Long[uniq.size()]));
 
         String[] domains = new String[virtualServer.getDomains().size()];
         for (int i = 0; i < virtualServer.getDomains().size(); i++) {
