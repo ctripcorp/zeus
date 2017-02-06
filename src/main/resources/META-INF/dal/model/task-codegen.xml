@@ -17,6 +17,7 @@
     <element name="status" value-type="String" />
     <element name="target-slb-id" value-type="long" />
     <element name="version" value-type="int" />
+    <element name="skip-validate" value-type="boolean" />
     <element name="slb-virtual-server-id" value-type="long" />
     <element name="resources" value-type="String" />
     <element name="fail-cause" value-type="String" />

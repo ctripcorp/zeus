@@ -113,7 +113,8 @@ public class C {
                 .setOpsType(task.getOpsType())
                 .setResources(task.getResources())
                 .setSlbVirtualServerId(task.getSlbVirtualServerId())
-                .setSlbId(task.getSlbId());
+                .setSlbId(task.getSlbId())
+                .setSkipValidate(task.isSkipValidate());
         return result;
     }
 
@@ -132,7 +133,8 @@ public class C {
                 .setOpsType(opsTask.getOpsType())
                 .setResources(opsTask.getResources())
                 .setSlbVirtualServerId(opsTask.getSlbVirtualServerId() == null ? 0 : opsTask.getSlbVirtualServerId())
-                .setSlbId(opsTask.getSlbId() == null ? 0 : opsTask.getSlbId());
+                .setSlbId(opsTask.getSlbId() == null ? 0 : opsTask.getSlbId())
+                .setSkipValidate(opsTask.getSkipValidate());
         return result;
     }
 

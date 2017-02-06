@@ -2,6 +2,7 @@ package com.ctrip.zeus.executor.impl;
 
 import com.ctrip.zeus.commit.entity.Commit;
 import com.ctrip.zeus.exceptions.NginxProcessingException;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.executor.TaskExecutor;
 import com.ctrip.zeus.lock.DbLockFactory;
 import com.ctrip.zeus.lock.DistLock;
@@ -11,10 +12,7 @@ import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.commit.CommitService;
 import com.ctrip.zeus.service.commit.util.CommitType;
 import com.ctrip.zeus.service.model.*;
-import com.ctrip.zeus.service.model.handler.GroupValidator;
-import com.ctrip.zeus.service.model.handler.SlbValidator;
-import com.ctrip.zeus.service.model.handler.TrafficPolicyValidator;
-import com.ctrip.zeus.service.model.handler.VirtualServerValidator;
+import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.status.StatusOffset;
@@ -63,19 +61,13 @@ public class TaskExecutorImpl implements TaskExecutor {
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
-    private SlbValidator slbModelValidator;
-    @Resource
-    private GroupValidator groupValidator;
-    @Resource
-    private TrafficPolicyValidator trafficPolicyValidator;
-    @Resource
-    private VirtualServerValidator virtualServerValidator;
-    @Resource
     private ConfVersionService confVersionService;
     @Resource
     private CommitService commitService;
     @Resource
     private TrafficPolicyRepository trafficPolicyRepository;
+    @Resource
+    private ValidationFacade validationFacade;
 
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -179,27 +171,37 @@ public class TaskExecutorImpl implements TaskExecutor {
             Map<Long, TrafficPolicy> nxOnlineTpes;
             Slb nxOnlineSlb;
 
-            //2.1 group
-            nxOnlineGroups = new HashMap<>(groupMap.getOnlineMapping());
-            for (Long gid : activateGroupOps.keySet()) {
-                Group offlineVersion = groupMap.getOfflineMapping().get(gid);
-                nxOnlineGroups.put(gid, offlineVersion);
+            //2.1 slb
+            nxOnlineSlb = onlineSlb;
+            if (activateSlbOps.size() > 0) {
+                if (validateSlbModel(nxOnlineSlb)) {
+                    nxOnlineSlb = slbMap.getOfflineMapping().get(slbId);
+                }
             }
             //2.2 vs
             nxOnlineVses = vsMap.getOnlineMapping();
             for (Long vsId : activateVsOps.keySet()) {
-                nxOnlineVses.put(vsId, vsMap.getOfflineMapping().get(vsId));
+                //TODO virtualServerValidator.validateForMerge(vsIds.toArray(new Long[vsIds.size()]), nxOnlineSlb.getId(), nxOnlineVses);
+                if (!validateVsModel(vsMap.getOfflineMapping().get(vsId))) {
+                    nxOnlineVses.put(vsId, vsMap.getOfflineMapping().get(vsId));
+                }
+
             }
-            //2.3 slb
-            nxOnlineSlb = onlineSlb;
-            if (activateSlbOps.size() > 0) {
-                nxOnlineSlb = slbMap.getOfflineMapping().get(slbId);
+            //2.3 group
+            nxOnlineGroups = new HashMap<>(groupMap.getOnlineMapping());
+            for (Long gid : activateGroupOps.keySet()) {
+                Group offlineVersion = groupMap.getOfflineMapping().get(gid);
+                if (validateGroupModel(offlineVersion)) {
+                    nxOnlineGroups.put(gid, offlineVersion);
+                }
             }
             //2.4 policy
             nxOnlineTpes = new HashMap<>(tpMap.getOnlineMapping());
             for (Long pid : activatePolicyOps.keySet()) {
                 TrafficPolicy offlineVersion = tpMap.getOfflineMapping().get(pid);
-                nxOnlineTpes.put(pid, offlineVersion);
+                if (validatePolicyModel(offlineVersion)) {
+                    nxOnlineTpes.put(pid, offlineVersion);
+                }
             }
 
 
@@ -210,37 +212,54 @@ public class TaskExecutorImpl implements TaskExecutor {
             }
             //3.2 find out vses which need build.
             Set<Long> buildingVsIds;
-            Set<Long> buildingGroupIds;
-            buildingGroupIds = new HashSet<>();
-            Set<Long> buildingPolicyIds;
-            buildingPolicyIds = new HashSet<>();
-            Map<Long, List<Group>> groupReferrerOfBuildingVs = new HashMap<>();
-            Map<Long, List<TrafficPolicy>> policyReferrerOfBuildingVs = new HashMap<>();
+            Set<Long> buildingGroupIds = new HashSet<>();
+            Set<Long> buildingPolicyIds = new HashSet<>();
+            Map<Long, List<Group>> groupReferrerOfBuildingVs = null;
+            Map<Long, List<TrafficPolicy>> policyReferrerOfBuildingVs = null;
+            Set<Long> buildingVsByDemand;
 
             // build all
+            buildingVsByDemand = filterBuildingVsByDemand(nxOnlineVses, groupMap.getOnlineMapping(), nxOnlineGroups, tpMap.getOnlineMapping(), nxOnlineTpes);
             if (activateSlbOps.size() > 0 && activateSlbOps.get(slbId) != null) {
                 buildingVsIds = nxOnlineVses.keySet();
             } else {
-                buildingVsIds = filterBuildingVsByDemand(nxOnlineVses, groupMap.getOnlineMapping(), nxOnlineGroups, tpMap.getOnlineMapping(), nxOnlineTpes);
+                buildingVsIds = buildingVsByDemand;
             }
+            Set<Long> buildingVsIdsTmp = null;
+            boolean flag = false;
+            for (int i = 0; i < 2; i++) {
+                groupReferrerOfBuildingVs = new HashMap<>();
+                policyReferrerOfBuildingVs = new HashMap<>();
+                buildingVsIdsTmp = new HashSet<>(buildingVsIds);
+                flag = false;
 
-            for (Map.Entry<Long, Group> e : nxOnlineGroups.entrySet()) {
-                boolean buildingRequired = traverseGroupContent(e.getKey(), e.getValue(), slbId,
-                        nxOnlineVses,
-                        buildingVsIds, groupReferrerOfBuildingVs);
+                for (Map.Entry<Long, Group> e : nxOnlineGroups.entrySet()) {
+                    boolean buildingRequired = traverseGroupContent(e.getKey(), e.getValue(), slbId,
+                            nxOnlineVses,
+                            buildingVsIdsTmp, groupReferrerOfBuildingVs);
 
-                if (buildingRequired) {
-                    buildingGroupIds.add(e.getKey());
+                    if (buildingRequired) {
+                        buildingGroupIds.add(e.getKey());
+                    }
                 }
+                for (Map.Entry<Long, TrafficPolicy> e : nxOnlineTpes.entrySet()) {
+                    boolean buildingRequired = traversePolicyContent(e.getKey(), e.getValue(), slbId,
+                            nxOnlineVses,
+                            buildingVsIdsTmp, policyReferrerOfBuildingVs);
+
+                    if (buildingRequired) {
+                        buildingPolicyIds.add(e.getKey());
+                    }
+                }
+
+                for (Long vsId : buildingVsByDemand) {
+                    flag = flag | validateEntriesOnVs(vsId, groupMap.getOnlineMapping(), nxOnlineGroups, tpMap.getOnlineMapping(),
+                            nxOnlineTpes, groupReferrerOfBuildingVs, policyReferrerOfBuildingVs);
+                }
+                if (!flag) break;
             }
-            for (Map.Entry<Long, TrafficPolicy> e : nxOnlineTpes.entrySet()) {
-                boolean buildingRequired = traversePolicyContent(e.getKey(), e.getValue(), slbId,
-                        nxOnlineVses,
-                        buildingVsIds, policyReferrerOfBuildingVs);
-
-                if (buildingRequired) {
-                    buildingPolicyIds.add(e.getKey());
-                }
+            if (flag) {
+                throw new ValidationException("Entries Validation On Vs Failed.Building VsIds: " + buildingVsIdsTmp.toString());
             }
 
             //3.* in case of no need to update the config files.
@@ -250,10 +269,6 @@ public class TaskExecutorImpl implements TaskExecutor {
                 setTaskResult(slbId, true, null);
                 return;
             }
-
-            //4. validate
-            validateModels(nxOnlineSlb, buildingVsIds, nxOnlineGroups, nxOnlineTpes,
-                    nxOnlineVses, groupReferrerOfBuildingVs, policyReferrerOfBuildingVs);
 
             //5.2 push config to all slb servers. reload if needed.
             //5.2.1 remove deactivate vs ids from need build vses
@@ -267,7 +282,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             //4.1 get allDownServers
             Set<String> allDownServers = getAllDownServer();
             //4.2 allUpGroupServers
-            Set<String> allUpGroupServers = getAllUpGroupServers(buildingVsIds, nxOnlineGroups, slbId);
+            Set<String> allUpGroupServers = getAllUpGroupServers(nxOnlineGroups);
             //4.3 build config
             buildVersion = buildService.build(nxOnlineSlb, nxOnlineVses, buildingVsIds, cleanVsIds, policyReferrerOfBuildingVs,
                     groupReferrerOfBuildingVs, allDownServers, allUpGroupServers);
@@ -306,49 +321,106 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     }
 
-    private void validateModels(Slb nxOnlineSlb, Set<Long> buildingVsIds, Map<Long, Group> nxOnlineGroups,
-                                Map<Long, TrafficPolicy> nxOnlineTpes, Map<Long, VirtualServer> nxOnlineVses,
-                                Map<Long, List<Group>> groupReferrerOfBuildingVs,
-                                Map<Long, List<TrafficPolicy>> policyReferrerOfBuildingVs) throws Exception {
-        if (activateSlbOps.size() > 0) {
-            Set<Long> slbIds = slbCriteriaQuery.queryAll();
-            ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(slbIds.toArray(new Long[slbIds.size()]));
-            Map<Long, Slb> map = slbMap.getOnlineMapping();
-            map.put(nxOnlineSlb.getId(), nxOnlineSlb);
-            try {
-                slbModelValidator.validateForMerge(new Long[]{nxOnlineSlb.getId()}, map);
-            } catch (Exception e) {
-                setTaskFail(activateSlbOps.get(nxOnlineSlb.getId()), "Invalidate version for online. SlbId:" + nxOnlineSlb.getId() + ";cause:" + e.getMessage());
-                logger.error("Invalidate version for online. SlbId:" + nxOnlineSlb.getId() + ";cause:" + e.getMessage(), e);
-            }
+    private boolean validatePolicyModel(TrafficPolicy policy) {
+        ValidationContext context = new ValidationContext();
+        validationFacade.validatePolicy(policy, context);
+        if (context.getErrors().size() > 0) {
+            setTaskFail(activatePolicyOps.get(policy.getId()), "Invalidate version for online. PolicyId:" + policy.getId() + ";cause:" + context.getErrors().toString());
+            activatePolicyOps.remove(policy.getId());
+            logger.error("Invalidate version for online. PolicyId:" + policy.getId() + ";cause:" + context.getErrors().toString());
+            return false;
+        } else {
+            return true;
         }
-        if (buildingVsIds.size() > 0) {
-            for (Long vsId : buildingVsIds) {
-                List<Group> groups = groupReferrerOfBuildingVs.get(vsId);
-                List<TrafficPolicy> policies = policyReferrerOfBuildingVs.get(vsId);
-                if (groups != null && groups.size() > 0) {
-                    Long[] tmp = new Long[groups.size()];
-                    for (int i = 0; i < groups.size(); i++) {
-                        tmp[i] = groups.get(i).getId();
+    }
+
+    private boolean validateGroupModel(Group group) {
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateGroup(group, context);
+        if (context.getErrors().size() > 0) {
+            setTaskFail(activateGroupOps.get(group.getId()), "Invalidate version for online. GroupId:" + group.getId() + ";cause:" + context.getErrors().toString());
+            activateGroupOps.remove(group.getId());
+            logger.error("Invalidate version for online. GroupId:" + group.getId() + ";cause:" + context.getErrors().toString());
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean validateVsModel(VirtualServer virtualServer) {
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateVs(virtualServer, context);
+        if (context.getErrors().size() > 0) {
+            setTaskFail(activateVsOps.get(virtualServer.getId()), "Invalidate version for online. VsId:" + virtualServer.getId() + ";cause:" + context.getErrors().toString());
+            activateVsOps.remove(virtualServer.getId());
+            logger.error("Invalidate version for online. VsId:" + virtualServer.getId() + ";cause:" + context.getErrors().toString());
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean validateSlbModel(Slb nxOnlineSlb) throws Exception {
+        Set<Long> slbIds = slbCriteriaQuery.queryAll();
+        ModelStatusMapping<Slb> slbMap = entityFactory.getSlbsByIds(slbIds.toArray(new Long[slbIds.size()]));
+        Map<Long, Slb> map = slbMap.getOnlineMapping();
+        map.put(nxOnlineSlb.getId(), nxOnlineSlb);
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateSlb(nxOnlineSlb.getId(), map, context);
+        if (context.getErrors().size() > 0) {
+            setTaskFail(activateSlbOps.get(nxOnlineSlb.getId()), "Invalidate version for online. SlbId:" + nxOnlineSlb.getId() + ";cause:" + context.getErrors().toString());
+            activateSlbOps.remove(nxOnlineSlb.getId());
+            logger.error("Invalidate version for online. SlbId:" + nxOnlineSlb.getId() + ";cause:" + context.getErrors().toString());
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean validateEntriesOnVs(Long vsId, Map<Long, Group> onlineGroups, Map<Long, Group> nxOnlineGroups,
+                                        Map<Long, TrafficPolicy> onlineTpes, Map<Long, TrafficPolicy> nxOnlineTpes,
+                                        Map<Long, List<Group>> groupReferrerOfBuildingVs,
+                                        Map<Long, List<TrafficPolicy>> policyReferrerOfBuildingVs) throws Exception {
+        boolean flag = false;
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateEntriesOnVs(vsId, groupReferrerOfBuildingVs.get(vsId), policyReferrerOfBuildingVs.get(vsId), context);
+        if (context.getErrorGroups().size() > 0) {
+            for (Long gid : context.getErrorGroups()) {
+                if (activateGroupOps.containsKey(gid) && !activateGroupOps.get(gid).isSkipValidate()) {
+                    setTaskFail(activateGroupOps.get(gid), "Group/Entries Validation On Vs Failed. VsId:" + vsId + ";Error:" + context.getErrors().get(gid.toString()));
+                    activateGroupOps.remove(gid);
+                    flag = true;
+                    if (onlineGroups.containsKey(gid)) {
+                        nxOnlineGroups.put(gid, onlineGroups.get(gid));
+                    } else {
+                        nxOnlineGroups.remove(gid);
                     }
-                    groupValidator.validateForMerge(tmp, vsId, nxOnlineGroups, nxOnlineTpes, false);
+                } else if (deactivateGroupOps.containsKey(gid) && !deactivateGroupOps.get(gid).isSkipValidate()) {
+                    setTaskFail(deactivateGroupOps.get(gid), "Group/Entries Validation On Vs Failed. VsId:" + vsId + ";Error:" + context.getErrors().get(gid.toString()));
+                    deactivateGroupOps.remove(gid);
+                    flag = true;
                 }
-                if (policies != null && policies.size() > 0) {
-                    Long[] tmp = new Long[policies.size()];
-                    for (int i = 0; i < policies.size(); i++) {
-                        tmp[i] = policies.get(i).getId();
+            }
+        }
+        if (context.getErrorPolicies().size() > 0) {
+            for (Long pid : context.getErrorPolicies()) {
+                if (activatePolicyOps.containsKey(pid) && !activatePolicyOps.get(pid).isSkipValidate()) {
+                    setTaskFail(activatePolicyOps.get(pid), "Policy/Entries Validation On Vs Failed. VsId:" + vsId + ";Error:" + context.getErrors().get(pid.toString()));
+                    activatePolicyOps.remove(pid);
+                    flag = true;
+                    if (onlineTpes.containsKey(pid)) {
+                        nxOnlineTpes.put(pid, onlineTpes.get(pid));
+                    } else {
+                        nxOnlineTpes.remove(pid);
                     }
-                    trafficPolicyValidator.validateForMerge(tmp, vsId, nxOnlineGroups, nxOnlineTpes, false);
+                } else if (deactivatePolicyOps.containsKey(pid) && !deactivatePolicyOps.get(pid).isSkipValidate()) {
+                    setTaskFail(deactivatePolicyOps.get(pid), "Policy/Entries Validation On Vs Failed. VsId:" + vsId + ";Error:" + context.getErrors().get(pid.toString()));
+                    deactivatePolicyOps.remove(pid);
+                    flag = true;
                 }
             }
         }
-        if (activateVsOps.size() > 0) {
-            Set<Long> vsIds = new HashSet<>();
-            for (OpsTask t : activateVsOps.values()) {
-                vsIds.add(t.getSlbVirtualServerId());
-            }
-            virtualServerValidator.validateForMerge(vsIds.toArray(new Long[vsIds.size()]), nxOnlineSlb.getId(), nxOnlineVses);
-        }
+        return flag;
     }
 
     private ModelStatusMapping<Slb> mapSlbVersionAndRevise(Long slbId, Collection<OpsTask> activateSlbTask) throws Exception {
@@ -625,7 +697,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                                           final Map<Long, VirtualServer> nxOnlineVses,
                                           Set<Long> buildingVsIds, Map<Long, List<TrafficPolicy>> policyReferrerOfBuildingVs) throws NginxProcessingException {
         if (policy == null) {
-            String errMsg = "Unexpected online group with null value. policyId =" + policyId + ".";
+            String errMsg = "Unexpected online policy with null value. policyId =" + policyId + ".";
             logger.error(errMsg);
             throw new NginxProcessingException(errMsg);
         }
@@ -914,12 +986,11 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private Set<String> getAllUpGroupServers(Set<Long> vsIds, Map<Long, Group> groups, Long slbId) throws Exception {
+    private Set<String> getAllUpGroupServers(Map<Long, Group> groups) throws Exception {
         Map<String, List<Boolean>> memberStatus = statusService.fetchGroupServerStatus(groups.keySet().toArray(new Long[]{}));
         Set<Long> tmpid = memberOps.keySet();
         for (Long gid : tmpid) {
-            Group groupTmp = groups.get(gid);
-            if (groupTmp == null) {
+            if (!groups.containsKey(gid)) {
                 /*group not activated. just skip it.*/
                 continue;
             }
@@ -927,20 +998,14 @@ public class TaskExecutorImpl implements TaskExecutor {
             for (OpsTask opsTask : taskList) {
                 String ipList = opsTask.getIpList();
                 String[] ips = ipList.split(";");
-                for (GroupVirtualServer gvs : groupTmp.getGroupVirtualServers()) {
-                    if (!vsIds.contains(gvs.getVirtualServer().getId())) {
-                        continue;
-                    }
-                    for (String ip : ips) {
-                        memberStatus.get(gid + "_" + ip).set(StatusOffset.MEMBER_OPS, opsTask.getUp());
-                    }
+                for (String ip : ips) {
+                    memberStatus.get(gid + "_" + ip).set(StatusOffset.MEMBER_OPS, opsTask.getUp());
                 }
             }
         }
         tmpid = pullMemberOps.keySet();
         for (Long gid : tmpid) {
-            Group groupTmp = groups.get(gid);
-            if (groupTmp == null) {
+            if (!groups.containsKey(gid)) {
                 /*group not activated. just skip it.*/
                 continue;
             }
@@ -948,21 +1013,15 @@ public class TaskExecutorImpl implements TaskExecutor {
             for (OpsTask opsTask : taskList) {
                 String ipList = opsTask.getIpList();
                 String[] ips = ipList.split(";");
-                for (GroupVirtualServer gvs : groupTmp.getGroupVirtualServers()) {
-                    if (!vsIds.contains(gvs.getVirtualServer().getId())) {
-                        continue;
-                    }
-                    for (String ip : ips) {
-                        memberStatus.get(gid + "_" + ip).set(StatusOffset.PULL_OPS, opsTask.getUp());
-                    }
+                for (String ip : ips) {
+                    memberStatus.get(gid + "_" + ip).set(StatusOffset.PULL_OPS, opsTask.getUp());
                 }
             }
         }
 
         tmpid = healthyOps.keySet();
         for (Long gid : tmpid) {
-            Group groupTmp = groups.get(gid);
-            if (groupTmp == null) {
+            if (!groups.containsKey(gid)) {
                 /*group not activated. just skip it.*/
                 continue;
             }
@@ -970,29 +1029,17 @@ public class TaskExecutorImpl implements TaskExecutor {
             for (OpsTask opsTask : taskList) {
                 String ipList = opsTask.getIpList();
                 String[] ips = ipList.split(";");
-                for (GroupVirtualServer gvs : groupTmp.getGroupVirtualServers()) {
-                    if (!vsIds.contains(gvs.getVirtualServer().getId())) {
-                        continue;
-                    }
-                    for (String ip : ips) {
-                        memberStatus.get(gid + "_" + ip).set(StatusOffset.HEALTHY, opsTask.getUp());
-                    }
+                for (String ip : ips) {
+                    memberStatus.get(gid + "_" + ip).set(StatusOffset.HEALTHY, opsTask.getUp());
                 }
             }
         }
 
-        boolean healthyActivateFlag = healthyOpsActivate.get();
         Set<String> result = new HashSet<>();
         for (String key : memberStatus.keySet()) {
             List<Boolean> status = memberStatus.get(key);
-            if (healthyActivateFlag) {
-                if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS) && status.get(StatusOffset.HEALTHY)) {
-                    result.add(key);
-                }
-            } else {
-                if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS)) {
-                    result.add(key);
-                }
+            if (status.get(StatusOffset.PULL_OPS) && status.get(StatusOffset.MEMBER_OPS) && status.get(StatusOffset.HEALTHY)) {
+                result.add(key);
             }
         }
         return result;
@@ -1011,25 +1058,22 @@ public class TaskExecutorImpl implements TaskExecutor {
         return allDownServers;
     }
 
-    private static String priorityKey(Long groupId, Long vsId) {
-        return "VS" + vsId + "_" + groupId;
-    }
-
     private void sortTaskData(List<OpsTask> pendingTasks) {
-        activateGroupOps.clear();
         activateSlbOps.clear();
-        serverOps.clear();
-        memberOps.clear();
-        deactivateGroupOps.clear();
-        pullMemberOps.clear();
-        healthyOps.clear();
         activateVsOps.clear();
         deactivateVsOps.clear();
         softDeactivateVsOps.clear();
-        softDeactivateGroupOps.clear();
         activatePolicyOps.clear();
         deactivatePolicyOps.clear();
         softDeactivatePolicyOps.clear();
+        activateGroupOps.clear();
+        deactivateGroupOps.clear();
+        softDeactivateGroupOps.clear();
+        serverOps.clear();
+        memberOps.clear();
+        pullMemberOps.clear();
+        healthyOps.clear();
+
 
         List<OpsTask> taskList;
         for (OpsTask task : pendingTasks) {

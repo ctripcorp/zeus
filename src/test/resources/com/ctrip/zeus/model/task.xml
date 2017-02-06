@@ -10,6 +10,7 @@
         <status>ddd</status>
         <target-slb-id>12345678901</target-slb-id>
         <version>1</version>
+        <skip-validate>false</skip-validate>
         <slb-virtual-server-id>12345678901</slb-virtual-server-id>
         <resources>resources</resources>
         <fail-cause>fail</fail-cause>
