@@ -10,8 +10,6 @@ import java.util.Map;
  */
 public interface VirtualServerValidator extends ModelValidator<VirtualServer> {
 
-    void validateForMerge(Long[] toBeMergedItems, Long slbId, Map<Long, VirtualServer> vsRef);
-
     boolean isActivated(Long vsId) throws Exception;
 
     void unite(List<VirtualServer> virtualServers) throws Exception;

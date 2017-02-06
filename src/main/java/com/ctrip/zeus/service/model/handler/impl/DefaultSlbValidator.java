@@ -5,17 +5,14 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.IdVersion;
-import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.handler.SlbValidator;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
-import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -81,16 +78,6 @@ public class DefaultSlbValidator implements SlbValidator {
     }
 
     @Override
-    public void validateForActivate(Slb[] toBeActivatedItems, boolean escapedPathValidation) throws Exception {
-
-    }
-
-    @Override
-    public void validateForDeactivate(Long[] toBeDeactivatedItems) throws Exception {
-
-    }
-
-    @Override
     public void checkVersionForUpdate(Slb target) throws Exception {
         SlbDo check = slbDao.findById(target.getId(), SlbEntity.READSET_FULL);
         if (check == null)
@@ -107,10 +94,5 @@ public class DefaultSlbValidator implements SlbValidator {
         if (rSlbStatusDao.findBySlb(slbId, RSlbStatusEntity.READSET_FULL).getOnlineVersion() != 0) {
             throw new ValidationException("Slb must be deactivated before deletion.");
         }
-    }
-
-    @Override
-    public void validateForMerge(Long[] toBeMergedItems, Map<Long, Slb> slbRef) throws Exception {
-
     }
 }

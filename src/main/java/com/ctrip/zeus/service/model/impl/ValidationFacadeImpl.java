@@ -30,16 +30,20 @@ public class ValidationFacadeImpl implements ValidationFacade {
         if (group.getName() == null || group.getName().isEmpty()
                 || group.getAppId() == null || group.getAppId().isEmpty()) {
             context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, "Field `name` and `app-id` are not allowed empty.");
+            return;
         }
-        if (!context.shouldProceed()) return;
 
         if (group.getHealthCheck() != null
                 && (group.getHealthCheck().getUri() == null || group.getHealthCheck().getUri().isEmpty())) {
             context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, "Field `health-check` is missing `uri` value.");
+            return;
         }
-        if (!context.shouldProceed()) return;
 
         try {
+            if (group.isVirtual() && (group.getGroupServers() != null && group.getGroupServers().size() > 0)) {
+                context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, "Field `group-servers` is not allowed if group is virtual type.");
+                return;
+            }
             validateMembers(group.getGroupServers());
         } catch (ValidationException e) {
             context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, e.getMessage());
@@ -48,14 +52,19 @@ public class ValidationFacadeImpl implements ValidationFacade {
 
         Map<Long, GroupVirtualServer> groupOnVses;
         try {
-            groupOnVses = validateGroupOnVses(group.getGroupVirtualServers());
-            if (groupOnVses.size() == 0) return;
+            groupOnVses = validateGroupOnVses(group.getGroupVirtualServers(), group.isVirtual());
+        } catch (ValidationException e) {
+            context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, e.getMessage());
+            return;
+        }
+        if (groupOnVses.size() == 0) return;
 
-            List<LocationEntry> policyEntries = null;
-            try {
-                policyEntries = vsEntryFactory.getGroupRelatedPolicyEntries(group.getId());
-            } catch (Exception e) {
-            }
+        List<LocationEntry> policyEntries = null;
+        try {
+            policyEntries = vsEntryFactory.getGroupRelatedPolicyEntries(group.getId());
+        } catch (Exception e) {
+        }
+        try {
             validatePolicyRestriction(groupOnVses, policyEntries);
         } catch (ValidationException e) {
             context.error(group.getId(), MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, e.getMessage());
@@ -85,7 +94,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
         }
     }
 
-    private Map<Long, GroupVirtualServer> validateGroupOnVses(List<GroupVirtualServer> groupOnVses) throws ValidationException {
+    private Map<Long, GroupVirtualServer> validateGroupOnVses(List<GroupVirtualServer> groupOnVses, boolean virtual) throws ValidationException {
         if (groupOnVses == null || groupOnVses.size() == 0)
             throw new ValidationException("Group is missing `group-virtual-server` field.");
 
@@ -100,6 +109,9 @@ public class ValidationFacadeImpl implements ValidationFacade {
             GroupVirtualServer prev = result.put(e.getVirtualServer().getId(), e);
             if (prev != null) {
                 throw new ValidationException("Group can have and only have one combination to the same virtual-server. \"vs-id\" : " + e.getVirtualServer().getId() + ".");
+            }
+            if (virtual && e.getRedirect() == null) {
+                throw new ValidationException("Field `redirect` is not allowed empty if group is virtual type.");
             }
         }
         return result;
@@ -127,6 +139,8 @@ public class ValidationFacadeImpl implements ValidationFacade {
     }
 
     private void validateMembers(List<GroupServer> servers) throws ValidationException {
+        if (servers == null || servers.size() == 0) return;
+
         Set<byte[]> unique = new HashSet<>();
         for (GroupServer s : servers) {
             if (s.getIp() == null || s.getIp().isEmpty() || s.getPort() == null) {
@@ -299,7 +313,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
                 List<GroupVirtualServer> gvsToBeChecked = new ArrayList<>(1);
                 gvsToBeChecked.add(target);
                 try {
-                    validateGroupOnVses(gvsToBeChecked);
+                    validateGroupOnVses(gvsToBeChecked, group.isVirtual());
                 } catch (ValidationException e) {
                     context.error(group.getId(), MetaType.GROUP, ErrorType.FIELD_VALIDATION, e.getMessage());
                 }

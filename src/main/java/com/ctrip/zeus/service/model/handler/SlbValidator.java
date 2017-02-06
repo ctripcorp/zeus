@@ -8,6 +8,4 @@ import java.util.Map;
  * Created by zhoumy on 2015/6/30.
  */
 public interface SlbValidator extends ModelValidator<Slb> {
-
-    void validateForMerge(Long[] toBeMergedItems, Map<Long, Slb> slbRef) throws Exception;
 }

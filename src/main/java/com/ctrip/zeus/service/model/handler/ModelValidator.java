@@ -9,10 +9,6 @@ public interface ModelValidator<T> {
 
     void validate(T target) throws Exception;
 
-    void validateForActivate(T[] toBeActivatedItems, boolean escapedPathValidation) throws Exception;
-
-    void validateForDeactivate(Long[] toBeDeactivatedItems) throws Exception;
-
     void checkVersionForUpdate(T target) throws Exception;
 
     void removable(Long targetId) throws Exception;

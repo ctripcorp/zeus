@@ -9,10 +9,7 @@ import org.junit.Test;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2017/1/16.
@@ -185,11 +182,11 @@ public class TrafficPolicyTest extends AbstractServerTest {
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(1L)))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(2L))));
 
-        assertValidationFailed(1L, new HashSet<>(groupRef.values()), new HashSet<>(policyRef.values()), "vs-traffic-control combination is not unique");
+        assertValidationFailed(1L, new ArrayList<>(groupRef.values()), new ArrayList<>(policyRef.values()), "vs-traffic-control combination is not unique");
         policyRef.remove(2L);
 
         ValidationContext context = new ValidationContext();
-        validationFacade.validateEntriesOnVs(1L, new HashSet<>(groupRef.values()), new HashSet<>(policyRef.values()), context);
+        validationFacade.validateEntriesOnVs(1L, new ArrayList<>(groupRef.values()), new ArrayList<>(policyRef.values()), context);
         if (context.getErrors().size() > 0) {
             if (context.getErrors().size() > 0) {
                 for (Map.Entry<String, String> r : context.getErrors().entrySet()) {
@@ -201,7 +198,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
         }
 
         groupRef.remove(2L);
-        assertValidationFailed(1L, new HashSet<>(groupRef.values()), new HashSet<>(policyRef.values()), "missing group on vs");
+        assertValidationFailed(1L, new ArrayList<>(groupRef.values()), new ArrayList<>(policyRef.values()), "missing group on vs");
     }
 
     @Test
@@ -237,7 +234,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
 
     }
 
-    private void assertValidationFailed(Long vsId, Set<Group> groups, Set<TrafficPolicy> policies, String message) {
+    private void assertValidationFailed(Long vsId, List<Group> groups, List<TrafficPolicy> policies, String message) {
         ValidationContext context = new ValidationContext();
         validationFacade.validateEntriesOnVs(vsId, groups, policies, context);
         if (context.getErrors().size() == 0) {

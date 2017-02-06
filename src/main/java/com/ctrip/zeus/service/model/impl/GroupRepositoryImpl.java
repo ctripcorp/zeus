@@ -9,7 +9,6 @@ import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.model.handler.GroupSync;
 import com.ctrip.zeus.service.model.handler.GroupValidator;
-import com.ctrip.zeus.service.model.handler.VGroupValidator;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
@@ -41,8 +40,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     private GroupValidator groupModelValidator;
     @Resource
     private ValidationFacade validationFacade;
-    @Resource
-    private VGroupValidator vGroupValidator;
     @Resource
     private StatusService statusService;
     @Resource
@@ -116,7 +113,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group getByKey(IdVersion key, RepositoryContext repositoryContext) throws Exception {
-        if (!groupModelValidator.exists(key.getId()) && !vGroupValidator.exists(key.getId())) {
+        if (!groupModelValidator.exists(key.getId())) {
             return null;
         }
 
@@ -175,9 +172,17 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public Group addVGroup(Group group, boolean escapedPathValidation) throws Exception {
         group.setId(null);
-        vGroupValidator.validate(group, escapedPathValidation);
-        autoFiller.autofillVGroup(group);
+        ValidationContext context = new ValidationContext();
         group.setVirtual(true);
+        validationFacade.validateGroup(group, context);
+        if (escapedPathValidation) {
+            //TODO filter by error type
+        } else {
+            if (context.getErrorGroups().contains(group.getId())) {
+                throw new ValidationException(context.getGroupErrorReason(group.getId()));
+            }
+        }
+        autoFiller.autofillVGroup(group);
         groupEntityManager.add(group, true);
         hideVirtualValue(group);
         return getByKey(new IdVersion(group.getId(), group.getVersion()));
@@ -215,11 +220,19 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group updateVGroup(Group group, boolean escapedPathValidation) throws Exception {
-        if (!vGroupValidator.exists(group.getId()))
+        if (!groupModelValidator.exists(group.getId(), true))
             throw new ValidationException("Group with id " + group.getId() + " does not exist.");
-        vGroupValidator.validate(group, escapedPathValidation);
-        autoFiller.autofillVGroup(group);
+        ValidationContext context = new ValidationContext();
         group.setVirtual(true);
+        validationFacade.validateGroup(group, context);
+        if (escapedPathValidation) {
+            //TODO filter by error type
+        } else {
+            if (context.getErrorGroups().contains(group.getId())) {
+                throw new ValidationException(context.getGroupErrorReason(group.getId()));
+            }
+        }
+        autoFiller.autofillVGroup(group);
         groupEntityManager.update(group);
         hideVirtualValue(group);
         return getByKey(new IdVersion(group.getId(), group.getVersion()));
@@ -234,7 +247,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public int deleteVGroup(Long groupId) throws Exception {
-        vGroupValidator.removable(groupId);
+        groupModelValidator.removable(groupId);
         return delete(groupId);
     }
 
