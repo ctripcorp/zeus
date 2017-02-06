@@ -5,8 +5,9 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.TrafficPolicyRepository;
+import com.ctrip.zeus.service.model.ValidationFacade;
 import com.ctrip.zeus.service.model.VersionUtils;
-import com.ctrip.zeus.service.model.handler.TrafficPolicyValidator;
+import com.ctrip.zeus.service.model.common.ValidationContext;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
@@ -25,7 +26,7 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
     @Resource
     private RTrafficPolicyVsDao rTrafficPolicyVsDao;
     @Resource
-    private TrafficPolicyValidator trafficPolicyValidator;
+    private ValidationFacade validationFacade;
 
     @Override
     public List<TrafficPolicy> list() throws Exception {
@@ -95,8 +96,16 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
 
     @Override
     public TrafficPolicy add(TrafficPolicy trafficPolicy, boolean force) throws Exception {
-        trafficPolicyValidator.validate(trafficPolicy, force);
-
+        trafficPolicy.setId(null);
+        ValidationContext context = new ValidationContext();
+        validationFacade.validatePolicy(trafficPolicy, context);
+        if (force) {
+            //TODO filter by error type
+        } else {
+            if (context.getErrorPolicies().contains(trafficPolicy.getId())) {
+                throw new ValidationException(context.getPolicyErrorReason(trafficPolicy.getId()));
+            }
+        }
         TrafficPolicyDo tpd = new TrafficPolicyDo().setName(trafficPolicy.getName()).setVersion(1).setActiveVersion(-1).setNxActiveVersion(1);
         trafficPolicyDao.insert(tpd);
         trafficPolicy.setId(tpd.getId()).setVersion(tpd.getVersion());
@@ -113,7 +122,15 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
 
     @Override
     public TrafficPolicy update(TrafficPolicy trafficPolicy, boolean force) throws Exception {
-        trafficPolicyValidator.validate(trafficPolicy, force);
+        ValidationContext context = new ValidationContext();
+        validationFacade.validatePolicy(trafficPolicy, context);
+        if (force) {
+            //TODO filter by error type
+        } else {
+            if (context.getErrorGroups().contains(trafficPolicy.getId())) {
+                throw new ValidationException(context.getPolicyErrorReason(trafficPolicy.getId()));
+            }
+        }
 
         TrafficPolicyDo tpd = trafficPolicyDao.findById(trafficPolicy.getId(), TrafficPolicyEntity.READSET_FULL);
         if (tpd == null) {

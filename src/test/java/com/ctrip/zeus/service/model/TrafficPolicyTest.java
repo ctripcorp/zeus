@@ -2,20 +2,17 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.AbstractServerTest;
 import com.ctrip.zeus.dal.core.*;
-import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.common.ValidationContext;
-import com.ctrip.zeus.service.model.handler.GroupValidator;
-import com.ctrip.zeus.service.model.handler.TrafficPolicyValidator;
-import com.ctrip.zeus.util.AssertUtils;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.junit.Assert;
 import org.junit.Test;
 import org.unidal.dal.jdbc.DalException;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2017/1/16.
@@ -27,11 +24,6 @@ public class TrafficPolicyTest extends AbstractServerTest {
     private RGroupVsDao rGroupVsDao;
     @Resource
     private SlbVirtualServerDao slbVirtualServerDao;
-
-    @Resource
-    private TrafficPolicyValidator trafficPolicyValidator;
-    @Resource
-    private GroupValidator groupModelValidator;
     @Resource
     private ValidationFacade validationFacade;
     @Resource
@@ -103,10 +95,12 @@ public class TrafficPolicyTest extends AbstractServerTest {
         rGroupVsDao.delete(d4);
 
         /********* case 6 *********/
-        try {
-            trafficPolicyValidator.validate(object, false);
-        } catch (Exception e) {
-            e.printStackTrace();
+        ValidationContext context = new ValidationContext();
+        validationFacade.validatePolicy(object, context);
+        if (context.getErrors().size() > 0) {
+            for (Map.Entry<String, String> r : context.getErrors().entrySet()) {
+                System.out.printf("%-10s : %s\n", r.getKey(), r.getValue());
+            }
             Assert.assertTrue(false);
         }
     }
@@ -191,30 +185,23 @@ public class TrafficPolicyTest extends AbstractServerTest {
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(1L)))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(2L))));
 
-        assertValidationFailed(new Long[]{1L}, 1L, groupRef, policyRef, "vs-traffic-control combination is not unique");
+        assertValidationFailed(1L, new HashSet<>(groupRef.values()), new HashSet<>(policyRef.values()), "vs-traffic-control combination is not unique");
         policyRef.remove(2L);
 
-        try {
-            trafficPolicyValidator.validateForMerge(new Long[]{1L}, 1L, groupRef, policyRef, false);
-            groupModelValidator.validateForMerge(new Long[]{1L}, 1L, groupRef, policyRef, false);
-            groupModelValidator.validateForMerge(new Long[]{3L}, 1L, groupRef, policyRef, false);
-        } catch (Exception e) {
-            e.printStackTrace();
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateEntriesOnVs(1L, new HashSet<>(groupRef.values()), new HashSet<>(policyRef.values()), context);
+        if (context.getErrors().size() > 0) {
+            if (context.getErrors().size() > 0) {
+                for (Map.Entry<String, String> r : context.getErrors().entrySet()) {
+                    System.out.printf("%s-%s\n", r.getKey(), r.getValue());
+                }
+            }
+            System.out.print("\n");
             Assert.assertTrue(false);
         }
 
         groupRef.remove(2L);
-        assertValidationFailed(new Long[]{1L}, 1L, groupRef, policyRef, "missing group on vs");
-        try {
-            groupModelValidator.validateForMerge(new Long[]{1L}, 1L, groupRef, policyRef, false);
-            Assert.assertTrue(false);
-        } catch (Exception e) {
-            System.out.println("GroupModelValidator expected: missing group on vs, Actual: " + e.getMessage());
-            if (!(e instanceof ValidationException)) {
-                e.printStackTrace();
-                Assert.assertTrue(false);
-            }
-        }
+        assertValidationFailed(1L, new HashSet<>(groupRef.values()), new HashSet<>(policyRef.values()), "missing group on vs");
     }
 
     @Test
@@ -250,17 +237,19 @@ public class TrafficPolicyTest extends AbstractServerTest {
 
     }
 
-    private void assertValidationFailed(Long[] items, Long vsId, Map<Long, Group> groupRef, Map<Long, TrafficPolicy> policyRef, String message) {
-        try {
-            trafficPolicyValidator.validateForMerge(items, vsId, groupRef, policyRef, false);
+    private void assertValidationFailed(Long vsId, Set<Group> groups, Set<TrafficPolicy> policies, String message) {
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateEntriesOnVs(vsId, groups, policies, context);
+        if (context.getErrors().size() == 0) {
             Assert.assertTrue(false);
-        } catch (Exception e) {
-            System.out.println("TrafficPolicyValidator expected: " + message + ", Actual: " + e.getMessage());
-            if (!(e instanceof ValidationException)) {
-                e.printStackTrace();
-                Assert.assertTrue(false);
+        }
+        System.out.print("Expected: " + message + ", Actual: ");
+        if (context.getErrors().size() > 0) {
+            for (Map.Entry<String, String> r : context.getErrors().entrySet()) {
+                System.out.printf("%s-%s\n", r.getKey(), r.getValue());
             }
         }
+        System.out.print("\n");
     }
 
     private void assertValidationFailed(Group object, String message) {
@@ -279,16 +268,18 @@ public class TrafficPolicyTest extends AbstractServerTest {
     }
 
     private void assertValidationFailed(TrafficPolicy object, String message) {
-        try {
-            trafficPolicyValidator.validate(object);
-            Assert.assertTrue(message, false);
-        } catch (Exception e) {
-            System.out.println("Expected: " + message + ", Actual: " + e.getMessage());
-            if (!(e instanceof ValidationException)) {
-                e.printStackTrace();
-                Assert.assertTrue(false);
+        ValidationContext context = new ValidationContext();
+        validationFacade.validatePolicy(object, context);
+        if (context.getErrors().size() == 0) {
+            Assert.assertTrue(false);
+        }
+        System.out.print("Expected: " + message + ", Actual: ");
+        if (context.getErrors().size() > 0) {
+            for (Map.Entry<String, String> r : context.getErrors().entrySet()) {
+                System.out.printf("%s-%s\n", r.getKey(), r.getValue());
             }
         }
+        System.out.print("\n");
     }
 
     private void assertEquals(TrafficPolicy o1, TrafficPolicy o2) {

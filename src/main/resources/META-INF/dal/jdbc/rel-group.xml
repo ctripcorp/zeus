@@ -85,6 +85,17 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-group-offline-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN r_group_status rgs
+                    ON <FIELD name='group-id'/> = rgs.group_id AND <FIELD name='group-version'/> = rgs.offline_version
+                    WHERE <FIELD name='group-id'/> IN <IN>${ids}</IN>
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-vses-and-group-online-version" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>

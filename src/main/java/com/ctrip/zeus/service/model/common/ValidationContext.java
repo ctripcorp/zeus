@@ -28,6 +28,10 @@ public class ValidationContext {
         return errorGroups.get(groupId);
     }
 
+    public String getPolicyErrorReason(Long policyId) {
+        return errorPolicies.get(policyId);
+    }
+
     public Set<Long> getErrorPolicies() {
         return errorPolicies.keySet();
     }
@@ -35,10 +39,10 @@ public class ValidationContext {
     public Map<String, String> getErrors() {
         Map<String, String> errors = new HashMap<>(errorGroups.size() + errorPolicies.size());
         for (Map.Entry<Long, String> e : errorGroups.entrySet()) {
-            errors.put(MetaType.GROUP.toString() + "-" + e.getKey(), e.getValue());
+            errors.put(MetaType.GROUP.toString() + "-" + (e.getKey() == null ? "new" : e.getKey()), e.getValue());
         }
         for (Map.Entry<Long, String> e : errorPolicies.entrySet()) {
-            errors.put(MetaType.TRAFFIC_POLICY.toString() + "-" + e.getKey(), e.getValue());
+            errors.put(MetaType.TRAFFIC_POLICY.toString() + "-" + (e.getKey() == null ? "new" : e.getKey()), e.getValue());
         }
         return errors;
     }
