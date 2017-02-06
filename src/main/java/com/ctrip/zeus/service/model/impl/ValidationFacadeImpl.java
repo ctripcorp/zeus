@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.model.impl;
 
+import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.ValidationFacade;
@@ -7,10 +8,9 @@ import com.ctrip.zeus.service.model.common.ErrorType;
 import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
-import com.ctrip.zeus.service.model.validation.GroupValidator;
-import com.ctrip.zeus.service.model.validation.PathValidator;
-import com.ctrip.zeus.service.model.validation.TrafficPolicyValidator;
-import com.ctrip.zeus.service.model.validation.VsEntryFactory;
+import com.ctrip.zeus.service.model.handler.SlbQuery;
+import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
+import com.ctrip.zeus.service.model.validation.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -29,6 +29,14 @@ public class ValidationFacadeImpl implements ValidationFacade {
     private GroupValidator groupModelValidator;
     @Resource
     private TrafficPolicyValidator trafficPolicyValidator;
+    @Resource
+    private SlbValidator slbModelValidator;
+    @Resource
+    private VirtualServerValidator virtualServerValidator;
+    @Resource
+    private SlbQuery slbQuery;
+    @Resource
+    private ArchiveVsDao archiveVsDao;
 
     @Override
     public void validateGroup(Group group, ValidationContext context) {
@@ -124,18 +132,94 @@ public class ValidationFacadeImpl implements ValidationFacade {
 
     @Override
     public void validateVs(VirtualServer vs, ValidationContext context) {
+        try {
+            virtualServerValidator.validateVsFields(vs);
+        } catch (ValidationException e) {
+            context.error(vs.getId(), MetaType.VS, ErrorType.FIELD_VALIDATION, e.getMessage());
+            return;
+        }
+        Map<Long, List<VirtualServer>> vsesBySlb = new HashMap<>();
+        try {
+            for (MetaVsArchiveDo e : archiveVsDao.findAllBySlbsAndVsOfflineVersion(vs.getSlbIds().toArray(new Long[vs.getSlbIds().size()]), ArchiveVsEntity.READSET_FULL)) {
+                if (vs.getId() != null && vs.getId().equals(e.getId())) continue;
 
+                VirtualServer value = ContentReaders.readVirtualServerContent(e.getContent());
+                if (value == null) continue;
+                for (Long slbId : value.getSlbIds()) {
+                    List<VirtualServer> v = vsesBySlb.get(slbId);
+                    if (v == null) {
+                        v = new ArrayList<>();
+                        vsesBySlb.put(slbId, v);
+                    }
+                    v.add(value);
+                }
+            }
+        } catch (Exception e) {
+        }
+        for (Long slbId : vs.getSlbIds()) {
+            List<VirtualServer> v = vsesBySlb.get(slbId);
+            if (v == null) {
+                v = new ArrayList<>();
+                vsesBySlb.put(slbId, v);
+            }
+            v.add(vs);
+        }
+        for (Map.Entry<Long, List<VirtualServer>> e : vsesBySlb.entrySet()) {
+            virtualServerValidator.validateDomains(e.getKey(), e.getValue(), context);
+        }
     }
 
     @Override
-    public void validateSlb(Long slb, Map<Long, Slb> slbMap, ValidationContext context) {
+    public void validateSlb(Slb slb, ValidationContext context) {
+        try {
+            slbModelValidator.validateSlbFields(slb, context);
+        } catch (ValidationException e) {
+            context.error(slb.getId(), MetaType.SLB, ErrorType.FIELD_VALIDATION, e.getMessage());
+            return;
+        }
+        Map<Long, List<SlbServer>> serversBySlb = new HashMap<>();
+        try {
+            serversBySlb = slbQuery.getServersBySlb();
+        } catch (Exception e) {
+        }
+        if (slb.getId() != null) {
+            serversBySlb.remove(slb.getId());
+        }
+        serversBySlb.put(slb.getId(), slb.getSlbServers());
+        slbModelValidator.validateSlbServers(serversBySlb, context);
+    }
 
+    @Override
+    public void validateSlbNodes(Collection<Slb> slbs, ValidationContext context) {
+        Map<Long, List<SlbServer>> serverBySlb = new HashMap<>();
+        for (Slb slb : slbs) {
+            try {
+                slbModelValidator.validateSlbFields(slb, context);
+            } catch (ValidationException e) {
+                context.error(slb.getId(), MetaType.SLB, ErrorType.FIELD_VALIDATION, e.getMessage());
+            }
+            serverBySlb.put(slb.getId(), slb.getSlbServers());
+        }
+        slbModelValidator.validateSlbServers(serverBySlb, context);
+    }
+
+    @Override
+    public void validateVsesOnSlb(Long slbId, List<VirtualServer> vses, ValidationContext context) {
+        for (VirtualServer vs : vses) {
+            try {
+                virtualServerValidator.validateVsFields(vs);
+            } catch (ValidationException e) {
+                context.error(vs.getId(), MetaType.VS, ErrorType.FIELD_VALIDATION, e.getMessage());
+            }
+        }
+        virtualServerValidator.validateDomains(slbId, vses, context);
     }
 
     @Override
     public void validateEntriesOnVs(Long vsId, List<Group> groups, List<TrafficPolicy> policies, ValidationContext context) {
         // validate groups
         for (Group group : groups) {
+            groupModelValidator.validateFields(group, context);
             GroupVirtualServer target = null;
             for (GroupVirtualServer e : group.getGroupVirtualServers()) {
                 if (e.getVirtualServer().getId().equals(vsId)) {
@@ -162,6 +246,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
         Map<Long, List<LocationEntry>> groupEntriesByVs = new HashMap<>(1);
         groupEntriesByVs.put(vsId, vsEntryFactory.filterGroupEntriesByVs(vsId, groups, context));
         for (TrafficPolicy policy : policies) {
+            trafficPolicyValidator.validateFields(policy, context);
             Long[] controlIds;
             try {
                 controlIds = trafficPolicyValidator.validatePolicyControl(policy);

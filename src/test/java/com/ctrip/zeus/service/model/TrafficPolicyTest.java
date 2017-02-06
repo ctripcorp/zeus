@@ -171,14 +171,14 @@ public class TrafficPolicyTest extends AbstractServerTest {
     public void testValidationForMergedData() {
         Map<Long, Group> groupRef = new HashMap<>();
         Map<Long, TrafficPolicy> policyRef = new HashMap<>();
-        groupRef.put(1L, new Group().setId(1L).addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1000)));
-        groupRef.put(2L, new Group().setId(2L).addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1000)));
-        groupRef.put(3L, new Group().setId(3L).addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path/overlap").setPriority(1100)));
+        groupRef.put(1L, new Group().setName("a").setAppId("a").setId(1L).addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1000)));
+        groupRef.put(2L, new Group().setName("a").setAppId("a").setId(2L).addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1000)));
+        groupRef.put(3L, new Group().setName("a").setAppId("a").setId(3L).addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path/overlap").setPriority(1100)));
 
-        policyRef.put(1L, new TrafficPolicy().setId(1L).addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1050))
+        policyRef.put(1L, new TrafficPolicy().setId(1L).setName("b").addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1050))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(1L)))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(2L))));
-        policyRef.put(2L, new TrafficPolicy().setId(2L).addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1050))
+        policyRef.put(2L, new TrafficPolicy().setId(2L).setName("b").addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/path").setPriority(1050))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(1L)))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(2L))));
 

@@ -4,7 +4,9 @@ import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.model.validation.VirtualServerValidator;
+import com.ctrip.zeus.service.model.common.ErrorType;
+import com.ctrip.zeus.service.model.common.MetaType;
+import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
@@ -32,6 +34,36 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
 
     public DefaultVirtualServerValidator() {
         pattern = Pattern.compile("([\\w\\.\\-\\*]+)");
+    }
+
+    @Override
+    public void validateVsFields(VirtualServer vs) throws ValidationException {
+        if (vs.getDomains() == null || vs.getDomains().size() == 0) {
+            throw new ValidationException("Field `domains` is not allowed empty.");
+        }
+        if (vs.getSlbIds() == null || vs.getSlbIds().size() == 0) {
+            throw new ValidationException("Field `slb-ids` is not allowed empty.");
+        }
+    }
+
+    @Override
+    public void validateDomains(Long slbId, List<VirtualServer> vses, ValidationContext context) {
+        Map<String, Long> domainByVs = new HashMap<>();
+        for (VirtualServer vs : vses) {
+            int i = vs.getSlbIds().indexOf(slbId);
+            if (i < 0) continue;
+            for (Domain d : vs.getDomains()) {
+                Long prev = domainByVs.put(d.getName() + ":" + vs.getPort(), vs.getId());
+                if (prev != null) {
+                    if (prev.equals(vs.getId())) {
+                        context.error(vs.getId(), MetaType.VS, ErrorType.DEPENDENCY_VALIDATION, "Duplicate domain value " + d.getName() + ":" + vs.getPort() + " is found");
+                    } else {
+                        context.error(vs.getId(), MetaType.SLB, ErrorType.DEPENDENCY_VALIDATION, "Domain " + d.getName() + ":" + vs.getPort() + " is found on multiple vses.");
+                        context.error(prev, MetaType.SLB, ErrorType.DEPENDENCY_VALIDATION, "Domain " + d.getName() + ":" + vs.getPort() + " is found on multiple vses.");
+                    }
+                }
+            }
+        }
     }
 
     @Override

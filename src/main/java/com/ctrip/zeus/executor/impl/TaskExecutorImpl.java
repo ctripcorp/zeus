@@ -366,7 +366,7 @@ public class TaskExecutorImpl implements TaskExecutor {
         Map<Long, Slb> map = slbMap.getOnlineMapping();
         map.put(nxOnlineSlb.getId(), nxOnlineSlb);
         ValidationContext context = new ValidationContext();
-        validationFacade.validateSlb(nxOnlineSlb.getId(), map, context);
+        validationFacade.validateSlbNodes(map.values(), context);
         if (context.getErrors().size() > 0) {
             setTaskFail(activateSlbOps.get(nxOnlineSlb.getId()), "Invalidate version for online. SlbId:" + nxOnlineSlb.getId() + ";cause:" + context.getErrors().toString());
             activateSlbOps.remove(nxOnlineSlb.getId());

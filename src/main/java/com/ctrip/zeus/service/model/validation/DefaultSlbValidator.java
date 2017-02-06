@@ -5,15 +5,16 @@ import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.IdVersion;
+import com.ctrip.zeus.service.model.common.ErrorType;
+import com.ctrip.zeus.service.model.common.MetaType;
+import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.model.validation.SlbValidator;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by zhoumy on 2015/6/30.
@@ -88,6 +89,41 @@ public class DefaultSlbValidator implements SlbValidator {
         }
         if (rSlbStatusDao.findBySlb(slbId, RSlbStatusEntity.READSET_FULL).getOnlineVersion() != 0) {
             throw new ValidationException("Slb must be deactivated before deletion.");
+        }
+    }
+
+    @Override
+    public void validateSlbFields(Slb slb, ValidationContext context) throws ValidationException {
+        if (slb.getName() == null || slb.getName().isEmpty()) {
+            throw new ValidationException("Field `name` is not allowed empty.");
+        }
+        if (slb.getVips() == null || slb.getVips().size() == 0) {
+            throw new ValidationException("Field `vips` is not allowed empty.");
+        }
+        if (slb.getSlbServers() == null || slb.getSlbServers().size() == 0) {
+            throw new ValidationException("Field `slb-servers` is not allowed empty.");
+        }
+    }
+
+    @Override
+    public void validateSlbServers(Map<Long, List<SlbServer>> serversBySlb, ValidationContext context) {
+        Map<String, Long> serverUniqueCheck = new HashMap<>();
+        for (Map.Entry<Long, List<SlbServer>> e : serversBySlb.entrySet()) {
+            for (SlbServer s : e.getValue()) {
+                if (s.getIp() == null || s.getIp().isEmpty()) {
+                    context.error(e.getKey(), MetaType.SLB, ErrorType.FIELD_VALIDATION, "Field `ip` of slb server is not allowed empty.");
+                    break;
+                }
+                Long prev = serverUniqueCheck.put(s.getIp(), e.getKey());
+                if (prev != null) {
+                    if (prev.equals(e.getKey())) {
+                        context.error(e.getKey(), MetaType.SLB, ErrorType.FIELD_VALIDATION, "Duplicate server ip " + s.getIp() + " is found of `slb-servers` list.");
+                    } else {
+                        context.error(e.getKey(), MetaType.SLB, ErrorType.DEPENDENCY_VALIDATION, "Server ip " + s.getIp() + " is declared on multiple slbs.");
+                        context.error(prev, MetaType.SLB, ErrorType.DEPENDENCY_VALIDATION, "Server ip " + s.getIp() + " is declared on multiple slbs.");
+                    }
+                }
+            }
         }
     }
 
