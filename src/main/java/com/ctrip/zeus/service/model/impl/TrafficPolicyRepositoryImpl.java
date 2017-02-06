@@ -8,6 +8,7 @@ import com.ctrip.zeus.service.model.TrafficPolicyRepository;
 import com.ctrip.zeus.service.model.ValidationFacade;
 import com.ctrip.zeus.service.model.VersionUtils;
 import com.ctrip.zeus.service.model.common.ValidationContext;
+import com.ctrip.zeus.service.model.validation.TrafficPolicyValidator;
 import org.springframework.stereotype.Repository;
 import org.unidal.dal.jdbc.DalException;
 
@@ -27,6 +28,8 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
     private RTrafficPolicyVsDao rTrafficPolicyVsDao;
     @Resource
     private ValidationFacade validationFacade;
+    @Resource
+    private TrafficPolicyValidator trafficPolicyValidator;
 
     @Override
     public List<TrafficPolicy> list() throws Exception {
@@ -122,6 +125,7 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
 
     @Override
     public TrafficPolicy update(TrafficPolicy trafficPolicy, boolean force) throws Exception {
+        trafficPolicyValidator.checkRestrictionForUpdate(trafficPolicy);
         ValidationContext context = new ValidationContext();
         validationFacade.validatePolicy(trafficPolicy, context);
         if (force) {
@@ -131,7 +135,6 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
                 throw new ValidationException(context.getPolicyErrorReason(trafficPolicy.getId()));
             }
         }
-
         TrafficPolicyDo tpd = trafficPolicyDao.findById(trafficPolicy.getId(), TrafficPolicyEntity.READSET_FULL);
         if (tpd == null) {
             throw new ValidationException("Traffic policy " + trafficPolicy.getId() + " that you tried to update does not exists.");
@@ -181,6 +184,7 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
 
     @Override
     public void delete(Long id) throws Exception {
+        trafficPolicyValidator.removable(id);
         trafficPolicyDao.deleteById(new TrafficPolicyDo().setId(id));
         rTrafficPolicyGroupDao.deleteByPolicy(new RTrafficPolicyGroupDo().setPolicyId(id));
         rTrafficPolicyVsDao.deleteByPolicy(new RTrafficPolicyVsDo().setPolicyId(id));

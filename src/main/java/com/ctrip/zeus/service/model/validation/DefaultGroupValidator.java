@@ -8,7 +8,6 @@ import com.ctrip.zeus.service.model.common.ErrorType;
 import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
-import com.ctrip.zeus.service.model.validation.GroupValidator;
 import org.springframework.stereotype.Component;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -28,11 +27,6 @@ public class DefaultGroupValidator implements GroupValidator {
     private GroupDao groupDao;
     @Resource
     private RTrafficPolicyGroupDao rTrafficPolicyGroupDao;
-
-    @Override
-    public boolean exists(Long targetId) throws Exception {
-        return exists(targetId, false);
-    }
 
     @Override
     public void validateFields(Group group, ValidationContext context) {
@@ -141,11 +135,13 @@ public class DefaultGroupValidator implements GroupValidator {
     }
 
     @Override
-    public void checkVersionForUpdate(Group target) throws Exception {
+    public void checkRestrictionForUpdate(Group target) throws Exception {
         RelGroupStatusDo check = rGroupStatusDao.findByGroup(target.getId(), RGroupStatusEntity.READSET_FULL);
-        if (check == null) {
+        RelGroupVgDo value = rGroupVgDao.findByGroup(target.getId(), RGroupVgEntity.READSET_FULL);
+        if (check == null || (target.isVirtual() == (value == null))) {
             throw new ValidationException("Group that you try to update does not exist.");
         }
+        check = rGroupStatusDao.findByGroup(target.getId(), RGroupStatusEntity.READSET_FULL);
         if (check.getOfflineVersion() > target.getVersion()) {
             throw new ValidationException("Newer version is detected.");
         }

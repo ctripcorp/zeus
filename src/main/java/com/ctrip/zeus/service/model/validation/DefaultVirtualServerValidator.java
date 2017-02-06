@@ -103,7 +103,7 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     }
 
     @Override
-    public void checkVersionForUpdate(VirtualServer target) throws Exception {
+    public void checkRestrictionForUpdate(VirtualServer target) throws Exception {
 
     }
 

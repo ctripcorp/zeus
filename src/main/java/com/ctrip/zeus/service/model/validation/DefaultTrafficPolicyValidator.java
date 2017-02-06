@@ -1,5 +1,8 @@
 package com.ctrip.zeus.service.model.validation;
 
+import com.ctrip.zeus.dal.core.TrafficPolicyDao;
+import com.ctrip.zeus.dal.core.TrafficPolicyDo;
+import com.ctrip.zeus.dal.core.TrafficPolicyEntity;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.PolicyVirtualServer;
 import com.ctrip.zeus.model.entity.TrafficPolicy;
@@ -7,9 +10,10 @@ import com.ctrip.zeus.service.model.common.ErrorType;
 import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
-import com.ctrip.zeus.service.model.validation.TrafficPolicyValidator;
 import org.springframework.stereotype.Service;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.annotation.Resource;
 import java.util.*;
 
 /**
@@ -17,25 +21,31 @@ import java.util.*;
  */
 @Service("trafficPolicyValidator")
 public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
-
-    @Override
-    public boolean exists(Long targetId) throws Exception {
-        return false;
-    }
+    @Resource
+    private TrafficPolicyDao trafficPolicyDao;
 
     @Override
     public void validate(TrafficPolicy target) throws Exception {
-
+        throw new NotImplementedException();
     }
 
     @Override
-    public void checkVersionForUpdate(TrafficPolicy target) throws Exception {
-
+    public void checkRestrictionForUpdate(TrafficPolicy target) throws Exception {
+        TrafficPolicyDo e = trafficPolicyDao.findById(target.getId(), TrafficPolicyEntity.READSET_FULL);
+        if (e == null) throw new ValidationException("Traffic policy that you try to update does not exist.");
+        if (e.getVersion() > target.getVersion()) {
+            throw new ValidationException("Newer offline version is detected.");
+        }
+        if (e.getVersion() != target.getVersion()) {
+            throw new ValidationException("Mismatched offline version is detected.");
+        }
     }
 
     @Override
     public void removable(Long targetId) throws Exception {
-
+        if (trafficPolicyDao.findById(targetId, TrafficPolicyEntity.READSET_FULL).getActiveVersion() != 0) {
+            throw new ValidationException("Traffic policy that you try to delete is still active.");
+        }
     }
 
     @Override

@@ -114,10 +114,6 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group getByKey(IdVersion key, RepositoryContext repositoryContext) throws Exception {
-        if (!groupModelValidator.exists(key.getId())) {
-            return null;
-        }
-
         ArchiveGroupDo d = archiveGroupDao.findByGroupAndVersion(key.getId(), key.getVersion(), ArchiveGroupEntity.READSET_FULL);
         if (d == null) return null;
 
@@ -196,8 +192,8 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group update(Group group, boolean escapedPathValidation) throws Exception {
-        if (!groupModelValidator.exists(group.getId()))
-            throw new ValidationException("Group with id " + group.getId() + " does not exist.");
+        groupModelValidator.checkRestrictionForUpdate(group);
+
         ValidationContext context = new ValidationContext();
         validationFacade.validateGroup(group, context);
         if (escapedPathValidation) {
@@ -221,8 +217,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group updateVGroup(Group group, boolean escapedPathValidation) throws Exception {
-        if (!groupModelValidator.exists(group.getId(), true))
-            throw new ValidationException("Group with id " + group.getId() + " does not exist.");
+        groupModelValidator.checkRestrictionForUpdate(group);
         ValidationContext context = new ValidationContext();
         group.setVirtual(true);
         validationFacade.validateGroup(group, context);

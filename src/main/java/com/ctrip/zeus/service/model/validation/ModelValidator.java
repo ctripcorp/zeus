@@ -5,11 +5,9 @@ package com.ctrip.zeus.service.model.validation;
  */
 public interface ModelValidator<T> {
 
-    boolean exists(Long targetId) throws Exception;
-
     void validate(T target) throws Exception;
 
-    void checkVersionForUpdate(T target) throws Exception;
+    void checkRestrictionForUpdate(T target) throws Exception;
 
     void removable(Long targetId) throws Exception;
 }

@@ -30,11 +30,6 @@ public class DefaultSlbValidator implements SlbValidator {
     private RSlbStatusDao rSlbStatusDao;
 
     @Override
-    public boolean exists(Long targetId) throws Exception {
-        return slbDao.findById(targetId, SlbEntity.READSET_FULL) != null;
-    }
-
-    @Override
     public void validate(Slb slb) throws Exception {
         if (slb.getName() == null || slb.getName().isEmpty()) {
             throw new ValidationException("Slb name is required.");
@@ -78,12 +73,12 @@ public class DefaultSlbValidator implements SlbValidator {
     }
 
     @Override
-    public void checkVersionForUpdate(Slb target) throws Exception {
+    public void checkRestrictionForUpdate(Slb target) throws Exception {
         SlbDo check = slbDao.findById(target.getId(), SlbEntity.READSET_FULL);
         if (check == null)
             throw new ValidationException("Slb with id " + target.getId() + " does not exist.");
         if (!target.getVersion().equals(check.getVersion()))
-            throw new ValidationException("Newer Group version is detected.");
+            throw new ValidationException("Newer offline version is detected.");
     }
 
     @Override
