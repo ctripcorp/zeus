@@ -76,23 +76,101 @@ public class GroupResource {
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * @api {get} /api/groups: Request group information
+     * @api {get} /api/groups: [Read] Batch fetch group data
      * @apiName ListGroups
      * @apiGroup Group
-     * @apiParam {long[]} groupId       1,2,3
-     * @apiParam {string[]} groupName   dev,localhost,test
-     * @apiParam {string[]} fuzzyName   de,local,te
-     * @apiParam {string[]} appId       1001,1101,1100
-     * @apiParam {string[]} ip          10.2.1.2,10.2.1.11
-     * @apiParam {string} mode          get {online/offline/redundant} (redundant=online&offline) version
-     * @apiParam {string} type          get groups with {info/normal/detail/extended} information
-     * @apiParam {string[]} anyTag      union search groups by tags e.g. anyTag=group1,group2
-     * @apiParam {string[]} tags        join search groups by tags e.g. tags=group1,group2
-     * @apiParam {string[]} anyProp     union search groups by properties(key:value) e.g. anyProp=dc:oy,dc:jq
-     * @apiParam {string[]} props       join search groups by properties(key:value) e.g. props=department:hotel,dc:jq
-     * @apiParam {any} vs               supported vs property queries, ref /api/vses
-     * @apiParam {any} slb              supported slb property queries, ref /api/slbs
-     * @apiSuccess {Group[]} groups     group list json object
+     * @apiDescription See [Update group content](#api-Group-FullUpdateGroup) for object description
+     * @apiSuccess (Success 200) {GroupObject[]} groups     group list result after query
+     * @apiSuccess (Success 200) {Integer[]} total          total number of group entities in the group list, it may be useful when `limit` parameter is specified
+     * @apiParam {long[]} [groupId]             1,2,3
+     * @apiParam {string[]} [groupName]         dev,localhost,test
+     * @apiParam {string[]} [fuzzyName]         de,local,te
+     * @apiParam {string[]} [appId]             1001,1101,1100
+     * @apiParam {string[]} [ip]                10.2.1.2,10.2.1.11
+     * @apiParam {string=online,offline,redundant(online&offline)} [mode]   query snapshot versions by mode
+     * @apiParam {string=info,normal,detail,extended} [type]                filter group information by detail level
+     * @apiParam {int} [limit=unlimited]        get limited number of result
+     * @apiParam {int} [offset=0]               get limited number of result since offset
+     * @apiParam {string=id,name,created-time} [sort]                       sort by property asc
+     * @apiParam {string=asc,desc} [order]      sort by group property and specified order
+     * @apiParam {string[]} [anyTag]      union search group by tags e.g. anyTag=group1,group2
+     * @apiParam {string[]} [tags]        join search group by tags e.g. tags=group1,group2
+     * @apiParam {string[]} [anyProp]     union search group by properties(key:value) e.g. anyProp=dc:oy,dc:jq
+     * @apiParam {string[]} [props]       join search group by properties(key:value) e.g. props=department:hotel,dc:jq
+     * @apiParam {any} [vs]               supported vs property queries, ref /api/vses
+     * @apiParam {any} [slb]              supported slb property queries, ref /api/slbs
+     * @apiSuccess (PropertyDetailLevel) {Long} id                          info/normal/detail/extended
+     * @apiSuccess (PropertyDetailLevel) {String} name                      info/normal/detail/extended
+     * @apiSuccess (PropertyDetailLevel) {Integer} version                  info/normal/detail/extended
+     * @apiSuccess (PropertyDetailLevel) {String} created-time              normal/detail/extended
+     * @apiSuccess (PropertyDetailLevel) {Boolean} ssl                      normal/detail/extended
+     * @apiSuccess (PropertyDetailLevel) {String} app-id                    info/normal/detail/extended
+     * @apiSuccess (PropertyDetailLevel) {GroupVirtualServer[]} group-virtual-servers   detail/extended
+     * @apiSuccess (PropertyDetailLevel) {HealthCheck} health-check                     detail/extended
+     * @apiSuccess (PropertyDetailLevel) {Object} load-balancing-method     detail/extended
+     * @apiSuccess (PropertyDetailLevel) {String[]} tags                    extended
+     * @apiSuccess (PropertyDetailLevel) {Object[]} properties              extended
+     * @apiSuccess (PropertyDetailLevel) {Object[]} group-servers           normal/detail/extended
+     * @apiSuccessExample {json} JSON format:
+     *  {
+     *    "id" : 1,
+     *    "name" : "sg_soho_dev_localhost_testservice",
+     *    "version" : 1,
+     *    "created-time" : "2016-09-18 10:00:05",
+     *    "ssl" : false,
+     *    "app-id" : "999999",
+     *    "group-virtual-servers" : [ {
+     *      "path" : "~* ^/testservice($|/|\\?)",
+     *      "virtual-server" : {
+     *        "port" : "80",
+     *        "version" : 1,
+     *        "domains" : [ {
+     *          "name" : "localhost"
+     *        } ],
+     *        "ssl" : false,
+     *        "id" : 3,
+     *        "slb-id" : 3,
+     *        "slb-ids" : [ 3 ],
+     *        "name" : "localhost_80"
+     *      },
+     *      "rewrite" : "",
+     *      "priority" : 1000
+     *    } ],
+     *    "health-check" : {
+     *      "timeout" : 2000,
+     *      "uri" : "/slbhealthcheck.html",
+     *      "intervals" : 10000,
+     *      "fails" : 10,
+     *      "passes" : 3
+     *    },
+     *    "load-balancing-method" : {
+     *      "type" : "roundrobin",
+     *      "value" : "default"
+     *    },
+     *    "tags" : [ "my_favorite", "test_group" ],
+     *    "properties" : [ {
+     *      "name" : "status",
+     *      "value" : "activated"
+     *    }, {
+     *      "name" : "Department",
+     *      "value" : "framework"
+     *    } ],
+     *    "group-servers" : [ {
+     *      "port" : 8080,
+     *      "ip" : "127.0.0.1",
+     *      "host-name" : "PC1",
+     *      "weight" : 5,
+     *      "max-fails" : 0,
+     *      "fail-timeout" : 0
+     *    }, {
+     *      "port" : 8080,
+     *      "ip" : "127.0.0.2",
+     *      "host-name" : "PC2",
+     *      "weight" : 5,
+     *      "max-fails" : 0,
+     *      "fail-timeout" : 0
+     *    } ]
+     *  }
      */
     @GET
     @Path("/groups")
@@ -165,61 +243,11 @@ public class GroupResource {
     }
 
     /**
-     * @api {get} /api/group: Get group content
+     * @api {get} /api/group: [Read] Get single group data
      * @apiName GetSingleGroup
      * @apiGroup Group
-     * @apiSuccess {Group} group json object
-     * @apiExample {json} Usage:
-     *  {
-     *    "id" : 1,
-     *    "name" : "sg_soho_dev_localhost_testservice",
-     *    "version" : 1,
-     *    "ssl" : false,
-     *    "app-id" : "999999",
-     *    "group-virtual-servers" : [ {
-     *      "path" : "~* ^/testservice",
-     *      "virtual-server" : {
-     *        "port" : "80",
-     *        "version" : 1,
-     *        "domains" : [ {
-     *          "name" : "localhost"
-     *        } ],
-     *        "ssl" : false,
-     *        "id" : 3,
-     *        "slb-id" : 3,
-     *        "slb-ids" : [ 3 ],
-     *        "name" : "localhost_80"
-     *      },
-     *      "rewrite" : "",
-     *      "priority" : 1000
-     *    } ],
-     *    "health-check" : {
-     *      "timeout" : 2000,
-     *      "uri" : "/slbhealthcheck.html",
-     *      "intervals" : 10000,
-     *      "fails" : 10,
-     *      "passes" : 3
-     *    },
-     *    "load-balancing-method" : {
-     *      "type" : "roundrobin",
-     *      "value" : "default"
-     *    },
-     *    "group-servers" : [ {
-     *      "port" : 8080,
-     *      "ip" : "127.0.0.1",
-     *      "host-name" : "PC1",
-     *      "weight" : 5,
-     *      "max-fails" : 0,
-     *      "fail-timeout" : 0
-     *    }, {
-     *      "port" : 8080,
-     *      "ip" : "127.0.0.2",
-     *      "host-name" : "PC2",
-     *      "weight" : 5,
-     *      "max-fails" : 0,
-     *      "fail-timeout" : 0
-     *    } ]
-     *  }
+     * @apiDescription See [Batch fetch group data](#api-Group-ListGroups) for more information
+     * @apiSuccess (Success 200) {GroupObject} group    group entity
      */
     @GET
     @Path("/group")
@@ -295,6 +323,13 @@ public class GroupResource {
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
+    /**
+     * @api {post} /api/group/new: [Write] Create new group
+     * @apiName CreateGroup
+     * @apiGroup Group
+     * @apiDescription See [Update group content](#api-Group-FullUpdateGroup) for object description
+     * @apiSuccess {Group} newly created group object
+     **/
     @POST
     @Path("/group/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
@@ -378,50 +413,70 @@ public class GroupResource {
     }
 
     /**
-     * @api {post} /api/group/update: Update group content
-     * @apiName UpdateGroup
+     * @api {post} /api/group/update: [Write] Update group content
+     * @apiName FullUpdateGroup
      * @apiGroup Group
-     * @apiSuccess {Group} group json object
-     * @apiExample {json} Usage:
+     * @apiSuccess {Group} updated group object
+     * @apiParam   (GroupObject) {Long} id                          id
+     * @apiParam   (GroupObject) {String} name                      name
+     * @apiParam   (GroupObject) {Integer} version                  version
+     * @apiParam   (GroupObject) {Boolean} ssl                      https group
+     * @apiParam   (GroupObject) {String} app-id                    app id
+     * @apiParam   (GroupObject) {GroupVirtualServer[]} group-virtual-servers   configuration on specified virtual server
+     * @apiParam   (GroupObject) {HealthCheck} [health-check]       health check configuration, disabled if null
+     * @apiParam   (GroupObject) {String[]} [tags]                  add tags to group
+     * @apiParam   (GroupObject) {Object[]} [properties]            add/update properties of group
+     * @apiParam   (GroupObject) {Object[]} group-servers           group server list
+     * @apiParam (GroupVirtualServer) {String} path               location entry on the specified virtual server
+     * @apiParam (GroupVirtualServer) {String} [rewrite]            rewrite path before proxying
+     * @apiParam (GroupVirtualServer) {Integer} [priority]        recommend to leave null, otherwise force set priority of location entry on the specified virtual server
+     * @apiParam (GroupVirtualServer) {Object} virtual-server     combined virtual server [id only]
+     * @apiParam (HealthCheck) {Integer} [timeout=2000]     timeout for health check page
+     * @apiParam (HealthCheck) {Integer} uri                health check uri
+     * @apiParam (HealthCheck) {Integer} [interval=5000]    health check interval
+     * @apiParam (HealthCheck) {Integer} [fails=3]          mark down after continuous failure count exceeds the latch
+     * @apiParam (HealthCheck) {Integer} [passes=1]         mark up after continuous success count reaches the latch
+     * @apiParam (GroupServer) {Integer} port               server port
+     * @apiParam (GroupServer) {String} ip                  server ip
+     * @apiParam (GroupServer) {String} host-name server    host name
+     * @apiParam (GroupServer) {Integer} [weight]           [readonly]
+     * @apiParam (GroupServer) {Integer} [max-fails=0]      exclude server from proxing if max_fails count exceeds the latch for fails_timeout interval, disabled if values 0
+     * @apiParam (GroupServer) {Integer} [fails-timeout=0]  disabled by default
+     * @apiParamExample {json} Sample Request:
      *  {
      *    "id" : 1,
      *    "name" : "sg_soho_dev_localhost_testservice",
      *    "version" : 1,
+     *    "created-time" : "2016-09-18 10:00:05",
      *    "ssl" : false,
      *    "app-id" : "999999",
      *    "group-virtual-servers" : [ {
-     *      "path" : "~* ^/testservice",
+     *      "path" : "~* ^/testservice($|/|\\?)",
      *      "virtual-server" : {
-     *        "id" : 715
+     *        "id" : 3
      *      },
      *      "rewrite" : "",
      *      "priority" : 1000
      *    } ],
      *    "health-check" : {
-     *      "timeout" : 2000,
-     *      "uri" : "/slbhealthcheck.html",
-     *      "intervals" : 10000,
-     *      "fails" : 10,
-     *      "passes" : 3
+     *      "uri" : "/slbhealthcheck.html"
      *    },
-     *    "load-balancing-method" : {
-     *      "type" : "roundrobin",
-     *      "value" : "default"
-     *    },
+     *    "tags" : [ "my_favorite", "test_group" ],
+     *    "properties" : [ {
+     *      "name" : "status",
+     *      "value" : "activated"
+     *    }, {
+     *      "name" : "Department",
+     *      "value" : "framework"
+     *    } ],
      *    "group-servers" : [ {
      *      "port" : 8080,
      *      "ip" : "127.0.0.1",
      *      "host-name" : "PC1",
-     *      "weight" : 5,
-     *      "max-fails" : 0,
-     *      "fail-timeout" : 0
      *    }, {
      *      "port" : 8080,
      *      "ip" : "127.0.0.2",
      *      "host-name" : "PC2",
-     *      "weight" : 5,
-     *      "max-fails" : 0,
-     *      "fail-timeout" : 0
      *    } ]
      *  }
      */
@@ -450,20 +505,18 @@ public class GroupResource {
             lock.unlock();
         }
 
+        if (extendedView.getProperties() != null) {
+            setProperties(g.getId(), extendedView.getProperties());
+        }
+        if (extendedView.getTags() != null) {
+            addTag(g.getId(), extendedView.getTags());
+        }
 
         try {
             if (groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.ONLINE_EXCLUSIVE).length == 1) {
                 propertyBox.set("status", "toBeActivated", "group", g.getId());
             }
         } catch (Exception ex) {
-        }
-
-        if (extendedView.getProperties() != null) {
-            setProperties(g.getId(), extendedView.getProperties());
-        }
-
-        if (extendedView.getTags() != null) {
-            addTag(g.getId(), extendedView.getTags());
         }
 
         addHealthProperty(g.getId());

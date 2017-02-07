@@ -61,8 +61,13 @@ public class WrappedStringState implements LogStatsState {
                 c = source[i];
                 if (c == startSymbol) {
                     if (!_escaping && matcher[0] == Character.MIN_VALUE) {
-                        matcher[0] = c;
-                        continue;
+                        if (sb.length() == 0) {
+                            matcher[0] = c;
+                            continue;
+                        } else {
+                            ctxt.setState(StateMachineContext.ContextState.FAILURE);
+                            return;
+                        }
                     }
                 }
                 if (c == endSymbol) {

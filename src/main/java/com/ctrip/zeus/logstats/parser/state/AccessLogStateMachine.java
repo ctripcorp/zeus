@@ -31,7 +31,7 @@ public class AccessLogStateMachine implements LogStatsStateMachine {
             }
             if (ctxt.shouldProceed()) {
                 ctxt.setState(StateMachineContext.ContextState.FAILURE);
-            } else {
+            } else if (!ctxt.getState().equals(StateMachineContext.ContextState.FAILURE)) {
                 ctxt.setState(StateMachineContext.ContextState.SUCCESS);
             }
         } catch (Exception ex) {

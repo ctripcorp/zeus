@@ -89,6 +89,8 @@ public class ServerConf {
             }
         }
 
+        addDefaultRootLoaction(slbId, vsId, groups, confWriter);
+
         confWriter.writeServerEnd();
         return confWriter.getValue();
     }
@@ -265,5 +267,24 @@ public class ServerConf {
             result += " SSLv3";
         }
         return result;
+    }
+
+    private void addDefaultRootLoaction(Long slbId, Long vsId, List<Group> groups, ConfWriter confWriter) throws Exception {
+        // 0. enable flag
+        if (!configHandler.getEnable("default.root.location", slbId, vsId, null, false)) {
+            return;
+        }
+        // 1. return while already have root location .
+        for (Group group : groups) {
+            for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
+                if (gvs.getVirtualServer().getId().equals(vsId)) {
+                    if (gvs.getPath().trim().equals("/") || gvs.getPath().trim().equals("~* ^/")) {
+                        return;
+                    }
+                }
+            }
+        }
+        // 2. add default location instead while not found root location.
+        locationConf.writeDefaultRootLocation(confWriter);
     }
 }

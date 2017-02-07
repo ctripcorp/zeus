@@ -130,6 +130,8 @@ public class LocationConf {
             confWriter.writeCommand("proxy_read_timeout", readTimeout + "s");
         }
 
+                writeSlbUrlCheck(confWriter, slbId, vsId, groupId);
+
         // write x-forward-for configuration
         if (configHandler.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {
             confWriter.writeIfStart("$remote_addr ~* \"" +
@@ -160,6 +162,14 @@ public class LocationConf {
             confWriter.writeCommand("proxy_pass", "http://$upstream");
         }
         confWriter.writeLocationEnd();
+    }
+
+    private void writeSlbUrlCheck(ConfWriter confWriter, Long slbId, Long vsId, Long groupId) throws Exception {
+        if (configHandler.getEnable("slb.url.check.flag", slbId, vsId, groupId, false)) {
+            confWriter.writeIfStart("$http_" + configHandler.getStringValue("slb.url.check.header.name", "thisfieldusedforslburlcheck") + " = \"true\"");
+            confWriter.writeCommand("return", " 200 \"GroupId=" + groupId + "\"");
+            confWriter.writeIfEnd();
+        }
     }
 
     private void writeSocketIOGroup(ConfWriter confWriter, String path, Group group, String upstreamName) {
@@ -336,6 +346,13 @@ public class LocationConf {
         confWriter.writeLocationStart("/");
         confWriter.writeCommand("set", LogFormat.VAR_UPSTREAM_NAME + " 127.0.0.1");
         confWriter.writeLine("return 404 \"Not Found!\";");
+        confWriter.writeLocationEnd();
+    }
+
+    public void writeDefaultRootLocation(ConfWriter confWriter) {
+        confWriter.writeLocationStart("/");
+        confWriter.writeCommand("error_page", "404 /404page");
+        confWriter.writeCommand("return", "404");
         confWriter.writeLocationEnd();
     }
 
