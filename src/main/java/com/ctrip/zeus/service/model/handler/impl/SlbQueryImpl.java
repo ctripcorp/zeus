@@ -36,8 +36,9 @@ public class SlbQueryImpl implements SlbQuery {
             List<SlbServer> v = result.get(e.getSlbId());
             if (v == null) {
                 v = new ArrayList<>();
-                v.add(new SlbServer().setIp(e.getIp()));
+                result.put(e.getSlbId(), v);
             }
+            v.add(new SlbServer().setIp(e.getIp()));
         }
         return result;
     }

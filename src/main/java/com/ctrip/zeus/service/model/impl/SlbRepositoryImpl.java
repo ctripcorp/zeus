@@ -92,7 +92,7 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public Slb add(Slb slb) throws Exception {
-        slb.setId(null);
+        slb.setId(0L);
         ValidationContext context = new ValidationContext();
         validationFacade.validateSlb(slb, context);
         if (context.getErrorSlbs().contains(slb.getId())) {

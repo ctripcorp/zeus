@@ -90,20 +90,12 @@ public class DefaultGroupValidator implements GroupValidator {
     @Override
     public void validateMembers(List<GroupServer> servers) throws ValidationException {
         if (servers == null || servers.size() == 0) return;
-
-        Set<byte[]> unique = new HashSet<>();
+        Set<String> uniqueServerCheck = new HashSet<>();
         for (GroupServer s : servers) {
             if (s.getIp() == null || s.getIp().isEmpty() || s.getPort() == null) {
                 throw new ValidationException("Group server ip and port cannot be null.");
             }
-            byte[] ip = s.getIp().getBytes();
-            byte[] v = new byte[ip.length + 2];
-            for (int i = 2; i < v.length; i++) {
-                v[i] = ip[i - 2];
-            }
-            v[1] = ':';
-            v[0] = s.getPort().byteValue();
-            if (!unique.add(v)) {
+            if (!uniqueServerCheck.add(s.getIp() + ":" + s.getPort())) {
                 throw new ValidationException("Duplicate combination of ip and port " + s.getIp() + ":" + s.getPort() + " is found in group server list.");
             }
         }

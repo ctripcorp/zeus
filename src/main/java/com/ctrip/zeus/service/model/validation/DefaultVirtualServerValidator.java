@@ -70,8 +70,8 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
                     if (prev.equals(vs.getId())) {
                         context.error(vs.getId(), MetaType.VS, ErrorType.DEPENDENCY_VALIDATION, "Duplicate domain value " + d.getName() + ":" + vs.getPort() + " is found");
                     } else {
-                        context.error(vs.getId(), MetaType.SLB, ErrorType.DEPENDENCY_VALIDATION, "Domain " + d.getName() + ":" + vs.getPort() + " is found on multiple vses.");
-                        context.error(prev, MetaType.SLB, ErrorType.DEPENDENCY_VALIDATION, "Domain " + d.getName() + ":" + vs.getPort() + " is found on multiple vses.");
+                        context.error(vs.getId(), MetaType.VS, ErrorType.DEPENDENCY_VALIDATION, "Domain " + d.getName() + ":" + vs.getPort() + " is found on multiple vses.");
+                        context.error(prev, MetaType.VS, ErrorType.DEPENDENCY_VALIDATION, "Domain " + d.getName() + ":" + vs.getPort() + " is found on multiple vses.");
                     }
                 }
             }

@@ -168,7 +168,7 @@ public class GroupRepositoryImpl implements GroupRepository {
 
     @Override
     public Group addVGroup(Group group, boolean escapedPathValidation) throws Exception {
-        group.setId(null);
+        group.setId(0L);
         ValidationContext context = new ValidationContext();
         group.setVirtual(true);
         validationFacade.validateGroup(group, context);
