@@ -193,7 +193,6 @@ public class GroupRepositoryImpl implements GroupRepository {
     @Override
     public Group update(Group group, boolean escapedPathValidation) throws Exception {
         groupModelValidator.checkRestrictionForUpdate(group);
-
         ValidationContext context = new ValidationContext();
         validationFacade.validateGroup(group, context);
         if (escapedPathValidation) {

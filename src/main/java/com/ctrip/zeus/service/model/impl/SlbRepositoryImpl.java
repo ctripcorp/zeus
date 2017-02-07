@@ -1,10 +1,11 @@
 package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.*;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
 import com.ctrip.zeus.service.model.*;
-import com.ctrip.zeus.service.model.handler.SlbQuery;
+import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.model.handler.SlbSync;
 import com.ctrip.zeus.service.model.validation.SlbValidator;
 import com.ctrip.zeus.service.model.IdVersion;
@@ -30,9 +31,9 @@ public class SlbRepositoryImpl implements SlbRepository {
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
-    private SlbQuery slbQuery;
-    @Resource
     private SlbValidator slbModelValidator;
+    @Resource
+    private ValidationFacade validationFacade;
     @Resource
     private AutoFiller autoFiller;
     @Resource
@@ -91,7 +92,12 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public Slb add(Slb slb) throws Exception {
-        slbModelValidator.validate(slb);
+        slb.setId(null);
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateSlb(slb, context);
+        if (context.getErrorSlbs().contains(slb.getId())) {
+            throw new ValidationException(context.getSlbErrorReason(slb.getId()));
+        }
         autoFiller.autofill(slb);
         slbEntityManager.add(slb);
 
@@ -107,19 +113,20 @@ public class SlbRepositoryImpl implements SlbRepository {
 
     @Override
     public Slb update(Slb slb) throws Exception {
-        slbModelValidator.validate(slb);
+        slbModelValidator.checkRestrictionForUpdate(slb);
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateSlb(slb, context);
+        if (context.getErrorSlbs().contains(slb.getId())) {
+            throw new ValidationException(context.getSlbErrorReason(slb.getId()));
+        }
+
         autoFiller.autofill(slb);
-
-        Set<String> checkList = new HashSet<>();
-        for (SlbServer ss : slb.getSlbServers()) {
-            checkList.add(ss.getIp());
-        }
-        for (String ss : slbQuery.getSlbIps(slb.getId())) {
-            checkList.remove(ss);
-        }
-
         slbEntityManager.update(slb);
-        certificateService.install(slb.getId(), new ArrayList<>(checkList), false);
+        List<String> servers = new ArrayList<>();
+        for (SlbServer server : slb.getSlbServers()) {
+            servers.add(server.getIp());
+        }
+        certificateService.install(slb.getId(), servers, false);
 
         for (SlbServer slbServer : slb.getSlbServers()) {
             nginxServerDao.insert(new NginxServerDo()

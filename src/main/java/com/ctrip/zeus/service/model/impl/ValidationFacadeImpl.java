@@ -32,7 +32,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
     @Resource
     private SlbValidator slbModelValidator;
     @Resource
-    private VirtualServerValidator virtualServerValidator;
+    private VirtualServerValidator virtualServerModelValidator;
     @Resource
     private SlbQuery slbQuery;
     @Resource
@@ -133,14 +133,19 @@ public class ValidationFacadeImpl implements ValidationFacade {
     @Override
     public void validateVs(VirtualServer vs, ValidationContext context) {
         try {
-            virtualServerValidator.validateVsFields(vs);
+            virtualServerModelValidator.validateFields(vs);
         } catch (ValidationException e) {
             context.error(vs.getId(), MetaType.VS, ErrorType.FIELD_VALIDATION, e.getMessage());
             return;
         }
+        Long[] relatedSlbIds = vs.getSlbIds().toArray(new Long[vs.getSlbIds().size()]);
+        if (!slbModelValidator.exists(relatedSlbIds)) {
+            context.error(vs.getId(), MetaType.VS, ErrorType.DEPENDENCY_VALIDATION, "Virtual server contains non-existent slb.");
+            return;
+        }
         Map<Long, List<VirtualServer>> vsesBySlb = new HashMap<>();
         try {
-            for (MetaVsArchiveDo e : archiveVsDao.findAllBySlbsAndVsOfflineVersion(vs.getSlbIds().toArray(new Long[vs.getSlbIds().size()]), ArchiveVsEntity.READSET_FULL)) {
+            for (MetaVsArchiveDo e : archiveVsDao.findAllBySlbsAndVsOfflineVersion(relatedSlbIds, ArchiveVsEntity.READSET_FULL)) {
                 if (vs.getId() != null && vs.getId().equals(e.getId())) continue;
 
                 VirtualServer value = ContentReaders.readVirtualServerContent(e.getContent());
@@ -165,14 +170,14 @@ public class ValidationFacadeImpl implements ValidationFacade {
             v.add(vs);
         }
         for (Map.Entry<Long, List<VirtualServer>> e : vsesBySlb.entrySet()) {
-            virtualServerValidator.validateDomains(e.getKey(), e.getValue(), context);
+            virtualServerModelValidator.validateDomains(e.getKey(), e.getValue(), context);
         }
     }
 
     @Override
     public void validateSlb(Slb slb, ValidationContext context) {
         try {
-            slbModelValidator.validateSlbFields(slb, context);
+            slbModelValidator.validateFields(slb, context);
         } catch (ValidationException e) {
             context.error(slb.getId(), MetaType.SLB, ErrorType.FIELD_VALIDATION, e.getMessage());
             return;
@@ -194,7 +199,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
         Map<Long, List<SlbServer>> serverBySlb = new HashMap<>();
         for (Slb slb : slbs) {
             try {
-                slbModelValidator.validateSlbFields(slb, context);
+                slbModelValidator.validateFields(slb, context);
             } catch (ValidationException e) {
                 context.error(slb.getId(), MetaType.SLB, ErrorType.FIELD_VALIDATION, e.getMessage());
             }
@@ -204,15 +209,18 @@ public class ValidationFacadeImpl implements ValidationFacade {
     }
 
     @Override
-    public void validateVsesOnSlb(Long slbId, List<VirtualServer> vses, ValidationContext context) {
+    public void validateVsesOnSlb(Long slbId, Collection<VirtualServer> vses, ValidationContext context) {
         for (VirtualServer vs : vses) {
+            if (vs.getSlbIds().indexOf(slbId) < 0) {
+                context.error(vs.getId(), MetaType.VS, ErrorType.DEPENDENCY_VALIDATION, "Cannot find target on slb " + slbId + ".");
+            }
             try {
-                virtualServerValidator.validateVsFields(vs);
+                virtualServerModelValidator.validateFields(vs);
             } catch (ValidationException e) {
                 context.error(vs.getId(), MetaType.VS, ErrorType.FIELD_VALIDATION, e.getMessage());
             }
         }
-        virtualServerValidator.validateDomains(slbId, vses, context);
+        virtualServerModelValidator.validateDomains(slbId, vses, context);
     }
 
     @Override

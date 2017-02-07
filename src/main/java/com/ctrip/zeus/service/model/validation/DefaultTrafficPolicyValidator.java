@@ -11,7 +11,6 @@ import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
 import org.springframework.stereotype.Service;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -23,11 +22,6 @@ import java.util.*;
 public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
     @Resource
     private TrafficPolicyDao trafficPolicyDao;
-
-    @Override
-    public void validate(TrafficPolicy target) throws Exception {
-        throw new NotImplementedException();
-    }
 
     @Override
     public void checkRestrictionForUpdate(TrafficPolicy target) throws Exception {

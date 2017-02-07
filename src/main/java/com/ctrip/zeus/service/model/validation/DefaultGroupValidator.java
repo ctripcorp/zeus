@@ -3,13 +3,15 @@ package com.ctrip.zeus.service.model.validation;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
+import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.PathRewriteParser;
+import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.common.ErrorType;
 import com.ctrip.zeus.service.model.common.LocationEntry;
 import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
+import com.ctrip.zeus.service.query.TrafficPolicyQuery;
 import org.springframework.stereotype.Component;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -26,7 +28,7 @@ public class DefaultGroupValidator implements GroupValidator {
     @Resource
     private GroupDao groupDao;
     @Resource
-    private RTrafficPolicyGroupDao rTrafficPolicyGroupDao;
+    private TrafficPolicyQuery trafficPolicyQuery;
 
     @Override
     public void validateFields(Group group, ValidationContext context) {
@@ -130,11 +132,6 @@ public class DefaultGroupValidator implements GroupValidator {
     }
 
     @Override
-    public void validate(Group target) throws Exception {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public void checkRestrictionForUpdate(Group target) throws Exception {
         RelGroupStatusDo check = rGroupStatusDao.findByGroup(target.getId(), RGroupStatusEntity.READSET_FULL);
         RelGroupVgDo value = rGroupVgDao.findByGroup(target.getId(), RGroupVgEntity.READSET_FULL);
@@ -156,10 +153,16 @@ public class DefaultGroupValidator implements GroupValidator {
         if (check == null) return;
 
         if (check.getOnlineVersion() != 0) {
-            throw new ValidationException("Group that you tried to delete is still active.");
+            throw new ValidationException("Group that you try to delete is still active.");
         }
-        if (rTrafficPolicyGroupDao.findByGroupsAndPolicyVersion(new Long[]{targetId}, RTrafficPolicyGroupEntity.READSET_FULL).size() > 0) {
-            throw new ValidationException("Group that you tried to delete has one or more traffic policy dependency.");
+        Set<IdVersion> keys = trafficPolicyQuery.queryByGroupId(targetId);
+        Set<Long> _policyIds = new HashSet<>();
+        for (IdVersion key : keys) {
+            _policyIds.add(key.getId());
+        }
+        keys.retainAll(trafficPolicyQuery.queryByIdsAndMode(_policyIds.toArray(new Long[_policyIds.size()]), SelectionMode.OFFLINE_FIRST));
+        if (keys.size() > 0) {
+            throw new ValidationException("Group that you try to delete has one or more traffic policy dependency.");
         }
     }
 }

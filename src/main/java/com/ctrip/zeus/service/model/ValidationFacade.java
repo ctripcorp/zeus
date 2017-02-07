@@ -24,7 +24,7 @@ public interface ValidationFacade {
 
     void validateSlbNodes(Collection<Slb> slbs, ValidationContext context);
 
-    void validateVsesOnSlb(Long slbId, List<VirtualServer> vses, ValidationContext context);
+    void validateVsesOnSlb(Long slbId, Collection<VirtualServer> vses, ValidationContext context);
 
     void validateEntriesOnVs(Long vsId, List<Group> groups, List<TrafficPolicy> policies, ValidationContext context);
 }

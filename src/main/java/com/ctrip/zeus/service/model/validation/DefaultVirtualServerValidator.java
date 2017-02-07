@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 /**
@@ -21,38 +22,49 @@ import java.util.regex.Pattern;
  */
 @Component("virtualServerModelValidator")
 public class DefaultVirtualServerValidator implements VirtualServerValidator {
-    private DynamicStringProperty portWhiteList = DynamicPropertyFactory.getInstance().getStringProperty("port.whitelist", "80,443");
+    private AtomicReference<Set<Integer>> allowedPorts = new AtomicReference<>();
+    private DynamicStringProperty portWhiteList = DynamicPropertyFactory.getInstance().getStringProperty("port.whitelist", "80,443", new Runnable() {
+        @Override
+        public void run() {
+            generateAllowedPorts();
+        }
+    });
 
     @Resource
     private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
-    private SlbVirtualServerDao slbVirtualServerDao;
-    @Resource
     private RVsStatusDao rVsStatusDao;
 
-    private final Pattern pattern;
-
-    public DefaultVirtualServerValidator() {
-        pattern = Pattern.compile("([\\w\\.\\-\\*]+)");
-    }
+    private static final Pattern DOMAIN_PATTERN = Pattern.compile("([\\w\\.\\-\\*]+)");
 
     @Override
-    public void validateVsFields(VirtualServer vs) throws ValidationException {
+    public void validateFields(VirtualServer vs) throws ValidationException {
         if (vs.getDomains() == null || vs.getDomains().size() == 0) {
             throw new ValidationException("Field `domains` is not allowed empty.");
         }
         if (vs.getSlbIds() == null || vs.getSlbIds().size() == 0) {
             throw new ValidationException("Field `slb-ids` is not allowed empty.");
         }
+        try {
+            if (!getAllowedPorts().contains(Integer.parseInt(vs.getPort()))) {
+                throw new ValidationException("Port " + vs.getPort() + " is not allowed.");
+            }
+        } catch (NumberFormatException e) {
+            throw new ValidationException("Illegal port: " + vs.getPort() + ".");
+        }
     }
 
     @Override
-    public void validateDomains(Long slbId, List<VirtualServer> vses, ValidationContext context) {
+    public void validateDomains(Long slbId, Collection<VirtualServer> vses, ValidationContext context) {
         Map<String, Long> domainByVs = new HashMap<>();
         for (VirtualServer vs : vses) {
             int i = vs.getSlbIds().indexOf(slbId);
             if (i < 0) continue;
             for (Domain d : vs.getDomains()) {
+                if (!DOMAIN_PATTERN.matcher(d.getName()).matches()) {
+                    context.error(vs.getId(), MetaType.VS, ErrorType.FIELD_VALIDATION, "Illegal domain name: " + d.getName() + " is found");
+                    break;
+                }
                 Long prev = domainByVs.put(d.getName() + ":" + vs.getPort(), vs.getId());
                 if (prev != null) {
                     if (prev.equals(vs.getId())) {
@@ -67,79 +79,47 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
     }
 
     @Override
-    public boolean isActivated(Long vsId) throws Exception {
-        RelVsStatusDo e = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
-        return e != null && e.getOnlineVersion() != 0;
-    }
-
-    @Override
-    public void unite(List<VirtualServer> virtualServers) throws Exception {
-        Map<String, Long> existingHost = new HashMap<>();
-        for (VirtualServer virtualServer : virtualServers) {
-            for (Domain domain : virtualServer.getDomains()) {
-                if (!getPortWhiteList().contains(virtualServer.getPort())) {
-                    throw new ValidationException("Port " + virtualServer.getPort() + " is not allowed. Reference vs-id: " + virtualServer.getId() + ".");
-                }
-                if (!pattern.matcher(domain.getName()).matches()) {
-                    throw new ValidationException("Invalid domain name: " + domain.getName() + ". Reference vs-id: " + virtualServer.getId() + ".");
-                }
-                String key = domain.getName().toLowerCase() + ":" + virtualServer.getPort();
-                Long check = existingHost.get(key);
-                if (check != null && !check.equals(virtualServer.getId())) {
-                    throw new ValidationException(key + " already exists on current slb. Reference vs-id: " + check + ".");
-                } else {
-                    existingHost.put(key, virtualServer.getId());
-                }
-            }
-        }
-    }
-
-    @Override
     public void removable(Long vsId) throws Exception {
+        RelVsStatusDo check = rVsStatusDao.findByVs(vsId, RVsStatusEntity.READSET_FULL);
+        if (check == null) return;
+        if (check.getOnlineVersion() > 0) {
+            throw new ValidationException("Virtual server that you try to delete is still active.");
+        }
         if (groupCriteriaQuery.queryByVsId(vsId).size() > 0)
-            throw new ValidationException("Virtual server with id " + vsId + " cannot be deleted. Dependencies exist.");
-        if (isActivated(vsId)) {
-            throw new ValidationException("Vs need to be deactivated before delete!");
-        }
-    }
-
-    @Override
-    public void validate(VirtualServer virtualServer) throws ValidationException {
-        if (virtualServer.getDomains() == null || virtualServer.getDomains().size() == 0)
-            throw new ValidationException("Virtual server must have domain(s).");
-        if (virtualServer.getSlbIds() == null || virtualServer.getSlbIds().size() == 0)
-            throw new ValidationException("Missing field slbIds or empty value is found.");
-
-        Set<Long> slbIds = new HashSet<>();
-        for (Long slbId : virtualServer.getSlbIds()) {
-            if (!slbIds.add(slbId)) {
-                throw new ValidationException("Duplicate slbId-" + slbId + " is found.");
-            }
-        }
-        Set<String> uniq = new HashSet<>();
-        Iterator<Domain> domainIter = virtualServer.getDomains().iterator();
-        while (domainIter.hasNext()) {
-            Domain domain = domainIter.next();
-            String name = domain.getName().toLowerCase();
-            if (uniq.contains(name)) domainIter.remove();
-            else {
-                uniq.add(name);
-                domain.setName(name);
-            }
-        }
+            throw new ValidationException("Virtual server that you try to has one or more group dependencies.");
     }
 
     @Override
     public void checkRestrictionForUpdate(VirtualServer target) throws Exception {
-
+        RelVsStatusDo check = rVsStatusDao.findByVs(target.getId(), RVsStatusEntity.READSET_FULL);
+        if (check == null) {
+            throw new ValidationException("Virtual server that you try to update does not exist.");
+        }
+        if (check.getOfflineVersion() > target.getVersion()) {
+            throw new ValidationException("Newer version is detected.");
+        }
+        if (check.getOfflineVersion() != target.getVersion()) {
+            throw new ValidationException("Incompatible version.");
+        }
     }
 
-    private Set<String> getPortWhiteList() {
-        Set<String> result = new HashSet<>();
+    private void generateAllowedPorts() {
+        Set<Integer> tmp = new HashSet<>();
         String whiteList = portWhiteList.get();
         for (String s : whiteList.split(",")) {
-            result.add(s.trim());
+            try {
+                Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                return;
+            }
         }
-        return result;
+        allowedPorts.set(tmp);
+    }
+
+    private Set<Integer> getAllowedPorts() {
+        if (allowedPorts.get() == null) {
+            generateAllowedPorts();
+        }
+        return allowedPorts.get();
     }
 }

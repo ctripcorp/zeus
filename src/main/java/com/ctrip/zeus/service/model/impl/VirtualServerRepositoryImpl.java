@@ -3,12 +3,14 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.ArchiveVsDao;
 import com.ctrip.zeus.dal.core.ArchiveVsEntity;
 import com.ctrip.zeus.dal.core.MetaVsArchiveDo;
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.SelectionMode;
+import com.ctrip.zeus.service.model.ValidationFacade;
 import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
-import com.ctrip.zeus.service.model.validation.SlbValidator;
 import com.ctrip.zeus.service.model.validation.VirtualServerValidator;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
@@ -32,9 +34,9 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Resource
     private VirtualServerEntityManager virtualServerEntityManager;
     @Resource
-    private VirtualServerValidator virtualServerModelValidator;
+    private ValidationFacade validationFacade;
     @Resource
-    private SlbValidator slbModelValidator;
+    private VirtualServerValidator virtualServerModelValidator;
     @Resource
     private SlbQuery slbQuery;
     @Resource
@@ -96,34 +98,14 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             }
             virtualServer.setSlbId(null);
         }
-
-        virtualServerModelValidator.validate(virtualServer);
-
-        Set<Long> uniq = new HashSet<>(virtualServer.getSlbIds());
-        slbModelValidator.exists(uniq.toArray(new Long[uniq.size()]));
-
-        String[] domains = new String[virtualServer.getDomains().size()];
-        for (int i = 0; i < virtualServer.getDomains().size(); i++) {
-            domains[i] = virtualServer.getDomains().get(i).getName();
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateVs(virtualServer, context);
+        if (context.getErrorVses().contains(virtualServer.getId())) {
+            throw new ValidationException(context.getVsErrorReason(virtualServer.getId()));
         }
 
-        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByDomains(domains);
-        List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
-        Iterator<VirtualServer> iter = check.iterator();
-        while (iter.hasNext()) {
-            VirtualServer tmp = iter.next();
-            boolean retained = false;
-            for (Long slbId : tmp.getSlbIds()) {
-                retained = uniq.contains(slbId);
-                if (retained) break;
-            }
-            if (!retained) iter.remove();
-        }
-        check.add(virtualServer);
-
-        virtualServerModelValidator.unite(check);
+        //TODO check slb exists
         virtualServerEntityManager.add(virtualServer);
-
         if (virtualServer.isSsl()) {
             installCertificate(virtualServer);
         }
@@ -140,37 +122,11 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             }
             virtualServer.setSlbId(null);
         }
-
-        virtualServerModelValidator.validate(virtualServer);
-
-        Set<Long> uniq = new HashSet<>(virtualServer.getSlbIds());
-        slbModelValidator.exists(uniq.toArray(new Long[uniq.size()]));
-
-        String[] domains = new String[virtualServer.getDomains().size()];
-        for (int i = 0; i < virtualServer.getDomains().size(); i++) {
-            domains[i] = virtualServer.getDomains().get(i).getName();
+        ValidationContext context = new ValidationContext();
+        validationFacade.validateVs(virtualServer, context);
+        if (context.getErrorVses().contains(virtualServer.getId())) {
+            throw new ValidationException(context.getVsErrorReason(virtualServer.getId()));
         }
-
-        Set<IdVersion> keys = virtualServerCriteriaQuery.queryByDomains(domains);
-        List<VirtualServer> check = listAll(keys.toArray(new IdVersion[keys.size()]));
-        Iterator<VirtualServer> iter = check.iterator();
-        while (iter.hasNext()) {
-            VirtualServer tmp = iter.next();
-            if (tmp.getId().equals(virtualServer.getId())) {
-                iter.remove();
-                continue;
-            }
-
-            boolean retained = false;
-            for (Long slbId : tmp.getSlbIds()) {
-                retained = uniq.contains(slbId);
-                if (retained) break;
-            }
-            if (!retained) iter.remove();
-        }
-        check.add(virtualServer);
-
-        virtualServerModelValidator.unite(check);
         virtualServerEntityManager.update(virtualServer);
 
         if (virtualServer.isSsl()) {

@@ -13,9 +13,9 @@ import java.util.Map;
  */
 public interface SlbValidator extends ModelValidator<Slb> {
 
-    void validateSlbFields(Slb slb, ValidationContext context) throws ValidationException;
+    void validateFields(Slb slb, ValidationContext context) throws ValidationException;
 
     void validateSlbServers(Map<Long, List<SlbServer>> serversBySlb, ValidationContext context);
 
-    void exists(Long[] slbId) throws Exception;
+    boolean exists(Long[] slbId);
 }

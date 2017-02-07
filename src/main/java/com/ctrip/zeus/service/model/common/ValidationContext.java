@@ -43,8 +43,24 @@ public class ValidationContext {
         return errorPolicies.get(policyId);
     }
 
+    public String getVsErrorReason(Long vsId) {
+        return errorVses.get(vsId);
+    }
+
+    public String getSlbErrorReason(Long slbId) {
+        return errorSlbs.get(slbId);
+    }
+
     public Set<Long> getErrorPolicies() {
         return errorPolicies.keySet();
+    }
+
+    public Set<Long> getErrorVses() {
+        return errorVses.keySet();
+    }
+
+    public Set<Long> getErrorSlbs() {
+        return errorSlbs.keySet();
     }
 
     public Map<String, String> getErrors() {
