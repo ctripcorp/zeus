@@ -334,4 +334,11 @@ public class LocationConf {
         confWriter.writeLine("return 404 \"Not Found!\";");
         confWriter.writeLocationEnd();
     }
+
+    public void writeDefaultRootLocation(ConfWriter confWriter) {
+        confWriter.writeLocationStart("/");
+        confWriter.writeCommand("error_page", "404 /404page");
+        confWriter.writeCommand("return", "404");
+        confWriter.writeLocationEnd();
+    }
 }
