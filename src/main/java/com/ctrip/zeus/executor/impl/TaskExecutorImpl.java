@@ -181,11 +181,10 @@ public class TaskExecutorImpl implements TaskExecutor {
             //2.2 vs
             nxOnlineVses = vsMap.getOnlineMapping();
             for (Long vsId : activateVsOps.keySet()) {
-                //TODO virtualServerValidator.validateForMerge(vsIds.toArray(new Long[vsIds.size()]), nxOnlineSlb.getId(), nxOnlineVses);
-                if (!validateVsModel(vsMap.getOfflineMapping().get(vsId))) {
-                    nxOnlineVses.put(vsId, vsMap.getOfflineMapping().get(vsId));
-                }
-
+                nxOnlineVses.put(vsId, vsMap.getOfflineMapping().get(vsId));
+            }
+            if (!validateVsModel(slbId, nxOnlineVses, vsMap.getOnlineMapping(), 3)) {
+                throw new ValidationException("Validate Vs Model Failed.");
             }
             //2.3 group
             nxOnlineGroups = new HashMap<>(groupMap.getOnlineMapping());
@@ -347,14 +346,26 @@ public class TaskExecutorImpl implements TaskExecutor {
         }
     }
 
-    private boolean validateVsModel(VirtualServer virtualServer) {
+    private boolean validateVsModel(Long slbId, Map<Long, VirtualServer> nxOnlineVs, Map<Long, VirtualServer> onlineMap, int retry) {
+        if (retry <= 0) return false;
         ValidationContext context = new ValidationContext();
-        validationFacade.validateVs(virtualServer, context);
-        if (context.getErrors().size() > 0) {
-            setTaskFail(activateVsOps.get(virtualServer.getId()), "Invalidate version for online. VsId:" + virtualServer.getId() + ";cause:" + context.getErrors().toString());
-            activateVsOps.remove(virtualServer.getId());
-            logger.error("Invalidate version for online. VsId:" + virtualServer.getId() + ";cause:" + context.getErrors().toString());
-            return false;
+        validationFacade.validateVsesOnSlb(slbId, nxOnlineVs.values(), context);
+        if (context.getErrorVses().size() > 0) {
+            for (Long vsId : context.getErrorVses()) {
+                if (activateVsOps.containsKey(vsId)) {
+                    setTaskFail(activateVsOps.get(vsId), "Invalidate version for online. VsId:" + vsId + ";cause:" + context.getVsErrorReason(vsId));
+                    activateVsOps.remove(vsId);
+                    if (onlineMap.containsKey(vsId)) {
+                        nxOnlineVs.put(vsId, onlineMap.get(vsId));
+                    } else {
+                        nxOnlineVs.remove(vsId);
+                    }
+                    logger.error("Invalidate online version with activate task. set task failed. VsId:" + vsId + ";cause:" + context.getVsErrorReason(vsId));
+                } else {
+                    logger.error("Invalidate online version without activate task. VsId:" + vsId + ";cause:" + context.getVsErrorReason(vsId));
+                }
+            }
+            return validateVsModel(slbId, nxOnlineVs, onlineMap, --retry);
         } else {
             return true;
         }
@@ -797,7 +808,12 @@ public class TaskExecutorImpl implements TaskExecutor {
             Group group = nxOnlineGroups.get(gid);
             for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
                 if (deactivateVsOps.containsKey(gvs.getVirtualServer().getId())) {
-                    activatingGroupIds.add(gid);
+                    if (!activateGroupOps.containsKey(gid)) {
+                        setTaskFail(deactivateVsOps.get(gvs.getVirtualServer().getId()), "[Deactivate Vs] Vs is has relative online group!GroupId:" + gid);
+                        deactivateVsOps.remove(gvs.getVirtualServer().getId());
+                    } else {
+                        activatingGroupIds.add(gid);
+                    }
                 }
             }
         }
