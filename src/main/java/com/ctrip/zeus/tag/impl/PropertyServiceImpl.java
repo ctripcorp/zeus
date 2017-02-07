@@ -168,7 +168,7 @@ public class PropertyServiceImpl implements PropertyService {
 
         Set<Long> result = new HashSet<>();
         for (PropertyItemDo e : propertyItemDao.findAllByProperties(pids.values().toArray(new Long[0]), PropertyItemEntity.READSET_FULL)) {
-            if (e.getType().equals(type)) {
+            if (e.getType().toLowerCase().equals(type.toLowerCase())) {
                 result.add(e.getItemId());
             }
         }
@@ -198,14 +198,14 @@ public class PropertyServiceImpl implements PropertyService {
             }
         }
         for (Long l : pids.values()) {
-            if (l == obj) return new HashSet<>();
+            if (l.equals(obj)) return new HashSet<>();
         }
 
         int joinedValue = pids.size();
         Map<Long, Counter> marker = new HashMap<>();
         for (PropertyItemDo e : propertyItemDao.findAllByProperties(pids.values().toArray(new Long[0]), PropertyItemEntity.READSET_FULL)) {
-            if (e.getType().equals(type)) {
-                Counter m = marker.get(e.getPropertyId());
+            if (e.getType().toLowerCase().equals(type.toLowerCase())) {
+                Counter m = marker.get(e.getItemId());
                 if (m == null) {
                     marker.put(e.getItemId(), new Counter());
                 } else {

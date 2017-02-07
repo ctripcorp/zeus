@@ -139,7 +139,11 @@ public class QueryEngine {
                 }
                 pre.retainAll(orig);
             }
-            c.addAtIndex(0, Joiner.on(",").join(pre));
+            if (pre.size() == 0) {
+                c.addAtIndex(0, "-1");
+            }else {
+                c.addAtIndex(0, Joiner.on(",").join(pre));
+            }
         }
 
         // filter by criteria queries
