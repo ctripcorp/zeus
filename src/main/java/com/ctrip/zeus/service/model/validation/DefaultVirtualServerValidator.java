@@ -108,7 +108,7 @@ public class DefaultVirtualServerValidator implements VirtualServerValidator {
         String whiteList = portWhiteList.get();
         for (String s : whiteList.split(",")) {
             try {
-                Integer.parseInt(s);
+                tmp.add(Integer.parseInt(s));
             } catch (NumberFormatException e) {
                 return;
             }

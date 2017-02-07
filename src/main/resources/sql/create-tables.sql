@@ -605,7 +605,7 @@ CREATE TABLE IF NOT EXISTS `nginx_conf_slb` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key',
   `slb_id` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb id',
   `version` bigint(20) NOT NULL DEFAULT '0' COMMENT 'slb conf version',
-  `content` mediumtext NOT NULL COMMENT 'conf content',
+  `content` mediumblob NOT NULL COMMENT 'conf content',
   `DataChange_LastTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last time modified',
   PRIMARY KEY (`id`),
   UNIQUE KEY `slb_id_version` (`slb_id`,`version`),

@@ -62,7 +62,7 @@ public class NginxConfBuilderImpl implements NginxConfBuilder {
             @Override
             public int compare(Group o1, Group o2) {
                 int result = ((GroupVirtualServer) objectOnVsReferrer.get("gvs-" + o2.getId())).getPriority() -
-                        ((GroupVirtualServer) objectOnVsReferrer.get("gvs-" + o2.getId())).getPriority();
+                        ((GroupVirtualServer) objectOnVsReferrer.get("gvs-" + o1.getId())).getPriority();
                 return result == 0 ? o2.getId().compareTo(o1.getId()) : result;
             }
         });

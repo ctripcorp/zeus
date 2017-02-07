@@ -63,6 +63,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
             return;
         }
 
+        Map<Long, LocationEntry> groupLocationEntryOnVses = new HashMap<>();
         try {
             Map<Long, List<LocationEntry>> locationEntries;
             if (group.getId() == null) {
@@ -76,10 +77,18 @@ public class ValidationFacadeImpl implements ValidationFacade {
                     v = new ArrayList<>();
                     locationEntries.put(e.getKey(), v);
                 }
-                v.add(new LocationEntry().setEntryId(group.getId()).setEntryType(MetaType.GROUP).setVsId(e.getKey()).setPath(e.getValue().getPath()).setPriority(e.getValue().getPriority()));
+                LocationEntry groupEntry = new LocationEntry().setEntryId(group.getId()).setEntryType(MetaType.GROUP).setVsId(e.getKey()).setPath(e.getValue().getPath()).setPriority(e.getValue().getPriority());
+                v.add(groupEntry);
+                groupLocationEntryOnVses.put(e.getKey(), groupEntry);
             }
             for (List<LocationEntry> entries : locationEntries.values()) {
                 pathValidator.checkOverlapRestricition(entries, context);
+            }
+            for (Map.Entry<Long, GroupVirtualServer> e : groupOnVses.entrySet()) {
+                LocationEntry v = groupLocationEntryOnVses.get(e.getKey());
+                if (e.getValue().getPriority() == null) {
+                    e.getValue().setPriority(v.getPriority());
+                }
             }
         } catch (ValidationException e) {
             context.error(group.getId(), MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, e.getMessage());
@@ -106,6 +115,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
             return;
         }
 
+        Map<Long, LocationEntry> policyLocationEntryOnVses = new HashMap<>();
         try {
             Map<Long, List<LocationEntry>> locationEntries;
             if (policy.getId() == null) {
@@ -119,16 +129,23 @@ public class ValidationFacadeImpl implements ValidationFacade {
                     v = new ArrayList<>();
                     locationEntries.put(e.getKey(), v);
                 }
-                v.add(new LocationEntry().setEntryId(policy.getId()).setEntryType(MetaType.GROUP).setVsId(e.getKey()).setPath(e.getValue().getPath()).setPriority(e.getValue().getPriority()));
+                LocationEntry policyEntry = new LocationEntry().setEntryId(policy.getId()).setEntryType(MetaType.GROUP).setVsId(e.getKey()).setPath(e.getValue().getPath()).setPriority(e.getValue().getPriority());
+                v.add(policyEntry);
+                policyLocationEntryOnVses.put(e.getKey(), policyEntry);
             }
             for (List<LocationEntry> entries : locationEntries.values()) {
                 pathValidator.checkOverlapRestricition(entries, context);
+            }
+            for (Map.Entry<Long, PolicyVirtualServer> e : policyOnVses.entrySet()) {
+                LocationEntry v = policyLocationEntryOnVses.get(e.getKey());
+                if (e.getValue().getPriority() == null) {
+                    e.getValue().setPriority(v.getPriority());
+                }
             }
         } catch (ValidationException e) {
             context.error(policy.getId(), MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, e.getMessage());
         }
     }
-
 
     @Override
     public void validateVs(VirtualServer vs, ValidationContext context) {
