@@ -7,77 +7,87 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by zhoumy on 2017/1/25.
  */
 public class ValidationContext {
-    private Map<Long, String> errorGroups = new HashMap<>();
-    private Map<Long, String> errorPolicies = new HashMap<>();
-    private Map<Long, String> errorSlbs = new HashMap<>();
-    private Map<Long, String> errorVses = new HashMap<>();
+    private Map<MetaType, Error> errors = new HashMap<>();
     private AtomicBoolean success = new AtomicBoolean(true);
 
     public void error(Long entryId, MetaType entryType, String errorType, String cause) {
         success.set(false);
-        switch (entryType) {
-            case GROUP:
-                errorGroups.put(entryId, errorType + "-" + cause);
-                break;
-            case TRAFFIC_POLICY:
-                errorPolicies.put(entryId, errorType + "-" + cause);
-                break;
-            case SLB:
-                errorSlbs.put(entryId, errorType + "-" + cause);
-                break;
-            case VS:
-                errorVses.put(entryId, errorType + "-" + cause);
-                break;
+        Error ev = errors.get(entryType);
+        if (ev == null) {
+            ev = new Error();
+            errors.put(entryType, ev);
         }
+        ev.report(entryId, errorType, cause);
     }
 
-    public Set<Long> getErrorGroups() {
-        return errorGroups.keySet();
+    public Set<String> getGroupErrorType(Long groupId) {
+        return getErrorTypeByEntry(groupId, MetaType.GROUP);
+    }
+
+    public Set<String> getVsErrorType(Long vsId) {
+        return getErrorTypeByEntry(vsId, MetaType.VS);
+    }
+
+    public Set<String> getSlbErrorType(Long slbId) {
+        return getErrorTypeByEntry(slbId, MetaType.SLB);
+    }
+
+    public Set<String> getPolicyErrorType(Long policyId) {
+        return getErrorTypeByEntry(policyId, MetaType.TRAFFIC_POLICY);
+    }
+
+    private Set<String> getErrorTypeByEntry(Long entryId, MetaType entryType) {
+        Set<String> result = new HashSet<>();
+        for (Error.Node n : errors.get(entryType).getErrorMessage(entryId).getFlattenNodes()) {
+            result.add(n.getErrorType());
+        }
+        return result;
     }
 
     public String getGroupErrorReason(Long groupId) {
-        return errorGroups.get(groupId);
+        return errors.get(MetaType.GROUP).getErrorMessage(groupId).toString();
     }
 
     public String getPolicyErrorReason(Long policyId) {
-        return errorPolicies.get(policyId);
+        return errors.get(MetaType.TRAFFIC_POLICY).getErrorMessage(policyId).toString();
     }
 
     public String getVsErrorReason(Long vsId) {
-        return errorVses.get(vsId);
+        return errors.get(MetaType.VS).getErrorMessage(vsId).toString();
     }
 
     public String getSlbErrorReason(Long slbId) {
-        return errorSlbs.get(slbId);
+        return errors.get(MetaType.SLB).getErrorMessage(slbId).toString();
+    }
+
+    public Set<Long> getErrorGroups() {
+        return errors.get(MetaType.GROUP).getErrorIds();
     }
 
     public Set<Long> getErrorPolicies() {
-        return errorPolicies.keySet();
+        return errors.get(MetaType.TRAFFIC_POLICY).getErrorIds();
     }
 
     public Set<Long> getErrorVses() {
-        return errorVses.keySet();
+        return errors.get(MetaType.VS).getErrorIds();
     }
 
     public Set<Long> getErrorSlbs() {
-        return errorSlbs.keySet();
+        return errors.get(MetaType.SLB).getErrorIds();
     }
 
     public Map<String, String> getErrors() {
-        Map<String, String> errors = new HashMap<>(errorGroups.size() + errorPolicies.size() + errorVses.size() + errorSlbs.size());
-        for (Map.Entry<Long, String> e : errorGroups.entrySet()) {
-            errors.put(MetaType.GROUP.toString() + "-" + (e.getKey() == null ? "new" : e.getKey()), e.getValue());
+        int size = 0;
+        for (Error error : errors.values()) {
+            size += error.size();
         }
-        for (Map.Entry<Long, String> e : errorPolicies.entrySet()) {
-            errors.put(MetaType.TRAFFIC_POLICY.toString() + "-" + (e.getKey() == null ? "new" : e.getKey()), e.getValue());
+        Map<String, String> errorMessage = new HashMap<>(size);
+        for (Map.Entry<MetaType, Error> e : errors.entrySet()) {
+            for (Map.Entry<Long, String> ee : e.getValue().listErrors().entrySet()) {
+                errorMessage.put(e.getKey().toString() + "-" + ((ee.getKey() == null || ee.getKey().equals(0L)) ? "new" : ee.getKey()), ee.getValue());
+            }
         }
-        for (Map.Entry<Long, String> e : errorVses.entrySet()) {
-            errors.put(MetaType.VS.toString() + "-" + (e.getKey() == null ? "new" : e.getKey()), e.getValue());
-        }
-        for (Map.Entry<Long, String> e : errorSlbs.entrySet()) {
-            errors.put(MetaType.SLB.toString() + "-" + (e.getKey() == null ? "new" : e.getKey()), e.getValue());
-        }
-        return errors;
+        return errorMessage;
     }
 
     public boolean shouldProceed() {

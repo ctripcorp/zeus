@@ -41,6 +41,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
     @Override
     public void validateGroup(Group group, ValidationContext context) {
         groupModelValidator.validateFields(group, context);
+        if (!context.shouldProceed()) return;
 
         Map<Long, GroupVirtualServer> groupOnVses;
         try {
