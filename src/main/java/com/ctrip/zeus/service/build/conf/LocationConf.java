@@ -60,18 +60,18 @@ public class LocationConf {
         Map.Entry<Double, Long> curr = controlOrder.pollFirstEntry();
         w = curr.getKey() + prevWeight;
         controlScript.append("  if (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r < " + String.format("%.2f", w / totalWeight) + ") then\n")
-                .append("    ngx.exec(\"@group" + curr.getValue() + "\")\n");
+                .append("    ngx.exec(\"@group_" + curr.getValue() + "\")\n");
         prevWeight += curr.getKey();
         curr = controlOrder.pollFirstEntry();
         while (curr != null) {
             w = curr.getKey() + prevWeight;
             controlScript.append("  elseif (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r " + (w == totalWeight ? "<= " : "< ") + String.format("%.2f", w / totalWeight) + ") then\n")
-                    .append("    ngx.exec(\"@group" + curr.getValue() + "\")\n");
+                    .append("    ngx.exec(\"@group_" + curr.getValue() + "\")\n");
             prevWeight = w;
             curr = controlOrder.pollFirstEntry();
         }
 
-        controlScript.append("  end\n';");
+        controlScript.append("  end'");
         return controlScript.toString();
     }
 
@@ -130,7 +130,7 @@ public class LocationConf {
             confWriter.writeCommand("proxy_read_timeout", readTimeout + "s");
         }
 
-                writeSlbUrlCheck(confWriter, slbId, vsId, groupId);
+        writeSlbUrlCheck(confWriter, slbId, vsId, groupId);
 
         // write x-forward-for configuration
         if (configHandler.getEnable("location.x-forwarded-for", slbId, vsId, groupId, true)) {

@@ -341,12 +341,16 @@ public class GroupResource {
         if (g == null) {
             throw new ValidationException("Invalid post entity. Fail to parse json to group.");
         }
-        g.setVirtual(null);
+        if (g.getName() == null) {
+            throw new ValidationException("Field `name` is not allowed empty.");
+        }
         trim(g);
-
         Long checkId = groupCriteriaQuery.queryByName(g.getName());
-        if (checkId > 0L)
+        if (checkId > 0L) {
             throw new ValidationException("Group name " + g.getName() + " has been taken by " + checkId + ".");
+        }
+
+        g.setVirtual(null);
 
         g = groupRepository.add(g, force != null && force);
 
@@ -386,15 +390,18 @@ public class GroupResource {
         if (g == null) {
             throw new ValidationException("Invalid post entity. Fail to parse json to virtual group.");
         }
-        g.setVirtual(true);
+        if (g.getName() == null) {
+            throw new ValidationException("Field `name` is not allowed empty.");
+        }
         trim(g);
-
         Long checkId = groupCriteriaQuery.queryByName(g.getName());
-        if (checkId > 0L)
+        if (checkId > 0L) {
             throw new ValidationException("Group name " + g.getName() + " has been taken by " + checkId + ".");
+        }
+
+        g.setVirtual(true);
 
         g = groupRepository.addVGroup(g, force != null && force);
-
 
         try {
             propertyBox.set("status", "deactivated", "group", g.getId());
@@ -491,11 +498,18 @@ public class GroupResource {
         if (g == null) {
             throw new ValidationException("Invalid post entity. Fail to parse json to group.");
         }
-        g.setVirtual(null);
+        if (g.getName() == null) {
+            throw new ValidationException("Field `name` is not allowed empty.");
+        }
         trim(g);
-
+        Long checkId = groupCriteriaQuery.queryByName(g.getName());
+        if (checkId > 0L) {
+            throw new ValidationException("Group name " + g.getName() + " has been taken by " + checkId + ".");
+        }
         IdVersion[] check = groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.OFFLINE_FIRST);
         if (check.length == 0) throw new ValidationException("Group " + g.getId() + " cannot be found.");
+
+        g.setVirtual(null);
 
         DistLock lock = dbLockFactory.newLock(g.getId() + "_updateGroup");
         lock.lock(TIMEOUT);
@@ -542,8 +556,16 @@ public class GroupResource {
         if (g == null) {
             throw new ValidationException("Invalid post entity. Fail to parse json to virtual group.");
         }
-        g.setVirtual(true);
+        if (g.getName() == null) {
+            throw new ValidationException("Field `name` is not allowed empty.");
+        }
         trim(g);
+        Long checkId = groupCriteriaQuery.queryByName(g.getName());
+        if (checkId > 0L) {
+            throw new ValidationException("Group name " + g.getName() + " has been taken by " + checkId + ".");
+        }
+
+        g.setVirtual(true);
 
         DistLock lock = dbLockFactory.newLock(g.getId() + "_updateGroup");
         lock.lock(TIMEOUT);

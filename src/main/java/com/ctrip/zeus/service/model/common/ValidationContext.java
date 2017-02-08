@@ -61,19 +61,25 @@ public class ValidationContext {
     }
 
     public Set<Long> getErrorGroups() {
-        return errors.get(MetaType.GROUP).getErrorIds();
+        return getErrorEntries(MetaType.GROUP);
     }
 
     public Set<Long> getErrorPolicies() {
-        return errors.get(MetaType.TRAFFIC_POLICY).getErrorIds();
+        return getErrorEntries(MetaType.TRAFFIC_POLICY);
     }
 
     public Set<Long> getErrorVses() {
-        return errors.get(MetaType.VS).getErrorIds();
+        return getErrorEntries(MetaType.VS);
     }
 
     public Set<Long> getErrorSlbs() {
-        return errors.get(MetaType.SLB).getErrorIds();
+        return getErrorEntries(MetaType.SLB);
+    }
+
+    private Set<Long> getErrorEntries(MetaType type) {
+        Error n = errors.get(type);
+        if (n == null) return new HashSet<>();
+        return n.getErrorIds();
     }
 
     public Map<String, String> getErrors() {

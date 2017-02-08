@@ -361,7 +361,7 @@ public class ActivateResource {
     @Authorize(name = "activate")
     public Response activatePolicy(@Context HttpServletRequest request,
                                    @Context HttpHeaders hh,
-                                   @QueryParam("policy") Long policyId,
+                                   @QueryParam("policyId") Long policyId,
                                    @QueryParam("force") Boolean force) throws Exception {
         if (policyId == null || policyId <= 0) {
             throw new ValidationException("Invalidate Parameter policy.");

@@ -214,6 +214,9 @@ public class ValidationFacadeImpl implements ValidationFacade {
 
     @Override
     public void validateSlbNodes(Collection<Slb> slbs, ValidationContext context) {
+        if (slbs == null) return;
+        if (context == null) context = new ValidationContext();
+
         Map<Long, List<SlbServer>> serverBySlb = new HashMap<>();
         for (Slb slb : slbs) {
             try {
@@ -228,6 +231,9 @@ public class ValidationFacadeImpl implements ValidationFacade {
 
     @Override
     public void validateVsesOnSlb(Long slbId, Collection<VirtualServer> vses, ValidationContext context) {
+        if (vses == null) return;
+        if (context == null) context = new ValidationContext();
+
         for (VirtualServer vs : vses) {
             if (vs.getSlbIds().indexOf(slbId) < 0) {
                 context.error(vs.getId(), MetaType.VS, ErrorType.DEPENDENCY_VALIDATION, "Cannot find target on slb " + slbId + ".");
@@ -244,6 +250,10 @@ public class ValidationFacadeImpl implements ValidationFacade {
     @Override
     public void validateEntriesOnVs(Long vsId, List<Group> groups, List<TrafficPolicy> policies, ValidationContext context) {
         // validate groups
+        if (groups == null) groups = new ArrayList<>();
+        if (policies == null) policies = new ArrayList<>();
+        if (context == null) context = new ValidationContext();
+
         for (Group group : groups) {
             groupModelValidator.validateFields(group, context);
             GroupVirtualServer target = null;

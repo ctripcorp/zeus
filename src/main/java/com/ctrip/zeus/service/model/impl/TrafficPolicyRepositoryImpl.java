@@ -47,6 +47,12 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
         for (IdVersion e : key) {
             policyById.put(e.getId(), new TrafficPolicy().setId(e.getId()).setVersion(e.getVersion()));
         }
+        for (TrafficPolicyDo e : trafficPolicyDao.findAllByIds(policyById.keySet().toArray(new Long[policyById.size()]), TrafficPolicyEntity.READSET_FULL)) {
+            TrafficPolicy tp = policyById.get(e.getId());
+            if (tp != null) {
+                tp.setName(e.getName());
+            }
+        }
 
         int i = 0;
         Integer[] hashes = new Integer[policyById.size()];
@@ -79,6 +85,8 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
     @Override
     public TrafficPolicy getByKey(IdVersion key) throws Exception {
         TrafficPolicy tp = new TrafficPolicy().setId(key.getId()).setVersion(key.getVersion());
+        TrafficPolicyDo d = trafficPolicyDao.findById(key.getId(), TrafficPolicyEntity.READSET_FULL);
+        tp.setName(d.getName());
         for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findByPolicy(key.getId(), key.getVersion(), RTrafficPolicyGroupEntity.READSET_FULL)) {
             if (tp != null && tp.getVersion().equals(e.getPolicyVersion())) {
                 tp.getControls().add(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
@@ -131,7 +139,7 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
         if (force) {
             //TODO filter by error type
         } else {
-            if (context.getErrorGroups().contains(trafficPolicy.getId())) {
+            if (context.getErrorPolicies().contains(trafficPolicy.getId())) {
                 throw new ValidationException(context.getPolicyErrorReason(trafficPolicy.getId()));
             }
         }

@@ -57,6 +57,53 @@ public class TrafficPolicyResource {
     private static Logger logger = LoggerFactory.getLogger(TrafficPolicyResource.class);
 
     @GET
+    @Path("/policy")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getPolicy(@Context HttpHeaders hh,
+                              @Context final HttpServletRequest request,
+                              @TrimmedQueryParam("mode") final String mode,
+                              @TrimmedQueryParam("type") final String type,
+                              @Context UriInfo uriInfo) throws Exception {
+        SelectionMode selectionMode = SelectionMode.getMode(mode);
+        QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "policy", SelectionMode.getMode(mode));
+        QueryCommand cmd = new TrafficPolicyCommand();
+        queryRender.readToCommand(cmd);
+
+        IdVersion[] searchKeys = trafficPolicyQuery.queryByCommand(cmd, selectionMode);
+        if (searchKeys == null) {
+            searchKeys = trafficPolicyQuery.queryAll(SelectionMode.getMode(mode)).toArray(new IdVersion[]{});
+        }
+        if (SelectionMode.REDUNDANT == selectionMode) {
+            if (searchKeys.length > 2)
+                throw new ValidationException("Too many matches have been found after querying.");
+        } else {
+            if (searchKeys.length > 1)
+                throw new ValidationException("Too many matches have been found after querying.");
+        }
+
+        List<TrafficPolicy> result = trafficPolicyRepository.list(searchKeys);
+
+        List<ExtendedView.ExtendedTrafficPolicy> viewArray = new ArrayList<>(result.size());
+        for (TrafficPolicy e : result) {
+            viewArray.add(new ExtendedView.ExtendedTrafficPolicy(e));
+        }
+        if (ViewConstraints.EXTENDED.equalsIgnoreCase(type)) {
+            viewDecorator.decorate(viewArray, "policy");
+        }
+
+        TrafficPolicyListView listView = new TrafficPolicyListView(result.size());
+        for (ExtendedView.ExtendedTrafficPolicy e : viewArray) {
+            listView.add(e);
+        }
+        if (listView.getTotal() == 0) throw new ValidationException("Traffic policy cannot be found.");
+        if (listView.getTotal() == 1) {
+            return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView.getList().get(0), type), hh.getMediaType());
+        }
+
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
+    }
+
+    @GET
     @Path("/policies")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response list(@Context HttpHeaders hh,
@@ -101,7 +148,15 @@ public class TrafficPolicyResource {
         if (p == null) {
             throw new ValidationException("Invalid post entity. Fail to parse json to traffic-policy.");
         }
+        if (p.getName() == null) {
+            throw new ValidationException("Field `name` is not allowed empty.");
+        }
         trim(p);
+        Long checkId = trafficPolicyQuery.queryByName(p.getName());
+        if (checkId > 0L) {
+            throw new ValidationException("Traffic policy name has been taken by " + checkId + ".");
+        }
+
         p = trafficPolicyRepository.add(p, force != null && force);
 
         try {
@@ -127,7 +182,15 @@ public class TrafficPolicyResource {
         if (p == null) {
             throw new ValidationException("Invalid post entity. Fail to parse json to traffic-policy.");
         }
+        if (p.getName() == null) {
+            throw new ValidationException("Field `name` is not allowed empty.");
+        }
         trim(p);
+        Long checkId = trafficPolicyQuery.queryByName(p.getName());
+        if (checkId > 0L) {
+            throw new ValidationException("Traffic policy name has been taken by " + checkId + ".");
+        }
+
         p = trafficPolicyRepository.update(p, force != null && force);
         if (extendedView.getProperties() != null) {
             setProperties(p.getId(), extendedView.getProperties());

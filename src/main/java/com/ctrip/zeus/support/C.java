@@ -134,7 +134,7 @@ public class C {
                 .setResources(opsTask.getResources())
                 .setSlbVirtualServerId(opsTask.getSlbVirtualServerId() == null ? 0 : opsTask.getSlbVirtualServerId())
                 .setSlbId(opsTask.getSlbId() == null ? 0 : opsTask.getSlbId())
-                .setSkipValidate(opsTask.getSkipValidate());
+                .setSkipValidate(opsTask.getSkipValidate() == null ? false : opsTask.getSkipValidate());
         return result;
     }
 

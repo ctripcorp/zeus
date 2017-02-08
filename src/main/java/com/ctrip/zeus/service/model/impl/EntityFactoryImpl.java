@@ -174,7 +174,7 @@ public class EntityFactoryImpl implements EntityFactory {
         Map<Long, TrafficPolicy> onlineResult = new HashMap<>();
         Set<Integer> searchKeys = new HashSet<>();
         for (TrafficPolicyDo e : trafficPolicyDao.findAllByIds(policyIds, TrafficPolicyEntity.READSET_FULL)) {
-            offlineResult.put(e.getId(), new TrafficPolicy().setId(e.getId()).setVersion(e.getNxActiveVersion()));
+            offlineResult.put(e.getId(), new TrafficPolicy().setId(e.getId()).setName(e.getName()).setVersion(e.getNxActiveVersion()));
             searchKeys.add(VersionUtils.getHash(e.getId(), e.getNxActiveVersion()));
             if (e.getActiveVersion() > 0) {
                 onlineResult.put(e.getId(), new TrafficPolicy().setId(e.getId()).setVersion(e.getActiveVersion()));
@@ -187,7 +187,6 @@ public class EntityFactoryImpl implements EntityFactory {
             TrafficPolicy v = offlineResult.get(e.getPolicyId());
             if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
                 v.addTrafficControl(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
-                continue;
             }
             v = onlineResult.get(e.getPolicyId());
             if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
@@ -199,7 +198,6 @@ public class EntityFactoryImpl implements EntityFactory {
             TrafficPolicy v = offlineResult.get(e.getPolicyId());
             if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
                 v.addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(e.getVsId())).setPath(e.getPath()).setPriority(e.getPriority()));
-                continue;
             }
             v = onlineResult.get(e.getPolicyId());
             if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
@@ -237,11 +235,23 @@ public class EntityFactoryImpl implements EntityFactory {
             TrafficPolicy v = offlineResult.get(e.getPolicyId());
             if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
                 v.addTrafficControl(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
-                continue;
             }
             v = onlineResult.get(e.getPolicyId());
             if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
                 v.addTrafficControl(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
+            }
+        }
+
+        Set<Long> pIds = new HashSet<>(offlineResult.keySet());
+        pIds.addAll(onlineResult.keySet());
+        for (TrafficPolicyDo e : trafficPolicyDao.findAllByIds(pIds.toArray(new Long[pIds.size()]), TrafficPolicyEntity.READSET_FULL)) {
+            TrafficPolicy tp = offlineResult.get(e.getId());
+            if (tp != null) {
+                tp.setName(e.getName());
+            }
+            tp = onlineResult.get(e.getId());
+            if (tp != null) {
+                tp.setName(e.getName());
             }
         }
 

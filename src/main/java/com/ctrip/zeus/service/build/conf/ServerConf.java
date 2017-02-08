@@ -110,14 +110,14 @@ public class ServerConf {
             PolicyVirtualServer pvs;
             if (first[_firstGroup] == null) {
                 g = groups.get(gIdx);
-                gvs = (GroupVirtualServer) objectOnVsReferrer.get("gvs-" + groups.get(gIdx).getId());
+                gvs = (GroupVirtualServer) objectOnVsReferrer.get("gvs-" + g.getId());
             } else {
                 g = (Group) first[_firstGroup];
                 gvs = (GroupVirtualServer) first[_firstGvs];
             }
             if (first[_firstPolicy] == null) {
                 p = policies.get(pIdx);
-                pvs = (PolicyVirtualServer) objectOnVsReferrer.get("pvs-" + groups.get(pIdx).getId());
+                pvs = (PolicyVirtualServer) objectOnVsReferrer.get("pvs-" + p.getId());
             } else {
                 p = (TrafficPolicy) first[_firstPolicy];
                 pvs = (PolicyVirtualServer) first[_firstPvs];
@@ -143,7 +143,7 @@ public class ServerConf {
         }
         while (pIdx < policies.size()) {
             TrafficPolicy p = policies.get(pIdx);
-            PolicyVirtualServer pvs = (PolicyVirtualServer) objectOnVsReferrer.get("pvs-" + groups.get(pIdx).getId());
+            PolicyVirtualServer pvs = (PolicyVirtualServer) objectOnVsReferrer.get("pvs-" + p.getId());
             locationConf.write(confWriter, slb, vs, p, pvs);
             for (TrafficControl c : p.getControls()) {
                 namedLocations.add(c.getGroup().getId());
@@ -152,7 +152,7 @@ public class ServerConf {
         }
         while (gIdx < groups.size()) {
             Group g = groups.get(gIdx);
-            GroupVirtualServer gvs = (GroupVirtualServer) objectOnVsReferrer.get("gvs-" + groups.get(gIdx).getId());
+            GroupVirtualServer gvs = (GroupVirtualServer) objectOnVsReferrer.get("gvs-" + g.getId());
             locationConf.write(confWriter, slb, vs, g, gvs, namedLocations.contains(g.getId()));
             gIdx++;
         }
