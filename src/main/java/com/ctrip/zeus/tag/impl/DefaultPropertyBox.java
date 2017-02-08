@@ -82,7 +82,7 @@ public class DefaultPropertyBox implements PropertyBox {
         Iterator<PropertyItemDo> iter = items.iterator();
         while (iter.hasNext()) {
             PropertyItemDo n = iter.next();
-            if (n.getType().equals(type)) {
+            if (n.getType().toLowerCase().equals(type.toLowerCase())) {
                 d = n;
                 iter.remove();
             } else {
@@ -94,7 +94,7 @@ public class DefaultPropertyBox implements PropertyBox {
             propertyItemDao.deleteById(items.toArray(new PropertyItemDo[items.size()]));
         }
         if (d == null) {
-            propertyItemDao.insert(new PropertyItemDo().setPropertyId(targetProperty.getId()).setItemId(itemId).setType(type));
+            propertyItemDao.insert(new PropertyItemDo().setPropertyId(targetProperty.getId()).setItemId(itemId).setType(type.toLowerCase()));
         } else {
             if (d.getPropertyId() == targetProperty.getId()) return false;
 
@@ -137,7 +137,7 @@ public class DefaultPropertyBox implements PropertyBox {
         Map<Long, PropertyItemDo> items = new HashMap<>();
         for (PropertyItemDo e : propertyItemDao.findAllByProperties(properties.toArray(new Long[properties.size()]), PropertyItemEntity.READSET_FULL)) {
             if (uniqItemIds.contains(e.getItemId())) {
-                if (e.getType().equals(type)) {
+                if (e.getType().toLowerCase().equals(type.toLowerCase())) {
                     PropertyItemDo dup = items.put(e.getItemId(), e);
                     if (dup != null) {
                         removing.add(dup);
@@ -149,7 +149,7 @@ public class DefaultPropertyBox implements PropertyBox {
         for (Long itemId : uniqItemIds) {
             PropertyItemDo d = items.get(itemId);
             if (d == null) {
-                adding.add(new PropertyItemDo().setPropertyId(targetProperty.getId()).setItemId(itemId).setType(type));
+                adding.add(new PropertyItemDo().setPropertyId(targetProperty.getId()).setItemId(itemId).setType(type.toLowerCase()));
 
             } else {
                 if (d.getPropertyId() == targetProperty.getId()) continue;
