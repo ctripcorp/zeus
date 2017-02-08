@@ -140,12 +140,16 @@ public class PathValidator {
             case -1:
                 return false;
             case 0:
-                throw new ValidationException("The two path being compared are completely equivalent. `path`=" + s1);
+                throw new ValidationException("The two path being compared are completely equivalent. Unable to solve the conflict. `path`=" + s1);
             case 1:
                 if (!e1.reduceRange(e2.getPriority(), Integer.MAX_VALUE)) {
                     if (!e2.reduceRange(Integer.MIN_VALUE, e1.getPriority())) {
                         if (e2.getPriority() < e1.getPriority()) return false;
-                        throw new ValidationException("Path priority range cannot be reduced.");
+                        int p1 = e2.getPriority() + 100;
+                        int p2 = e1.getPriority() - 100;
+                        p1 = e1.isRoot() ? (p1 < -1000 ? -1000 : p1) : (p1 < 1000 ? 1000 : p1);
+                        p2 = e2.isRoot() ? (p2 > -1000 ? -1000 : p2) : (p2 > 1000 ? 1000 : p2);
+                        throw new ValidationException("Path priority range cannot be reduced. Modify priority of entry (" + e1.value.getEntryId() + ", " + s1 + ") to " + p1 + " or entry (" + e2.value.getEntryId() + ", " + s2 + ") to " + p2 + ".");
                     }
                 }
                 return true;
@@ -153,7 +157,11 @@ public class PathValidator {
                 if (!e1.reduceRange(Integer.MIN_VALUE, e2.getPriority())) {
                     if (!e2.reduceRange(e1.getPriority(), Integer.MAX_VALUE)) {
                         if (e2.getPriority() > e1.getPriority()) return false;
-                        throw new ValidationException("Path priority range cannot be reduced.");
+                        int p1 = e2.getPriority() - 100;
+                        int p2 = e1.getPriority() + 100;
+                        p1 = e1.isRoot() ? (p1 > -1000 ? -1000 : p1) : (p1 > 1000 ? 1000 : p1);
+                        p2 = e2.isRoot() ? (p2 < -1000 ? -1000 : p2) : (p2 < 1000 ? 1000 : p2);
+                        throw new ValidationException("Path priority range cannot be reduced. Modify priority of entry (" + e1.value.getEntryId() + ", " + s1 + ") to " + p1 + " or entry (" + e2.value.getEntryId() + ", " + s2 + ") to " + p2 + ".");
                     }
                 }
                 return true;
