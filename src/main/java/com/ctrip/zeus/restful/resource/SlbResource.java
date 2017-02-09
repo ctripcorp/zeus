@@ -225,7 +225,7 @@ public class SlbResource {
         }
         trim(s);
         Long checkId = slbCriteriaQuery.queryByName(s.getName());
-        if (checkId > 0L) {
+        if (checkId > 0L && !checkId.equals(s.getId())) {
             throw new ValidationException("Slb name " + s.getName() + " has been taken by " + checkId + ".");
         }
 

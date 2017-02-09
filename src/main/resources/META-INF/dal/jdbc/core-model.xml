@@ -277,7 +277,8 @@
                 <statement>
                     <![CDATA[
                     UPDATE <TABLE/>
-                    SET <FIELD name='version'/> = ${version},
+                    SET <FIELD name='name'/> = ${name},
+                        <FIELD name='version'/> = ${version},
                         <FIELD name='active-version'/> = ${active-version},
                         <FIELD name='nx-active-version'/> = ${nx-active-version}
                     WHERE <FIELD name='id'/> = ${id}
@@ -290,30 +291,6 @@
                     <![CDATA[
                     DELETE FROM <TABLE/>
                     WHERE <FIELD name='id'/> = ${id}
-                    ]]>
-                </statement>
-            </query>
-        </query-defs>
-    </entity>
-    <entity name="archive-traffic-policy" table="archive_traffic_policy" alias="atp" do-class="ArchiveTrafficPolicyDo">
-        <query-defs>
-            <query name="find-by-policy-id" type="SELECT">
-                <param name="policy-id"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='policy-id'/> = ${policy-id}
-                    ]]>
-                </statement>
-            </query>
-            <query name="find-by-policy-name" type="SELECT">
-                <param name="policy-name"/>
-                <statement>
-                    <![CDATA[
-                    SELECT <FIELDS/>
-                    FROM <TABLE/>
-                    WHERE <FIELD name='policy-name'/> = ${policy-name}
                     ]]>
                 </statement>
             </query>

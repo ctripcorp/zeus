@@ -187,7 +187,7 @@ public class TrafficPolicyResource {
         }
         trim(p);
         Long checkId = trafficPolicyQuery.queryByName(p.getName());
-        if (checkId > 0L) {
+        if (checkId > 0L && !checkId.equals(p.getId())) {
             throw new ValidationException("Traffic policy name has been taken by " + checkId + ".");
         }
 

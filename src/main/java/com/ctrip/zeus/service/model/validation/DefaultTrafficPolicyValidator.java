@@ -37,7 +37,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
 
     @Override
     public void removable(Long targetId) throws Exception {
-        if (trafficPolicyDao.findById(targetId, TrafficPolicyEntity.READSET_FULL).getActiveVersion() != 0) {
+        if (trafficPolicyDao.findById(targetId, TrafficPolicyEntity.READSET_FULL).getActiveVersion() > 0) {
             throw new ValidationException("Traffic policy that you try to delete is still active.");
         }
     }
@@ -55,6 +55,9 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         for (int i = 0; i < policy.getControls().size(); i++) {
             groupIds[i] = policy.getControls().get(i).getGroup().getId();
         }
+        if (groupIds.length <= 1) {
+            throw new ValidationException("Traffic policy that you try to create/modify does not have enough traffic-controls.");
+        }
         Arrays.sort(groupIds);
         Long prev = groupIds[0];
         for (int i = 1; i < groupIds.length; i++) {
@@ -62,9 +65,6 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                 throw new ValidationException("Traffic policy that you try to create/modify declares the same group " + prev + " more than once.");
             }
             prev = groupIds[i];
-        }
-        if (groupIds.length <= 1) {
-            throw new ValidationException("Traffic policy that you try to create/modify does not have enough traffic-controls.");
         }
         return groupIds;
     }

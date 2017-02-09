@@ -503,7 +503,7 @@ public class GroupResource {
         }
         trim(g);
         Long checkId = groupCriteriaQuery.queryByName(g.getName());
-        if (checkId > 0L) {
+        if (checkId > 0L && !checkId.equals(g.getId())) {
             throw new ValidationException("Group name " + g.getName() + " has been taken by " + checkId + ".");
         }
         IdVersion[] check = groupCriteriaQuery.queryByIdAndMode(g.getId(), SelectionMode.OFFLINE_FIRST);
@@ -561,7 +561,7 @@ public class GroupResource {
         }
         trim(g);
         Long checkId = groupCriteriaQuery.queryByName(g.getName());
-        if (checkId > 0L) {
+        if (checkId > 0L && !checkId.equals(g.getId())) {
             throw new ValidationException("Group name " + g.getName() + " has been taken by " + checkId + ".");
         }
 
