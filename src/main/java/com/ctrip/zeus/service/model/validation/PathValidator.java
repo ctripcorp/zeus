@@ -49,8 +49,8 @@ public class PathValidator {
         int size = _locationEntries.size();
         boolean[] visited = new boolean[size];
         boolean[] delayCompare = new boolean[size];
-        for (int i = 0; i < size; i++) {
-            for (int j = i + 1; j < size; j++) {
+        for (int i = size - 1; i >= 0; i--) {
+            for (int j = i - 1; j >= 0; j--) {
                 if (!compareAndModify(context, visited, _locationEntries, i, j, true)) {
                     delayCompare[i] = true;
                     delayCompare[j] = true;
@@ -140,7 +140,7 @@ public class PathValidator {
             case -1:
                 return false;
             case 0:
-                throw new ValidationException("The two path being compared are completely equivalent. Unable to solve the conflict. `path`=" + s1);
+                throw new ValidationException("The two path being compared are completely equivalent. Unable to solve the conflict. " + e1.toString() + " and " + e2.toString());
             case 1:
                 if (!e1.reduceRange(e2.getPriority(), Integer.MAX_VALUE)) {
                     if (!e2.reduceRange(Integer.MIN_VALUE, e1.getPriority())) {
@@ -284,13 +284,18 @@ public class PathValidator {
                 if (!root) {
                     priority = 1000;
                 } else if (value.getPath().equals(ROOT)) {
-                    priority = -1100;
+                    priority = -2000;
                 } else {
                     priority = -1000;
                 }
             } else {
                 ceiling = floor = priority = e.getPriority();
             }
+        }
+
+        @Override
+        public String toString() {
+            return value.getEntryType() + "-" + value.getEntryId() + " : (" + value.getPriority() + ", " + value.getPath() + ")";
         }
     }
 
@@ -310,7 +315,7 @@ public class PathValidator {
 
         String insertUri = PathUtils.extractUriIgnoresFirstDelimiter(insertEntry.getPath());
         boolean insertRootUri = "/".equals(insertUri);
-        insertEntry.setPriority(insertEntry.getPriority() == null ? (insertRootUri ? ("/".equals(insertEntry.getPath()) ? -1100 : -1000) : 1000) : insertEntry.getPriority());
+        insertEntry.setPriority(insertEntry.getPriority() == null ? (insertRootUri ? ("/".equals(insertEntry.getPath()) ? -2000 : -1000) : 1000) : insertEntry.getPriority());
 
         List<String> insertPathMembers = getPathCandidates(insertEntry, insertUri, insertRootUri);
 
@@ -392,7 +397,7 @@ public class PathValidator {
             if (pathCandidates.size() == 0) pathCandidates.add(refinedUri);
         } else {
             boolean exactRootUri = "/".equals(locationEntry.getPath());
-            locationEntry.setPriority(locationEntry.getPriority() == null ? (exactRootUri ? -1100 : -1000) : locationEntry.getPriority());
+            locationEntry.setPriority(locationEntry.getPriority() == null ? (exactRootUri ? -2000 : -1000) : locationEntry.getPriority());
             pathCandidates.add(refinedUri);
         }
         return pathCandidates;
