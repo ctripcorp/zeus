@@ -122,6 +122,7 @@
     <attribute name="id" value-type="long" />
     <attribute name="version" value-type="int" />
     <element name="name" value-type="String" />
+    <element name="created-time" value-type="Date" format="yyyy-MM-dd HH:mm:ss" />
     <entity-ref name="policy-virtual-server" type="list" names="policy-virtual-servers" xml-indent="true" />
     <entity-ref name="traffic-control" type="list" names="controls" xml-indent="true" />
     <entity-ref name="rule" type="list" names="rule-set" xml-indent="true" />

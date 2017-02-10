@@ -99,6 +99,7 @@
             <rule/>
             <rule/>
         </rule-set>
+        <created-time>2013-05-20 13:34:00</created-time>
     </traffic-policy>
     <traffic-control>
         <group/>

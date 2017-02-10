@@ -460,6 +460,10 @@ public interface ExtendedView<T> {
             return instance.getVersion();
         }
 
+        public Date getCreatedTime() {
+            return instance.getCreatedTime();
+        }
+
         @Override
         public void setTags(List<String> tags) {
             this.tags = tags;

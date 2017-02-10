@@ -13,15 +13,19 @@ import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.TrafficPolicyRepository;
+import com.ctrip.zeus.service.query.CriteriaQueryFactory;
 import com.ctrip.zeus.service.query.QueryEngine;
 import com.ctrip.zeus.service.query.TrafficPolicyQuery;
-import com.ctrip.zeus.service.query.command.QueryCommand;
+import com.ctrip.zeus.service.query.command.PropQueryCommand;
+import com.ctrip.zeus.service.query.command.TagQueryCommand;
 import com.ctrip.zeus.service.query.command.TrafficPolicyCommand;
 import com.ctrip.zeus.support.ObjectJsonParser;
 import com.ctrip.zeus.support.ObjectJsonWriter;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.tag.TagBox;
 import com.ctrip.zeus.tag.entity.Property;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -32,6 +36,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by zhoumy on 2017/1/18.
@@ -53,6 +58,8 @@ public class TrafficPolicyResource {
     private ViewDecorator viewDecorator;
     @Resource
     private ResponseHandler responseHandler;
+    @Resource
+    private CriteriaQueryFactory criteriaQueryFactory;
 
     private static Logger logger = LoggerFactory.getLogger(TrafficPolicyResource.class);
 
@@ -64,12 +71,12 @@ public class TrafficPolicyResource {
                               @TrimmedQueryParam("mode") final String mode,
                               @TrimmedQueryParam("type") final String type,
                               @Context UriInfo uriInfo) throws Exception {
-        SelectionMode selectionMode = SelectionMode.getMode(mode);
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "policy", SelectionMode.getMode(mode));
-        QueryCommand cmd = new TrafficPolicyCommand();
-        queryRender.readToCommand(cmd);
+        TrafficPolicyCommand tpcmd = new TrafficPolicyCommand();
+        filterByPropsAndTags(queryRender, tpcmd);
 
-        IdVersion[] searchKeys = trafficPolicyQuery.queryByCommand(cmd, selectionMode);
+        SelectionMode selectionMode = SelectionMode.getMode(mode);
+        IdVersion[] searchKeys = trafficPolicyQuery.queryByCommand(tpcmd, selectionMode);
         if (searchKeys == null) {
             searchKeys = trafficPolicyQuery.queryAll(SelectionMode.getMode(mode)).toArray(new IdVersion[]{});
         }
@@ -103,11 +110,32 @@ public class TrafficPolicyResource {
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
+    private void filterByPropsAndTags(QueryEngine queryRender, TrafficPolicyCommand tpcmd) throws Exception {
+        TagQueryCommand tcmd = new TagQueryCommand();
+        PropQueryCommand pcmd = new PropQueryCommand();
+
+        queryRender.readToCommand(Lists.newArrayList(tpcmd, tcmd, pcmd));
+
+        Set<Long> preFilteredId = queryRender.preFilter(criteriaQueryFactory, tcmd, pcmd, "policy");
+        if (preFilteredId == null) return;
+
+        if (tpcmd.hasValue(0)) {
+            for (String s : tpcmd.getValue(0)) {
+                try {
+                    preFilteredId.add(Long.parseLong(s));
+                } catch (NumberFormatException e) {
+                    throw new ValidationException("Invalid query value from parameter `id`.");
+                }
+            }
+        }
+        tpcmd.addAtIndex(0, preFilteredId.size() == 0 ? "-1" : Joiner.on(",").join(preFilteredId));
+    }
+
     /**
      * @api {get} /api/policies: [Read] Batch fetch policy data
      * @apiName ListPolicies
      * @apiGroup Policy
-     * @apiDescription See [Update Policy content](#api-Group-FullUpdatePolicy) for object description
+     * @apiDescription See [Update Policy content](#api-Policy-FullUpdatePolicy) for object description
      * @apiSuccess (Success 200) {PolicyObject[]} policies     policy list result after query
      * @apiSuccess (Success 200) {Integer[]} total          total number of policy entities in the policy list, it may be useful when `limit` parameter is specified
      * @apiParam {long[]} [policyId]            1,2,3
@@ -158,14 +186,14 @@ public class TrafficPolicyResource {
                          @TrimmedQueryParam("mode") final String mode,
                          @TrimmedQueryParam("type") final String type,
                          @Context UriInfo uriInfo) throws Exception {
-
         QueryEngine queryRender = new QueryEngine(QueryParamRender.extractRawQueryParam(uriInfo), "policy", SelectionMode.getMode(mode));
-        QueryCommand cmd = new TrafficPolicyCommand();
-        queryRender.readToCommand(cmd);
+        TrafficPolicyCommand tpcmd = new TrafficPolicyCommand();
+        filterByPropsAndTags(queryRender, tpcmd);
 
-        IdVersion[] searchKeys = trafficPolicyQuery.queryByCommand(cmd, SelectionMode.getMode(mode));
+        SelectionMode selectionMode = SelectionMode.getMode(mode);
+        IdVersion[] searchKeys = trafficPolicyQuery.queryByCommand(tpcmd, selectionMode);
         if (searchKeys == null) {
-            searchKeys = trafficPolicyQuery.queryAll(SelectionMode.getMode(mode)).toArray(new IdVersion[]{});
+            searchKeys = trafficPolicyQuery.queryAll(selectionMode).toArray(new IdVersion[]{});
         }
         List<TrafficPolicy> result = trafficPolicyRepository.list(searchKeys);
 

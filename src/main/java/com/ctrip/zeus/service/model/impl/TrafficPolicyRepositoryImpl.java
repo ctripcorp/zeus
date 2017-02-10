@@ -64,6 +64,7 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
         for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findAllByHash(hashes, RTrafficPolicyGroupEntity.READSET_FULL)) {
             TrafficPolicy tp = policyById.get(e.getPolicyId());
             if (tp != null && tp.getVersion().equals(e.getPolicyVersion())) {
+                tp.setCreatedTime(e.getDataChangeLastTime());
                 tp.getControls().add(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
             }
         }
@@ -88,12 +89,13 @@ public class TrafficPolicyRepositoryImpl implements TrafficPolicyRepository {
         TrafficPolicyDo d = trafficPolicyDao.findById(key.getId(), TrafficPolicyEntity.READSET_FULL);
         tp.setName(d.getName());
         for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findByPolicy(key.getId(), key.getVersion(), RTrafficPolicyGroupEntity.READSET_FULL)) {
-            if (tp != null && tp.getVersion().equals(e.getPolicyVersion())) {
+            if (tp.getVersion().equals(e.getPolicyVersion())) {
+                tp.setCreatedTime(e.getDataChangeLastTime());
                 tp.getControls().add(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
             }
         }
         for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findByPolicy(key.getId(), key.getVersion(), RTrafficPolicyVsEntity.READSET_FULL)) {
-            if (tp != null && tp.getVersion().equals(e.getPolicyVersion())) {
+            if (tp.getVersion().equals(e.getPolicyVersion())) {
                 tp.getPolicyVirtualServers().add(new PolicyVirtualServer().setPath(e.getPath()).setPriority(e.getPriority()).setVirtualServer(new VirtualServer().setId(e.getVsId())));
             }
         }

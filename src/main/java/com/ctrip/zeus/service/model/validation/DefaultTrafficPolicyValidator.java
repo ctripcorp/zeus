@@ -94,7 +94,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                 int j = Arrays.binarySearch(controlIds, ee.getEntryId());
                 if (j < 0) continue;
                 visited[j] = i;
-                if (e.getPriority() < ee.getPriority()) {
+                if (e.getPriority() <= ee.getPriority()) {
                     String error = "Traffic policy has lower `priority` than its control item " + controlIds[j] + " on vs " + vsId + ".";
                     _context.error(policyId, MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, error);
                     _context.error(controlIds[j], MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, error);
