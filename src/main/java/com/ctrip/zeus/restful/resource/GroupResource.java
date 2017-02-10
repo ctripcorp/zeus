@@ -328,7 +328,8 @@ public class GroupResource {
      * @apiName CreateGroup
      * @apiGroup Group
      * @apiDescription See [Update group content](#api-Group-FullUpdateGroup) for object description
-     * @apiSuccess {Group} newly created group object
+     * @apiParam {boolean} [force]             skip all validations and forcibly create a group
+     * @apiSuccess (Success 200) {GroupObject} group    newly created group object
      **/
     @POST
     @Path("/group/new")

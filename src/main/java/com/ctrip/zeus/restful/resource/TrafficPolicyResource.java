@@ -103,6 +103,53 @@ public class TrafficPolicyResource {
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/policies: [Read] Batch fetch policy data
+     * @apiName ListPolicies
+     * @apiGroup Policy
+     * @apiDescription See [Update Policy content](#api-Group-FullUpdatePolicy) for object description
+     * @apiSuccess (Success 200) {PolicyObject[]} policies     policy list result after query
+     * @apiSuccess (Success 200) {Integer[]} total          total number of policy entities in the policy list, it may be useful when `limit` parameter is specified
+     * @apiParam {long[]} [policyId]            1,2,3
+     * @apiParam {string[]} [policyName]        dev,localhost,test
+     * @apiParam {string[]} [fuzzyName]         de,local,te
+     * @apiParam {long[]} [vsId]                1001,1101,1100
+     * @apiParam {long[]} [groupId]             1001,1101,1100
+     * @apiParam {string=online,offline,redundant(online&offline)} [mode]   query snapshot versions by mode
+     * @apiParam {string[]} [anyTag]      union search policy by tags e.g. anyTag=policy1,policy2
+     * @apiParam {string[]} [tags]        join search policy by tags e.g. tags=policy1,policy2
+     * @apiParam {string[]} [anyProp]     union search policy by properties(key:value) e.g. anyProp=dc:oy,dc:jq
+     * @apiParam {string[]} [props]       join search policy by properties(key:value) e.g. props=department:hotel,dc:jq
+     * @apiSuccessExample {json} JSON format:
+     * {
+     *   "id": 1,
+     *   "name": "policy1",
+     *   "version": 3,
+     *   "policy-virtual-servers": [
+     *     {
+     *       "priority": 1000,
+     *       "path": "~*  ^/path",
+     *       "virtual-server": {
+     *         "id": 1
+     *       }
+     *     }
+     *   ],
+     *   "controls": [
+     *     {
+     *       "group": {
+     *         "id": 1
+     *       },
+     *       "weight": 3
+     *     },
+     *     {
+     *       "group": {
+     *         "id": 2
+     *       },
+     *       "weight": 5
+     *     }
+     *   ]
+     * }
+     */
     @GET
     @Path("/policies")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -138,6 +185,13 @@ public class TrafficPolicyResource {
         return responseHandler.handleSerializedValue(ObjectJsonWriter.write(listView, type), hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/policy: [Read] Get single policy data
+     * @apiName GetSinglePolicy
+     * @apiGroup Policy
+     * @apiDescription See [Batch fetch policy data](#api-Policy-ListPolicies) for more information
+     * @apiSuccess (Success 200) {PolicyObject} policy    policy entity
+     */
     @POST
     @Path("/policy/new")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
@@ -172,6 +226,53 @@ public class TrafficPolicyResource {
         return responseHandler.handle(p, hh.getMediaType());
     }
 
+    /**
+     * @api {post} /api/policy/update: [Write] Update policy content
+     * @apiName FullUpdatePolicy
+     * @apiGroup Policy
+     * @apiSuccess (Success 200) {PolicyObject} policy    updated policy entity
+     * @apiParam   (PolicyObject) {Long} id                          id
+     * @apiParam   (PolicyObject) {String} name                      name
+     * @apiParam   (PolicyObject) {Integer} version                  version
+     * @apiParam   (PolicyObject) {PolicyVirtualServer[]} policy-virtual-servers   configuration on specified virtual server
+     * @apiParam   (PolicyObject) {PolicyControl[]} controls         policy control list
+     * @apiParam   (PolicyObject) {String[]} [tags]                  add tags to policy
+     * @apiParam   (PolicyObject) {Object[]} [properties]            add/update properties of policy
+     * @apiParam (PolicyVirtualServer) {String} path                 location entry on the specified virtual server
+     * @apiParam (PolicyVirtualServer) {Integer} priority            must be explicitly set and higher than its controls' priority
+     * @apiParam (PolicyVirtualServer) {Object} virtual-server       combined virtual server [id only]
+     * @apiParam (PolicyControl) {Group} group                a/b testing group
+     * @apiParam (PolicyControl) {Integer} weight             proxying weight of this group
+     * @apiParamExample {json} Sample Request:
+     * {
+     *   "id": 1,
+     *   "name": "policy1",
+     *   "version": 3,
+     *   "policy-virtual-servers": [
+     *     {
+     *       "priority": 1000,
+     *       "path": "~*  ^/path",
+     *       "virtual-server": {
+     *         "id": 1
+     *       }
+     *     }
+     *   ],
+     *   "controls": [
+     *     {
+     *       "group": {
+     *         "id": 1
+     *       },
+     *       "weight": 3
+     *     },
+     *     {
+     *       "group": {
+     *         "id": 2
+     *       },
+     *       "weight": 5
+     *     }
+     *   ]
+     * }
+     */
     @POST
     @Path("/policy/update")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
