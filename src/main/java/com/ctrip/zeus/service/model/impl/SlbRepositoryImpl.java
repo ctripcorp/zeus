@@ -63,6 +63,7 @@ public class SlbRepositoryImpl implements SlbRepository {
             try {
                 Slb slb = ContentReaders.readSlbContent(d.getContent());
                 slb.setCreatedTime(d.getDataChangeLastTime());
+                autoFiller.autofill(slb);
                 result.add(slb);
             } catch (Exception e) {
             }
@@ -86,7 +87,7 @@ public class SlbRepositoryImpl implements SlbRepository {
 
         Slb result = ContentReaders.readSlbContent(d.getContent());
         result.setCreatedTime(d.getDataChangeLastTime());
-
+        autoFiller.autofill(result);
         return result;
     }
 

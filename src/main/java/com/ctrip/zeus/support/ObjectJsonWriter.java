@@ -20,12 +20,12 @@ public class ObjectJsonWriter {
         objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.INDENT_OUTPUT, true)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
+                .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
                 .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"))
                 .setPropertyNamingStrategy(new LowerCaseWithHyphenStrategy());
-        objectMapper.addMixInAnnotations(ExtendedView.ExtendedGroup.class, GroupView.class);
-        objectMapper.addMixInAnnotations(ExtendedView.ExtendedVs.class, VsView.class);
-        objectMapper.addMixInAnnotations(ExtendedView.ExtendedSlb.class, SlbView.class);
+        objectMapper.addMixIn(ExtendedView.ExtendedGroup.class, GroupView.class);
+        objectMapper.addMixIn(ExtendedView.ExtendedVs.class, VsView.class);
+        objectMapper.addMixIn(ExtendedView.ExtendedSlb.class, SlbView.class);
     }
 
     public static String write(Object obj, String type) throws ValidationException, JsonProcessingException {

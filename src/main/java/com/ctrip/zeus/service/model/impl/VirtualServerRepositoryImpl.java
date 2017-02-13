@@ -6,17 +6,15 @@ import com.ctrip.zeus.dal.core.MetaVsArchiveDo;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Domain;
 import com.ctrip.zeus.model.entity.VirtualServer;
-import com.ctrip.zeus.service.model.SelectionMode;
-import com.ctrip.zeus.service.model.ValidationFacade;
-import com.ctrip.zeus.service.model.VirtualServerRepository;
+import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.model.handler.SlbQuery;
 import com.ctrip.zeus.service.model.validation.VirtualServerValidator;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.VirtualServerEntityManager;
 import com.ctrip.zeus.service.nginx.CertificateService;
-import com.ctrip.zeus.service.model.IdVersion;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
+import com.dianping.cat.Cat;
 import com.google.common.base.Joiner;
 import org.springframework.stereotype.Component;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -43,6 +41,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     private CertificateService certificateService;
     @Resource
     private ArchiveVsDao archiveVsDao;
+    @Resource
+    private AutoFiller autoFiller;
 
     @Override
     public List<VirtualServer> listAll(Long[] vsIds) throws Exception {
@@ -63,6 +63,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
             try {
                 VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
                 vs.setCreatedTime(d.getDateTimeLastChange());
+                autoFiller.autofill(vs);
                 result.add(vs);
             } catch (Exception e) {
             }
@@ -85,6 +86,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
         VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
         vs.setCreatedTime(d.getDateTimeLastChange());
+        autoFiller.autofill(vs);
         return vs;
     }
 
@@ -94,6 +96,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         //TODO render for deprecated field
         if (virtualServer.getSlbId() != null) {
             if (!virtualServer.getSlbIds().contains(virtualServer.getSlbId())) {
+                Cat.logEvent("Vs-Slb.Deprecated", virtualServer.getName().toString());
                 virtualServer.getSlbIds().add(virtualServer.getSlbId());
             }
             virtualServer.setSlbId(null);
@@ -118,6 +121,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         //TODO render for deprecated field
         if (virtualServer.getSlbId() != null) {
             if (!virtualServer.getSlbIds().contains(virtualServer.getSlbId())) {
+                Cat.logEvent("Vs-Slb.Deprecated", virtualServer.getName().toString());
                 virtualServer.getSlbIds().add(virtualServer.getSlbId());
             }
             virtualServer.setSlbId(null);
