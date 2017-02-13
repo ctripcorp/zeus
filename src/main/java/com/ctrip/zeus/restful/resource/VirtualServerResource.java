@@ -224,8 +224,7 @@ public class VirtualServerResource {
      * "name" : "localhost_80"
      * } ],
      * "ssl" : false,
-     * "slb-ids" : [ 3 ],
-     * "slb-id" : 3
+     * "slb-ids" : [ 3 ]
      * }
      */
     @POST
