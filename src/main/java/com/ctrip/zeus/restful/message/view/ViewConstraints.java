@@ -1,7 +1,5 @@
 package com.ctrip.zeus.restful.message.view;
 
-import com.ctrip.zeus.exceptions.ValidationException;
-
 /**
  * Created by zhoumy on 2016/7/25.
  */
@@ -11,7 +9,7 @@ public class ViewConstraints {
     public static final String DETAIL = "DETAIL";
     public static final String EXTENDED = "EXTENDED";
 
-    static public Class<?> getContraintType(String type) throws ValidationException {
+    static public Class<?> getContraintType(String type) {
         if (type == null || type.isEmpty()) return Detail.class;
 
         switch (type.toUpperCase()) {
