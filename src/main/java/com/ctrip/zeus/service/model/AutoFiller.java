@@ -11,6 +11,7 @@ public class AutoFiller {
     private static final String RegexRootPath = " /";
 
     public void autofill(Group group) {
+        group.setSsl(group.getSsl() == null ? false:group.getSsl());
         for (GroupVirtualServer gvs : group.getGroupVirtualServers()) {
             gvs.setVirtualServer(new VirtualServer().setId(gvs.getVirtualServer().getId()));
 
