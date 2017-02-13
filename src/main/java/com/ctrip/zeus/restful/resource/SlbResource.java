@@ -176,7 +176,14 @@ public class SlbResource {
         if (s == null) {
             throw new ValidationException("Invalid post entity. Fail to parse json to slb.");
         }
+        if (s.getName() == null) {
+            throw new ValidationException("Field `name` is not allowed empty.");
+        }
         trim(s);
+        Long checkId = slbCriteriaQuery.queryByName(s.getName());
+        if (checkId > 0L) {
+            throw new ValidationException("Slb name " + s.getName() + " has been taken by " + checkId + ".");
+        }
 
         s = slbRepository.add(s);
 
@@ -213,7 +220,14 @@ public class SlbResource {
         if (s == null) {
             throw new ValidationException("Invalid post entity. Fail to parse json to slb.");
         }
+        if (s.getName() == null) {
+            throw new ValidationException("Field `name` is not allowed empty.");
+        }
         trim(s);
+        Long checkId = slbCriteriaQuery.queryByName(s.getName());
+        if (checkId > 0L && !checkId.equals(s.getId())) {
+            throw new ValidationException("Slb name " + s.getName() + " has been taken by " + checkId + ".");
+        }
 
         IdVersion[] check = slbCriteriaQuery.queryByIdAndMode(s.getId(), SelectionMode.OFFLINE_FIRST);
         if (check.length == 0) throw new ValidationException("Slb " + s.getId() + " cannot be found.");

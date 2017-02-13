@@ -59,7 +59,6 @@ public interface ExtendedView<T> {
             return instance.getAppId();
         }
 
-
         @Override
         HealthCheck getHealthCheck() {
             return instance.getHealthCheck();
@@ -256,7 +255,7 @@ public interface ExtendedView<T> {
 
         @Override
         public VirtualServer getInstance() {
-            return null;
+            return instance;
         }
 
         public static void renderVirtualServer(VirtualServer vs) {
@@ -424,6 +423,70 @@ public interface ExtendedView<T> {
                     }
                     return null;
             }
+        }
+    }
+
+    class ExtendedTrafficPolicy implements ExtendedView<TrafficPolicy> {
+        private List<String> tags;
+        private List<Property> properties;
+        private final TrafficPolicy instance;
+
+        public ExtendedTrafficPolicy() {
+            this(new TrafficPolicy());
+        }
+
+        public ExtendedTrafficPolicy(TrafficPolicy instance) {
+            this.instance = instance;
+        }
+
+        @Override
+        public Long getId() {
+            return instance.getId();
+        }
+
+        public List<TrafficControl> getControls() {
+            return instance.getControls();
+        }
+
+        public String getName() {
+            return instance.getName();
+        }
+
+        public List<PolicyVirtualServer> getPolicyVirtualServers() {
+            return instance.getPolicyVirtualServers();
+        }
+
+        public Integer getVersion() {
+            return instance.getVersion();
+        }
+
+        public Date getCreatedTime() {
+            return instance.getCreatedTime();
+        }
+
+        @Override
+        public void setTags(List<String> tags) {
+            this.tags = tags;
+        }
+
+        @Override
+        public void setProperties(List<Property> properties) {
+            this.properties = properties;
+        }
+
+        @Override
+        public List<String> getTags() {
+            return tags;
+        }
+
+        @Override
+        public List<Property> getProperties() {
+            return properties;
+        }
+
+        @Override
+        public TrafficPolicy getInstance() {
+            return getInstance();
         }
     }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,14 @@ public class ObjectJsonParser {
             .setPropertyNamingStrategy(new LowerCaseWithHyphenStrategy());
 
     public static <T> T parse(String jsonValue, Class<T> t) {
+        try {
+            return objectMapper.readValue(jsonValue, t);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public static <T> T parse(InputStream jsonValue, Class<T> t) {
         try {
             return objectMapper.readValue(jsonValue, t);
         } catch (IOException e) {

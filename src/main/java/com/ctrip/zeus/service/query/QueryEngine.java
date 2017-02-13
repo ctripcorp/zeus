@@ -58,6 +58,22 @@ public class QueryEngine {
         sequenceController[4] = propertyCommand;
     }
 
+    public void readToCommand(List<QueryCommand> command) {
+        Queue<String[]> curr = new LinkedList<>(params);
+        Queue<String[]> next = new LinkedList<>();
+        for (QueryCommand c : command) {
+            while (!curr.isEmpty()) {
+                String[] e = curr.poll();
+                if (!c.add(e[0], e[1])) {
+                    next.add(e);
+                }
+            }
+            Queue<String[]> tmp = curr;
+            curr = next;
+            next = tmp;
+        }
+    }
+
     public void init(boolean skipable) throws ValidationException {
         Queue<String[]> curr = new LinkedList<>(params);
         Queue<String[]> next = new LinkedList<>();
@@ -141,7 +157,7 @@ public class QueryEngine {
             }
             if (pre.size() == 0) {
                 c.addAtIndex(0, "-1");
-            }else {
+            } else {
                 c.addAtIndex(0, Joiner.on(",").join(pre));
             }
         }
@@ -175,6 +191,22 @@ public class QueryEngine {
             result = tmp.toArray(new IdVersion[tmp.size()]);
         }
         return result;
+    }
+
+    public Set<Long> preFilter(CriteriaQueryFactory criteriaQueryFactory, TagQueryCommand tagCommand, PropQueryCommand propertyCommand, String resource) throws Exception {
+        Set<Long> preFilterId = null;
+        if (tagCommand != null) {
+            preFilterId = criteriaQueryFactory.getTagService().queryByCommand(tagCommand, resource);
+        }
+        if (propertyCommand != null) {
+            Set<Long> tmp = criteriaQueryFactory.getPropertyService().queryByCommand(propertyCommand, resource);
+            if (preFilterId == null) {
+                preFilterId = tmp;
+            } else {
+                preFilterId.retainAll(tmp);
+            }
+        }
+        return preFilterId == null ? null : preFilterId;
     }
 
     private IdVersion[] traverseQuery(String[] queryCommands, int idx, CriteriaQueryFactory criteriaQueryFactory) throws Exception {

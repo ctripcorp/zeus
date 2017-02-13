@@ -33,6 +33,22 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-slbs-and-vs-offline-version" type="SELECT" multiple="true">
+                <param name="ids"/>
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/>
+                    INNER JOIN (SELECT rvs.vs_id, rvs.vs_version
+                        FROM r_vs_slb rvs
+                        INNER JOIN r_vs_status rvss
+                            ON rvs.vs_id = rvss.vs_id
+                            AND rvs.slb_id IN <IN>${ids}</IN>
+                            AND rvs.vs_version = rvss.offline_version) AS tmp
+                    ON av.vs_id = tmp.vs_id AND av.version = tmp.vs_version
+                    ]]>
+                </statement>
+            </query>
             <query name="find-versionized-by-ids" type="SELECT" multiple="true">
                 <param name="ids"/>
                 <statement>

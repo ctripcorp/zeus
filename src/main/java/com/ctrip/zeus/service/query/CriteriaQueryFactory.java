@@ -18,6 +18,8 @@ public class CriteriaQueryFactory {
     @Resource
     private CriteriaQuery virtualServerCriteriaQuery;
     @Resource
+    private CriteriaQuery trafficPolicyQuery;
+    @Resource
     private TagService tagService;
     @Resource
     private PropertyService propertyService;
@@ -30,6 +32,8 @@ public class CriteriaQueryFactory {
                 return virtualServerCriteriaQuery;
             case "slb":
                 return slbCriteriaQuery;
+            case "policy":
+                return trafficPolicyQuery;
             default:
                 return null;
         }

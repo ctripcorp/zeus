@@ -87,6 +87,7 @@ public class C {
                 .setCreateTime(msg.getCreateTime())
                 .setPerformer(msg.getPerformer());
     }
+
     public static Message toMessage(MessageQueueDo msg) {
         return new Message()
                 .setTargetData(msg.getTargetData())
@@ -108,10 +109,12 @@ public class C {
                 .setFailCause(task.getFailCause())
                 .setIpList(task.getIpList())
                 .setGroupId(task.getGroupId())
+                .setPolicyId(task.getPolicyId())
                 .setOpsType(task.getOpsType())
                 .setResources(task.getResources())
                 .setSlbVirtualServerId(task.getSlbVirtualServerId())
-                .setSlbId(task.getSlbId());
+                .setSlbId(task.getSlbId())
+                .setSkipValidate(task.isSkipValidate());
         return result;
     }
 
@@ -126,10 +129,12 @@ public class C {
                 .setFailCause(opsTask.getFailCause())
                 .setIpList(opsTask.getIpList())
                 .setGroupId(opsTask.getGroupId() == null ? 0 : opsTask.getGroupId())
+                .setPolicyId(opsTask.getPolicyId() == null ? 0 : opsTask.getPolicyId())
                 .setOpsType(opsTask.getOpsType())
                 .setResources(opsTask.getResources())
                 .setSlbVirtualServerId(opsTask.getSlbVirtualServerId() == null ? 0 : opsTask.getSlbVirtualServerId())
-                .setSlbId(opsTask.getSlbId() == null ? 0 : opsTask.getSlbId());
+                .setSlbId(opsTask.getSlbId() == null ? 0 : opsTask.getSlbId())
+                .setSkipValidate(opsTask.getSkipValidate() == null ? false : opsTask.getSkipValidate());
         return result;
     }
 
@@ -209,17 +214,16 @@ public class C {
     }
 
     private static String subIds(List<Long> sub) {
-        if(sub==null || sub.size()==0) return null;
+        if (sub == null || sub.size() == 0) return null;
 
-        StringBuilder sb=new StringBuilder();
-        for (Long i:sub)
-        {
-            sb.append(i+",");
+        StringBuilder sb = new StringBuilder();
+        for (Long i : sub) {
+            sb.append(i + ",");
         }
 
-        String result=sb.toString();
+        String result = sb.toString();
         int lastSpliter = result.lastIndexOf(",");
 
-        return result.substring(0,lastSpliter);
+        return result.substring(0, lastSpliter);
     }
 }

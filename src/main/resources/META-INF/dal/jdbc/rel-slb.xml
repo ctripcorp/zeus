@@ -23,6 +23,16 @@
                     ]]>
                 </statement>
             </query>
+            <query name="find-all-by-slb-offline-version" type="SELECT" multiple="true">
+                <statement>
+                    <![CDATA[
+                    SELECT <FIELDS/>
+                    FROM <TABLE/> INNER JOIN r_slb_status rss
+                    ON <FIELD name='slb-id'/> = rss.slb_id AND <FIELD name='slb-version'/> = rss.offline_version
+                    WHERE rss.id IS NOT NULL
+                    ]]>
+                </statement>
+            </query>
             <query name="find-by-ip" type="SELECT" multiple="true">
                 <param name="ip"/>
                 <statement>

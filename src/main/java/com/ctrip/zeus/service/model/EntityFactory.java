@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.model;
 
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.TrafficPolicy;
 import com.ctrip.zeus.model.entity.VirtualServer;
 
 /**
@@ -18,6 +19,10 @@ public interface EntityFactory {
     ModelStatusMapping<VirtualServer> getVsesByIds(Long[] vsIds) throws Exception;
 
     ModelStatusMapping<Group> getGroupsByIds(Long[] groupIds) throws Exception;
+
+    ModelStatusMapping<TrafficPolicy> getPoliciesByIds(Long[] policyIds) throws Exception;
+
+    ModelStatusMapping<TrafficPolicy> getPoliciesByVsIds(Long[] vsIds) throws Exception;
 
     Long[] getGroupIdsByGroupServerIp(String ip, SelectionMode mode) throws Exception;
 

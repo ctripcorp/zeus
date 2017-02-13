@@ -10,12 +10,14 @@
     <element name="id" value-type="long" />
     <element name="slb-id" value-type="long" />
     <element name="group-id" value-type="long" />
+    <element name="policy-id" value-type="long" />
     <element name="ops-type" value-type="String" />
     <element name="ip-list" value-type="String" />
     <element name="up" value-type="boolean" />
     <element name="status" value-type="String" />
     <element name="target-slb-id" value-type="long" />
     <element name="version" value-type="int" />
+    <element name="skip-validate" value-type="boolean" />
     <element name="slb-virtual-server-id" value-type="long" />
     <element name="resources" value-type="String" />
     <element name="fail-cause" value-type="String" />

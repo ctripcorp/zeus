@@ -3,11 +3,15 @@ package com.ctrip.zeus.service.model.impl;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
+import com.ctrip.zeus.model.entity.TrafficPolicy;
 import com.ctrip.zeus.model.entity.VirtualServer;
 import com.ctrip.zeus.service.model.Archive;
 import com.ctrip.zeus.service.model.ArchiveRepository;
+import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.model.handler.impl.ContentWriters;
+import com.ctrip.zeus.support.ObjectJsonParser;
+import com.ctrip.zeus.util.CompressUtils;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -33,6 +37,8 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     private ArchiveVsDao archiveVsDao;
     @Resource
     private ArchiveCommitDao archiveCommitDao;
+    @Resource
+    private ArchiveTrafficPolicyDao archiveTrafficPolicyDao;
 
     @Override
     public void archiveGroup(Group group) throws Exception {
@@ -51,6 +57,12 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     public void archiveVs(VirtualServer vs) throws Exception {
         archiveVsDao.insert(new MetaVsArchiveDo().setVsId(vs.getId()).setHash(0).setVersion(0)
                 .setContent(ContentWriters.writeVirtualServerContent(vs)));
+    }
+
+    @Override
+    public void archivePolicy(TrafficPolicy trafficPolicy) throws Exception {
+        archiveTrafficPolicyDao.insert(new ArchiveTrafficPolicyDo().setPolicyId(trafficPolicy.getId()).setPolicyName(trafficPolicy.getName()).setVersion(0)
+                .setContent(CompressUtils.compressToGzippedBase64String(ContentWriters.write(trafficPolicy))));
     }
 
     @Override
@@ -89,6 +101,18 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     }
 
     @Override
+    public TrafficPolicy getPolicyArchive(Long id, String name) throws Exception {
+        ArchiveTrafficPolicyDo d = null;
+        if (id != null && id > 0L) {
+            d = archiveTrafficPolicyDao.findByPolicyId(id, ArchiveTrafficPolicyEntity.READSET_FULL);
+        }
+        if (d == null && name != null) {
+            d = archiveTrafficPolicyDao.findByPolicyName(name, ArchiveTrafficPolicyEntity.READSET_FULL);
+        }
+        return d == null ? null : ObjectJsonParser.parse(CompressUtils.decompressGzippedBase64String(d.getContent()), TrafficPolicy.class);
+    }
+
+    @Override
     public List<Archive<Group>> getAllGroupArchives(Long id) throws Exception {
         List<ArchiveGroupDo> archives = archiveGroupDao.findAllByGroup(id, ArchiveGroupEntity.READSET_CONTENT_EXCLUDED);
         Long[] archiveIds = new Long[archives.size()];
@@ -97,7 +121,7 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
         }
 
         Map<Long, ArchiveCommitDo> commitByArchiveId = new HashMap<>();
-        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, Archive.GROUP, ArchiveCommitEntity.READSET_FULL)) {
+        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, MetaType.GROUP.getId(), ArchiveCommitEntity.READSET_FULL)) {
             commitByArchiveId.put(d.getArchiveId(), d);
         }
         List<Archive<Group>> result = new ArrayList<>(archives.size());
@@ -122,7 +146,7 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
         }
 
         Map<Long, ArchiveCommitDo> commitByArchiveId = new HashMap<>();
-        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, Archive.SLB, ArchiveCommitEntity.READSET_FULL)) {
+        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, MetaType.SLB.getId(), ArchiveCommitEntity.READSET_FULL)) {
             commitByArchiveId.put(d.getArchiveId(), d);
         }
         List<Archive<Slb>> result = new ArrayList<>(archives.size());
@@ -147,7 +171,7 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
         }
 
         Map<Long, ArchiveCommitDo> commitByArchiveId = new HashMap<>();
-        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, Archive.VS, ArchiveCommitEntity.READSET_FULL)) {
+        for (ArchiveCommitDo d : archiveCommitDao.findAllByArchiveAndType(archiveIds, MetaType.VS.getId(), ArchiveCommitEntity.READSET_FULL)) {
             commitByArchiveId.put(d.getArchiveId(), d);
         }
         List<Archive<VirtualServer>> result = new ArrayList<>(archives.size());

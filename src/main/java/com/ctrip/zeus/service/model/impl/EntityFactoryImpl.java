@@ -2,10 +2,7 @@ package com.ctrip.zeus.service.model.impl;
 
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.executor.impl.ResultHandler;
-import com.ctrip.zeus.model.entity.Group;
-import com.ctrip.zeus.model.entity.GroupVirtualServer;
-import com.ctrip.zeus.model.entity.Slb;
-import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
@@ -37,6 +34,12 @@ public class EntityFactoryImpl implements EntityFactory {
     private RVsStatusDao rVsStatusDao;
     @Resource
     private RSlbStatusDao rSlbStatusDao;
+    @Resource
+    private RTrafficPolicyGroupDao rTrafficPolicyGroupDao;
+    @Resource
+    private RTrafficPolicyVsDao rTrafficPolicyVsDao;
+    @Resource
+    private TrafficPolicyDao trafficPolicyDao;
 
     @Resource
     private AutoFiller autoFiller;
@@ -161,6 +164,103 @@ public class EntityFactoryImpl implements EntityFactory {
             if (d.getOnlineVersion() != 0) {
                 result.addOnline(d.getGroupId(), ref.get(d.getGroupId() + "," + d.getOnlineVersion()));
             }
+        }
+        return result;
+    }
+
+    @Override
+    public ModelStatusMapping<TrafficPolicy> getPoliciesByIds(Long[] policyIds) throws Exception {
+        Map<Long, TrafficPolicy> offlineResult = new HashMap<>();
+        Map<Long, TrafficPolicy> onlineResult = new HashMap<>();
+        Set<Integer> searchKeys = new HashSet<>();
+        for (TrafficPolicyDo e : trafficPolicyDao.findAllByIds(policyIds, TrafficPolicyEntity.READSET_FULL)) {
+            offlineResult.put(e.getId(), new TrafficPolicy().setId(e.getId()).setName(e.getName()).setVersion(e.getNxActiveVersion()));
+            searchKeys.add(VersionUtils.getHash(e.getId(), e.getNxActiveVersion()));
+            if (e.getActiveVersion() > 0) {
+                onlineResult.put(e.getId(), new TrafficPolicy().setId(e.getId()).setVersion(e.getActiveVersion()));
+                searchKeys.add(VersionUtils.getHash(e.getId(), e.getActiveVersion()));
+            }
+        }
+
+        Integer[] hashes = searchKeys.toArray(new Integer[searchKeys.size()]);
+        for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findAllByHash(hashes, RTrafficPolicyGroupEntity.READSET_FULL)) {
+            TrafficPolicy v = offlineResult.get(e.getPolicyId());
+            if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
+                v.addTrafficControl(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
+            }
+            v = onlineResult.get(e.getPolicyId());
+            if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
+                v.addTrafficControl(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
+            }
+        }
+
+        for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findAllByHash(hashes, RTrafficPolicyVsEntity.READSET_FULL)) {
+            TrafficPolicy v = offlineResult.get(e.getPolicyId());
+            if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
+                v.addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(e.getVsId())).setPath(e.getPath()).setPriority(e.getPriority()));
+            }
+            v = onlineResult.get(e.getPolicyId());
+            if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
+                v.addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(e.getVsId())).setPath(e.getPath()).setPriority(e.getPriority()));
+            }
+        }
+
+        ModelStatusMapping<TrafficPolicy> result = new ModelStatusMapping<>();
+        for (Map.Entry<Long, TrafficPolicy> e : offlineResult.entrySet()) {
+            result.addOffline(e.getKey(), e.getValue());
+        }
+        for (Map.Entry<Long, TrafficPolicy> e : onlineResult.entrySet()) {
+            result.addOnline(e.getKey(), e.getValue());
+        }
+        return result;
+    }
+
+    @Override
+    public ModelStatusMapping<TrafficPolicy> getPoliciesByVsIds(Long[] vsIds) throws Exception {
+        Map<Long, TrafficPolicy> offlineResult = new HashMap<>();
+        Map<Long, TrafficPolicy> onlineResult = new HashMap<>();
+        Set<Integer> searchKeys = new HashSet<>();
+        for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findByVsesAndPolicyVersion(vsIds, RTrafficPolicyVsEntity.READSET_FULL)) {
+            offlineResult.put(e.getPolicyId(), new TrafficPolicy().setId(e.getPolicyId()).setVersion(e.getPolicyVersion())
+                    .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(e.getVsId())).setPath(e.getPath()).setPriority(e.getPriority())));
+            searchKeys.add(e.getHash());
+        }
+        for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findByVsesAndPolicyActiveVersion(vsIds, RTrafficPolicyVsEntity.READSET_FULL)) {
+            onlineResult.put(e.getPolicyId(), new TrafficPolicy().setId(e.getPolicyId()).setVersion(e.getPolicyVersion())
+                    .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(e.getVsId())).setPath(e.getPath()).setPriority(e.getPriority())));
+            searchKeys.add(e.getHash());
+        }
+
+        for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findAllByHash(searchKeys.toArray(new Integer[searchKeys.size()]), RTrafficPolicyGroupEntity.READSET_FULL)) {
+            TrafficPolicy v = offlineResult.get(e.getPolicyId());
+            if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
+                v.addTrafficControl(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
+            }
+            v = onlineResult.get(e.getPolicyId());
+            if (v != null && v.getVersion().equals(e.getPolicyVersion())) {
+                v.addTrafficControl(new TrafficControl().setGroup(new Group().setId(e.getGroupId())).setWeight(e.getWeight()));
+            }
+        }
+
+        Set<Long> pIds = new HashSet<>(offlineResult.keySet());
+        pIds.addAll(onlineResult.keySet());
+        for (TrafficPolicyDo e : trafficPolicyDao.findAllByIds(pIds.toArray(new Long[pIds.size()]), TrafficPolicyEntity.READSET_FULL)) {
+            TrafficPolicy tp = offlineResult.get(e.getId());
+            if (tp != null) {
+                tp.setName(e.getName());
+            }
+            tp = onlineResult.get(e.getId());
+            if (tp != null) {
+                tp.setName(e.getName());
+            }
+        }
+
+        ModelStatusMapping<TrafficPolicy> result = new ModelStatusMapping<>();
+        for (Map.Entry<Long, TrafficPolicy> e : offlineResult.entrySet()) {
+            result.addOffline(e.getKey(), e.getValue());
+        }
+        for (Map.Entry<Long, TrafficPolicy> e : onlineResult.entrySet()) {
+            result.addOnline(e.getKey(), e.getValue());
         }
         return result;
     }

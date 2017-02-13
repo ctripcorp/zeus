@@ -7,6 +7,9 @@ public class TaskOpsType {
     public static final String ACTIVATE_GROUP = "Activate_Group";
     public static final String DEACTIVATE_GROUP = "Deactivate_Group";
     public static final String SOFT_DEACTIVATE_GROUP = "Soft_Deactivate_Group";
+    public static final String SOFT_DEACTIVATE_POLICY = "Soft_Deactivate_Policy";
+    public static final String DEACTIVATE_POLICY = "Deactivate_Policy";
+    public static final String ACTIVATE_POLICY = "Activate_Policy";
     public static final String ACTIVATE_SLB = "Activate_SLB";
     public static final String SERVER_OPS = "Server_Ops";
     public static final String MEMBER_OPS = "Member_Ops";

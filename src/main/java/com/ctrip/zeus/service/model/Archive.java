@@ -13,10 +13,6 @@ public class Archive<T> {
     private String author;
     private String commitMessage;
 
-    public static final int GROUP = 1;
-    public static final int VS = 2;
-    public static final int SLB = 3;
-
     public long getId() {
         return id;
     }

@@ -46,6 +46,15 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>archive-traffic-policy</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>archive_traffic_policy</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>archive-vs</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -442,6 +451,24 @@
 		</component>
 		<component>
 			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>r-traffic-policy-group</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>r_traffic_policy_group</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>r-traffic-policy-vs</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>r_traffic_policy_vs</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
 			<role-hint>r-vs-domain</role-hint>
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
@@ -482,6 +509,15 @@
 			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
 			<configuration>
 				<physical-table-name>report_queue</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>rule</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>rule</physical-table-name>
 				<data-source-name>zeus</data-source-name>
 			</configuration>
 		</component>
@@ -621,6 +657,15 @@
 			</configuration>
 		</component>
 		<component>
+			<role>org.unidal.dal.jdbc.mapping.TableProvider</role>
+			<role-hint>traffic-policy</role-hint>
+			<implementation>org.unidal.dal.jdbc.mapping.SimpleTableProvider</implementation>
+			<configuration>
+				<physical-table-name>traffic_policy</physical-table-name>
+				<data-source-name>zeus</data-source-name>
+			</configuration>
+		</component>
+		<component>
 			<role>com.ctrip.zeus.dal.core.AppInfoDao</role>
 			<implementation>com.ctrip.zeus.dal.core.AppInfoDao</implementation>
 			<requirements>
@@ -650,6 +695,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.ArchiveSlbDao</role>
 			<implementation>com.ctrip.zeus.dal.core.ArchiveSlbDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.ArchiveTrafficPolicyDao</role>
+			<implementation>com.ctrip.zeus.dal.core.ArchiveTrafficPolicyDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
@@ -1053,6 +1107,24 @@
 			</requirements>
 		</component>
 		<component>
+			<role>com.ctrip.zeus.dal.core.RTrafficPolicyGroupDao</role>
+			<implementation>com.ctrip.zeus.dal.core.RTrafficPolicyGroupDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.RTrafficPolicyVsDao</role>
+			<implementation>com.ctrip.zeus.dal.core.RTrafficPolicyVsDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
 			<role>com.ctrip.zeus.dal.core.RVsDomainDao</role>
 			<implementation>com.ctrip.zeus.dal.core.RVsDomainDao</implementation>
 			<requirements>
@@ -1091,6 +1163,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.ReportQueueDao</role>
 			<implementation>com.ctrip.zeus.dal.core.ReportQueueDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.RuleDao</role>
+			<implementation>com.ctrip.zeus.dal.core.RuleDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>
@@ -1226,6 +1307,15 @@
 		<component>
 			<role>com.ctrip.zeus.dal.core.TaskDao</role>
 			<implementation>com.ctrip.zeus.dal.core.TaskDao</implementation>
+			<requirements>
+				<requirement>
+					<role>org.unidal.dal.jdbc.QueryEngine</role>
+				</requirement>
+			</requirements>
+		</component>
+		<component>
+			<role>com.ctrip.zeus.dal.core.TrafficPolicyDao</role>
+			<implementation>com.ctrip.zeus.dal.core.TrafficPolicyDao</implementation>
 			<requirements>
 				<requirement>
 					<role>org.unidal.dal.jdbc.QueryEngine</role>

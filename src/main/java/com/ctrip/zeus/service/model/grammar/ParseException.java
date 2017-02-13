@@ -1,4 +1,4 @@
-package com.ctrip.zeus.service.model.handler.impl;
+package com.ctrip.zeus.service.model.grammar;
 
 /**
  * Created by zhoumy on 2015/6/29.
