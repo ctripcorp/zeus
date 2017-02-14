@@ -594,6 +594,19 @@ public class GroupResource {
         return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
     }
 
+    /**
+     * @api {post} /api/group/updateCheckUri: [Write] Create new group
+     * @apiName UpdateGroupCheck
+     * @apiGroup Group
+     * @apiSuccess (Success 200) {GroupObject} group    newly created group object
+     * @apiParamExample {json} Sample Request:
+     *  {
+     *    "id" : 1,
+     *    "health-check" : {
+     *      "uri" : "/slbhealthcheck.html"
+     *    }
+     *  }
+     **/
     @POST
     @Path("/group/updateCheckUri")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, "*/*"})
@@ -607,7 +620,12 @@ public class GroupResource {
         lock.lock(TIMEOUT);
         try {
             Group orig = groupRepository.getById(g.getId());
-            orig.getHealthCheck().setUri(g.getHealthCheck().getUri());
+            HealthCheck hc = orig.getHealthCheck();
+            if (hc == null) {
+                hc = new HealthCheck();
+                orig.setHealthCheck(hc);
+            }
+            hc.setUri(g.getHealthCheck().getUri());
             g = groupRepository.update(orig);
         } finally {
             lock.unlock();
