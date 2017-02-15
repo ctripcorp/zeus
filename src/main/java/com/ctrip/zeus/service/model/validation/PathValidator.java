@@ -283,7 +283,7 @@ public class PathValidator {
             if (modifiable) {
                 if (!root) {
                     priority = 1000;
-                } else if (value.getPath().equals(ROOT)) {
+                } else if (e.getPath().equals(ROOT)) {
                     priority = -2000;
                 } else {
                     priority = -1000;

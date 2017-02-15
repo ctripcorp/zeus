@@ -164,7 +164,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
         Map<Long, List<VirtualServer>> vsesBySlb = new HashMap<>();
         try {
             for (MetaVsArchiveDo e : archiveVsDao.findAllBySlbsAndVsOfflineVersion(relatedSlbIds, ArchiveVsEntity.READSET_FULL)) {
-                if (vs.getId() != null && vs.getId().equals(e.getId())) continue;
+                if (vs.getId() != null && vs.getId().equals(e.getVsId())) continue;
 
                 VirtualServer value = ContentReaders.readVirtualServerContent(e.getContent());
                 if (value == null) continue;
