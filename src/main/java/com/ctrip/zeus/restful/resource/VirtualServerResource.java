@@ -205,7 +205,7 @@ public class VirtualServerResource {
             messageQueue.produceMessage(MessageType.NewVs, vs.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(vs, ViewConstraints.DETAIL), hh.getMediaType());
 
     }
 
@@ -273,7 +273,7 @@ public class VirtualServerResource {
             messageQueue.produceMessage(MessageType.UpdateVs, vs.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(vs, ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @GET
@@ -313,7 +313,7 @@ public class VirtualServerResource {
             messageQueue.produceMessage(MessageType.UpdateVs, vs.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(vs, ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @GET
@@ -360,7 +360,7 @@ public class VirtualServerResource {
         } else {
             messageQueue.produceMessage(MessageType.UpdateVs, vs.getId(), slbMessageData);
         }
-        return responseHandler.handle(new ExtendedView.ExtendedVs(vs), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(vs, ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @GET

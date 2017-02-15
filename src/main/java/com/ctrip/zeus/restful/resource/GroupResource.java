@@ -377,7 +377,7 @@ public class GroupResource {
             messageQueue.produceMessage(MessageType.NewGroup, g.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedGroup(g), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @POST
@@ -417,7 +417,7 @@ public class GroupResource {
             addTag(g.getId(), extendedView.getTags());
         }
 
-        return responseHandler.handle(g, hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedGroup(g), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     /**
@@ -543,7 +543,7 @@ public class GroupResource {
             messageQueue.produceMessage(MessageType.UpdateGroup, g.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedGroup(g), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @POST
@@ -591,7 +591,7 @@ public class GroupResource {
             addTag(g.getId(), extendedView.getTags());
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedGroup(g), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     /**
@@ -636,7 +636,7 @@ public class GroupResource {
         } else {
             messageQueue.produceMessage(MessageType.UpdateGroup, g.getId(), slbMessageData);
         }
-        return responseHandler.handle(new ExtendedView.ExtendedGroup(g), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedGroup(g), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @POST
@@ -710,7 +710,7 @@ public class GroupResource {
             messageQueue.produceMessage(MessageType.UpdateGroup, target.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedGroup(target), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedGroup(target), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @GET
@@ -763,7 +763,7 @@ public class GroupResource {
             messageQueue.produceMessage(MessageType.UpdateGroup, target.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedGroup(target), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedGroup(target), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
 

@@ -127,7 +127,7 @@ public class DefaultTrafficPolicyCriteriaQuery implements TrafficPolicyQuery {
                     public Set<IdVersion> filter() throws Exception {
                         Set<IdVersion> result = new HashSet<>();
                         for (String s : policyQuery.getValue(policyQuery.vs_id)) {
-                            result.addAll(queryByGroupId(Long.parseLong(s)));
+                            result.addAll(queryByVsId(Long.parseLong(s)));
                         }
                         return result;
                     }

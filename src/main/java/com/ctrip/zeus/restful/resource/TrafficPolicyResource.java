@@ -251,7 +251,7 @@ public class TrafficPolicyResource {
         if (extendedView.getTags() != null) {
             addTag(p.getId(), extendedView.getTags());
         }
-        return responseHandler.handle(p, hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedTrafficPolicy(p), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     /**
@@ -334,7 +334,7 @@ public class TrafficPolicyResource {
         } catch (Exception ex) {
         }
 
-        return responseHandler.handle(p, hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedTrafficPolicy(p), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @GET

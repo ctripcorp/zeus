@@ -7,7 +7,9 @@ import com.ctrip.zeus.restful.message.ResponseHandler;
 import com.ctrip.zeus.restful.message.TrimmedQueryParam;
 import com.ctrip.zeus.restful.message.view.ArchiveList;
 import com.ctrip.zeus.restful.message.view.ExtendedView;
+import com.ctrip.zeus.restful.message.view.ViewConstraints;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.support.ObjectJsonWriter;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -64,7 +66,7 @@ public class ArchiveResource {
                     e.setVirtualServer(v);
                 }
             }
-            return responseHandler.handle(new ExtendedView.ExtendedGroup(archive), hh.getMediaType());
+            return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedGroup(archive), ViewConstraints.DETAIL), hh.getMediaType());
         }
     }
 
@@ -130,7 +132,7 @@ public class ArchiveResource {
         if (archive == null) {
             return responseHandler.handle("Slb archive of id " + slbId + " cannot be found.", hh.getMediaType());
         } else {
-            return responseHandler.handle(new ExtendedView.ExtendedSlb(archive), hh.getMediaType());
+            return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedSlb(archive), ViewConstraints.DETAIL), hh.getMediaType());
         }
     }
 
@@ -148,7 +150,7 @@ public class ArchiveResource {
         if (archive == null) {
             return responseHandler.handle("Virtual server archive of id " + vsId + " cannot be found.", hh.getMediaType());
         } else {
-            return responseHandler.handle(new ExtendedView.ExtendedVs(archive), hh.getMediaType());
+            return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedVs(archive), ViewConstraints.DETAIL), hh.getMediaType());
         }
     }
 
@@ -174,7 +176,7 @@ public class ArchiveResource {
             if (archive == null) {
                 return responseHandler.handle("Cannot find traffic policy of id " + policyId + " and version " + version + ".", hh.getMediaType());
             } else {
-                return responseHandler.handle(new ExtendedView.ExtendedTrafficPolicy(archive), hh.getMediaType());
+                return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedTrafficPolicy(archive), ViewConstraints.DETAIL), hh.getMediaType());
             }
         }
     }

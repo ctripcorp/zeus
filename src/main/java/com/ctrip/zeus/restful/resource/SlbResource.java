@@ -207,7 +207,7 @@ public class SlbResource {
             messageQueue.produceMessage(MessageType.NewSlb, s.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedSlb(s), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedSlb(s), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @POST
@@ -261,7 +261,7 @@ public class SlbResource {
             messageQueue.produceMessage(MessageType.UpdateSlb, s.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedSlb(s), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedSlb(s), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @GET
@@ -349,7 +349,7 @@ public class SlbResource {
             messageQueue.produceMessage(MessageType.UpdateSlb, slb.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedSlb(slb), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedSlb(slb), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     @GET
@@ -400,7 +400,7 @@ public class SlbResource {
             messageQueue.produceMessage(MessageType.UpdateSlb, slb.getId(), slbMessageData);
         }
 
-        return responseHandler.handle(new ExtendedView.ExtendedSlb(slb), hh.getMediaType());
+        return responseHandler.handleSerializedValue(ObjectJsonWriter.write(new ExtendedView.ExtendedSlb(slb), ViewConstraints.DETAIL), hh.getMediaType());
     }
 
     private void setProperties(Long slbId, List<Property> properties) {
