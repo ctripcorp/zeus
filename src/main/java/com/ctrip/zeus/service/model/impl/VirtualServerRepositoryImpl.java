@@ -106,8 +106,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         if (context.getErrorVses().contains(virtualServer.getId())) {
             throw new ValidationException(context.getVsErrorReason(virtualServer.getId()));
         }
-
-        //TODO check slb exists
+        autoFiller.autofill(virtualServer);
         virtualServerEntityManager.add(virtualServer);
         if (virtualServer.isSsl()) {
             installCertificate(virtualServer);
@@ -131,6 +130,7 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
         if (context.getErrorVses().contains(virtualServer.getId())) {
             throw new ValidationException(context.getVsErrorReason(virtualServer.getId()));
         }
+        autoFiller.autofill(virtualServer);
         virtualServerEntityManager.update(virtualServer);
 
         if (virtualServer.isSsl()) {

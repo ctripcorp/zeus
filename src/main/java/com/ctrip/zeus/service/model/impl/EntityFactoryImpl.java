@@ -5,7 +5,6 @@ import com.ctrip.zeus.executor.impl.ResultHandler;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.model.handler.impl.ContentReaders;
-import com.ctrip.zeus.service.query.GroupCriteriaQuery;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
 import com.ctrip.zeus.service.query.VirtualServerCriteriaQuery;
 import com.ctrip.zeus.service.query.filter.FilterSet;
@@ -43,8 +42,6 @@ public class EntityFactoryImpl implements EntityFactory {
 
     @Resource
     private AutoFiller autoFiller;
-    @Resource
-    private GroupCriteriaQuery groupCriteriaQuery;
     @Resource
     private SlbCriteriaQuery slbCriteriaQuery;
     @Resource
@@ -89,6 +86,7 @@ public class EntityFactoryImpl implements EntityFactory {
         for (MetaVsArchiveDo d : archiveVsDao.findAllBySlbId(slbId, ArchiveVsEntity.READSET_FULL)) {
             vsIds.add(d.getVsId());
             VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
+            autoFiller.autofill(vs);
             ref.put(vs.getId() + "," + d.getVersion(), vs);
         }
 
@@ -111,6 +109,7 @@ public class EntityFactoryImpl implements EntityFactory {
         Map<String, Slb> ref = new HashMap<>();
         for (ArchiveSlbDo d : archiveSlbDao.findVersionizedByIds(slbIds, ArchiveSlbEntity.READSET_FULL)) {
             Slb slb = ContentReaders.readSlbContent(d.getContent());
+            autoFiller.autofill(slb);
             ref.put(slb.getId() + "," + slb.getVersion(), slb);
         }
 
@@ -131,6 +130,7 @@ public class EntityFactoryImpl implements EntityFactory {
         Map<String, VirtualServer> ref = new HashMap<>();
         for (MetaVsArchiveDo d : archiveVsDao.findVersionizedByIds(vsIds, ArchiveVsEntity.READSET_FULL)) {
             VirtualServer vs = ContentReaders.readVirtualServerContent(d.getContent());
+            autoFiller.autofill(vs);
             ref.put(vs.getId() + "," + d.getVersion(), vs);
         }
 
