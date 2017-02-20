@@ -40,6 +40,7 @@ public class LocationConf {
 
     public void write(ConfWriter confWriter, Slb slb, VirtualServer vs, TrafficPolicy trafficPolicy, PolicyVirtualServer policyOnVs) {
         confWriter.writeLocationStart(policyOnVs.getPath());
+        confWriter.writeCommand("set", LogFormat.VAR_POLICY_NAME + " " + "policy_" + trafficPolicy.getId());
         confWriter.writeCommand("content_by_lua", generateTrafficControlScript(trafficPolicy.getControls()));
         confWriter.writeLocationEnd();
     }
@@ -345,6 +346,7 @@ public class LocationConf {
 
         confWriter.writeLocationStart("/");
         confWriter.writeCommand("set", LogFormat.VAR_UPSTREAM_NAME + " 127.0.0.1");
+        confWriter.writeCommand("set", LogFormat.VAR_POLICY_NAME + " -");
         confWriter.writeLine("return 404 \"Not Found!\";");
         confWriter.writeLocationEnd();
     }
@@ -355,6 +357,4 @@ public class LocationConf {
         confWriter.writeCommand("return", "404");
         confWriter.writeLocationEnd();
     }
-
-
 }
