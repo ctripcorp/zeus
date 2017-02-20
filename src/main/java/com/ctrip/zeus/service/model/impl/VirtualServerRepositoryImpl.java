@@ -93,14 +93,8 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
     @Override
     public VirtualServer add(VirtualServer virtualServer) throws Exception {
         virtualServer.setId(0L);
-        //TODO render for deprecated field
-        if (virtualServer.getSlbId() != null) {
-            if (!virtualServer.getSlbIds().contains(virtualServer.getSlbId())) {
-                Cat.logEvent("Vs-Slb.Deprecated", virtualServer.getName().toString());
-                virtualServer.getSlbIds().add(virtualServer.getSlbId());
-            }
-            virtualServer.setSlbId(null);
-        }
+        // keep slb-id field for history record
+        virtualServer.setSlbId(null);
         ValidationContext context = new ValidationContext();
         validationFacade.validateVs(virtualServer, context);
         if (context.getErrorVses().contains(virtualServer.getId())) {
@@ -116,15 +110,9 @@ public class VirtualServerRepositoryImpl implements VirtualServerRepository {
 
     @Override
     public VirtualServer update(VirtualServer virtualServer) throws Exception {
+        // keep slb-id field for history record
+        virtualServer.setSlbId(null);
         virtualServerModelValidator.checkRestrictionForUpdate(virtualServer);
-        //TODO render for deprecated field
-        if (virtualServer.getSlbId() != null) {
-            if (!virtualServer.getSlbIds().contains(virtualServer.getSlbId())) {
-                Cat.logEvent("Vs-Slb.Deprecated", virtualServer.getName().toString());
-                virtualServer.getSlbIds().add(virtualServer.getSlbId());
-            }
-            virtualServer.setSlbId(null);
-        }
         ValidationContext context = new ValidationContext();
         validationFacade.validateVs(virtualServer, context);
         if (context.getErrorVses().contains(virtualServer.getId())) {

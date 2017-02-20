@@ -16,41 +16,18 @@ import org.slf4j.LoggerFactory;
  */
 public class ContentWriters {
     private static Logger logger = LoggerFactory.getLogger(ContentWriters.class);
-    private static DynamicBooleanProperty n2nPersistentEnabled = DynamicPropertyFactory.getInstance().getBooleanProperty("slb.slb-vs-n2n.persistent.enabled", false);
     private static final ObjectMapper objectMapper;
 
     static {
         objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.INDENT_OUTPUT, false)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
+                .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
                 .setPropertyNamingStrategy(new LowerCaseWithHyphenStrategy());
     }
 
     public static String writeVirtualServerContent(VirtualServer vs) {
-        //TODO switch option for deprecated fields
-        if (!n2nPersistentEnabled.get()) {
-            VirtualServer tmp = new VirtualServer()
-                    .setId(vs.getId()).setName(vs.getName()).setVersion(vs.getVersion())
-                    .setSsl(vs.getSsl()).setPort(vs.getPort()).setSlbId(vs.getSlbId());
-            for (Long slbId : vs.getSlbIds()) {
-                tmp.getSlbIds().add(slbId);
-            }
-            for (Domain d : vs.getDomains()) {
-                tmp.getDomains().add(d);
-            }
-            if (tmp.getSlbId() == null || tmp.getSlbId().equals(0L)) {
-                if (tmp.getSlbIds().size() == 1) {
-                    tmp.setSlbId(vs.getSlbIds().get(0));
-                    tmp.getSlbIds().clear();
-                } else {
-                    logger.error("Multiple slb relations are found on vs-" + vs.getId() + ".");
-                }
-            }
-            return write(tmp);
-        } else {
-            return write(vs);
-        }
+        return write(vs);
     }
 
     public static String writeGroupContent(Group g) {

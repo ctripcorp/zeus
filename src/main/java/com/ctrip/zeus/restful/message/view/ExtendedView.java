@@ -96,9 +96,6 @@ public interface ExtendedView<T> {
 
         @Override
         List<GroupVirtualServer> getGroupVirtualServers() {
-            for (GroupVirtualServer gvs : instance.getGroupVirtualServers()) {
-                ExtendedVs.renderVirtualServer(gvs.getVirtualServer());
-            }
             return instance.getGroupVirtualServers();
         }
 
@@ -154,8 +151,6 @@ public interface ExtendedView<T> {
     }
 
     class ExtendedVs extends VsView implements ExtendedView<VirtualServer>, PropertySortable {
-        private static DynamicStringProperty n2nViewMode = DynamicPropertyFactory.getInstance().getStringProperty("slb.slb-vs-n2n.view.mode", "singular");
-
         private List<String> tags;
         private List<Property> properties;
         private VirtualServer instance;
@@ -184,33 +179,8 @@ public interface ExtendedView<T> {
         }
 
         @Override
-        Long getSlbId() {
-            switch (n2nViewMode.get()) {
-                case "plural":
-                    return null;
-                case "singular":
-                case "redundant":
-                default:
-                    if (instance.getSlbId() == null && instance.getSlbIds().size() > 0) {
-                        instance.setSlbId(instance.getSlbIds().get(0));
-                    }
-                    return instance.getSlbId();
-            }
-        }
-
-        @Override
         List<Long> getSlbIds() {
-            switch (n2nViewMode.get()) {
-                case "plural":
-                case "redundant":
-                    if (instance.getSlbIds().size() == 0 && instance.getSlbId() != null) {
-                        instance.getSlbIds().add(instance.getSlbId());
-                    }
-                    return instance.getSlbIds();
-                case "singular":
-                default:
-                    return null;
-            }
+            return instance.getSlbIds();
         }
 
         @Override
@@ -256,30 +226,6 @@ public interface ExtendedView<T> {
         @Override
         public VirtualServer getInstance() {
             return instance;
-        }
-
-        public static void renderVirtualServer(VirtualServer vs) {
-            switch (n2nViewMode.get()) {
-                case "plural":
-                    if (vs.getSlbIds().size() == 0 && vs.getSlbId() != null) {
-                        vs.getSlbIds().add(vs.getSlbId());
-                    }
-                    vs.setSlbId(null);
-                    break;
-                case "redundant":
-                    if (vs.getSlbIds().size() == 0 && vs.getSlbId() != null) {
-                        vs.getSlbIds().add(vs.getSlbId());
-                    } else if (vs.getSlbId() == null && vs.getSlbIds().size() > 0) {
-                        vs.setSlbId(vs.getSlbIds().get(0));
-                    }
-                    break;
-                case "singular":
-                default:
-                    if (vs.getSlbId() == null && vs.getSlbIds().size() > 0) {
-                        vs.setSlbId(vs.getSlbIds().get(0));
-                    }
-                    vs.getSlbIds().clear();
-            }
         }
 
         @Override

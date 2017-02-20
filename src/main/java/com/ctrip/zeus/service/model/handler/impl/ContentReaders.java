@@ -36,7 +36,7 @@ public class ContentReaders {
         } else {
             vs = ObjectJsonParser.parse(content, VirtualServer.class);
         }
-        //TODO render for deprecated field
+        //render for history records
         if (vs != null) {
             if ((vs.getSlbIds() == null || vs.getSlbIds().isEmpty())
                     && vs.getSlbId() != null) {
