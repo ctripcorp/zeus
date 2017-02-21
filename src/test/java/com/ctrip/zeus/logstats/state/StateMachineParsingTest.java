@@ -33,7 +33,7 @@ public class StateMachineParsingTest {
                 "server_port", "remote_user", "remote_addr", "http_x_forwarded_for",
                 "server_protocol", "http_user_agent", "http_cookie", "http_referer",
                 "status", "request_length", "bytes_sent", "request_time", "upstream_response_time",
-                "upstream_addr", "upstream_status", "upstream_name"};
+                "upstream_addr", "upstream_status", "upstream_name", "policy_name"};
         LineFormat lineFormat = new AccessLogStateMachineFormat(LogFormat.getMainCompactString()).generate();
         String[] actualKeys = lineFormat.getKeys();
         Assert.assertArrayEquals(expectedKeys, actualKeys);
