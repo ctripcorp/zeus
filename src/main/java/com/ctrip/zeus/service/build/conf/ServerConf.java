@@ -131,7 +131,12 @@ public class ServerConf {
                 p = null;
                 pvs = null;
             } else {
-                locationConf.write(confWriter, slb, vs, g, gvs, namedLocations.contains(g.getId()));
+                if (namedLocations.contains(g.getId())) {
+                    locationConf.write(confWriter, slb, vs, g, gvs, false);
+                    locationConf.write(confWriter, slb, vs, g, gvs, true);
+                } else {
+                    locationConf.write(confWriter, slb, vs, g, gvs, false);
+                }
                 gIdx++;
                 g = null;
                 gvs = null;
@@ -153,7 +158,12 @@ public class ServerConf {
         while (gIdx < groups.size()) {
             Group g = groups.get(gIdx);
             GroupVirtualServer gvs = (GroupVirtualServer) objectOnVsReferrer.get("gvs-" + g.getId());
-            locationConf.write(confWriter, slb, vs, g, gvs, namedLocations.contains(g.getId()));
+            if (namedLocations.contains(g.getId())) {
+                locationConf.write(confWriter, slb, vs, g, gvs, false);
+                locationConf.write(confWriter, slb, vs, g, gvs, true);
+            } else {
+                locationConf.write(confWriter, slb, vs, g, gvs, false);
+            }
             gIdx++;
         }
     }
