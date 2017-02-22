@@ -454,15 +454,15 @@ public class TaskExecutorImpl implements TaskExecutor {
 
     private ModelStatusMapping<TrafficPolicy> mapPolicyVersionAndRevise(Set<Long> vsIds, Collection<OpsTask> activatePolicyTask) throws Exception {
         ModelStatusMapping<TrafficPolicy> tpMap = entityFactory.getPoliciesByVsIds(vsIds.toArray(new Long[vsIds.size()]));
-        Map<Long, TrafficPolicy> offlineGroups = tpMap.getOfflineMapping();
+        Map<Long, TrafficPolicy> offlinePolicies = tpMap.getOfflineMapping();
         List<IdVersion> revisedVersion = new ArrayList<>();
         for (OpsTask task : activatePolicyTask) {
-            if (!offlineGroups.get(task.getPolicyId()).getVersion().equals(task.getVersion())) {
-                revisedVersion.add(new IdVersion(task.getId(), task.getVersion()));
+            if (!offlinePolicies.get(task.getPolicyId()).getVersion().equals(task.getVersion())) {
+                revisedVersion.add(new IdVersion(task.getPolicyId(), task.getVersion()));
             }
         }
         for (TrafficPolicy policy : trafficPolicyRepository.list(revisedVersion.toArray(new IdVersion[revisedVersion.size()]))) {
-            offlineGroups.put(policy.getId(), policy);
+            offlinePolicies.put(policy.getId(), policy);
         }
         return tpMap;
     }

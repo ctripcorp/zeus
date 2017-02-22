@@ -35,9 +35,14 @@ public class TrafficPolicyTest extends AbstractServerTest {
 
     @Test
     public void testTrafficPolicyValidation() throws DalException {
+        SlbVirtualServerDo v1 = new SlbVirtualServerDo().setSlbId(1).setName("v1").setPort("8080");
+        slbVirtualServerDao.insert(v1);
+        SlbVirtualServerDo v2 = new SlbVirtualServerDo().setSlbId(1).setName("v2").setPort("8080");
+        slbVirtualServerDao.insert(v2);
+
         TrafficPolicy object = new TrafficPolicy().setName("name").setVersion(1)
-                .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(1L)).setPath("~* ^/v1($|/|\\?)").setPriority(1200))
-                .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(2L)).setPath("~* ^/v2($|/|\\?)").setPriority(1200))
+                .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(v1.getId())).setPath("~* ^/v1($|/|\\?)").setPriority(1200))
+                .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(v2.getId())).setPath("~* ^/v2($|/|\\?)").setPriority(1200))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(1L)).setWeight(50))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(2L)).setWeight(50));
 
@@ -100,6 +105,8 @@ public class TrafficPolicyTest extends AbstractServerTest {
             }
             Assert.assertTrue(false);
         }
+        slbVirtualServerDao.deleteById(v1);
+        slbVirtualServerDao.deleteById(v2);
     }
 
     @Test

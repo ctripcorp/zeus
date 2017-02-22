@@ -144,7 +144,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
                 }
             }
         } catch (ValidationException e) {
-            context.error(policy.getId(), MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, e.getMessage());
+            context.error(policy.getId(), MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, e.getMessage());
         }
     }
 

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -47,9 +48,14 @@ public class LocationConf {
 
     protected String generateTrafficControlScript(List<TrafficControl> controls) {
         double totalWeight = 0.0;
-        TreeMap<Double, Long> controlOrder = new TreeMap<>();
+        TreeMap<Double, List<Long>> controlOrder = new TreeMap<>();
         for (TrafficControl c : controls) {
-            controlOrder.put(c.getWeight().doubleValue(), c.getGroup().getId());
+            List<Long> v = controlOrder.get(c.getWeight().doubleValue());
+            if (v == null) {
+                v = new ArrayList<>();
+                controlOrder.put(c.getWeight().doubleValue(), v);
+            }
+            v.add(c.getGroup().getId());
             totalWeight += c.getWeight().doubleValue();
         }
 
@@ -58,18 +64,22 @@ public class LocationConf {
                 .append("  local r = math.random()\n");
 
         double prevWeight = 0.0, w;
-        Map.Entry<Double, Long> curr = controlOrder.pollFirstEntry();
-        w = curr.getKey() + prevWeight;
-        controlScript.append("  if (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r < " + String.format("%.2f", w / totalWeight) + ") then\n")
-                .append("    ngx.exec(\"@group_" + curr.getValue() + "\")\n");
-        prevWeight += curr.getKey();
+        Map.Entry<Double, List<Long>> curr = controlOrder.pollFirstEntry();
+        for (Long v : curr.getValue()) {
+            w = curr.getKey() + prevWeight;
+            controlScript.append("  if (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r < " + String.format("%.2f", w / totalWeight) + ") then\n")
+                    .append("    ngx.exec(\"@group_" + v + "\")\n");
+            prevWeight += curr.getKey();
+        }
         curr = controlOrder.pollFirstEntry();
         while (curr != null) {
-            w = curr.getKey() + prevWeight;
-            controlScript.append("  elseif (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r " + (w == totalWeight ? "<= " : "< ") + String.format("%.2f", w / totalWeight) + ") then\n")
-                    .append("    ngx.exec(\"@group_" + curr.getValue() + "\")\n");
-            prevWeight = w;
-            curr = controlOrder.pollFirstEntry();
+            for (Long v : curr.getValue()) {
+                w = curr.getKey() + prevWeight;
+                controlScript.append("  elseif (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r " + (w == totalWeight ? "<= " : "< ") + String.format("%.2f", w / totalWeight) + ") then\n")
+                        .append("    ngx.exec(\"@group_" + v + "\")\n");
+                prevWeight = w;
+                curr = controlOrder.pollFirstEntry();
+            }
         }
 
         controlScript.append("  end'");
