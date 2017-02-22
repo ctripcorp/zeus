@@ -42,7 +42,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
 
         TrafficPolicy object = new TrafficPolicy().setName("name").setVersion(1)
                 .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(v1.getId())).setPath("~* ^/v1($|/|\\?)").setPriority(1200))
-                .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(v2.getId())).setPath("~* ^/v2($|/|\\?)").setPriority(1200))
+                .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(v2.getId())).setPath("~* ^/v2/v22($|/|\\?)").setPriority(1200))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(1L)).setWeight(50))
                 .addTrafficControl(new TrafficControl().setGroup(new Group().setId(2L)).setWeight(50));
 
@@ -50,20 +50,20 @@ public class TrafficPolicyTest extends AbstractServerTest {
         rGroupStatusDao.insert(new RelGroupStatusDo().setGroupId(2).setOfflineVersion(2).setOnlineVersion(1));
         rGroupStatusDao.insert(new RelGroupStatusDo().setGroupId(3).setOfflineVersion(1));
 
-        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(1).setVsId(1).setGroupVersion(1).setPath("~* ^/v1($|/|\\?)").setPriority(1000));
-        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(1).setVsId(2).setGroupVersion(1).setPath("~* ^/v2($|/|\\?)").setPriority(1000));
+        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(1).setVsId(v1.getId()).setGroupVersion(1).setPath("~* ^/v1($|/|\\?)").setPriority(1000));
+        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(1).setVsId(v2.getId()).setGroupVersion(1).setPath("~* ^/v2($|/|\\?)").setPriority(1000));
 
-        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(2).setVsId(1).setGroupVersion(1).setPath("~* ^/v1($|/|\\?)").setPriority(1100));
-        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(2).setVsId(2).setGroupVersion(1).setPath("~* ^/v2($|/|\\?)").setPriority(1100));
-        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(2).setVsId(1).setGroupVersion(2).setPath("~* ^/v1($|/|\\?)").setPriority(1100));
+        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(2).setVsId(v1.getId()).setGroupVersion(1).setPath("~* ^/v1($|/|\\?)").setPriority(1100));
+        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(2).setVsId(v2.getId()).setGroupVersion(1).setPath("~* ^/v2($|/|\\?)").setPriority(1100));
+        rGroupVsDao.insert(new RelGroupVsDo().setGroupId(2).setVsId(v1.getId()).setGroupVersion(2).setPath("~* ^/v1($|/|\\?)").setPriority(1100));
 
         /********* case 1 *********/
         assertValidationFailed(object, "vs-traffic-control(2-2) combination cannot be found");
 
         /********* case 2 *********/
-        RelGroupVsDo d0 = new RelGroupVsDo().setGroupId(2).setVsId(2).setGroupVersion(2).setPath("~* ^/v22($|/|\\?)").setPriority(1100);
+        RelGroupVsDo d0 = new RelGroupVsDo().setGroupId(2).setVsId(v2.getId()).setGroupVersion(2).setPath("~* ^/v22($|/|\\?)").setPriority(1100);
         rGroupVsDao.insert(d0);
-        assertValidationFailed(object, "traffic-control path is not equivalent");
+        assertValidationFailed(object, "traffic-control path is neither equivalent nor overlapped");
 
         /********* case 3 *********/
         d0.setPath("~* ^/v2($|/|\\?)").setPriority(1500);
@@ -79,7 +79,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
         trafficPolicyDao.insert(d1);
         RTrafficPolicyGroupDo d2 = new RTrafficPolicyGroupDo().setGroupId(1L).setPolicyId(d1.getId()).setPolicyVersion(1).setWeight(50);
         rTrafficPolicyGroupDao.insert(d2);
-        RTrafficPolicyVsDo d3 = new RTrafficPolicyVsDo().setVsId(1).setPolicyId(d1.getId()).setPolicyVersion(1).setPath("/").setPriority(1000);
+        RTrafficPolicyVsDo d3 = new RTrafficPolicyVsDo().setVsId(v1.getId()).setPolicyId(d1.getId()).setPolicyVersion(1).setPath("/").setPriority(1000);
         rTrafficPolicyVsDao.insert(d3);
         assertValidationFailed(object, "vs-traffic-control combination is not unique");
 
@@ -89,7 +89,7 @@ public class TrafficPolicyTest extends AbstractServerTest {
         rTrafficPolicyVsDao.deleteByPK(d3);
 
         /********* case 5 *********/
-        RelGroupVsDo d4 = new RelGroupVsDo().setGroupId(3).setVsId(1).setGroupVersion(1).setPath("~* ^/v1/v2($|/|\\?)").setPriority(1000);
+        RelGroupVsDo d4 = new RelGroupVsDo().setGroupId(3).setVsId(v1.getId()).setGroupVersion(1).setPath("~* ^/v1/v2($|/|\\?)").setPriority(1000);
         rGroupVsDao.insert(d4);
         assertValidationFailed(object, "path overlap is found");
 

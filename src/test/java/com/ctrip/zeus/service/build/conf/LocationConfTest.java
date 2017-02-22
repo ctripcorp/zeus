@@ -9,7 +9,7 @@ import org.junit.Test;
 public class LocationConfTest {
 
     @Test
-    public void generateTrafficControlScript() throws Exception {
+    public void generateTrafficControlScriptWithDiffWeight() throws Exception {
         VirtualServer v = new VirtualServer().setId(1L);
         TrafficPolicy policy = new TrafficPolicy().setId(100L).setName("test-policy").setVersion(1)
                 .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(v).setPath("~* ^/test($|/|\\?)").setPriority(1100))
@@ -26,4 +26,21 @@ public class LocationConfTest {
         System.out.println("content_by_lua " + lc.generateTrafficControlScript(policy.getControls()));
     }
 
+    @Test
+    public void generateTrafficControlScriptWithSameWeight() throws Exception {
+        VirtualServer v = new VirtualServer().setId(1L);
+        TrafficPolicy policy = new TrafficPolicy().setId(100L).setName("test-policy").setVersion(1)
+                .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(v).setPath("~* ^/test($|/|\\?)").setPriority(1100))
+                .addTrafficControl(new TrafficControl().setWeight(50)
+                        .setGroup(new Group().setId(1L)
+                                .addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(v).setPriority(1000).setPath("@group1"))))
+                .addTrafficControl(new TrafficControl().setWeight(50)
+                        .setGroup(new Group().setId(2L)
+                                .addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(v).setPriority(1000).setPath("@group2"))))
+                .addTrafficControl(new TrafficControl().setWeight(50)
+                        .setGroup(new Group().setId(3L)
+                                .addGroupVirtualServer(new GroupVirtualServer().setVirtualServer(v).setPriority(1000).setPath("@group3"))));
+        LocationConf lc = new LocationConf();
+        System.out.println("content_by_lua " + lc.generateTrafficControlScript(policy.getControls()));
+    }
 }

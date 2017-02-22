@@ -22,6 +22,8 @@ import java.util.*;
 public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
     @Resource
     private TrafficPolicyDao trafficPolicyDao;
+    @Resource
+    private PathValidator pathValidator;
 
     @Override
     public void checkRestrictionForUpdate(TrafficPolicy target) throws Exception {
@@ -100,8 +102,10 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                     _context.error(controlIds[j], MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, error);
                     if (context == null) throw new ValidationException(error);
                 }
-                if (!e.getPath().equals(ee.getPath())) {
-                    String error = "Traffic policy and its control item " + controlIds[j] + " does not have the same `path` value on vs " + vsId + ".";
+
+                int ol = pathValidator.prefixOverlaps(e.getPath(), ee.getPath());
+                if (ol == 1 || ol == -1) {
+                    String error = "Traffic policy is neither sharing the same `path` with nor containing part of the `path` of its control item " + controlIds[j] + " on vs " + vsId + ".";
                     _context.error(policyId, MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, error);
                     _context.error(controlIds[j], MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, error);
                     if (context == null) throw new ValidationException(error);

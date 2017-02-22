@@ -65,21 +65,24 @@ public class LocationConf {
 
         double prevWeight = 0.0, w;
         Map.Entry<Double, List<Long>> curr = controlOrder.pollFirstEntry();
-        for (Long v : curr.getValue()) {
+        if (curr.getValue() != null) {
+            Long v = curr.getValue().get(0);
             w = curr.getKey() + prevWeight;
             controlScript.append("  if (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r < " + String.format("%.2f", w / totalWeight) + ") then\n")
                     .append("    ngx.exec(\"@group_" + v + "\")\n");
             prevWeight += curr.getKey();
+            curr.getValue().remove(0);
         }
-        curr = controlOrder.pollFirstEntry();
+        if (curr.getValue().size() == 0) curr = controlOrder.pollFirstEntry();
+
         while (curr != null) {
             for (Long v : curr.getValue()) {
                 w = curr.getKey() + prevWeight;
                 controlScript.append("  elseif (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r " + (w == totalWeight ? "<= " : "< ") + String.format("%.2f", w / totalWeight) + ") then\n")
                         .append("    ngx.exec(\"@group_" + v + "\")\n");
                 prevWeight = w;
-                curr = controlOrder.pollFirstEntry();
             }
+            curr = controlOrder.pollFirstEntry();
         }
 
         controlScript.append("  end'");

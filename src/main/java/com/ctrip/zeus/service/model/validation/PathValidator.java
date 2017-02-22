@@ -2,6 +2,7 @@ package com.ctrip.zeus.service.model.validation;
 
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.service.model.common.LocationEntry;
+import com.ctrip.zeus.service.model.common.MetaType;
 import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.model.grammar.GrammarException;
 import com.ctrip.zeus.service.model.grammar.PathParseHandler;
@@ -30,6 +31,30 @@ public class PathValidator {
 
     public PathValidator() {
         pathParseHandler = new PathParseHandler();
+    }
+
+    /**
+     * @param path1
+     * @param path2
+     * @return the value -1 if path1 and path2 are logically non relevant;
+     * the value 0 if path1 and path2 is lexicographically equivalent;
+     * the value 1 if path1 overlaps path2;
+     * the value 2 if path1 is overlapped by path2.
+     */
+    public int prefixOverlaps(String path1, String path2) {
+        List<LocationEntry> compare = new ArrayList<>();
+        compare.add(new LocationEntry().setEntryId(0L).setEntryType(MetaType.GROUP).setPath(path1).setPriority(1000));
+        LocationEntry e = new LocationEntry().setEntryId(0L).setEntryType(MetaType.GROUP).setPath(path2);
+        compare.add(e);
+        ValidationContext context = new ValidationContext();
+        checkOverlapRestricition(compare, context);
+        if (context.getErrors().size() > 0) {
+            return 0;
+        } else {
+            if (e.getPriority() > 1000) return 1;
+            else if (e.getPriority() < 1000) return 2;
+            else return -1;
+        }
     }
 
     public void checkOverlapRestricition(List<LocationEntry> locationEntries, ValidationContext context) {
