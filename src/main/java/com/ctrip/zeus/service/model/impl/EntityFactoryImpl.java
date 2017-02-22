@@ -221,14 +221,23 @@ public class EntityFactoryImpl implements EntityFactory {
         Map<Long, TrafficPolicy> onlineResult = new HashMap<>();
         Set<Integer> searchKeys = new HashSet<>();
         for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findByVsesAndPolicyVersion(vsIds, RTrafficPolicyVsEntity.READSET_FULL)) {
-            offlineResult.put(e.getPolicyId(), new TrafficPolicy().setId(e.getPolicyId()).setVersion(e.getPolicyVersion())
-                    .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(e.getVsId())).setPath(e.getPath()).setPriority(e.getPriority())));
-            searchKeys.add(e.getHash());
+            TrafficPolicy tp = offlineResult.get(e.getPolicyId());
+            if (tp == null) {
+                tp = new TrafficPolicy().setId(e.getPolicyId()).setVersion(e.getPolicyVersion());
+                offlineResult.put(e.getPolicyId(), tp);
+                searchKeys.add(e.getHash());
+            }
+            tp.addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(e.getVsId())).setPath(e.getPath()).setPriority(e.getPriority()));
+
         }
         for (RTrafficPolicyVsDo e : rTrafficPolicyVsDao.findByVsesAndPolicyActiveVersion(vsIds, RTrafficPolicyVsEntity.READSET_FULL)) {
-            onlineResult.put(e.getPolicyId(), new TrafficPolicy().setId(e.getPolicyId()).setVersion(e.getPolicyVersion())
-                    .addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(e.getVsId())).setPath(e.getPath()).setPriority(e.getPriority())));
-            searchKeys.add(e.getHash());
+            TrafficPolicy tp = onlineResult.get(e.getPolicyId());
+            if (tp == null) {
+                tp = new TrafficPolicy().setId(e.getPolicyId()).setVersion(e.getPolicyVersion());
+                onlineResult.put(e.getPolicyId(), tp);
+                searchKeys.add(e.getHash());
+            }
+            tp.addPolicyVirtualServer(new PolicyVirtualServer().setVirtualServer(new VirtualServer().setId(e.getVsId())).setPath(e.getPath()).setPriority(e.getPriority()));
         }
 
         for (RTrafficPolicyGroupDo e : rTrafficPolicyGroupDao.findAllByHash(searchKeys.toArray(new Integer[searchKeys.size()]), RTrafficPolicyGroupEntity.READSET_FULL)) {
