@@ -195,4 +195,14 @@ public class PathValidationV2Test {
             }
         }
     }
+
+    @Test
+    public void testPathContains() {
+        PathValidator pathValidator = new PathValidator();
+        Assert.assertTrue(pathValidator.contains("~* ^/", "~* ^/abc"));
+        Assert.assertTrue(pathValidator.contains("/a|/c|/d", "/abc|/ac"));
+        Assert.assertTrue(pathValidator.contains("/ab|/ac|/ad", "/abc|/ac"));
+        Assert.assertTrue(pathValidator.contains("a|c|d", "/abc|/d"));
+        Assert.assertFalse(pathValidator.contains("/ab|/ac|/ad", "/abc|/d"));
+    }
 }

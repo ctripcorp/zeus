@@ -41,8 +41,8 @@ public class PathUtils {
      * @param path2
      * @return the value -1 if path1 and path2 are logically non relevant;
      * the value 0 if path1 and path2 is lexicographically equivalent;
-     * the value 1 if path1 overlaps path2;
-     * the value 2 if path1 is overlapped by path2.
+     * the value 1 if path1 is overlapped by path2;
+     * the value 2 if path1 overlaps path2.
      */
     public static int prefixOverlaps(String path1, String path2) {
         int i = path1.startsWith("/") ? 1 : 0;

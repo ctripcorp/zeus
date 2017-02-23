@@ -103,8 +103,8 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                     if (context == null) throw new ValidationException(error);
                 }
 
-                int ol = pathValidator.prefixOverlaps(e.getPath(), ee.getPath());
-                if (ol == 1 || ol == -1) {
+
+                if (!pathValidator.contains(ee.getPath(), e.getPath())) {
                     String error = "Traffic policy is neither sharing the same `path` with nor containing part of the `path` of its control item " + controlIds[j] + " on vs " + vsId + ".";
                     _context.error(policyId, MetaType.TRAFFIC_POLICY, ErrorType.DEPENDENCY_VALIDATION, error);
                     _context.error(controlIds[j], MetaType.GROUP, ErrorType.DEPENDENCY_VALIDATION, error);

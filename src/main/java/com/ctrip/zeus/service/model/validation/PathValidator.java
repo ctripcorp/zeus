@@ -34,26 +34,35 @@ public class PathValidator {
     }
 
     /**
+     * Check if path1 contains path2
+     *
      * @param path1
      * @param path2
-     * @return the value -1 if path1 and path2 are logically non relevant;
-     * the value 0 if path1 and path2 is lexicographically equivalent;
-     * the value 1 if path1 overlaps path2;
-     * the value 2 if path1 is overlapped by path2.
+     * @return true if contains
      */
-    public int prefixOverlaps(String path1, String path2) {
-        List<LocationEntry> compare = new ArrayList<>();
-        compare.add(new LocationEntry().setEntryId(0L).setEntryType(MetaType.GROUP).setPath(path1).setPriority(1000));
-        LocationEntry e = new LocationEntry().setEntryId(0L).setEntryType(MetaType.GROUP).setPath(path2);
-        compare.add(e);
-        ValidationContext context = new ValidationContext();
-        checkOverlapRestricition(compare, context);
-        if (context.getErrors().size() > 0) {
-            return 0;
-        } else {
-            if (e.getPriority() > 1000) return 1;
-            else if (e.getPriority() < 1000) return 2;
-            else return -1;
+    public boolean contains(String path1, String path2) {
+        try {
+            String[] checkParts = pathParseHandler.parse(path2);
+            String[] unionParts = pathParseHandler.parse(path1);
+
+            boolean[] flag = new boolean[checkParts.length];
+            for (int i = 0; i < checkParts.length; i++) {
+                flag[i] = false;
+                for (String p : unionParts) {
+                    int ol = PathUtils.prefixOverlaps(checkParts[i], p);
+                    if (ol == 0 || ol == 1) {
+                        flag[i] = true;
+                        break;
+                    }
+                }
+            }
+            boolean result = true;
+            for (int i = 0; i < flag.length; i++) {
+                result &= flag[i];
+            }
+            return result;
+        } catch (GrammarException e) {
+            return false;
         }
     }
 
@@ -322,197 +331,5 @@ public class PathValidator {
         public String toString() {
             return value.getEntryType() + "-" + value.getEntryId() + " : (" + value.getPriority() + ", " + value.getPath() + ")";
         }
-    }
-
-    @Deprecated
-    public LocationEntry checkOverlapRestriction(Long vsId, LocationEntry insertEntry, List<LocationEntry> currentEntrySet) throws ValidationException {
-        if (insertEntry == null) {
-            throw new NullPointerException("Null location entry value when executing path overlap check.");
-        }
-        try {
-            insertEntry.setPath(PathUtils.pathReformat(insertEntry.getPath()));
-        } catch (GrammarException e) {
-            throw new ValidationException(e.getMessage());
-        }
-
-        if (currentEntrySet == null || currentEntrySet.size() == 0) return insertEntry;
-
-
-        String insertUri = PathUtils.extractUriIgnoresFirstDelimiter(insertEntry.getPath());
-        boolean insertRootUri = "/".equals(insertUri);
-        insertEntry.setPriority(insertEntry.getPriority() == null ? (insertRootUri ? ("/".equals(insertEntry.getPath()) ? -2000 : -1000) : 1000) : insertEntry.getPriority());
-
-        List<String> insertPathMembers = getPathCandidates(insertEntry, insertUri, insertRootUri);
-
-        Set<LocationEntry> overlappedEntries = new HashSet<>();
-        for (LocationEntry entryNode : currentEntrySet) {
-            if ((insertEntry.getEntryId() != null && insertEntry.getEntryId().equals(entryNode.getEntryId()))
-                    && insertEntry.getEntryType().equals(entryNode.getEntryType())) continue;
-
-            String entryNodeUri = entryNode.getPath();
-            try {
-                entryNodeUri = PathUtils.extractUriIgnoresFirstDelimiter(entryNode.getPath());
-            } catch (ValidationException ex) {
-            }
-            entryNode.setPriority((entryNode.getPriority() != null && entryNode.getPriority().equals(0)) ? null : entryNode.getPriority());
-            boolean rootUri = "/".equals(entryNodeUri);
-
-            // compare root uri explicitly
-            if (insertRootUri && rootUri) {
-                if (entryNode.getPath().equals(insertEntry.getPath())) {
-                    overlappedEntries.add(entryNode);
-                } else {
-                    insertEntry.setPriority("/".equals(entryNode.getPath()) ? entryNode.getPriority() + 100 : entryNode.getPriority() - 100);
-                }
-                continue;
-            }
-
-            List<String> retainedPathMembers = getPathCandidates(entryNode, entryNodeUri, rootUri);
-            for (String ap : insertPathMembers) {
-                for (String rp : retainedPathMembers) {
-                    if (insertRootUri && insertEntry.getPriority() >= entryNode.getPriority()) {
-                        insertEntry.setPriority(entryNode.getPriority() - 100);
-                        continue;
-                    }
-                    if (rootUri && insertEntry.getPriority() <= entryNode.getPriority()) {
-                        insertEntry.setPriority(entryNode.getPriority() + 100);
-                        continue;
-                    }
-
-                    int ol = PathUtils.prefixOverlapped(ap, rp, standardSuffix);
-                    switch (ol) {
-                        case -1:
-                            break;
-                        case 0:
-                            overlappedEntries.add(entryNode);
-                            break;
-                        case 1:
-                            if (insertEntry.getPriority() <= entryNode.getPriority()) {
-                                insertEntry.setPriority(entryNode.getPriority() + 100);
-                            }
-                            break;
-                        case 2:
-                            if (insertEntry.getPriority() >= entryNode.getPriority()) {
-                                insertEntry.setPriority(entryNode.getPriority() - 100);
-                            }
-                            break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-                }
-            }
-        }
-
-        if (overlappedEntries.size() > 0) {
-            List<LocationEntry> entries = new ArrayList<>();
-            for (LocationEntry e : overlappedEntries) {
-                entries.add(e);
-            }
-            throw new ValidationException("Path that you tried to add/update is completely equivalent to existing entries: [ " + Joiner.on(",").join(entries) + " at vs " + vsId + ".");
-        }
-        return insertEntry;
-    }
-
-    @Deprecated
-    private List<String> getPathCandidates(LocationEntry locationEntry, String refinedUri, boolean isRootUri) throws ValidationException {
-        List<String> pathCandidates = new ArrayList<>();
-        if (!isRootUri) {
-            locationEntry.setPriority(locationEntry.getPriority() == null ? 1000 : locationEntry.getPriority());
-            pathCandidates = splitParallelPaths(refinedUri, 1);
-            if (pathCandidates.size() == 0) pathCandidates.add(refinedUri);
-        } else {
-            boolean exactRootUri = "/".equals(locationEntry.getPath());
-            locationEntry.setPriority(locationEntry.getPriority() == null ? (exactRootUri ? -2000 : -1000) : locationEntry.getPriority());
-            pathCandidates.add(refinedUri);
-        }
-        return pathCandidates;
-    }
-
-    @Deprecated
-    public List<String> splitParallelPaths(String path, int depth) throws ValidationException {
-        List<String> pathMembers = new ArrayList<>();
-        if (depth > 1) {
-            throw new IllegalArgumentException("SplitParallelPaths only supports splitting regex path at first level.");
-        }
-        int fromIdx, idxSuffix;
-        fromIdx = idxSuffix = 0;
-        while ((idxSuffix = path.indexOf(standardSuffix, fromIdx)) != -1) {
-            if (fromIdx > 0) {
-                if (path.charAt(fromIdx) == '|') {
-                    fromIdx++;
-                    pathMembers.addAll(splitParallelPaths(path.substring(fromIdx, idxSuffix), true));
-                } else {
-                    String prev = pathMembers.get(pathMembers.size() - 1);
-
-                    List<String> subPaths = splitParallelPaths(prev + path.substring(fromIdx, idxSuffix + 8), true);
-                    pathMembers.set(pathMembers.size() - 1, subPaths.get(0));
-                    for (int i = 1; i < subPaths.size(); i++) {
-                        pathMembers.add(pathMembers.get(i));
-                    }
-                }
-            } else {
-                pathMembers.addAll(splitParallelPaths(path.substring(0, idxSuffix), true));
-            }
-            fromIdx = idxSuffix + 8;
-        }
-
-        if (pathMembers.size() == 0) {
-            pathMembers.addAll(splitParallelPaths(path, false));
-        }
-
-        return pathMembers;
-    }
-
-    @Deprecated
-    private List<String> splitParallelPaths(String path, boolean appendSuffix) throws ValidationException {
-        if (path == null || path.isEmpty()) return null;
-
-        List<String> subPaths = new ArrayList<>();
-        StringBuilder pathBuilder = new StringBuilder();
-        char[] pp = path.toCharArray();
-        int startIdx, endIdx;
-        startIdx = 0;
-        endIdx = pp.length - 1;
-        if (pp[startIdx] == '(' && pp[endIdx] == ')') {
-            startIdx++;
-            endIdx--;
-        }
-
-        for (int i = startIdx; i <= endIdx; i++) {
-            switch (pp[i]) {
-                case '|':
-                    if (appendSuffix) {
-                        String p = pathBuilder.toString();
-                        pathBuilder.setLength(0);
-                        for (String s : standardSuffixIdentifier) {
-                            subPaths.add(p + s);
-                        }
-                    }
-                    break;
-                default:
-                    pathBuilder.append(pp[i]);
-                    break;
-            }
-        }
-
-        if (pathBuilder.length() > 0) {
-            String p = pathBuilder.toString();
-            pathBuilder.setLength(0);
-            if (appendSuffix) {
-                for (String s : standardSuffixIdentifier) {
-                    subPaths.add(p + s);
-                }
-            } else {
-                subPaths.add(p);
-            }
-        }
-
-        if (subPaths.size() == 0) {
-            for (String s : standardSuffixIdentifier) {
-                subPaths.add(path + s);
-            }
-        }
-
-        return subPaths;
     }
 }
