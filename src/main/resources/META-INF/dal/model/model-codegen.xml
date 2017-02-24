@@ -75,6 +75,7 @@
     <element name="type" value-type="int" />
     <element name="version" value-type="int" />
     <element name="data" value-type="String" />
+    <element name="phase-id" value-type="int" />
     <element name="phase" value-type="String" />
   </entity>
   <entity name="virtual-server">

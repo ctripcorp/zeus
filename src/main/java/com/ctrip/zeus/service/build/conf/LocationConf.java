@@ -47,6 +47,10 @@ public class LocationConf {
     }
 
     protected String generateTrafficControlScript(List<TrafficControl> controls) {
+        if (controls.size() == 0) return "";
+        if (controls.size() == 1) {
+            return "'\n  ngx.exec(\"@group_" + controls.get(0).getGroup().getId() + "\")\n'";
+        }
         double totalWeight = 0.0;
         TreeMap<Double, List<Long>> controlOrder = new TreeMap<>();
         for (TrafficControl c : controls) {

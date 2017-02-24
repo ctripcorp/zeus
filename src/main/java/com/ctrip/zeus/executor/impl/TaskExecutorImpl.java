@@ -12,6 +12,7 @@ import com.ctrip.zeus.service.build.BuildService;
 import com.ctrip.zeus.service.commit.CommitService;
 import com.ctrip.zeus.service.commit.util.CommitType;
 import com.ctrip.zeus.service.model.*;
+import com.ctrip.zeus.service.model.common.RulePhase;
 import com.ctrip.zeus.service.model.common.ValidationContext;
 import com.ctrip.zeus.service.nginx.NginxService;
 import com.ctrip.zeus.service.query.SlbCriteriaQuery;
@@ -168,7 +169,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             //2. merge data and get next online entities
             Map<Long, Group> nxOnlineGroups;
             Map<Long, VirtualServer> nxOnlineVses;
-            Map<Long, TrafficPolicy> nxOnlineTpes;
+            Map<Long, TrafficPolicy> nxOnlineTps;
             Slb nxOnlineSlb;
 
             //2.1 slb
@@ -181,6 +182,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             if (nxOnlineSlb == null) {
                 throw new ValidationException("Not found activated slb version.SlbId:" + slbId);
             }
+
             //2.2 vs
             nxOnlineVses = vsMap.getOnlineMapping();
             for (Long vsId : activateVsOps.keySet()) {
@@ -196,17 +198,19 @@ public class TaskExecutorImpl implements TaskExecutor {
                 nxOnlineGroups.put(gid, offlineVersion);
             }
             //2.4 policy
-            nxOnlineTpes = new HashMap<>(tpMap.getOnlineMapping());
+            nxOnlineTps = new HashMap<>(tpMap.getOnlineMapping());
             for (Long pid : activatePolicyOps.keySet()) {
                 TrafficPolicy offlineVersion = tpMap.getOfflineMapping().get(pid);
-                nxOnlineTpes.put(pid, offlineVersion);
+                nxOnlineTps.put(pid, offlineVersion);
             }
-
+            if (nxOnlineTps.size() > 0) {
+                nxOnlineSlb.addRule(new Rule().setPhaseId(RulePhase.HTTP_BEFORE_SERVER.getId()).setName("init_by_lua"));
+            }
 
             //3. find out vses which need build.
             //3.1 deactivate vs pre check
             if (deactivateVsOps.size() > 0) {
-                deactivateVsPreCheck(vsMap.getOnlineMapping().keySet(), nxOnlineGroups, nxOnlineTpes);
+                deactivateVsPreCheck(vsMap.getOnlineMapping().keySet(), nxOnlineGroups, nxOnlineTps);
             }
             //3.2 find out vses which need build.
             Set<Long> buildingVsIds;
@@ -217,7 +221,7 @@ public class TaskExecutorImpl implements TaskExecutor {
             Set<Long> buildingVsByDemand;
 
             // build all
-            buildingVsByDemand = filterBuildingVsByDemand(nxOnlineVses, groupMap.getOnlineMapping(), nxOnlineGroups, tpMap.getOnlineMapping(), nxOnlineTpes);
+            buildingVsByDemand = filterBuildingVsByDemand(nxOnlineVses, groupMap.getOnlineMapping(), nxOnlineGroups, tpMap.getOnlineMapping(), nxOnlineTps);
             if (activateSlbOps.size() > 0 && activateSlbOps.get(slbId) != null) {
                 buildingVsIds = new HashSet<>(nxOnlineVses.keySet());
             } else {
@@ -240,7 +244,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                         buildingGroupIds.add(e.getKey());
                     }
                 }
-                for (Map.Entry<Long, TrafficPolicy> e : nxOnlineTpes.entrySet()) {
+                for (Map.Entry<Long, TrafficPolicy> e : nxOnlineTps.entrySet()) {
                     boolean buildingRequired = traversePolicyContent(e.getKey(), e.getValue(), slbId,
                             nxOnlineVses,
                             buildingVsIdsTmp, policyReferrerOfBuildingVs);
@@ -252,7 +256,7 @@ public class TaskExecutorImpl implements TaskExecutor {
 
                 for (Long vsId : buildingVsIdsTmp) {
                     flag = flag & validateEntriesOnVs(vsId, groupMap.getOnlineMapping(), nxOnlineGroups, tpMap.getOnlineMapping(),
-                            nxOnlineTpes, groupReferrerOfBuildingVs, policyReferrerOfBuildingVs);
+                            nxOnlineTps, groupReferrerOfBuildingVs, policyReferrerOfBuildingVs);
                 }
                 if (flag) break;
             }

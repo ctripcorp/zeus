@@ -1,10 +1,15 @@
 package com.ctrip.zeus.service.build.conf;
 
+import com.ctrip.zeus.model.entity.Rule;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.service.build.ConfigHandler;
+import com.ctrip.zeus.service.model.common.RulePhase;
+import com.ctrip.zeus.service.model.common.RuleSet;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author:xingchaowang
@@ -19,9 +24,31 @@ public class NginxConf {
     ServerConf serverConf;
 
     private static String ShmZoneName = "proxy_zone";
+    private Map<String, RuleGenerate> ruleGenerateRegistry = new HashMap<>();
+
+    public NginxConf() {
+        registerHttpRules();
+    }
+
+    private void registerHttpRules() {
+        try {
+            ruleGenerateRegistry.put("init_by_lua", new RuleGenerate() {
+                @Override
+                public void generateRuleCommand(ConfWriter confWriter) {
+                    confWriter.writeCommand("init_by_lua", generateLuaInitScripts());
+                }
+            });
+        } catch (Exception e) {
+        }
+    }
 
     public String generate(Slb slb) throws Exception {
         Long slbId = slb.getId();
+
+        RuleSet<Slb> generationRules = new RuleSet<>();
+        for (Rule rule : slb.getRuleSet()) {
+            generationRules.addRule(rule);
+        }
 
         ConfWriter confWriter = new ConfWriter(10240, true);
         confWriter.writeCommand("worker_processes", "auto");
@@ -61,6 +88,8 @@ public class NginxConf {
 
         confWriter.writeCommand("req_status_zone", ShmZoneName + " \"$hostname/$proxy_host\" 20M");
 
+        writeRuleConf(confWriter, generationRules, RulePhase.HTTP_BEFORE_SERVER);
+
         serverConf.writeCheckStatusServer(confWriter, ShmZoneName, slbId);
         serverConf.writeDyupsServer(confWriter, slbId);
         serverConf.writeDefaultServers(confWriter, slbId);
@@ -70,5 +99,18 @@ public class NginxConf {
         confWriter.writeHttpEnd();
 
         return confWriter.getValue();
+    }
+
+    protected void writeRuleConf(ConfWriter confWriter, RuleSet<Slb> generationRules, RulePhase rulePhase) {
+        for (Rule rule : generationRules.getRulesByPhase(RulePhase.HTTP_BEFORE_SERVER)) {
+            RuleGenerate gen = ruleGenerateRegistry.get(rule.getName());
+            if (gen != null) {
+                gen.generateRuleCommand(confWriter);
+            }
+        }
+    }
+
+    protected String generateLuaInitScripts() {
+        return "'\n  math.randomseed(os.time())\n'";
     }
 }

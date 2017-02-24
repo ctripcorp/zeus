@@ -57,7 +57,7 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         for (int i = 0; i < policy.getControls().size(); i++) {
             groupIds[i] = policy.getControls().get(i).getGroup().getId();
         }
-        if (groupIds.length <= 1) {
+        if (groupIds.length < 1) {
             throw new ValidationException("Traffic policy that you try to create/modify does not have enough traffic-controls.");
         }
         Arrays.sort(groupIds);

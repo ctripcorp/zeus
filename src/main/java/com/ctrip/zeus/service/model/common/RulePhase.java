@@ -4,6 +4,7 @@ package com.ctrip.zeus.service.model.common;
  * Created by zhoumy on 2017/1/9.
  */
 public enum RulePhase {
+    HTTP_BEFORE_SERVER(5),
     LOC_BEFORE_REWRITE(1),
     LOC_AFTER_REWRITE(2),
     LOC_BEFORE_DYUP(3),
@@ -29,6 +30,8 @@ public enum RulePhase {
                 return LOC_BEFORE_DYUP;
             case 4:
                 return LOC_AFTER_DYUP;
+            case 5:
+                return HTTP_BEFORE_SERVER;
         }
         return null;
     }
