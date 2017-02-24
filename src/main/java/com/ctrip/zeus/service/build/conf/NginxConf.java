@@ -102,7 +102,7 @@ public class NginxConf {
     }
 
     protected void writeRuleConf(ConfWriter confWriter, RuleSet<Slb> generationRules, RulePhase rulePhase) {
-        for (Rule rule : generationRules.getRulesByPhase(RulePhase.HTTP_BEFORE_SERVER)) {
+        for (Rule rule : generationRules.getRulesByPhase(rulePhase)) {
             RuleGenerate gen = ruleGenerateRegistry.get(rule.getName());
             if (gen != null) {
                 gen.generateRuleCommand(confWriter);
