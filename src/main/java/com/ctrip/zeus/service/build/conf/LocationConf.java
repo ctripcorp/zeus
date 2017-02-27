@@ -68,23 +68,26 @@ public class LocationConf {
                 .append("  local r = math.random()\n");
 
         double prevWeight = 0.0, w;
+        boolean firstBlockGenerated = false;
         Map.Entry<Double, List<Long>> curr = controlOrder.pollFirstEntry();
-        if (curr.getValue() != null) {
-            Long v = curr.getValue().get(0);
-            w = curr.getKey() + prevWeight;
-            controlScript.append("  if (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r < " + String.format("%.2f", w / totalWeight) + ") then\n")
-                    .append("    ngx.exec(\"@group_" + v + "\")\n");
-            prevWeight += curr.getKey();
-            curr.getValue().remove(0);
-        }
-        if (curr.getValue().size() == 0) curr = controlOrder.pollFirstEntry();
 
         while (curr != null) {
-            for (Long v : curr.getValue()) {
-                w = curr.getKey() + prevWeight;
-                controlScript.append("  elseif (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r " + (w == totalWeight ? "<= " : "< ") + String.format("%.2f", w / totalWeight) + ") then\n")
-                        .append("    ngx.exec(\"@group_" + v + "\")\n");
-                prevWeight = w;
+            if (curr.getKey() > 0.0) {
+                for (Long v : curr.getValue()) {
+                    w = curr.getKey() + prevWeight;
+                    if (!firstBlockGenerated && w == totalWeight) {
+                        return "'\n  ngx.exec(\"@group_" + v + "\")\n'";
+                    } else if (!firstBlockGenerated) {
+                        controlScript.append("  if (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r < " + String.format("%.2f", w / totalWeight) + ") then\n")
+                                .append("    ngx.exec(\"@group_" + v + "\")\n");
+                        prevWeight += curr.getKey();
+                        firstBlockGenerated = true;
+                    } else {
+                        controlScript.append("  elseif (r >= " + String.format("%.2f", prevWeight / totalWeight) + " and r " + (w == totalWeight ? "<= " : "< ") + String.format("%.2f", w / totalWeight) + ") then\n")
+                                .append("    ngx.exec(\"@group_" + v + "\")\n");
+                        prevWeight = w;
+                    }
+                }
             }
             curr = controlOrder.pollFirstEntry();
         }

@@ -5,6 +5,7 @@ import com.ctrip.zeus.dal.core.TrafficPolicyDo;
 import com.ctrip.zeus.dal.core.TrafficPolicyEntity;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.PolicyVirtualServer;
+import com.ctrip.zeus.model.entity.TrafficControl;
 import com.ctrip.zeus.model.entity.TrafficPolicy;
 import com.ctrip.zeus.service.model.common.ErrorType;
 import com.ctrip.zeus.service.model.common.LocationEntry;
@@ -49,6 +50,9 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
         if (policy.getName() == null) {
             context.error(policy.getId(), MetaType.TRAFFIC_POLICY, ErrorType.FIELD_VALIDATION, "Field `name` is empty.");
         }
+        if (policy.getPolicyVirtualServers() == null || policy.getPolicyVirtualServers().size() == 0) {
+            context.error(policy.getId(), MetaType.TRAFFIC_POLICY, ErrorType.FIELD_VALIDATION, "Field `policy-virtual-servers` is empty.");
+        }
     }
 
     @Override
@@ -67,6 +71,11 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                 throw new ValidationException("Traffic policy that you try to create/modify declares the same group " + prev + " more than once.");
             }
             prev = groupIds[i];
+        }
+        for (TrafficControl c : policy.getControls()) {
+            if (c.getWeight() <= 0) {
+                throw new ValidationException("Field `weight` only accepts positive value.");
+            }
         }
         return groupIds;
     }
