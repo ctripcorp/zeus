@@ -20,9 +20,6 @@ import java.util.*;
  */
 @Service("pathValidator")
 public class PathValidator {
-    private static final String standardSuffix = "($|/|\\?)";
-    private static final String[] standardSuffixIdentifier = new String[]{"$", "/"};
-
     private static final Logger logger = LoggerFactory.getLogger(PathValidator.class);
 
     private static final String ROOT = "/";

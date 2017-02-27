@@ -92,7 +92,13 @@ public class DefaultTrafficPolicyValidator implements TrafficPolicyValidator {
                 }
             }
             i++;
-            for (LocationEntry ee : groupEntries.get(vsId)) {
+            List<LocationEntry> entriesOnVs = groupEntries.get(vsId);
+            if (entriesOnVs == null || entriesOnVs.size() == 0) {
+                String error = "Traffic policy that you try to create/modify does not have enough traffic-controls.";
+                _context.error(policyId, MetaType.TRAFFIC_POLICY, ErrorType.FIELD_VALIDATION, error);
+                if (context == null) throw new ValidationException(error);
+            }
+            for (LocationEntry ee : entriesOnVs) {
                 int j = Arrays.binarySearch(controlIds, ee.getEntryId());
                 if (j < 0) continue;
                 visited[j] = i;
