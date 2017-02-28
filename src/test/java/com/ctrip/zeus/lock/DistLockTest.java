@@ -148,4 +148,23 @@ public class DistLockTest extends AbstractServerTest {
         Assert.assertTrue(anotherLock.tryLock());
         anotherLock.unlock();
     }
+
+//    @Test
+//    public void testAbnormalLock() {
+//        DistLock lock = dbLockFactory.newLock("abnormal");
+//        lock.lock();
+//        MysqlDistLock dbLock = (MysqlDistLock) lock;
+//        dbLock.replaceDistLockDao(new DistLockDao());
+//        if (!dbLock.unlock()) {
+//            dbLock.replaceDistLockDao(distLockDao);
+//            Assert.assertFalse(dbLockFactory.newLock("abnormal").tryLock());
+//            try {
+//                Thread.sleep(60 * 1000L);
+//            } catch (InterruptedException e) {
+//            }
+//        } else {
+//            Assert.assertTrue(false);
+//        }
+//        Assert.assertTrue(dbLockFactory.newLock("abnormal").tryLock());
+//    }
 }

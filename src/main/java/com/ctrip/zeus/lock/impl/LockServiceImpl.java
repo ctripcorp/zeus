@@ -33,6 +33,15 @@ public class LockServiceImpl implements LockService {
     }
 
     @Override
+    public void forceUnlockByServer(String ip) throws DalException {
+        List<DistLockDo> check = distLockDao.getByServer(ip, DistLockEntity.READSET_FULL);
+        for (DistLockDo d : check) {
+            d.setServer("").setOwner(0L).setCreatedTime(System.currentTimeMillis());
+        }
+        distLockDao.updateByKey(check.toArray(new DistLockDo[check.size()]), DistLockEntity.UPDATESET_FULL);
+    }
+
+    @Override
     public void forceUnlock(String key) throws DalException {
         distLockDao.updateByKey(new DistLockDo().setLockKey(key).setServer("").setOwner(0L).setCreatedTime(System.currentTimeMillis()), DistLockEntity.UPDATESET_FULL);
     }

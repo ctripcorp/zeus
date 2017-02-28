@@ -1,30 +1,41 @@
 package com.ctrip.zeus.lock;
 
 import com.ctrip.zeus.dal.core.DistLockDao;
-import com.ctrip.zeus.dal.core.DistLockDo;
-import com.ctrip.zeus.dal.core.DistLockEntity;
+import com.ctrip.zeus.lock.impl.LockScavenger;
 import com.ctrip.zeus.lock.impl.MysqlDistLock;
+import com.ctrip.zeus.startup.PreCheck;
 import com.ctrip.zeus.util.S;
 import com.netflix.config.DynamicPropertyFactory;
 import com.netflix.config.DynamicStringProperty;
 import org.springframework.stereotype.Component;
+import org.unidal.dal.jdbc.DalException;
 import org.unidal.dal.jdbc.transaction.TransactionManager;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * Created by zhoumy on 2015/4/23.
  */
 @Component("dbLockFactory")
-public class DbLockFactory {
+public class DbLockFactory implements PreCheck {
     DynamicStringProperty dbName = DynamicPropertyFactory.getInstance().getStringProperty("dal.db-name", "zeus");
 
     @Resource
     private DistLockDao distLockDao;
     @Resource
     private TransactionManager transactionManager;
+    @Resource
+    private LockService lockService;
+
+    private LockScavenger lockScavenger;
+
+    public DbLockFactory() {
+        try {
+            lockScavenger = new LockScavenger();
+        } catch (RuntimeException e) {
+        } catch (Throwable t) {
+        }
+    }
 
     public DistLock newLock(String name) {
         return new MysqlDistLock(name, this);
@@ -42,12 +53,17 @@ public class DbLockFactory {
         return dbName.get();
     }
 
-    @PostConstruct
-    public void releaseDeadLocks() throws Exception {
-        List<DistLockDo> check = distLockDao.getByServer(S.getIp(), DistLockEntity.READSET_FULL);
-        for (DistLockDo d : check) {
-            d.setServer("").setOwner(0L).setCreatedTime(System.currentTimeMillis());
+    public LockScavenger getLockScavenger() {
+        return lockScavenger;
+    }
+
+    @Override
+    public boolean ready() {
+        try {
+            lockService.forceUnlockByServer(S.getIp());
+            return true;
+        } catch (DalException e) {
+            return false;
         }
-        distLockDao.updateByKey(check.toArray(new DistLockDo[check.size()]), DistLockEntity.UPDATESET_FULL);
     }
 }

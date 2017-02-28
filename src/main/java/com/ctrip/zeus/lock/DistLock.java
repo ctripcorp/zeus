@@ -35,5 +35,7 @@ public interface DistLock {
     /**
      * Release the lock.
      */
-    void unlock();
+    boolean unlock();
+
+    String getKey();
 }

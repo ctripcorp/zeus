@@ -22,9 +22,10 @@ public class MysqlDistLock implements DistLock {
     private static final long SLEEP_INTERVAL = DynamicPropertyFactory.getInstance().getLongProperty("lock.sleep.interval", 300L).get();
 
     private final String key;
-    private final DistLockDao distLockDao;
+    private DistLockDao distLockDao;
     private final TransactionManager transactionManager;
     private final String resourceName;
+    private LockScavenger lockScavenger;
 
     private AtomicBoolean state = new AtomicBoolean(false);
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -35,6 +36,7 @@ public class MysqlDistLock implements DistLock {
         this.distLockDao = dbLockFactory.getDao();
         this.transactionManager = dbLockFactory.getTransactionManager();
         this.resourceName = dbLockFactory.getResourceName();
+        this.lockScavenger = dbLockFactory.getLockScavenger();
     }
 
     @Override
@@ -51,7 +53,7 @@ public class MysqlDistLock implements DistLock {
                 retryDelay(key, i);
             }
         }
-        logger.warn("Unable to create the lock " + key);
+        logger.debug("Unable to create the lock " + key);
         return false;
     }
 
@@ -91,25 +93,30 @@ public class MysqlDistLock implements DistLock {
     }
 
     @Override
-    public void unlock() {
+    public boolean unlock() {
         DistLockDo d = new DistLockDo().setLockKey(key);
         try {
-            if (unlock(d))
-                return;
-        } catch (DalException e) {
+            if (unlock(d)) return true;
+        } catch (Exception e) {
             logger.warn("Fail to unlock the lock " + key + ".", e);
         }
         for (int i = 1; i < MAX_RETRIES; i++) {
             try {
-                if (unlock(d))
-                    return;
+                if (unlock(d)) return true;
                 retryDelay(key, i);
-            } catch (DalException e) {
+            } catch (Exception e) {
                 retryDelay(key, i);
                 logger.warn("Fail to unlock the lock " + key + ".", e);
             }
         }
-        logger.warn("Abnormal unlock tries. Fail to unlock the lock " + key + ".");
+        logger.error("Abnormal unlock tries. Fail to unlock the lock " + key + ".");
+        lockScavenger.collect(this);
+        return false;
+    }
+
+    @Override
+    public String getKey() {
+        return key;
     }
 
     public static boolean isFree(DistLockDo d) {
@@ -154,7 +161,7 @@ public class MysqlDistLock implements DistLock {
         return false;
     }
 
-    private boolean unlock(DistLockDo d) throws DalException {
+    private boolean unlock(DistLockDo d) throws Exception {
         d.setServer("").setOwner(0L).setCreatedTime(System.currentTimeMillis());
         if (compareAndSetState(true, false)) {
             try {
@@ -162,13 +169,15 @@ public class MysqlDistLock implements DistLock {
                 if (count == 1) return true;
                 DistLockDo check = distLockDao.getByKey(d.getLockKey(), DistLockEntity.READSET_FULL);
                 if (check == null || isFree(check)) return true;
-            } catch (DalException ex) {
+            } catch (Exception ex) {
                 compareAndSetState(false, true);
                 throw ex;
             }
             compareAndSetState(false, true);
+            return false;
+        } else {
+            return true;
         }
-        return false;
     }
 
     private void retryDelay(String key, int attemptCount) {
@@ -181,7 +190,7 @@ public class MysqlDistLock implements DistLock {
         }
     }
 
-    private final boolean compareAndSetState(boolean expected, boolean updated) {
+    private boolean compareAndSetState(boolean expected, boolean updated) {
         boolean success = state.compareAndSet(expected, updated);
         if (!success) {
             logger.warn("Abnormal state - expected: " + expected + ", but was " + !expected + ".");

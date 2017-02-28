@@ -12,5 +12,7 @@ public interface LockService {
 
     List<LockStatus> getLockStatus() throws DalException;
 
+    void forceUnlockByServer(String ip) throws DalException;
+
     void forceUnlock(String key) throws DalException;
 }
