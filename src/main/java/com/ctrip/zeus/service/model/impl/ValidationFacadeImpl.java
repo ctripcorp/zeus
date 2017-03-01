@@ -130,7 +130,7 @@ public class ValidationFacadeImpl implements ValidationFacade {
                     v = new ArrayList<>();
                     locationEntries.put(e.getKey(), v);
                 }
-                LocationEntry policyEntry = new LocationEntry().setEntryId(policy.getId()).setEntryType(MetaType.GROUP).setVsId(e.getKey()).setPath(e.getValue().getPath()).setPriority(e.getValue().getPriority());
+                LocationEntry policyEntry = new LocationEntry().setEntryId(policy.getId()).setEntryType(MetaType.TRAFFIC_POLICY).setVsId(e.getKey()).setPath(e.getValue().getPath()).setPriority(e.getValue().getPriority());
                 v.add(policyEntry);
                 policyLocationEntryOnVses.put(e.getKey(), policyEntry);
             }
