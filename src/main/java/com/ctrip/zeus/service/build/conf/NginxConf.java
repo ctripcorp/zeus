@@ -1,5 +1,6 @@
 package com.ctrip.zeus.service.build.conf;
 
+import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Rule;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.service.build.ConfigHandler;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,10 +34,14 @@ public class NginxConf {
 
     private void registerHttpRules() {
         try {
-            ruleGenerateRegistry.put("init_by_lua", new RuleGenerate() {
+            ruleGenerateRegistry.put("init_randomseed", new RuleGenerate() {
                 @Override
-                public void generateRuleCommand(ConfWriter confWriter) {
-                    confWriter.writeCommand("init_by_lua", generateLuaInitScripts());
+                public String generateCommandValue(Rule rule) throws Exception {
+                    if (RulePhase.HTTP_INIT_BY_LUA.equals(RulePhase.getRulePhase(rule.getPhaseId()))) {
+                        return "math.randomseed(os.time())";
+                    } else {
+                        throw new Exception("Invalid rule phase " + rule.getPhase() + ".");
+                    }
                 }
             });
         } catch (Exception e) {
@@ -45,7 +51,7 @@ public class NginxConf {
     public String generate(Slb slb) throws Exception {
         Long slbId = slb.getId();
 
-        RuleSet<Slb> generationRules = new RuleSet<>();
+        RuleSet<Slb> generationRules = new RuleSet<>(slb);
         for (Rule rule : slb.getRuleSet()) {
             generationRules.addRule(rule);
         }
@@ -66,8 +72,18 @@ public class NginxConf {
         confWriter.writeHttpStart();
         confWriter.writeCommand("include", "mime.types");
 
-        if (configHandler.getEnable("waf", slbId, null, null, false)) {
+        boolean luaInitEnabled = true;
+        boolean wafInitEnabled = configHandler.getEnable("waf", slbId, null, null, false);
+        if (wafInitEnabled) {
             confWriter.writeCommand("include", configHandler.getStringValue("waf.include.conf", slbId, null, null, "/opt/app/nginx/conf/waf/waf.conf"));
+            luaInitEnabled = configHandler.getEnable("waf.canary", slbId, null, null, false);
+        }
+        List<Rule> luaInitRules = generationRules.getRulesByPhase(RulePhase.HTTP_INIT_BY_LUA);
+        if (luaInitRules.size() > 0 && !luaInitEnabled) {
+            throw new Exception("Fail to generate nginx.conf with init_by_lua directive disabled.");
+        }
+        if (luaInitRules.size() > 0 || (wafInitEnabled && luaInitEnabled)) {
+            confWriter.writeCommand("init_by_lua", generateLuaInitScripts(wafInitEnabled, luaInitRules));
         }
 
         confWriter.writeCommand("default_type", "application/octet-stream");
@@ -88,8 +104,6 @@ public class NginxConf {
 
         confWriter.writeCommand("req_status_zone", ShmZoneName + " \"$hostname/$proxy_host\" 20M");
 
-        writeRuleConf(confWriter, generationRules, RulePhase.HTTP_BEFORE_SERVER);
-
         serverConf.writeCheckStatusServer(confWriter, ShmZoneName, slbId);
         serverConf.writeDyupsServer(confWriter, slbId);
         serverConf.writeDefaultServers(confWriter, slbId);
@@ -101,16 +115,20 @@ public class NginxConf {
         return confWriter.getValue();
     }
 
-    protected void writeRuleConf(ConfWriter confWriter, RuleSet<Slb> generationRules, RulePhase rulePhase) {
-        for (Rule rule : generationRules.getRulesByPhase(rulePhase)) {
+
+    protected String generateLuaInitScripts(boolean wafEnabled, List<Rule> rules) throws Exception {
+        StringBuilder initLuaScripts = new StringBuilder();
+        initLuaScripts.append("'\n");
+        if (wafEnabled) {
+            initLuaScripts.append("  local initwaf = require \"core.init\"\n").append("  initwaf()\n");
+        }
+        for (Rule rule : rules) {
             RuleGenerate gen = ruleGenerateRegistry.get(rule.getName());
             if (gen != null) {
-                gen.generateRuleCommand(confWriter);
+                initLuaScripts.append("  " + gen.generateCommandValue(rule));
             }
         }
-    }
-
-    protected String generateLuaInitScripts() {
-        return "'\n  math.randomseed(os.time())\n'";
+        initLuaScripts.append("\n'");
+        return initLuaScripts.toString();
     }
 }

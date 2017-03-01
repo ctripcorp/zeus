@@ -204,7 +204,7 @@ public class TaskExecutorImpl implements TaskExecutor {
                 nxOnlineTps.put(pid, offlineVersion);
             }
             if (nxOnlineTps.size() > 0) {
-                nxOnlineSlb.addRule(new Rule().setPhaseId(RulePhase.HTTP_BEFORE_SERVER.getId()).setName("init_by_lua"));
+                nxOnlineSlb.addRule(new Rule().setPhaseId(RulePhase.HTTP_INIT_BY_LUA.getId()).setName("init_randomseed"));
             }
 
             //3. find out vses which need build.

@@ -15,17 +15,13 @@ public class RuleSet<T> {
     private Map<RulePhase, List<Rule>> rulesByPhase;
     private int size = 0;
 
-    public RuleSet() {
+    public RuleSet(T ref) {
         rulesByPhase = new HashMap<>();
+        this.ref = ref;
     }
 
     public T getRef() {
         return ref;
-    }
-
-    public RuleSet<T> setRef(T ref) {
-        this.ref = ref;
-        return this;
     }
 
     public List<Rule> getRules() {

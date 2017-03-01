@@ -23,8 +23,7 @@ public class RuleRepositoryImpl implements RuleRepository {
 
     @Override
     public RuleSet getRulesByReference(Long refId, MetaType refType) throws Exception {
-        RuleSet<Long> ruleSet = new RuleSet<>();
-        ruleSet.setRef(refId);
+        RuleSet<Long> ruleSet = new RuleSet<>(refId);
         for (RuleDo e : ruleDao.findAllByTargetAndType(refId, refType.getId(), RuleEntity.READSET_FULL)) {
             Rule r = new Rule();
             ruleSet.addRule(r);
@@ -38,7 +37,7 @@ public class RuleRepositoryImpl implements RuleRepository {
         RuleSet[] ruleSetArray = new RuleSet[refId.length];
         Map<Long, Integer> idxRef = new HashMap<>();
         for (int i = 0; i < refId.length; i++) {
-            ruleSetArray[i] = new RuleSet<Long>().setRef(refId[i]);
+            ruleSetArray[i] = new RuleSet<>(refId[i]);
             idxRef.put(refId[i], i);
         }
 
