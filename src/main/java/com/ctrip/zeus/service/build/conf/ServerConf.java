@@ -72,7 +72,7 @@ public class ServerConf {
             confWriter.writeCommand("ssl_session_cache", configHandler.getStringValue("ssl.session.cache", slbId, vsId, null, "shared:SSL:20m"));
             confWriter.writeCommand("ssl_session_timeout", configHandler.getStringValue("ssl.session.cache.timeout", slbId, vsId, null, "180m"));
 
-            if (configHandler.getEnable("session.ticket", slbId, vsId, null, false) && sessionTicketService.getCurrentIndexPage(slbId) != null) {
+            if (configHandler.getEnable("session.ticket", slbId, vsId, null, false) && sessionTicketService.getCurrentSessionTicketFile(slbId) != null) {
                 confWriter.writeCommand("ssl_session_tickets", "on");
                 String path = configHandler.getStringValue("session.ticket.key.path", "/opt/app/nginx/conf/ticket");
                 String fileName = configHandler.getStringValue("session.ticket.key.file", "sessionTicket.key");
