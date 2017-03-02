@@ -1,14 +1,14 @@
-package com.ctrip.zeus.service.errorPage.impl;
+package com.ctrip.zeus.service.file.impl;
 
 import com.ctrip.zeus.client.InstallDefaultPageClient;
 import com.ctrip.zeus.dal.core.*;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.SlbServer;
-import com.ctrip.zeus.page.entity.DefaultPage;
+import com.ctrip.zeus.page.entity.DefaultFile;
 import com.ctrip.zeus.server.LocalInfoPack;
 import com.ctrip.zeus.service.build.ConfigHandler;
-import com.ctrip.zeus.service.errorPage.ErrorPageService;
+import com.ctrip.zeus.service.file.ErrorPageService;
 import com.ctrip.zeus.service.model.EntityFactory;
 import com.ctrip.zeus.service.model.SelectionMode;
 import com.ctrip.zeus.service.model.SlbRepository;
@@ -97,26 +97,26 @@ public class ErrorPageServiceImpl implements ErrorPageService, PreCheck {
     }
 
     @Override
-    public DefaultPage getCurrentErrorPage(String code, Long slbId) throws Exception {
+    public DefaultFile getCurrentErrorPage(String code, Long slbId) throws Exception {
         DefaultPageActiveDo errorPageActiveDo = defaultPageActiveDao.findByKeyAndSlbIdAndType(code, slbId, PAGE_TYPE, DefaultPageActiveEntity.READSET_FULL);
         if (errorPageActiveDo == null) {
             return null;
         } else {
-            DefaultPage res = new DefaultPage().setCode(code).setVersion(errorPageActiveDo.getVersion());
+            DefaultFile res = new DefaultFile().setName(code).setVersion(errorPageActiveDo.getVersion());
             DefaultPageFileDo page = defaultPageFileDao.findByKeyAndVersion(code, errorPageActiveDo.getVersion(), DefaultPageFileEntity.READSET_FULL);
-            return res.setErrprPageFile(new String(page.getFileData()));
+            return res.setFile(new String(page.getFileData()));
         }
     }
 
     @Override
-    public DefaultPage getCurrentErrorPage(String code, String ip) throws Exception {
+    public DefaultFile getCurrentErrorPage(String code, String ip) throws Exception {
         DefaultPageServerActiveDo errorPageActiveDo = defaultPageServerActiveDao.findByServerIpAndKey(code, ip, DefaultPageServerActiveEntity.READSET_FULL);
         if (errorPageActiveDo == null) {
             return null;
         } else {
-            DefaultPage res = new DefaultPage().setCode(code).setVersion(errorPageActiveDo.getVersion());
+            DefaultFile res = new DefaultFile().setName(code).setVersion(errorPageActiveDo.getVersion());
             DefaultPageFileDo page = defaultPageFileDao.findByKeyAndVersion(code, errorPageActiveDo.getVersion(), DefaultPageFileEntity.READSET_FULL);
-            return res.setErrprPageFile(new String(page.getFileData()));
+            return res.setFile(new String(page.getFileData()));
         }
     }
 

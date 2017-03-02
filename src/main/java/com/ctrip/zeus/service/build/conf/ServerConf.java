@@ -3,6 +3,7 @@ package com.ctrip.zeus.service.build.conf;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.model.entity.*;
 import com.ctrip.zeus.service.build.ConfigHandler;
+import com.ctrip.zeus.service.file.SessionTicketService;
 import com.ctrip.zeus.util.AssertUtils;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,8 @@ import java.util.Set;
 public class ServerConf {
     @Resource
     ConfigHandler configHandler;
+    @Resource
+    SessionTicketService sessionTicketService;
     @Resource
     LocationConf locationConf;
 
@@ -69,6 +72,12 @@ public class ServerConf {
             confWriter.writeCommand("ssl_session_cache", configHandler.getStringValue("ssl.session.cache", slbId, vsId, null, "shared:SSL:20m"));
             confWriter.writeCommand("ssl_session_timeout", configHandler.getStringValue("ssl.session.cache.timeout", slbId, vsId, null, "180m"));
 
+            if (configHandler.getEnable("session.ticket", slbId, vsId, null, false) && sessionTicketService.getCurrentIndexPage(slbId) != null) {
+                confWriter.writeCommand("ssl_session_tickets", "on");
+                String path = configHandler.getStringValue("session.ticket.key.path", "/opt/app/nginx/conf/ticket");
+                String fileName = configHandler.getStringValue("session.ticket.key.file", "sessionTicket.key");
+                confWriter.writeCommand("ssl_session_ticket_key", path + "/" + fileName);
+            }
         }
 
         if (configHandler.getEnable("server.vs.health.check", slbId, vsId, null, false)) {

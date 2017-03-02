@@ -1,9 +1,9 @@
 package com.ctrip.zeus.restful.resource;
 
 import com.ctrip.zeus.exceptions.ValidationException;
-import com.ctrip.zeus.page.entity.DefaultPage;
+import com.ctrip.zeus.page.entity.DefaultFile;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.errorPage.ErrorPageService;
+import com.ctrip.zeus.service.file.ErrorPageService;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.stereotype.Component;
 
@@ -81,7 +81,7 @@ public class ErrorPageResource {
                                  @QueryParam("code") String code,
                                  @QueryParam("slbId") Long slbId,
                                  @QueryParam("ip") String ip) throws Exception {
-        DefaultPage res = null;
+        DefaultFile res = null;
         if (slbId != null) {
             res = errorPageService.getCurrentErrorPage(code, slbId);
         } else if (ip != null) {

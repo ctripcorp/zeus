@@ -3,7 +3,7 @@ package com.ctrip.zeus.restful.resource;
 import com.ctrip.zeus.exceptions.ValidationException;
 import com.ctrip.zeus.page.entity.DefaultFile;
 import com.ctrip.zeus.restful.message.ResponseHandler;
-import com.ctrip.zeus.service.file.IndexPageService;
+import com.ctrip.zeus.service.file.SessionTicketService;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.springframework.stereotype.Component;
 
@@ -20,21 +20,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
 /**
- * Created by fanqq on 2016/9/1.
+ * Created by fanqq on 2017/3/2.
  */
 @Component
-@Path("/indexPage")
-public class IndexPageResource {
-    @Resource
-    IndexPageService indexPageService;
+@Path("/session/ticket/key")
+public class SessionTicketResource {
     @Resource
     ResponseHandler responseHandler;
+    @Resource
+    SessionTicketService sessionTicketService;
 
     @POST
     @Path("/upload")
     public Response update(@Context HttpServletRequest request,
                            @Context HttpHeaders hh,
-                           @FormDataParam("page") InputStream page) throws Exception {
+                           @FormDataParam("key") InputStream page) throws Exception {
         ByteArrayOutputStream swapStream = new ByteArrayOutputStream();
         byte[] buff = new byte[1024];
         int rc = 0;
@@ -42,7 +42,7 @@ public class IndexPageResource {
             swapStream.write(buff, 0, rc);
         }
         byte[] content = swapStream.toByteArray();
-        indexPageService.updateIndexPageFile(content);
+        sessionTicketService.addSessionTicketFile(content);
         return responseHandler.handle("Update success.", hh.getMediaType());
     }
 
@@ -52,10 +52,12 @@ public class IndexPageResource {
                             @Context HttpHeaders hh,
                             @QueryParam("version") Long version,
                             @QueryParam("slbId") Long slbId) throws Exception {
+        if (slbId == null) throw new ValidationException("SlbId is need.");
+
         if (version == null) {
-            version = indexPageService.getMaxIndexPageVersion();
+            version = sessionTicketService.getMaxVersion(slbId);
         }
-        indexPageService.installIndexPage(slbId, version);
+        sessionTicketService.installSessionTicketFile(slbId, version);
         return responseHandler.handle("Install success.", hh.getMediaType());
     }
 
@@ -63,12 +65,11 @@ public class IndexPageResource {
     @Path("/install/local")
     public Response install(@Context HttpServletRequest request,
                             @Context HttpHeaders hh,
-                            @QueryParam("code") String code,
                             @QueryParam("version") Long version) throws Exception {
         if (version == null) {
             throw new ValidationException("Param version is need.");
         }
-        indexPageService.installLocalIndexPage(version);
+        sessionTicketService.installLocalSessionTicketFile(version);
         return responseHandler.handle("Install success.", hh.getMediaType());
     }
 
@@ -80,9 +81,9 @@ public class IndexPageResource {
                                  @QueryParam("ip") String ip) throws Exception {
         DefaultFile res = null;
         if (slbId != null) {
-            res = indexPageService.getCurrentIndexPage(slbId);
+            res = sessionTicketService.getCurrentSessionTicketFile(slbId);
         } else if (ip != null) {
-            res = indexPageService.getCurrentIndexPage(ip);
+            res = sessionTicketService.getCurrentSessionTicketFile(ip);
         }
         if (res == null) {
             return responseHandler.handle("Not Found Online Version", hh.getMediaType());

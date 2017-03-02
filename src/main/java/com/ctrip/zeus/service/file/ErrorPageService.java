@@ -1,6 +1,6 @@
-package com.ctrip.zeus.service.errorPage;
+package com.ctrip.zeus.service.file;
 
-import com.ctrip.zeus.page.entity.DefaultPage;
+import com.ctrip.zeus.page.entity.DefaultFile;
 
 /**
  * Created by fanqq on 2016/8/22.
@@ -12,9 +12,9 @@ public interface ErrorPageService {
 
     public void installLocalErrorPage(String code, Long version) throws Exception;
 
-    public DefaultPage getCurrentErrorPage(String code, Long slbId) throws Exception;
+    public DefaultFile getCurrentErrorPage(String code, Long slbId) throws Exception;
 
-    public DefaultPage getCurrentErrorPage(String code, String ip) throws Exception;
+    public DefaultFile getCurrentErrorPage(String code, String ip) throws Exception;
 
     public byte[] getErrorPage(String code, Long version) throws Exception;
 

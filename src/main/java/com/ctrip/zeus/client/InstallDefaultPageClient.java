@@ -55,4 +55,9 @@ public class InstallDefaultPageClient extends AbstractRestClient {
         String responseStr = target.request().headers(getDefaultHeaders()).get(String.class);
         return responseStr;
     }
+    public String sessionTicketFile(Long version ) throws Exception {
+        WebTarget target = getTarget().path("/api/session/ticket/key/install/local");
+        target = target.queryParam("version",version);
+        return target.request().headers(getDefaultHeaders()).get(String.class);
+    }
 }

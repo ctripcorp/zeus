@@ -2,9 +2,9 @@
     <page-context>
         <title>title</title>
     </page-context>
-    <default-page>
-        <code>500d</code>
+    <default-file>
+        <name>500d</name>
         <version>1234567890123</version>
-        <errpr-page-file>file</errpr-page-file>
-    </default-page>
+        <file>file</file>
+    </default-file>
 </page>
