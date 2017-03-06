@@ -785,9 +785,12 @@ public class GroupResource {
         if (archive.isVirtual())
             throw new ValidationException("Virtual group cannot be deleted. Use /vgroup/delete instead.");
 
+        ExtendedView.ExtendedGroup archiveExtended = new ExtendedView.ExtendedGroup(archive);
+        viewDecorator.decorate(archiveExtended, "group");
+
         groupRepository.delete(groupId);
         try {
-            archiveRepository.archiveGroup(archive);
+            archiveRepository.archiveGroup(archiveExtended);
         } catch (Exception ex) {
             logger.warn("Try archive deleted group-" + groupId + " failed. ", ex);
         }

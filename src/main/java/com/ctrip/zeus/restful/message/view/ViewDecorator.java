@@ -90,4 +90,15 @@ public class ViewDecorator {
             }
         }
     }
+
+    public <T extends ExtendedView> void decorate(T object, String type) {
+        try {
+            object.setTags(tagService.getTags(type, object.getId()));
+        } catch (Exception e) {
+        }
+        try {
+            propertyService.getProperties(type, object.getId());
+        } catch (Exception e) {
+        }
+    }
 }

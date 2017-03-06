@@ -4,6 +4,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.TrafficPolicy;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.restful.message.view.ExtendedView;
 
 import java.util.List;
 
@@ -14,11 +15,15 @@ public interface ArchiveRepository {
 
     void archiveGroup(Group group) throws Exception;
 
+    void archiveGroup(ExtendedView.ExtendedGroup group) throws Exception;
+
     void archiveSlb(Slb slb) throws Exception;
 
     void archiveVs(VirtualServer vs) throws Exception;
 
     void archivePolicy(TrafficPolicy trafficPolicy) throws Exception;
+
+    String getGroupArchiveRaw(Long id, int version) throws Exception;
 
     Group getGroupArchive(Long id, int version) throws Exception;
 

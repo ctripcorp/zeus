@@ -5,6 +5,7 @@ import com.ctrip.zeus.model.entity.Group;
 import com.ctrip.zeus.model.entity.Slb;
 import com.ctrip.zeus.model.entity.TrafficPolicy;
 import com.ctrip.zeus.model.entity.VirtualServer;
+import com.ctrip.zeus.restful.message.view.ExtendedView;
 import com.ctrip.zeus.service.model.Archive;
 import com.ctrip.zeus.service.model.ArchiveRepository;
 import com.ctrip.zeus.service.model.common.MetaType;
@@ -48,6 +49,13 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     }
 
     @Override
+    public void archiveGroup(ExtendedView.ExtendedGroup group) throws Exception {
+        groupHistoryDao.insert(new GroupHistoryDo().setGroupId(group.getId()).setGroupName(group.getName()));
+        archiveGroupDao.insert(new ArchiveGroupDo().setGroupId(group.getId()).setHash(0).setVersion(0)
+                .setContent(ContentWriters.write(group)));
+    }
+
+    @Override
     public void archiveSlb(Slb slb) throws Exception {
         archiveSlbDao.insert(new ArchiveSlbDo().setSlbId(slb.getId()).setHash(0).setVersion(0)
                 .setContent(ContentWriters.writeSlbContent(slb)));
@@ -63,6 +71,12 @@ public class ArchiveRepositoryImpl implements ArchiveRepository {
     public void archivePolicy(TrafficPolicy trafficPolicy) throws Exception {
         archiveTrafficPolicyDao.insert(new ArchiveTrafficPolicyDo().setPolicyId(trafficPolicy.getId()).setPolicyName(trafficPolicy.getName()).setVersion(0)
                 .setContent(CompressUtils.compressToGzippedBase64String(ContentWriters.write(trafficPolicy))));
+    }
+
+    @Override
+    public String getGroupArchiveRaw(Long id, int version) throws Exception {
+        ArchiveGroupDo archiveGroupDo = archiveGroupDao.findByGroupAndVersion(id, version, ArchiveGroupEntity.READSET_FULL);
+        return archiveGroupDo == null ? null : archiveGroupDo.getContent();
     }
 
     @Override
