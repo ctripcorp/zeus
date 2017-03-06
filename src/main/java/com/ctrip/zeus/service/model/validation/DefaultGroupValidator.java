@@ -29,6 +29,8 @@ public class DefaultGroupValidator implements GroupValidator {
     private GroupDao groupDao;
     @Resource
     private TrafficPolicyQuery trafficPolicyQuery;
+    @Resource
+    private PathValidator pathValidator;
 
     @Override
     public void validateFields(Group group, ValidationContext context) {
@@ -117,8 +119,8 @@ public class DefaultGroupValidator implements GroupValidator {
             if (gvs.getPriority() > e.getPriority()) {
                 throw new ValidationException("Group has higher `priority` than its traffic policy " + e.getEntryId() + " on vs " + vsId + ".");
             }
-            if (!gvs.getPath().equals(e.getPath())) {
-                throw new ValidationException("Group and its traffic policy " + e.getEntryId() + " do not have the same `path` value on vs " + vsId + ".");
+            if (!pathValidator.contains(gvs.getPath(), e.getPath())) {
+                throw new ValidationException("Traffic policy " + e.getEntryId() + " is neither sharing the same `path` with nor containing part of the `path` of the current group on vs " + vsId + ".");
             }
         }
     }
