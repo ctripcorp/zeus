@@ -425,6 +425,7 @@ public class GroupResource {
      * @apiName FullUpdateGroup
      * @apiGroup Group
      * @apiSuccess {Group} updated group object
+     * @apiParam {boolean} [force]  skip all validations and forcibly create a group
      * @apiParam   (GroupObject) {Long} id                          id
      * @apiParam   (GroupObject) {String} name                      name
      * @apiParam   (GroupObject) {Integer} version                  version
@@ -436,7 +437,7 @@ public class GroupResource {
      * @apiParam   (GroupObject) {Object[]} [properties]            add/update properties of group
      * @apiParam   (GroupObject) {Object[]} group-servers           group server list
      * @apiParam (GroupVirtualServer) {String} path               location entry on the specified virtual server
-     * @apiParam (GroupVirtualServer) {String} [rewrite]            rewrite path before proxying
+     * @apiParam (GroupVirtualServer) {String} [rewrite]          rewrite path before proxying
      * @apiParam (GroupVirtualServer) {Integer} [priority]        recommend to leave null, otherwise force set priority of location entry on the specified virtual server
      * @apiParam (GroupVirtualServer) {Object} virtual-server     combined virtual server [id only]
      * @apiParam (HealthCheck) {Integer} [timeout=2000]     timeout for health check page
@@ -595,7 +596,7 @@ public class GroupResource {
     }
 
     /**
-     * @api {post} /api/group/updateCheckUri: [Write] Create new group
+     * @api {post} /api/group/updateCheckUri: [Write] Update check URI
      * @apiName UpdateGroupCheck
      * @apiGroup Group
      * @apiSuccess (Success 200) {GroupObject} group    newly created group object

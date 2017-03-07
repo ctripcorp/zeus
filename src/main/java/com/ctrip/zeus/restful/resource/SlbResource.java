@@ -76,7 +76,7 @@ public class SlbResource {
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * @api {get} /api/slbs: Request slb information
+     * @api {get} /api/slbs: [Read] Batch fetch slb data
      * @apiName ListSlbs
      * @apiGroup Slb
      * @apiParam {long[]} slbId         1,2,3

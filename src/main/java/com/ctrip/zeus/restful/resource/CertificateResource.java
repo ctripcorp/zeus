@@ -44,14 +44,14 @@ public class CertificateResource {
     private ResponseHandler responseHandler;
 
     /**
-     * @api {post} /api/cert/upload: Upload certificate
-     * @apiDescription Upload certificate if and only if the domain does not have any history certificates.
+     * @api {post} /api/cert/upload: [Write] Upload cert
+     * @apiDescription Upload cert if and only if the domain does not have any history certs.
      * @apiName UploadCertificate
      * @apiGroup Certificate
-     * @apiParam {Long}     domain      domain name of the certificate. Use '|' to join multiple domain values as a whole.
-     * @apiParam {FormData} cert        cert file
-     * @apiParam {FormData} key         key file
-     * @apiSuccess {String} message     success message
+     * @apiParam {string}   domain      domain name of the cert. Use '|' to join multiple domain values as a whole.
+     * @apiParam {formdata} cert        cert file
+     * @apiParam {formdata} key         key file
+     * @apiSuccess {string} message     success message
      */
     @POST
     @Path("/upload")
@@ -73,15 +73,15 @@ public class CertificateResource {
     }
 
     /**
-     * @api {post} /api/cert/upgrade: Upgrade certificate
-     * @apiDescription Upgrade certificate if history certificate exists for the domain. An extra installation of virtual server is required for the new certificate to take effect.
+     * @api {post} /api/cert/upgrade: [Write] Upgrade cert
+     * @apiDescription Upgrade cert if history cert exists for the domain. Either [Update vs content](#api-VS-FullUpdateVS) or [Install cert](#api-Certificate-InstallCertificate) to trigger cert installation.
      * @apiName UpgradeCertificate
      * @apiGroup Certificate
-     * @apiParam {Long}     domain      domain name of the certificate. Use '|' to join multiple domain values as a whole.
-     * @apiParam {Boolean}  greyscale   [optional] greyscale upgrading certificate. If this parameter is used, set the certificate as the canary version. Activation is required for on board use.
-     * @apiParam {FormData} cert        cert file
-     * @apiParam {FormData} key         key file
-     * @apiSuccess {String} message     success message with the newly uploaded certificate
+     * @apiParam {string}   domain      domain name of the cert. Use '|' to join multiple domain values as a whole.
+     * @apiParam {boolean}  [greyscale] greyscale upgrading cert. If this parameter is used, set the cert as the canary version. Activation is required for on board use.
+     * @apiParam {formdata} cert        cert file
+     * @apiParam {formdata} key         key file
+     * @apiSuccess {string} message     success message with the newly uploaded cert
      */
     @POST
     @Path("/upgrade")
@@ -104,11 +104,12 @@ public class CertificateResource {
     }
 
     /**
-     * @api {get} /api/cert/activate: Activate canary certificate
+     * @api {get} /api/cert/activate: [Write] Activate canary cert
+     * @apiDescription Activate slb is required to bring the cert into use.
      * @apiName ActivateCertificate
      * @apiGroup Certificate
-     * @apiParam {Long}     certId      id of certificate to be activated
-     * @apiSuccess {String} message     success message
+     * @apiParam {long}     certId      id of cert to be activated
+     * @apiSuccess {string} message     success message
      */
     @GET
     @Path("/activate")
@@ -121,15 +122,16 @@ public class CertificateResource {
     }
 
     /**
-     * @api {get} /api/cert/remoteInstall: Install certificate for virtual server
-     * @apiName ActivateCertificate
+     * @api {get} /api/cert/remoteInstall: [Write] Install cert
+     * @apiDescription Activate slb is required to bring the cert into use.
+     * @apiName InstallCertificate
      * @apiGroup Certificate
-     * @apiParam {Long}     certId      id of certificate to be installed
-     * @apiParam {Long}     vsId        virtual server that the certificate will be installed for
-     * @apiParam {String[]} ip          [optional] specify slb servers that the certificate will be installed. The other parameter greyscale=true is required if this parameter is set.
-     * @apiParam {Boolean}  greyscale   [optional] greyscale installing certificate. The other parameter ip must be specified if this parameter is set to true.
-     * @apiParam {Boolean}  force       [optional] force to overwrite the certificate file if exists
-     * @apiSuccess {String} message     success message
+     * @apiParam {long}     certId      cert id to be installed
+     * @apiParam {long}     vsId        virtual server that the cert is to be installed for
+     * @apiParam {string[]} [ip]        specify slb servers that the cert will be installed. `greyscale` is required explicitly set to true if this parameter is set.
+     * @apiParam {boolean}  [greyscale] greyscale installing cert. The other parameter ip must be specified if this parameter is set to true.
+     * @apiParam {boolean}  [force]     force to overwrite the cert file if exists
+     * @apiSuccess {string} message     success message
      */
     @GET
     @Path("/remoteInstall")
@@ -162,13 +164,14 @@ public class CertificateResource {
     }
 
     /**
-     * @api {get} /api/cert/default/remoteInstall: Install default certificate for slb
+     * @api {get} /api/cert/default/remoteInstall: [Write] Install default cert
+     * @apiDescription Activate slb is required to bring the cert into use.
      * @apiName RemoteInstallDefaultCertificate
      * @apiGroup Certificate
-     * @apiParam {Long}     slbId       id of slb to (re-)install default certificate
-     * @apiParam {String}   domain      domain of slb's default server
-     * @apiParam {Boolean}  force       [optional] force to overwrite the certificate file if exists
-     * @apiSuccess {String} message     success message
+     * @apiParam {long}     slbId       slb that default cert is to be installed for
+     * @apiParam {string}   domain      domain name of the default cert
+     * @apiParam {boolean}  [force]     force to overwrite the cert file if exists
+     * @apiSuccess {string} message     success message
      */
     @GET
     @Path("/default/remoteInstall")

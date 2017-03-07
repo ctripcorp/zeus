@@ -63,6 +63,16 @@ public class PropertyResource {
         return responseHandler.handle(propertyList, hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/property/set: [Write] Set property
+     * @apiName SetProperty
+     * @apiGroup Property
+     * @apiSuccess (Success 200) {String} message success message
+     * @apiParam {long[]} targetId          target id to be tagged
+     * @apiParam {string=group,vs,slb} type target type
+     * @apiParam {string} pname             property name
+     * @apiParam {string} pvalue            property value
+     **/
     @GET
     @Path("/property/set")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -78,6 +88,16 @@ public class PropertyResource {
         return responseHandler.handle(Joiner.on(",").join(targetIds) + " is/are added to property " + pname + "/" + pvalue + ".", hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/property/clear: [Write] Clear property
+     * @apiName ClearProperty
+     * @apiGroup Property
+     * @apiSuccess (Success 200) {String} message success message
+     * @apiParam {long[]} targetId          target id to be tagged
+     * @apiParam {string=group,vs,slb} type target type
+     * @apiParam {string} pname             property name
+     * @apiParam {string} pvalue            property value
+     **/
     @GET
     @Path("/property/clear")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -105,6 +125,14 @@ public class PropertyResource {
         return responseHandler.handle(Joiner.on(",").join(targetIds) + " is/are deleted from property " + pname + "/" + pvalue + ".", hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/property/delete: [Write] Delete property
+     * @apiName DeleteProperty
+     * @apiGroup Property
+     * @apiSuccess (Success 200) {String} message success message
+     * @apiParam {string} pname         property to be deleted
+     * @apiParam {boolean} [force]      force delete property regardless its item dependency
+     **/
     @GET
     @Path("/property/delete")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})

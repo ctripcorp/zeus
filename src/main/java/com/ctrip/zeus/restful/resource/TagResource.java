@@ -76,6 +76,15 @@ public class TagResource {
         return responseHandler.handle(oldName + " is renamed to " + newName + ".", hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/tagging: [Write] Tag item(s)
+     * @apiName Tagging
+     * @apiGroup Tag
+     * @apiSuccess (Success 200) {String} success
+     * @apiParam {long[]} targetId          target id to be tagged
+     * @apiParam {string=group,vs,slb}      type target type
+     * @apiParam {string} tagName           tag name
+     **/
     @GET
     @Path("/tagging")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -90,6 +99,16 @@ public class TagResource {
         return responseHandler.handle("Tagged " + Joiner.on(", ").join(targetIds) + " to " + tagName + ".", hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/untagging: [Write] Untag item(s)
+     * @apiName Untagging
+     * @apiGroup Tag
+     * @apiSuccess (Success 200) {String} message success message
+     * @apiParam {long[]} [targetId]            target id to be untagged. Nullable if `batch` is set to true
+     * @apiParam {string=group,vs,slb} type     target type
+     * @apiParam {string} tagName               tag name
+     * @apiParam {boolean} [batch]              untag all the items having the tag
+     **/
     @GET
     @Path("/untagging")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -116,6 +135,14 @@ public class TagResource {
         return responseHandler.handle("No action is performed.", hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/tag/remove: [Write] Remove tag
+     * @apiName RemoveTag
+     * @apiGroup Tag
+     * @apiSuccess (Success 200) {String} message success message
+     * @apiParam {string} targetName    tag to be deleted
+     * @apiParam {boolean} [force]      force delete tag regardless its item dependency
+     **/
     @GET
     @Path("/tag/remove")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -129,6 +156,14 @@ public class TagResource {
         return responseHandler.handle("Successfully removed tag - " + tagName + ".", hh.getMediaType());
     }
 
+    /**
+     * @api {get} /api/tag/clear: [Write] Clear tag
+     * @apiName ClearTag
+     * @apiGroup Tag
+     * @apiSuccess (Success 200) {String} message success message
+     * @apiParam {long} targetId    the item that tags needs to be cleared
+     * @apiParam {string=group,vs,slb} type     target type
+     **/
     @GET
     @Path(("/tag/clear"))
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
