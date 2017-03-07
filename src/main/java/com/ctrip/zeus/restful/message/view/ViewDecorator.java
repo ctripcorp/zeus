@@ -97,7 +97,7 @@ public class ViewDecorator {
         } catch (Exception e) {
         }
         try {
-            propertyService.getProperties(type, object.getId());
+            object.setProperties(propertyService.getProperties(type, object.getId()));
         } catch (Exception e) {
         }
     }
