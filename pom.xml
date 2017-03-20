@@ -141,6 +141,13 @@
             <artifactId>jersey-spring3</artifactId>
         </dependency>
         <!-- Jersey End -->
+        <!-- Mail Start -->
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4.4</version>
+        </dependency>
+        <!-- Mail End -->
 
         <!-- Spring -->
         <dependency>
