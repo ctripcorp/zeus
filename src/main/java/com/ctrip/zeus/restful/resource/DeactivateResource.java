@@ -10,6 +10,7 @@ import com.ctrip.zeus.service.message.queue.MessageQueue;
 import com.ctrip.zeus.service.message.queue.MessageType;
 import com.ctrip.zeus.service.model.*;
 import com.ctrip.zeus.service.query.GroupCriteriaQuery;
+import com.ctrip.zeus.service.query.TrafficPolicyQuery;
 import com.ctrip.zeus.service.task.constant.TaskOpsType;
 import com.ctrip.zeus.tag.PropertyBox;
 import com.ctrip.zeus.task.entity.OpsTask;
@@ -56,13 +57,18 @@ public class DeactivateResource {
     private ConfigHandler configHandler;
     @Resource
     private TrafficPolicyRepository trafficPolicyRepository;
+    @Resource
+    private TrafficPolicyQuery trafficPolicyQuery;
+
 
     private static DynamicLongProperty apiTimeout = DynamicPropertyFactory.getInstance().getLongProperty("api.timeout", 15000L);
 
     @GET
     @Path("/group")
-    @Authorize(name = "deactivate")
-    public Response deactivateGroup(@Context HttpServletRequest request, @Context HttpHeaders hh, @QueryParam("groupId") List<Long> groupIds, @QueryParam("groupName") List<String> groupNames) throws Exception {
+    public Response deactivateGroup(@Context HttpServletRequest request,
+                                    @Context HttpHeaders hh,
+                                    @QueryParam("groupId") List<Long> groupIds,
+                                    @QueryParam("groupName") List<String> groupNames) throws Exception {
         Set<Long> _groupIds = new HashSet<>();
 
         if (groupIds != null && !groupIds.isEmpty()) {
@@ -97,6 +103,7 @@ public class DeactivateResource {
         ModelStatusMapping<VirtualServer> vsMap = entityFactory.getVsesByIds(vsIds.toArray(new Long[]{}));
 
         List<OpsTask> tasks = new ArrayList<>();
+        Set<Long> policyIds = new HashSet<>();
         for (Map.Entry<Long, Group> e : groupMap.getOnlineMapping().entrySet()) {
             Group group = e.getValue();
 
@@ -109,6 +116,29 @@ public class DeactivateResource {
                 slbIds.addAll(vs.getSlbIds());
             }
 
+            if (configHandler.getEnable("deactivate.related.policy", false)) {
+                Set<IdVersion> idv = trafficPolicyQuery.queryByGroupId(group.getId());
+                if (idv != null && idv.size() > 0) {
+                    Long id = idv.iterator().next().getId();
+                    ModelStatusMapping<TrafficPolicy> tpMap = entityFactory.getPoliciesByIds(new Long[]{id});
+                    if (tpMap.getOnlineMapping().get(id) != null && tpMap.getOnlineMapping().get(id).getControls().size() == 2) {
+                        for (TrafficControl trafficControl : tpMap.getOfflineMapping().get(id).getControls()) {
+                            if (trafficControl.getGroup().getId().equals(group.getId()) && trafficControl.getWeight() <= 0) {
+                                for (Long slbId : slbIds) {
+                                    OpsTask task = new OpsTask();
+                                    task.setPolicyId(id);
+                                    task.setOpsType(TaskOpsType.DEACTIVATE_POLICY);
+                                    task.setTargetSlbId(slbId);
+                                    tasks.add(task);
+                                }
+                                policyIds.add(id);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             for (Long slbId : slbIds) {
                 OpsTask task = new OpsTask();
                 task.setGroupId(e.getKey());
@@ -117,9 +147,9 @@ public class DeactivateResource {
                 tasks.add(task);
             }
         }
-        List<Long> taskIds = taskManager.addTask(tasks);
+        List<Long> taskIds = taskManager.addAggTask(tasks);
 
-        List<TaskResult> results = taskManager.getResult(taskIds, apiTimeout.get());
+        List<TaskResult> results = taskManager.getAggResult(taskIds, apiTimeout.get());
 
         TaskResultList resultList = new TaskResultList();
         for (TaskResult t : results) {
@@ -132,14 +162,18 @@ public class DeactivateResource {
         } catch (Exception ex) {
         }
 
-        String slbMessageData = MessageUtil.getMessageData(request,
-                groupMap.getOfflineMapping().values().toArray(new Group[groupMap.getOfflineMapping().size()]), null, null, null, true);
-        for (Long id : groupMap.getOfflineMapping().keySet()) {
-            if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-                messageQueue.produceMessage(request.getRequestURI(), id, slbMessageData);
-            } else {
-                messageQueue.produceMessage(MessageType.DeactivateGroup, id, slbMessageData);
+        try {
+            if (policyIds.size() > 0) {
+                propertyBox.set("status", "deactivated", "policy", policyIds.toArray(new Long[policyIds.size()]));
             }
+        } catch (Exception ex) {
+        }
+
+
+        String slbMessageData = MessageUtil.getMessageData(request,
+                groupMap.getOfflineMapping().values().toArray(new Group[groupMap.getOfflineMapping().size()]), null, null, null, null, true);
+        for (Long id : groupMap.getOfflineMapping().keySet()) {
+            messageQueue.produceMessage(request.getRequestURI(), id, slbMessageData);
         }
 
         return responseHandler.handle(resultList, hh.getMediaType());
@@ -195,11 +229,7 @@ public class DeactivateResource {
 
         String slbMessageData = MessageUtil.getMessageData(request, null,
                 new VirtualServer[]{vsMap.getOfflineMapping().get(vsId)}, null, null, true);
-        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueue.produceMessage(request.getRequestURI(), vsId, slbMessageData);
-        } else {
-            messageQueue.produceMessage(MessageType.DeactivateVs, vsId, slbMessageData);
-        }
+        messageQueue.produceMessage(request.getRequestURI(), vsId, slbMessageData);
 
         return responseHandler.handle(resultList, hh.getMediaType());
     }
@@ -307,12 +337,8 @@ public class DeactivateResource {
         Slb slb = slbRepository.getById(slbId);
         String slbMessageData = MessageUtil.getMessageData(request, null, null,
                 new Slb[]{slb}, null, true);
+        messageQueue.produceMessage(request.getRequestURI(), slbId, slbMessageData);
 
-        if (configHandler.getEnable("use.new,message.queue.producer", false)) {
-            messageQueue.produceMessage(request.getRequestURI(), slbId, slbMessageData);
-        } else {
-            messageQueue.produceMessage(MessageType.DeactivateSlb, slbId, slbMessageData);
-        }
         return responseHandler.handle(slb, hh.getMediaType());
     }
 
@@ -418,7 +444,7 @@ public class DeactivateResource {
         }
 
         String slbMessageData = MessageUtil.getMessageData(request,
-                null, null, null, null, true);
+                null, tpMap.getOnlineMapping().values().toArray(new TrafficPolicy[0]), null, null, null, true);
         for (Long id : tpMap.getOfflineMapping().keySet()) {
             messageQueue.produceMessage(request.getRequestURI(), id, slbMessageData);
         }
