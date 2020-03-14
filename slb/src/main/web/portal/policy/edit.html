@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Update Traffic Policy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <!--Cytoscape JS-->
+    <script src="/static/lib/cytoscape.js-2.7.15/cytoscape.min.js"></script>
+
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+
+    <style type="text/css">
+        .modal {
+            z-index: 9999999999;
+        }
+    </style>
+</head>
+
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel-half " style="overflow: hidden; outline: none;">
+
+</aside>
+
+<section class="middle-content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+        <div class="row traffic-edit-container" id="traffic-edit-area" ng-app="trafficEditApp"
+             ng-controller="trafficEditController" ng-cloak>
+            <div class="wraper container-fluid">
+                <div class="policy-id-text hide"></div>
+                <div class="row graphics">
+                    <div class="col-md-12">
+                        <div class="diagram">
+                        </div>
+                    </div>
+                </div>
+                <!-- Basic Form Wizard -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default" id="inputarea">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">{{resource['policynew']['policynew_trafficEditApp_group']['title']}}</h3>
+                            </div>
+                            <div class="panel-body">
+                                <section>
+                                    <div class="form-group clearfix alert  alert-warning">
+                                        <div><b>{{resource['policynew']['policynew_trafficEditApp_group']['tooltip']}}</b>
+                                        </div>
+                                    </div>
+                                    <div class="form-group clearfix">
+                                        <div class="col-md-12">
+                                            <div id="toolbar">
+                                                <div class="pull-left">
+                                                    <span class="status-red pull-right" ng-show="showGroupsError"><b>{{resource['policynew_trafficEditApp_group']['error']}}</b></span>
+                                                </div>
+                                                <div class="pull-right">
+                                                    <a style="margin-top: 8px;" ng-click="popAddNewControl()"
+                                                       id="addToTable"
+                                                       class="btn btn-info waves-effect waves-light pull-right">
+                                                        Add <i class="fa fa-plus"></i></a>
+                                                </div>
+                                            </div>
+                                            <table id="controls-table"></table>
+                                            <!-- panel -->
+                                        </div>
+                                        <!-- end col -->
+                                    </div>
+                                </section>
+                            </div>
+                            <!-- End panel-body -->
+                        </div>
+                        <!-- End panel -->
+                    </div>
+                    <!-- end col -->
+                </div>
+                <div class="row">
+                    <div class="col-md-12" id="previewarea">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">{{resource['policynew']['policynew_trafficEditApp_preview']['title']}}</h3>
+                            </div>
+                            <div class="panel-body">
+                                <section>
+                                    <div class="form-group clearfix ">
+                                        <label class="col-lg-2 control-label " for="policyname">{{resource['policynew']['policynew_trafficEditApp_preview']['title']}}
+                                            <b class="status-red">*</b></label>
+
+                                        <div class="col-lg-10">
+                                            <input class="form-control" id="policyname"
+                                                   name="policyname"
+                                                   data-validator-type="validation"
+                                                   data-validator="required"
+                                                   ng-blur="policyNameChanged()"
+                                                   type="text" data-ng-model="trafficInfo.name">
+                                        </div>
+                                    </div>
+                                    <div class="form-group clearfix ">
+                                        <label class="col-lg-2 control-label " for="policytarget">{{resource['policynew']['policynew_trafficEditApp_preview']['type']}}:
+                                            <b class="status-red">*</b></label>
+
+                                        <div class="col-lg-4">
+ <span class="label label-default" ng-class="isSelectedTarget(target)" data-ng-repeat="target in policyTargets"
+       id="policytarget" style="margin-right: 5px; cursor: pointer;"
+       ng-click="toggleTarget(target)">
+                        {{target.value}}
+                    </span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <span class="status-red hide targetwarning">{{resource['policynew']['policynew_trafficEditApp_preview']['reason']}}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group clearfix ">
+                                        <div class="col-md-12">
+                                            <label id="toolbar2" class="control-label">{{resource['policynew']['policynew_trafficEditApp_preview']['vs']}} <b
+                                                    class="status-red">*</b></label>
+                                            <table id="vs-table">
+                                            </table>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="text-center">
+                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#createpolicyModal">{{resource['policynew']['policynew_trafficEditApp_preview_save']['submit']}}
+                            </button>
+                            <button type="button" class="btn btn-warning" ng-click="resetChanges()"
+                                    data-dismiss="modal">{{resource['policynew']['policynew_trafficEditApp_preview_save']['close']}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- End row -->
+                <div class="modals">
+                    <div class="modal fade" id="addNewTrafficPolicyModal" role="dialog">
+                        <div class="modal-dialog">
+                            <div class="modal-content" style="background-color:#f1f4f5">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    <h4 class="modal-title">{{resource['policynew']['policynew_trafficEditApp_addNewTrafficPolicyModal']['title']}}</h4>
+                                </div>
+                                <div class="modal-body">
+
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <div class="panel-title">
+                                                {{resource['policynew']['policynew_trafficEditApp_addNewTrafficPolicyModal']['paneltitle']}}
+                                            </div>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="row form-group clearfix ">
+                                                <label class="col-lg-2 control-label "
+                                                       for="groupIdSelector">{{resource['policynew']['policynew_trafficEditApp_addNewTrafficPolicyModal']['group']}}:</label>
+
+                                                <div class="col-lg-10">
+                                                    <div angucomplete-alt id="groupIdSelector"
+                                                         placeholder="{{resource['policynew']['policynew_trafficEditApp_addNewTrafficPolicyModal']['group_placeholder']}}"
+                                                         pause="100"
+                                                         selected-object="selectGroupId"
+                                                         remote-url="{{remoteGroupsUrl()}}"
+                                                         remote-url-request-formatter="cacheRequestFn"
+                                                         search-fields="id,name"
+                                                         title-field="id"
+                                                         description-field="name"
+                                                         minlength="0"
+                                                         match-class="highlight"
+                                                         input-class="form-control form-control-small"
+                                                         input-changed="groupIdInputChanged">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row form-group clearfix ">
+                                                <label class="col-lg-2 control-label " for="wighttext">{{resource['policynew']['policynew_trafficEditApp_addNewTrafficPolicyModal']['weight']}}:</label>
+
+                                                <div class="col-lg-10">
+                                                    <input class="form-control required" id="wighttext" name="wighttext"
+                                                           type="text" data-ng-model="currentweight">
+                                                </div>
+                                            </div>
+                                            <div class="row form-group clearfix alert-danger"
+                                                 ng-show="showErrorMessage()">
+                                                <label class="col-lg-2 control-label "
+                                                       for="errorlable">{{error.code}}:</label>
+
+                                                <div class="col-lg-10">
+                                            <span id="errorlable" style="word-break: break-all">
+                                                {{error.message}}
+                                            </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-info" ng-click="addNewControl(0)">
+                                                    {{resource['policynew']['policynew_trafficEditApp_addNewTrafficPolicyModal']['ok']}}
+                                                </button>
+                                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policynew']['policynew_trafficEditApp_addNewTrafficPolicyModal']['close']}}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="panel panel-default" ng-show="showSuggestArea()">
+                                        <div class="panel-heading">
+                                            <div class="panel-title">
+                                                {{resource['policynew']['policynew_trafficEditApp_suggest']['title']}}
+                                            </div>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <!--<div id="suggest-toolbar" class="table-toolbar">共有<b>{{suggestGroups.length}}</b>个推荐的Groups-->
+                                                    <!--</div>-->
+                                                    <table id="suggest-groups">
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-info" ng-click="addNewControl(1)">
+                                                    {{resource['policynew']['policynew_trafficEditApp_suggest']['ok']}}
+
+                                                </button>
+                                                <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                    {{resource['policynew']['policynew_trafficEditApp_suggest']['close']}}
+
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="confirmAddTrafficPolicyResult" role="dialog">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    <h4 class="modal-title">{{resource['policynew']['policynew_trafficEditApp_operation']['title']}}</h4>
+                                </div>
+                                <div class="modal-body ">
+                                    <div class="warning-important" id="failed-div"></div>
+                                    <div class="success-important" id="success-div"></div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-warning forceUpdateBt"
+                                            ng-show="showForceUpdate"
+                                            ng-click="forceUpdatePolicy()">{{resource['policynew']['policynew_trafficEditApp_operation']['force']}}
+                                    </button>
+                                    <button type="button" class="btn btn-info closeProgressWindowBt"
+                                            data-dismiss="modal">{{resource['policynew']['policynew_trafficEditApp_operation']['close']}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="diffVSDiv" class="modal fade" role="dialog" aria-hidden="true">
+                        <div class="span12 modal-dialog fileDiffMainContainer">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h1 class='fileViewHead'>{{resource['policynew']['policynew_trafficEditApp_diffVSDiv']['title']}}</h1>
+                            </div>
+                            <form id='fileDiffForm1'>
+                            </form>
+                            <div class="modal-foot">
+                                <div class="btnDiv">
+                                    <button class="btn btn-info" data-dismiss="modal">{{resource['policynew']['policynew_trafficEditApp_diffVSDiv']['close']}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="createpolicyModal" class="modal fade" role="dialog">
+                        <div class="modal-dialog">
+                            <!-- has no vses-->
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    <h4 class="modal-title">{{resource['policynew']['policynew_trafficEditApp_createpolicyModal']['title']}}</h4>
+                                </div>
+                                <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.reason"
+                                                               placeholder="{{resource['policynew']['policynew_trafficEditApp_createpolicyModal']['placeholder']}}"></textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button ng-disabled="!query.reason" type="button" class="btn btn-info" data-dismiss="modal"
+                                            ng-click="saveNewControl()">{{resource['policynew']['policynew_trafficEditApp_createpolicyModal']['ok']}}
+                                    </button>
+                                    <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policynew']['policynew_trafficEditApp_createpolicyModal']['close']}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid page-foot" id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<!--DateTime JS-->
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/high-chart/highcharts.js"></script>
+<script src="/static/lib/high-chart/highcharts-3d.js"></script>
+
+<script src="/statics/js/repository/paramCommand.js"></script>
+<script src="/statics/js/repository/queryCommand.js"></script>
+<script src="/statics/js/repository/apiCommand.js"></script>
+
+<script src="/statics/js/services/paramService.js"></script>
+<script src="/statics/js/services/queryService.js"></script>
+<script src="/statics/js/services/apiService.js"></script>
+<script src="/statics/js/services/esService.js"></script>
+
+<script src="/statics/js/apps/app.js"></script>
+<script src="/statics/js/apps/userPolicyApp.js"></script>
+<script src="/static/js/new-graphic.js"></script>
+
+<script src="/static/js/tree.js"></script>
+<script src="/static/js/traffic-policy-edit.js"></script>
+</html>

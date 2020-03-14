@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>分流策略</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <!--Cytoscape JS-->
+    <script src="/static/lib/cytoscape.js-2.7.15/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown diagnose-menu">
+
+            </li>
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li>
+                <a href="{{generateLink('home')}}">
+                    <i class="fa fa-home"></i>
+                    <span class="nav-label">{{resource["navs"]["navs_home"]}}</span>
+                </a>
+            </li>
+            <li class=""><a href="{{generateLink('basic')}}"><i
+                    class="fa ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["navs"]["navs_aboutme"]}}</span></a></li>
+
+            <li class="active"><a href="{{generateLink('policy')}}"><i class="fa fa-map-signs"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_net_java"]}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_mylog"]}}</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('access')}}"><i class="fa fa-user"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_myaccess"]}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin,chinese-name"
+                                 title-field="id,name"
+                                 minlength="0"
+                                 ng-click="clickTarget()"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class=" query-container traffic-container breadcrumb-follow" id="traffics-query-area"
+             ng-app="trafficsQueryApp"
+             ng-controller="trafficsQueryController" ng-cloak>
+            <div class="col-md-12 panel panel-default">
+                <div class="col-md-10 form-area">
+                    <!--ROW 1-->
+                    <div class="row trafficid">
+                        <div class="col-md-1 query-label">ID:</div>
+                        <div class="col-md-5 query-body">
+                            <div angucomplete-alt id="trafficIdSelector"
+                                 placeholder="请输入Policy ID..."
+                                 pause="100"
+                                 selected-object="selectTrafficId"
+                                 remote-url="{{remoteTrafficsUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name"
+                                 title-field="id"
+                                 description-field="name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small"
+                                 input-changed="trafficIdInputChanged">
+                            </div>
+                        </div>
+                        <div class="col-md-1 query-label">Name:</div>
+                        <div class="col-md-5 query-body">
+                            <input class="form-control" type="text" placeholder="请输入Policy Name..."
+                                   ng-model="query.trafficname">
+                        </div>
+                    </div>
+                    <div class="row groupvsrow">
+                        <div class="col-md-1 query-label">Vs:</div>
+                        <div class="col-md-5 query-body">
+                            <div angucomplete-alt id="vsIdSelector"
+                                 placeholder="请输入Vs Id..."
+                                 pause="100"
+                                 selected-object="selectVsId"
+                                 remote-url="{{remoteVsesUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name"
+                                 title-field="id"
+                                 description-field="name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small"
+                                 input-changed="vsIdInputChanged">
+                            </div>
+
+                        </div>
+                        <div class="col-md-1 query-label">Group:</div>
+                        <div class="col-md-5 query-body">
+                            <div angucomplete-alt id="groupIdSelector"
+                                 placeholder="请输入Group ID..."
+                                 pause="100"
+                                 selected-object="selectGroupId"
+                                 remote-url="{{remoteGroupsUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name"
+                                 title-field="id"
+                                 description-field="name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small"
+                                 input-changed="groupIdInputChanged">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row tags">
+                        <div class="col-md-1 query-label">Tags:</div>
+                        <div class="col-md-11 query-body">
+                            <div angucomplete-alt id="tagSelector"
+                                 placeholder="请输入Tag名称..."
+                                 pause="100"
+                                 selected-object="selectTag"
+                                 local-data="data.tagArr"
+                                 search-fields="name"
+                                 title-field="name"
+                                 minlength="0"
+                                 clear-selected="true"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+
+                            <div class="selected-domains">
+                        <span class="label label-default pull-left" ng-repeat="(k,v) in query.tags"
+                              ng-click="removeTag(v)">{{v}} <b>x</b> </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row status">
+                        <div class="col-md-1 query-label">Status:</div>
+                        <div class="col-md-4 query-body">
+                             <span class="label label-default" ng-class="isSelectedStatus(x)"
+                                   data-ng-repeat="x in data.statusArr"
+                                   ng-click="toggleStatus(x)">
+                        {{x}}
+                   </span>
+                            <a ng-click="statusClear()" ng-class="showClear('status')">Clear</a>
+                        </div>
+
+                        <div class="col-md-1 query-label">Target:</div>
+                        <div class="col-md-6 query-body">
+                             <span class="label label-default" ng-class="isSelectedTarget(x)"
+                                   data-ng-repeat="x in data.trafficForArr"
+                                   ng-click="toggleTarget(x)">
+                        {{x}}
+                   </span>
+                            <a ng-click="targetClear()" ng-class="showClear('target')">Clear</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 button-area">
+                    <div class="pull-right">
+                        <button type="button" class="btn btn-default" ng-click="clearQuery()">清空</button>
+                        <button type="button" class="btn btn-info" ng-click="executeQuery()" id="executeQuery">查询
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController">
+
+            <div class="col-md-12" style="padding-bottom: 10px">
+                <label class="summary"></label>
+            </div>
+            <div class="col-md-12" id="diagrams-area">
+                <div class="panel panel-default">
+                    <div class="panel-body" id="diagram-canvas">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+
+    (function (slb, $, undefined) {
+    })(window.slb = window.slb || {}, $, undefined);
+
+    $(function () {
+        slb.test();
+    });
+</script>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/traffic-policy-graphics.js"></script>
+<script src="/static/js/user-policy.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New SLB</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/slb.css">
+
+</head>
+
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu">
+            <li class="dropdown language-menu" id="language-area" ng-app="languageApp"
+                ng-controller="languageController" ng-cloak>
+                <button class="btn btn-default btn-xs language-bt">语言</button>
+                <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)">
+                    <option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option>
+                </select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel-half " style="overflow: hidden; outline: none;">
+</aside>
+
+<section class="middle-content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="wraper container-fluid">
+                <!-- Basic Form Wizard -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default" id="inputarea">
+
+                            <div class="panel-body">
+                                <div class="container" id="slb-edit-dropdown-area" ng-app="slbEditDropdownApp"
+                                     ng-controller="slbEditDropdownController">
+                                    <div class="pull-left">
+                                        <button class="btn btn-info" data-toggle="modal" data-target="#cloneSLBModal">
+                                            {{resource['slb/new']['slb/new_slbEditDropdownApp_clone']}}
+                                        </button>
+                                    </div>
+
+                                    <div class="modal fade" id="cloneSLBModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource["slb/new"]["slb/new_slbEditDropdownApp_clonedialog"]["title"]}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div angucomplete-alt id="targetSelector"
+                                                         class="target-selector auto-target-selector"
+                                                         placeholder='{{resource["slb/new"]["slb/new_slbEditDropdownApp_clonedialog"]["place_holder"]}}'
+                                                         pause="100"
+                                                         selected-object="selectTarget"
+                                                         remote-url="{{remoteUrl()}}"
+                                                         remote-url-request-formatter="cacheRequestFn"
+                                                         search-fields="id,name"
+                                                         title-field="id,name"
+                                                         minlength="0"
+                                                         match-class="highlight"
+                                                         input-class="form-control form-control-small">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info" data-dismiss="modal"
+                                                            id="confirmClone">{{resource["slb/new"]["slb/new_slbEditDropdownApp_clonedialog"]["ok"]}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal"
+                                                            ng-click="cancelClone()">{{resource["slb/new"]["slb/new_slbEditDropdownApp_clonedialog"]["cancel"]}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="container slb-edit-container" id="slb-edit-area" ng-app="slbEditApp"
+                                     ng-controller="slbEditController">
+                                    <form class="form-horizontal" role="form" id="newSLBForm">
+                                        <div class="alert alert-info" data-class="body-alert">
+                                            <b>{{resource['slb/new']['slb/new_slbEditDropdownApp_tip']}}</b>
+                                        </div>
+                                        <div class="container query-container edit-container">
+                                            <div class="form-group">
+                                                <div class="col-sm-2"><label class="control-label">{{resource['slb/new']['slb/new_slbEditDropdownApp_id']}}:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="slb-id"
+                                                           ng-model="view.slb.id" placeholder="{{resource['slb/new']['slb/new_slbEditDropdownApp_idplaceholder']}}" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-sm-2"><label class="control-label">{{resource['slb/new']['slb/new_slbEditDropdownApp_name']}}:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="slb-name"
+                                                           ng-model="view.slb.name" placeholder="{{resource['slb/new']['slb/new_slbEditDropdownApp_nameplaceholder']}}"
+                                                           data-validator-type="validation" data-validator="required">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="col-sm-2"><label class="control-label">{{resource['slb/new']['slb/new_slbEditDropdownApp_nginxbin']}}:</label>
+                                                </div>
+
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="slb-nginx-bin"
+                                                           ng-model="view.slb['nginx-bin']"
+                                                           placeholder="无需填写，默认为：/opt/app/nginx/sbin" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-sm-2"><label class="control-label">{{resource['slb/new']['slb/new_slbEditDropdownApp_nginxconf']}}:</label>
+                                                </div>
+
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="slb-nginx-conf"
+                                                           ng-model="view.slb['nginx-conf']"
+                                                           placeholder="无需填写，默认为：/opt/app/nginx/conf" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-sm-2"><label
+                                                        class="control-label">{{resource['slb/new']['slb/new_slbEditDropdownApp_nginxworker']}}:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control"
+                                                           id="slb-nginx-worker-process" placeholder="auto" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-sm-2"><label class="control-label">{{resource['slb/new']['slb/new_slbEditDropdownApp_viplist']}}:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <table class="table table-bordered table-striped ng-scope ng-table">
+                                                        <col/>
+                                                        <col width="120px"/>
+                                                        <tr>
+                                                            <th>{{resource['slb/new']['slb/new_slbEditDropdownApp_viplistip']}}</th>
+                                                            <th style="text-align: center">{{resource['slb/new']['slb/new_slbEditDropdownApp_viplistoperation']}}</th>
+                                                        </tr>
+                                                        <tr ng-repeat="col in vipsTable.columns">
+                                                            <td>
+                                                                <input class="form-control" ng-model="col.ip"
+                                                                       data-validator-type="validation"
+                                                                       data-validator="ip required"
+                                                                       id="vips{{$index}}"/>
+                                                            </td>
+                                                            <td style="text-align: center">
+                                                                <button id="removeVip" class="btn"
+                                                                        ng-click="vipsTable.remove($index)"
+                                                                        ng-hide="$index == 0 && vipsTable.columns.length == 1">
+                                                                    <i class="fa fa-minus"></i></button>
+                                                                <button id="addVip" class="btn btn-primary"
+                                                                        ng-click="vipsTable.add($index)"
+                                                                        ng-show="$index == vipsTable.columns.length -1">
+                                                                    <i class="fa fa-plus"></i></button>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-sm-2"><label class="control-label">{{resource['slb/new']['slb/new_slbEditDropdownApp_slbservers']}}:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <table class="table table-bordered table-striped ng-scope ng-table">
+                                                        <col/>
+                                                        <col/>
+                                                        <col width="120px"/>
+                                                        <tr>
+                                                            <th>{{resource['slb/new']['slb/new_slbEditDropdownApp_slbserversip']}}</th>
+                                                            <th>{{resource['slb/new']['slb/new_slbEditDropdownApp_slbservershost']}}</th>
+                                                            <th style="text-align: center">{{resource['slb/new']['slb/new_slbEditDropdownApp_slbserveroperation']}}</th>
+                                                        </tr>
+                                                        <tr ng-repeat="col in slbServersTable.columns">
+                                                            <td>
+                                                                <input class="form-control" ng-model="col.ip"
+                                                                       data-validator-type="validation"
+                                                                       data-validator="ip required"
+                                                                       id="slbServerIp{{$index}}"/>
+                                                            </td>
+                                                            <td>
+                                                                <input class="form-control"
+                                                                       ng-model="col['host-name']"/>
+                                                            </td>
+                                                            <td style="text-align: center">
+                                                                <button id="removeSLBServer" class="btn"
+                                                                        ng-click="slbServersTable.remove($index)"
+                                                                        ng-hide="$index == 0 && slbServersTable.columns.length == 1">
+                                                                    <i class="fa fa-minus"></i></button>
+                                                                <button id="addSLBServer" class="btn btn-primary"
+                                                                        ng-click="slbServersTable.add($index)"
+                                                                        ng-show="$index == slbServersTable.columns.length -1">
+                                                                    <i class="fa fa-plus"></i></button>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        <div class="form-group button-group">
+                                            <div class="col-sm-12">
+                                                <button type="button" class="btn btn-info" id="validateAddSLBBtn">{{resource['slb/new']['slb/new_slbEditDropdownApp_save']}}
+                                                </button>
+                                                <button type="button" class="btn btn-warning"
+                                                        ng-click="clearSLBInfo('new')">{{resource['slb/new']['slb/new_slbEditDropdownApp_reset']}}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </form>
+
+                                    <div class="modal fade" id="confirmAddSLB" role="dialog">
+                                        <div class="modal-dialog">
+
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title"><i class="fa fa-lightbulb-o">{{resource['slb/new']['slb/new_slbEditDropdownApp_opreason']["title"]}}</i></h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.reason"
+                                                               placeholder="{{resource['slb/new']['slb/new_slbEditDropdownApp_opreason']['placeholder']}}"></textarea>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button ng-disabled="!query.reason" type="button"
+                                                            class="btn btn-info" ng-click="newSLB()"
+                                                            data-toggle="modal" data-dismiss="modal">{{resource['slb/new']['slb/new_slbEditDropdownApp_opreason']['Ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['slb/new']['slb/new_slbEditDropdownApp_opreason']['Cancel']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal fade" id="operationConfrimModel" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['slb/new']['slb/new_slbEditDropdownApp_progress']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                </div>
+                                                <span class="timerspan"></span>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info closeProgressWindowBt"
+                                                            data-dismiss="modal">{{resource['slb/new']['slb/new_slbEditDropdownApp_progress']['Ok']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid page-foot" id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/slb-edit.js"></script>
+</html>

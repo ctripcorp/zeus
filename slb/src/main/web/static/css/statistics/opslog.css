@@ -1,0 +1,37 @@
+.bu-ul{
+    margin-left: -50px;
+    float: left;
+    list-style: none;
+}
+.bu-ul li{
+}
+.to-be-delete-status{
+    color: darkred;
+}
+.to-be-add-status{
+    color: #c7c412;
+}
+.online-status{
+    color:darkgreen;
+}
+
+.show-more-bt{
+    color: #101010;
+}
+.show-more-bt:hover{
+    text-decoration: none;
+}
+.link-hide{
+    visibility: hidden;
+}
+.link-show{
+    visibility: visible;
+}
+
+.bu-class{
+    margin-top: 4px;
+    padding:6px 8px;
+}
+/*#output-div  .modal-dialog{*/
+    /*width: 50%;*/
+/*}*/

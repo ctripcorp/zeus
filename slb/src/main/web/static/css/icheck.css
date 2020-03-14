@@ -1,0 +1,77 @@
+.i-checkbox, .i-radio {
+    padding-top: 7px;
+}
+.i-checkbox label, .i-radio label {
+    display: inline;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.i-checkbox input[type="checkbox"],
+
+.i-radio input[type="radio"],
+.i-switch input {
+    position: absolute;
+    opacity: 0;
+    margin-left: 0;
+}
+.i-checkbox span, .i-radio span {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+    border: 1px solid #ccc;
+    margin-right: 5px;
+}
+.i-radio span {
+    border-radius: 500px;
+}
+.i-checkbox:hover span,
+.i-radio:hover span {
+    border-color: rgb(35, 183, 229);
+}
+.i-checkbox span:before, .i-radio span:before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    text-align: center !important;
+    font-size: 12px;
+    line-height: 18px;
+    vertical-align: middle;
+    -webkit-transition: all 0.2s;
+}
+input[type=checkbox]:checked + span,
+input[type=radio]:checked + span {
+    border-color: rgb(35, 183, 229);
+    background-color: rgb(35, 183, 229);
+}
+input[type=checkbox]:checked + span:before,
+input[type=radio]:checked + span:before {
+    color: #fff;
+    opacity: 1;
+}
+input[type="checkbox"][disabled] + span,
+input[type="radio"][disabled] + span
+{
+    cursor: not-allowed;
+    border-color: #ddd !important;
+    background-color: #ddd !important;
+}
+
+.fa {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.fa-check:before {
+    content: "\f00c";
+}

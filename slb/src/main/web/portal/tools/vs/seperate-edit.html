@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>VS Split Edit</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/angular/angular-sanitize.js"></script>
+    <script src="/static/lib/angular/angular-cookies.js"></script>
+
+
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <script src="/static-new/http-auth-interceptor.js"></script>
+
+    <script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+
+
+    <!--Repository-->
+    <script src="/static-new/model/Class.js"></script>
+    <script src="/static-new/util/C.js"></script>
+    <script src="/static-new/util/Constants.js"></script>
+    <script src="/static-new/util/object-wrapper.js"></script>
+
+    <script src="/static-new/viewmodel/vs-seperate.js"></script>
+    <script src="/static-new/repository/unitwork/command.js"></script>
+    <script src="/static-new/repository/unitwork/repository.js"></script>
+    <script src="/static-new/repository/slb/slbs-repository.js"></script>
+    <script src="/static-new/repository/vs/vses-repository.js"></script>
+    <script src="/static-new/repository/vs/vs-statistics-repository.js"></script>
+    <script src="/static-new/repository/tools/vs-seperate-repository.js"></script>
+    <!--Service-->
+    <script src="/static-new/service/vs/vses-service.js"></script>
+    <script src="/static-new/service/tools/vs-seperate-service.js"></script>
+
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+
+    <!--Animation css-->
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+
+    <link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/notifications/notification.css" rel="stylesheet">
+
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <style type="text/css">
+        #vsIdSelector_dropdown {
+            width: 376px;
+        }
+
+        .edit-vs-tile {
+            border: 1px solid rgb(216, 216, 216);
+            box-sizing: border-box;
+            float: left;
+            max-height: 200px;
+            height: 150px;
+            margin: 10px;
+            position: relative;
+            opacity: 1;
+            cursor: pointer;
+            text-align: center;
+            background: #fff;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        .edit-vs-tile i {
+            cursor: pointer;
+        }
+
+        .edit-vs-tile > button:first-of-type {
+            background-position: 177px 0px;
+            right: 0px;
+        }
+
+        .edit-vs-tile > button:nth-of-type(2) {
+            background-position: 147px 0px;
+            right: 0px;
+        }
+
+        .edit-vs-tile i.fa {
+            font-size: 40px;
+            line-height: 100px;
+            color: #000;
+        }
+
+        .edit-vs-tile p {
+            line-height: 5px;
+        }
+
+        .edit-vs-tile > button {
+            background-color: transparent;
+            background-image: url("/static/img/controls-431.png");
+            background-position: 147px 0px;
+            cursor: pointer;
+            border: 0px none;
+            height: 24px;
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            width: 24px;
+            -moz-appearance: none;
+        }
+    </style>
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('list')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["tools"]["headerInfoController_toolsList"]}}
+</span></a></li>
+
+            <li class=""><a href="{{generateLink('url')}}"><i class="fa fa-tripadvisor"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_URLProbeTool"]}}
+</span></a>
+            </li>
+
+
+            <li class=" tools-hide"><a href="{{generateLink('cert-upgrade')}}"><i class="fa fa-certificate"></i> <span
+                    class="nav-label">证书升级</span></a>
+            </li>
+            <li class="tools-hide"><a href="{{generateLink('slb-sharding')}}"><i class="fa fa-cogs"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_SLBSplitTool"]}}
+</span></a>
+            </li>
+
+            <li class="tools-hide"><a href="{{generateLink('vs-migration')}}"><i class="fa fa-rocket"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMigrationTool"]}}
+</span></a>
+            </li>
+            <li class="active"><a href="{{generateLink('vs-seperate')}}"><i class="fa fa-delicious"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSSplitTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-merge')}}"><i class="fa fa-steam"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMergeTool"]}}
+</span></a>
+            </li>
+
+
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+
+        <div class="breadcrumb-follow" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController" ng-cloak="">
+
+            <div class="row" style="padding-bottom: 10px">
+                <div class="col-md-12">
+                    <a class="pull-right fa fa-mail-reply" style="font-weight: bold; color: blue"
+                       href="/portal/tools/vs/seperates#?env={{env}}">{{resource.tools.vseparatesEdit.html.msg1}}</a>
+                </div>
+            </div>
+
+
+            <div class="panel panel-default">
+                <div class="panel-heading" style="height: 40px">
+                    <div class="row">
+                        <h4 class="panel-title col-md-3">{{resource.tools.vseparatesEdit.html.msg2}}</h4>
+                        <div class=" col-md-9" ng-class="getFinalClass()" style="line-height: 0px">
+                            <h4 class="pull-right">
+                                {{resource.tools.vseparatesEdit.html.msg3}}: {{resource.tools.vseparatesEdit.js[getFinalStatus()]}}
+                            </h4>
+
+                        </div>
+
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <form name="content">
+                        <div ng-show="showFirstStep()" class="form-group row standard-row">
+                            <label class="col-md-1 query-label" for="name">Name</label>
+                            <div class="col-md-4">
+                                <input class="form-control"
+                                       placeholder={{resource.tools.vseparatesEdit.html.msg4}}
+                                       id="name"
+                                       name="name"
+                                       ng-model="data.vsSeperate.name"
+                                       maxlength="30"
+                                       required/>
+                            </div>
+                            <div class="col-md-3 status-red"
+                                 ng-show="content.name.$invalid || data.vsSeperate.name.length>30">* {{resource.tools.vseparatesEdit.html.msg5}}
+                            </div>
+                        </div>
+
+                        <div ng-show="showFirstStep()" class="form-group row standard-row">
+                            <label class="col-md-1 query-label">{{resource.tools.vseparatesEdit.html.msg6}}</label>
+                            <div class="col-md-4">
+                                <div angucomplete-alt id="vsIdSelector"
+                                     placeholder={{resource.tools.vseparatesEdit.html.msg7}}
+                                     pause="100"
+                                     selected-object="selectVsId"
+                                     remote-url="{{remoteVsesUrl()}}"
+                                     remote-url-request-formatter="cacheRequestFn"
+                                     search-fields="id,name"
+                                     title-field="id"
+                                     description-field="name"
+                                     minlength="0"
+                                     match-class="highlight"
+                                     input-class="form-control form-control-small"
+                                     input-changed="vsIdInputChanged">
+                                </div>
+                            </div>
+                            <div class="col-md-3 status-red"
+                                 ng-show="query.vsId==undefined">* {{resource.tools.vseparatesEdit.html.msg8}}
+                            </div>
+                        </div>
+
+                        <div class="form-group row " ng-show="showOriginVsInfo()">
+                            <label class="col-md-1 query-label">{{resource.tools.vseparatesEdit.html.msg9}}</label>
+                            <div class="col-md-7">
+                                <div class="panel tile-selected2">
+                                    <div class="panel-body" style="padding-top: 0;">
+                                        <div class="media-main">
+                                            <div class="info">
+                                                <div class="row">
+                                                    <label for="vs-title" class="col-md-3">{{resource.tools.vseparatesEdit.html.msg11}}:</label>
+                                                    <a class="col-md-9" id="vs-title"
+                                                       href="/portal/vs#?env={{env}}&vsId={{data.vsSeperate.Data.originVs.id}}">{{data.vsSeperate.Data.originVs.id}}({{data.vsSeperate.Data.originVs.name}})</a>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-md-3">{{resource.tools.vseparatesEdit.html.msg12}}:</label>
+                                                    <div class="col-md-9">
+                                                        <a style="word-break: break-all"
+                                                           href="/portal/vs#?env={{env}}&vsId={{data.vsSeperate.Data.originVs.id}}">
+                                                            {{getDomainText(data.vsSeperate.Data.originVs.domains)}}
+                                                        </a>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <label class="col-md-3">SSL:</label>
+                                                    <span class="col-md-9">{{data.vsSeperate.Data.originVs.ssl?'Https':'Http'}}</span>
+                                                </div>
+
+                                                <div class="row">
+                                                    <label class="col-md-3">IDC/Zone:</label>
+                                                    <span class="col-md-9">{{data.vsSeperate.Data.originVs.idc}}/{{resource.tools.vseparatesEdit.js[data.vsSeperate.Data.originVs.zone]}}</span>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-md-3">{{resource.tools.vseparatesEdit.html.msg13}}:</label>
+                                                    <span class="col-md-9">
+                                                        <span class="status-red">{{data.vsSeperate.Data.originVs.statistics['app-count']}}</span>{{resource.tools.vseparatesEdit.html.msg14}},
+                                                        <span class="status-red">{{data.vsSeperate.Data.originVs.statistics['group-count']}}</span>{{resource.tools.vseparatesEdit.html.msg15}},
+                                                        <span class="status-red">{{data.vsSeperate.Data.originVs.statistics['group-server-count']}}</span>{{resource.tools.vseparatesEdit.html.msg16}},
+                                                        <span class="status-red">{{data.vsSeperate.Data.originVs.statistics['member-count']}}</span>{{resource.tools.vseparatesEdit.html.msg17}}.
+                                                    </span>
+                                                </div>
+
+                                                <div class="row">
+                                                    <label class="col-md-3">QPS:</label>
+                                                    <span class="col-md-9">{{data.vsSeperate.Data.originVs.statistics['qps']}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row" ng-show="data.vsSeperate.Data.originVs.message">
+                            <div class="status-red col-md-12">
+                                {{resource.tools.vseparatesEdit.html.msg18}}:{{data.vsSeperate.Data.originVs.message}}
+                            </div>
+                        </div>
+
+                        <div ng-show="showCreatedError() && showFirstStep()" class="status-red form-group row">
+                            {{resource.tools.vseparatesEdit.html.msg19}}：Status: {{data.vsSeperate.Stages['created']['status']}}. Message:
+                            {{data.vsSeperate.Stages['created']['message']}}
+                        </div>
+                    </form>
+
+                    <form name="addvs" ng-show="showSecondStepDiv()">
+                        <div class="form-group row standard-row" ng-show="showVsCountRow()">
+                            <div class="col-md-1">
+                                <label for="total">{{resource.tools.vseparatesEdit.html.msg21}}:</label>
+                            </div>
+                            <div class="col-md-1">
+                                <input id="total" class="form-control" name="total" type="number" min="2"
+                                       ng-model="data.vsSeperate.Data.targetVs.total" required/>
+                            </div>
+                            <div class="col-md-9 status-red"
+                                 ng-show="addvs.total.$invalid || data.vsSeperate.Data.targetVs.total>data.vsSeperate.Data.originVs.domains.length">
+                                *{{resource.tools.vseparatesEdit.html.msg22}} {{data.vsSeperate.Data.originVs.domains.length}}{{resource.tools.vseparatesEdit.html.msg23}}
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-1">
+                                <label for="total">{{resource.tools.vseparatesEdit.html.msg24}}:</label>
+                            </div>
+
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-4 edit-vs-tile" title={{resource.tools.vseparatesEdit.html.msg25}}
+                                         data-ng-repeat="domain in data.vsSeperate.Data.targetVs.vses">
+                                        <button title={{resource.tools.vseparatesEdit.html.msg26}} ng-click="popEditVs($index, domain)"
+                                                ng-show="domain.length!=0"></button>
+                                        <button title={{resource.tools.vseparatesEdit.html.msg27}} ng-show="showRemoveVs()" ng-click="removeVs()"></button>
+
+                                        <div ng-show="domain.length==0" ng-click="popNewVs($index)">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <p>{{resource.tools.vseparatesEdit.html.msg28}}</p>
+                                        </div>
+                                        <div ng-show="domain.length>0">
+                                            <div class="row">
+                                                <div class="col-md-2">
+                                                    <label>SSL:</label>
+                                                </div>
+                                                <div class="col-md-10" style="text-align: left">
+                                                    {{data.vsSeperate.Data.originVs.ssl?'Https':'Http'}}
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-2">
+                                                    <label>{{resource.tools.vseparatesEdit.html.msg29}}:</label>
+                                                </div>
+                                                <div class="col-md-10" style="max-height: 150px; overflow-y: auto">
+                                                    <div data-ng-repeat="name in domain" style="text-align: left">
+                                                        {{name}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-show="showTargetVsErrorMessage()" class="row status-red">
+                                    <div class="col-md-12">
+                                        {{resource.tools.vseparatesEdit.html.msg31}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-show="showCreatedError()" class="status-red form-group row">
+                            {{resource.tools.vseparatesEdit.html.msg32}}：Status: {{data.vsSeperate.Stages['created']['status']}}. Message:
+                            {{data.vsSeperate.Stages['created']['message']}}
+                        </div>
+                    </form>
+
+                    <form name="createvs" ng-show="showThirdStep()">
+                        <div class="form-group row">
+                            <div class="col-md-12" style="padding-bottom: 10px">
+                                <a class="btn btn-danger pull-right" ng-show="showRetry()" style="padding:1px 5px"
+                                   ng-click="retryFailed()"><i class="fa fa-refresh"></i>{{resource.tools.vseparatesEdit.html.msg33}}</a>
+                            </div>
+                            <div class="col-md-1">
+                                <label>{{resource.tools.vseparatesEdit.html.msg34}}:</label>
+                            </div>
+                            <div class="col-md-11">
+                                <table class=" table table-bordered resource-table">
+                                    <thead>
+                                    <tr>
+                                        <th style="width: 15%">{{resource.tools.vseparatesEdit.html.msg35}}</th>
+                                        <th style="width: 70%">{{resource.tools.vseparatesEdit.html.msg36}}</th>
+                                        <th style="width: 15%">{{resource.tools.vseparatesEdit.html.msg37}}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>
+                                            {{resource.tools.vseparatesEdit.html.msg38}}
+                                        </td>
+
+                                        <td rowspan="2">
+                                            <div ng-show="showBindError()" class="status-red form-group row">
+                                                {{resource.tools.vseparatesEdit.html.msg32}}：Status:
+                                                {{data.vsSeperate.Stages['create-and-bind-new-vs']['status']}}. Message:
+                                                {{data.vsSeperate.Stages['create-and-bind-new-vs']['message']}}
+                                            </div>
+
+                                            <div ng-show="showActivateError()" class="status-red form-group row">
+                                                {{resource.tools.vseparatesEdit.html.msg32}}：Status: {{data.vsSeperate.Stages['split-vs']['status']}}.
+                                                Message:
+                                                {{data.vsSeperate.Stages['split-vs']['message']}}
+                                            </div>
+
+                                            <div style="padding-bottom: 10px"
+                                                 data-ng-repeat="(k,v) in data.vsSeperate.Data.createdVs">
+
+                                                <div style="padding-bottom: 10px;">
+                                                    <div class="row">
+
+                                                        <label class="col-md-2">
+                                                            ID:
+                                                        </label>
+                                                        <span class="col-md-10">
+                                                            {{v.id}}(<a href="/portal/vs#?env={{env}}&vsId={{v.id}}"
+                                                                        target="_blank">{{v.name}}</a>)
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <label class="col-md-2">
+                                                            {{resource.tools.vseparatesEdit.html.msg12}}:
+                                                        </label>
+                                                        <span class="col-md-10">
+                                                            <a href="/portal/vs#?env={{env}}&vsId={{v.id}}"
+                                                               target="_blank">{{getDomainText(v.domains)}}</a>
+                                                        </span>
+                                                    </div>
+
+
+                                                    <div class="row">
+                                                        <label class="col-md-2">
+                                                            SSL:
+                                                        </label>
+                                                        <span class="col-md-10">
+                                                            {{v.ssl?'Https':'Http'}}
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <label class="col-md-2">
+                                                            IDC/Zone:
+                                                        </label>
+                                                        <span class="col-md-10">
+                                                            {{v.idc}}/{{v.zone}}
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <label class="col-md-2">
+                                                            Status:
+                                                        </label>
+                                                        <span class="col-md-10"
+                                                              ng-bind-html="getVsStatusText(v.status)">
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span ng-class="stepClass('create-and-bind-new-vs')">{{stepText('create-and-bind-new-vs')}}
+                                            </span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            {{resource.tools.vseparatesEdit.html.msg43}}
+                                        </td>
+
+                                        <td>
+                                          <span ng-class="stepClass('split-vs')">
+                                           {{stepText('split-vs')}}
+                                          </span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            {{resource.tools.vseparatesEdit.html.msg44}}
+                                        </td>
+
+                                        <td>
+                                            <a ng-click="getMonitorLink()" class="status-blue"
+                                               style="text-decoration: underline"><i
+                                                    class="fa fa-hand-o-right"></i><span>{{resource.tools.vseparatesEdit.html.msg45}}</span></a>
+                                        </td>
+                                        <td>
+                                            -
+                                        </td>
+                                    </tr>
+
+                                    <tr ng-show="showRevert()">
+                                        <td>
+                                            {{resource.tools.vseparatesEdit.html.msg46}}
+                                        </td>
+
+                                        <td>
+                                            {{resource.tools.vseparatesEdit.html.msg47}}
+
+                                            <div ng-show="showRollbackError()" class="status-red form-group row">
+                                                {{resource.tools.vseparatesEdit.html.msg48}}：Status: {{data.vsSeperate.Stages['rollback']['status']}}.
+                                                Message:
+                                                {{data.vsSeperate.Stages['rollback']['message']}}
+                                            </div>
+
+                                        </td>
+                                        <td>
+                                            <a ng-show="showRevert()" class="fa fa-undo status-red"
+                                               ng-click="revertChanges()">{{resource.tools.vseparatesEdit.html.msg49}}</a>
+
+                                            <span ng-show="showRevertProgress()" ng-class="stepClass('rollback')">{{stepText('rollback')}}
+                                            </span>
+                                        </td>
+                                    </tr>
+
+                                    </tbody>
+
+                                </table>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="panel-footer dialog-footer row " style="background: none;" ng-show="showFirstStep()">
+                    <div class="col-md-10"></div>
+                    <div class="col-md-2">
+                        <button class="btn btn-info pull-right" ng-disabled="firstStepDisable(content.name.$invalid)"
+                                ng-click="moveFirstToSecond()">
+                            {{resource.tools.vseparatesEdit.html.msg51}}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-footer dialog-footer row " style="background: none;" ng-show="showSecondStep()">
+                    <div class="col-md-10"></div>
+                    <div class="col-md-2">
+                        <button class="btn btn-info pull-right"
+                                ng-click="moveSecondToThird()"
+                                ng-disabled="secondStepDisable()">
+                            {{resource.tools.vseparatesEdit.html.msg51}}
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modals">
+                <div class="modal fade" id="selectDomainDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vseparatesEdit.html.msg52}}</h4>
+                            </div>
+                            <div class="modal-body" style="max-height: 400px; overflow-y: auto">
+                                <div class="status-red pull-right" style="margin: -10px 0px 10px 0px;">
+                                    {{resource.tools.vseparatesEdit.html.msg53}}
+                                </div>
+                                <table id="domainsTable">
+
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button data-dismiss="modal" id="saveVsBt" class="btn btn-info"
+                                            ng-click="saveVsClick()" disabled>{{resource.tools.vseparatesEdit.html.msg54}}
+                                    </button>
+                                    <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.vseparatesEdit.html.msg55}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="errorDomainDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vseparatesEdit.html.msg56}}</h4>
+                            </div>
+                            <div class="modal-body warning-important" id="body-error">
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.vseparatesEdit.html.msg55}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="progressDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vseparatesEdit.html.msg57}}</h4>
+                            </div>
+                            <div class="modal-body" id="progress">
+
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info closeProgressWindowBt" data-dismiss="modal">{{resource.tools.vseparatesEdit.html.msg58}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static-new/main/tools/vs-seperate-edit.js"></script>
+</body>
+</html>

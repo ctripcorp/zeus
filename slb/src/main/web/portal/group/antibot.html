@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>反爬规则</title>
+    <script src="/static/lib/sui/jquery.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/sui/sui-append.min.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+
+    <link rel="stylesheet" href="/static/css/statistics/opslog.css">
+
+    <style type="text/css">
+
+        .grid-container {
+            background-color: #f1f4f5;
+        }
+
+        .grid-container h4 {
+            margin-left: 10px;
+        }
+
+        .btn-add {
+            margin-bottom: 10px;
+        }
+
+        .panel {
+            background: #fbfbfb;
+        }
+
+        .desc {
+            line-height: 35px;
+        }
+
+        .delete {
+            line-height: 35px;
+            font-size: 20px;
+            cursor: pointer;
+            text-decoration: none
+        }
+
+        .unit {
+            line-height: 32px;
+            margin-left: -10px;
+        }
+
+        .form-control {
+            background-color: white;
+        }
+
+        .split-line {
+            border-top: 1px solid #e7e7e7 !important;
+            margin-top: 10px;
+        }
+
+        .label-tag {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .line {
+            position: relative;
+            padding: 20px 0 20px;
+            list-style: none;
+            text-align: right;
+        }
+
+        .timeline:before {
+            display: none;
+        }
+
+        .action .row {
+            padding-bottom: 10px;
+        }
+
+        .rule-table thead th {
+            vertical-align: middle;
+        }
+
+        .rule-table tbody tr td {
+            vertical-align: middle;
+        }
+
+        .text-add {
+            line-height: 35px;
+        }
+
+        .function {
+            color: #b5192c;
+        }
+
+        .condition div {
+            float: left;
+        }
+
+        .fa-question-circle {
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .system-link {
+            font-size: 16px;
+        }
+
+        #newRuleModel .modal-dialog {
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;后台管理</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('basic')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["navs"]["navs_basic"]}}</span></a></li>
+            <li class=""><a href="{{generateLink('rule')}}"><i class="fa fa-pencil-square-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_rule"]}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('intercept')}}"><i class="fa fa-shirtsinbulk"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_intercept"]}}</span></a>
+            </li>
+            <li class="" ng-show="showDelegate()"><a href="{{generateLink('delegate')}}"><i class="fa fa-random"></i> <span
+                    class="nav-label">流量回源</span></a>
+            </li>
+            <li class="active"><a href="{{generateLink('antibot')}}"><i class="fa fa-shirtsinbulk"></i> <span
+                    class="nav-label">反爬规则</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_log"]}}</span></a>
+            </li>
+
+
+            <li class=""><a href="{{generateLink('conf')}}"><i class="fa fa-file-code-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_conf"]}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id,name"
+                                 ng-click="clickTarget()"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wraper info-container" id="operation-log-area" ng-app="operationLogApp"
+             ng-controller="operationLogController">
+
+            <div class="row status-row">
+                <div class="col-md-12">
+                    <div class="pull-right">
+                        <h4 ng-class="getStatusClass()" class="pull-right">
+                            {{getStatusText()}}
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class=" panel panel-default">
+                <div class="panel-body">
+                    <div>
+                        <div class="row">
+                            <div class="col-md-10 text-add fa fa-info">
+                                当前Group共有<b>{{pagerules.length}}</b>个反爬规则. 点击新建规则, 规则自上而下逐次生效.
+                            </div>
+                            <div class="col-md-2">
+                                <button ng-click="createNewRule()" ng-show="showNewRuleBt()" id="createGroup"
+                                        class="btn btn btn-info pull-right btn-add">
+                                    <i class="fa fa-plus"></i> 新建规则
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table table-bordered rule-table">
+                        <thead>
+                        <tr>
+                            <th style="width: 1%;">#</th>
+                            <th>反爬条件</th>
+                            <th style="text-align: left;width: 10%">反爬后行为类型</th>
+                            <th style="text-align: left">反爬后行为详情</th>
+                            <th style="width: 20%;text-align: center">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr data-ng-repeat="rule in pagerules">
+                            <td>
+                                {{$index+1}}
+                            </td>
+                            <td ng-bind-html="translateCondition(rule)">
+                            </td>
+                            <td ng-bind-html="translateActionType(rule)">
+                            </td>
+                            <td style="text-align: left" ng-bind-html="translateAction(rule)">
+                            </td>
+                            <td style="text-align: center;vertical-align: middle">
+                                <button ng-click="moveUp($index, rule)" type="btn btn-sm" class="btn-info"><i
+                                        class="fa fa-arrow-up">上移</i>
+                                </button>
+                                <button ng-click="moveDown($index, rule)" type="btn btn-sm" class="btn-info"><i
+                                        class="fa fa-arrow-down">下移</i></button>
+                                <button ng-click="editRule($index, rule)" type="btn btn-sm" class="btn-info"><i
+                                        class="fa fa-edit">编辑</i>
+                                </button>
+                                <button ng-click="deleteRule($index, rule)" type="btn btn-sm btn-danger"
+                                        class="btn-danger"><i
+                                        class="fa fa-times">删除</i></button>
+                            </td>
+                        </tr>
+                        <tr ng-show="pagerules.length==0">
+                            <td colspan="5" style="text-align: center;vertical-align: middle;"><i class="fa fa-warning">没有任何反爬规则，点击新建规则创建新的反爬规则！</i>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="row" style="margin-top: 20px" ng-show="pagerules && pagerules.length>0">
+                        <div class="col-md-10">
+
+                        </div>
+                        <div class="col-md-2">
+                            <div class="pull-right" style="margin-left: 15px;">
+                                <div class="system-link">
+                                    <a class="dashboard" target="_blank"
+                                       href="/portal/group/traffic#?env={{env}}&groupId={{query.groupId}}&trafficType=请求数&startTime={{query.startTime}}">全部流量</a>
+                                </div>
+
+                                <div class="system-link">
+                                    <a class="fa fa-shirtsinbulk" target="_blank"
+                                       href="/portal/group/traffic#?env={{env}}&groupId={{query.groupId}}&trafficType=被反爬请求&startTime={{query.startTime}}">被反爬流量</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row save-buttons">
+                <div class="col-md-9">
+                    <div ng-show="showChangeRule()"
+                         class="status-red pull-right">
+                        您还没有操作当前Group的权限，请<a style="font-weight: bold" ng-click="getAuthLink()">
+                        点此</a>申请。
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <a class="btn btn-info pull-right" role="button"
+                       ng-click="saveSettings()"
+                       ng-disabled="disableSaving() || !showNewRuleBt()"><span
+                            style="margin-left: 5px" class="fa fa-check">保存</span></a>
+                    <a class="btn btn-info pull-right" style="margin-right: 10px" role="button"
+                       ng-show="showActivateBt() && canActivateRule()"
+                       ng-click="activateRule()">
+                        <i class="fa fa-hand-o-right">生效</i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="modals">
+                <div id="activateGroupModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead' ng-class="activateGroupTitleClass()">
+                                {{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm'>
+                            <div id="diffOutput"></div>
+                            <div class="btnDiv">
+                                <button class="btn confirm-bt btn-info" data-toggle="modal"
+                                        data-target="#confirmActivateGroup" data-dismiss="modal"
+                                        ng-show="activateBtShow()">
+                                    激活生效
+                                </button>
+
+                                <span ng-show="!activateBtShow()" class="status-red">
+                                    您当前没有激活权限，请<a ng-click="applyGroupUpdateRequest()">点此</a>申请
+                                </span>
+                                <button class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="confirmActivateGroup" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认是否要激活</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">激活Group会使Group的变动生效，生效后对Group的流量产生影响。请谨慎激活!</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="activateGroup()"
+                                        data-dismiss="modal">确认激活
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="saveSettingsModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">操作进度</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div ng-show="showSuccessMsg()" class="status-green">
+                                    操作成功 <i class="fa fa-check" style="padding-left: 10px"></i>
+                                </div>
+
+                                <div ng-show="!showSuccessMsg()"
+                                     class="status-red">
+                                    操作失败<i class="fa fa-times" style="padding-left: 10px"></i>. 原因:
+                                    <div ng-bind-html="getErrorMsg()"></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="closeSaveBt" type="button" class="btn btn-info" ng-click="reloadPage()"
+                                        data-dismiss="modal">关闭
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="newRuleModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">新建规则</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -20px">
+                                <div class="panel panel-default ">
+                                    <div class="panel-body">
+                                        <form name="myForm" role="form" class="form-horizontal"
+                                              style="margin-top: -15px">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="btn-group pull-right">
+                                                        <button type="button"
+                                                                class="btn btn-info btn-sm dropdown-toggle "
+                                                                data-toggle="dropdown" aria-expanded="true"><i
+                                                                class="fa fa-plus"></i>新增反爬条件
+                                                        </button>
+                                                        <ul class="dropdown-menu" role="menu">
+                                                            <li>
+                                                                <a ng-click="newConditionClick('header')">根据Header值反爬</a>
+                                                            </li>
+                                                            <li><a ng-click="newConditionClick('countheader')">根据Header个数反爬</a>
+                                                            </li>
+                                                            <li class="divider"></li>
+                                                            <li>
+                                                                <a ng-click="newConditionClick('cookie')">根据Cookie值反爬</a>
+                                                            </li>
+                                                            <li><a ng-click="newConditionClick('countcookie')">根据Cookie个数反爬</a>
+                                                            </li>
+                                                            <li class="divider"></li>
+                                                            <li>
+                                                                <a ng-click="newConditionClick('uri')">根据请求URI</a>
+                                                            </li>
+                                                            <li>
+                                                                <a ng-click="newConditionClick('url')">根据请求URI<b
+                                                                        class="status-red">(包含查询参数)</b></a>
+                                                            </li>
+                                                            <li class="divider"></li>
+                                                            <li>
+                                                                <a ng-click="newConditionClick('method')">根据请求Method反爬</a>
+                                                            </li>
+                                                            <li class="divider"></li>
+                                                            <li>
+                                                                <a ng-click="newConditionClick('arg')">根据请求参数值反爬</a>
+                                                            </li>
+                                                            <li class="divider"></li>
+                                                            <li>
+                                                                <a ng-click="newConditionClick('cip')">根据源IP反爬</a>
+                                                            </li>
+                                                            <li class="divider"></li>
+                                                            <li>
+                                                                <a ng-click="newConditionClick('merge')" ng-show="false">复合类型</a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['header']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">Header<i ng-click="getHelpLink('header')"
+                                                                                class="fa fa-question-circle"
+                                                                                title="满足条件的Header键值对"></i></span>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">键</span>
+                                                        <input type="text" name="headerkey"
+                                                               class="form-control" placeholder=""
+                                                               data-ng-model="composit['key']"
+                                                               required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit,'value')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="=" selected>=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value="~">正则等于</option>
+                                                        <option value="~*">正则等于(忽略大小写)</option>
+                                                        <option value="!~">正则不等于</option>
+                                                        <option value="!~*">正则不等于(忽略大小写)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <div class="input-group" ng-show="composit['value']!='nil'">
+                                                        <span class="input-group-addon">值</span>
+                                                        <input type="text" name="headervalue"
+                                                               class="form-control" placeholder=""
+                                                               data-ng-model="composit['value']"
+                                                               required>
+                                                    </div>
+
+                                                    <div class="input-group" ng-show="composit['value']=='nil'">
+                                                        <input type="text" name="headervalue"
+                                                               value="空"
+                                                               class="form-control"
+                                                               disabled>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <label class="cr-styled desc"
+                                                           ng-show="composit.function=='=' || composit.function=='!='">
+                                                        <input type="checkbox" ng-checked="composit['value']=='nil'"
+                                                               ng-click="checkNull(composit)"/>
+                                                        <i class="fa"></i>
+                                                        值置空
+                                                    </label>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <a title="删除" ng-show="showDeleteComposite()"
+                                                       ng-click="deleteRow($index,'header')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true"></a>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.key || !composit.value">*必须
+                                                    </div>
+                                                    <div class="status-red unit"
+                                                         ng-show="isKeyValid(composit.key)">*键不合法
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['countheader']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">Header数<i ng-click="getHelpLink('countheader')"
+                                                                                 class="fa fa-question-circle"
+                                                                                 title="满足条件的Header个数"></i></span>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit,'count')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="=" selected>=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value=">">&gt;</option>
+                                                        <option value="<">&lt;</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-7">
+                                                    <div>
+                                                        <input type="number" name="headercount"
+                                                               class="form-control pull-left" placeholder=""
+                                                               ng-model="composit.count"
+                                                               required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <a ng-show="showDeleteComposite()" title="删除"
+                                                       ng-click="deleteRow($index,'countheader')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true"></a>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.count || composit.count<0">
+                                                        *大于0
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['cookie']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">Cookie<i ng-click="getHelpLink('cookie')"
+                                                                                class="fa fa-question-circle"
+                                                                                title="满足条件的Cookie键值对"></i></span>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">键</span>
+                                                        <input type="text" name="cookiekey"
+                                                               class="form-control" placeholder=""
+                                                               data-ng-model="composit['key']"
+                                                               required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit,'value')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="=" selected>=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="~">正则等于</option>
+                                                        <option value="~*">正则等于(忽略大小写)</option>
+                                                        <option value="!~">正则不等于</option>
+                                                        <option value="!~*">正则不等于(忽略大小写)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <div class="input-group" ng-show="composit['value']!='nil'">
+                                                        <span class="input-group-addon">值</span>
+                                                        <input type="text" name="cookievalue"
+                                                               class="form-control" placeholder=""
+                                                               data-ng-model="composit['value']"
+                                                               required>
+                                                    </div>
+
+                                                    <div class="input-group" ng-show="composit['value']=='nil'">
+                                                        <input type="text" name="cookievalue"
+                                                               value="空"
+                                                               class="form-control"
+                                                               disabled>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <label class="cr-styled desc"
+                                                           ng-show="composit.function=='=' || composit.function=='!='">
+                                                        <input type="checkbox" ng-checked="composit['value']=='nil'"
+                                                               ng-click="checkNull(composit)"/>
+                                                        <i class="fa"></i>
+                                                        值置空
+                                                    </label>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <a title="删除" ng-show="showDeleteComposite()"
+                                                       ng-click="deleteRow($index,'cookie')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true"></a>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.key || !composit.value">*必须
+                                                    </div>
+                                                    <div class="status-red unit"
+                                                         ng-show="isKeyValid(composit.key)">*键不合法
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['countcookie']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">Cookie数<i ng-click="getHelpLink('countcookie')"
+                                                                                 class="fa fa-question-circle"
+                                                                                 title="满足条件的Cookie个数"></i></span>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit,'count')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="=" selected>=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value=">">&gt;</option>
+                                                        <option value="<">&lt;</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-7">
+                                                    <div>
+                                                        <input type="number" name="cookiecount"
+                                                               class="form-control pull-left" placeholder=""
+                                                               ng-model="composit.count"
+                                                               required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <a title="删除"
+                                                       ng-click="deleteRow($index,'countcookie')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true" ng-show="showDeleteComposite()"></a>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.count || composit.count<0">
+                                                        *大于0
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['uri']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">URI<i ng-click="getHelpLink('uri')"
+                                                                             class="fa fa-question-circle"
+                                                                             title="满足条件的uri"></i></span>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit,'value')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="=" selected>=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="~">正则等于</option>
+                                                        <option value="~*">正则等于(忽略大小写)</option>
+                                                        <option value="!~">正则不等于</option>
+                                                        <option value="!~*">正则不等于(忽略大小写)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-7">
+                                                    <div>
+                                                        <input type="text" name="uri"
+                                                               class="form-control pull-left" placeholder=""
+                                                               ng-model="composit.value"
+                                                               required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <a title="删除"
+                                                       ng-click="deleteRow($index,'uri')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true" ng-show="showDeleteComposite()"></a>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.value">
+                                                        *必须
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['url']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">URI(含参)<i ng-click="getHelpLink('url')"
+                                                                                 class="fa fa-question-circle"
+                                                                                 title="满足条件的url"></i></span>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit,'value')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="=" selected>=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="~">正则等于</option>
+                                                        <option value="~*">正则等于(忽略大小写)</option>
+                                                        <option value="!~">正则不等于</option>
+                                                        <option value="!~*">正则不等于(忽略大小写)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-7">
+                                                    <div>
+                                                        <input type="text" name="url"
+                                                               class="form-control pull-left" placeholder=""
+                                                               ng-model="composit.value"
+                                                               required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <a title="删除"
+                                                       ng-click="deleteRow($index,'url')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true" ng-show="showDeleteComposite()"></a>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.value">
+                                                        *必须
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['arg']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">请求参数<i ng-click="getHelpLink('arg')"
+                                                                              class="fa fa-question-circle"
+                                                                              title="满足条件的请求参数键值对"></i></span>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">键</span>
+                                                        <input type="text" name="paramkey"
+                                                               class="form-control" placeholder=""
+                                                               data-ng-model="composit['key']"
+                                                               required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit,'value')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="=" selected>=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="~">正则等于</option>
+                                                        <option value="~*">正则等于(忽略大小写)</option>
+                                                        <option value="!~">正则不等于</option>
+                                                        <option value="!~*">正则不等于(忽略大小写)</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="input-group" ng-show="composit['value']!='nil'">
+                                                        <span class="input-group-addon">值</span>
+                                                        <input type="text" name="paramvalue"
+                                                               class="form-control" placeholder=""
+                                                               data-ng-model="composit['value']"
+                                                               required>
+                                                    </div>
+
+                                                    <div class="input-group" ng-show="composit['value']=='nil'">
+                                                        <input type="text" name="paramvalue"
+                                                               value="空"
+                                                               class="form-control"
+                                                               disabled>
+                                                    </div>
+
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <label class="cr-styled desc"
+                                                           ng-show="composit.function=='=' || composit.function=='!='">
+                                                        <input type="checkbox" ng-checked="composit['value']=='nil'"
+                                                               ng-click="checkNull(composit)"/>
+                                                        <i class="fa"></i>
+                                                        值置空
+                                                    </label>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <a ng-show="showDeleteComposite()" title="删除"
+                                                       ng-click="deleteRow($index,'arg')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true"></a>
+                                                </div>
+
+
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.key || !composit.value">*必须
+                                                    </div>
+                                                    <div class="status-red unit"
+                                                         ng-show="isKeyValid(composit.key)">*键不合法
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['cip']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">请求IP<i ng-click="getHelpLink('cip')"
+                                                                              class="fa fa-question-circle"
+                                                                              title="满足条件的源IP"></i></span>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit, 'ip')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="=" selected>=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value="IN">IN</option>
+                                                        <option value="~">正则等于</option>
+                                                        <option value="!~">正则不等于</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-7">
+                                                    <input type="text" name="ipkey"
+                                                           class="form-control" placeholder=""
+                                                           data-ng-model="composit['ip']"
+                                                           required>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <a ng-show="showDeleteComposite()" title="删除"
+                                                       ng-click="deleteRow($index,'cip')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true"></a>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.ip">*必须
+                                                    </div>
+                                                    <div class="status-red unit"
+                                                         ng-show="isIpValid(composit.function, composit['ip'])">*IP不合法
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['method']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">Method<i ng-click="getHelpLink('method')"
+                                                                                class="fa fa-question-circle"
+                                                                                title="满足条件Request Method"></i></span>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit, 'method')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="=" selected>=</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value="IN">IN</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-7">
+                                                    <select class="form-control"
+                                                            data-ng-model="composit.method">
+                                                        <option value="GET" selected>GET</option>
+                                                        <option value="POST">POST</option>
+                                                        <option value="PUT">PUT</option>
+                                                        <option value="HEAD">HEAD</option>
+                                                        <option value="DELETE">DELETE</option>
+                                                        <option value="OPTIONS">OPTIONS</option>
+                                                        <option value="TRACE">TRACE</option>
+                                                        <option value="CONNECT">CONNECT</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <a ng-show="showDeleteComposite()" title="删除"
+                                                       ng-click="deleteRow($index,'method')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true"></a>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.method">*必须
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row" style="padding-top: 10px"
+                                                 data-ng-repeat="composit in condition.composit['merge']">
+                                                <div class="col-md-1">
+                                                    <span class="desc">复合条件<i ng-click="getHelpLink('merge')"
+                                                                              class="fa fa-question-circle"
+                                                                              title="满足条件的复合类型"></i></span>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">条件</span>
+                                                        <input type="text" name="mergekey"
+                                                               class="form-control" placeholder=""
+                                                               data-ng-model="composit['key']"
+                                                               required />
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select class="form-control"
+                                                            ng-change="changeFunction(composit,'value')"
+                                                            data-ng-model="composit.function">
+                                                        <option value="IN" selected>IN</option>
+                                                        <option value="=">=</option>
+                                                        <option value="!=">!=</option>
+                                                        <option value="~">正则等于</option>
+                                                        <option value="~*">正则等于(忽略大小写)</option>
+                                                        <option value="!~">正则不等于</option>
+                                                        <option value="!~*">正则不等于(忽略大小写)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">值</span>
+                                                        <input type="text" name="mergevalue"
+                                                               class="form-control" placeholder=""
+                                                               data-ng-model="composit['value']"
+                                                               required />
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <a title="删除" ng-show="showDeleteComposite()"
+                                                       ng-click="deleteRow($index,'merge')"
+                                                       class="fa fa-times-circle-o delete status-red"
+                                                       aria-hidden="true"></a>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <div class="status-red unit"
+                                                         ng-show="!composit.key || !composit.value">*必须
+                                                    </div>
+                                                    <div class="status-red unit"
+                                                         ng-show="isKeyValid(composit.key)">*键不合法
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row"
+                                                 ng-show="showEmptyConitionMsg()">
+                                                <div class="col-md-12" style="text-align: center">
+                                                    <i>还没有任何反爬条件，点击创建按钮创建新的反爬条件!</i>
+                                                </div>
+                                            </div>
+                                            <div class="row " style="padding-top: 10px"
+                                                 ng-show="showConditionJoin()">
+                                                <div class="col-md-1">
+                                                    条件关系
+                                                </div>
+                                                <div class="col-md-10">
+                                                            <span style="padding: 3px"
+                                                                  class="label-tag label label-default"
+                                                                  ng-class="isSelectedRelation(k,v)"
+                                                                  data-ng-repeat="(k,v) in relations"
+                                                                  ng-click="toggleRelation(k,v)">
+                                                                {{k}}
+                                                             </span>
+                                                </div>
+                                                <div class="col-md-1 status-red" ng-show="!condition.type">
+                                                    <span style="line-height: 10px; margin-left: -10px">*必须</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="split-line col-md-12">
+
+                                                </div>
+                                            </div>
+                                            <div class="row" style="padding-top: 10px;">
+                                                <div class="col-md-1">
+                                                            <span class="desc" ng-show="showConditionActionText()">
+                                                                处理行为
+                                                                <i ng-click="getHelpLink('action')"
+                                                                   class="fa fa-question-circle"
+                                                                   title="满足条件的Header个数"></i>
+                                                            </span>
+
+
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <span type="text" class="desc"
+                                                          ng-show="showConditionActionText()">
+                                                        <span>
+                                                        {{getConditionActionText()}}
+                                                    </span>
+                                                        <!--<i style="margin-left: 5px" ng-click="showHelpMsg()"-->
+                                                        <!--class="fa fa-question-circle"></i>-->
+                                                    </span>
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <div class="btn-group pull-right">
+                                                        <button type="button"
+                                                                class="btn btn-info btn-sm dropdown-toggle "
+                                                                data-toggle="dropdown" aria-expanded="true"><i
+                                                                class="fa fa-plus"></i>新增反爬行为
+                                                        </button>
+                                                        <ul class="dropdown-menu" role="menu">
+                                                            <li><a ng-click="newActionClick('reject')">拒绝访问</a>
+                                                            </li>
+                                                            <li><a ng-click="newActionClick('flag')">标识请求</a>
+                                                            </li>
+                                                            <li><a ng-click="newActionClick('redirect')">Redirect跳转</a>
+                                                            </li>
+                                                            <li><a ng-click="newActionClick('proxypass')">定向转发</a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style="padding-top:10px" class="action"
+                                                 ng-show="condition.action.type=='reject'">
+                                                <div class="row">
+                                                    <div class="col-md-1">
+                                                        <span class="desc">返回码</span>
+                                                    </div>
+                                                    <div class="col-md-1">
+                                                        <select class="form-control"
+                                                                data-ng-model="condition.action['code']">
+                                                            <option value="433" selected>433</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-1">
+                                                        <span class="desc">错误信息</span>
+                                                    </div>
+                                                    <div class="col-md-10">
+                                                        <textarea name="rejectmessage"
+                                                                  class="form-control" placeholder="拒绝信息"
+                                                                  data-ng-model="condition.action['message']">
+                                                        </textarea>
+
+                                                    </div>
+                                                    <div class="col-md-1 status-red"
+                                                         ng-show="!condition.action['message']">
+                                                        <span class="unit">*必须</span>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div style="padding-top:10px" class="action"
+                                                 ng-show="condition.action.type=='flag'">
+
+                                                <div class="row"
+                                                     data-ng-repeat="header in condition.action.headers">
+                                                    <div class="col-md-1">
+                                                            <span class="desc">
+                                                                新的Header
+                                                            </span>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon">键</span>
+                                                            <input type="text" name="headerkey"
+                                                                   class="form-control " placeholder=""
+                                                                   data-ng-model="header['key']" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon">值</span>
+                                                            <input type="text" name="headervalue"
+                                                                   class="form-control " placeholder=""
+                                                                   data-ng-model="header['value']" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <a title="新增" ng-show="showAddHeaderBt($index)"
+                                                           ng-click="addHeaderRow()"
+                                                           class="fa fa-plus-circle delete status-green"
+                                                           aria-hidden="true"></a>
+                                                        <a title="删除" ng-show="showRemoveHeaderBt($index)"
+                                                           ng-click="deleteHeaderRow()"
+                                                           class="fa fa-times-circle-o delete status-red"
+                                                           aria-hidden="true"></a>
+                                                    </div>
+
+                                                    <div class="col-md-1 status-red">
+                                                        <span class="unit" ng-show="!header['key'] || !header['value']">*必须</span>
+
+                                                        <span class="unit"
+                                                              ng-show="isKeyValid(header['key'])">*键不合法
+                                                        </span>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div style="padding-top:10px" class="action"
+                                                 ng-show="condition.action.type=='redirect'">
+                                                <div class="row">
+                                                    <div class="col-md-1">
+                                                            <span class="desc">
+                                                                返回码
+                                                            </span>
+                                                    </div>
+
+                                                    <div class="col-md-1">
+                                                        <select class="form-control"
+                                                                data-ng-model="condition.action['code']">
+                                                            <option value="301" selected>301</option>
+                                                            <option value="302">302</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+
+                                                <div class="row">
+                                                    <div class="col-md-1">
+                                                            <span class="desc">
+                                                                跳转到地址
+                                                            </span>
+                                                    </div>
+                                                    <div class="col-md-10">
+                                                            <textarea name="target"
+                                                                      class="form-control" placeholder="目标url"
+                                                                      data-ng-model="condition.action['target']"
+                                                                      required>
+                                                            </textarea>
+                                                    </div>
+                                                    <div class="col-md-1 status-red"
+                                                         ng-show="!condition.action['target']">
+                                                        <span class="unit">*必须</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style="padding-top:10px" class=""
+                                                 ng-show="condition.action.type=='proxypass'">
+                                                <div class="row">
+                                                    <div class="col-md-1">
+                                                            <span class="desc">
+                                                                透传到地址
+                                                            </span>
+                                                    </div>
+                                                    <div class="col-md-10">
+                                                            <textarea name="targeturl"
+                                                                      class="form-control"
+                                                                      placeholder="透传到的url, 确保地址是内网能访问的。否则操作会返回504超时"
+                                                                      data-ng-model="condition.action['target']"
+                                                                      required>
+                                                            </textarea>
+                                                    </div>
+                                                    <div class="col-md-1 status-red"
+                                                         ng-show="!condition.action['target']">
+                                                        <span class="unit">*必须</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style="padding-top:10px" class="row"
+                                                 ng-show="showConditionActionError()">
+                                                <div class="col-md-12" style="text-align: center">
+                                                    <i>还没有任何反爬后处理行为，点击新增按钮创建新的反爬后行为!</i>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="saveCondition()"
+                                        ng-disabled="disableAddCondition()"
+                                        data-dismiss="modal">
+                                    <i class="fa fa-check"></i>保存
+                                </button>
+
+                                <button type="button" class="btn btn-warning"
+                                        data-dismiss="modal">关闭
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="operationConfrimModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">操作进度</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div ng-if="query.saveResult==true" class="status-green">
+                                    回退成功 <i class="fa fa-check" style="padding-left: 10px"></i>
+                                </div>
+
+                                <div ng-if="query.saveResult['code']"
+                                     class="status-red">
+                                    回退失败<i class="fa fa-times" style="padding-left: 10px"></i>. 原因:
+                                    {{query.saveResult['message']}}
+                                </div>
+                            </div>
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning forceUpdateBt"
+                                        ng-show="showForceUpdate"
+                                        ng-click="forceActivateGroup()">强制操作
+                                </button>
+
+                                <button type="button" class="btn btn-info closeProgressWindowBt"
+                                        data-dismiss="modal">
+                                    关闭
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="/static/lib/sui/sui.min.js"></script>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/group-antibot-rule.js"></script>
+
+</body>
+</html>

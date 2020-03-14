@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SLB 拆分</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/angular/angular-sanitize.js"></script>
+    <script src="/static/lib/angular/angular-cookies.js"></script>
+    <script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+
+
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <script src="/static-new/http-auth-interceptor.js"></script>
+
+    <!--Repository-->
+    <script src="/static-new/model/Class.js"></script>
+    <script src="/static-new/util/C.js"></script>
+    <script src="/static-new/util/Constants.js"></script>
+    <script src="/static-new/util/object-wrapper.js"></script>
+
+    <script src="/static-new/viewmodel/slb-sharding.js"></script>
+    <script src="/static-new/repository/unitwork/command.js"></script>
+    <script src="/static-new/repository/unitwork/repository.js"></script>
+    <script src="/static-new/repository/slb/slbs-repository.js"></script>
+    <script src="/static-new/repository/tools/slb-sharding-repository.js"></script>
+    <script src="/static-new/repository/tools/vs-migration-repository.js"></script>
+    <!--Service-->
+    <script src="/static-new/service/slb/slbs-service.js"></script>
+    <script src="/static-new/service/tools/slb-sharding-service.js"></script>
+    <script src="/static-new/service/tools/vs-migration-service.js"></script>
+
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+
+    <!--Animation css-->
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+
+
+    <link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/notifications/notification.css" rel="stylesheet">
+
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+    <link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+    <style type="text/css">
+        #slb-area {
+            position: absolute;
+            left: 1%;
+            right: 2%;
+            width: 50%;
+            margin-top: 10px;
+        }
+
+        #vs-area {
+            position: absolute;
+            left: 1%;
+            right: 2%;
+            width: 90%;
+            margin-top: 10px;
+        }
+
+        #slb-area li {
+            float: left;
+            width: 25%;
+        }
+
+        #vs-area li {
+            float: left;
+            width: 12%;
+        }
+
+        .timeline:before {
+            content: " ";
+            position: absolute;
+            left: 0;
+            height: 2px;
+            width: 100%;
+            margin-top: 48px;
+            background-color: #999;
+        }
+
+        .timeline > li > .timeline-badge {
+            top: 0;
+            left: 10%;
+            margin-left: 0px;
+            font-size: 15px;
+            width: 80px;
+            height: 60px;
+            line-height: 60px;
+        }
+
+        .form-group .fa {
+            font-size: 15px;
+            margin-right: 10px;
+        }
+
+    </style>
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('list')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["tools"]["headerInfoController_toolsList"]}}
+</span></a></li>
+
+            <li class=""><a href="{{generateLink('url')}}"><i class="fa fa-tripadvisor"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_URLProbeTool"]}}
+</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('verify')}}"><i class="fa fa-magnet"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_NewBrokenApplicationDetectTool"]}}
+</span></a>
+            <li class=" tools-hide"><a href="{{generateLink('cert-upgrade')}}"><i class="fa fa-certificate"></i> <span
+                    class="nav-label">证书升级</span></a>
+            </li>
+            <li class="tools-hide active"><a href="{{generateLink('slb-sharding')}}"><i class="fa fa-cogs"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_SLBSplitTool"]}}
+</span></a>
+            </li>
+
+            <li class="tools-hide"><a href="{{generateLink('vs-migration')}}"><i class="fa fa-rocket"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMigrationTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-seperate')}}"><i class="fa fa-delicious"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSSplitTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-merge')}}"><i class="fa fa-steam"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMergeTool"]}}
+</span></a>
+            </li>
+
+
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+
+        <div class="breadcrumb-follow" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController" ng-cloak>
+            <!--tile summary Area-->
+            <div class="row tile-summary">
+                <div class="col-lg-4 col-sm-4">
+                    <div class="btn btn-block btn-lg btn-primary " ng-click="startNewSharding()"
+                         style="padding: 54px 10px 0px 0px;height: 130px;">
+                        <i class="fa fa-plus"></i>
+                        <span type="button" class="bg-white" style="color: white">{{resource.tools.shardingEdit.html.msg1}}</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-8 col-sm-8">
+                    <div class="widget-panel widget-style-2 white-bg"
+                         style="padding: 40px 10px 0px 0px;height: 130px;">
+                        <div class="row" style="margin-left: 10px;">
+
+                            <div style="cursor: pointer;" class="col-md-2 text-center" ng-click="filterSharing(count)"
+                                 data-ng-repeat="(count,v) in data.shardings.statusCountMap">
+                                <h2 class="m-t-0 m-b-0"><a class="activated-text ">{{v}}</a></h2>
+
+                                <div class="">{{count}}</div>
+                            </div>
+
+                            <div style="cursor: pointer;" class="col-md-2 text-center" ng-click="getAllSharing()">
+                                <h2 class="m-t-0 m-b-0"><a class="activated-text status-green">{{total}}</a></h2>
+
+                                <div class="status-green" style="font-weight: bold">{{resource.tools.shardingEdit.html.msg2}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="count-summary" style="padding-bottom: 15px">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <h5 class="panel-title ">{{resource.tools.shardingEdit.html.msg3}}</h5>
+                        </div>
+                    </div>
+
+                    <form name="myForm">
+                        <div class="panel-body">
+                            <div class="col-md-12 form-horizontal" id="slb-zone" ng-class="disabledSlbData()">
+                                <div class="form-group">
+                                    <label class="col-md-3"><i class="fa fa-circle"></i>Name</label>
+                                    <div class="col-md-2 ">
+                                        <input ng-if="!data.sharding.newSlbEntity" class="form-control" type="text"
+                                               ng-model="data.sharding.name"
+                                               placeholder={{resource.tools.shardingEdit.html.msg4}}/>
+
+                                        <input ng-if="data.sharding.newSlbEntity" class="form-control" type="text"
+                                               ng-model="data.sharding.name" readonly/>
+
+                                    </div>
+                                    <label class="col-md-2 status-red">{{resource.tools.shardingEdit.html.msg22}}</label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-md-3 "><i class="fa fa-circle"></i>{{resource.tools.shardingEdit.html.msg6}}</label>
+                                    <div class="col-md-2">
+                                        <div ng-if="!data.sharding.newSlbEntity" angucomplete-alt id="slbIdSelector"
+                                             placeholder={{resource.tools.shardingEdit.html.msg7}}
+                                             pause="100"
+                                             selected-object="selectSlbId"
+                                             remote-url="{{remoteSLBsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name"
+                                             title-field="id,name"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small"
+                                             input-changed="slbIdInputChanged">
+                                        </div>
+
+                                        <input ng-if="data.sharding.newSlbEntity" class="form-control" type="text"
+                                               ng-value="getSlbDetail(data.sharding['targetSlbId'])" readonly/>
+
+                                    </div>
+                                    <label class="col-md-2 status-red">{{resource.tools.shardingEdit.html.msg8}}</label>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 160px"
+                                     ng-show="query.slbId || query.shardingId">
+                                    <label class="pull-left " style="margin-left: 10px"><i class="fa fa-cloud"></i>{{resource.tools.shardingEdit.html.msg9}}</label>
+                                    <div class="col-md-12">
+                                        <div class="pull-right">
+                                            <span class="pull-right">
+                                                <button ng-disabled="creationDisabled()"
+                                                        ng-click="startSlbCreation()"
+                                                        ng-show="!data.sharding.newSlbEntity"
+                                                        class="btn btn-icon btn-info btn-rounded"> <i
+                                                        class="fa fa-wrench"></i> {{resource.tools.shardingEdit.html.msg11}}</button>
+                                                <span ng-click="slbDataRefresh()" style="cursor: pointer">
+                                                    <i class="fa fa-refresh"></i>{{resource.tools.shardingEdit.html.msg12}}
+                                                </span>
+                                            </span>
+                                        </div>
+
+                                        <ul class="timeline" id="slb-area">
+                                            <li data-ng-repeat="stage in data.slbCreationStages"
+                                                style="cursor: pointer">
+                                                <div class="timeline-badge" style="color:red;"
+                                                     ng-class="getSlbCreationStatus($index, stage)"
+                                                     ng-click="goToSlbCreation()">{{resource.tools.shardingEdit.js.stages[stage]}}
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom:60px"
+                                     ng-show="data.sharding && data.sharding.newSlbEntity && data.sharding.newSlbEntity.status=='成功创建'">
+                                    <label class="col-md-12 "><i class=" fa fa-rocket"></i>{{resource.tools.shardingEdit.html.msg13}}</label>
+                                    <div class="col-md-12">
+                                        <div class="pull-right">
+                                            <span class="pull-right">
+                                                <button ng-disabled="creationDisabled()"
+                                                        ng-click="startVsCreation()"
+                                                        ng-show="!data.sharding.vsMigrationEntity"
+                                                        class="btn btn-icon btn-info btn-rounded"> <i
+                                                        class="fa fa-wrench"></i> {{resource.tools.shardingEdit.html.msg14}}</button>
+                                                <span ng-click="vsDataRefresh()" style="cursor: pointer">
+                                                    <i class="fa fa-refresh"></i>{{resource.tools.shardingEdit.html.msg12}}
+                                                </span>
+                                            </span>
+                                        </div>
+
+                                        <ul class="timeline" id="vs-area">
+                                            <li data-ng-repeat="stage in data.vsesStages" style="cursor: pointer">
+                                                <div class="timeline-badge "
+                                                     ng-class="getVsCreationStatus($index, stage)"
+                                                     ng-click="goToVsCreation()">{{stage}}
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="modals">
+
+                                <div class="modal fade" id="confirmCreateSlbDialog" role="dialog">
+                                    <div class="modal-dialog">
+                                        <!-- Modal content-->
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;
+                                                </button>
+                                                <h4 class="modal-title">{{resource.tools.shardingEdit.html.msg16}}</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row form-group">
+                                                    <label class="col-md-5">SLB:</label>
+                                                    <div class="col-md-7">
+                                                        <div>
+                                                            <a href="/portal/slb#?env={{env}}&slbId={{data.targetSlb.id}}">{{data.targetSlb.id}}/{{data.targetSlb.name}}
+                                                                <i class="tooltip-hand fa fa-hand-o-right "><b>{{resource.tools.shardingEdit.html.msg17}}</b></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <label class="col-md-5">IDC</label>
+                                                    <div class="col-md-5">
+                                                        {{data.targetSlb.properties.idc}}
+                                                    </div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <label class="col-md-5">Zone</label>
+                                                    <div class="col-md-5">
+                                                        {{data.targetSlb.properties.zone}}
+                                                    </div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <label class="col-md-5">Application Type</label>
+                                                    <div class="col-md-5">
+                                                        {{data.targetSlb.properties.apptype || "N/A"}}
+                                                    </div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <label class="col-md-5">PCI</label>
+                                                    <div class="col-md-5">
+                                                        {{data.targetSlb.properties.pci=='true'?'是':'否'}}
+                                                    </div>
+                                                </div>
+
+                                                <div class="row form-group">
+                                                    <label class="col-md-5">BGP</label>
+                                                    <div class="col-md-5">
+                                                        {{data.targetSlb.properties.bgp=='true'?'是':'否'}}
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-footer" style="margin-bottom: -30px;">
+                                                    <div class="pull-right">
+                                                        <a class="btn btn-info" ng-click="confirmCreateSlb()"
+                                                           data-dismiss="modal">{{resource.tools.shardingEdit.html.msg18}}
+                                                        </a>
+                                                        <button type="button" class="btn btn-warning"
+                                                                data-dismiss="modal">
+                                                            {{resource.tools.shardingEdit.html.msg19}}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal fade" id="confirmCreateVsDialog" role="dialog">
+                                    <div class="modal-dialog">
+                                        <!-- Modal content-->
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;
+                                                </button>
+                                                <h4 class="modal-title"><i class="fa fa-th-large"
+                                                                           style="margin-right: 10px"></i>{{resource.tools.shardingEdit.html.msg20}}</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row form-group">
+                                                    <label class="col-md-5">From SLB</label>
+                                                    <div class="col-md-5">
+                                                        {{data.sharding.targetSlbId}}
+                                                    </div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <label class="col-md-5">To SLB</label>
+                                                    <div class="col-md-5">
+                                                        {{data.sharding.newSlbEntity['slb-data'][0]['new-slb-id']}}
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div class="modal-footer">
+                                                <div class="pull-right">
+                                                    <a class="btn btn-info" ng-click="confirmCreateVs()"
+                                                       data-dismiss="modal">确认
+                                                    </a>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource.tools.shardingEdit.html.msg19}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--<div class="col-md-12">-->
+                            <!--<div class="pull-right" style="padding-top: 60px">-->
+                            <!--<button ng-click="saveBasic()"-->
+                            <!--class="btn btn-info m-b-5" ng-disabled="nextDisabled()"><span>{{getNextText()}}</span>-->
+                            <!--</button>-->
+                            <!--</div>-->
+                            <!--</div>-->
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+            <div class="container pull-left">
+                &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                    href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+                SLB Team</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="/static-new/global.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<!--Auto complete CSS and JS-->
+<!--DateTime JS-->
+<script src="/static-new/apps/tools/slb-sharding-application.js"></script>
+<script src="/static-new/main/tools/slb-edit-sharding.js"></script>
+
+</body>
+</html>

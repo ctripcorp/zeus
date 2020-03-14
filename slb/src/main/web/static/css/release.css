@@ -1,0 +1,44 @@
+.slb-conf{
+    margin:0 0 30px 0;
+}
+.slb-conf,.slb-release{
+    margin: 20px 0;
+    padding-left:30px;
+}
+.slb-info{
+    margin-bottom: 5px;
+}
+.slb-link{
+    font-weight: bold;
+}
+.server-info{
+    width:200px;
+}
+.server-conf-version{
+    display: none;
+}
+.info-types-area{
+    padding:0 15px;
+}
+.info-types li a{
+    color:gray;
+}
+.info-types li a:hover{
+    color:#337ab7;
+}
+.info-types li.current a{
+    color:#337ab7;
+    font-weight: bold;
+}
+.commits-info{
+    margin:20px 10px;
+}
+.commits-info div.row{
+    padding:0 20px;
+}
+.release-table  tbody tr td{
+    border-top: none;
+}
+.status-revoked{
+    color:#f0ad4e;
+}

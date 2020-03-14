@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Edit Group</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/group/group-edit.css">
+</head>
+
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel-half " style="overflow: hidden; outline: none;">
+</aside>
+<section class="middle-content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="wraper container-fluid">
+                <!-- Basic Form Wizard -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default" id="inputarea">
+
+                            <div class="panel-body">
+                                <div class="container group-edit-container" id="group-edit-area" ng-app="groupEditApp"
+                                     ng-controller="groupEditController" ng-cloak>
+                                    <form class="form-horizontal" role="form" id="newGroupForm">
+                                        <div class="alert alert-info" data-class="body-alert">
+                                            <b>{{resource['groupnew']["groupnew_groupEditApp_tooltip"]}}</b>
+                                        </div>
+
+                                        <div class="container query-container edit-container">
+                                            <div class="row group-id">
+                                                <div class="col-md-2"><label class="control-label">{{resource['groupnew']["groupnew_groupEditApp_id"]}}:</label></div>
+                                                <div class="col-md-10">
+                                                    <input type="text" class="form-control" id="group-id"
+                                                           ng-model="groupInfo.id" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="row group-name">
+                                                <div class="col-md-2">
+                                                    <label class="control-label">{{resource['groupnew']['groupnew_groupEditApp_name']}}:</label>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <input type="text" class="form-control" id="group-name"
+                                                           ng-model="groupInfo.name" placeholder="{{resource['groupnew']['groupnew_groupEditApp_name_placeholder']}}"
+                                                           data-validator-type="validation" data-validator="required">
+                                                </div>
+                                            </div>
+                                            <div class="row group-appid">
+                                                <div class="col-md-2">
+                                                    <label class="control-label">{{resource['groupnew']['groupnew_groupEditApp_appid']}}:</label>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <input type="text" class="form-control" id="group-appId"
+                                                           ng-model="groupInfo['app-id']" placeholder="{{resource['groupnew']['groupnew_groupEditApp_appid_placeholder']}}"
+                                                           data-validator-type="validation"
+                                                           data-validator="required integer">
+                                                </div>
+                                            </div>
+
+                                            <div class="row group-ssl">
+                                                <div class="col-md-2">
+                                                    <label class="control-label">{{resource['groupnew']['groupnew_groupEditApp_isssl']}}:</label>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <div class="i-checkbox">
+                                                        <div class="i-checkbox">
+                                                            <label>
+                                                                <input type="checkbox" ng-model="groupInfo.ssl"
+                                                                       disabled/>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div class="row group-vs">
+                                                <div class="col-md-2">
+                                                    <label class="control-label">{{resource['groupnew']['groupnew_groupEditApp_gvs']}}:</label>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <table class="table table-bordered table-striped ng-scope ng-table">
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Path</th>
+                                                            <th>Name</th>
+                                                            <th>Rewrite</th>
+                                                            <th>Priority</th>
+                                                            <th>Operation</th>
+                                                        </tr>
+                                                        <tr ng-repeat="col in groupVirtualServersTable.columns">
+                                                            <td>
+                                                                <span>{{col['virtual-server'].id}}</span>
+                                                            </td>
+                                                            <td width="auto">
+                                                                <span>{{col.path}}</span>
+                                                            </td>
+                                                            <td width="auto">
+                                                                <span>{{col.name}}</span>
+                                                            </td>
+                                                            <td>
+                                                                <span ng-if="col.rewrite">{{col.rewrite}}</span>
+                                                            </td>
+                                                            <td>
+                                                                <span>{{col.priority}}</span>
+                                                            </td>
+                                                            <td width="15%">
+                                                                <div class="operation-bts">
+                                                                    <button id="editGroupVirtualServer{{$index}}"
+                                                                            class="btn btn-info"
+                                                                            ng-click="groupVirtualServersTable.edit(col,$index)">
+                                                                        <i class="fa fa-edit"></i></button>
+                                                                    <button id="removeGroupVirtualServer" class="btn"
+                                                                            ng-click="groupVirtualServersTable.remove($index)"
+                                                                            ng-hide="$index == 0 && groupVirtualServersTable.columns.length == 1">
+                                                                        <i class="fa fa-minus"></i></button>
+                                                                    <button id="addGroupVirtualServer"
+                                                                            class="btn btn-info"
+                                                                            ng-click="groupVirtualServersTable.add(col, $index)"
+                                                                            ng-show="$index == groupVirtualServersTable.columns.length -1">
+                                                                        <i class="fa fa-plus"></i></button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="row group-health">
+                                                <div class="col-md-2">
+                                                    <label class="control-label ">{{resource['groupnew']['groupnew_groupEditApp_healthcheck']}}:</label>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <input type="text" class="form-control" id="group-healthcheck_url"
+                                                           ng-model="groupInfo['health-check'].uri"
+                                                           placeholder="{{resource['groupnew']['groupnew_groupEditApp_healthcheck_placeholder']}}">
+                                                </div>
+                                            </div>
+
+                                            <div class="row group-health-policy">
+                                                <div class="col-md-2">
+                                                    <label class="control-label">{{resource['groupnew']['groupnew_groupEditApp_healthcheck_policy']}}:</label>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <table class="table table-bordered table-striped ng-scope ng-table">
+                                                        <tr>
+                                                            <th>Fails</th>
+                                                            <th>Passes</th>
+                                                            <th>Intervals</th>
+                                                            <th>TimeOut</th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <input class="form-control"
+                                                                       ng-model="groupInfo['health-check'].fails"
+                                                                       data-validator-type="validation"
+                                                                       data-validator="integer"/>
+                                                            </td>
+                                                            <td>
+                                                                <input class="form-control"
+                                                                       ng-model="groupInfo['health-check'].passes"
+                                                                       data-validator-type="validation"
+                                                                       data-validator="integer"/>
+                                                            </td>
+                                                            <td>
+                                                                <input class="form-control"
+                                                                       ng-model="groupInfo['health-check'].intervals"
+                                                                       data-validator-type="validation"
+                                                                       data-validator="integer"/>
+                                                            </td>
+                                                            <td>
+                                                                <input class="form-control"
+                                                                       ng-model="groupInfo['health-check'].timeout"
+                                                                       data-validator-type="validation"
+                                                                       data-validator="integer"/>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="row group-load">
+                                                <div class="col-md-2">
+                                                    <label class="control-label">{{resource['groupnew']['groupnew_groupEditApp_lbmethod']}}:</label>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <input type="text" class="form-control"
+                                                           ng-model="groupInfo['load-balancing-method'].type" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="row group-servers">
+                                                <div class="col-md-2">
+                                                    <label class="control-label ">{{resource['groupnew']['groupnew_groupEditApp_gs']}}:</label>
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <table class="table table-bordered table-striped ng-scope ng-table">
+                                                        <col/>
+                                                        <col/>
+                                                        <col/>
+                                                        <col/>
+                                                        <!--<col/>-->
+                                                        <!--<col/>-->
+                                                        <col width="120px"/>
+                                                        <tr>
+                                                            <th>IP</th>
+                                                            <th>HostName</th>
+                                                            <th>Port</th>
+                                                            <th>Weight</th>
+                                                            <!--<th>MaxFails</th>-->
+                                                            <!--<th>FailTimeout</th>-->
+                                                            <th>Operation</th>
+                                                        </tr>
+                                                        <tr ng-repeat="col in groupServersTable.columns">
+                                                            <td>
+                                                                <input class="form-control" ng-model="col.ip"
+                                                                       data-validator-type="validation"
+                                                                       data-validator="ip required"
+                                                                       id="groupServerIp{{$index}}" disabled/>
+                                                            </td>
+                                                            <td>
+                                                                <input class="form-control" ng-model="col['host-name']"
+                                                                       id="groupServerHostName{{$index}}" disabled/>
+                                                            </td>
+                                                            <td class="shortCol">
+                                                                <input class="form-control" ng-model="col.port"
+                                                                       id="groupServerPort{{$index}}" disabled/>
+                                                            </td>
+                                                            <td class="shortCol">
+                                                                <input class="form-control" ng-model="col.weight"
+                                                                       id="groupServerWeight{{$index}}" disabled/>
+                                                            </td>
+
+                                                            <td width="20%">
+                                                                <div class="operation-bts">
+                                                                    <button id="editGroupServer{{$index}}"
+                                                                            class="btn btn-info"
+                                                                            ng-click="groupServersTable.edit($index)"><i
+                                                                            class="fa fa-edit"></i></button>
+                                                                    <button id="removeGroupServer" class="btn"
+                                                                            ng-click="groupServersTable.remove($index)"
+                                                                            ng-hide="$index == 0 && groupServersTable.columns.length == 1">
+                                                                        <i class="fa fa-minus"></i></button>
+                                                                    <button id="addGroupServer" class="btn btn-info"
+                                                                            ng-click="groupServersTable.add($index)"
+                                                                            ng-show="$index == groupServersTable.columns.length -1">
+                                                                        <i class="fa fa-plus"></i></button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="form-group button-group">
+                                            <div class="col-md-12">
+                                                <button type="button" class="btn btn-default backLink">{{resource['groupnew']['groupnew_groupEditApp_return']}}</button>
+                                                <button type="submit" class="btn btn-info" id="validateEditGroupBtn">
+                                                    {{resource['groupnew']['groupnew_groupEditApp_submit']}}
+                                                </button>
+                                                <button type="button" class="btn btn-warning"
+                                                        ng-click="clearGroupInfo('edit')">{{resource['groupnew']['groupnew_groupEditApp_reset']}}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+
+
+                                    <!--Edit virtual Server modal-->
+                                    <div class="modal fade" id="addVirtualServerModel" role="dialog">
+                                        <div class="modal-dialog">
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="alert alert-warning row">
+                                                        <h4>{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning']}}:</h4>
+                                                        <ul class="operation-warnning-ul">
+                                                            <li>
+                                                                {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning1']}}
+                                                            </li>
+                                                            <li>
+                                                                {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning2']}}
+                                                            </li>
+
+                                                            <li>
+                                                                {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning3']}}
+                                                            </li>
+                                                            <li>
+                                                                {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning4']}}
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="container">
+                                                        <div class="col-md-12 query-container add-vs-dv"
+                                                             ng-repeat="col in groupVirtualServersTable.addedColumns">
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['vsid']}}:
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <div angucomplete-alt id="vsNew{{$index}}"
+                                                                         placeholder="{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['vsidplacehoder']}}"
+                                                                         pause="100"
+                                                                         selected-object="selectVsId"
+                                                                         remote-url="{{remoteVsesUrl()}}"
+                                                                         remote-url-request-formatter="cacheRequestFn"
+                                                                         search-fields="id,name"
+                                                                         title-field="id"
+                                                                         description-field="name"
+                                                                         minlength="0"
+                                                                         match-class="highlight"
+                                                                         initial-value="col['virtual-server']['id']"
+                                                                         disable-input="false"
+                                                                         input-class="form-control form-control-small">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-8">
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['path']}}:
+                                                                </div>
+                                                                <div class="col-md-10">
+                                                                    <div class="row">
+
+                                                                        <div class="col-md-1"
+                                                                             ng-show="showSuffixText(col.path)"
+                                                                             style="margin: 0px -50px">
+                                                                            ~* ^
+                                                                        </div>
+                                                                        <div class="col-md-7">
+                                                                            <input ng-focus="focusGField('path')"
+                                                                                   style=""
+                                                                                   class="form-control pull-left"
+                                                                                   ng-model="col.showPath"
+                                                                                   id="groupNewVsPath{{$index}}"/>
+                                                                        </div>
+                                                                        <div class="col-md-1"
+                                                                             ng-show="showSuffixText(col.path)"
+                                                                             style="margin: 0px -20px">
+                                                                            ($|/|\?)
+                                                                        </div>
+
+                                                                        <div class="col-md-3">
+                                                                            <b>IsRoot?</b><input
+                                                                                ng-click="toggleAddRootPath()"
+                                                                                id="pathAddRootSetting{{$index}}"
+                                                                                type="checkbox" value=""/>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['name']}}:
+                                                                </div>
+                                                                <div class="col-md-10">
+                                                                    <div class="row">
+                                                                        <div class="col-md-1" class="show-text" ng-show="col.showNamePrefix"
+                                                                             style="margin: 0px -50px">
+                                                                            {{namePrefix}}
+                                                                        </div>
+                                                                        <div class="col-md-7">
+                                                                            <input ng-focus="focusGField('name')" style=""
+                                                                                   class="form-control pull-left"
+                                                                                   ng-model="col.showName"
+                                                                                   id="groupNewVsName{{$index}}" disabled/>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <button data-toggle="modal"
+                                                                                    data-target="#doubleConfirmAddNameModal"
+                                                                                    id="newGroupName{{index}}"
+                                                                                    class="btn btn-xs btn-info col-right"><i
+                                                                                class="fa fa-edit"></i></button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['rewrite']}}:
+                                                                </div>
+                                                                <div class="col-md-10">
+                                                                    <div class="row">
+                                                                        <div class="col-md-9">
+                                                                            <input ng-focus="focusGField('rewrite')"
+                                                                                   class="form-control group-rewrite"
+                                                                                   ng-model="col.rewrite"
+                                                                                   id="groupNewVsRewrite{{$index}}"
+                                                                                   disabled/>
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <button data-toggle="modal"
+                                                                                    data-target="#doubleConfirmAddRewriteModal"
+                                                                                    id="newGroupRewrite{{index}}"
+                                                                                    class="btn btn-xs btn-info col-right">
+                                                                                <i class="fa fa-edit"></i></button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['priority']}}:
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <div class="row">
+                                                                        <div class="col-md-10">
+                                                                            <input ng-focus="focusGField('priority')"
+                                                                                   class="form-control group-priority"
+                                                                                   data-toggle="tooltip"
+                                                                                   title="{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['priorityplaceholder']}}"
+                                                                                   ng-model="col.priority"
+                                                                                   id="groupVsPriority{{$index}}"
+                                                                                   data-validator-type="validation"
+                                                                                   data-validator="number" disabled/>
+
+                                                                        </div>
+                                                                        <div class="col-md-2">
+                                                                            <button data-toggle="modal"
+                                                                                    data-target="#doubleConfirmAddPriorityModal"
+                                                                                    id="NewGroupPriority{{index}}"
+                                                                                    class="btn btn-xs btn-info"><i
+                                                                                    class="fa fa-edit"></i></button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-8">
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="field-description">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info "
+                                                            id="saveNewVirtualServer">{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['submit']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="editVirtualServerModel" role="dialog">
+                                        <div class="modal-dialog">
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="alert alert-warning row">
+                                                        <h4>{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning']}}:</h4>
+                                                        <ul class="operation-warnning-ul">
+                                                            <li>
+                                                                {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning1']}}
+                                                            </li>
+                                                            <li>
+                                                                {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning2']}}
+                                                            </li>
+
+                                                            <li>
+                                                                {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning3']}}
+                                                            </li>
+                                                            <li>
+                                                                {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['warning4']}}
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="container edit-vs-table">
+                                                        <div class="col-md-12 query-container"
+                                                             ng-repeat="col in groupVirtualServersTable.selectedColumn">
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['vsid']}}
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <div angucomplete-alt id="vsEdit{{$index}}"
+                                                                         placeholder="{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['vsidplacehoder']}}"
+                                                                         pause="100"
+                                                                         selected-object="selectVsId"
+                                                                         remote-url="{{remoteVsesUrl()}}"
+                                                                         remote-url-request-formatter="cacheRequestFn"
+                                                                         search-fields="id,name"
+                                                                         title-field="id"
+                                                                         description-field="name"
+                                                                         minlength="0"
+                                                                         match-class="highlight"
+                                                                         initial-value="col['virtual-server']['id']"
+                                                                         disable-input="vsBindingDisabled"
+                                                                         input-class="form-control form-control-small">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-8">
+                                                                    <button data-target="#doubleConfirmEditVSModal"
+                                                                            data-toggle="modal" id="editVsId{{index}}"
+                                                                            class="btn btn-xs btn-info short-right"><i
+                                                                            class="fa fa-edit"></i></button>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['path']}}:
+                                                                </div>
+                                                                <div class="col-md-10">
+                                                                    <div class="row">
+                                                                        <div class="col-md-1"
+                                                                             ng-show="showSuffixText(col.path)"
+                                                                             style="margin: 0px -50px">
+                                                                            ~* ^
+                                                                        </div>
+                                                                        <div class="col-md-7">
+                                                                            <input ng-focus="focusGField('path')"
+                                                                                   style=""
+                                                                                   class="form-control pull-left"
+                                                                                   ng-model="col.showPath"
+                                                                                   id="groupEditVsPath{{$index}}"
+                                                                                   disabled/>
+                                                                        </div>
+                                                                        <div class="col-md-1" style="margin: 0px -20px"
+                                                                             ng-show="showSuffixText(col.path)">
+                                                                            ($|/|\?)
+                                                                        </div>
+                                                                        <div class="col-md-2">
+                                                                            <b>IsRoot?</b><input
+                                                                                ng-click="toggleEditRootPath()"
+                                                                                id="pathEditRootSetting{{$index}}"
+                                                                                type="checkbox" value="" disabled/>
+                                                                        </div>
+
+                                                                        <div class="col-md-1">
+                                                                            <button data-toggle="modal"
+                                                                                    data-target="#doubleConfirmEditPathModal"
+                                                                                    id="editVsPath{{index}}"
+                                                                                    class="btn btn-xs btn-info"><i
+                                                                                    class="fa fa-edit"></i></button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['name']}}:
+                                                                </div>
+                                                                <div class="col-md-10">
+                                                                    <div class="row">
+                                                                        <div class="col-md-1" class="show-text" ng-show="col.showNamePrefix"
+                                                                             style="margin: 0px -50px">
+                                                                            {{namePrefix}}
+                                                                        </div>
+                                                                        <div class="col-md-7">
+                                                                            <input ng-focus="focusGField('name')" style=""
+                                                                                   class="form-control pull-left"
+                                                                                   ng-model="col.showName"
+                                                                                   id="groupEditVsName{{$index}}" disabled/>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <button data-toggle="modal"
+                                                                                    data-target="#doubleConfirmEditNameModal"
+                                                                                    id="editGroupName{{index}}"
+                                                                                    class="btn btn-xs btn-info col-right"><i
+                                                                                class="fa fa-edit"></i></button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['rewrite']}}:
+                                                                </div>
+                                                                <div class="col-md-10">
+                                                                    <div class="row">
+                                                                        <div class="col-md-7">
+                                                                            <input ng-focus="focusGField('rewrite')"
+                                                                                   class="form-control group-rewrite"
+                                                                                   ng-model="col.rewrite"
+                                                                                   id="groupEditVsRewrite{{$index}}"
+                                                                                   disabled/>
+                                                                        </div>
+                                                                        <div class="col-md-5">
+                                                                            <button data-toggle="modal"
+                                                                                    data-toggle="modal"
+                                                                                    data-target="#doubleConfirmEditRewriteModal"
+                                                                                    id="editGroupRewrite{{index}}"
+                                                                                    class="btn btn-xs btn-info col-right">
+                                                                                <i class="fa fa-edit" disabled></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row">
+                                                                <div class="col-md-2">
+                                                                    {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['priority']}}:
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <div class="row">
+                                                                        <div class="col-md-10">
+                                                                            <input ng-focus="focusGField('priority')"
+                                                                                   class="form-control group-priority"
+                                                                                   data-toggle="tooltip"
+                                                                                   title="{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['priorityplaceholder']}}"
+                                                                                   ng-model="col.priority"
+                                                                                   id="groupEditVsPriority{{$index}}"
+                                                                                   data-validator-type="validation"
+                                                                                   data-validator="number" disabled/>
+                                                                        </div>
+                                                                        <div class="col-md-2">
+                                                                            <button data-toggle="modal"
+                                                                                    data-target="#doubleConfirmEditPriorityModal"
+                                                                                    id="EditGroupPriority{{index}}"
+                                                                                    class="btn btn-xs btn-info"><i
+                                                                                    class="fa fa-edit"></i></button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-8">
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="field-description">
+
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info "
+                                                            id="saveEditVirtualServer">{{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['submit']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_addVirtualServerModel']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="modal fade" id="confirmEditGroup" role="dialog">
+                                        <div class="modal-dialog">
+
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_confirmEditGroup']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.reason"
+                                                               placeholder="{{resource['groupnew']['groupnew_groupEditApp_confirmEditGroup']['reason']}}"></textarea>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button ng-disabled="!query.reason" type="button" class="btn btn-info" ng-click="updateGroup()"
+                                                            data-dismiss="modal" data-toggle="modal">{{resource['groupnew']['groupnew_groupEditApp_confirmEditGroup']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_confirmEditGroup']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal fade" id="newGroupDialog" role="dialog">
+                                        <div class="modal-dialog">
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_newGroupDialog']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                </div>
+                                                <div class="created-group-id" hidden="hidden"></div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default btn-warning"
+                                                            ng-show="showForceUpdateBt"
+                                                            ng-click="forceCreateGroupDismiss()" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_newGroupDialog']['force']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-default btn-info"
+                                                            ng-click="createGroupDismiss()" data-dismiss="modal"> {{resource['groupnew']['groupnew_groupEditApp_newGroupDialog']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <!--Double confirm rows-->
+                                    <div class="modal fade" id="doubleConfirmRemoveGroupVirtualServerModal"
+                                         role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmRemoveGroupVirtualServerModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmRemoveGroupVirtualServerModal']['title']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmRemoveGroupVirtualServer()"
+                                                            data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmRemoveGroupVirtualServerModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmRemoveGroupVirtualServerModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal fade" id="doubleConfirmAddGroupVirtualServerModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddGroupVirtualServerModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddGroupVirtualServerModal']['message']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmAddGroupVirtualServer()"
+                                                            data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddGroupVirtualServerModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddGroupVirtualServerModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal fade" id="doubleConfirmAddPriorityModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddPriorityModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddPriorityModal']['message']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmAddPriority()" data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddPriorityModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddPriorityModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="doubleConfirmAddNameModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddNameModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddNameModal']['message']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmAddName()" data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddNameModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddNameModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="doubleConfirmAddRewriteModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddRewriteModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                        <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddRewriteModal']['message']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmAddRewrite()" data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddRewriteModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmAddRewriteModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="doubleConfirmEditGroupVirtualServerModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditGroupVirtualServerModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditGroupVirtualServerModal']['message']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmEditGroupVirtualServer()"
+                                                            data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditGroupVirtualServerModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditGroupVirtualServerModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="doubleConfirmEditPriorityModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditPriorityModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditPriorityModal']['message']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmEditPriority()" data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditPriorityModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditPriorityModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="doubleConfirmEditNameModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditNameModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditNameModal']['message']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmEditName()" data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditNameModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditNameModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="doubleConfirmEditRewriteModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditRewriteModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                        <span class="warning-important">
+                            {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditRewriteModal']['message']}}
+                        </span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmEditRewrite()" data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditRewriteModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditRewriteModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="doubleConfirmEditPathModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditPathModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditPathModal']['message']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmEditPath()" data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditPathModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditPathModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="doubleConfirmEditVSModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditVSModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditVSModal']['message']}}</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmEditVs()" data-dismiss="modal">{{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditVSModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['groupnew']['groupnew_groupEditApp_doubleConfirmEditVSModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid page-foot" id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/util.js"></script>
+<script src="/static/js/group-edit.js"></script>
+</html>

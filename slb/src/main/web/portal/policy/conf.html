@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+
+    <!--For diff patch-->
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+    <link rel="stylesheet" href="/static/css/animate.css">
+
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/conf.css">
+
+    <link rel="stylesheet" href="/static/lib/code-mirro/codemirror.css">
+    <title>查看 Nginx 配置</title>
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('basic')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["navs"]["navs_basic"]}}</span></a></li>
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_log"]}}</span></a>
+            </li>
+
+
+            <li class="active"><a href="{{generateLink('conf')}}"><i class="fa fa-file-code-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_conf"]}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="pull-left row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+        <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+             ng-controller="summaryController"
+             ng-cloak>
+            <div class="page-title">
+                <div>
+                    <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                         placeholder="{{target.name}}"
+                         pause="100"
+                         selected-object="selectTarget"
+                         remote-url="{{remoteUrl()}}"
+                         ng-click="clickTarget()"
+                         remote-url-request-formatter="cacheRequestFn"
+                         search-fields="id,name,pinyin"
+                         title-field="id,name"
+                         minlength="0"
+                         match-class="highlight"
+                         input-class="form-control form-control-small">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="conf-area" ng-app="confApp" ng-controller="confController" class="breadcrumb-follow" ng-cloak>
+            <div class="info-types-area row">
+                <ul class="info-types nav nav-pills  pull-left">
+                    <li ng-class="isCurrentInfoPage(x)"
+                        data-ng-repeat="x in infoTypes.links">
+                        <a href="javascript:void(0)" ng-click="setInfoType(x)"> {{generateVSLinkText(x)}} </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="content-area row">
+                <div data-ng-repeat="vs in infoTypes.links">
+                    <div style="margin-left: 15px; margin-top: 15px" ng-show="showInfo(vs)">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" data-ng-repeat="slb in data.vsSlbs[vs]"
+                                ng-class="isActivateSlb($index)" ng-click="changeSlb(vs,slb, $event)">
+                                <a href="#conf_{{vs}}_{{slb}}" role="tab" data-toggle="tab">
+                                    {{generateSLBLinkText(slb)}}
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Tab panes -->
+                        <div class="tab-content" id="vs_{{vs}}">
+                            <div role="tabpanel" id="panel_{{vs}}_{{slb}}" class="tab-pane"
+                                 ng-class="isActivateSlb($index)" data-ng-repeat="slb in data.vsSlbs[vs]"
+                                 id="conf_{{vs}}_{{slb}}">
+                                <div>
+                                    <span style="font-weight: bold;">HOST</span>
+                                    <textarea name="nginxInput_{{vs}}_{{slb}}" class="slbnginx"
+                                              style="display: none;"></textarea>
+                                </div>
+
+                                <div style="margin-top: 50px">
+                                    <span style="font-weight: bold;">Upstream</span>
+                                    <textarea name="nginxInput2_{{vs}}_{{slb}}" class="slbnginx"
+                                              style="display: none;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+<script src="/static/lib/code-mirro/codemirror.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/js/nginx_conf_formatter.js"></script>
+<script src="/static/lib/code-mirro/nginx.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/traffic-policy-conf.js"></script>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+</html>

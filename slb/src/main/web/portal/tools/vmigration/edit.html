@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Create New Domain Migration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <!--<script src="/static/lib/lodash/loadash.min.js"></script>-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/global-new.css">
+
+
+    <script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+    <script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+    <script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+
+    <script src="/static-new/model/Class.js"></script>
+    <script src="/static-new/repository/unitwork/command.js"></script>
+    <script src="/static-new/repository/unitwork/repository.js"></script>
+    <script src="/static-new/util/Constants.js"></script>
+
+    <script src="/static/js/charts.js"></script>
+    <script src="/static-new/viewmodel/traffic.js"></script>
+    <script src="/static-new/repository/traffic/traffic-repository.js"></script>
+    <script src="/static-new/service/traffic/traffic-interface.js"></script>
+    <script src="/static-new/service/traffic/impl/vs-traffic-service.js"></script>
+
+    <style type="text/css">
+        #confirmRollbackTrafficChanges .modal-dialog {
+            width: 70%;
+        }
+        .table-header tr td{
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('list')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["tools"]["headerInfoController_toolsList"]}}
+</span></a></li>
+
+            <li class=""><a href="{{generateLink('url')}}"><i class="fa fa-tripadvisor"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_URLProbeTool"]}}
+</span></a>
+            </li>
+
+
+            <li class=" tools-hide"><a href="{{generateLink('cert-upgrade')}}"><i class="fa fa-certificate"></i> <span
+                    class="nav-label">证书升级</span></a>
+            </li>
+            <li class="tools-hide"><a href="{{generateLink('slb-sharding')}}"><i class="fa fa-cogs"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_SLBSplitTool"]}}
+</span></a>
+            </li>
+
+            <li class="tools-hide active"><a href="{{generateLink('vs-migration')}}"><i class="fa fa-rocket"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMigrationTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-seperate')}}"><i class="fa fa-delicious"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSSplitTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-merge')}}"><i class="fa fa-steam"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMergeTool"]}}
+</span></a>
+            </li>
+
+
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+
+        <div class="breadcrumb-follow" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController" ng-cloak="">
+            <!--tile summary Area-->
+            <!--count summary Area-->
+            <div class="">
+                <div class="row">
+                    <!--Top navigation bar-->
+                    <div class="col-md-12">
+                        <div class="btn-group btn-group-justified m-b-8">
+                            <a data-ng-repeat="(k,v) in data.nav"
+                               ng-class="stepClass(k, $index)" class="nav-class"
+                               role="button">{{$index+1}}: {{resource.tools.vmigrationEdit.js[v]}}</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="">
+                    <div class="row new-row">
+                        <!--New row-->
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">{{resource.tools.vmigrationEdit.html.msg1}}</h4>
+                                </div>
+                                <!--New-->
+                                <div class="panel-body"
+                                     ng-show="data.steps.migration['vses']==undefined">
+                                    <!--来自的SLB-->
+                                    <div class="col-md-5 panel" style="cursor: pointer; "
+                                         ng-click="selectSourceSlb()">
+                                        <div class="panel-body p-t-0">
+                                            <div class="media-main"
+                                                 ng-show="data.steps.migration['source-slb']==undefined">
+                                                <a class="pull-left">
+                                                    <div class="thumb-lg img-circle bx-s" alt="">
+                                                        <div class="icon-center">
+                                                            <i class="fa fa-plus fa-4"></i>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                                <div class="info">
+                                                    <h4 class="ng-binding">{{resource.tools.vmigrationEdit.html.msg2}}</h4>
+                                                    <p class="text-muted ng-binding">{{resource.tools.vmigrationEdit.html.msg3}}
+                                                        {{resource.tools.vmigrationEdit.html.msg4}}</p>
+                                                </div>
+                                            </div>
+                                            <div class="media-main"
+                                                 ng-show="data.steps.migration['source-slb']!=undefined">
+                                                <a class="pull-left">
+                                                    <div class="thumb-lg img-circle bx-s" alt="">
+                                                        <div class="icon-center"
+                                                             style="line-height: 100px;">
+                                                            <span style="font-size: 30px;">{{data.steps.migration['source-slb']}}</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                                <div class="info">
+                                                    <h4 class="ng-binding">{{resource.tools.vmigrationEdit.html.msg5}}</h4>
+                                                    <p class="text-muted ng-binding">{{resource.tools.vmigrationEdit.html.msg6}}:
+                                                        {{data.steps.migration['source-slb']}}/{{data.slbs[data.steps.migration['source-slb']].name}},
+                                                        {{resource.tools.vmigrationEdit.html.msg7}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- panel-body -->
+                                    </div>
+                                    <div class="col-md-2"
+                                         style="text-align: center; line-height: 150px">
+                                        <i class="fa fa-arrow-right fa-4" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="col-md-5 panel" style="cursor: pointer; "
+                                         ng-click="selectTargetSlb()">
+                                        <div class="panel-body p-t-0">
+                                            <div class="media-main"
+                                                 ng-show="data.steps.migration['target-slb']==undefined">
+                                                <a class="pull-left">
+                                                    <div class="thumb-lg img-circle bx-s" alt="">
+                                                        <div class="icon-center">
+                                                            <i class="fa fa-plus fa-4"></i>
+                                                        </div>
+                                                    </div>
+                                                </a>
+
+                                                <div class="info">
+                                                    <h4 class="ng-binding">{{resource.tools.vmigrationEdit.html.msg8}}</h4>
+                                                    <p class="text-muted ng-binding">{{resource.tools.vmigrationEdit.html.msg9}}
+                                                        {{resource.tools.vmigrationEdit.html.msg11}}</p>
+                                                </div>
+                                            </div>
+                                            <div class="media-main"
+                                                 ng-show="data.steps.migration['target-slb']!=undefined">
+                                                <a class="pull-left">
+                                                    <div class="thumb-lg img-circle bx-s" alt="">
+                                                        <div class="icon-center"
+                                                             style="line-height: 100px;">
+                                                            <span style="font-size: 30px;">{{data.steps.migration['target-slb']}}</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                                <div class="info">
+                                                    <h4 class="ng-binding">{{resource.tools.vmigrationEdit.html.msg12}}</h4>
+                                                    <p class="text-muted ng-binding">{{resource.tools.vmigrationEdit.html.msg13}}:
+                                                        {{data.steps.migration['target-slb']}}/{{data.slbs[data.steps.migration['target-slb']].name}},
+                                                        {{resource.tools.vmigrationEdit.html.msg7}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- panel-body -->
+                                    </div>
+
+                                    <div class="col-md-12 panel" ng-show="showVsesPanel()">
+                                        <div class="panel-heading row">
+                                            <div class="col-md-6 status-red" style="line-height: 35px;">
+                                                *{{resource.tools.vmigrationEdit.html.msg14}}Virtual Server
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="input-group pull-left" style="width: 80%;">
+                                                                <span class="input-group-btn"><button type="button"
+                                                                                                      data-toggle="modal"
+                                                                                                      data-target="#domainFilterDialog"
+                                                                                                      class="btn btn-effect-ripple ">{{resource.tools.vmigrationEdit.html.msg15}}<span
+                                                                        style="font-size: 10px" class="status-red">({{resource.tools.vmigrationEdit.html.msg16}})</span></button></span>
+                                                    <input type="text" class="form-control"
+                                                           placeholder={{resource.tools.vmigrationEdit.html.msg17}}
+                                                           data-ng-model="domainText">
+
+
+                                                </div>
+                                                <div ng-click="toggleVses()" class=" pull-right" title={{resource.tools.vmigrationEdit.html.msg18}}
+                                                     style="line-height: 30px;">
+                                                    <i ng-class="vsListClass()"
+                                                       style="font-size: 20px; line-height: 40px"></i>
+                                                    <span style="margin-left: 5px">{{vsListContent()}}</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <a style="line-height: 30px;" ng-click="changeAvailible()"
+                                                   class="btn btn-info btn-xs pull-right">{{getAvailableContent()}}</a>
+                                            </div>
+                                        </div>
+
+                                        <div class="row" style="line-height: 40px">
+                                            <div class="col-md-12">
+                                                <label class="cr-styled pull-left">
+                                                    <input type="checkbox"
+                                                           ng-model="allChecked"
+                                                           ng-click="toggleCheckAll()"> <i class="fa"></i>
+                                                    <span style="font-weight: bold">{{resource.tools.vmigrationEdit.html.msg19}}</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="row"
+                                             style="max-height: 300px; overflow-y: scroll; overflow-x: hidden">
+
+                                            <label class="cr-styled col-md-12"
+                                                   style="padding-bottom: 4px"
+                                                   data-ng-repeat="v in data.slbVses[data.steps.migration['source-slb']]
+                                                   | domainFilter: domainText |
+                                                   availableFilter: query.availableVses |
+                                                    orderBy:'available':revers">
+
+                                                <input type="checkbox"
+                                                       ng-disabled="!(v.available && v.statusAvailable)"
+                                                       ng-model="currentChecked"
+                                                       ng-checked="isCurrentVsChecked(v.id)"
+                                                       ng-click="toggleSelectedVs(v.id, currentChecked)">
+                                                <i class="fa"></i>
+                                                VS:{{v.id}}/{{resource.tools.vmigrationEdit.html.msg23}}:{{v.name}}/QPS:<span class="status-red">{{data.vses[v.id].qps}}</span>/Group{{resource.tools.vmigrationEdit.html.msg21}}:
+                                                <span class="status-red">{{data.vses[v.id]['groupCount']}}</span>
+                                                <span style="font-weight: bold" class="status-red"
+                                                      ng-show="!v.available"><i
+                                                        class="fa fa-exclamation-triangle"
+                                                        aria-hidden="true"></i>({{resource.tools.vmigrationEdit.html.msg22}})</span>
+                                                <span style="font-weight: bold" class="status-red"
+                                                      ng-show="!v.statusAvailable"><i
+                                                        class="fa fa-exclamation-triangle"
+                                                        aria-hidden="true"></i>({{resource.tools.vmigrationEdit.html.msg24}})</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--Update-->
+                                <div class="panel-body"
+                                     ng-show="data.steps.migration['vses']!=undefined">
+                                    <div class="col-md-5 panel">
+                                        <div class="panel-body p-t-0">
+                                            <div class="media-main">
+                                                <a class="pull-left">
+                                                    <div class="thumb-lg img-circle bx-s" alt="">
+                                                        <div class="icon-center"
+                                                             style="line-height: 100px;">
+                                                            <span class="fa fa-3x">{{data.steps.migration['source-slb']}}</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                                <div class="info">
+                                                    <h4 class="ng-binding">
+                                                        {{data.slbs[data.steps.migration['source-slb']].name}}</h4>
+                                                    <p class="text-muted ng-binding">
+                                                        IDC:
+                                                        {{data.slbs[data.steps.migration['source-slb']].idc}};
+                                                        Vs{{resource.tools.vmigrationEdit.html.msg21}}:
+                                                        {{data.slbs[data.steps.migration['source-slb']].vsesCount}};
+                                                        {{resource.tools.vmigrationEdit.html.msg25}}:
+                                                        {{data.slbs[data.steps.migration['source-slb']].serverCount}},
+                                                        QPS:
+                                                        {{data.slbs[data.steps.migration['source-slb']].qps}}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2" style="text-align: center;margin-top: 40px;">
+                                        <i class="fa fa-arrow-right fa-4" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="col-md-5 panel">
+                                        <div class="panel-body p-t-0">
+                                            <div class="media-main">
+                                                <a class="pull-left">
+                                                    <div class="thumb-lg img-circle bx-s" alt="">
+                                                        <div class="icon-center"
+                                                             style="line-height: 100px;">
+                                                            <span class="fa fa-3x">{{data.steps.migration['target-slb']}}</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                                <div class="info">
+                                                    <h4 class="ng-binding">
+                                                        {{data.slbs[data.steps.migration['target-slb']].name}}</h4>
+                                                    <p class="text-muted ng-binding">
+                                                        IDC:
+                                                        {{data.slbs[data.steps.migration['target-slb']].idc}};
+                                                        Vs{{resource.tools.vmigrationEdit.html.msg21}}:
+                                                        {{data.slbs[data.steps.migration['target-slb']].vsesCount}};
+                                                        {{resource.tools.vmigrationEdit.html.msg25}}:
+                                                        {{data.slbs[data.steps.migration['target-slb']].serverCount}},
+                                                        QPS:
+                                                        {{data.slbs[data.steps.migration['target-slb']].qps}}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 highlight">{{resource.tools.vmigrationEdit.html.msg26}} Virtual
+                                            Server,源SLB共有{{data.slbs[data.steps.migration['source-slb']].vsesCount}}{{resource.tools.vmigrationEdit.html.msg28}}，
+                                            {{resource.tools.vmigrationEdit.html.msg29}} {{data.steps.migration['vses'].length}}{{resource.tools.vmigrationEdit.html.msg31}}
+                                        </div>
+                                        <div class="col-md-12" style="max-height: 300px; overflow-y: auto">
+                                            <label class="cr-styled col-md-5"
+                                                   data-ng-repeat="v in data.steps.migration['vses']">
+                                                <input type="checkbox" checked disabled>
+                                                <i class="fa"></i>
+                                                <a href="/portal/vs#?env={{env}}&vsId={{v}}">
+                                                    ID:{{v}}/{{resource.tools.vmigrationEdit.html.msg23}}:{{data.vses[v].name}}/QPS:<span
+                                                        class="status-red">{{data.vses[v].qps}}</span>/Group{{resource.tools.vmigrationEdit.html.msg21}}:
+                                                    <span
+                                                            class="status-red">{{data.vses[v]['groupCount']}}</span>
+                                                </a>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="panel-footer row dialog-footer" style="background: none">
+                                    <div class="col-md-6"></div>
+                                    <div class="col-md-5"></div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-info next-step-class pull-right"
+                                                ng-disabled="disableClassFirstToSecond()"
+                                                ng-click="firstToSecondClick()"
+                                                ng-show="data.steps.migration['vses']==undefined">
+                                            {{resource.tools.vmigrationEdit.html.msg32}}
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <!--Activate row-->
+                    <div class="row activate-row" ng-show="showStep(data.keys[1])">
+
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <div class="col-md-1">
+                                            <h4 class="panel-title">{{resource.tools.vmigrationEdit.html.msg33}}</h4>
+                                        </div>
+                                        <div class="col-md-11">
+                                            <button class="btn btn-info next-step-class pull-right"
+                                                    ng-click="secondToThirdClick()">
+                                                {{resource.tools.vmigrationEdit.html.msg34}}
+                                            </button>
+
+                                            <button style="margin-right: 10px;"
+                                                    class="btn btn-danger next-step-class pull-right"
+                                                    ng-click="retryFailedPublish()">
+                                                {{resource.tools.vmigrationEdit.html.msg35}}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="panel-body "
+                                     ng-show="!data.steps.migration['deployResult']">
+                                    <div class="alert alert-warning" role="alert">
+                                        <ul class="operation-warnning-ul row">
+                                            <li>第一步:将目标SLB填加到Virtual Server</li>
+                                            <li>{{resource.tools.vmigrationEdit.html.msg37}}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="panel-body" ng-show="data.steps.migration['deployResult']">
+                                    <div class="row">
+                                        <div class="col-md-10 highlight">
+                                            {{resource.tools.vmigrationEdit.html.msg38}}{{data.steps.migration['vses'].length}}{{resource.tools.vmigrationEdit.html.msg39}}<span
+                                                style="font-size: 20px"> {{getDeployResultState()}}</span> {{resource.tools.vmigrationEdit.html.msg41}}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button"
+                                                    class="btn btn-info btn-rounded btn-sm m-b-5 pull-right"
+                                                    ng-click="exportDomains()">{{resource.tools.vmigrationEdit.html.msg42}}
+                                            </button>
+                                        </div>
+                                        <div class="col-md-12" style="max-height: 300px; overflow-y: auto">
+                                            <div data-ng-repeat="(k,v) in data.steps.migration['deployResult']">
+                                                <div class="system-padding-top col-md-12 row"
+                                                     style="font-weight: bold">
+                                                    ({{$index+1}}) VS: {{k}}({{data.vses[k].name}})
+
+                                                </div>
+                                                <div data-ng-repeat="item in v | orderConfigFilter">
+                                                    <div class="col-md-6">{{item.task}}</div>
+                                                    <div class="col-md-6" ng-click="showErrorMessage(item)"
+                                                         ng-class="getConfigActivateClass(item)"
+                                                         ng-bind-html="getConfigActivateResult(item)">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="panel-footer row dialog-footer" style="background: none">
+                                    <div class="col-md-6"></div>
+                                    <div class="col-md-5">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-info next-step-class pull-right"
+                                                ng-click="secondToThirdClick()"
+                                                ng-show="data.steps[data.keys[1]] && !data.steps.migration.deployResult">
+                                            {{resource.tools.vmigrationEdit.html.msg43}}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row test-row" ng-show="showStep(data.keys[2])">
+                        <!--Test row-->
+                        <div class="col-md-12">
+                            <div class="panel panel-default" id="test-area">
+                                <div class="panel-heading">
+                                    <span class="panel-title">{{resource.tools.vmigrationEdit.html.msg44}}</span>
+                                    <button type="button" ng-disabled="disbableTestPassed()"
+                                            class="btn btn-info btn-rounded btn-sm m-b-5 pull-right"
+                                            ng-click="redoHealthCheck()">{{resource.tools.vmigrationEdit.html.msg45}}
+                                    </button>
+                                </div>
+                                <div class="panel-body" ng-show="!data.steps[data.keys[2]].status"
+                                     id="testArea">
+                                    <div class="alert alert-warning" role="alert"
+                                         style="margin-bottom: 0px">
+                                        <ul class="operation-warnning-ul row">
+                                            <li>{{resource.tools.vmigrationEdit.html.msg46}}
+                                            </li>
+                                            <li>{{resource.tools.vmigrationEdit.html.msg47}}<a ng-click="bindHostDialog()">{{resource.tools.vmigrationEdit.html.msg48}}</a>，{{resource.tools.vmigrationEdit.html.msg49}}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="row" style="max-height: 300px; overflow-y: auto">
+                                        <div data-ng-repeat="(k,v) in data.steps.migration['testResult']"
+                                             class="col-md-6 list-group">
+                                            <div>
+                                                <h5 style="font-weight: bold"
+                                                    class="list-group-item active">({{$index+1}}) VS:
+                                                    {{data.vses[k].name}}({{k}})</h5>
+                                                <div data-ng-repeat="(k1,v1) in v"
+                                                     class="list-group-item">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            {{resource.tools.vmigrationEdit.html.msg51}}:{{data.groups[k1].appName}}
+                                                        </div>
+                                                        <div class="col-md-5"
+                                                             ng-class="v1.message.toLowerCase()=='ok'?'status-green':'status-red'">
+                                                            {{resource.tools.vmigrationEdit.html.msg52}}: {{v1.message || 'Unknown' }}<a
+                                                                ng-click="getHealthCheckUrl(data.groups[k1], data.vses[k])">({{resource.tools.vmigrationEdit.html.msg54}})</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-body"
+                                     ng-show="data.steps[data.keys[2]].status=='Success'">
+                                    <div class="col-md-12">
+                                        <h4 class="status-green">
+                                            <i class="fa fa-check"></i>
+                                            {{resource.tools.vmigrationEdit.html.msg55}} <b>{{env| uppercase}}</b>, {{resource.tools.vmigrationEdit.html.msg56}}
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div class="panel-footer row dialog-footer" style="background: none"
+                                     ng-show="!data.steps[data.keys[2]].status">
+                                    <div class="col-md-6">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class=" status-red pull-right"
+                                             style="font-weight: bold;line-height: 30px;">
+                                            <input type="checkbox"
+                                                   ng-model="testPassed"
+                                                   ng-disabled="disbableTestPassed()"
+                                            >
+                                            <i class="fa"></i>
+                                            {{resource.tools.vmigrationEdit.html.msg57}}
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-info pull-right next-step-class"
+                                                ng-click="thirdToFourthClick()"
+                                                ng-show="testPassed">
+                                            {{resource.tools.vmigrationEdit.html.msg32}}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row dns-row" ng-show="showStep(data.keys[3])">
+                        <!--Dns row-->
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <span class="panel-title">{{resource.tools.vmigrationEdit.html.msg58}}</span>
+                                    <button type="button" ng-disabled="disbableDnsPassed()"
+                                            class="btn btn-info btn-rounded btn-sm m-b-5 pull-right fa fa-repeat"
+                                            ng-click="dnsCheck()">{{resource.tools.vmigrationEdit.html.msg59}}
+                                    </button>
+                                </div>
+                                <div class="panel-body" ng-show="!data.steps[data.keys[3]].status">
+                                    <div class="col-md-12">
+                                        <div class="alert alert-warning row dns-check-div"
+                                             style="margin-bottom: 0px">
+                                            <ul class="operation-warnning-ul">
+                                                <li>
+                                                    <a href="{{getDnsOperationMail()}}">{{resource.tools.vmigrationEdit.html.msg61}}</a>,
+                                                </li>
+                                                <li>
+                                                    {{resource.tools.vmigrationEdit.html.msg62}}
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="dns-check-div2" style="max-height: 300px; overflow-y: auto"
+                                             ng-show="data.steps.migration['dnsResult']">
+                                            <!--List the vpns of the vs domains -->
+                                            <div class="status-red">
+                                                {{resource.tools.vmigrationEdit.html.msg63}}{{data.steps.migration['vses'].length}}{{resource.tools.vmigrationEdit.html.msg64}} <span
+                                                    style="font-size: 20px">{{getVsDnsCheckFailedCount()}}</span> {{resource.tools.vmigrationEdit.html.msg65}}
+                                                {{resource.tools.vmigrationEdit.html.msg66}}
+                                            </div>
+                                            <div data-ng-repeat="(k,v) in data.steps.migration['dnsResult']"
+                                                 class="list-group row">
+                                                <h5 href="#" class="list-group-item active">
+                                                    ({{$index+1}})VS: {{data.vses[k].name}} {{resource.tools.vmigrationEdit.html.msg67}}
+                                                    {{resource.tools.vmigrationEdit.html.msg68}}
+                                                </h5>
+                                                <div class=" list-group-item col-md-12"
+                                                     data-ng-repeat="item in v.value">
+                                                    <div>
+                                                        <div class="col-md-5">{{item.name}}</div>
+                                                        <div class="col-md-5">{{item.ip}}</div>
+                                                        <div class="col-md-2"><i class="fa"
+                                                                                 ng-class="getDnsClass(item.ip)"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-body"
+                                     ng-show="data.steps[data.keys[3]].status=='Success'">
+                                    <div class="col-md-12">
+                                        <h4 class="status-green">
+                                            <i class="fa fa-check"></i>
+                                            {{resource.tools.vmigrationEdit.html.msg55}} <b>{{env| uppercase}}</b>, {{resource.tools.vmigrationEdit.html.msg71}}
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div class="panel-footer row dialog-footer" style="background: none"
+                                     ng-show="!data.steps[data.keys[3]].status">
+                                    <div class="col-md-12">
+                                        <table class="table table-bordered">
+                                            <thead class="table-header">
+                                            <tr>
+                                                <td>ID</td>
+                                                <td>Domains</td>
+                                                <td style="text-align: center">QPS</td>
+                                                <td>{{resource.tools.vmigrationEdit.html.msg72}}</td>
+                                                <td style="text-align: center">{{resource.tools.vmigrationEdit.html.msg74}}</td>
+                                                <td>{{resource.tools.vmigrationEdit.html.msg73}}</td>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <!--<tr data-ng-repeat="switch in data.steps[data.keys[3]]['dns-switch']">-->
+                                            <tr data-ng-repeat="vs in getVses(data.steps['migration']['vses'])">
+                                                <td>
+                                                    <a href="/portal/vs#?env={{env}}&vsId={{vs.id}}" target="_blank">{{vs.id}}({{vs.name}})</a>
+                                                </td>
+                                                <td>
+                                                    <ul>
+                                                        <li data-ng-repeat="domain in vs.domains">
+                                                            <a href="/portal/vs#?env={{env}}&vsId={{vs.id}}"
+                                                               target="_blank">{{domain}}</a>
+                                                            <span class="fa" ng-class="getDomainClass(domain, vs.id)">{{getDomainStatusText(domain, vs.id)}}</span>
+                                                        </li>
+                                                    </ul>
+                                                </td>
+                                                <td style="text-align: center">
+                                                    {{vs.qps}}
+                                                </td>
+
+                                                <td class="{{getSwitchClass(vs.id)}}">
+                                                    {{getSwitchText(vs.id)}}
+                                                </td>
+
+                                                <td style="text-align: center">
+                                                    <a class="fa fa-play btn btn-info" ng-show="showStartSwitch(vs.id)"
+                                                       ng-click="startSwitch(vs.id)">{{resource.tools.vmigrationEdit.html.msg75}}</a>
+                                                    <a class="fa fa-hand-paper-o btn btn-warning"
+                                                       ng-show="showRevertSwitch(vs.id)" ng-click="revertSwitch(vs.id)">{{resource.tools.vmigrationEdit.html.msg76}}</a>
+                                                    <a class="fa fa-times btn btn-danger"
+                                                       ng-show="showDeleteSwitch(vs.id)" ng-click="deleteSwitch(vs.id)">{{resource.tools.vmigrationEdit.html.msg77}}</a>
+                                                </td>
+
+                                                <td style="text-align: center">
+                                                    <div class="system-link">
+                                                        <a class="dashboard" target="_blank"
+                                                           ng-click="generateMonitorUrl('dashboard', vs.id, vs.domains)">Dashboard</a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6"></div>
+                                    <div class="col-md-5">
+                                        <div class=" status-red pull-right"
+                                             style="font-weight: bold;line-height: 30px;">
+                                            <input type="checkbox"
+                                                   ng-model="dnsPassed"
+                                                   ng-disabled="disbableDNSPassed()">
+                                            <i class="fa"></i>
+                                            {{resource.tools.vmigrationEdit.html.msg78}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-info pull-right next-step-class"
+                                                ng-click="fourthToFifthClick()"
+                                                ng-show="dnsPassed">
+                                            {{resource.tools.vmigrationEdit.html.msg32}}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row monitor-row" ng-show="showStep(data.keys[4])">
+                        <!--Monitor row-->
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <span class="panel-title">{{resource.tools.vmigrationEdit.html.msg79}}</span>
+                                </div>
+                                <div class="panel-body" ng-show="!data.steps[data.keys[4]].status">
+                                    <div class="row" style="max-height: 300px; overflow-y: auto">
+                                        <div data-ng-repeat="k in data.steps.migration.vses"
+                                             class="col-md-12 list-group">
+                                            <h5 style="font-weight: bold"
+                                                class="list-group-item active">
+                                                ({{$index+1}})VS: {{data.vses[k].name}}
+                                                <a href='/portal/vs/traffic#?env={{env}}&vsId={{k}}'>
+                                                    <i class="fa fa-line-chart" aria-hidden="true"></i>
+                                                </a>
+                                            </h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-body"
+                                     ng-show="data.steps[data.keys[4]].status=='Success'">
+                                    <div class="col-md-12">
+                                        <h4 class="status-green">
+                                            <i class="fa fa-check"></i>
+                                            {{resource.tools.vmigrationEdit.html.msg55}} <b>{{env| uppercase}}</b>, {{resource.tools.vmigrationEdit.html.msg82}}。
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div class="panel-footer row dialog-footer" style="background: none"
+                                     ng-show="!data.steps[data.keys[4]].status">
+                                    <div class="col-md-6"></div>
+                                    <div class="col-md-5">
+                                        <div class="pull-right status-red"
+                                             style="font-weight: bold;line-height: 30px;">
+                                            <input type="checkbox"
+                                                   ng-model="monitorPassed"
+                                                   ng-disabled="disbableMonitorPassed()">
+                                            <i class="fa"></i>
+                                            {{resource.tools.vmigrationEdit.html.msg83}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-info next-step-class"
+                                                ng-click="fifthToSixthClick()"
+                                                ng-show="monitorPassed">
+                                            {{resource.tools.vmigrationEdit.html.msg32}}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row clean-row" ng-show="showStep(data.keys[5])">
+                        <!--Monitor row-->
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <div class="col-md-1">
+                                            <span class="panel-title">{{resource.tools.vmigrationEdit.html.msg84}}</span>
+                                        </div>
+                                        <div class="col-md-11">
+                                            <button class="btn btn-info next-step-class pull-right"
+                                                    ng-click="allowToCleanClick()">
+                                                {{resource.tools.vmigrationEdit.html.msg34}}
+                                            </button>
+
+                                            <button style="margin-right: 10px;"
+                                                    class="btn btn-danger next-step-class pull-right"
+                                                    ng-click="retryFailedClean()">
+                                                {{resource.tools.vmigrationEdit.html.msg35}}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-body" ng-show="!data.steps[data.keys[5]].status">
+                                    <div class="alert alert-danger fade in">
+                                        <h4>{{resource.tools.vmigrationEdit.html.msg87}}?</h4>
+                                        <p>{{resource.tools.vmigrationEdit.html.msg88}}
+                                            {{resource.tools.vmigrationEdit.html.msg89}}</p>
+                                        <p>
+                                            <button type="button" class="btn btn-success"
+                                                    ng-click="allowToCleanClick()">{{resource.tools.vmigrationEdit.html.msg91}}
+                                            </button>
+                                        </p>
+                                    </div>
+
+                                    <div id="clean-task">
+
+                                    </div>
+                                </div>
+                                <div class="panel-body" ng-show="data.steps.migration['cleanResult']">
+                                    <div class="row">
+                                        <div class="col-md-12 highlight">
+                                            {{resource.tools.vmigrationEdit.html.msg92}}{{data.slbs[data.steps.migration['source-slb']].vsesCount}}{{resource.tools.vmigrationEdit.html.msg93}}
+                                            {{resource.tools.vmigrationEdit.html.msg94}}
+                                            <span style="font-size: 20px">{{getCleanFailedCount()}}</span>{{resource.tools.vmigrationEdit.html.msg95}}
+                                        </div>
+                                        <div class="col-md-12" style="max-height: 300px; overflow-y: auto">
+                                            <div data-ng-repeat="(k,v) in data.steps.migration['cleanResult']">
+                                                <div class="system-padding-top col-md-12 row"
+                                                     style="font-weight: bold">
+                                                    ({{$index+1}}) VS: {{data.vses[k].name}}({{k}})
+                                                    <a ng-click="retryDeployVs(k,2)"
+                                                       ng-show="showRetryDeploy(k,2)">
+                                                        <i style="cursor:pointer;" class="fa fa-refresh"
+                                                           aria-hidden="true" title="{{resource.tools.vmigrationEdit.html.msg96}}"></i><span
+                                                            class="status-red">({{resource.tools.vmigrationEdit.html.msg96}})</span>
+                                                    </a>
+
+                                                </div>
+                                                <div data-ng-repeat="item in v | orderConfigFilter">
+                                                    <div class="col-md-6">{{item.task}}</div>
+                                                    <div class="col-md-6" ng-click="showErrorMessage(item)"
+                                                         ng-class="getConfigActivateClass(item)"
+                                                         ng-bind-html="getConfigActivateResult(item)">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="panel-footer row dialog-footer" style="background: none"
+                                     ng-show="data.steps[data.keys[5]].status=='Success'">
+                                    <div class="pull-right">
+                                        <button class="btn btn-info pull-right next-step-class"
+                                                ng-click="sixthToSeventhClick()"
+                                                ng-show="data.steps.migration['cleanResult'] && !data.steps[data.keys[6]] && !activateHasFailures(2)">
+                                            {{resource.tools.vmigrationEdit.html.msg32}}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row remove-row" ng-show="showStep(data.keys[6])">
+                        <!--Delete migration row-->
+                        <div class="col-md-12">
+                            <div class="panel panel-default" ng-show="!data.steps[data.keys[6]].status">
+                                <div class="panel-heading">
+                                    <span class="panel-title">{{resource.tools.vmigrationEdit.html.msg97}}</span>
+                                </div>
+                                <div class="panel-body">
+                                    <h4 class="status-green"><i class="fa fa-thumbs-up"
+                                                                aria-hidden="true"></i>{{resource.tools.vmigrationEdit.html.msg98}}!!!!
+                                        {{resource.tools.vmigrationEdit.html.msg99}},
+                                        {{resource.tools.vmigrationEdit.html.msg101}}<a style="margin: 0px 10px" class="btn btn-info"
+                                                                                        ng-click="removeMigration()">{{resource.tools.vmigrationEdit.html.msg77}}</a>{{resource.tools.vmigrationEdit.html.msg102}}!</h4>.
+                                </div>
+                            </div>
+
+                            <div class="panel panel-default" ng-show="data.steps[data.keys[6]].status">
+                                <div class="panel-heading">
+                                    <span class="panel-title">{{resource.tools.vmigrationEdit.html.msg97}}</span>
+                                </div>
+                                <div class="panel-body">
+                                    <h4 class="status-green"><i class="fa fa-thumbs-up"
+                                                                aria-hidden="true"></i>{{resource.tools.vmigrationEdit.html.msg103}}</h4>.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row done-row" ng-show="showStep(data.keys[7])">
+                        <!--Delete migration row-->
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <span class="panel-title">{{resource.tools.vmigrationEdit.html.msg104}}</span>
+                            </div>
+                            <div class="panel-body">
+                                <h4 class="status-green">{{resource.tools.vmigrationEdit.html.msg105}}</h4>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-show="showRevert()">
+                    <div class="col-md-12">
+                        <div class="pull-right">
+                            <a ng-click="getMonitorLink()" class="status-blue"
+                               style="text-decoration: underline; padding-right: 10px">
+                                <i class="fa fa-hand-o-right"></i><span>{{resource.tools.vmigrationEdit.html.msg106}}</span></a>
+                            <a ng-click="revertChanges()" class="fa fa-undo status-red ">{{resource.tools.vmigrationEdit.html.msg107}}</a>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="row" id="loadingArea">
+
+                </div>
+            </div>
+            <!--modals area-->
+            <div class="modals">
+                <div class="modal fade" id="selectSlbDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vmigrationEdit.html.msg108}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-sm-1 query-label" style="line-height: 40px">Slb Id:</div>
+                                    <div class="col-sm-11 query-body">
+                                        <div angucomplete-alt id="slbIdSelector"
+                                             placeholder={{resource.tools.vmigrationEdit.html.msg109}}
+                                             pause="100"
+                                             selected-object="selectSlbId"
+                                             remote-url="{{remoteSLBsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small"
+                                             input-changed="slbIdInputChanged">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row breadcrumb-follow" style="max-height: 600px; overflow-y: scroll">
+                                    <div>
+                                        <div class="col-md-12 panel-title"
+                                             style="border-bottom: 1px solid #e5e5e5;border-bottom-width: 2px; font-size: 18px">
+                                            {{resource.tools.vmigrationEdit.html.msg112}}<span style="font-size: 10px;" class="status-red">{{resource.tools.vmigrationEdit.html.msg111}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="" style="padding-top: 48px">
+                                        <div class="col-md-3"
+                                             data-ng-repeat="(k,v) in data.slbsToChoose | slbIdFilter: query.slbId">
+                                            <div ng-class="selectedTileClass(k)"
+                                                 class="panel"
+                                                 ng-click="clickSlb(k, $event)">
+                                                <div class="panel-body" style="padding-top: 0;">
+                                                    <div class="media-main">
+                                                        <div class="info">
+                                                            <p><span
+                                                                    class="">{{resource.tools.vmigrationEdit.html.msg23}}:</span><a
+                                                                    href="/portal/slb#?env={{env}}&slbId={{v.id}}"
+                                                                    target="_blank">{{v.id}}/{{v.name}}</a>
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-black">IDC: {{v.idc}}
+                                                            </p>
+                                                            <p class="text-black">{{resource.tools.vmigrationEdit.html.msg25}}: {{v.serverCount || 0}}
+                                                            </p>
+                                                            <p class="text-black">{{resource.tools.vmigrationEdit.html.msg115}}:
+                                                                <a>{{g.vsesCount || 0}}</a></p>
+                                                            <p class="text-black">{{resource.tools.vmigrationEdit.html.msg116}}:
+                                                                <a>{{g.qps || 0}}</a></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" data-dismiss="modal"
+                                            ng-disabled="disableSlbSelection()" ng-click="selectSlb()">{{resource.tools.vmigrationEdit.html.msg117}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="bindHostDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vmigrationEdit.html.msg118}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.tools.vmigrationEdit.html.msg119}}
+                                            <div class="row" data-ng-repeat="vs in data.steps[data.keys[0]].vses">
+                                                <div class="col-md-12 highlight">
+                                                    # {{$index+1}} VS: {{data.vses[vs].name}}({{vs}})
+                                                </div>
+                                                <div class="col-md-12" style="padding-left: 10px;"
+                                                     data-ng-repeat="domain in data.vses[vs].domains">
+                                                    {{getTargetSlbVip()}} {{domain}}
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li>{{resource.tools.vmigrationEdit.html.msg121}}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" data-dismiss="modal">{{resource.tools.vmigrationEdit.html.msg122}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="confirmRollbackChanges" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vmigrationEdit.html.msg123}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="warning-important">
+                                    {{resource.tools.vmigrationEdit.html.msg124}}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" data-toggle="modal" data-dismiss="modal"
+                                            ng-click="startRollbackWindow()">{{resource.tools.vmigrationEdit.html.msg125}}
+                                    </button>
+                                    <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.vmigrationEdit.html.msg126}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="confirmRollbackTrafficChanges" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vmigrationEdit.html.msg127}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-1 query-label" style="line-height: 35px"><label
+                                            class="SLB">{{resource.tools.vmigrationEdit.html.msg128}}:</label></div>
+                                    <div class="col-md-11 query-body">
+                                        <div class="input-group  pull-left col-md-5">
+                                            <input type="text" class="form-control"
+                                                   datetime-picker="yyyy-MM-dd HH:mm"
+                                                   ng-model="queryDate.startTime"
+                                                   is-open="isOpen" readonly/>
+                                            <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="openCalendar($event, prop)">
+                            <i class="fa fa-calendar"></i>
+                        </button>
+                    </span>
+                                        </div>
+                                        <div class="pull-right col-md-7 time" style="line-height: 35px;">
+                                            To<a style="padding-left: 10px">{{getDecodedTime(queryDate.endTime) |
+                                            date: "yyyy-MM-dd HH:mm"}}</a>
+                                            <a href="javascript:void(0)" ng-click="setDatePreviousHour()">{{resource.tools.vmigrationEdit.html.msg129}}</a>
+                                            <a href="javascript:void(0)" ng-click="setDateNextHour()">{{resource.tools.vmigrationEdit.html.msg131}}</a>
+                                            <a href="javascript:void(0)" ng-click="setDateNow()">Now</a>
+                                            <a id="refreshBt" href="javascript:void(0)"
+                                               ng-click="refreshCharts()">{{resource.tools.vmigrationEdit.html.msg132}}</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="traffic-types-area row"
+                                     style="padding-top: 20px; height: 500px; overflow-y: scroll">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" data-dismiss="modal" ng-click="confirmRevert()">{{resource.tools.vmigrationEdit.html.msg133}}
+                                    </button>
+                                    <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.vmigrationEdit.html.msg134}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="domainFilterDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vmigrationEdit.html.msg135}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <ul>
+                                            <li>
+                                                <h4>{{resource.tools.vmigrationEdit.html.msg136}}</h4>
+                                            </li>
+                                            <li>
+                                                <h4>{{resource.tools.vmigrationEdit.html.msg137}}</h4>
+                                            </li>
+                                            <li>
+
+                                                <h4>
+                                                    {{resource.tools.vmigrationEdit.html.msg138}}
+                                                </h4>
+                                            </li>
+                                            <li>
+                                                <h4>
+                                                    {{resource.tools.vmigrationEdit.html.msg139}}
+                                                </h4>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" data-dismiss="modal">{{resource.tools.vmigrationEdit.html.msg141}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="tobeswitcheddialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vmigrationEdit.html.msg142}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    {{resource.tools.vmigrationEdit.html.msg143}}
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12" style="margin-bottom: 5px">
+                                        <b>{{resource.tools.vmigrationEdit.html.msg144}}:</b>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="pull-left">
+                                            <div class="pull-left">
+                                                <a href="/portal/slb#?env={{env}}&slbId={{data.steps['migration']['source-slb']}}"
+                                                   target="_blank">{{data.steps['migration']['source-slb']}}({{data.slbs[data.steps['migration']['source-slb']].name}}) </a>
+                                                <span>VIPS: <b
+                                                        data-ng-repeat="ip in data.slbs[data.steps['migration']['source-slb']]['vips']">{{ip}}</b></span>
+
+                                                <b style="font-size: 30px;line-height: 48px"
+                                                   class="status-red">----></b> <a
+                                                    href="/portal/slb#?env={{env}}&slbId={{data.steps['migration']['target-slb']}}"
+                                                    target="_blank">{{data.steps['migration']['target-slb']}}({{data.slbs[data.steps['migration']['target-slb']].name}}) </a>
+                                                <span>VIPS: <b
+                                                        data-ng-repeat="ip in data.slbs[data.steps['migration']['target-slb']]['vips']">{{ip}}</b></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top: 20px">
+                                    <div class="col-md-12" style="margin-bottom: 5px">
+                                        <b>{{resource.tools.vmigrationEdit.html.msg145}}:</b>
+                                    </div>
+                                    <div class="col-md-12">
+
+                                        <table class="table table-bordered">
+                                            <thead>
+                                            <tr>
+                                                <th>Id</th>
+                                                <th>Name</th>
+                                                <th>Domains</th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody>
+                                            <tr data-ng-repeat="vs in data.currentDnsSwitchVses">
+                                                <td>
+                                                    {{vs}}
+                                                </td>
+                                                <td>
+                                                    {{data.vses[vs].name}}
+                                                </td>
+                                                <td>
+                                                    <div data-ng-repeat="domain in data.vses[vs].domains">
+                                                        {{domain}}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" data-toggle="modal" data-dismiss="modal"
+                                            ng-click="confirmSwitch()">{{resource.tools.vmigrationEdit.html.msg146}}
+                                    </button>
+                                    <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.vmigrationEdit.html.msg147}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="tobedeleteddialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vmigrationEdit.html.msg148}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <h2 class="alert alert-warning status-red">
+                                    {{resource.tools.vmigrationEdit.html.msg125}}{{resource.tools.vmigrationEdit.html.msg126}}{{resource.tools.vmigrationEdit.html.msg77}}当前切换
+                                </h2>
+                            </div>
+
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" data-toggle="modal" data-dismiss="modal"
+                                            ng-click="confirmDeleteSwith()">{{resource.tools.vmigrationEdit.html.msg146}}
+                                    </button>
+                                    <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.vmigrationEdit.html.msg147}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="deleteswitchresultdialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vmigrationEdit.html.msg148}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <h2 class="alert alert-warning status-green">
+                                    {{resource.tools.vmigrationEdit.html.msg77}}当前切换成功，点击{{resource.tools.vmigrationEdit.html.msg146}}{{resource.tools.vmigrationEdit.html.msg132}}。
+                                </h2>
+                            </div>
+
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" data-toggle="modal" data-dismiss="modal"
+                                            ng-click="closeDeleteSwitchDialog()">{{resource.tools.vmigrationEdit.html.msg146}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="tobeswitchedbackdialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.vmigrationEdit.html.msg148}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    以下Virtual Servers 中的域名将在本次DNS切换{{resource.tools.vmigrationEdit.html.msg76}}中生效。请{{resource.tools.vmigrationEdit.html.msg146}}无误后点击确定开始DNS切换{{resource.tools.vmigrationEdit.html.msg76}}过程
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12" style="margin-bottom: 5px">
+                                        <b>{{resource.tools.vmigrationEdit.html.msg144}}:</b>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="pull-left">
+                                            <a href="/portal/slb#?env={{env}}&slbId={{data.steps['migration']['target-slb']}}"
+                                               target="_blank">{{data.steps['migration']['target-slb']}}({{data.slbs[data.steps['migration']['target-slb']].name}}) </a>
+                                            <span>VIPS: <b
+                                                    data-ng-repeat="ip in data.slbs[data.steps['migration']['target-slb']]['vips']">{{ip}}</b></span>
+
+                                            <b style="font-size: 30px;line-height: 48px"
+                                               class="status-red">----></b> <a
+                                                href="/portal/slb#?env={{env}}&slbId={{data.steps['migration']['source-slb']}}"
+                                                target="_blank">{{data.steps['migration']['source-slb']}}({{data.slbs[data.steps['migration']['source-slb']].name}}) </a>
+                                            <span>VIPS: <b
+                                                    data-ng-repeat="ip in data.slbs[data.steps['migration']['source-slb']]['vips']">{{ip}}</b></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top: 20px">
+                                    <div class="col-md-12" style="margin-bottom: 5px">
+                                        <b>{{resource.tools.vmigrationEdit.html.msg145}}:</b>
+                                    </div>
+                                    <div class="col-md-12">
+
+                                        <table class="table table-bordered">
+                                            <thead>
+                                            <tr>
+                                                <th>Id</th>
+                                                <th>Name</th>
+                                                <th>Domains</th>
+                                            </tr>
+                                            </thead>
+
+                                            <tbody>
+                                            <tr data-ng-repeat="vs in data.currentDnsSwitchVses">
+                                                <td>
+                                                    {{vs}}
+                                                </td>
+                                                <td>
+                                                    {{data.vses[vs].name}}
+                                                </td>
+                                                <td>
+                                                    <div data-ng-repeat="domain in data.vses[vs].domains">
+                                                        {{domain}}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info" data-toggle="modal" data-dismiss="modal"
+                                            ng-click="startRevertSwitch()">{{resource.tools.vmigrationEdit.html.msg146}}
+                                    </button>
+                                    <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.vmigrationEdit.html.msg147}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/tools-vs-migration.js"></script>
+</body>
+</html>

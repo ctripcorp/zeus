@@ -1,0 +1,19 @@
+
+.slb-info{
+    margin-bottom: 5px;
+}
+.slb-link{
+    font-weight: bold;
+}
+
+.info-types li a{
+    color:gray;
+}
+.info-types li a:hover{
+    color:#337ab7;
+}
+.info-types li.current a{
+    color:#337ab7;
+    font-weight: bold;
+}
+

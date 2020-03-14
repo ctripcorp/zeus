@@ -1,0 +1,213 @@
+/****************** File Difference view css start ******************************/
+.fileDiffMainContainer {
+    background: white;
+    border-radius: 5px;
+    padding: 20px;
+    float: none !important;
+    display: inline-block !important;
+    box-shadow: 0 1px 3px rgba(34, 25, 25, 0.4);
+    -webkit-box-shadow: 0 1px 3px rgba(34, 25, 25, 0.4);
+    -moz-box-shadow: 0 1px 3px rgba(34, 25, 25, 0.4);
+    margin-bottom: 9px;
+    text-align: left;
+    min-height: 500px !important;
+}
+
+.fileViewHead {
+    text-align: center;
+    padding-left: 10PX;
+    margin: 0;
+    margin-left: 10px;
+    padding: 15PX;
+    margin-right: 10px;
+    color: #3D3D3D;
+    letter-spacing: 1.5px;
+    padding-top: 0;
+    color: rgba(114, 114, 114, 1);
+}
+
+[class *="span"] {
+    float: left;
+    min-height: 1px;
+    margin-right: 20px;
+}
+
+
+/*for activated dialog*/
+.fileDiffMainContainer label {
+    display: block;
+    margin-bottom: 5px;
+    padding: 12px;
+    text-align: center;
+    font-size: 25px;
+    color: #A7A7A7;
+    background: #F0F0F0;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border: 2px dotted rgba(68, 68, 68, 0.25);
+}
+
+
+#uploadCertDialog .modal-dialog {
+    width: 50%;
+}
+
+#diffModal {
+    text-align:center;
+}
+
+#diffModal .modal-dialog {
+    width: 80%;
+}
+
+#tobeswitcheddialog .modal-dialog {
+    width: 80%;
+}
+#tobeswitchedbackdialog .modal-dialog {
+    width: 80%;
+}
+
+#activateSLBModal, #activatePolicyModal {
+    text-align:center;
+}
+
+#activateSLBModal .modal-dialog,#activatePolicyModal .modal-dialog {
+    width: 80%;
+}
+
+#newAddVsAdvancedHeaderOptionModel .modal-dialog{
+    width: 50%;
+    background-color: #f1f4f5;
+}
+#newVsAdvancedHeaderOptionModel .modal-dialog{
+    width: 50%;
+    background-color: #f1f4f5;
+}
+
+#activateVSModal {
+    text-align:center;
+}
+
+#activateVSModal .modal-dialog {
+    width: 80%;
+}
+
+#activateGroupModal, #activateVGroupModal{
+    text-align:center;
+}
+
+#addNewTrafficPolicyModal .modal-dialog{
+    width: 80%;
+    background-color: #f1f4f5;
+}
+
+#activateGroupModal .modal-dialog, #activateVGroupModal .modal-dialog, #resultCompareDialog .modal-dialog{
+    width: 80%;
+}
+
+#diffGroupModal, #diffSeperateGroups, #diffSeperateVses, #diffSeperateSlbs, #diffSeperatePolicies, #diffVSDiv, #slbdiffVSDiv, #resultCompareDialog {
+    text-align:center;
+}
+
+#diffGroupModal .modal-dialog, #diffSeperateGroups .modal-dialog, #diffSeperateVses .modal-dialog, #diffSeperateSlbs .modal-dialog, #diffSeperatePolicies .modal-dialog, #diffVSDiv .modal-dialog,  #slbdiffVSDiv .modal-dialog{
+    width: 80%;
+}
+
+#newTrafficPolicyDialog .modal-dialog,
+#PolicyIdSelectorDialog .modal-dialog,
+
+#deactivateTrafficPolicyDialog .modal-dialog{
+    width: 80%;
+}
+
+#HelpModel .modal-dialog{
+    width: 50%;
+}
+#diagramModel .modal-dialog{
+    width: 90%;
+}
+#weightAdjustDialog .modal-dialog{
+    width: 80%;
+}
+#updateGroupDialog .modal-dialog{
+    width: 80%;
+}
+
+#updateGroupDialog2 .modal-dialog{
+    width: 80%;
+}
+.span12 {
+    width: 700px;
+}
+
+#fileDiffFormVGroup #diffOutputVGroup,
+#fileDiffForm #diffOutput,
+#fileDiffForm2 #diffOutput2, #fileDiffForm3 #diffOutput3,#vGroupFileDiffForm #vGroupDiffOutput, #diffVSDiv #fileDiffForm1,#slbdiffVSDiv #slbfileDiffForm,#activateVSModal #fileDiffForm, #resultCompareDialog #fileDiffForm{
+    height: 600px;
+    overflow: scroll;
+}
+#revertCompareModel #ruleDiffOutput{
+    height: 300px;
+    overflow: scroll;
+}
+#revertCompareModel #ruleDiffOutput table{
+    width: 100%;
+}
+#revertCompareModel .modal-dialog{
+    width: 50%;
+}
+#addSlbServerDialog .modal-dialog, #addBatchServerModal .modal-dialog, #removeSlbServerDialog .modal-dialog, #addDomainDialog .modal-dialog, #removeDomainDialog .modal-dialog, #addServerModal .modal-dialog{
+    width: 50%;
+}
+#fileDiffFormVGroup #diffOutputVGroup table, #fileDiffForm #diffOutput table, #fileDiffForm2 #diffOutput2 table, #fileDiffForm3 #diffOutput3 table,#vGroupDiffOutput table,#fileDiffForm table, #slbfileDiffForm table{
+    width: 100%;
+}
+#fileDiffFormVGroup #diffOutputVGroup .texttitle, #fileDiffForm #diffOutput .texttitle, #fileDiffForm2 #diffOutput2 .texttitle, #fileDiffForm3 #diffOutput3 .texttitle,  #vGroupFileDiffForm #vGroupDiffOutput .texttitle, #diffVSDiv #fileDiffForm1 .texttitle,  #slbfileDiffForm .texttitle{
+    width: 700px;
+}
+
+#fileDiffFormVGroup .btnDiv,
+#fileDiffForm .btnDiv,
+#ruleDiffForm .btnDiv{
+    padding-top: 10px;
+}
+
+#info_diffOutput {
+    height: 600px;
+    overflow: scroll;
+}
+
+#info_diffOutput table{
+    width: 100%;
+}
+
+.btnDiv {
+    padding-top: 10px;
+}
+
+#newVsMigrationDialog .modal-dialog{
+    width: 80%;
+}
+
+#selectSlbDialog .modal-dialog{
+    width: 80%;
+}
+
+#drIdModal .modal-dialog{
+    width: 70%;
+}
+#RightApplyModal .modal-dialog{
+    width: 50%;
+}
+#InstructionModal .modal-dialog{
+    width: 55%;
+}
+#revertModel .modal-dialog{
+    width: 55%;
+}
+#activateSlbsModel .modal-dialog{
+    width: 55%;
+}
+#newRuleModel .modal-dialog{
+    width: 70%;
+}

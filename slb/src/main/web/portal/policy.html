@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Traffic Policy</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <!--Cytoscape JS-->
+    <script src="/static/lib/cytoscape.js-2.7.15/cytoscape.min.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+
+    <style type="text/css">
+        .alert-row {
+            position: relative;
+        }
+
+        .alert-row img {
+            position: absolute;
+            left: 150px;
+            top: -55px;
+            height: 70px;
+        }
+    </style>
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class="active"><a href="{{generateLink('basic')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["navs"]["navs_basic"]}}</span></a></li>
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_log"]}}</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('conf')}}"><i class="fa fa-file-code-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_conf"]}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+
+    <div class="wraper container-fluid">
+        <!--Breadcrumb Area-->
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id,name"
+                                 ng-click="clickTarget()"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wraper breadcrumb-follow info-container" id="policy-info-area" ng-app="policyInfoApp"
+             ng-controller="policyInfoController"
+             ng-cloak>
+            <!--Policy Basic Information Area -->
+            <div class="basics">
+                <div class="panel panel-default">
+                    <div class="panel-heading row" style="padding-bottom: 0px">
+                        <div class="col-md-1">
+                            <h3 class="panel-title">{{resource['policy']['policy_policyInfoApp_title']}}</h3>
+                        </div>
+                        <div class="col-md-11">
+                            <div class="top-toolbar">
+                                <div class="pull-right">
+                                    <div class="top-toolbar-left pull-left">
+                                        <a class="btn btn-info"
+                                           href="/portal/policy/edit#?env={{env}}&policyId={{query.policyId}}"
+                                           role="button"
+                                           ng-show="showUpdatePolicyBt()">{{resource['policy']['policy_policyInfoApp_update']}}</a>
+                                        <a class="btn btn-info activePOLICY" role="button"
+                                           ng-show="showActivatePolicyBt()"
+                                           ng-click="activatePolicyClick()">{{resource['policy']['policy_policyInfoApp_activate']}}</a>
+                                        <a class="btn btn-info" ng-click="showDialog(p, 'addTag')"
+                                           ng-show="showAddPOLICYTagBt()">{{resource['policy']['policy_policyInfoApp_tag']}}</a>
+                                        <a class="btn btn-info" ng-click="showDialog(p, 'addProp')"
+                                           ng-show="showAddPOLICYPropertyBt()">{{resource['policy']['policy_policyInfoApp_property']}}</a>
+                                        <a class="btn btn-deactivate" ng-click="deactivatePolicyAction()" role="button"
+                                           ng-disabled="disableDeactivatePolicy()"
+                                           ng-show="showDeactivatePolicyBt()">{{resource['policy']['policy_policyInfoApp_deactivate']}}</a>
+                                        <a ng-show="showDeletePolicyBt()" class="btn btn-danger deletePolicy"
+                                           role="button"
+                                           ng-click="deletePolicyAction()"
+                                           ng-disabled="disableRemovePolicy()">{{resource['policy']['policy_policyInfoApp_delete']}}</a>
+                                        <a class="btn btn-info" role="button" ng-click="startABTestLink()">{{resource['policy']['policy_policyInfoApp_ab']}}</a>
+                                        <a class="btn btn-info" role="button" data-toggle="modal"
+                                           data-target="#comparePolicyModel">{{resource['policy']['policy_policyInfoApp_diff']}}</a>
+
+                                        <a class="btn btn-info" role="button" ng-click="applyBtClick()"><span
+                                                class="fa fa-group" style="margin-left: 5px">{{resource['policy']['policy_policyInfoApp_auth']}}</span></a>
+                                    </div>
+                                    <div class="top-toolbar-right pull-right">
+                                        <span ng-class="statusClass()" ng-cloak>&nbsp;&nbsp;{{resource['policy']['policy_policyInfoApp_status']}}：{{statusText()}}</span>
+                                        <span style="float: right">&nbsp;&nbsp;</span>
+                                        <span ng-class="getFocusCss()"><a
+                                                ng-click="toggleFocus($event)">{{getFocusText()}}</a></span>
+                                        <span ng-class="getOptionPanelCss()" ng-cloak>&nbsp;&nbsp;<a
+                                                ng-click="toggleOptionPanel()">{{getOptionPanelText()}}</a></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body" style="padding-top: 0px">
+                        <table class="table table-condensed">
+                            <tbody>
+                            <tr>
+                                <td class="model-basic-info"><b>{{resource['policy']['policy_policyInfoApp_body']['id']}}:</b></td>
+                                <td>
+                                    <a href="#" class="ng-binding">
+                                        {{query.policyId}}
+                                    </a></td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['policy']['policy_policyInfoApp_body']['name']}}:</b></td>
+                                <td class="ng-binding">
+                                    {{view.extendedpolicy.name}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['policy']['policy_policyInfoApp_body']['contact']}}:</b></td>
+                                <td class="ng-binding">
+                                    <a style="margin-right: 6px" target="_blank"
+                                       data-ng-repeat="o in view.extendedpolicy.owner['user']"
+                                       href="/portal/user#?env={{env}}&userId={{getOwnerNameByChineseName(o)}}">{{o}}
+                                        <span ng-if="$index!=view.extendedpolicy.owner['user'].length-1">,</span>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['policy']['policy_policyInfoApp_body']['bu']}}:</b></td>
+                                <td class="ng-binding">
+                                    <a style="margin-right: 6px" target="_blank"
+                                       data-ng-repeat="b in view.extendedpolicy.owner['bu']"
+                                       href="/portal/bu#?env={{env}}&buName={{b}}">{{b}}<span
+                                            ng-if="$index!=view.extendedpolicy.owner['bu'].length-1">,</span></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['policy']['policy_policyInfoApp_body']['version']}}:</b></td>
+                                <td class="alert-row">
+                                    <span class="">{{view.extendedpolicy.version}}</span>
+                                    <span ng-if="getPolicyStatusProperty()=='activated'"
+                                          ng-class="policyVersionClass()">({{policyVersionText()}})</span>
+                                    <a ng-if="getPolicyStatusProperty()!='activated'" ng-click="activatePolicyClick()"
+                                       ng-class="policyVersionClass()">({{policyVersionText()}})</a>
+                                    (<a data-toggle="modal" ng-click="getHistoryClick()"
+                                        id="historyVersionBtn">{{resource['policy']['policy_policyInfoApp_body']['hversion']}}</a>)
+
+                                    <img ng-click="activatePolicyClick()" style="cursor: pointer"
+                                         ng-show="getPolicyStatusProperty()!='activated'" src="/static/img/alert.png"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b> {{resource['policy']['policy_policyInfoApp_body']['reason']}}:</b></td>
+                                <td>
+                                    {{getTargetPolicy(view.extendedpolicy['targetFor'])}}
+                                </td>
+                            </tr>
+                            <tr ng-show="showExtendedTag()">
+                                <td><b> {{resource['policy']['policy_policyInfoApp_body']['tags']}}:</b></td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-11 multi-tags" ng-class="multiTagsClass()">
+                                            <span
+                                                    class="label label-default tag-span"
+                                                    ng-repeat="t in view.extendedpolicy.tags"
+                                                    ng-click="showDialog(t, 'deleteTag')"
+                                                    ng-show="showCurrentTag(t)">{{t}}&nbsp;<b
+                                                    ng-show="showRemoveTagBt(t)"
+                                                    ng-click="showDialog(v, 'deleteTag')">x</b> </span>
+                                        </div>
+                                        <div class="col-md-1 collapse-btns">
+                                            <a ng-click="toggleShowMoreTags()" class="toggle-show-btn">
+                                                <span ng-class="collapseTagBtnClass()"></span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                            <tr ng-show="showExtendedProperty()">
+                                <td><b> {{resource['policy']['policy_policyInfoApp_body']['properties']}}:</b></td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-11 multi-tags" ng-class="multiPropertiesClass()">
+<span class="label label-default tag-span " ng-repeat="p in view.extendedpolicy.properties"
+      ng-click="showDialog(p, 'deleteProp')">{{p.name}}:&nbsp;{{p.value}}&nbsp;<b
+        ng-show="showRemoveProperty(p)">x</b> </span>
+                                        </div>
+                                        <div class="col-md-1 collapse-btns">
+                                            <a ng-click="toggleShowMoreProperties()" class="toggle-show-btn">
+                                                <span ng-class="collapsePropertiesBtnClass()"></span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['policy']['policy_policyInfoApp_body']['latestlogs']}}:</b></td>
+                                <td>
+                                    <div class="row" ng-show="showLogs()">
+                                        <div class="col-md-12">
+                                            <div data-ng-repeat="log in model.currentlogs" class="row">
+                                                <div class="col-md-3">{{log['date-time']}}</div>
+                                                <div class="col-md-2"><a
+                                                        href="/portal/user#?env={{env}}&userId={{log['user-name']}}">{{log['user-name']}}</a>
+                                                </div>
+                                                <div class="col-md-2">{{getOperationText(log.operation)}}</div>
+                                                <div class="col-md-1"><b
+                                                        ng-class="log.success?'status-green':'status-red'">{{log.success?'SUCCESS':'FAILED'}}</b>
+                                                </div>
+                                                <div class="col-md-3" ng-if="$last"><a target="_self"
+                                                                                       class="pull-left"
+                                                                                       href="/portal/policy/log#?env={{env}}&policyId={{query.policyId}}">{{resource['policy']['policy_policyInfoApp_body']['logsmore']}}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row" ng-show="showLogs()==false">
+                                        {{resource['policy']['policy_policyInfoApp_body']['nologs']}}
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td><b>{{resource['policy']['policy_policyInfoApp_body']['links']}}:</b></td>
+                                <td>
+                                    <div class="system-link" ng-show="showEs()">
+                                        <a class="es" target="_blank" href="{{generateMonitorUrl('es')}}">ES</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!--Traffic policy Graphics Area-->
+            <div class="graphics">
+                <div class=" diagram" id="diagrams-area">
+
+                </div>
+            </div>
+            <!--Traffic policy Virtual Servers Table-->
+            <div class="">
+                <div class="panel panel-default">
+                    <div class="row panel-heading">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">
+                                Virtual Servers
+                            </h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getPolicyVsShowMoreTitle()}}"
+                                   ng-click="toggleShowMorePolicyVsColumns()">
+                                    <i ng-class="getPolicyVsShowMore()"></i>
+                                </a>
+                                <a class="op-bar" title="{{getPolicyVsOperationTitle()}}"
+                                   ng-click="toggleShowPolicyVsOperations()" ng-disabled="disableOpenPolicyVs()">
+                                    <i ng-class="getPolicyVsShowOperation()"></i>
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="toolbar2" class="table-toolbar">
+                            <span><b>{{view.extendedpolicy['policy-virtual-servers'].length}}</b> {{resource['policy']['policy_policyInfoApp_vses']['title']}} </span>
+                        </div>
+                        <table id="vs-table"></table>
+                    </div>
+                </div>
+            </div>
+            <!--Traffic policy Groups Table-->
+            <div class="controls">
+                <div class="panel panel-default">
+                    <div class="row panel-heading">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">
+                                {{resource['policy']['policy_policyInfoApp_groups']['title']}}
+                            </h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getPolicyGroupShowMoreTitle()}}"
+                                   ng-click="toggleShowMorePolicyGroupColumns()">
+                                    <i ng-class="getPolicyGroupShowMore()"></i>
+                                </a>
+
+                                <a class="op-bar" title="{{getPolicyGroupOperationTitle()}}"
+                                   ng-click="toggleShowPolicyGroupOperations()" ng-disabled="disableOpenPolicyGroup()">
+                                    <i ng-class="getPolicyGroupShowOperation()"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+                        <div id="toolbar" class="table-toolbar row">
+                            <div class="col-md-5">
+                                <span><b>{{view.extendedpolicy.controls.length}}</b> {{resource['policy']['policy_policyInfoApp_groups']['title']}} </span>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="pull-right">
+                                    <a class="btn btn-info" ng-show="showAddGroupBt()" ng-click="popAddNewControl()"
+                                       type="button">{{resource['policy']['policy_policyInfoApp_groups']['addgroup']}}</a>
+                                    <a class="btn btn-info edit" id="batch-edit-weight" ng-show="showAddGroupBt()"
+                                       ng-click="batchEditControlWeight()" type="button">{{resource['policy']['policy_policyInfoApp_groups']['groupweight']}}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <table id="controls-table"></table>
+                    </div>
+                </div>
+            </div>
+            <div class="modals">
+                <div class="modal fade" id="rightAccessDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_rightAccessDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div id="group-role-selector-toolbar" class="table-toolbar">
+                                    <span>{{resource['policy']['policy_policyInfoApp_rightAccessDialog']['tooltip']}}</span>
+                                </div>
+                                <table id="group-role-selector-table">
+
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button type="button" class="btn btn-info" data-dismiss="modal"
+                                            ng-click="applyUserRight()">{{resource['policy']['policy_policyInfoApp_rightAccessDialog']['ok']}}
+                                    </button>
+                                    <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_rightAccessDialog']['close']}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="rightAccessConfirmDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_rightAccessConfirmDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                <span ng-bind-html="resource['policy']['policy_policyInfoApp_rightAccessConfirmDialog']['tooltip']"></span>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button type="button" class="btn btn-info" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_rightAccessConfirmDialog']['ok']}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="addPOLICYTag" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_addPOLICYTag']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <input type="text" id="tagNameInput" ng-model="tagNameInput"
+                                       class="form-control" data-validator-type="validation"
+                                       data-validator="required" placeholder="{{resource['policy']['policy_policyInfoApp_addPOLICYTag']['placeholder']}}">
+                                <div style="margin-top: 10px">
+                                <textarea id="tagreason" cols="2" rows="5" style="width: 100%;"
+                                          data-ng-model="query.tagreason" placeholder="{{resource['policy']['policy_policyInfoApp_addPOLICYTag']['reason']}}"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!tagNameInput || !query.tagreason" id="addTagBt" type="button"
+                                        class="btn btn-info">{{resource['policy']['policy_policyInfoApp_addPOLICYTag']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_addPOLICYTag']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="addPOLICYProp" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_addPOLICYProp']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <label class="prop-label">{{resource['policy']['policy_policyInfoApp_addPOLICYProp']['name']}}：</label>
+                                <input id="pname" type="text" ng-model="prop.name"
+                                       class="form-control" placeholder="{{resource['policy']['policy_policyInfoApp_addPOLICYProp']['name_placeholder']}}"><br>
+                                <label class="prop-label">{{resource['policy']['policy_policyInfoApp_addPOLICYProp']['value']}}：</label>
+                                <input id="pvalue" type="text" ng-model="prop.value"
+                                       class="form-control" placeholder="{{resource['policy']['policy_policyInfoApp_addPOLICYProp']['value_placeholder']}}">
+
+                                <div style="margin-top: 15px">
+                                <textarea id="propertyreason" cols="2" rows="5" style="width: 100%;"
+                                          data-ng-model="query.propertyreason" placeholder="{{resource['policy']['policy_policyInfoApp_addPOLICYProp']['reason']}}"></textarea>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!prop.name || !prop.value || !query.propertyreason"
+                                        id="addPropertyBt" type="button" class="btn btn-info">{{resource['policy']['policy_policyInfoApp_addPOLICYProp']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_addPOLICYProp']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deletePOLICYTag" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_deletePOLICYTag']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deletetagreason"
+                                                               placeholder="{{resource['policy']['policy_policyInfoApp_deletePOLICYTag']['reason']}}"></textarea>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deletetagreason" type="button" class="btn btn-info"
+                                        ng-click="deleteTag(currentTagName)">{{resource['policy']['policy_policyInfoApp_deletePOLICYTag']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_deletePOLICYTag']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deletePOLICYProp" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_deletePOLICYProp']['title']}}</h4>
+                            </div>
+
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deletepropertyreason"
+                                                               placeholder="{{resource['policy']['policy_policyInfoApp_deletePOLICYProp']['reason']}}"></textarea>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deletepropertyreason" type="button" class="btn btn-info"
+                                        ng-click="deleteProperty(currentProperty)">{{resource['policy']['policy_policyInfoApp_deletePOLICYProp']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_deletePOLICYProp']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="historyVersionModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_historyVersionModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                        <span data-ng-repeat="x in view.historyversions"
+                              class="label label-default pull-left version-class" ng-click="toggleVersion(x)"
+                              id="historyVersion{{x}}">
+                            {{x}}
+                        </span>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="diffVsBetweenVersions()" type="button" class="btn btn-info"
+                                        ng-show="view.historyversions.length >= 2"
+                                        ng-disabled="showDiffHistory()">{{resource['policy']['policy_policyInfoApp_historyVersionModel']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_historyVersionModel']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!--Diff and Activate Policy Area-->
+                <div id="activatePolicyModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead' ng-class="activatePolicyTitleClass()">{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm'>
+                            <div id="diffOutput"></div>
+                            <div class="btnDiv">
+                                <button class="btn btn-info confirmActivatePolicy" data-toggle="modal"
+                                        data-target="#confirmActivatePolicy" data-dismiss="modal"
+                                        ng-show="activateBtShow()">
+                                    {{resource['policy']['policy_policyInfoApp_activatePolicyModal']['ok']}}
+                                </button>
+                                <button class="btn btn-warning" data-dismiss="modal"> {{resource['policy']['policy_policyInfoApp_activatePolicyModal']['close']}}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="confirmActivatePolicy" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title"> {{resource['policy']['policy_policyInfoApp_confirmActivatePolicy']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['policy']['policy_policyInfoApp_confirmActivatePolicy']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="activatePOLICY()">
+                                    {{resource['policy']['policy_policyInfoApp_confirmActivatePolicy']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_confirmActivatePolicy']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="allowDeactivatePolicyModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- has no vses-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_allowDeactivatePolicyModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                 <textarea cols="2" rows="10" style="width: 100%"
+                                           data-ng-model="query.deactivatereason"
+                                           placeholder="{{resource['policy']['policy_policyInfoApp_allowDeactivatePolicyModal']['placeholder']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deactivatereason" type="button"
+                                        class="btn btn-info confirmDeactivatePolicy"
+                                        ng-click="deactivatePolicy()">
+                                    {{resource['policy']['policy_policyInfoApp_allowDeactivatePolicyModal']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_allowDeactivatePolicyModal']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deactivatePolicyModalConfirm" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_deactivatePolicyModalConfirm']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['policy']['policy_policyInfoApp_deactivatePolicyModalConfirm']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmDeactivatePolicy"
+                                        ng-click="confirmDeactivatePolicy()">{{resource['policy']['policy_policyInfoApp_deactivatePolicyModalConfirm']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_deactivatePolicyModalConfirm']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="allowDeletePolicyModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_allowDeletePolicyModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deletereason"
+                                                               placeholder="{{resource['policy']['policy_policyInfoApp_allowDeletePolicyModal']['placeholder']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deletereason" type="button" class="btn btn-info"
+                                        ng-click='deletePolicy()'>{{resource['policy']['policy_policyInfoApp_allowDeletePolicyModal']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_allowDeletePolicyModal']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deletePolicyModalConfirm" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_deletePolicyModalConfirm']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['policy']['policy_policyInfoApp_deletePolicyModalConfirm']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info " ng-click="confirmDeletePolicy()">{{resource['policy']['policy_policyInfoApp_deletePolicyModalConfirm']['ok']}}</button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_deletePolicyModalConfirm']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--Diff traffic policy-->
+                <div id="comparePolicyModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_comparePolicyModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div angucomplete-alt id="targetPolicyIdSelector"
+                                     placeholder="{{resource['policy']['policy_policyInfoApp_comparePolicyModel']['placeholder']}}"
+                                     pause="100"
+                                     selected-object="selectDiffPolicyId"
+                                     remote-url="{{remoteUrl()}}"
+                                     remote-url-request-formatter="cacheRequestFn"
+                                     search-fields="id,name"
+                                     title-field="id,name"
+                                     minlength="0"
+                                     match-class="highlight"
+                                     input-class="form-control form-control-small">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmSelectPolicyId()"
+                                        data-dismiss="modal"
+                                        ng-disabled="confirmDiffButtonDisable">{{resource['policy']['policy_policyInfoApp_comparePolicyModel']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_comparePolicyModel']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="diffSeperatePolicies" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm3'>
+                            <div id="diffOutput3"></div>
+                            <div class="btnDiv">
+                                <button class="btn btn-info" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_diffSeperatePolicies']['ok']}}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="output-div" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Log 详情</h4>
+                            </div>
+                            <div class="modal-body operation-detail-div" style="word-break: break-all">
+
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-info" data-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--关联新的Traffic Policy-->
+                <div class="modal fade" id="updateTrafficPolicyVSModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyVSModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group clearfix ">
+                                    <label class="col-lg-2 control-label " for="groupIdSelector">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyVSModal']['vs']}}:</label>
+
+                                    <div class="col-lg-10">
+                                        <div angucomplete-alt id="updateVsIdSelector"
+                                             pause="100"
+                                             selected-object="selectGroupId"
+                                             remote-url="{{remoteGroupsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             disable-input="true"
+                                             input-class="form-control form-control-small"
+                                             input-changed="groupIdInputChanged">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group clearfix">
+                                    <label class="col-lg-2 control-label ">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyVSModal']['priority']}}:</label>
+
+                                    <div class="col-lg-10">
+                                        <input class="form-control" id="priorityid" name="wighttext"
+                                               data-ng-model="currentpriority" data-validator="required integer"
+                                               data-validator-type="validation" data-validator="required">
+                                    </div>
+                                </div>
+                                <div class="form-group clearfix ">
+                                    <label class="col-lg-2 control-label ">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyVSModal']['path']}}:</label>
+
+                                    <div class="col-lg-10">
+                                        <input class="form-control" id="path"
+                                               type="text" data-ng-model="currentpath" data-validator-type="validation"
+                                               data-validator="required">
+                                    </div>
+                                </div>
+                                <div class="form-group clearfix status-red" ng-show="showErrorMessage()">
+                                    <label class="col-lg-2 control-label ">{{error.code}}:</label>
+
+                                    <div class="col-lg-10">
+                                            <span style="word-break: break-all">
+                                                {{error.message}}
+                                            </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="updateVirtualServer()">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyVSModal']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyVSModal']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="updateTrafficPolicyModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group clearfix ">
+                                    <label class="col-lg-2 control-label " for="groupIdSelector">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyModal']['group']}}:</label>
+
+                                    <div class="col-lg-10">
+                                        <div angucomplete-alt id="updateGroupIdSelector"
+                                             pause="100"
+                                             selected-object="selectGroupId"
+                                             remote-url="{{remoteGroupsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             initial-value="query.groupid"
+                                             input-class="form-control form-control-small"
+                                             input-changed="groupIdInputChanged">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group clearfix ">
+                                    <label class="col-lg-2 control-label " for="wighttext">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyModal']['weight']}}:</label>
+
+                                    <div class="col-lg-10">
+                                        <input class="form-control required" id="updatewighttext" name="wighttext"
+                                               type="text" data-ng-model="currentweight">
+                                    </div>
+                                </div>
+                                <div class="form-group clearfix status-red" ng-show="showErrorMessage()">
+                                    <label class="col-lg-2 control-label ">{{error.code}}:</label>
+
+                                    <div class="col-lg-10">
+                                            <span style="word-break: break-all">
+                                                {{error.message}}
+                                            </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="updateControl()">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyModal']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_updateTrafficPolicyModal']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="addNewTrafficPolicyModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content" style="background-color:#f1f4f5">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <div class="panel-title">
+                                            {{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['manual']}}
+                                        </div>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="row form-group clearfix ">
+                                            <label class="col-lg-2 control-label " for="groupIdSelector">
+                                                {{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['group']}}
+
+                                                :</label>
+
+                                            <div class="col-lg-10">
+                                                <div angucomplete-alt id="groupIdSelector"
+                                                     placeholder="{{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['group_placeholder']}}"
+                                                     pause="100"
+                                                     selected-object="selectGroupId"
+                                                     remote-url="{{remoteGroupsUrl()}}"
+                                                     remote-url-request-formatter="cacheRequestFn"
+                                                     search-fields="id,name"
+                                                     title-field="id"
+                                                     description-field="name"
+                                                     minlength="0"
+                                                     match-class="highlight"
+                                                     input-class="form-control form-control-small"
+                                                     input-changed="groupIdInputChanged">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row form-group clearfix " id="suggest1">
+                                            <label class="col-lg-2 control-label " for="wighttext">{{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['weight']}}:</label>
+
+                                            <div class="col-lg-10">
+                                                <input class="form-control required" id="wighttext" name="wighttext"
+                                                       type="text" data-ng-model="currentweight"
+                                                       data-validator-type="validation"
+                                                       data-validator="required integer">
+                                            </div>
+                                        </div>
+                                        <div class="row form-group clearfix status-red" ng-show="showErrorMessage()">
+                                            <label class="col-lg-2 control-label "
+                                                   for="errorlable">{{error.code}}:</label>
+
+                                            <div class="col-lg-10">
+                                            <span id="errorlable" style="word-break: break-all">
+                                                {{error.message}}
+                                            </span>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-info" ng-click="addNewControl(0)">{{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['ok']}}
+                                            </button>
+                                            <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['close']}}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="panel panel-default" ng-show="showSuggestArea()">
+                                    <div class="panel-heading">
+                                        <div class="panel-title">
+                                            {{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['suggest']}}
+                                        </div>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div id="suggest-toolbar" class="table-toolbar">{{suggestGroups.length}}</b>{{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['suggestcount']}}
+                                                </div>
+                                                <table id="suggest-groups">
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-info" ng-click="addNewControl(1)">{{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['ok']}}
+                                            </button>
+                                            <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_addNewTrafficPolicyModal']['close']}}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!--delete Traffic policy 的Groups-->
+                <div id="confirmRemovePolicy" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_confirmRemovePolicy']['title']}}</h4>
+                            </div>
+                            <div class="modal-body ">
+                                <span class="warning-important">
+                                    {{resource['policy']['policy_policyInfoApp_confirmRemovePolicy']['tooltip']}}
+                                </span>
+
+
+                                <textarea cols="2" rows="10" style="width: 100%"
+                                          data-ng-model="query.deletegroupreason"
+                                          placeholder="{{resource['policy']['policy_policyInfoApp_confirmRemovePolicy']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deletegroupreason" type="button" class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="confirmRemoveGroup()">
+                                    {{resource['policy']['policy_policyInfoApp_confirmRemovePolicy']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_confirmRemovePolicy']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="batchUpdateGroupWeightDialog" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_batchUpdateGroupWeightDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body ">
+                                <span class="warning-important">
+                                   {{resource['policy']['policy_policyInfoApp_batchUpdateGroupWeightDialog']['tooltip']}}
+                                </span>
+
+                                <textarea cols="2" rows="10" style="width: 100%"
+                                          data-ng-model="query.changeweightreason"
+                                          placeholder="{{resource['policy']['policy_policyInfoApp_batchUpdateGroupWeightDialog']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.changeweightreason" type="button"
+                                        class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="batchUpdateControlWeight()">
+                                    {{resource['policy']['policy_policyInfoApp_batchUpdateGroupWeightDialog']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_batchUpdateGroupWeightDialog']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="confirmUpdateVs" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_confirmUpdateVs']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['policy']['policy_policyInfoApp_confirmUpdateVs']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="confirmUpdateVS()">
+                                    {{resource['policy']['policy_policyInfoApp_confirmUpdateVs']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal"> {{resource['policy']['policy_policyInfoApp_confirmUpdateVs']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="confirmAddVSDialog" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_confirmAddVSDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['policy']['policy_policyInfoApp_confirmAddVSDialog']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="confirmAddVirtualServer()">
+                                    {{resource['policy']['policy_policyInfoApp_confirmAddVSDialog']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_confirmAddVSDialog']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="confirmRemoveVSDialog" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_confirmRemoveVSDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['policy']['policy_policyInfoApp_confirmRemoveVSDialog']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="confirmRemoveVirtualServer()">
+                                    {{resource['policy']['policy_policyInfoApp_confirmRemoveVSDialog']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_confirmRemoveVSDialog']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="confirmAddPolicy" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_confirmAddPolicy']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['policy']['policy_policyInfoApp_confirmAddPolicy']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="confirmAddGroup()">
+                                    {{resource['policy']['policy_policyInfoApp_confirmAddPolicy']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_confirmAddPolicy']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="confirmUpdatePolicy" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_confirmUpdatePolicy']['title']}}</h4>
+                            </div>
+                            <div class="modal-body ">
+                                <span class="warning-important">
+                              {{resource['policy']['policy_policyInfoApp_confirmUpdatePolicy']['tooltip']}}
+                                </span>
+                                <textarea cols="2" rows="10" style="width: 100%"
+                                          data-ng-model="query.updategroupreason"
+                                          placeholder="{{resource['policy']['policy_policyInfoApp_confirmUpdatePolicy']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.updategroupreason" type="button"
+                                        class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="confirmUpdateGroup()">
+                                    {{resource['policy']['policy_policyInfoApp_confirmUpdatePolicy']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_confirmUpdatePolicy']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="diffVSDiv" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{resource['policy']['policy_policyInfoApp_diffVSDiv']['title']}}</h1>
+                        </div>
+                        <form id='fileDiffForm1'>
+                        </form>
+                        <div class="modal-foot">
+                            <div class="btnDiv">
+                                <button class="btn btn-info" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_diffVSDiv']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="operationConfrimModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_operationConfrimModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning forceUpdateBt"
+                                        ng-show="showForceUpdate"
+                                        ng-click="forceActivatePolicy()">{{resource['policy']['policy_policyInfoApp_operationConfrimModel']['force']}}
+                                </button>
+
+                                <button type="button" class="btn btn-info closeProgressWindowBt" data-dismiss="modal">{{resource['policy']['policy_policyInfoApp_operationConfrimModel']['close']}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="operationConfrimModel2" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['policy']['policy_policyInfoApp_operationConfrimModel2']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info closeProgressWindowBt2" data-dismiss="modal">
+                                    {{resource['policy']['policy_policyInfoApp_operationConfrimModel2']['close']}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<!--DateTime JS-->
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<!--For diff patch-->
+<script src="/static/lib/diff-match-patch/difflib.js"></script>
+<script src="/static/lib/diff-match-patch/diffview.js"></script>
+<script src="/static/lib/underscore/underscore-min.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/lib/high-chart/highcharts.js"></script>
+<script src="/static/lib/high-chart/highcharts-3d.js"></script>
+
+<script src="/statics/js/repository/paramCommand.js"></script>
+<script src="/statics/js/repository/queryCommand.js"></script>
+<script src="/statics/js/repository/apiCommand.js"></script>
+
+<script src="/statics/js/services/paramService.js"></script>
+<script src="/statics/js/services/queryService.js"></script>
+<script src="/statics/js/services/apiService.js"></script>
+
+<script src="/statics/js/apps/app.js"></script>
+<script src="/statics/js/apps/userPolicyApp.js"></script>
+<script src="/statics/js/services/esService.js"></script>
+
+<script src="/static/js/new-graphic.js"></script>
+<!--<script src="/static/js/traffic-policy-graphics.js"></script>-->
+<script src="/static/js/traffic-policy.js"></script>
+</html>

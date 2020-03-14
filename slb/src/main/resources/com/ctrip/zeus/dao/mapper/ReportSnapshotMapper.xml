@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ctrip.zeus.dao.mapper.ReportSnapshotMapper">
+  <resultMap id="BaseResultMap" type="com.ctrip.zeus.dao.entity.ReportSnapshot">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="target_type" jdbcType="VARCHAR" property="targetType" />
+    <result column="agg_key" jdbcType="VARCHAR" property="aggKey" />
+    <result column="agg_value" jdbcType="VARCHAR" property="aggValue" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="DataChange_LastTime" jdbcType="TIMESTAMP" property="datachangeLasttime" />
+    <result column="count" jdbcType="BIGINT" property="count" />
+    <result column="target_tag" jdbcType="VARCHAR" property="targetTag" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    id, target_type, agg_key, agg_value, create_time, DataChange_LastTime, `count`, target_tag
+  </sql>
+  <select id="selectByExample" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshotExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from report_snapshot
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+    <if test="rows != null">
+      <if test="offset != null">
+        limit ${offset}, ${rows}
+      </if>
+      <if test="offset == null">
+        limit ${rows}
+      </if>
+    </if>
+  </select>
+  <select id="selectByExampleSelective" parameterType="map" resultMap="BaseResultMap">
+    select
+    <if test="example.distinct">
+      distinct
+    </if>
+    <choose>
+      <when test="selective != null and selective.length > 0">
+        <foreach collection="selective" item="column" separator=",">
+          ${column.aliasedEscapedColumnName}
+        </foreach>
+      </when>
+      <otherwise>
+        <include refid="Base_Column_List" />
+      </otherwise>
+    </choose>
+    from report_snapshot
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+    <if test="example.orderByClause != null">
+      order by ${example.orderByClause}
+    </if>
+    <if test="example.rows != null">
+      <if test="example.offset != null">
+        limit ${example.offset}, ${example.rows}
+      </if>
+      <if test="example.offset == null">
+        limit ${example.rows}
+      </if>
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from report_snapshot
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectByPrimaryKeySelective" parameterType="map" resultMap="BaseResultMap">
+    select
+    <choose>
+      <when test="selective != null and selective.length > 0">
+        <foreach collection="selective" item="column" separator=",">
+          ${column.aliasedEscapedColumnName}
+        </foreach>
+      </when>
+      <otherwise>
+        <include refid="Base_Column_List" />
+      </otherwise>
+    </choose>
+    from report_snapshot
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from report_snapshot
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshotExample">
+    delete from report_snapshot
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshot">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into report_snapshot (target_type, agg_key, agg_value, 
+      create_time, DataChange_LastTime, `count`, 
+      target_tag)
+    values (#{targetType,jdbcType=VARCHAR}, #{aggKey,jdbcType=VARCHAR}, #{aggValue,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{datachangeLasttime,jdbcType=TIMESTAMP}, #{count,jdbcType=BIGINT}, 
+      #{targetTag,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshot">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into report_snapshot
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="targetType != null">
+        target_type,
+      </if>
+      <if test="aggKey != null">
+        agg_key,
+      </if>
+      <if test="aggValue != null">
+        agg_value,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="datachangeLasttime != null">
+        DataChange_LastTime,
+      </if>
+      <if test="count != null">
+        `count`,
+      </if>
+      <if test="targetTag != null">
+        target_tag,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="targetType != null">
+        #{targetType,jdbcType=VARCHAR},
+      </if>
+      <if test="aggKey != null">
+        #{aggKey,jdbcType=VARCHAR},
+      </if>
+      <if test="aggValue != null">
+        #{aggValue,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="datachangeLasttime != null">
+        #{datachangeLasttime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="count != null">
+        #{count,jdbcType=BIGINT},
+      </if>
+      <if test="targetTag != null">
+        #{targetTag,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshotExample" resultType="java.lang.Long">
+    select count(*) from report_snapshot
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update report_snapshot
+    <set>
+      <if test="record.id != null">
+        id = #{record.id,jdbcType=BIGINT},
+      </if>
+      <if test="record.targetType != null">
+        target_type = #{record.targetType,jdbcType=VARCHAR},
+      </if>
+      <if test="record.aggKey != null">
+        agg_key = #{record.aggKey,jdbcType=VARCHAR},
+      </if>
+      <if test="record.aggValue != null">
+        agg_value = #{record.aggValue,jdbcType=VARCHAR},
+      </if>
+      <if test="record.createTime != null">
+        create_time = #{record.createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.datachangeLasttime != null">
+        DataChange_LastTime = #{record.datachangeLasttime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.count != null">
+        `count` = #{record.count,jdbcType=BIGINT},
+      </if>
+      <if test="record.targetTag != null">
+        target_tag = #{record.targetTag,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update report_snapshot
+    set id = #{record.id,jdbcType=BIGINT},
+      target_type = #{record.targetType,jdbcType=VARCHAR},
+      agg_key = #{record.aggKey,jdbcType=VARCHAR},
+      agg_value = #{record.aggValue,jdbcType=VARCHAR},
+      create_time = #{record.createTime,jdbcType=TIMESTAMP},
+      DataChange_LastTime = #{record.datachangeLasttime,jdbcType=TIMESTAMP},
+      `count` = #{record.count,jdbcType=BIGINT},
+      target_tag = #{record.targetTag,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshot">
+    update report_snapshot
+    <set>
+      <if test="targetType != null">
+        target_type = #{targetType,jdbcType=VARCHAR},
+      </if>
+      <if test="aggKey != null">
+        agg_key = #{aggKey,jdbcType=VARCHAR},
+      </if>
+      <if test="aggValue != null">
+        agg_value = #{aggValue,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="datachangeLasttime != null">
+        DataChange_LastTime = #{datachangeLasttime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="count != null">
+        `count` = #{count,jdbcType=BIGINT},
+      </if>
+      <if test="targetTag != null">
+        target_tag = #{targetTag,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshot">
+    update report_snapshot
+    set target_type = #{targetType,jdbcType=VARCHAR},
+      agg_key = #{aggKey,jdbcType=VARCHAR},
+      agg_value = #{aggValue,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      DataChange_LastTime = #{datachangeLasttime,jdbcType=TIMESTAMP},
+      `count` = #{count,jdbcType=BIGINT},
+      target_tag = #{targetTag,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectOneByExample" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshotExample" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from report_snapshot
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+    limit 1
+  </select>
+  <select id="selectOneByExampleSelective" parameterType="map" resultMap="BaseResultMap">
+    select
+    <choose>
+      <when test="selective != null and selective.length > 0">
+        <foreach collection="selective" item="column" separator=",">
+          ${column.aliasedEscapedColumnName}
+        </foreach>
+      </when>
+      <otherwise>
+        <include refid="Base_Column_List" />
+      </otherwise>
+    </choose>
+    from report_snapshot
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+    <if test="example.orderByClause != null">
+      order by ${example.orderByClause}
+    </if>
+    limit 1
+  </select>
+  <insert id="upsertSelective" keyColumn="id" keyProperty="id" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshot" useGeneratedKeys="true">
+    insert into report_snapshot
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="targetType != null">
+        target_type,
+      </if>
+      <if test="aggKey != null">
+        agg_key,
+      </if>
+      <if test="aggValue != null">
+        agg_value,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="datachangeLasttime != null">
+        DataChange_LastTime,
+      </if>
+      <if test="count != null">
+        `count`,
+      </if>
+      <if test="targetTag != null">
+        target_tag,
+      </if>
+    </trim>
+    values
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="targetType != null">
+        #{targetType,jdbcType=VARCHAR},
+      </if>
+      <if test="aggKey != null">
+        #{aggKey,jdbcType=VARCHAR},
+      </if>
+      <if test="aggValue != null">
+        #{aggValue,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="datachangeLasttime != null">
+        #{datachangeLasttime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="count != null">
+        #{count,jdbcType=BIGINT},
+      </if>
+      <if test="targetTag != null">
+        #{targetTag,jdbcType=VARCHAR},
+      </if>
+    </trim>
+    on duplicate key update 
+    <trim suffixOverrides=",">
+      <if test="id != null">
+        id = #{id,jdbcType=BIGINT},
+      </if>
+      <if test="targetType != null">
+        target_type = #{targetType,jdbcType=VARCHAR},
+      </if>
+      <if test="aggKey != null">
+        agg_key = #{aggKey,jdbcType=VARCHAR},
+      </if>
+      <if test="aggValue != null">
+        agg_value = #{aggValue,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="datachangeLasttime != null">
+        DataChange_LastTime = #{datachangeLasttime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="count != null">
+        `count` = #{count,jdbcType=BIGINT},
+      </if>
+      <if test="targetTag != null">
+        target_tag = #{targetTag,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <insert id="upsert" keyColumn="id" keyProperty="id" parameterType="com.ctrip.zeus.dao.entity.ReportSnapshot" useGeneratedKeys="true">
+    insert into report_snapshot
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      target_type,
+      agg_key,
+      agg_value,
+      create_time,
+      DataChange_LastTime,
+      `count`,
+      target_tag,
+    </trim>
+    values
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      #{targetType,jdbcType=VARCHAR},
+      #{aggKey,jdbcType=VARCHAR},
+      #{aggValue,jdbcType=VARCHAR},
+      #{createTime,jdbcType=TIMESTAMP},
+      #{datachangeLasttime,jdbcType=TIMESTAMP},
+      #{count,jdbcType=BIGINT},
+      #{targetTag,jdbcType=VARCHAR},
+    </trim>
+    on duplicate key update 
+    <trim suffixOverrides=",">
+      <if test="id != null">
+        id = #{id,jdbcType=BIGINT},
+      </if>
+      target_type = #{targetType,jdbcType=VARCHAR},
+      agg_key = #{aggKey,jdbcType=VARCHAR},
+      agg_value = #{aggValue,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      DataChange_LastTime = #{datachangeLasttime,jdbcType=TIMESTAMP},
+      `count` = #{count,jdbcType=BIGINT},
+      target_tag = #{targetTag,jdbcType=VARCHAR},
+    </trim>
+  </insert>
+
+  <!--Non-automatic generation Code-->
+  <insert id="batchInsert">
+    insert into report_snapshot (target_type, agg_key, agg_value,
+    create_time, DataChange_LastTime, count,
+    target_tag)
+    <trim prefix="values ">
+      <foreach collection="list" item="item" separator=",">
+        (#{item.targetType,jdbcType=VARCHAR}, #{item.aggKey,jdbcType=VARCHAR}, #{item.aggValue,jdbcType=VARCHAR},
+        #{item.createTime,jdbcType=TIMESTAMP}, #{item.datachangeLasttime,jdbcType=TIMESTAMP}, #{item.count,jdbcType=BIGINT},
+        #{item.targetTag,jdbcType=VARCHAR})
+      </foreach>
+    </trim>
+  </insert>
+  <!--Non-automatic generation Code END-->
+</mapper>

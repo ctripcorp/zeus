@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>.Net-to-Java</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--Cytoscape JS-->
+    <script src="/static/lib/cytoscape.js-2.7.15/cytoscape.min.js"></script>
+    <!-- ION Slider -->
+    <link href="/static/lib/velonic-admin/assets/ion-rangeslider/ion.rangeSlider.css" rel="stylesheet" type="text/css"/>
+    <link href="/static/lib/velonic-admin/assets/ion-rangeslider/ion.rangeSlider.skinFlat.css" rel="stylesheet"
+          type="text/css"/>
+
+    <link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/notifications/notification.css" rel="stylesheet">
+
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <script src="/static/lib/velonic-admin/assets/ion-rangeslider/ion.rangeSlider.min.js"></script>
+    <script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+
+    <!--Cytoscape JS-->
+    <script src="/static/lib/cytoscape.js-2.7.15/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <style type="text/css">
+        h5 {
+            font-size: 16px;
+        }
+
+        .highcharts-container {
+            border-radius: 1px;
+            border: 1px solid;
+            border-color: #DDDDDD;
+        }
+
+        .options-bar .btn {
+            margin-left: 10px;
+            margin-top: -10px;
+        }
+    </style>
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown diagnose-menu">
+
+            </li>
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource.tools.verify.html.personalPage}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/users#?env={{env}}"><span>&nbsp;{{resource.languageApp.languageController.privilege}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource.tools.verify.html.logout}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li>
+                <a href="{{generateLink('home')}}">
+                    <i class="fa fa-home"></i>
+                    <span class="nav-label">{{resource.userHome.html.title}}</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{generateLink('basic')}}"><i
+                        class="ion-ios7-speedometer"></i>
+                    <span class="nav-label">{{resource.userHome.html.headerInfoController.item2}}</span></a>
+            </li>
+            <li class="active"><a href="{{generateLink('policy')}}"><i class="fa fa-map-signs"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item3}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('AB')}}"><i class="fa fa-universal-access"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item4}}</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item6}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('access')}}"><i class="fa fa-user"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item7}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController">
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin,chinese-name"
+                                 title-field="id,name"
+                                 minlength="0"
+                                 ng-click="clickTarget()"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="breadcrumb-follow" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController">
+            <!--tile summary Area-->
+            <div class="row tile-summary">
+                <div class="col-lg-3 col-sm-3">
+                    <div class="btn btn-block btn-lg btn-primary " ng-click="startNewTrafficPolicy()"
+                         style="padding: 54px 10px 0px 0px;height: 130px;">
+                        <i class="fa fa-plus"></i>
+                        <span type="button" class="bg-white" style="color: white">{{resource.userTrafficpolicy.html.msg2}}</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-3">
+                    <div class="btn btn-block btn-lg alert-danger " ng-click="dropTrafficPolicy()"
+                         style="padding: 54px 10px 0px 0px;height: 130px;">
+                        <i class="fa fa-minus"></i>
+                        <span type="button" class="bg-white" style="">{{resource.userTrafficpolicy.html.msg3}}</span>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-3">
+                    <div class="widget-panel widget-style-2 white-bg"
+                         style="padding: 40px 10px 0px 0px;height: 130px;">
+                        <div class="row">
+                            <div class="col-sm-9">
+                                <div class="row" style="margin-left: 10px;">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('activated')"
+                                         class="col-xs-4 text-center">
+                                        <h2 class="m-t-0 m-b-0"><a class="activated-text status-green">0</a></h2>
+
+                                        <div class="status-green">{{resource.summaryInfoApp.html.token1}}</div>
+                                    </div>
+                                    <div
+                                            class="col-xs-4 text-center">
+                                        <h2 class=" m-b-0 m-t-0 "><a class="status-yellow tobeactivated-text">0</a>
+                                        </h2>
+
+                                        <div class="status-yellow">{{resource.summaryInfoApp.html.token2}}</div>
+                                    </div>
+                                    <div class="col-xs-4 text-center">
+                                        <h2 class=" m-b-0 m-t-0 "><a class="status-gray deactivated-text">0</a></h2>
+
+                                        <div class="status-gray">{{resource.summaryInfoApp.html.token3}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-3">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i class="fa fa-pie-chart text-pink"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--count summary Area-->
+            <div class="row count-summary" style="padding-bottom: 15px">
+                <div class="col-md-6">
+                    <div style="margin-top: 5px">
+                        <b>{{summaryInfo}}</b>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="pull-right">
+                        <div class="input-group">
+                            <input type="text" id="example-input1-group2" name="example-input1-group2"
+                                   class="form-control ng-pristine ng-valid ng-touched"
+                                   placeholder="{{resource.userTrafficpolicy.html.msg7}}" data-ng-model="searchtext">
+                            <span class="input-group-btn">
+                                        <button type="button" class="btn btn-effect-ripple "
+                                                ng-click="searchPolicy()"><i class="fa fa-search"></i></button>
+                                    </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--result area-->
+            <div class="results" id="diagrams-area">
+
+            </div>
+            <!--modals area-->
+            <div class="modals">
+                <div id="activateVSModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{resource.tools.drs.html.trafficsResultApp.token9}}</h1>
+                        </div>
+                        <div class="modal-body">
+                            <form id='fileDiffForm'>
+                                <div id="diffOutput"></div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <div class="pull-left">
+                                <a class="btn btn-info confirmActivatePolicy"
+                                   ng-click="confirmActivatePolicy()" ng-disabled="canUserActivatePolicy()"
+                                   ng-attr-title="getActivatePolicyTitle()">{{resource.userTrafficpolicy.html.msg9}}</a>
+                                <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.verify.html.token12}}</button>
+                            </div>
+                            <div class="pull-right status-red" ng-show="canUserActivatePolicy()">
+                                {{resource.userTrafficpolicy.html.msg11}} <a ng-click="getPolicyAuthLink($event)">{{resource.userTrafficpolicy.html.msg12}}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="weightAdjustDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userTrafficpolicy.html.msg13}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-5 left-app">
+
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" id="range_02"/>
+                                    </div>
+                                    <div class="col-md-5 right-app">
+
+                                    </div>
+                                </div>
+
+                                <div class="row system-padding-bottom">
+                                    <div class="col-md-12">
+                                        <div class="pull-left">
+                                            <a ng-click="clickUpdateAdvancedOption()"
+                                               class="updateadvanced system-color"><i
+                                                    ng-class="advancedUpdateOperationClass()"></i>{{advancedUpdateOperationText()}}</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="row" ng-show="showUpdateAdvanceRow()">
+                                    <div class="col-md-12">
+                                        <div class="panel">
+                                            <div id="loadingUpdateArea" class="panel-body" style="padding-top:0px">
+                                                <div ng-show="showsoaAdvanced" class="soa-area">
+                                                    <div class="row text-black"><label
+                                                            class="status-red">*</label>
+                                                        {{resource.userTrafficpolicy.html.msg14}}<b>{{updateNetOps.length}}</b>{{resource.userTrafficpolicy.html.msg15}}
+                                                        Operations。
+                                                        {{resource.userTrafficpolicy.html.msg16}}
+                                                    </div>
+                                                    <div class="row text-black system-padding-bottom ">
+                                                        <div class="col-md-8">
+                                                            <label class="status-red"
+                                                                   ng-show="showSoaUpdateError">
+                                                                {{getUpdateSoaOpError()}}</label>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="input-group">
+                                                                <input type="text" id="example-input1-group4"
+                                                                       name="example-input1-group4"
+                                                                       class="form-control ng-pristine ng-valid ng-touched"
+                                                                       placeholder="Operation Name"
+                                                                       data-ng-model="opupdatename">
+                                                                <span class="input-group-btn">
+                                                                                    <button type="button"
+                                                                                            class="btn btn-effect-ripple ">
+                                                                                        <i class="fa fa-search"></i>
+                                                                                    </button>
+                                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-4 system-padding-bottom"
+                                                             data-ng-repeat="op in updateNetOps | soaFilter: opupdatename">
+                                                            <label ng-class="isSelectedLable(op)"><input
+                                                                    style="margin-right: 5px"
+                                                                    type="checkbox" name="op"
+                                                                    ng-checked="isSelectedOps(op)"
+                                                                    ng-click="updateUpdatedSelectedOps($event,op)"/>{{op}}</label>
+                                                        </div>
+                                                        <button class="btn pull-right" ng-show="showUndoOpsChange()"
+                                                                ng-click="undoOpChange()">
+                                                            <i class="fa fa-undo system-padding-right"
+                                                               aria-hidden="true"></i> {{resource.userTrafficpolicy.html.msg17}}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div ng-show="isUpdateSoaValide==false&&showsoaAdvanced"
+                                                     class="soa-error-area">
+                                                    <div class="row text-black status-red">
+                                                        <span class="status-red">{{resource.userTrafficpolicy.html.msg18}} <a
+                                                                href="mailto:slb@test.com?subject=SLB产品咨询&body=NET应用中无法找到SOA Operations:%E2%80%A8%E2%80%A8%E2%80%A8%E2%80%A8">SLB
+                                                            {{resource.userTrafficpolicy.html.msg83}}</a>{{resource.userTrafficpolicy.html.msg19}}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div ng-show="showslbAdvanced" id="slb-new-area">
+                                                    <div class="row text-black"><label
+                                                            class="status-red">*</label>
+                                                        {{resource.userTrafficpolicy.html.msg22}}<label>{{getUpdateSlbPath()}}/*</label>,
+                                                        {{resource.userTrafficpolicy.html.msg23}}<label
+                                                                class="status-red"
+                                                                ng-show="showSlbUpdateError">
+                                                            {{getUpdateSlbOpError()}}</label></div>
+                                                    <div style="padding-top: 10px; line-height: 40px;"
+                                                         class="groupnode row"
+                                                         data-ng-repeat="path in updateGroupPaths">
+                                                        <div class="col-md-12">
+                                                            <div class="input-group">
+                                                                <span class="input-group-addon" id="basic-new-addon3">{{getUpdateSlbPath()}}/</span>
+                                                                <input type="text" class="form-control path-update-text"
+                                                                       placeholder="{{resource.userTrafficpolicy.html.msg24}}"
+                                                                       data-ng-model="path.value"
+                                                                       ng-blur="blurUpdateText($event, path.value)">
+                                                                <span class="input-group-addon"
+                                                                      style="background-color: transparent; width: 5.1%">
+
+                                                    <button type="button"
+                                                            class="btn btn-effect-ripple btn-info btn-xs "
+                                                            ng-click="removeUpdateSubPath(path,$index)"><i
+                                                            class="fa fa-minus"></i></button>
+                                                                                       <button style="border: none;"
+                                                                                               type="button"
+                                                                                               class="btn btn-effect-ripple btn-info btn-xs"
+                                                                                               ng-show="$index==updateGroupPaths.length-1"
+                                                                                               ng-click="addUpdateSubPath(path.value,$index)">
+                                                                                           <i class="fa fa-plus"
+                                                                                              style="padding: 4px 2px;"></i>
+                                                                                       </button>
+                                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <textarea cols="2" rows="5" style="width: 100%"
+                                          data-ng-model="query.updatereason"
+                                          placeholder="{{resource.userTrafficpolicy.html.msg25}}"></textarea>
+
+                            </div>
+
+
+
+                            <div class="operation-result modal-footer">
+                                <div class="col-md-10">
+                                    <div class="pull-right system-padding-top-mx">
+                                        <i class="status-green fa fa-check system-padding-right"></i>
+                                        <span class="status-red">{{resource.userTrafficpolicy.html.msg27}}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button ng-click="activatePolicy()"
+                                            class="btn btn-info "><i class="fa fa-check"></i>
+                                        <span>{{resource.userTrafficpolicy.html.msg59}}</span></button>
+                                    <button data-dismiss="modal" class="btn btn-warning "><i
+                                            class="fa fa-close"></i> <span>{{resource.userTrafficpolicy.html.msg26}}</span></button>
+                                </div>
+                            </div>
+                            <div class="origin-footer modal-footer">
+                                <div class="pull-left status-red" ng-show="canUserChangePolicy()">
+                                    {{resource.userTrafficpolicy.html.msg28}}<a ng-click="getPolicyAuthLink($event)">{{resource.userTrafficpolicy.html.msg29}}</a>
+                                </div>
+                                <div class="status-red" id="showTootipId" ng-show="showSaveAsk()">
+                                    <input type="checkbox" data-ng-model="read"/>
+                                    {{resource.userTrafficpolicy.html.msg31}}<a target="_blank"
+                                                                                href="/portal/tools/test#?env={{env}}&policyId={{selectedPolicy.id}}">{{resource.userTrafficpolicy.html.msg32}}</a>){{resource.userTrafficpolicy.html.msg33}}
+                                </div>
+                                <div class="status-red" ng-show="!showSaveAsk()">
+                                    {{resource.userTrafficpolicy.html.msg34}}<a
+                                        href="/portal/policy#?env={{env}}&policyId={{policyId}}">{{resource.userTrafficpolicy.html.msg86}}</a>.
+                                    {{resource.userTrafficpolicy.html.msg35}}
+                                    <a href="mailto:slb@test.com?subject=SLB产品咨询&body=请添加咨询问题列表:%E2%80%A8%E2%80%A8%E2%80%A8%E2%80%A8">SLB
+                                        {{resource.userTrafficpolicy.html.msg83}}</a>
+                                </div>
+
+                                <div class="pull-right">
+                                    <button ng-click="saveWeight($event)" type="button"
+                                            class="btn btn-info"
+                                            ng-disabled="canUserChangePolicy() || canUserSaveWeight() || !query.updatereason"
+                                            ng-attr-title="getUserChangePolicyTitle()">{{resource.userTrafficpolicy.html.msg36}}
+                                    </button>
+                                    <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource.tools.verify.html.token12}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="unFocusDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="">{{resource.tools.verify.html.token11}}{{resource.tools.verify.html.token12}}{{resource.user.html.label9}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="modal-title"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="unFocusOperation(unFocusType, unFocusIds)" type="button"
+                                        class="btn btn-info">{{resource.tools.verify.html.token11}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource.tools.verify.html.token12}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="focusDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="">{{resource.tools.verify.html.token11}}{{resource.user.html.label9}}</h4>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="modal-title"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="focusOperation(focusType, focusIds)" type="button"
+                                        class="btn btn-info">{{resource.tools.verify.html.token11}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource.tools.verify.html.token12}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="newTrafficPolicyDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userTrafficpolicy.html.msg39}}</h4>
+                            </div>
+                            <div class="modal-body" style="padding-top: 0px;">
+                                <div class="timeline">
+                                    <!--Step1: Chosse java app-->
+                                    <li class="first-step">
+                                        <div class="timeline-badge info"><i class="fa fa-coffee"></i>
+                                        </div>
+                                        <div class="panel panel-default traffic-init-panel">
+                                            <div class="panel-heading">
+                                                <h4 class="panel-title">{{resource.userTrafficpolicy.html.msg41}}</h4>
+                                            </div>
+                                            <div class="panel-body">
+                                                <div class="row">
+                                                    <div class="col-md-1">AppID：</div>
+                                                    <div class="col-md-11">
+                                                        <div angucomplete-alt id="appIdSelector"
+                                                             placeholder={{resource.apps.html.msg1}}
+                                                             pause="100"
+                                                             selected-object="selectAppId"
+                                                             remote-url="{{remoteAppsUrl()}}"
+                                                             remote-url-request-formatter="cacheRequestFn"
+                                                             search-fields="id,name,pinyin"
+                                                             title-field="id"
+                                                             description-field="name"
+                                                             minlength="0"
+                                                             match-class="highlight"
+                                                             input-class="form-control form-control-small"
+                                                             input-changed="appIdInputChanged">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row" style="padding-top: 20px"
+                                                     ng-show="javaGroups.length>0">
+                                                    <div class="col-md-1">
+                                                        {{resource.app.html.msbg2}}:
+                                                    </div>
+                                                    <div class="col-md-11">
+                                                        <div class="row">
+                                                            <div class="col-sm-6" data-ng-repeat="g in javaGroups">
+                                                                <div ng-class="selectedTileClass(g,1,$index)"
+                                                                     class="panel group-item" tag="{{g.id}}"
+                                                                     ng-click="clickTile(g, $event,1)">
+                                                                    <div class="panel-body" style="padding-top: 0;">
+                                                                        <div class="media-main">
+                                                                            <div class="info">
+                                                                                <p><span
+                                                                                        class="">Group:</span><a
+                                                                                        href="/portal/group#?env={{env}}&groupId={{g.id}}"
+                                                                                        target="_blank">{{g.name}}</a>
+                                                                                </p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p class="text-black">App: <a
+                                                                                        href="/portal/app#?env={{env}}&appId={{g.appId}}"
+                                                                                        target="_blank">{{g.appId}}/{{g.app}}</a>
+                                                                                </p>
+
+                                                                                <p class="text-black">IDC:
+                                                                                    <a>{{g.idc}}</a></p>
+                                                                            </div>
+
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                                <div class="status-red"
+                                                                     ng-show="!g.available">
+                                                                    <span ng-bind-html="g.error"></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-1"></div>
+                                                    <div class="col-md-11"><span class="status-red">{{firstToSecondErrorMessage}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row" ng-show="canMoveNext(1)"
+                                                     style="padding-top: 10px">
+                                                    <div class="col-md-12">
+                                                        <div class="pull-right">
+                                                            <button ng-click="moveNext($event,1)"
+                                                                    class="first-step-bt btn btn-info m-b-5"><i
+                                                                    class="fa fa-arrow-right"></i> <span>{{resource.userTrafficpolicy.html.msg43}}</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <!--Step2: Chosse net app-->
+                                    <li ng-show="showStep(2)" class="second-step">
+                                        <div class="timeline-badge warning"><i class="fa fa-windows"></i>
+                                        </div>
+                                        <div class="panel default-panel traffic-init-panel">
+                                            <div class="panel-heading">
+                                                <h4 class="panel-title">{{resource.userTrafficpolicy.html.msg44}}</h4>
+                                            </div>
+                                            <div class="panel-body ">
+                                                <div class="row">
+                                                    <div class="col-md-1">
+                                                        {{resource.app.html.msbg2}}:
+                                                    </div>
+                                                    <div class="col-md-11">
+                                                        <div class="row">
+                                                            <div class="col-sm-6 java-group-class"
+                                                                 data-ng-repeat="g in netGroups">
+                                                                <div ng-class="selectedTileClass(g,2,$index)"
+                                                                     class="panel group-item" tag="{{g.id}}"
+                                                                     ng-click="clickTile(g,$event,2)">
+                                                                    <div class="panel-body" style="padding-top: 0;">
+                                                                        <div class="media-main">
+                                                                            <div class="info">
+                                                                                <p><span
+                                                                                        class="text-black">Group:</span><a
+                                                                                        href="/portal/group#?env={{env}}&groupId={{g.id}}"
+                                                                                        target="_blank">{{g.name}}</a>
+                                                                                </p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p class="text-black">App: <a
+                                                                                        href="/portal/app#?env={{env}}&appId={{g.appId}}"
+                                                                                        target="_blank">{{g.appId}}/{{g.app}}</a>
+                                                                                </p>
+
+                                                                                <p class="text-black">IDC:
+                                                                                    <a>{{g.idc}}</a></p>
+                                                                            </div>
+
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                </div>
+                                                                <div class="status-red error-msg"
+                                                                     ng-show="!g.available">
+                                                                    <span class="status-red"
+                                                                          ng-bind-html="g.error"
+                                                                          ng-click="applyRightClick($event,g)"></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row" style="padding-top: 10px" ng-show="canMoveNext(2)">
+                                                    <div class="col-md-12">
+                                                        <div class="pull-right">
+                                                            <button ng-click="moveNext($event,2)"
+                                                                    class="second-step-bt btn btn-info m-b-5">
+                                                                <i class="fa fa-arrow-right"></i> <span>{{resource.userTrafficpolicy.html.msg43}}</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <!--Step3: Weight-->
+                                    <li ng-show="showStep(3)" class="third-step">
+                                        <div class="timeline-badge danger"><i class="fa fa-balance-scale"></i>
+                                        </div>
+                                        <div class="panel default-panel traffic-init-panel">
+                                            <div class="panel-heading">
+                                                <h4 class="panel-title">{{resource.userTrafficpolicy.html.msg45}}</h4>
+                                            </div>
+                                            <div class="panel-body ">
+                                                <div class="row">
+                                                    <div class="col-sm-6" data-ng-repeat="g in bothGroups">
+                                                        <div class="panel group-item" tag="{{g.id}}">
+                                                            <div class="panel-body" style="padding-top: 0;">
+                                                                <div class="media-main">
+                                                                    <div class="form form-group">
+                                                                        <div class="">
+                                                                            <span class="app-type"> {{g.desc}} <i
+                                                                                    ng-class="getTypeCss(g.type)"></i></span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="form form-group">
+                                                                        <p><span class="text-black">Group:</span><a
+                                                                                href="/portal/group#?env={{env}}&groupId={{g.id}}"
+                                                                                target="_blank">{{g.name}}</a>
+                                                                        </p>
+
+                                                                        <p class="text-black">App: <a
+                                                                                href="/portal/app#?env={{env}}&appId={{g.appId}}"
+                                                                                target="_blank">{{g.appId}}/{{g.app}}</a>
+                                                                        </p>
+
+                                                                        <p class="text-black">IDC: <a>{{g.idc}}</a></p>
+                                                                    </div>
+
+                                                                    <div class="form form-group"><span
+                                                                            class="text-black">{{resource.userTrafficpolicy.html.msg46}}</span><span
+                                                                            id="{{g.type}}">{{g.percent}}%</span><span
+                                                                            style="margin-left: 10px;"
+                                                                            class="status-red">{{getDescByType(g.type)}}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row" style="margin-top: 15px">
+                                                    <div class="col-md-12">
+                                                    <textarea cols="2" rows="5" style="width: 100%"
+                                                              data-ng-model="query.newreason"
+                                                              placeholder="{{resource.userTrafficpolicy.html.msg25}}"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="row" style="padding-bottom: 15px">
+                                                    <div class="col-md-12">
+                                                        <div class="pull-left">
+                                                            <a class="system-color" ng-click="clickAdvancedOption()"><i
+                                                                    ng-class="advancedOperationClass()"></i>{{advancedOperationText()}}</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row loadingrow hide">
+                                                    Loading...
+                                                </div>
+                                                <div class="row" ng-show="showAdvanceRow">
+                                                    <div class="col-md-12">
+                                                        <div class="panel">
+                                                            <div class="panel-body" style="padding-top:0px">
+                                                                <div ng-show="showSoaMethod()" class="soa-area">
+                                                                    <div class="row text-black">
+                                                                        <div class="col-md-12">
+                                                                            <label
+                                                                                    class="status-red">*</label>
+                                                                            {{resource.userTrafficpolicy.html.msg14}}<b>{{netOps.length}}</b>{{resource.userTrafficpolicy.html.msg48}}
+                                                                            {{resource.userTrafficpolicy.html.msg49}}
+                                                                            {{resource.userTrafficpolicy.html.msg51}}
+                                                                        </div>
+
+                                                                    </div>
+                                                                    <div class="row text-black  ">
+                                                                        <div class="col-md-8">
+                                                                            <label class="status-red"
+                                                                                   ng-show="showSoaOpsError()">
+                                                                                {{getSoaOpError()}}</label>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <div class="input-group">
+                                                                                <input type="text"
+                                                                                       id="example-input1-group3"
+                                                                                       name="example-input1-group3"
+                                                                                       class="form-control ng-pristine ng-valid ng-touched"
+                                                                                       placeholder="Operation Name"
+                                                                                       data-ng-model="opname">
+                                                                                <span class="input-group-btn">
+                                                                                    <button type="button"
+                                                                                            class="btn btn-effect-ripple ">
+                                                                                        <i class="fa fa-search"></i>
+                                                                                    </button>
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <div class="col-md-4 system-padding-bottom"
+                                                                             data-ng-repeat="op in netOps  | soaFilter: opname">
+                                                                            <label class="create-ops-label"
+                                                                                   ng-class="isSelectedNewLable(op)"><input
+                                                                                    id="op" type="checkbox" name="op"
+                                                                                    ng-checked="isSelectedNewOps(op)"
+                                                                                    ng-click="updateSelectedOps($event,op)"
+                                                                                    style="padding-right: 2px"/>{{op}}</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div ng-show="showSoaErrorMethod()"
+                                                                     class="soa-error-area">
+                                                                    <div class="row text-black status-red">
+                                                                        <span class="status-red">{{resource.userTrafficpolicy.html.msg18}} <a
+                                                                                href="mailto:slb@test.com?subject=SLB产品咨询&body=NET应用中无法找到SOA Operations:%E2%80%A8%E2%80%A8%E2%80%A8%E2%80%A8">SLB
+                                                                            {{resource.userTrafficpolicy.html.msg83}}</a>{{resource.userTrafficpolicy.html.msg19}}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div ng-show="showSlbMethod()" id="slb-area">
+                                                                    <div class="row text-black"><label
+                                                                            class="status-red">*</label>
+                                                                        {{resource.userTrafficpolicy.html.msg22}}<label>{{getSlbPath()}}/*</label>,
+                                                                        {{resource.userTrafficpolicy.html.msg23}}<label
+                                                                                class="status-red"
+                                                                                ng-show="showSlbOpsError()">
+                                                                            {{getSlbOpError()}}</label></div>
+                                                                    <div style="padding-top: 10px; line-height: 40px;"
+                                                                         class="groupnode row"
+                                                                         data-ng-repeat="path in groupPaths">
+                                                                        <div class="col-md-12">
+                                                                            <div class="input-group">
+                                                                                <span class="input-group-addon"
+                                                                                      id="basic-addon3">{{getSlbPath()}}/</span>
+                                                                                <input type="text"
+                                                                                       class="form-control path-text"
+                                                                                       placeholder="{{resource.userTrafficpolicy.html.msg24}}"
+                                                                                       data-ng-model="path">
+                                                                                <span class="input-group-addon"
+                                                                                      style="background-color: transparent;border: none;">
+                                                                                     <button style="border: none;"
+                                                                                             type="button"
+                                                                                             class="btn btn-info btn-effect-ripple btn-xs"
+                                                                                             ng-show="$index==groupPaths.length-1"
+                                                                                             ng-click="addSubPath($event,path)">
+                                                                                         <i class="fa fa-plus"></i>
+                                                                                     </button>
+                                                    <button ng-show="$index!=groupPaths.length-1" type="button"
+                                                            class="btn btn-effect-ripple btn-info btn-xs"
+                                                            ng-click="removeSubPath(path,$index)"><i
+                                                            class="fa fa-minus"></i></button>
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row" style="padding-top: 10px">
+                                                    <div class="col-md-12">
+                                                        <div class="pull-right">
+                                                            <button ng-disabled="!query.newreason" ng-click="moveNext($event,3)"
+                                                                    class="third-step-bt btn btn-info m-b-5"><i
+                                                                    class="fa fa-arrow-right"></i> <span>创建</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <!--Step4: Create-->
+                                    <li ng-show="showStep(4)" class="forth-step">
+                                        <div class="timeline-badge success"><i class="fa fa-check-circle"></i>
+                                        </div>
+                                        <div class="panel default-panel traffic-init-panel">
+                                            <div class="panel-heading">
+                                                <h4 class="panel-title">{{resource.userTrafficpolicy.html.msg57}}</h4>
+                                            </div>
+                                            <div class="panel-body ">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="pull-right">
+                                                            <button ng-click="activatePolicy()"
+                                                                    class="btn btn-info m-b-5"><i
+                                                                    class="fa fa-check"></i>
+                                                                <span>{{resource.userTrafficpolicy.html.msg59}}</span></button>
+                                                            <button data-dismiss="modal" class="btn btn-warning m-b-5">
+                                                                <i
+                                                                        class="fa fa-close"></i> <span>{{resource.userTrafficpolicy.html.msg26}}</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.verify.html.token12}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="deactivateTrafficPolicyDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userTrafficpolicy.html.msg61}}</h4>
+                            </div>
+                            <div class="modal-body" style="padding-top: 0px;">
+                                <div class="timeline">
+                                    <!--Step1: Chosse java app-->
+                                    <li class="first-step">
+                                        <div class="timeline-badge info"><i class="fa fa-coffee"></i>
+                                        </div>
+                                        <div class="panel panel-default traffic-init-panel">
+                                            <div class="panel-heading">
+                                                <h4 class="panel-title">{{resource.userTrafficpolicy.html.msg62}}</h4>
+                                            </div>
+                                            <div class="panel-body">
+                                                <div class="row">
+                                                    <div class="col-md-1">AppID：</div>
+                                                    <div class="col-md-11">
+                                                        <div angucomplete-alt id="appIdSelectorDeactivate"
+                                                             placeholder={{resource.apps.html.msg1}}
+                                                             pause="100"
+                                                             selected-object="selectDeactivateAppId"
+                                                             remote-url="{{remoteAppsUrl()}}"
+                                                             remote-url-request-formatter="cacheRequestFn"
+                                                             search-fields="id,name,pinyin"
+                                                             title-field="id"
+                                                             description-field="name"
+                                                             minlength="0"
+                                                             match-class="highlight"
+                                                             input-class="form-control form-control-small"
+                                                             input-changed="appIdInputChanged">
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                                <div class="row status-red">
+                                                    <div class="col-md-1"></div>
+                                                    <div class="col-md-11">
+                                                        <h5>{{appidNotHasPolicyError}}</h5>
+                                                    </div>
+                                                </div>
+                                                <div ng-show="firstshow">
+                                                    <div class="row" style="padding-top: 20px"
+                                                         ng-show="showSelectedPolicies()">
+                                                        <div class="col-md-1">
+                                                            策略:
+                                                        </div>
+                                                        <div class="col-md-11">
+                                                            <div class="row">
+                                                                <div class="col-sm-6"
+                                                                     data-ng-repeat="p in deactivatedpolicies">
+                                                                    <div ng-class="getPolicyTileClass(p,$index)"
+                                                                         class="panel group-item"
+                                                                         ng-click="clickPolicyTile($index, p)">
+                                                                        <div class="panel-body" style="padding-top: 0;">
+                                                                            <div class="row">
+                                                                                <div class="col-md-3"><h5><b>{{resource.userTrafficpolicy.html.msg63}}</b>
+                                                                                </h5></div>
+                                                                                <div class="col-md-9"><a
+                                                                                        href="/portal/policy#?env={{env}}&policyId={{p.id}}"
+                                                                                        target="_blank"><h5>
+                                                                                    {{p.name}}</h5></a></div>
+                                                                            </div>
+                                                                            <div class="row">
+                                                                                <div class="col-md-3"><h5><b>{{resource.userTrafficpolicy.html.msg64}}</b>
+                                                                                </h5></div>
+                                                                                <div class="col-md-9"
+                                                                                     ng-class="getPolicyStatusClass(p.status)">
+                                                                                    <h5>
+                                                                                        {{getPolicyStatusText(p.status)}}</h5>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row">
+                                                                                <div class="col-md-3"><h5><b>{{resource.userTrafficpolicy.html.msg65}}</b>
+                                                                                </h5></div>
+                                                                                <div class="col-md-9"><h5>
+                                                                                    {{p.createdtime}}</h5>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row">
+                                                                                <div class="col-md-3"><h5><b>Owner:</b>
+                                                                                </h5></div>
+                                                                                <div class="col-md-9">
+                                                                                    <h5>
+                                                                                <span data-ng-repeat="author in p.owners"><a
+                                                                                        target="_blank"
+                                                                                        href="/portal/user#?env={{env}}&userId={{author}}"
+                                                                                        style="margin-right: 5px">{{author}}</a></span>
+                                                                                    </h5>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row">
+                                                                                <div class="col-md-3"><h5><b>BU:</b>
+                                                                                </h5></div>
+                                                                                <div class="col-md-9">
+                                                                                    <h5><a data-ng-repeat="bu in p.bues"
+                                                                                           href="/portal/bu#?env={{env}}&buName={{bu}}"
+                                                                                           style="margin-right: 5px"
+                                                                                           target="_blank">{{bu}}</a>
+                                                                                    </h5>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row">
+                                                                                <div class="col-md-3"><h5><b>{{resource.userTrafficpolicy.html.msg66}}</b>
+                                                                                </h5></div>
+                                                                                <div class="col-md-9">
+                                                                                    <div class=""
+                                                                                         data-ng-repeat="app in p.apps">
+                                                                                        <h5>
+                                                                                            <a href="/portal/group#?env={{env}}&groupId={{app.groupid}}"
+                                                                                               target="_blank">{{app.appname}}({{app.groupname}})</a>
+                                                                                        </h5>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="status-red"
+                                                                         ng-show="!p.available">
+                                                                        <span ng-bind-html="p.error"
+                                                                              ng-click="applyRightClick($event,p)"></span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" ng-show="showPolicyDeactivateFirstToSecond()"
+                                                         style="margin-top: 10px">
+                                                        <div class="col-md-12">
+                                                            <div class="pull-right">
+                                                                <button ng-click="deactivatePolicyFirstToSecond($event)"
+                                                                        class="deactivate-apply btn btn-info m-b-5"><i
+                                                                        class="fa fa-arrow-right"></i>
+                                                                    <span>{{resource.userTrafficpolicy.html.msg67}}</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <!--Step2: Chosse net app-->
+                                    <li ng-show="showConfirmDeactivatePolicy()" class="second-step">
+                                        <div class="timeline-badge warning"><i class="fa fa-question-circle"></i>
+                                        </div>
+                                        <div class="panel default-panel traffic-init-panel">
+                                            <div class="panel-heading">
+                                                <h4 class="panel-title">{{resource.userTrafficpolicy.html.msg68}}</h4>
+                                            </div>
+                                            <div class="panel-body ">
+                                                <div class="row">
+                                                    <div class="col-md-6" data-ng-repeat="group in reservedgroups">
+                                                        <div class="panel">
+                                                            <div class="panel-body" style="padding-top: 0px">
+                                                                <div class="col-md-10">
+                                                                    <div clss="row">
+                                                                        <div class="col-md-3">
+                                                                            <h5><b>App:</b></h5>
+                                                                        </div>
+                                                                        <div class="col-md-9">
+                                                                            <h5><b><a
+                                                                                    ng-class="getReservedGroupClass(group)"
+                                                                                    href="/portal/group#?env={{env}}&groupId={{group.groupid}}">{{group.appid}}({{group.appname}})</a></b>
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div clss="row">
+                                                                        <div class="col-md-3">
+                                                                            <h5><b>Language:</b></h5>
+                                                                        </div>
+                                                                        <div class="col-md-9">
+                                                                            <h5><b><a
+                                                                                    ng-class="getReservedGroupClass(group)">{{group.language}}</a></b>
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div clss="row">
+                                                                        <div class="col-md-3">
+                                                                            <h5><b>IDC:</b></h5>
+                                                                        </div>
+                                                                        <div class="col-md-9">
+                                                                            <h5><b>{{group.idc}}</b></h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div clss="row">
+                                                                        <div class="col-md-3">
+                                                                            <h5><b>Group:</b></h5>
+                                                                        </div>
+                                                                        <div class="col-md-9">
+                                                                            <h5>
+                                                                                <a href="/portal/group#?env={{env}}&groupId={{group.groupid}}">{{group.groupname}}</a>
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+
+
+                                                                    <div clss="row">
+                                                                        <div class="col-md-3">
+                                                                            <h5><b>BU:</b></h5>
+                                                                        </div>
+                                                                        <div class="col-md-9">
+                                                                            <h5><span>{{group.bu}}</span></h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <div class="col-md-3"><h5><b>Owner:</b></h5>
+                                                                        </div>
+                                                                        <div class="col-md-9">
+                                                                            <h5>
+                                                                            <span data-ng-repeat="author in group.owners"><a
+                                                                                    target="_blank"
+                                                                                    href="/portal/user#?env={{env}}&userId={{author}}"
+                                                                                    style="margin-right: 5px">{{author}}</a></span>
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <h5 class="app-online"
+                                                                        ng-class="getReservedGroupClass(group)">
+                                                                        {{getReservedGroupText(group)}}</h5>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <textarea cols="2" rows="10" style="width: 100%"
+                                                          data-ng-model="query.deletepolicyreason"
+                                                          placeholder="{{resource.userTrafficpolicy.html.msg25}}"></textarea>
+
+                                                <div class="row" style="padding-top: 10px">
+                                                    <div class="col-md-12">
+                                                        <div class="pull-right">
+                                                            <input class="status-red" type="checkbox"
+                                                                   data-ng-model="confirmDeactivate"/> <span
+                                                                style="margin-right: 20px" class="status-red">{{resource.userTrafficpolicy.html.msg69}}</span>
+                                                            <button ng-disabled="!confirmDeactivate || !query.deletepolicyreason"
+                                                                    ng-click="confirmDeactivatePolicy()"
+                                                                    class="second-step-bt btn btn-info m-b-5">
+                                                                <i class="fa fa-arrow-right"></i> <span>{{resource.userTrafficpolicy.html.msg71}}</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+
+                                    <!--Step3: Operation logs-->
+                                    <li ng-show="showLogsDeactivatePolicy()" class="third-step">
+                                        <div class="timeline-badge info"><i class="fa fa-file-code-o"></i>
+                                        </div>
+                                        <div class="panel default-panel traffic-init-panel">
+                                            <div class="panel-heading">
+                                                <h4 class="panel-title">{{resource.userTrafficpolicy.html.msg72}}</h4>
+                                            </div>
+                                            <div class="panel-body ">
+                                                <div class="panel-body">
+                                                    <div class="row" data-ng-repeat="log in logs | orderBy:'index'">
+                                                        <div class="col-md-12">
+                                                            <h5>
+                                                                <i ng-class="getLogIcon(log)"
+                                                                   style="padding-right: 10px"></i>{{log.text}}
+                                                            </h5>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.verify.html.token12}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade graphics" id="diagramModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userTrafficpolicy.html.msg73}}{{policyName}}</h4>
+                            </div>
+                            <div class="modal-body diagram">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="confirmDeactivateNetAppModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">
+                                    {{resource.userTrafficpolicy.html.msg74}}
+                                </h4>
+                            </div>
+                            <div class="modal-body ">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h4 class="status-red">{{resource.userTrafficpolicy.html.msg75}}</h4>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 deactivated-group"></div>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button data-dismiss="modal" class="btn btn-info m-b-5"
+                                        ng-click="confirmDeactivateNetApp()"><span>{{resource.tools.verify.html.token11}}下线</span></button>
+                                <button data-dismiss="modal" class="btn btn-warning m-b-5"><span>{{resource.tools.verify.html.token12}}</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="operationConfrimModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="errorConfrimModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <div class="modal-title">
+                                    {{resource.userTrafficpolicy.html.msg77}}
+                                </div>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <div class="modal-footer">
+                                <button data-dismiss="modal" class="btn btn-warning m-b-5"><span>{{resource.userTrafficpolicy.html.msg78}}</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="newPolicyNotAllowedModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <div class="modal-title">
+                                    {{resource.app.html.msg15}}！
+                                </div>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">
+                                    {{resource.userTrafficpolicy.html.msg81}}<a
+                                        href="mailto:slb@test.com?subject=新建流量灰度策略权限申请&body=我想为用户(此处必填：用户的Ctrip账号)。申请创建流量灰度的权限. %E2%80%A8%E2%80%A8%E2%80%A8%E2%80%A8">{{resource.userTrafficpolicy.html.msg82}}
+                                    {{resource.userTrafficpolicy.html.msg83}}</a>{{resource.userTrafficpolicy.html.msg12}}。
+                                </span>
+                            </div>
+                            <div class="modal-footer">
+                                <button data-dismiss="modal" class="btn btn-warning m-b-5"><span>{{resource.userTrafficpolicy.html.msg85}}</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+            SLB {{resource.userTrafficpolicy.html.msg83}}</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Feedback</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text" placeholder={{resource.questionModal.token2}}></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">{{resource.tools.verify.html.token11}}</button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">{{resource.tools.verify.html.token12}}</button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<!--Auto complete CSS and JS-->
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<!--DateTime JS-->
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<!--Customer JS-->
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+
+<script src="/static/lib/high-chart/highcharts.js"></script>
+<script src="/static/lib/high-chart/highcharts-3d.js"></script>
+
+<script src="/statics/js/repository/paramCommand.js"></script>
+<script src="/statics/js/repository/queryCommand.js"></script>
+<script src="/statics/js/repository/apiCommand.js"></script>
+
+<script src="/statics/js/services/paramService.js"></script>
+<script src="/statics/js/services/queryService.js"></script>
+<script src="/statics/js/services/apiService.js"></script>
+<script src="/statics/js/services/esService.js"></script>
+
+<script src="/statics/js/apps/app.js"></script>
+<script src="/statics/js/apps/userPolicyApp.js"></script>
+
+<script src="/static/js/new-graphic.js"></script>
+<script src="/static/js/user-traffic-policy.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+</html>

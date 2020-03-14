@@ -1,0 +1,48 @@
+.traffic-chart{
+    height:400px;
+}
+.charts-long-container{
+    padding:0;
+    margin:0;
+}
+.chart-container{
+    padding:0;
+    margin:0;
+}
+.charts-container div.current{
+}
+.traffic-query-area{
+    padding:0 0;
+    margin:0 0 50px 0;
+}
+.traffic-query-area .date-area{
+    line-height:30px;
+    padding:8px;
+    border-bottom:1px solid #ccc;
+}
+.traffic-query-area .date-area .starttime-picker{
+    width:220px;
+    margin:0;
+}
+.traffic-query-area .date-area .label:hover{
+    background-color: rgba(91, 192, 222, 1);
+}
+
+.traffic-query-area .date-area a{
+    margin-left:10px;
+}
+.traffic-types li a{
+    color:gray;
+}
+.traffic-types li a:hover{
+    color:#337ab7;
+}
+.traffic-types li.current a{
+    color:#337ab7;
+    font-weight: bold;
+}
+.target-info a{
+    padding:10px 15px;
+    display:block;
+    color:#000;
+}

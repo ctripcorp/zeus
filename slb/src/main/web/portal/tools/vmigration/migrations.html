@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>VS Migration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/global-new.css">
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('list')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["tools"]["headerInfoController_toolsList"]}}
+</span></a></li>
+
+            <li class=""><a href="{{generateLink('url')}}"><i class="fa fa-tripadvisor"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_URLProbeTool"]}}
+</span></a>
+            </li>
+
+
+            <li class=" tools-hide"><a href="{{generateLink('cert-upgrade')}}"><i class="fa fa-certificate"></i> <span
+                    class="nav-label">证书升级</span></a>
+            </li>
+            <li class="tools-hide"><a href="{{generateLink('slb-sharding')}}"><i class="fa fa-cogs"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_SLBSplitTool"]}}
+</span></a>
+            </li>
+
+            <li class="tools-hide active"><a href="{{generateLink('vs-migration')}}"><i class="fa fa-rocket"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMigrationTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-seperate')}}"><i class="fa fa-delicious"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSSplitTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-merge')}}"><i class="fa fa-steam"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMergeTool"]}}
+</span></a>
+            </li>
+
+
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+
+        <div class="breadcrumb-follow" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController" ng-cloak="">
+            <!--tile summary Area-->
+            <div class="row tile-summary">
+                <div class="col-lg-3 col-sm-3">
+                    <div class="btn btn-block btn-lg btn-primary " ng-click="startNewMigration()"
+                         style="padding: 54px 10px 0px 0px;height: 130px;">
+                        <i class="fa fa-plus"></i>
+                        <span type="button" class="bg-white" style="color: white">{{resource.tools.vmigration.html.startNewMigration}}</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-9 col-sm-6">
+                    <div class="widget-panel widget-style-2 white-bg"
+                         style="padding: 40px 10px 0px 0px;height: 130px;">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="row" style="margin-left: 10px;">
+                                    <div style="cursor: pointer;" ng-click="clickStatus('new')"
+                                         class="col-xs-1 text-center">
+                                        <h2 class="m-t-0 m-b-0"><a class="activated-text ">{{data.migrationSummary['new']
+                                            || 0}}</a></h2>
+
+                                        <div class="">{{resource.tools.vmigration.html.token1}}</div>
+                                    </div>
+
+                                    <div class="col-xs-1 text-center" ng-click="clickStatus('test')">
+                                        <h2 class=" m-b-0 m-t-0 "><a class=" ">{{data.migrationSummary['test']||
+                                            0}}</a></h2>
+
+                                        <div class="">{{resource.tools.vmigration.html.token2}}</div>
+                                    </div>
+
+                                    <div class="col-xs-2 text-center" ng-click="clickStatus('dns')">
+                                        <h2 class=" m-b-0 m-t-0 "><a class="">{{data.migrationSummary['dns']||
+                                            0}}</a></h2>
+
+                                        <div class="">{{resource.tools.vmigration.html.token3}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center" ng-click="clickStatus('monitor')">
+                                        <h2 class=" m-b-0 m-t-0 "><a class=" ">{{data.migrationSummary['monitor']||
+                                            0}}</a></h2>
+
+                                        <div class="status-gray">{{resource.tools.vmigration.html.token4}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center" ng-click="clickStatus('clean')">
+                                        <h2 class=" m-b-0 m-t-0 "><a class=" ">{{data.migrationSummary['clean']||
+                                            0}}</a></h2>
+
+                                        <div class="">{{resource.tools.vmigration.html.token5}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center" ng-click="clickStatus('delete')">
+                                        <h2 class=" m-b-0 m-t-0 "><a class=" ">{{data.migrationSummary['delete']||
+                                            0}}</a></h2>
+
+                                        <div class="">{{resource.tools.vmigration.html.token6}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center" ng-click="clickStatus('removed')">
+                                        <h2 class=" m-b-0 m-t-0 "><a class=" ">{{data.migrationSummary['removed']||
+                                            0}}</a></h2>
+
+                                        <div class="">{{resource.tools.vmigration.html.token7}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--count summary Area-->
+            <div class="row count-summary" style="padding-bottom: 15px">
+                <div class="col-md-6">
+                    <div style="margin-top: 5px">
+                        <b ng-bind-html="getSummaryInfo()"></b>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="pull-right">
+                        <div class="input-group">
+                            <input type="text" id="example-input1-group2" name="example-input1-group2"
+                                   class="form-control ng-pristine ng-valid ng-touched"
+                                   placeholder="{{resource.tools.vmigration.html.placeholder}}" data-ng-model="searchtext">
+                            <span class="input-group-btn">
+                                        <button type="button" class="btn btn-effect-ripple "
+                                                ng-click="searchMigrationByVs(searchtext)"><i class="fa fa-search"></i></button>
+                                    </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <div class="col-md-12 panel " style="cursor: pointer; max-height: 600px;    margin-right: 10px;"
+                     data-ng-repeat="mock in data.migrations | migrationFilter: query.status: this: query.domain"
+                     ng-click="openPropertyOfMigration(mock)">
+                    <div class="panel-heading">
+                        <div class=" panel-title">
+                            {{mock.name}}
+                        </div>
+                        <div class="pull-right" style="margin-top: -25px"
+                             ng-class="getMigrationStatusClass(mock)">
+                            {{resource.tools.vmigration.js[getMigrationStatusText(mock)]}}
+                        </div>
+                    </div>
+                    <div class="panel-body p-t-0">
+                        <div class="media-main" style="margin-top: 10px">
+                            <div class="row">
+                                <div class="col-md-4" style="font-weight: bold">IDC</div>
+                                <div class="col-md-8">{{mock.idc}}</a></div>
+                            </div>
+                            <div class="row system-padding-top">
+                                <div class="col-md-4" style="font-weight: bold">{{resource.tools.vmigration.html.token8}}</div>
+                                <div class="col-md-8"><a target="_blank"
+                                                         href="/portal/slb#?env={{env}}&slbId={{mock.sourceSlbId}}">{{mock.sourceSlbName}}/{{mock.sourceSlbId}}</a>
+                                </div>
+                            </div>
+                            <div class="row system-padding-top">
+                                <div class="col-md-4" style="font-weight: bold">{{resource.tools.vmigration.html.token9}}</div>
+                                <div class="col-md-8"><a target="_blank"
+                                                         href="/portal/slb#?env={{env}}&slbId={{mock.targetSlbId}}">{{mock.targetSlbName}}/{{mock.targetSlbId}}</a>
+                                </div>
+                            </div>
+
+                            <div class="row system-padding-top">
+                                <div class="col-md-4" style="font-weight: bold">{{resource.tools.vmigration.html.token10}}</div>
+                                <div class="col-md-8">
+                                    <div data-ng-repeat="vs in mock['vses']">
+                                        <a class="system-padding-top" href="/portal/vs" ng-if="$index<10">
+                                            {{vs.name}}({{vs.id}})
+                                        </a>
+                                        <a class="system-padding-top" ng-if="$index==10"
+                                           ng-click="openPropertyOfMigration(mock)">
+                                            {{resource.tools.vmigration.html.token11}}
+                                        </a>
+                                        <div ng-if="$index>10">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- panel-body -->
+                </div>
+            </div>
+            <!--modals area-->
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+            SLB Team</a>
+        </div>
+    </div>
+    </div>
+</section>
+
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/tools-vs-migration.js"></script>
+</body>
+</html>getMigrationStatusClass

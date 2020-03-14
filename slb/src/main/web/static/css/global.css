@@ -1,0 +1,670 @@
+[ng\:cloak], [ng-cloak], .ng-cloak {
+    display: none !important
+}
+
+body {
+    padding-right: 0px !important;
+    font-family: "Microsoft Yahei";
+}
+
+body a {
+    cursor: pointer;
+}
+
+.fixed-table-pagination {
+    margin-top: 8px !important;
+}
+
+.loading-indicator {
+    height: 80px;
+    width: 80px;
+    background-image: url('../img/loading_100.gif');
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.loading-indicator-overlay {
+    background-color: #FFFFFF;
+    opacity: 0.6;
+    filter: alpha(opacity=60);
+}
+
+/**
+Show and hide class
+***/
+.hide {
+    display: none;
+}
+
+.page-head {
+    background-color: #2C3E50;
+}
+
+.page-middle {
+}
+
+.page-foot {
+}
+
+.page-content-container {
+}
+
+.middle-content {
+    margin: 0px 200px;
+}
+
+.page-head #top-brand {
+    margin-right: -120px;
+}
+
+.page-head .navbar-brand {
+    font-size: 24px;
+    color: #FEFEFE;
+}
+
+.page-head .nav {
+    color: #FEFEFE;
+}
+
+.page-head .envs {
+    padding: 22px 0 0 0;
+}
+
+.page-head .envs .label {
+    margin: 0 2px;
+    padding: 1px 10px 2px;
+}
+
+.page-head .envs a.label:hover {
+    background-color: rgba(91, 192, 222, 1);
+}
+
+.page-head #top-links ul li a {
+    padding-right: 40px;
+    padding-left: 40px;
+    line-height: 20px;
+    color: #eee;
+}
+
+.page-head #top-links ul li a span, .page-head #user-info ul li a span {
+    padding-right: 5px;
+}
+
+.page-head ul li a:hover, .selected-toplink {
+    background-color: rgba(56, 79, 102, 1);
+    color: #eee;
+}
+
+.page-head ul li a:visited {
+    background-color: rgba(56, 79, 102, 1);
+}
+
+.page-foot div.container {
+    text-align: center;
+    margin: 10px auto 20px;
+    padding: 10px 0;
+    border-top: 3px #ccc double;
+}
+
+.default-toplink {
+    background-color: rgba(44, 62, 80, 1);
+    color: #eee;
+}
+
+.breadcrumb-container {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.breadcrumb-container .breadcrumb {
+    margin-bottom: 0px;
+}
+
+.edit-container {
+    border-bottom: none !important;
+}
+
+.query-container {
+    margin-bottom: 20px;
+    padding: 10px 0;
+    border-top: 1px #ccc solid;
+    border-bottom: 1px #ccc solid;
+    line-height: 33px;
+}
+
+.query-container .form-area {
+    padding: 0;
+}
+
+.query-container .button-area {
+    padding: 0;
+}
+
+.query-container .form-area .angucomplete-dropdown {
+    width: 300px;
+}
+
+.query-container .row:not(:last-child) {
+    margin-bottom: 10px;
+}
+
+.query-container .row .query-label {
+    line-height: 33px;
+}
+
+.query-container .row .query-body .dropdown .dropdown-menu li {
+    cursor: pointer;
+}
+
+.query-container .label {
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.query-container .label:hover, .selected-label {
+    background-color: rgba(91, 192, 222, 1);
+    color: #eee;
+}
+
+.query-container .selected-domains .label, .query-container .selected-tags .label {
+    margin: 5px 15px 5px 0;
+    padding: 6px 6px;
+    line-height: 14px;
+}
+
+.query-container .selected-domains .label:hover {
+    background-color: rgb(119, 119, 119);
+}
+
+.query-container .selected-domains .label:hover b {
+    color: rgba(25, 11, 25, 0.89);
+}
+
+.query-container .selected-tags .label:hover {
+    background-color: rgb(119, 119, 119);
+}
+
+.query-container .selected-tags .label:hover b {
+    color: rgba(25, 11, 25, 0.89);
+}
+
+.query-container .multi-tags {
+    padding: 0;
+}
+
+.query-container .collapse-btns {
+    padding: 0;
+}
+
+.collapse-btns .toggle-show-btn {
+    text-align: right;
+    padding: 0 20px 0 0;
+}
+
+.collapse-btns .bu-clear {
+    text-align: right;
+    padding: 0 5px 0 0;
+    margin-top: 20px;
+}
+
+.multi-tags-collapse {
+    height: 30px;
+    overflow: hidden;
+}
+
+.result-container {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px 0;
+}
+
+.link-comment {
+    cursor: default;
+    color: #101010;
+}
+
+.link-comment:hover {
+    text-decoration: none;
+    color: #101010;
+}
+
+#user-info {
+    padding: 0 5px 0 0;
+}
+
+/**覆盖bootstrap-table样式**/
+/*.btn-group > .btn:first-child {*/
+/*height: 35px;*/
+/*}*/
+
+/** for info page **/
+.info-container {
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.btn-deactivate {
+    color: #ffffff;
+    background-color: #808080;
+}
+
+.btn-deactivate:hover {
+    color: #ffffff;
+    background-color: #5d5d5d;
+}
+
+.info-table {
+    text-align: center;
+}
+
+.info-table th {
+    width: 50%;
+    text-align: center;
+}
+
+.info-table tbody tr td {
+    vertical-align: middle;
+}
+
+.status-label {
+    float: right;
+}
+
+#activateSLBModal .btnDiv {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.status-activated, .status-tobeActivated, .status-deactivated, .status-focus, .status-unfocus, .panel-open, .panel-close {
+    float: right;
+    line-height: 34px;
+}
+
+.status-focus, .panel-open {
+    color: rgba(51, 122, 183, 1);
+}
+
+.status-unfocus, .panel-close {
+    color: #808080;
+}
+
+.status-focus, .status-unfocus {
+    width: 80px;
+}
+
+.panel-open, .panel-close {
+    width: 120px;
+}
+
+.model-basic-info {
+    width: 50% !important;
+    word-break: break-all;
+}
+
+.model-basic-info span {
+    margin-top: 2px;
+}
+
+.status-activated, .status-green {
+    color: #2e9d50;
+}
+
+.status-tobeActivated, .status-yellow {
+    color: #c7c412;
+}
+
+.status-alert {
+    color: #c7a603;
+}
+
+.status-deactivated, .status-gray {
+    color: #808080;
+}
+
+.status-red {
+    color: #b5192c;
+}
+
+.status-red-important {
+    color: #b5192c !important;
+}
+
+.warning-important {
+    color: #b5192c;
+    font-weight: bold;
+    font-size: 22px;
+}
+
+.slbServer-qps:hover {
+    color: #808080;
+}
+
+.info-container td .tag-span {
+    cursor: pointer;
+}
+
+.info-container td span:hover b {
+    color: rgba(25, 11, 25, 0.89);
+}
+
+.version-div div {
+    float: left;
+}
+
+.info-container .vsinfo-domains {
+    margin-left: -20px;
+}
+
+.info-slbServer {
+    text-align: center;
+    margin-left: 150px;
+}
+
+/** for edit page **/
+.slb-edit-container, .vs-edit-container, .group-edit-container {
+    margin-top: -20px;
+    margin-bottom: 20px;
+    padding: 20px 0;
+}
+
+.slb-edit-container .form-group, .vs-edit-container .form-group, .group-edit-container .form-group {
+}
+
+.button-group {
+    text-align: center;
+}
+
+.button-group div button {
+    margin-right: 10px;
+}
+
+/** for activate dialog**/
+#activateSLBModal .modal-dialog {
+    width: 80%
+}
+
+#activateSLBModal .online-body {
+    width: 45%;
+    display: inline-block;
+    float: left;
+}
+
+#activateSLBModal .tobeactivated-body {
+    width: 55%;
+    display: inline-block;
+    float: left
+}
+
+.submit-btn {
+    float: right;
+}
+
+/*覆盖autocomplete dropdown的width,仅用于clone*/
+.auto-target-selector div #targetSelector_dropdown {
+    width: 500px;
+}
+
+/** for add prop dialog **/
+.prop-label {
+    float: left;
+}
+
+/**Fix Component Display**/
+.fixed-table-container {
+    border: 0;
+}
+
+.fixed-table-body {
+    height: auto;
+}
+
+/*.bootstrap-table .custom-toolbar{*/
+/*margin:15px 0;*/
+/*}*/
+p.table-summary {
+    margin: 0;
+    padding: 5px 0 0 10px;
+}
+
+.bs-checkbox {
+    vertical-align: middle !important;
+}
+
+.label {
+    font-size: 100%;
+    font-weight: normal;
+}
+
+#spinner {
+    width: 100px;
+    margin: 0 auto;
+}
+
+/**Component InfoLinks**/
+.info-links-container {
+    border-bottom: 3px #ccc double;
+    margin-bottom: 20px;
+}
+
+.info-links-container li a {
+    color: gray;
+}
+
+.info-links-container li a:hover {
+    color: #337ab7;
+}
+
+.info-links-container li.current a {
+    font-weight: bolder;
+    color: #337ab7;
+}
+
+.info-links-container .target-selector {
+    width: 220px;
+}
+
+#slb-edit-dropdown-area, #vs-edit-dropdown-area, #group-edit-dropdown-area {
+    border-bottom: 3px #ccc double;
+    margin-bottom: 20px;
+    padding-left: 0px;
+}
+
+#slb-edit-dropdown-area div button, #vs-edit-dropdown-area div button, #group-edit-dropdown-area div button {
+    margin-bottom: 5px;
+}
+
+/**Component OperationLogs**/
+.log-target-info {
+    font-weight: bolder;
+}
+
+.log-target-info a {
+    color: #337ab7;
+}
+
+/**Component Angucomplete**/
+.angucomplete-dropdown {
+    overflow-y: auto;
+    max-height: 300px;
+    line-height: 18px;
+}
+
+.angucomplete-row {
+    word-wrap: break-word;
+}
+
+.highlight {
+    color: #b5192c;
+    font-weight: bold;
+}
+
+/**Model dialogs**/
+.operation-detail-table {
+    border: none;
+    width: 850px;
+    margin: 10px auto;
+}
+
+.operation-detail-table tbody tr td {
+    border-top: none;
+}
+
+.modal-body {
+    word-wrap: break-word;
+}
+
+/**Navigation bar**/
+.naviList {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    cursor: pointer;
+    color: #fff !important;
+}
+
+.navbar .naviList > .user {
+    min-width: 130px;
+}
+
+/**Operation warning information ul**/
+.operation-warnning-ul {
+    margin-left: -20px;
+}
+
+.operation-warnning-ul li {
+    padding: 2px;
+}
+
+/**VS related groups**/
+.path-item-list {
+    padding: 0;
+    line-height: 34px;
+}
+
+.path-main-item {
+    padding: 0;
+    line-height: 34px;
+    white-space: nowrap;
+    overflow: hidden;
+    font-weight: bold;
+    color: #196eaa;
+}
+
+.path-sub-item {
+    padding: 0;
+    line-height: 34px;
+    white-space: nowrap;
+    overflow: hidden;
+    font-weight: bold;
+    color: gray;
+}
+
+/*Group table classes*/
+.interger-input {
+    width: 100px;
+}
+
+.prefix-path {
+    width: 10%;
+    margin: 8px 0px 0px 0px;
+}
+
+.suffix-path {
+    width: 15%;
+    margin: 8px -10px 0px 0px;
+}
+
+.show-path {
+    width: 55%;
+}
+
+.root-path {
+    width: 20%;
+    margin: 8px 0px 0px 0px !important;
+}
+
+/*For diff history version @info page*/
+.version-class {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    margin-right: 4px;
+    padding: 6px 8px;
+}
+
+.version-class:hover {
+    cursor: pointer;
+}
+
+#historyVersionModel .modal-body {
+    height: 160px;
+}
+
+.loading-img {
+    width: 30px;
+    height: 30px;
+}
+
+.table-toolbar {
+    position: relative;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    line-height: 34px;
+}
+
+.alert-danger {
+    width: 100%;
+}
+
+.alert-success {
+    width: 25%;
+    border: none;
+    background-color: #008855;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+
+.system-link {
+    color: #333;
+    float: left !important;
+    margin-left: 8px;
+}
+
+.custom-toolbar-new {
+    margin-top: 10px;
+    float: left;
+}
+
+.visit-url-tool-error {
+    margin-left: -25px;
+}
+
+.visit-url-tool-error li {
+    list-style: decimal;
+}
+
+.visit-url-tool-error ul li {
+    list-style: disc;
+}
+
+h4 .big-header {
+    margin-bottom: 20px;
+}
+
+#language-area {
+    margin-right: 20px !important;
+    line-height: 60px !important;
+}
+#language-area .language-bt{
+    cursor: crosshair;
+    margin-top: -3px !important;
+}
+#language-area .language-choose {
+    background-color: #2C3E50 !important;
+    padding: 3px !important;
+}
+
+#topLinksApp > li > a {
+    position: relative;
+    display: block;
+    padding: 10px 5px;
+}

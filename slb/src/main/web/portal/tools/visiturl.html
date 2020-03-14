@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>URL 探测工具</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <style type="text/css">
+        .slb-envs a {
+            padding: 2px 5px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource.languageApp.languageController.personPage}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/users#?env={{env}}"><span>&nbsp;{{resource.languageApp.languageController.privilege}}</span></a>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource.languageApp.languageController.logout}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('list')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["tools"]["headerInfoController_toolsList"]}}
+</span></a></li>
+
+            <li class="active"><a href="{{generateLink('url')}}"><i class="fa fa-tripadvisor"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_URLProbeTool"]}}
+</span></a>
+            </li>
+
+
+            <li class=" tools-hide"><a href="{{generateLink('cert-upgrade')}}"><i class="fa fa-certificate"></i> <span
+                    class="nav-label">证书升级</span></a>
+            </li>
+            <li class="tools-hide"><a href="{{generateLink('slb-sharding')}}"><i class="fa fa-cogs"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_SLBSplitTool"]}}
+</span></a>
+            </li>
+
+            <li class="tools-hide"><a href="{{generateLink('vs-migration')}}"><i class="fa fa-rocket"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMigrationTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-seperate')}}"><i class="fa fa-delicious"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSSplitTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-merge')}}"><i class="fa fa-steam"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMergeTool"]}}
+</span></a>
+            </li>
+
+
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController">
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource.breadCrumbApp.firstPage}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+        <div class="query-container breadcrumb-follow" id="query-area"
+             ng-app="toolsQueryUrlApp"
+             ng-controller="toolsQueryUrlController" ng-cloak>
+            <form name="form1">
+                <div class="col-md-12 panel panel-default">
+                    <div class="col-md-10 form-area">
+                        <!--ROW 1-->
+                        <div class="row trafficid">
+                            <div class="row">
+                                <div class="col-md-1 query-label">URL:</div>
+                                <div class="col-md-9 query-body">
+                                    <input id="urlzone" type="text" name="example-input1-group2"
+                                           data-validator-type="validation"
+                                           data-validator="required" class="form-control" placeholder={{resource.tools.visitUrl.html.msg13}}
+                                           ng-model="query.url"/>
+                                </div>
+
+                                <div class="col-md-2" ng-show="query.url">
+                                    <input type="checkbox"
+                                           ng-model="query.checkhost"
+                                           ng-checked="isHostChecked()"/> {{resource.tools.visitUrl.html.msg1}}
+                                </div>
+                            </div>
+
+                            <div class="row" ng-show="showHostArea()">
+                                <div class="col-md-1">
+                                    Env:
+                                </div>
+                                <div class="col-md-11">
+                                    <div class="slb-envs">
+                                        <a class="label label-default "
+                                           ng-class="isCurrentENV(x)"
+                                           ng-click="toggleEnv(x)"
+                                           data-ng-repeat="x in data.envs">
+                                            {{x}}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row" ng-show="showHostArea()">
+                                <!--set host by select slb id-->
+                                <div class="col-md-1">
+                                    SLB:
+                                </div>
+                                <div class="col-md-11">
+                                    <div style="float: left; height: 80px; width: 200px; margin: 10px 10px 0px 0px"
+                                         data-ng-repeat="s in data.slbs">
+                                        <div ng-class="selectedTileClass(s,$index)"
+                                             class="panel"
+                                             ng-click="clickTile(s, $index)">
+                                            <div><a target="_blank">{{s.id}}({{s.name.substring(0,14)}})</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding-top: 10px" class="row" ng-show="showHostArea()">
+                                <div class="col-md-1">
+                                    Host:
+                                </div>
+                                <div class="col-md-4">
+                                    <input id="hostzone" type="text" name="example-input1-group1"
+                                           data-validator-type="validation" class="form-control"
+                                           placeholder={{resource.tools.visitUrl.html.msg2}}
+                                           ng-model="query.host" disabled/>
+                                </div>
+                                <div class="col-md-3">
+                                    <span style="cursor: pointer" class="fa fa-edit" ng-click="editHostClick()"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 button-area">
+                        <div class="pull-right">
+                            <button type="button" class="btn btn-default" ng-click="clearQuery()">{{resource.tools.visitUrl.html.msg3}}</button>
+                            <button type="button" class="btn btn-info" ng-disabled="disableUrlCheck()"
+                                    ng-click="executeQuery()" id="executeQuery">{{resource.tools.visitUrl.html.msg4}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="" id="tools-area" ng-app="toolsVisitUrlApp"
+             ng-controller="toolsVisitUrlController">
+            <div class="row" style="padding-bottom: 15px">
+                <div class="col-lg-12">
+                    <span>{{getToolTipText()}}</span>
+                </div>
+            </div>
+            <div class="row ">
+                <div class="col-lg-12">
+                    <div class="panel panel-default check-result-area">
+                        <table class="table table-condensed">
+                            <thead>
+                            <tr>
+                                <th colspan="2">
+                                    <h3 class="panel-title">{{resource.tools.visitUrl.html.msg5}}</h3>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <table ng-show="checkPassed==true" class="table table-condensed">
+
+                                    <tbody>
+                                    <tr>
+                                        <td class="model-basic-info"><b>{{resource.tools.visitUrl.html.msg6}}</b></td>
+                                        <td>
+                                            <span class="status-green"><b>{{resource.tools.visitUrl.html.msg7}}</b></span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="model-basic-info"><b>URL</b></td>
+                                        <td>
+                                            <span><b>{{query.url}}</b></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="model-basic-info"><b>{{resource.tools.visitUrl.html.msg8}}</b></td>
+                                        <td>
+                                            <a target="_blank" class="pull-left"
+                                               href="{{information.appdata['applink']}}">{{information.extendedGroup['app-id']}}(
+                                                {{information.appdata['appname']}} )</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="model-basic-info"><b>{{resource.tools.visitUrl.html.msg9}}</b></td>
+                                        <td>
+                                            <a target="_blank" class="pull-left"
+                                               ng-href="{{generateGroupIdLink(information.extendedGroup)}}">{{information.extendedGroup.id}}({{information.extendedGroup.name}})</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="model-basic-info"><b>{{resource.tools.visitUrl.html.msg10}}</b></td>
+                                        <td>
+                                            <a target="_blank"
+                                               href="/portal/bu#?env={{env}}&buName={{information.appdata['bu']}}">{{information.appdata['bu']}}</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="model-basic-info"><b>Owner</b></td>
+                                        <td>
+                                            <a
+                                                    href="/portal/user#?env={{env}}&userId={{information.appdata['owner']}}">
+                                                {{information.appdata['owner']}}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </tr>
+                            <tr>
+                                <table ng-show="checkPassed==false" class="table table-condensed">
+                                    <tbody>
+                                    <tr>
+                                        <td class="model-basic-info"><b>{{resource.tools.visitUrl.html.msg6}}</b></td>
+                                        <td>
+                                            <span class="status-red"><b>{{resource.tools.visitUrl.html.msg11}}</b></span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="model-basic-info"><b>URL</b></td>
+                                        <td>
+                                            <span><b>{{query.url}}</b></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="model-basic-info"><b>{{resource.tools.visitUrl.html.msg12}}</b></td>
+                                        <td>
+                                            <span class="error-message"></span>
+                                        </td>
+                                    </tr>
+
+                                    </tbody>
+                                </table>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/tools-visiturl.js"></script>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Feedback</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text" placeholder="{{resource.questionModal.token2}}"></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">确定</button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">取消</button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+</html>

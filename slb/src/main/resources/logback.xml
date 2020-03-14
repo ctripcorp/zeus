@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOG_DIR" value="${APP_HOME}/logs"/>
+    <property name="LOG_FILE_NAME" value="zeus.log"/>
+
+    <timestamp key="byDay" datePattern="yyyy-MM-dd_HH:mm"/>
+    <!-- Output to Console -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <!--<filter class="ch.qos.logback.classic.filter.LevelFilter">-->
+            <!--<level>INFO</level>-->
+            <!--<onMatch>ACCEPT</onMatch>-->
+            <!--<onMismatch>DENY</onMismatch>-->
+        <!--</filter>-->
+        <encoder>
+            <pattern>%date %level [%thread] %10logger [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!-- Output to File and Rotate if it's necessary -->
+    <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${LOG_FILE_NAME}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <maxHistory>7</maxHistory>
+            <fileNamePattern>${LOG_DIR}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}.%i</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- or whenever the file size reaches 100MB -->
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <!--<filter class="ch.qos.logback.classic.filter.LevelFilter">-->
+            <!--<level>INFO</level>-->
+            <!--<onMatch>ACCEPT</onMatch>-->
+            <!--<onMismatch>DENY</onMismatch>-->
+        <!--</filter>-->
+        <encoder>
+            <pattern>%date [%-5thread] %-5level [%-10logger] %-10msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="CentralLogging" class="com.ctrip.zeus.logstats.appender.ctrip.CloggingAppender">
+        <appId>100000716</appId>
+        <serverIp>localhost</serverIp>
+        <serverPort>63100</serverPort>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="ROLLING"/>
+    </root>
+
+</configuration>

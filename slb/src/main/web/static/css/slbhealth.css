@@ -1,0 +1,43 @@
+/*.portlet{
+    margin: 20px;
+    box-shadow: 0 0px 8px 0 rgba(0,0,0,0.06),0 1px 0px 0 rgba(0,0,0,0.02);
+    background: #fff;
+    border-radius: 5px;
+    width: 46.5%
+}*/
+/*.info-container{
+    background-color: #f1f4f5;
+}*/
+
+/*.portlet-heading{
+    padding: 20px 0px;
+    line-height: 38px;
+    min-height: 39px;
+    border-radius: 3px;
+    color: #fff;
+}
+
+.portlet-title{
+    float: left;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+.text-dark {
+    color: #797979;
+}
+.portlet-body-*{
+    background: #fff;
+    padding: 15px;
+}
+.c3-chart-bar{
+    color: #008855;
+}*/
+.selected-slbs{
+    margin-top: 10px;
+}
+path.domain {
+    fill: none;
+    stroke: #000;
+}

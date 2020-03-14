@@ -1,0 +1,9 @@
+.shortCol{
+    width: 15%;
+}
+.shortCol .operation-bts{
+    margin: 8px 0px;
+}
+#editVirtualServerModel .modal-dialog, #addVirtualServerModel .modal-dialog{
+    width: 1200px;
+}

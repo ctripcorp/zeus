@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>VSMerge Edit</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/angular/angular-sanitize.js"></script>
+    <script src="/static/lib/angular/angular-cookies.js"></script>
+
+
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <script src="/static-new/http-auth-interceptor.js"></script>
+
+
+    <script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+
+    <!--Repository-->
+    <script src="/static-new/model/Class.js"></script>
+    <script src="/static-new/util/C.js"></script>
+    <script src="/static-new/util/Constants.js"></script>
+    <script src="/static-new/util/object-wrapper.js"></script>
+
+    <script src="/static-new/viewmodel/vs-merge.js"></script>
+    <script src="/static-new/repository/unitwork/command.js"></script>
+    <script src="/static-new/repository/unitwork/repository.js"></script>
+    <script src="/static-new/repository/slb/slbs-repository.js"></script>
+    <script src="/static-new/repository/vs/vses-repository.js"></script>
+    <script src="/static-new/repository/vs/vs-statistics-repository.js"></script>
+    <script src="/static-new/repository/tools/vs-seperate-repository.js"></script>
+    <!--Service-->
+    <script src="/static-new/service/vs/vses-service.js"></script>
+    <script src="/static-new/service/tools/vs-seperate-service.js"></script>
+
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+
+    <!--Animation css-->
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+
+    <link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/notifications/notification.css" rel="stylesheet">
+
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <style type="text/css">
+        #vsIdSelector_dropdown {
+            width: 376px;
+        }
+
+        .edit-vs-tile {
+            border: 1px solid rgb(216, 216, 216);
+            box-sizing: border-box;
+            position: relative;
+            opacity: 1;
+            cursor: pointer;
+            /*text-align: center;*/
+            height: 200px;
+            overflow-y: auto;
+            background: #fff;
+            padding: 10px;
+        }
+
+        .edit-vs-tile i {
+            cursor: pointer;
+        }
+
+        .edit-vs-tile > button:first-of-type {
+            background-position: 177px 0px;
+            right: 0px;
+        }
+
+        .edit-vs-tile > button:nth-of-type(2) {
+            background-position: 147px 0px;
+            right: 0px;
+        }
+
+        .edit-vs-tile i.fa {
+            font-size: 40px;
+            line-height: 80px;
+            color: #000;
+        }
+
+        .edit-vs-tile p {
+            line-height: 25px;
+            margin-top: -10px;
+        }
+
+        .edit-vs-tile > button {
+            background-color: transparent;
+            background-image: url("/static/img/controls-431.png");
+            background-position: 147px 0px;
+            cursor: pointer;
+            border: 0px none;
+            height: 24px;
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            width: 24px;
+            -moz-appearance: none;
+        }
+    </style>
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                   <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;后台管理</span></a>                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('list')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["tools"]["headerInfoController_toolsList"]}}
+</span></a></li>
+
+            <li class=""><a href="{{generateLink('url')}}"><i class="fa fa-tripadvisor"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_URLProbeTool"]}}
+</span></a>
+            </li>
+
+
+            <li class=" tools-hide"><a href="{{generateLink('cert-upgrade')}}"><i class="fa fa-certificate"></i> <span
+                    class="nav-label">证书升级</span></a>
+            </li>
+            <li class="tools-hide"><a href="{{generateLink('slb-sharding')}}"><i class="fa fa-cogs"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_SLBSplitTool"]}}
+</span></a>
+            </li>
+            <li class="tools-hide "><a href="{{generateLink('slb-migration')}}"><i class="fa fa-cloud"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_SLBCreationTool"]}}
+</span></a>
+            </li>
+            <li class="tools-hide"><a href="{{generateLink('vs-migration')}}"><i class="fa fa-rocket"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMigrationTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-seperate')}}"><i class="fa fa-delicious"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSSplitTool"]}}
+</span></a>
+            </li>
+            <li class="active"><a href="{{generateLink('vs-merge')}}"><i class="fa fa-steam"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMergeTool"]}}
+</span></a>
+            </li>
+
+
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+
+        <div class="breadcrumb-follow" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController" ng-cloak="">
+            <div class="row" style="padding-bottom: 10px">
+                <div class="col-md-12">
+                    <a class="pull-right fa fa-mail-reply" style="font-weight: bold; color: blue"
+                       href="/portal/tools/vs/merges#?env={{env}}">{{resource.tools.mergeEdit.html.msg1}}</a>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading" style="height: 40px">
+                    <div class="row">
+                        <h4 class="panel-title col-md-6">{{resource.tools.mergeEdit.html.msg2}}</h4>
+                        <div class=" col-md-6" ng-class="getFinalClass()">
+                            <h4 style="line-height: 0px" class="pull-right">{{resource.tools.mergeEdit.html.msg3}}: {{getFinalStatus()}}</h4>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="panel-body">
+                    <form name="content">
+                        <div class="form-group row standard-row">
+                            <label class="col-md-1 query-label" for="name">Name</label>
+                            <div class="col-md-4">
+                                <input class="form-control"
+                                       placeholder={{resource.tools.mergeEdit.html.msg4}}
+                                       id="name"
+                                       name="name"
+                                       ng-disabled="disableMergeName()"
+                                       ng-model="data.vsMerge.name"
+                                       maxlength="30"
+                                       required/>
+                            </div>
+                            <div class="col-md-3 status-red"
+                                 ng-show="content.name.$invalid || data.vsMerge.name.length>30">{{resource.tools.mergeEdit.html.msg55}}
+                            </div>
+                        </div>
+
+                        <div class="form-group row standard-row">
+                            <label class="col-md-1 query-label" for="cid">CID</label>
+                            <div class="col-md-4">
+                                <input class="form-control"
+                                       placeholder={{resource.tools.mergeEdit.html.msg5}}
+                                       id="cid"
+                                       name="cid"
+                                       ng-disabled="disableMergeName()"
+                                       ng-model="data.vsMerge.cid"
+                                       maxlength="10"
+                                       required/>
+                            </div>
+                            <div class="col-md-3 status-red"
+                                 ng-show="content.cid.$invalid || data.vsMerge.cid.length>10">{{resource.tools.mergeEdit.html.msg6}}
+                            </div>
+                        </div>
+
+
+                        <div class="row" id="vses">
+                            <label class="col-md-1 query-label">{{resource.tools.mergeEdit.html.msg7}}</label>
+                            <div class="col-md-11" ng-show="!disableMergeName()">
+                                <div class="pull-left" style="color: blue">
+                                    <i class="fa fa-plus-circle" style="padding-right: 1px"></i>
+                                    <a ng-click="popAddVs()" style="color: blue">{{resource.tools.mergeEdit.html.msg8}}</a>
+                                </div>
+                            </div>
+                            <div class="col-md-1"></div>
+                            <div class="col-md-11">
+                                <div class="row">
+                                    <div style="margin-bottom: 15px" class="col-md-4"
+                                         data-ng-repeat="(k,v) in data.vsMerge['source-vses']">
+                                        <div class=" edit-vs-tile" title={{resource.tools.mergeEdit.html.msg12}}>
+                                            <button title={{resource.tools.mergeEdit.html.msg9}} ng-click="popEditVs($index, domain)"
+                                                    ng-show="domain.length!=0"></button>
+                                            <button title={{resource.tools.mergeEdit.html.msg11}} ng-click="removeVs(k)"></button>
+
+
+                                            <div style="padding-top: 10px">
+                                                <div ng-if="v.message" class="row status-red">
+                                                    <label class="col-md-3">{{resource.tools.mergeEdit.html.msg13}}:</label>
+                                                    <span class="col-md-9">{{v.message}}</span>
+                                                </div>
+
+                                                <div class="row">
+                                                    <label for="vs-title" class="col-md-3">{{resource.tools.mergeEdit.html.msg14}}:</label>
+                                                    <a class="col-md-9" id="vs-title"
+                                                       href="/portal/vs#?env={{env}}&vsId={{v.id}}">{{v.id}}({{v.name}})</a>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-md-3">{{resource.tools.mergeEdit.html.msg15}}:</label>
+                                                    <div class="col-md-9">
+                                                        <a style="word-break: break-all"
+                                                           href="/portal/vs#?env={{env}}&vsId={{v.id}}">
+                                                            {{getDomainText(v.domains)}}
+                                                        </a>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <label class="col-md-3">SSL:</label>
+                                                    <span class="col-md-9">{{v.ssl?'Https':'Http'}}</span>
+                                                </div>
+
+                                                <div class="row">
+                                                    <label class="col-md-3">IDC/Zone:</label>
+                                                    <span class="col-md-9">{{v.idc}}/{{v.zone}}</span>
+                                                </div>
+                                                <div class="row">
+                                                    <label class="col-md-3">{{resource.tools.mergeEdit.html.msg16}}:</label>
+                                                    <span class="col-md-9">
+                                                        <span class="status-red">{{v.statistics['app-count'] || 0}}</span>{{resource.tools.mergeEdit.html.msg17}}
+                                                        <span class="status-red">{{v.statistics['group-count'] || 0}}</span>{{resource.tools.mergeEdit.html.msg18}},
+                                                        <span class="status-red">{{v.statistics['group-server-count'] || 0}}</span>{{resource.tools.mergeEdit.html.msg19}},
+                                                        <span class="status-red">{{v.statistics['member-count'] || 0}}</span>{{resource.tools.mergeEdit.html.msg21}}.
+                                                    </span>
+                                                </div>
+
+                                                <div class="row">
+                                                    <label class="col-md-3">QPS:</label>
+                                                    <span class="col-md-9">{{v.statistics['qps']}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" id="validate-id" ng-show="data.vsMerge.vsesValid">
+                            <div class="col-md-12 status-red">
+                                {{data.vsMerge.vsesValid}}
+                            </div>
+                        </div>
+
+                        <div name="createvs" ng-show="showVsCreation()">
+                            <div class="form-group row">
+                                <div class="col-md-12" style="padding-bottom: 10px">
+                                    <a class="btn btn-danger pull-right" ng-show="showRetry()" style="padding:1px 5px"
+                                       ng-click="retryFailed()"><i class="fa fa-refresh"></i>{{resource.tools.mergeEdit.html.msg22}}</a>
+                                </div>
+                                <div class="col-md-1">
+                                    <label>{{resource.tools.mergeEdit.html.msg23}}</label>
+                                </div>
+                                <div class="col-md-11">
+                                    <table class=" table table-bordered resource-table">
+                                        <thead>
+                                        <tr>
+                                            <th style="width: 20%">{{resource.tools.mergeEdit.html.msg24}}</th>
+                                            <th style="width: 58%">{{resource.tools.mergeEdit.html.msg25}}</th>
+                                            <th style="width: 22%">{{resource.tools.mergeEdit.html.msg26}}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-show="showCertificateRow()">
+                                            <td>
+                                                {{resource.tools.mergeEdit.html.msg27}}
+                                            </td>
+
+                                            <td>
+                                                {{data.vsMerge.stages['cert'].message}}
+                                            </td>
+
+                                            <td>
+                                                <div ng-if="data.vsMerge.stages['cert'].status=='SUCCESS'">
+                                                    <i class="fa fa-check status-green"></i> {{resource.tools.mergeEdit.html.msg28}}
+                                                </div>
+
+                                                <div ng-if="data.vsMerge.stages['cert'].status=='FAIL'">
+                                                    <i class="fa fa-times status-red"></i>{{resource.tools.mergeEdit.html.msg29}}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                {{resource.tools.mergeEdit.html.msg31}}
+                                            </td>
+
+                                            <td rowspan="2">
+
+                                                <div ng-show="showTargetVs()"
+                                                     data-ng-repeat="(k,v) in data.vsMerge['target-vs']">
+
+                                                    <div>
+                                                        <div class="row">
+                                                            <label class="col-md-1">Name:</label>
+                                                            <a class="col-md-11"
+                                                               href="/portal/vs#?env={{env}}&vsId={{k}}">{{k}}({{v.name}})</a>
+                                                        </div>
+                                                        <div class="row">
+                                                            <label class="col-md-1">{{resource.tools.mergeEdit.html.msg15}}:</label>
+
+                                                            <span class="col-md-11">{{getDomainText(v.domains)}}</span>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <label class="col-md-1">SSL:</label>
+                                                            <span class="col-md-11">
+                                                                {{v.ssl?'Https':'Http'}}
+                                                            </span>
+                                                        </div>
+                                                        <div class="row">
+                                                            <label class="col-md-1">IDC/Zone:</label>
+                                                            <span class="col-md-11">{{v.idc}}/{{v.zone}}</span>
+                                                        </div>
+                                                        <div class="row">
+                                                            <label class="col-md-1">{{resource.tools.mergeEdit.html.msg26}}:</label>
+                                                            <span class="col-md-11"
+                                                                  ng-bind-html="getVsStatusText(v.status)"></span>
+                                                        </div>
+                                                        <!--<div class="row">-->
+                                                        <!--<label class="col-md-1">{{resource.tools.mergeEdit.html.msg16}}：</label>-->
+                                                        <!--<div class="col-md-11">-->
+                                                        <!--<span class="status-red">{{v.statistics['app-count'] || 0}}</span>{{resource.tools.mergeEdit.html.msg17}}-->
+                                                        <!--<span class="status-red">{{v.statistics['group-count'] || 0}}</span>{{resource.tools.mergeEdit.html.msg18}},-->
+                                                        <!--<span class="status-red">{{v.statistics['group-server-count'] || 0}}</span>{{resource.tools.mergeEdit.html.msg19}},-->
+                                                        <!--<span class="status-red">{{v.statistics['member-count'] || 0}}</span>{{resource.tools.mergeEdit.html.msg21}}.-->
+                                                        <!--</div>-->
+                                                        <!--</div>-->
+                                                        <div class="row">
+                                                            <label class="col-md-1">{{resource.tools.mergeEdit.html.msg33}}:</label>
+                                                            <div class="col-md-11">
+                                                                <div class="system-link">
+                                                                    <a class="dashboard" target="_blank"
+                                                                       href="{{generateMonitorUrl('dashboard', v)}}">Dashboard</a>
+                                                                </div>
+
+                                                                <div class="system-link"
+                                                                     ng-show="showLinks('hickwall')">
+                                                                    <a class="pull-left hickwall" title="Hickwall"
+                                                                       target="_blank"
+                                                                       href="{{generateMonitorUrl('hickwall')}}">
+                                                                        Hickwall
+                                                                    </a>
+                                                                </div>
+                                                                <div class="system-link" ng-show="showLinks('es')">
+                                                                    <a class="pull-left es" title="ES" target="_blank"
+                                                                       href="{{generateMonitorUrl('es')}}">
+                                                                        ES
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div style="margin-top: 20px" ng-show="showBindError()"
+                                                     class="status-red form-group">
+                                                    <div class="col-md-12">
+                                                        {{resource.tools.mergeEdit.html.msg34}}：Status:
+                                                        {{data.vsMerge.stages['create-and-bind-new-vs']['status']}}.
+                                                        Message:
+                                                        {{data.vsMerge.stages['create-and-bind-new-vs']['message']}}
+                                                    </div>
+                                                </div>
+
+                                                <div style="margin-top: 20px" ng-show="showActivateError()"
+                                                     class="status-red form-group">
+                                                    <div class="col-md-12">
+                                                        {{resource.tools.mergeEdit.html.msg35}}：Status: {{data.vsMerge.stages['merge-vs']['status']}}.
+                                                        Message:
+                                                        {{data.vsMerge.stages['merge-vs']['message']}}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                            <span ng-class="stepClass('create-and-bind-new-vs')">{{stepText('create-and-bind-new-vs')}}
+                                            </span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>
+                                                {{resource.tools.mergeEdit.html.msg36}}
+                                            </td>
+
+                                            <td>
+                                          <span ng-class="stepClass('merge-vs')">
+                                           {{stepText('merge-vs')}}
+                                          </span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>
+                                                {{resource.tools.mergeEdit.html.msg33}}
+                                            </td>
+
+                                            <td>
+                                                <a ng-click="getMonitorLink()" class="status-blue"
+                                                   style="text-decoration: underline"><i class="fa fa-hand-o-right"></i><span>{{resource.tools.mergeEdit.html.msg37}}</span></a>
+                                            </td>
+                                            <td>
+                                                -
+                                            </td>
+                                        </tr>
+
+
+                                        <tr ng-show="showRevertRow()">
+                                            <td>
+                                                {{resource.tools.mergeEdit.html.msg38}}
+                                            </td>
+
+                                            <td>
+                                                {{resource.tools.mergeEdit.html.msg39}}
+
+                                                <div ng-show="showRollbackError()" class="status-red form-group row">
+                                                    {{resource.tools.mergeEdit.html.msg41}}：Status: {{data.vsMerge.stages['rollback']['status']}}.
+                                                    Message:
+                                                    {{data.vsMerge.stages['rollback']['message']}}
+                                                </div>
+
+                                            </td>
+                                            <td>
+                                                <a ng-show="showRevertLink()" ng-click="revertChanges()"
+                                                   class="fa fa-undo status-red">{{resource.tools.mergeEdit.html.msg42}}</a>
+                                                <div ng-show="showRevertProgress()">
+                                                      <span ng-class="stepClass('rollback')">{{stepText('rollback')}}
+                                            </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+
+                                        </tbody>
+
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-show="showSecondStep() && hasReverting()">
+                            <div class="form-group row">
+                                <div class="col-md-1">
+                                    <label>{{resource.tools.mergeEdit.html.msg43}}</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="checkbox" ng-model="query.accept"/> {{resource.tools.mergeEdit.html.msg44}}
+                                </div>
+                            </div>
+
+                            <div class="form-group row" ng-show="showSecondStep()">
+                                <button class="btn btn-info pull-right" ng-disabled="secondStepDisable()"
+                                        ng-click="moveSecondToThird()">
+                                    {{resource.tools.mergeEdit.html.msg45}}
+                                </button>
+                            </div>
+
+                            <div ng-show="showCleanResult()" class="row form-group">
+                                <div class="col-md-12">
+                                    <i class="getCleanClass()"></i>
+                                    <span ng-bind-html="getCleanText()"></span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+                <div class="panel-footer dialog-footer row " style="background: none;" ng-show="showFirstToSecond()">
+                    <div class="col-md-10"></div>
+                    <div class="col-md-2">
+                        <button class="btn btn-info pull-right" ng-disabled="firstStepDisable(content.name.$invalid)"
+                                ng-click="moveFirstToSecond()">
+                            {{resource.tools.mergeEdit.html.msg46}}
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modals">
+                <div class="modal fade" id="selectVsDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.mergeEdit.html.msg8}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row standard-row">
+                                    <label class="col-md-2">
+                                        VS Id:
+                                    </label>
+
+                                    <div class="col-md-9">
+                                        <div angucomplete-alt id="vsIdSelector"
+                                             placeholder={{resource.tools.mergeEdit.html.msg48}}
+                                             pause="100"
+                                             selected-object="selectVsId"
+                                             remote-url="{{remoteVsesUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small"
+                                             input-changed="vsIdInputChanged">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button data-dismiss="modal" id="saveVsBt" class="btn btn-info"
+                                            ng-click="saveVsClick()" ng-disabled="!query.vsId">{{resource.tools.mergeEdit.html.msg49}}
+                                    </button>
+                                    <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.mergeEdit.html.msg51}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="errorDomainDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.mergeEdit.html.msg52}}</h4>
+                            </div>
+                            <div class="modal-body warning-important" id="body-error">
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-warning" data-dismiss="modal">{{resource.tools.mergeEdit.html.msg51}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="progressDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.mergeEdit.html.msg53}}</h4>
+                            </div>
+                            <div class="modal-body" id="progress">
+
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-right">
+                                    <button class="btn btn-info closeProgressWindowBt" data-dismiss="modal">{{resource.tools.mergeEdit.html.msg54}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static-new/main/tools/vs-merge-edit.js"></script>
+</body>
+</html>

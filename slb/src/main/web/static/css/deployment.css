@@ -1,0 +1,15 @@
+.info-table.deployment-table th {
+    width: 20%;
+}
+
+.info-table.deployment-table .text-left {
+    text-align: left;
+}
+
+.info-table.deployment-table .text-right {
+    text-align: right;
+}
+
+.info-table.deployment-table .text-center {
+    text-align: center;
+}

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>新建证书升级流程</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <!--<script src="/static/lib/lodash/loadash.min.js"></script>-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/global-new.css">
+
+
+    <script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+    <script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+    <script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+
+    <script src="/static-new/model/Class.js"></script>
+    <script src="/static-new/repository/unitwork/command.js"></script>
+    <script src="/static-new/repository/unitwork/repository.js"></script>
+    <script src="/static-new/util/Constants.js"></script>
+
+    <script src="/static/js/charts.js"></script>
+    <script src="/static-new/viewmodel/traffic.js"></script>
+    <script src="/static-new/repository/traffic/traffic-repository.js"></script>
+    <script src="/static-new/service/traffic/traffic-interface.js"></script>
+    <script src="/static-new/service/traffic/impl/vs-traffic-service.js"></script>
+
+    <style type="text/css">
+        #confirmRollbackTrafficChanges .modal-dialog {
+            width: 70%;
+        }
+
+        .table-header tr td {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .bs-bars {
+            width: 100% !important;
+        }
+
+        .actions a {
+            margin-right: 5px;
+        }
+
+        .actions button {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu">
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>意见反馈</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;个人主页</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;后台管理</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;登出</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('list')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">工具列表</span></a></li>
+            <li class=""><a href="{{generateLink('url')}}"><i class="fa fa-tripadvisor"></i> <span
+                    class="nav-label">URL探测工具</span></a>
+            </li>
+
+            <li class="active tools-hide"><a href="{{generateLink('cert-upgrade')}}"><i class="fa fa-certificate"></i>
+                <span
+                        class="nav-label">证书升级</span></a>
+            </li>
+            <li class="tools-hide"><a href="{{generateLink('slb-sharding')}}"><i class="fa fa-cogs"></i> <span
+                    class="nav-label">SLB 拆分工具</span></a>
+            </li>
+            <li class="tools-hide"><a href="{{generateLink('slb-migration')}}"><i class="fa fa-cloud"></i> <span
+                    class="nav-label">SLB新建工具</span></a>
+            </li>
+            <li class="tools-hide"><a href="{{generateLink('vs-migration')}}"><i class="fa fa-rocket"></i> <span
+                    class="nav-label">VS迁移工具</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-seperate')}}"><i class="fa fa-delicious"></i> <span
+                    class="nav-label">VS拆分工具</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-merge')}}"><i class="fa fa-steam"></i> <span
+                    class="nav-label">VS合并工具</span></a>
+            </li>
+
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController">
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    首页
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+
+        <div class="breadcrumb-follow" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController" ng-cloak="">
+
+            <div class="row">
+                <!--Top navigation bar-->
+                <div class="col-md-12">
+                    <div class="btn-group btn-group-justified m-b-8">
+                        <a data-ng-repeat="(k,v) in data.nav"
+                           ng-class="stepClass(k, $index)" class="nav-class"
+                           role="button">{{$index+1}}: {{v}}</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">新建</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="row form-group" style="padding-top: 20px">
+                        <label class="col-md-1" style="line-height: 35px;" for="source">原证书ID:</label>
+                        <div class="col-md-3">
+                            <input id="source" class="form-control" type="text" placeholder="原证书ID"
+                                   ng-model="data.steps['New']['old-id']" ng-disabled="data.steps.id!=undefined"/>
+                        </div>
+                        <div class="col-md-8 status-red" ng-show="showOldIdError(data.steps['New']['old-id'])">
+                            *数字、必填
+                        </div>
+                    </div>
+
+                    <div class="row form-group">
+                        <label class="col-md-1" style="line-height: 35px;" for="target">新的证书ID:</label>
+                        <div class="col-md-3">
+                            <input id="target" class="form-control" type="text" placeholder="新的证书ID"
+                                   ng-model="data.steps['New']['new-id']" ng-disabled="data.steps.id!=undefined"/>
+                        </div>
+                        <div class="col-md-8 status-red" ng-show="showNewIdError(data.steps['New']['new-id'])">
+                            *数字、必填
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-footer row" style="background: none; padding-bottom: 20px">
+                    <div class="col-md-6"></div>
+                    <div class="col-md-5"></div>
+                    <div class="col-md-1">
+                        <button class="btn btn-info next-step-class pull-right"
+                                ng-disabled="disableFirstToSecond()"
+                                ng-show="data.steps.id ==undefined"
+                                ng-click="firstToSecond()">
+                            下一步
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default" ng-show="showSecondStep()">
+                <div class="panel-heading">
+                    <h4 class="panel-title">灰度Virtual Server</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="row table-toolbar" id="vsToolBar">
+                        <div class="col-md-10">共有{{}}个Virtual Server 使用了原证书.请选择期望升级的证书进行灰度</div>
+                        <div class="col-md-2">
+                            <!--<div class="actions pull-right">-->
+                                <!--<button class="btn btn-default btn-xs "-->
+                                        <!--id="batchCanary"-->
+                                        <!--ng-click="batchCanary()" disabled>-->
+                                    <!--批量灰度-->
+                                <!--</button>-->
+                                <!--<button class="btn btn-danger btn-xs "-->
+                                        <!--id="batchActive"-->
+                                        <!--ng-click="batchActivate()" disabled>-->
+                                    <!--批量激活-->
+                                <!--</button>-->
+                            <!--</div>-->
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table id="virtualServersTable">
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-footer row" style="background: none; padding-bottom: 20px">
+                    <div class="col-md-6"></div>
+                    <div class="col-md-5"></div>
+                    <div class="col-md-1">
+                        <button class="btn btn-info next-step-class pull-right"
+                                ng-show="showSecondToThird()"
+                                ng-click="secondToThird()">
+                            下一步
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="panel panel-default" ng-show="showThirdStep()">
+                <div class="panel-heading">
+                    <h4 class="panel-title">灰度测试</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="status-red ">
+
+                        <input type="checkbox" ng-model="query.tested"/> 已经测试完成！
+                    </div>
+                </div>
+
+                <div class="panel-footer row" style="background: none; padding-bottom: 20px">
+                    <div class="col-md-6"></div>
+                    <div class="col-md-5"></div>
+                    <div class="col-md-1">
+                        <button class="btn btn-info next-step-class pull-right"
+                                ng-disabled="!query.tested"
+                                ng-click="completeClick()">
+                            完成
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default" ng-show="showForthStep()">
+                <div class="panel-heading">
+                    <h4 class="panel-title">全部完成</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="status-green ">
+                        证书升级全部完成
+                    </div>
+                </div>
+            </div>
+
+            <div class="modals">
+
+                <div class="modal fade" id="uploadCertDialog" role="dialog">
+                    <div class="modal-dialog" id="uploadCertHead">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">灰度新的证书</h4>
+                            </div>
+                            <div class="modal-body query-container" style="padding-bottom: 0px">
+                                <div class="row standard-row">
+                                    <div class="col-md-2 query-label">
+                                        <label>证书ID:</label>
+                                    </div>
+
+                                    <div class="col-md-10 query-body">
+                                        <b>{{data.steps['New']['new-id']}}</b>
+                                    </div>
+                                </div>
+
+                                <div class="row " style="line-height: 40px; margin-bottom: 0px"
+                                     ng-show="showCanaryArea()">
+                                    <div class="col-md-2 query-label">
+                                        <label>
+                                            设定灰度比例:
+                                        </label>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <div class="pull-left form-group">
+                                            <span>25%</span>
+                                            <input id="exampleInputPassword3"
+                                                   name="ration"
+                                                   ng-model="certificateRange.max"
+                                                   ng-value="25"
+                                                   type="radio"
+                                                   ng-checked="certificateRange.max==25"/>
+                                        </div>
+
+                                        <div class="pull-right form-group">
+                                            <span>50%</span>
+                                            <input id="exampleInputPassword4"
+                                                   name="ration"
+                                                   ng-model="certificateRange.max"
+                                                   ng-value="50"
+                                                   type="radio"
+                                                   ng-checked="certificateRange.max==50"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row"
+                                     ng-show="data.steps['Activate'][query.vsId]['status']=='canarySuccess' || data.steps['Activate'][query.vsId]['status']=='canaryDone'">
+                                    <div class="col-md-2">
+                                        <label>灰度机器列表:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div>
+                                            <!--当前VS共灰度了{{}}SLB共有{{query.allSlbs.length}}台机器，-->
+                                            <!--已有{{canaryIps.length}}台机器安装了正在灰度的证书-->
+                                        </div>
+                                        <ul style="margin-left: -40px;list-style: none; max-height: 500px; overflow-y: auto">
+                                            <li data-ng-repeat="k in data.steps['Activate'][query.vsId]['canaryIps']">
+                                                <span><i class="fa fa-desktop"></i> {{k}} </span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <!--未灰度过-->
+                                <div ng-show="data.steps['Activate'][query.vsId]['status']=='toBeCanary'">
+                                    <a ng-click="startCanary(certificateRange.max)"
+                                       class="btn btn-info pull-right"
+                                       ng-disabled="certificateRange.max==0">开始灰度</a>
+                                </div>
+
+                                <!--灰度过但没有全部生效-->
+                                <div ng-show="data.steps['Activate'][query.vsId]['status'] && data.steps['Activate'][query.vsId]['status']=='canarySuccess'"
+                                     style="line-height: 35px;">
+                                        <span class="status-red" style="margin-right: 20px; line-height: 35px;">
+                                            <input type="checkbox" ng-model="query.allCanaryPassed"/>
+                                            <span>TODO: 替换所有服务器上的证书并激活生效。确认操作</span>
+                                        </span>
+
+                                    <div class="pull-right">
+                                        <a ng-click="activateSlb()" class="btn btn-danger pull-left">重新激活SLB</a>
+
+                                        <a ng-click="batchCanary()" ng-disabled="!query.allCanaryPassed"
+                                           class="btn btn-info pull-right">下一步：生效全部证书</a>
+                                    </div>
+
+                                </div>
+
+                                <!--<div class="pull-right"-->
+                                <!--ng-show="data.steps['Activate'][query.vsId].canarySuccess && data.steps['Activate'][query.vsId].canaryDone"-->
+                                <!--style="line-height: 35px;">-->
+                                <!--<a class="btn btn-info" data-dismiss="modal">全部完成</a>-->
+                                <!--</div>-->
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/tools-cert-upgrade.js"></script>
+</body>
+</html>

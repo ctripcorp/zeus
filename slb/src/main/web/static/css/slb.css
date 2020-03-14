@@ -1,0 +1,27 @@
+.message-button {
+    color: #101010;
+}
+
+.new-idc span {
+    margin-right: 10px;
+    cursor: pointer;
+}
+.slb-logs{
+    margin-top: 25px;
+}
+#slbInfo-logs-toolbar{
+    width: 100%;
+}
+.slb-servers,.slb-vses-div{
+    margin-top: 35px;
+}
+.custom-toolbar{
+    margin-top: 12px;
+}
+.slb-list-ul{
+    list-style: none;
+    margin-left: -40px;
+}
+.slb-list-ul li{
+    float: left;
+}

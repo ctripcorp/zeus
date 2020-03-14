@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>权限审批</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('users')}}"><i class="fa fa-user"></i> <span
+                    class="">用户管理</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('role')}}"><i class="fa fa-group"></i> <span
+                    class="">角色管理</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('rights')}}"><i
+                    class="fa fa-balance-scale"></i>
+                <span class="nav-label">权限管理</span></a></li>
+
+            <li class="active"><a href="{{generateLink('access')}}"><i class="fa fa-sign-in"></i> <span
+                    class="">权限审批</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('config')}}"><i class="fa fa-pencil"></i> <span
+                    class="">配置管理</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<section class="content">
+    <div class="wraper container-fluid">
+        <!--Breadcrumb Area-->
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 ng-click="clickTarget()"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id,name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wraper breadcrumb-follow info-container" id="approvals-info-area" ng-app="approvalsInfoApp"
+             ng-controller="approvalsInfoController">
+
+            <div class="row" style="margin-bottom: 10px">
+                <div class="pull-right ">
+                    <button data-ng-repeat="bt in data.category" class="btn" ng-class="isSelectedCategory(bt)"
+                            ng-click="toggleCategory(bt)" type="button">
+                        {{bt}}
+                    </button>
+                </div>
+            </div>
+            <div class="row" ng-show="showPanel('未审批')">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="panel-title">未审批</div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="approvals-notapproved-toolbar" class="table-toolbar row">
+                            <div class="col-md-12">
+                                <span>当前共有: <b>{{data.notapproved.length}}</b> 个未审批的权限请求</span>
+                            </div>
+                        </div>
+                        <table id="approvals-notapproved-table">
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+            <div class="row" ng-show="showPanel('已审批')">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="panel-title">已审批</div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="approvals-approved-toolbar" class="table-toolbar row">
+                            <div class="col-md-12">
+                                <span>当前共有: <b>{{data.approved.length}}</b> 已经审批的权限请求</span>
+                            </div>
+                        </div>
+                        <table id="approvals-approved-table">
+
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="modals">
+                <div class="modal fade" id="newRoleDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">新建Role</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <h4>注意</h4>
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            新建的Role 默认权限同 <a
+                                                href="/portal/role#?env={{env}}&roleId={{query.slbvisitor.id}}"
+                                                target="_blank">SlbVisitor</a> 的权限相同
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="container row">
+                                    <div class="row">
+                                        <div class="col-md-2">Name</div>
+                                        <div class="col-md-4">
+                                            <input type="text" ng-model="newRole['role-name']"
+                                                   class="form-control"/>
+                                        </div>
+                                    </div>
+
+                                    <div class="row" style="margin-top: 10px">
+                                        <div class="col-md-2">Description</div>
+                                        <div class="col-md-4">
+                                            <input type="text" ng-model="newRole.discription"
+                                                   class="form-control"/>
+                                        </div>
+                                    </div>
+                                    <div class="row role-create-message status-red" style="margin: 10px 4px">
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default btn-info" ng-click="saveNewRole()">
+                                    保存
+                                </button>
+                                <button type="button" class="btn btn-default btn-warning"
+                                        data-dismiss="modal">取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;{{year}} Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/approvals.js"></script>
+
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+.product-groups, .uat-groups, .fat-groups{
+    margin-top: 35px;
+}
+.model-basic-info {
+    width: 50% !important;
+    word-break: break-all;
+}

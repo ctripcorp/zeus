@@ -1,0 +1,57 @@
+/** only for groups **/
+.fail{
+    color: darkred;
+}
+.success{
+    color: green;
+}
+.warn{
+    color: #985f0d;
+}
+.appinfo-table tr td{
+    border: none;
+}
+.appinfo-table thead{
+    border-bottom: solid 1px;
+}
+.status-query-left, .status-query-right{
+    margin-left: -15px;
+}
+.bu-ul{
+    margin-left: -50px;
+    float: left;
+    list-style: none;
+}
+.bu-ul li{
+}
+.to-be-delete-status{
+    color: darkred;
+}
+.to-be-add-status{
+    color: #c7c412;
+}
+.online-status{
+    color:darkgreen;
+}
+.bu-class{
+    margin-top: 4px;
+    padding:6px 8px;
+}
+.show-more-bt{
+    color: #101010;
+}
+.show-more-bt:hover{
+    text-decoration: none;
+}
+.group-summarizer{
+    float: right;
+    line-height: 20px;
+    padding-left: 5px;
+}
+
+.link-hide{
+    visibility: hidden;
+}
+.link-show{
+    visibility: visible;
+}

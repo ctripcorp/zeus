@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Index</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <script src="/static-new/util/C.js"></script>
+    <script src="/static-new/model/Class.js"></script>
+    <script src="/static-new/repository/unitwork/command.js"></script>
+    <script src="/static-new/repository/unitwork/repository.js"></script>
+    <script src="/static-new/repository/app/apps-repository.js"></script>
+    <script src="/static-new/repository/group/groups-repository.js"></script>
+    <script src="/static-new/repository/slb/slbs-repository.js"></script>
+    <script src="/static-new/repository/user/user-repository.js"></script>
+    <script src="/static-new/repository/vs/vses-repository.js"></script>
+
+    <!--Service-->
+    <script src="/static-new/service/app/apps-service.js"></script>
+    <script src="/static-new/service/group/groups-service.js"></script>
+
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+
+    <style type="text/css">
+        .group-item {
+            padding: 4px !important;
+        }
+
+        .search-bar {
+            width: 430px;
+            padding-bottom: 5px
+        }
+
+        .search-bar-status {
+            line-height: 40px;
+            margin-bottom: -100px;
+            margin-left: -10px;
+        }
+
+        #appIdSelector_dropdown {
+            width: 510px;
+        }
+
+        .operations-panel .widget-panel {
+
+        }
+
+        .operations-panel .widget-panel div {
+            font-size: 10px;
+            padding-top: 5px;
+        }
+
+        .operations-panel > div {
+            cursor: pointer;
+        }
+
+        .operations-panel .counter {
+            font-size: 20px;
+        }
+
+        .modals > div .modal-dialog {
+            width: 60%;
+        }
+
+        .widget-panel .fa {
+            display: none;
+        }
+
+        .doc-info {
+            margin-left: -40px;
+        }
+
+        .doc-info li {
+            float: left;
+            list-style: none;
+            margin-right: 20px;
+
+        }
+
+        .doc-info li a {
+            color: #009688;
+            text-decoration: underline;
+        }
+
+        .fa-book {
+            margin-right: 3px;
+        }
+
+        .counter {
+            font-size: 14px !important;
+        }
+
+        .widget-panel {
+            margin-bottom: 10px !important;
+            padding: 10px !important;
+        }
+
+        #homeGroupsDialog .modal-dialog {
+            width: 50%;
+        }
+
+        .list-group .list-group-item {
+            padding: 0px;
+        }
+
+        .widget-panel {
+            background-color: white !important;
+            box-shadow: none;
+        }
+
+        .text-white {
+            color: #797979;
+            text-decoration: underline;
+        }
+
+        .filter li {
+            float: left;
+            list-style: none;
+            padding-right: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .selected-tool {
+            color: blue;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu">
+            <li class="dropdown language-menu" id="language-area" ng-app="languageApp"
+                ng-controller="languageController" ng-cloak>
+                <button class="btn btn-default btn-xs language-bt">语言</button>
+                <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)">
+                    <option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option>
+                </select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class="active">
+                <a href="{{generateLink('home')}}">
+                    <i class="fa fa-home"></i>
+                    <span class="nav-label">{{resource.userHome.html.title}}</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{generateLink('basic')}}"><i
+                        class="ion-ios7-speedometer"></i>
+                    <span class="nav-label">{{resource.userHome.html.headerInfoController.item2}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('policy')}}"><i class="fa fa-map-signs"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item3}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('AB')}}"><i class="fa fa-universal-access"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item4}}</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item6}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('access')}}"><i class="fa fa-user"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item7}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource.breadCrumbApp.firstPage}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="breadcrumb-follow" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController" ng-cloak>
+
+            <div class="row">
+                <div class="col-md-4">
+
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="row panel-heading">
+                    <div class="panel-title">
+                        {{resource.userHome.html.selfInfoApp.item1}}
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-1">
+                            <label class="standard-row">AppId:</label>
+                        </div>
+                        <div class="col-md-5">
+                            <div angucomplete-alt id="appIdSelector"
+                                 placeholder="{{resource.userHome.html.selfInfoApp.item2}}"
+                                 pause="100"
+                                 selected-object="selectAppId"
+                                 remote-url="{{remoteAppsUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id"
+                                 description-field="name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" ng-show="homeAppId">
+                        <div class="col-md-1">
+                            <label class="standard-row">{{resource.userHome.html.selfInfoApp.item3}}</label>
+                        </div>
+                        <div class="col-md-11">
+                            <a href="/portal/app#?env={{env}}&appId={{query.appId}}" class="status-blue standard-row"
+                               ng-bind-html="getAppData()">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="row panel-heading">
+                    <div class="panel-title">
+                        {{resource.userHome.html.selfInfoApp.item4}}
+                    </div>
+                </div>
+                <div class="panel-body">
+
+                    <div class="row">
+                        <div class="col-md-1">
+                            <label style="line-height: 20px">{{resource.userHome.html.selfInfoApp.item5}}</label>
+                        </div>
+                        <div class="col-md-11">
+                            <ul class="doc-info">
+                                <li>
+                                    <a href="{{getDocumentUrl('group')}}" target="_blank"><i class="fa fa-book "></i>{{resource.userHome.html.selfInfoApp.item6}}</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('activate-group')}}" target="_blank"><i
+                                            class="fa fa-book "></i>{{resource.userHome.html.selfInfoApp.token106}}</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('member')}}" target="_blank"><i class="fa fa-book "></i>{{resource.userHome.html.selfInfoApp.token112}}</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('health-modify')}}" target="_blank"><i
+                                            class="fa fa-book "></i>{{resource.userHome.html.selfInfoApp.token113}}</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('rewrite')}}" target="_blank"><i
+                                            class="fa fa-book "></i>{{resource.userHome.html.selfInfoApp.token114}}</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('health-check')}}" target="_blank"><i
+                                            class="fa fa-book "></i>{{resource.userHome.html.selfInfoApp.token115}}</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('url-rewrite')}}" target="_blank"><i
+                                            class="fa fa-book "></i>{{resource.userHome.html.selfInfoApp.token116}}</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('domain-remove')}}" target="_blank"><i
+                                            class="fa fa-book "></i>{{resource.userHome.html.selfInfoApp.token117}}</a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 10px">
+                        <div class="col-md-1">
+                            <label style="line-height: 20px">{{resource.userHome.html.selfInfoApp.token118}}</label>
+                        </div>
+                        <div class="col-md-11">
+                            <ul class="doc-info doc-info2">
+                                <li>
+                                        {{resource.userHome.html.selfInfoApp.token19}}</a>
+                                    <a href="{{getDocumentUrl('normaltraffic')}}" target="_blank"><i
+                                            class="fa fa-book "></i>{{resource.navs.navs_app_policy}}</a>
+                                </li>
+
+                                    <a href="{{getDocumentUrl('dr')}}" target="_blank"><i class="fa fa-book "></i>{{resource.userHome.html.selfInfoApp.token22}}</a>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 10px">
+                        <div class="col-md-1">
+                            <label style="line-height: 20px">{{resource.userHome.html.selfInfoApp.token23}}</label>
+                        </div>
+                        <div class="col-md-11">
+                            <ul class="doc-info">
+                                <li>
+                                    <a href="{{getDocumentUrl('413')}}" target="_blank"><i class="fa fa-book "></i> 413
+                                        (Request Entity Too Large)</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('414')}}" target="_blank"><i class="fa fa-book "></i>414
+                                        (Request-URI Too Large)</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('499')}}" target="_blank"><i class="fa fa-book "></i>499
+                                        (client has closed connection)</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('502')}}" target="_blank"><i class="fa fa-book "></i>502
+                                        (Bad Gateway)</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('504')}}" target="_blank"><i class="fa fa-book "></i>504
+                                        (Gateway Timeout)</a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+
+
+                    <div class="row" style="margin-top: 10px">
+                        <div class="col-md-1">
+                            <label style="line-height: 20px">{{resource.userHome.html.selfInfoApp.token24}}</label>
+                        </div>
+                        <div class="col-md-11">
+                            <ul class="doc-info">
+
+                                <li>
+                                    <a href="{{getDocumentUrl('error-page')}}" target="_blank"><i
+                                            class="fa fa-book "></i> {{resource.userHome.html.selfInfoApp.token25}}</a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('url-check')}}" target="_blank"><i
+                                            class="fa fa-book "></i> {{resource.userHome.html.selfInfoApp.token26}} </a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('nohttpreponse')}}" target="_blank"><i
+                                            class="fa fa-book "></i> NoHttpResponse&ConnectionReset </a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('isssl')}}" target="_blank"><i class="fa fa-book "></i>
+                                        {{resource.userHome.html.selfInfoApp.token27}} </a>
+                                </li>
+
+                                <li>
+                                    <a href="{{getDocumentUrl('httptiaohttps')}}" target="_blank"><i
+                                            class="fa fa-book "></i> {{resource.userHome.html.selfInfoApp.token28}} </a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="row panel-heading">
+                    <div style="line-height: 30px">
+                        <div class="panel-title col-md-2">
+                            {{resource.userHome.html.selfInfoApp.token29}}
+                        </div>
+
+                        <div class="col-md-10 ">
+                            <div class="pull-right">
+                                <ul class="filter" id="filter">
+                                    <li ng-click="toggleFilter(t)"
+                                        data-ng-repeat="t in data.filters"
+                                        ng-class="isSelectedTool(t)">{{t.key}}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body" style="margin-bottom: -20px">
+                    <div style="margin-left: -25px" class="row operations-panel">
+                        <div data-ng-repeat="category in data.categories"
+                             class="col-md-3 col-sm-6"
+                             ng-click="popDialog(category.type)">
+                            <div class="widget-panel widget-style-1 bg-info">
+                                <h2 class="m-0 counter text-white">{{category.name}}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modals">
+
+                <div class="modal fade" id="errorpage" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token13}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token32}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token33}}<a
+                                                href="mailto:test@Ctrip.com">{{resource.userHome.html.selfInfoApp.token34}}</a>
+
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token35}}<a
+                                                href="http://test.company.com/#/httpprocessor/">http://cd.ops.company.com/#/httpprocessor/</a>
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token36}}<a
+                                                href="mailto:slb@test.com">{{resource.userHome.html.selfInfoApp.token37}}</a>{{resource.userHome.html.selfInfoApp.token38}}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="member" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token39}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token14}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token43}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token42}}<a class="status-red"
+                                                                                             target="_blank"
+                                                                                             href="{{getDocumentUrl('member')}}">{{resource.userHome.html.selfInfoApp.token44}}</a>
+                                            {{resource.userHome.html.selfInfoApp.token45}}
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdMemberSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.item2}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row " ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token48}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <ul class="list-group list-group-lg">
+                                            <li style="list-style-type: disc" class="list-group-item b-0"
+                                                data-ng-repeat="(k, group) in data.appGroups[appid]">
+                                                <a class="status-blue"
+                                                   href="/portal/group#?env={{env}}&groupId={{k}}&memberOp=true"
+                                                   target="_blank" style="line-height: 40px">Group
+                                                    {{$index+1}}:{{group.name}} </a>
+                                                <span class="pull-right label bg-info inline m-t-10">IDC: {{getGroupIDCText(group.properties)}}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="apprewrite" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token49}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token15}}
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdRewriteSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.item2}}"
+                                             pause="100"
+                                             selected-object="selectRewriteAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="healthchecker" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token115}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token53}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token54}}
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdHealthySelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.item2}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row " ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token48}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <ul class="list-group list-group-lg">
+                                            <li style="list-style-type: disc" class="list-group-item b-0"
+                                                data-ng-repeat="(k, group) in data.appGroups[appid]">
+                                                <a class="status-blue"
+                                                   href="/portal/group#?env={{env}}&groupId={{k}}&preHealthCheck=true"
+                                                   target="_blank" style="line-height: 40px">Group
+                                                    {{$index+1}}:{{group.name}} </a>
+                                                <span class="pull-right label bg-info inline m-t-10">IDC: {{getGroupIDCText(group.properties)}}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="healthchange" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token56}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token57}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token58}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token42}}<a class="status-red"
+                                                                                             target="_blank"
+                                                                                             href="{{getDocumentUrl('health-modify')}}">{{resource.userHome.html.selfInfoApp.token59}}</a>
+                                            {{resource.userHome.html.selfInfoApp.token16}}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdHealthChangeSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.item2}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row " ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token48}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <ul class="list-group list-group-lg">
+                                            <li style="list-style-type: disc" class="list-group-item b-0"
+                                                data-ng-repeat="(k, group) in data.appGroups[appid]">
+                                                <a class="status-blue"
+                                                   href="/portal/group#?env={{env}}&groupId={{k}}&preModifyHealthCheck=true"
+                                                   target="_blank" style="line-height: 40px">Group
+                                                    {{$index+1}}:{{group.name}} </a>
+                                                <span class="pull-right label bg-info inline m-t-10">IDC: {{getGroupIDCText(group.properties)}}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="netjava" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token62}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token63}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token42}}<a class="status-red"
+                                                                                             target="_blank"
+                                                                                             href="{{getDocumentUrl('netjava')}}">{{resource.userHome.html.selfInfoApp.token19}}</a>
+                                            {{resource.userHome.html.selfInfoApp.token65}}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdNetJavaSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.token66}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row" ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token67}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <a class="status-blue fa fa-hand-o-right"
+                                           target="_blank"
+                                           href="/portal/user/user-trafficpolicy#?env={{env}}&appId={{appid}}">{{resource.userHome.html.selfInfoApp.token68}}</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="normaltraffic" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token69}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token17}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token42}}<a class="status-red"
+                                                                                             target="_blank"
+                                                                                             href="{{getDocumentUrl('normaltraffic')}}">{{resource.navs.navs_app_policy}}文档</a>
+                                            {{resource.userHome.html.selfInfoApp.token65}}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdNormalSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.token74}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row" ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token75}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <a class="status-blue fa fa-hand-o-right"
+                                           target="_blank"
+                                           href="/portal/user/user-normalpolicy#?env={{env}}&type=new&appId={{appid}}">{{resource.userHome.html.selfInfoApp.token77}}</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="endtraffic" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token76}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token78}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token42}}<a class="status-red"
+                                                                                             target="_blank"
+                                                                                             href="{{getDocumentUrl('endtraffic')}}">{{resource.userHome.html.selfInfoApp.token79}}</a>
+                                            {{resource.userHome.html.selfInfoApp.token18}}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdEndSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.token82}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row" ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token83}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <a class="status-blue fa fa-hand-o-right"
+                                           target="_blank"
+                                           href="/portal/user/user-normalpolicy#?env={{env}}&type=deactivate&appId={{appid}}">{{resource.userHome.html.selfInfoApp.token84}}</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="dr" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token85}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token86}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token42}}<a class="status-red"
+                                                                                             target="_blank"
+                                                                                             href="{{getDocumentUrl('dr')}}">{{resource.userHome.html.selfInfoApp.token87}}</a>
+                                            {{resource.userHome.html.selfInfoApp.token88}}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdDrSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.token82}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row " ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token91}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <a class="status-blue fa fa-hand-o-right" href="" ng-click="startDr(appid)">{{resource.userHome.html.selfInfoApp.token93}}</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="grouptraffic" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token92}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token94}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token95}}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdGroupTrafficSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.item2}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row " ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token48}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <ul class="list-group list-group-lg">
+                                            <li style="list-style-type: disc" class="list-group-item b-0"
+                                                data-ng-repeat="(k, group) in data.appGroups[appid]">
+                                                <a class="status-blue"
+                                                   href="/portal/group/traffic#?env={{env}}&groupId={{k}}"
+                                                   target="_blank" style="line-height: 40px">Group
+                                                    {{$index+1}}:{{group.name}} </a>
+                                                <span class="pull-right label bg-info inline m-t-10">IDC: {{getGroupIDCText(group.properties)}}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="memberop" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token96}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token97}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token98}}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdMemberOpSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.item2}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row " ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token48}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <ul class="list-group list-group-lg">
+                                            <li style="list-style-type: disc" class="list-group-item b-0"
+                                                data-ng-repeat="(k, group) in data.appGroups[appid]">
+                                                <a class="status-blue"
+                                                   href="/portal/group/log#?env={{env}}&groupId={{k}}&groupOperations=upMember&groupOperations=downMember"
+                                                   target="_blank" style="line-height: 40px">Group
+                                                    {{$index+1}}:{{group.name}} </a>
+                                                <span class="pull-right label bg-info inline m-t-10">IDC: {{getGroupIDCText(group.properties)}}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="healthyop" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.userHome.html.selfInfoApp.token99}}</h4>
+                            </div>
+                            <div class="modal-body" style="margin-bottom: -10px">
+                                <div class="alert alert-warning">
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token97}}
+                                        </li>
+                                        <li>
+                                            {{resource.userHome.html.selfInfoApp.token210}}
+                                        </li>
+
+                                    </ul>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">AppId:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="appIdHealthyOpSelector"
+                                             placeholder="{{resource.userHome.html.selfInfoApp.item2}}"
+                                             pause="100"
+                                             selected-object="selectMemberAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" style="" ng-show="appid">
+                                    <div class="col-md-2">
+                                        <label class="standard-row">{{resource.userHome.html.selfInfoApp.token47}}</label>
+                                    </div>
+                                    <div class="col-md-10" ng-show="appid">
+                                        <div style="color: blue; line-height: 45px">
+                                            <a style="color: blue;" href="/portal/app#?env={{env}}&appId={{appid}}">{{appid}}({{getAppName(data.appGroups[appid])}})</a>,
+                                            <a style="color: blue;" href="{{getUserEmail(data.appGroups[appid])}}">{{getAppOwners(data.appGroups[appid])}}</a>,
+                                            <span>{{getAppBu(data.appGroups[appid])}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row status-red" ng-show="data.appGroups['error'][appid]">
+                                    <div class="col-md-12">
+                                        {{data.appGroups['error'][appid]}}
+                                    </div>
+                                </div>
+                                <div class="row " ng-show="data.appGroups[appid]">
+                                    <div class="col-md-2 status-red">
+                                        <label>{{resource.userHome.html.selfInfoApp.token48}}</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <ul class="list-group list-group-lg">
+                                            <li style="list-style-type: disc" class="list-group-item b-0"
+                                                data-ng-repeat="(k, group) in data.appGroups[appid]">
+                                                <a class="status-blue"
+                                                   href="/portal/group/log#?env={{env}}&groupId={{k}}&groupOperations=fall&groupOperations=raise"
+                                                   target="_blank" style="line-height: 40px">Group {{$index+1}}:
+                                                    {{group.name}} </a>
+                                                <span class="pull-right label bg-info inline m-t-10">IDC: {{getGroupIDCText(group.properties)}}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning pull-right" data-dismiss="modal">
+                                    {{resource.userHome.html.modal.msg2}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="homeGroupsDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">
+                                    {{resource.userHome.html.selfInfoApp.token410}}{{homeAppId}}{{resource.userHome.html.selfInfoApp.token105}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    {{resource.userHome.html.selfInfoApp.token310}}
+                                </div>
+                                <ul class="list-group list-group-lg">
+                                    <li style="list-style-type: disc" class="list-group-item b-0"
+                                        data-ng-repeat="group in data.homegroups">
+                                        <a class="status-blue" href="/portal/group#?env={{env}}&groupId={{group.id}}"
+                                           target="_blank" style="line-height: 40px">Group {{$index+1}}:
+                                            {{group.name}} </a>
+                                        <span class="pull-right label bg-info inline m-t-10">IDC: {{group.properties['idc']}}</span>
+                                    </li>
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+            <div class="container pull-left">
+                &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                    href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+                SLB Team</a>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+
+<script src="/statics/js/services/esService.js"></script>
+<script src="/statics/js/apps/userApp.js"></script>
+
+<script src="/static-new/main/home.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+</html>

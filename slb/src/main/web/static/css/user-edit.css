@@ -1,0 +1,52 @@
+#roleIdSelector{
+    width: 300px;
+}
+#newSlbDialog .modal-dialog, #newVSDialog .modal-dialog,  #newGroupDialog .modal-dialog,
+#newPolicyDialog .modal-dialog,
+#newConfDialog .modal-dialog, #newCleanDialog .modal-dialog,  #newLockDialog .modal-dialog,
+#newSyncDialog .modal-dialog, #newAuthDialog .modal-dialog,  #newIpDialog .modal-dialog{
+    width: 880px;
+}
+#newSlbDialog .bs-bars,
+#newConfDialog .bs-bars,
+#newSyncDialog .bs-bars,
+#newVSDialog .bs-bars,
+#newGroupDialog .bs-bars,
+#newCleanDialog .bs-bars,
+#newLockDialog .bs-bars,
+#newAuthDialog .bs-bars,
+#newPolicyDialog .bs-bars,
+#newIpDialog .bs-bars{
+    width: 65%;
+}
+
+
+/*#slbIdSelector, #vsIdSelector, #groupIdSelector{
+    width: 580px;
+}*/
+.selectslball{
+    float: right;
+    margin: 5px 1px;
+}
+.add-slb-auth-alert,.add-vs-auth-alert, .add-group-auth-alert,.add-policy-auth-alert,
+.add-conf-auth-alert,.add-clean-auth-alert, .add-lock-auth-alert
+.add-sync-auth-alert,.add-auth-auth-alert, .add-ip-auth-alert{
+    color:red;
+}
+.fa-toggle-on, .fa-toggle-off, .fa-check-square, .fa-square-o{
+    cursor: pointer;
+}
+/*
+.custom-toolbar{
+    position: relative;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    line-height: 34px;
+}
+.custom-toolbar-0{
+    position: relative;
+    margin-bottom: 10px;
+    line-height: 34px;
+}
+*/
+

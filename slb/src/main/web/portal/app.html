@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>App BasicInfo</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!--adfdfd-->
+    <!--aline-->
+    <!--bline-->
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <style type="text/css">
+        #rewriteForJavaModel .modal-dialog {
+            width: 70%;
+        }
+        .btn-xs{
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class="active"><a href="{{generateLink('basic')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource.app.html.headerInfoController.l1}}</span></a></li>
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource.app.html.headerInfoController.l2}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('traffic')}}"><i class="ion-stats-bars"></i> <span
+                    class="nav-label">{{resource.app.html.headerInfoController.l3}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 ng-click="clickTarget()"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="app-area wraper" id="app-area" ng-app="appInfoApp" ng-controller="appInfoController"
+             ng-cloak>
+            <div class="">
+                <div class="panel panel-default">
+                    <div class="panel-heading row" style="padding-bottom: 10px">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">{{resource.app.html.headerInfoController.l1}}</h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="top-toolbar">
+                                <div class="pull-right">
+                                     <span class="" ng-class="getFocusCss()"><a
+                                             ng-click="toggleFocus()">{{getFocusText()}}</a></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body" style="padding-top: 0px">
+                        <table class="table table-condensed">
+                            <tbody>
+                            <tr>
+                                <td class="model-basic-info"><b> ID:</b></td>
+                                <td>
+                                    {{appinfoResponse['app-id']}}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td><b>{{resource.app.html.msg17}}:</b></td>
+                                <td>
+                                    {{appinfoResponse['chinese-name']}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>Contact:</b></td>
+                                <td>
+                                    <a href="/portal/user#?env={{env}}&userId={{appinfoResponse['name']}}"
+                                       class="ng-binding">
+                                        {{appinfoResponse['owner']}}
+                                    </a></td>
+                            </tr>
+                            <tr>
+                                <td><b>BU:</b></td>
+                                <td>
+                                    <a href="/portal/bu#?env={{env}}&buName={{appinfoResponse['sbu']}}"
+                                       class="ng-binding">
+                                        {{appinfoResponse['sbu']}}
+                                    </a></td>
+                            </tr>
+                            <tr>
+                                <td><b>Links:</b></td>
+                                <td>
+                                    <div class="system-link" ng-show="showLink('hickwall')">
+                                        <a class="pull-left hickwall" title="Hickwall" target="_blank"
+                                           href="{{generateMonitorUrl('hickwall')}}">
+                                            Hickwall
+                                        </a>
+                                    </div>
+                                    <div class="system-link" ng-show="showLink('webinfo')">
+                                        <a class="webinfo" target="_blank" href="{{generateMonitorUrl('webinfo')}}">WebInfo</a>
+                                    </div>
+                                    <div class="system-link" ng-show="showLink('cms')">
+                                        <a class="cms" target="_blank" href="{{generateMonitorUrl('cms')}}">CMS</a>
+                                    </div>
+                                    <div class="system-link" ng-show="showLink('cat')">
+                                        <a class="cat" target="_blank" href="{{generateMonitorUrl('cat')}}">CAT</a>
+                                    </div>
+
+                                    <div class="system-link" ng-show="showLink('es')">
+                                        <a class="es" target="_blank" href="{{generateMonitorUrl('es')}}">ES</a>
+                                    </div>
+                                    <div class="system-link" ng-show="showLink('clog')">
+                                        <a class="clog" target="_blank" href="{{generateMonitorUrl('clog')}}">Clog</a>
+                                    </div>
+
+                                    <div class="system-link" ng-show="env!='fws' && env!='fra-aws'"
+                                         style="padding-left: 5px">
+                                        <a style="" target="_blank" href="{{getCdPath(appinfoResponse['app-id'])}}"><i
+                                                class="fa fa-sitemap"
+                                                style="padding-right: 5px"></i><span
+                                                style="text-decoration: underline">CD</span></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{env | uppercase}}{{resource.app.html.msg1}}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="appInfo-groupList-toolbar-{{env}}" class="table-toolbar">
+                            {{resource.app.html.msg18}} <b>{{gc.length}}</b> Groups
+                        </div>
+                        <table id="app-groups-table-{{env}}"></table>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{otherEnv1 | uppercase}}{{resource.app.html.msg1}}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="appInfo-groupList-toolbar-{{otherEnv1}}" class="table-toolbar">
+                            {{resource.app.html.msg18}} <b>{{go1.length}}</b> Groups
+                        </div>
+                        <table id="app-groups-table-{{otherEnv1}}"></table>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{otherEnv2 | uppercase}}{{resource.app.html.msg1}}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="appInfo-groupList-toolbar-{{otherEnv2}}" class="table-toolbar">
+                            {{resource.app.html.msg18}} <b>{{go2.length}}</b> Groups
+                        </div>
+                        <table id="app-groups-table-{{otherEnv2}}"></table>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{otherEnv3 | uppercase}}{{resource.app.html.msg1}}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="appInfo-groupList-toolbar-{{otherEnv3}}" class="table-toolbar">
+                            {{resource.app.html.msg18}} <b>{{go3.length}}</b> Groups
+                        </div>
+                        <table id="app-groups-table-{{otherEnv3}}"></table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{otherEnv4 | uppercase}}{{resource.app.html.msg1}}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="appInfo-groupList-toolbar-{{otherEnv4}}" class="table-toolbar">
+                            {{resource.app.html.msg18}} <b>{{go4.length}}</b> Groups
+                        </div>
+                        <table id="app-groups-table-{{otherEnv4}}"></table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{otherEnv5 | uppercase}}{{resource.app.html.msg1}}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="appInfo-groupList-toolbar-{{otherEnv5}}" class="table-toolbar">
+                            {{resource.app.html.msg18}} <b>{{go5.length}}</b> Groups
+                        </div>
+                        <table id="app-groups-table-{{otherEnv5}}"></table>
+                    </div>
+                </div>
+            </div>
+
+            <!--Modal Rows-->
+            <div class="modals">
+                <div id="activateGroupModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form class='fileDiffForm'>
+                            <div id="info_diffOutput"></div>
+                            <div class="btnDiv">
+                                <button class="btn btn-info confirmActivateGroup">{{resource.app.html.msg3}}</button>
+                                <button class="btn btn-warning" data-dismiss="modal">{{resource.app.html.msg19}}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="diffVSDiv" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{resource.app.html.msg4}}</h1>
+                        </div>
+                        <form id='fileDiffForm1'>
+                        </form>
+                        <div class="modal-foot">
+                            <div class="btnDiv">
+                                <button class="btn btn-info" data-dismiss="modal">{{resource.app.html.msg20}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="confirmActivateGroup" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.app.html.msg5}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource.app.html.msg6}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateGroup"
+                                        ng-click="activateGroup()">{{resource.app.html.msg21}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource.app.html.msg19}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="operationConfrimModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.app.html.msg22}}</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" id="closeProgressWindowBt"
+                                        data-dismiss="modal">{{resource.app.html.msg21}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="rewriteForJavaModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.app.html.msg7}}</h4>
+                            </div>
+                            <div class="modal-body" style="max-height: 800px; overflow-y: auto">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title ng-binding">{{resource.app.html.msg8}}</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div id="pro_t">
+                                            <span class="status-red" ng-show="query.rewrite['pro']">{{resource.app.html.msg9}}<a mailto="slb@test.com">slb team</a></span>
+                                            <a ng-click="changePath('pro')" class="btn btn-info btn-xs" ng-show="query['pro'] && !query.rewrite['pro']">
+                                                <i class="fa fa-hand-o-right">{{resource.app.html.msg10}}</i>
+                                            </a>
+                                            <span class="status-red" ng-show="!query['pro']">{{resource.app.html.msg11}}
+                                                <a class="fa fa-hand-o-right"
+                                                   ng-click="getAuthUrl('pro')">{{resource.app.html.msg12}}</a></span>
+                                        </div>
+                                        <table id="pro"></table>
+                                    </div>
+                                </div>
+
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title ng-binding">{{resource.app.html.msg13}}</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div id="uat_t">
+                                            <span class="status-red" ng-show="query.rewrite['uat']">{{resource.app.html.msg9}}<a mailto="slb@test.com">slb team</a></span>
+                                            <a ng-click="changePath('uat')" class="btn btn-info btn-xs" ng-show="query['uat'] && !query.rewrite['uat']">
+                                                <i class="fa fa-hand-o-right">{{resource.app.html.msg10}}</i>
+                                            </a>
+                                            <span class="status-red" ng-show="!query['uat']">{{resource.app.html.msg15}} <a
+                                                    class="fa fa-hand-o-right"
+                                                    ng-click="getAuthUrl('uat')">{{resource.app.html.msg12}}</a></span>
+                                        </div>
+                                        <table id="uat"></table>
+                                    </div>
+                                </div>
+
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title ng-binding">{{resource.app.html.msg14}}</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div id="fws_t">
+                                            <span class="status-red" ng-show="query.rewrite['fws']">{{resource.app.html.msg9}}<a mailto="slb@test.com">slb team</a></span>
+                                            <a ng-click="changePath('fws')" class="btn btn-info btn-xs" ng-show="query['fws'] && !query.rewrite['fws']">
+                                                <i class="fa fa-hand-o-right">{{resource.app.html.msg10}}</i>
+                                            </a>
+                                            <span class="status-red" ng-show="!query['fws']">{{resource.app.html.msg15}}
+                                             <a class="fa fa-hand-o-right"
+                                                ng-click="getAuthUrl('fws')">{{resource.app.html.msg12}}</a>
+                                            </span>
+                                        </div>
+                                        <table id="fws"></table>
+                                    </div>
+                                </div>
+
+
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title ng-binding">{{resource.app.html.msg16}}</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div id="fra-aws_t">
+
+                                            <span class="status-red" ng-show="query.rewrite['fra-aws']">{{resource.app.html.msg9}}<a mailto="slb@test.com">slb team</a></span>
+                                            <a ng-click="changePath('fra-aws')" class="btn btn-info btn-xs" ng-show="query['fra-aws'] && !query.rewrite['fra-aws']">
+                                                <i class="fa fa-hand-o-right">{{resource.app.html.msg10}}</i>
+                                            </a>
+
+
+                                            <span class="status-red" ng-show="!query['fra-aws']">{{resource.app.html.msg15}}
+                                             <a class="fa fa-hand-o-right"
+                                                ng-click="getAuthUrl('fra-aws')">{{resource.app.html.msg12}}</a></span>
+                                        </div>
+                                        <table id="fra-aws"></table>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <div class="pull-left status-red" id="errors">
+
+                                </div>
+                                <div class="pull-right">
+                                    <button type="button" class="btn btn-warning " data-dismiss="modal">{{resource.app.html.msg19}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text" placeholder="{{resource.questionModal.token2}}"></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">{{resource.app.html.msg21}}</button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">{{resource.app.html.msg19}}</button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+<!--Include Bootstrap-Table-->
+<script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+<script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+<script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+<script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+
+<!--For diff patch-->
+<script src="/static/lib/diff-match-patch/difflib.js"></script>
+<script src="/static/lib/diff-match-patch/diffview.js"></script>
+<script src="/static/lib/underscore/underscore-min.js"></script>
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/util.js"></script>
+<script src="/static/js/app.js"></script>
+
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+</html>

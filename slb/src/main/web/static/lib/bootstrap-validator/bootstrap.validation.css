@@ -1,0 +1,41 @@
+﻿.validation-group
+{
+    position: relative;
+    min-height: 1px;
+    width:100%;
+    display: inline-block;
+}
+
+.validation-feedback
+{
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    line-height: 34px;
+    width: 34px;
+    height: 34px;
+    text-align: center;
+    z-index:2;
+}
+
+.validation-success
+{
+    border-color: #3c763d;
+}
+
+.validation-fail
+{
+    border-color: #a94442;
+}
+
+.validation-success.help-block,
+.validation-feedback.glyphicon-ok
+{
+    color: #3c763d;
+}
+
+.validation-fail.help-block,
+.validation-feedback.glyphicon-remove
+{
+    color: #a94442;
+}

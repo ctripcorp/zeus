@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>配置管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <style type="text/css">
+        .operations a{
+            font-size: 17px;
+        }
+        #batchNewKvDialog .modal-dialog{
+            width: 50%;
+        }
+        .fixed-table-body{
+            overflow: hidden; !important;
+        }
+    </style>
+</head>
+<body>
+
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu">
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>意见反馈</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;个人主页</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;后台管理</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;登出</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+
+            <li class=""><a href="{{generateLink('users')}}"><i class="fa fa-user"></i> <span
+                    class="">用户管理</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('role')}}"><i class="fa fa-group"></i> <span
+                    class="">角色管理</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('rights')}}"><i
+                    class="fa fa-balance-scale"></i>
+                <span class="nav-label">权限管理</span></a></li>
+
+            <li class=""><a href="{{generateLink('access')}}"><i class="fa fa-sign-in"></i> <span
+                    class="">权限审批</span></a>
+            </li>
+            <li class="active"><a href="{{generateLink('config')}}"><i class="fa fa-pencil"></i> <span
+                    class="">配置管理</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<section class="content">
+    <div class="wraper container-fluid">
+        <!--Breadcrumb Area-->
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController">
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            首页
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!--<div class="row query-container breadcrumb-follow" id="query-info-area" ng-app="queryInfoApp"-->
+             <!--ng-controller="queryInfoController" ng-cloak>-->
+            <!--<div class="col-md-12 panel panel-default">-->
+                <!--<div class="col-md-10 form-area">-->
+                    <!--&lt;!&ndash; Row 1 (Key & Value)&ndash;&gt;-->
+                    <!--<div class="row slbId-slbName">-->
+                        <!--<div class="ID">-->
+                            <!--<div class="col-md-1 query-label">KEY:</div>-->
+                            <!--<div class="col-md-5 query-body">-->
+                                <!--<div angucomplete-alt id="keySelector"-->
+                                     <!--placeholder="请输入Key..."-->
+                                     <!--pause="100"-->
+                                     <!--selected-object="selectKey"-->
+                                     <!--remote-url="{{remoteKeysUrl()}}"-->
+                                     <!--remote-url-request-formatter="cacheRequestFn"-->
+                                     <!--search-fields="name"-->
+                                     <!--title-field="name"-->
+                                     <!--description-field="name"-->
+                                     <!--minlength="0"-->
+                                     <!--match-class="highlight"-->
+                                     <!--input-class="form-control form-control-small"-->
+                                     <!--input-changed="keyInputChanged">-->
+                                <!--</div>-->
+                            <!--</div>-->
+                        <!--</div>-->
+                        <!--<div class="Name">-->
+                            <!--<div class="col-md-1 query-label">Value:</div>-->
+                            <!--<div class="col-md-5 query-body">-->
+                                <!--<input class="form-control" type="text" placeholder="请输入 Value ..."-->
+                                       <!--ng-model="query.value">-->
+                            <!--</div>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                <!--</div>-->
+                <!--<div class="col-md-2 button-area">-->
+                    <!--<div class="pull-right">-->
+                        <!--<button type="button" class="btn btn-default" ng-click="clearQuery()">清空</button>-->
+                        <!--<button type="button" class="btn btn-info" ng-click="executeQuery()" id="executeQuery">查询-->
+                        <!--</button>-->
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+
+        <div class="row wraper  info-container breadcrumb-follow" id="config-info-area" ng-app="configInfoApp"
+             ng-controller="configInfoController">
+            <div class="col-md-12 panel panel-default">
+                <div class="panel-body">
+                    <div class="table-toolbar row" id="config-table-toolbar">
+                        <div class="col-md-6">
+                            当前共有{{}}项配置
+                        </div>
+                        <div class="col-md-6">
+                        <span class="pull-right" style="display: none">
+                            <button class="btn btn-info btn-xs" ng-click="newKvClick()"><i class="fa fa-plus" aria-hidden="true">新增</i></button>
+                            <button ng-click="batchEdit()" id="batchEdit" class="btn btn-info btn-xs" disabled><i class="fa fa-pencil-square-o" aria-hidden="true">修改</i></button>
+                            <button ng-click="batchDelete()" id="batchDelete" class="btn btn-danger btn-xs" disabled><i class="fa fa-minus"
+                                                                                                                        aria-hidden="true">删除</i></button>
+                        </span>
+                        </div>
+                    </div>
+                    <table style="width: 100%" id="configs"></table>
+                </div>
+            </div>
+            <div class="modals">
+                <div class="modal fade" id="newKvDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">编辑键值对</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="container row">
+                                    <div class="row form-group">
+                                        <div class="col-md-1">Key</div>
+                                        <div class="col-md-4">
+                                            <input type="text" placeholder="请输入键..."
+                                                   class="form-control" data-ng-model="query.currentConfig.propertyKey" data-validator-type="validation"
+                                                   data-validator="required"/>
+                                        </div>
+                                        <div class="col-md-7 status-red" ng-show="!query.currentConfig.propertyKey">
+                                            *
+                                        </div>
+                                    </div>
+
+                                    <div class="row form-group">
+                                        <div class="col-md-1">Value</div>
+                                        <div class="col-md-4">
+                                            <textarea style="min-height: 100px"
+                                                   data-ng-model="query.currentConfig.propertyValue"
+                                                   placeholder="请输入值..."
+                                                      class="form-control"></textarea>
+                                        </div>
+                                        <div class="col-md-7 status-red" ng-show="!query.currentConfig.propertyValue">
+                                            *
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default btn-info" ng-click="saveConfig()" ng-disabled="!query.currentConfig.propertyKey || !query.currentConfig.propertyValue">保存
+                                </button>
+                                <button type="button" class="btn btn-default btn-warning"
+                                        data-dismiss="modal">取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="batchNewKvDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">批量新增</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row form-group">
+                                    <div class="col-md-12">
+                                            <textarea data-ng-model="query.batchContent" style="width: 100%; min-height: 400px; max-height: 400px; overflow-y: auto; overflow-x: auto">
+
+                                            </textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row status-red" ng-show="showBatchError()">
+                                    <div class="col-md-12">
+                                        <b class="pull-right">批量修改内容不允许为空、不允许有重复的Key.</b>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" ng-disabled="!query.batchContent || showBatchError()" class="btn btn-default btn-info" ng-click="batchInsertSave()">保存
+                                </button>
+                                <button type="button" class="btn btn-default btn-warning"
+                                        data-dismiss="modal">取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="batchEditDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">批量编辑</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row form-group">
+                                    <div class="col-md-12">
+                                            <textarea data-ng-model="query.batchContent" style="width: 100%; min-height: 400px; max-height: 400px; overflow-y: auto; overflow-x: auto">
+
+                                            </textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row status-red" ng-show="showBatchError()">
+                                    <div class="col-md-12">
+                                        <b class="pull-right">批量修改内容不允许为空、不允许有重复的Key.</b>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" ng-disabled="!query.batchContent || showBatchError()" class="btn btn-default btn-info" ng-click="batchEditSave()">保存
+                                </button>
+                                <button type="button" class="btn btn-default btn-warning"
+                                        data-dismiss="modal">取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="confirmDeleteDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">确认删除当前配置</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="container row">
+                                    <div class="row form-group">
+                                        <span class="warning-important">你确定要删除当前配置吗？</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" ng-click="confirmRemove()" class="btn btn-default btn-info">确认
+                                </button>
+                                <button type="button" class="btn btn-default btn-warning"
+                                        data-dismiss="modal">取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="confirmBatchDeleteDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">确认删除选中配置</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="container row">
+                                    <div class="row form-group">
+                                        <span class="warning-important">你确定要删除选中配置吗？</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" ng-click="confirmBatchDelete()" class="btn btn-default btn-info">确认
+                                </button>
+                                <button type="button" class="btn btn-default btn-warning"
+                                        data-dismiss="modal">取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- error message modal -->
+                <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" data-dismiss="modal">确定</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/config.js"></script>
+
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+</body>
+</html>

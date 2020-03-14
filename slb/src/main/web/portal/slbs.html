@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SLBS</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/slbs.css">
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel-half " style="overflow: hidden; outline: none;">
+    <div class="logo">
+        <a href="/portal" class="logo-expanded">
+            <i class="fa fa-road"></i>
+            <span class="nav-label">SLB Portal</span>
+        </a>
+    </div>
+</aside>
+
+<section class="middle-content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+        <div class="row breadcrumb-follow" id="apps-summary-area" ng-app="slbsSummaryApp"
+             ng-controller="slbsSummaryController" ng-cloak>
+            <div class="row">
+                <div class="col-lg-3 col-sm-3">
+                    <div class="widget-panel widget-style-2 white-bg" style="padding: 40px 10px 0px 0px;height: 130px;">
+                        <div class="row">
+                            <div class="col-sm-9">
+                                <div class="row" style="margin-left: 10px;">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('activated')"
+                                         class="col-xs-3 text-center">
+                                        <h2 class="m-t-0 m-b-0 activate-slb-text status-green">0</h2>
+
+                                        <div class="status-green">
+                                            {{resource['slbs']['slbs_slbsSummaryApp_Activated']}}
+                                        </div>
+                                    </div>
+                                    <div style="cursor: pointer" ng-click="navigateTo('tobeactivated')"
+                                         class="col-xs-5 text-center">
+                                        <h2 class=" m-b-0 m-t-0 tobeactivated-slb-text status-yellow">0</h2>
+
+                                        <div class="status-yellow">
+                                            {{resource['slbs']['slbs_slbsSummaryApp_ToBeActivated']}}
+                                        </div>
+                                    </div>
+                                    <div style="cursor: pointer" class="col-xs-4 text-center"
+                                         ng-click="navigateTo('deactivated')">
+                                        <h2 class=" m-b-0 m-t-0 deactivated-slb-text status-gray">0</h2>
+
+                                        <div class="status-gray">
+                                            {{resource['slbs']['slbs_slbsSummaryApp_DeActivated']}}
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-3">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i class="fa fa-pie-chart text-pink"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-3">
+                    <div class="widget-panel widget-style-2 white-bg">
+                        <i class="fa fa-line-chart text-info"></i>
+
+                        <div>
+                            <h2 class="m-0 text-center qps-text">
+                                0
+                            </h2>
+
+                            <div class="text-center">{{resource['slbs']['slbs_slbsSummaryApp_QPS']}}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-sm-6">
+                    <div class="widget-panel widget-style-2 white-bg" style="padding: 40px 10px 0px 0px;height: 130px;">
+                        <div class="row">
+                            <div class="col-sm-10">
+                                <div class="row" style="margin-left: 10px;">
+                                    <div class="col-xs-2 text-center">
+                                        <h2 class="m-t-0 m-b-0 slbs-text">0</h2>
+
+                                        <div>{{resource['slbs']['slbs_slbsSummaryApp_SLBS']}}</div>
+                                    </div>
+
+                                    <div class="col-xs-2 text-center">
+                                        <h2 class="m-t-0 m-b-0 vs-text">0</h2>
+
+                                        <div>{{resource['slbs']['slbs_slbsSummaryApp_VSES']}}</div>
+                                    </div>
+
+                                    <div class="col-xs-2 text-center">
+                                        <h2 class="m-t-0 m-b-0 app-text">0</h2>
+
+                                        <div>{{resource['slbs']['slbs_slbsSummaryApp_APPS']}}</div>
+                                    </div>
+                                    <div
+                                            class="col-xs-2 text-center">
+                                        <h2 class=" m-b-0 m-t-0 groups-text">0</h2>
+
+                                        <div>{{resource['slbs']['slbs_slbsSummaryApp_Groups']}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center">
+                                        <h2 class=" m-b-0 m-t-0 server-text">0</h2>
+
+                                        <div>{{resource['slbs']['slbs_slbsSummaryApp_Servers']}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center">
+                                        <h2 class=" m-b-0 m-t-0 member-text">0</h2>
+
+                                        <div>{{resource['slbs']['slbs_slbsSummaryApp_Members']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-2">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i class="fa fa-sitemap status-green"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row query-container" id="slbs-query-area" ng-app="slbsQueryApp"
+             ng-controller="slbsQueryController" ng-cloak>
+            <div class="col-md-12 panel panel-default">
+                <div class="col-md-10 form-area">
+                    <!-- Row 1 (ID & Name)-->
+                    <div class="row slbId-slbName">
+                        <div class="ID">
+                            <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_ID']}}:</div>
+                            <div class="col-md-5 query-body">
+                                <div angucomplete-alt id="slbIdSelector"
+                                     placeholder="{{resource.slbs['slbs_slbsQueryApp_IDPlaceHolder']}}"
+                                     pause="100"
+                                     selected-object="selectSlbId"
+                                     remote-url="{{remoteSLBsUrl()}}"
+                                     remote-url-request-formatter="cacheRequestFn"
+                                     search-fields="id,name"
+                                     title-field="id"
+                                     description-field="name"
+                                     minlength="0"
+                                     match-class="highlight"
+                                     input-class="form-control form-control-small"
+                                     input-changed="slbIdInputChanged">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="Name">
+                            <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_Name']}}:</div>
+                            <div class="col-md-5 query-body">
+                                <input class="form-control" type="text"
+                                       placeholder="{{resource.slbs['slbs_slbsQueryApp_NamePlaceHolder']}}"
+                                       ng-model="query.slbName">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2 (Vip & Server)-->
+                    <div class="row hostIp-tag">
+                        <div class="vip">
+                            <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_VIP']}}:</div>
+                            <div class="col-md-5 query-body">
+                                <div angucomplete-alt id="vipSelector"
+                                     placeholder="{{resource.slbs['slbs_slbsQueryApp_VipPlaceHolder']}}"
+                                     pause="100"
+                                     selected-object="selectVIP"
+                                     remote-url="{{remoteVipsUrl()}}"
+                                     remote-url-request-formatter="cacheRequestFn"
+                                     search-fields="name"
+                                     title-field="name"
+                                     minlength="0"
+                                     match-class="highlight"
+                                     input-class="form-control form-control-small"
+                                     input-changed="vipInputChanged">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hostIp">
+                            <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_Server']}}:</div>
+                            <div class="col-md-5 query-body">
+                                <div angucomplete-alt id="hostIpSelector"
+                                     placeholder="{{resource.slbs['slbs_slbsQueryApp_ServerPlaceHolder']}}"
+                                     pause="100"
+                                     selected-object="selectHostIp"
+                                     remote-url="{{remoteSlbServersUrl()}}"
+                                     remote-url-request-formatter="cacheRequestFn"
+                                     search-fields="id,name"
+                                     title-field="id"
+                                     description-field="name"
+                                     minlength="0"
+                                     match-class="highlight"
+                                     input-class="form-control form-control-small"
+                                     input-changed="slbServerInputChanged">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 3 Domain-->
+                    <div class="row domain">
+                        <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_Domain']}}:</div>
+                        <div class="col-md-11 query-body">
+                            <div angucomplete-alt id="domainSelector"
+                                 placeholder="{{resource.slbs['slbs_slbsQueryApp_DomainPlaceHolder']}}"
+                                 pause="100"
+                                 selected-object="addDomain"
+                                 remote-url="{{remoteDomainsUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id"
+                                 title-field="id"
+                                 minlength="0"
+                                 clear-selected="true"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                            <div class="selected-domains">
+                        <span class="label label-default pull-left" ng-repeat="(k,v) in query.domains"
+                              ng-click="removeDomain(v)">{{v}} <b>x</b> </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4 Tag-->
+                    <div class="row domain">
+                        <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_Tag']}}:</div>
+                        <div class="col-md-11 query-body">
+                            <div angucomplete-alt id="tagSelector"
+                                 placeholder="{{resource.slbs['slbs_slbsQueryApp_TagPlaceHolder']}}"
+                                 pause="100"
+                                 selected-object="addTag"
+                                 local-data="data.tagArr"
+                                 search-fields="name"
+                                 title-field="name"
+                                 minlength="0"
+                                 clear-selected="true"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                            <div class="selected-tags">
+                        <span class="label label-default pull-left" ng-repeat="(k,v) in query.tags"
+                              ng-click="removeTag(v)">{{v}} <b>x</b> </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!---Row 5 (IDC & Zone)-->
+                    <div class="row idc-zone">
+                        <div class="idc" ng-show="data.idcs.length > 0">
+                            <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_IDC']}}:</div>
+                            <div class="col-md-5 query-body">
+                   <span style="margin-right: 5px" class="label label-default" ng-class="isSelectedIDC(x.idc)"
+                         data-ng-repeat="x in data.idcs"
+                         ng-click="toggleIDC(x.idc)">
+                        {{x.idc}}
+                   </span>
+                                <a ng-click="idcClear()" ng-show="showClear('idc')">{{resource.slbs['slbs_slbsQueryApp_Clear']}}</a>
+                            </div>
+                        </div>
+
+                        <div class="zone" ng-show="data.zones.length > 0">
+                            <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_Zone']}}:</div>
+                            <div class="col-md-5 query-body">
+                    <span class="label label-default" ng-class="isSelectedZone(x.zone)" data-ng-repeat="x in data.zones"
+                          ng-click="toggleZone(x.zone)">
+                        {{getZoneLanguage(x.zone)}}
+                   </span>
+                                <a ng-click="zoneClear()" ng-show="showClear('zone')">{{resource.slbs['slbs_slbsQueryApp_Clear']}}</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!---Row 6 (Status)-->
+                    <div class="row status-tag">
+                        <div class="status">
+                            <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_Status']}}:</div>
+                            <div class="col-md-5 query-body">
+                    <span class="label label-default" ng-class="isSelectedStatus(x)" data-ng-repeat="x in data.statuses"
+                          ng-click="toggleStatus(x)">
+                        {{getStatusLanguage(x)}}
+                   </span>
+                                <a ng-click="statusClear()" ng-show="showClear('status')">{{resource.slbs['slbs_slbsQueryApp_Clear']}}</a>
+                            </div>
+                        </div>
+
+                        <div class="pci">
+                            <div class="col-md-1 query-label">{{resource.slbs['slbs_slbsQueryApp_PCI']}}:</div>
+                            <div class="col-md-5 query-body">
+                    <span class="label label-default" ng-class="isSelectedPCI('true')" ng-click="togglePCI('true')">
+                        {{resource.slbs['slbs_slbsQueryApp_PCI_YES']}}
+                   </span>
+                                <span class="label label-default" ng-class="isSelectedPCI('false')"
+                                      ng-click="togglePCI('false')">
+                         {{resource.slbs['slbs_slbsQueryApp_PCI_NO']}}
+                   </span>
+                                <a ng-click="pciClear()" ng-show="showClear('pci')">{{resource.slbs['slbs_slbsQueryApp_Clear']}}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 button-area">
+                    <div class="pull-right">
+                        <button type="button" class="btn btn-default" ng-click="clearQuery()">
+                            {{resource.slbs['slbs_slbsQueryApp_Reset']}}
+                        </button>
+                        <button type="button" class="btn btn-info" ng-click="executeQuery()" id="executeQuery">
+                            {{resource.slbs['slbs_slbsQueryApp_Search']}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="slbs-result-area" ng-app="slbsResultApp"
+             ng-controller="slbsResultController" ng-cloak>
+            <div class="panel panel-default">
+                <div class="row panel-heading">
+                    <div class="col-md-2">
+                        <h3 class="panel-title">{{resource.slbs['slbs_slbsResultApp_title']}}</h3>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="op-tool">
+                            <a class="op-bar" title="{{getSlbsShowMoreTitle()}}"
+                               ng-click="toggleShowMoreSlbsColumns()">
+                                <i ng-class="getSlbsShowMore()"></i>
+                            </a>
+                            <a class="op-bar" title="{{getSlbsOperationTitle()}}"
+                               ng-click="toggleShowSlbsOperations()" ng-disabled="disableOpenSlbs()">
+                                <i ng-class="getSlbsShowOperation()"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <div id="slbList-table-toolbar" class="table-toolbar row">
+                        <div class="col-md-10">
+                            <span class="pull-left  ">Total: <b>{{summaryInfo.totalSlbCount}}</b> SLB, <b>{{summaryInfo.totalSlbServerCount}}</b> SLB Servers,
+                <span data-ng-repeat="s in summaryInfo.status">
+                    {{getStatusEnglishName(s.name)}}: <a ng-class="countSearchClass(s.count)"
+                                   ng-click="toggleCountSearch(s.name, s.count)"><b>{{s.count}}</b></a>.
+                </span>
+                <span>. <b> {{summaryInfo.totalVSCount}} </b>VS,<b> {{summaryInfo.totalAppCount}} </b>App, <b>
+                    {{summaryInfo.totalGroupCount}} </b>Group,
+                <b> {{summaryInfo.totalServerCount}} </b>Server,<b> {{summaryInfo.totalMemberCount}} </b>Member
+                </span>
+            </span>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="pull-right">
+                                <button ng-show="showAddSlbTagBtn()" id="createTag" class="btn btn-info"
+                                        data-toggle="modal"
+                                        data-target="#createSLBTagDialog" disabled>
+                                    <i class="icon-tag"></i>{{resource.slbs['slbs_slbsResultApp_Tagging']}}
+                                </button>
+                                <button ng-click="createSLBTagClick()" id="createSLB" class="btn btn-info"
+                                        ng-show="showNewSlbBtn()">
+                                    <i class="icon-edit"></i>{{resource.slbs['slbs_slbsResultApp_NewSlb']}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <table id="slbList-table"></table>
+                </div>
+            </div>
+            <div class="modals">
+                <div class="modal fade" id="createSLBTagDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.slbs["slbs_slbsResultApp_NewTag"]["title"]}}</h4>
+                            </div>
+                            <div class="modal-footer">
+                                <input type="text" ng-model="tagName"
+                                       placeholder='{{resource["slbs"]["slbs_slbsResultApp_NewTag"]["placeholder"]}}'
+                                       class="form-control" data-validator-type="validation"
+                                       data-validator="required"><br>
+                                <button ng-click="createSlbTag(tagName)" type="button" class="btn btn-info"
+                                        data-toggle="modal"
+                                        data-target="#createSLBTagResult">{{resource["slbs"]["slbs_slbsResultApp_Ok"]}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                    {{resource["slbs"]["slbs_slbsResultApp_Cancel"]}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="createSLBTagResult" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{createSLBTagResponseResult}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <p>{{createSLBTagResponseInfo}}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+
+<script src="/statics/js/model/protocol.js"></script>
+
+<script src="/statics/js/repository/paramCommand.js"></script>
+<script src="/statics/js/repository/queryCommand.js"></script>
+<script src="/statics/js/repository/apiCommand.js"></script>
+
+<script src="/statics/js/services/paramService.js"></script>
+<script src="/statics/js/services/queryService.js"></script>
+<script src="/statics/js/services/apiService.js"></script>
+<script src="/statics/js/services/esService.js"></script>
+
+<script src="/statics/js/apps/app.js"></script>
+<script src="/statics/js/apps/slbsApp.js"></script>
+
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+<script src="/static/js/slbs.js"></script>
+</html>

@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Virtual Server</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!-- ION Slider -->
+    <link href="/static/lib/angular-range-slider/angular.rangeSlider.css" rel="stylesheet" type="text/css"/>
+    <script src="/static/lib/angular-range-slider/angular.rangeSlider.js"></script>
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <link rel="stylesheet" href="/static/css/global-new.css">
+
+    <link rel="stylesheet" href="/static/css/formatter.css">
+</head>
+<body>
+<!--Left side panel-->
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class="active"><a href="{{generateLink('basic')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["navs"]["navs_basic"]}}</span></a></li>
+
+            <li><a href="{{generateLink('rule')}}"><i class="fa fa-pencil-square-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_rule"]}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('intercept')}}"><i class="fa fa-shirtsinbulk"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_intercept"]}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_log"]}}</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('conf')}}"><i class="fa fa-file-code-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_conf"]}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<section class="content">
+    <div class="wraper container-fluid">
+        <!---Breadcrumb Area-->
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 selected-object="selectTarget"
+                                 ng-click="clickTarget()"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id,name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wraper breadcrumb-follow info-container" id="vs-info-area" ng-app="vsInfoApp"
+             ng-controller="vsInfoController"
+             ng-cloak>
+            <!--VS Basic Information Area-->
+            <div>
+                <div class="panel panel-default">
+                    <div class="panel-heading row" style="padding-bottom: 0px">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">{{resource['vs']['vs_vsInfoApp_basic']['title']}}</h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="top-toolbar">
+                                <div class="pull-right">
+                                    <div class="top-toolbar-left pull-left">
+                                        <a class="btn btn-info" href="/portal/vs/edit#?env={{env}}&vsId={{query.vsId}}"
+                                           role="button"
+                                           ng-show="showUpdateVsBt()">{{resource['vs']['vs_vsInfoApp_basic']['update']}}</a>
+                                        <a class="btn btn-info activeVS" role="button" ng-show="showActivateVsBt()"
+                                           ng-click="activateVsClick()">{{resource['vs']['vs_vsInfoApp_basic']['activate']}}</a>
+                                        <a class="btn btn-info" ng-click="showDialog(p, 'addTag')"
+                                           ng-show="showAddVsTagBt()">{{resource['vs']['vs_vsInfoApp_basic']['tag']}}</a>
+                                        <a class="btn btn-info" ng-click="showDialog(p, 'addProp')"
+                                           ng-show="showAddVsPropertyBt()">{{resource['vs']['vs_vsInfoApp_basic']['property']}}</a>
+                                        <a class="btn btn-deactivate" ng-click="deactivateVsAction()" role="button"
+                                           ng-disabled="disableDeactivateVs()" ng-show="showDeactivateVsBt()">{{resource['vs']['vs_vsInfoApp_basic']['deactivate']}}</a>
+                                        <a ng-show="showDeleteVsBt()" class="btn btn-danger deleteVS" role="button"
+                                           ng-click="deleteVsAction()"
+                                           ng-disabled="disableRemoveVs()">{{resource['vs']['vs_vsInfoApp_basic']['delete']}}</a>
+                                        <a class="btn btn-info" role="button" data-toggle="modal"
+                                           data-target="#compareVsModel">{{resource['vs']['vs_vsInfoApp_basic']['diff']}}</a>
+                                        <a ng-show="showCloneVsBt()" class="btn btn-info"
+                                           href="/portal/vs/new#?env={{env}}&vsId={{query.vsId}}"
+                                           role="button">Clone</a>
+                                    </div>
+                                    <div class="top-toolbar-right pull-right">
+                                        <span ng-class="statusClass()" ng-cloak>&nbsp;&nbsp;{{resource['vs']['vs_vsInfoApp_basic']['status']}}：{{statusText()}}</span>
+                                        <span style="float: right">&nbsp;&nbsp;</span>
+                                        <span ng-class="getFocusCss()"><a ng-click="toggleFocus($event)">{{getFocusText()}}</a></span>
+                                        <span ng-class="getOptionPanelCss()" ng-cloak>&nbsp;&nbsp;<a
+                                                ng-click="toggleOptionPanel()">{{getOptionPanelText()}}</a></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body" style="padding-top: 0px">
+                        <table class="table table-condensed">
+                            <tbody>
+                            <tr>
+                                <td class="model-basic-info"><b>{{resource['vs']['vs_vsInfoApp_basic']['slbids']}}:</b></td>
+                                <td>
+                                    <div data-ng-repeat="slb in view.extendedvs['slb-ids']">
+                                        {{slb.id}} (<a
+                                            href="/portal/slb#?env={{env}}&slbId={{slb.id}}">{{getSlbNameWithID(slb.id)}}</a>)
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['vs']['vs_vsInfoApp_basic']['id']}}:</b></td>
+                                <td class="ng-binding">{{query.vsId}}</td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['vs']['vs_vsInfoApp_basic']['name']}}:</b></td>
+                                <td>
+                                    <a href="" class="ng-binding">
+                                        {{view.extendedvs['name']}}
+                                    </a></td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['vs']['vs_vsInfoApp_basic']['idc']}}:</b></td>
+                                <td>
+                                    <span>
+                                        {{view.extendedvs['idc']}}
+                                    </span></td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['vs']['vs_vsInfoApp_basic']['version']}}:</b></td>
+                                <td>
+                                    <span>{{view.extendedvs.version}}</span>
+                                    <span ng-if="getVsStatusProperty()=='activated'" ng-class="vsVersionClass()">({{vsVersionText()}})</span>
+                                    <a ng-if="getVsStatusProperty()!='activated'" ng-click="activateVsClick()"
+                                       ng-class="vsVersionClass()">({{vsVersionText()}})</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['vs']['vs_vsInfoApp_basic']['vip']}}:</b></td>
+                                <td>
+                                    <span>{{vips}}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['vs']['vs_vsInfoApp_basic']['cname']}}:</b></td>
+                                <td>
+                                    <div data-ng-repeat="(k,v) in getCName(view.extendedvs)">
+                                        {{v}}
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['vs']['vs_vsInfoApp_basic']['ssl']}}:</b></td>
+                                <td>
+                                    <a href="" class="ng-binding">
+                                        {{vsSSLText()}}
+                                    </a></td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['vs']['vs_vsInfoApp_basic']['port']}}:</b></td>
+                                <td>
+                                    <a href="" class="ng-binding">
+                                        {{view.extendedvs.port}}
+                                    </a></td>
+                            </tr>
+                            <tr>
+                                <td><b> {{resource['vs']['vs_vsInfoApp_basic']['lastchangetime']}}:</b></td>
+                                <td>
+                                    {{view.extendedvs['created-time']}}
+                                </td>
+                            </tr>
+                            <tr ng-show="showExtendedTag()">
+                                <td><b> {{resource['vs']['vs_vsInfoApp_basic']['tags']}}:</b></td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-11 multi-tags" ng-class="multiTagsClass()">
+                                             <span class="label label-default tag-span pull-left"
+                                                   ng-repeat="t in view.extendedvs.tags"
+                                                   ng-click="showDialog(t, 'deleteTag')" ng-show="showCurrentTag(t)">{{t}}&nbsp;<b
+                                                     ng-show="showRemoveTagBt(t)">x</b> </span>
+                                        </div>
+                                        <div class="col-md-1 collapse-btns">
+                                            <a ng-click="toggleShowMoreTags()" class="toggle-show-btn">
+                                                <span ng-class="collapseTagBtnClass()"></span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                            <tr ng-show="showExtendedProperty()">
+                                <td><b> {{resource['vs']['vs_vsInfoApp_basic']['properties']}}:</b></td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-11 multi-tags" ng-class="multiPropertiesClass()">
+                                             <span class="label label-default tag-span pull-left"
+                                                   ng-repeat="p in view.extendedvs.properties"
+                                                   ng-click="showDialog(p, 'deleteProp')">{{p.name}}:&nbsp;{{p.value}}&nbsp;<b
+                                                     ng-show="showRemoveProperty(p)">x</b> </span>
+                                        </div>
+                                        <div class="col-md-1 collapse-btns">
+                                            <a ng-click="toggleShowMoreProperties()" class="toggle-show-btn">
+                                                <span ng-class="collapsePropertiesBtnClass()"></span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+
+                                </td>
+                            </tr>
+
+                            <tr ng-show="showHttpsRedirect()">
+                                <td><b> {{resource['vs']['vs_vsInfoApp_basic']['allhttps']}}:</b></td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                           <span ng-show="showRedirect()">
+                                               <a href="/portal/tools/redirect/edit#?env={{env}}&redirectId={{getRedirectId()}}">{{resource['vs']['vs_vsInfoApp_basic']['allhttpscomment']}}</a>
+                                           </span>
+
+                                            <span ng-show="!showRedirect()">
+                                               <a href="/portal/tools/redirect/edit#?env={{env}}&vsId={{query.vsId}}">{{resource['vs']['vs_vsInfoApp_basic']['allhttpsstart']}}</a>
+                                           </span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+
+                            <tr ng-show="showDelegate()">
+                                <td><b> 流量转出到上海:</b></td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                           <span>
+                                               <a href="{{getNamedGroupUrl(env, query.vsId)}}">编辑</a>
+                                           </span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <td><b> {{resource['vs']['vs_vsInfoApp_basic']['logs']}}:</b></td>
+                                <td>
+                                    <div class="row" ng-show="showLogs()">
+                                        <div class="col-md-12">
+                                            <div data-ng-repeat="log in model.currentlogs" class="row">
+                                                <div class="col-md-3">{{log['date-time']}}</div>
+                                                <div class="col-md-2"><a
+                                                        href="/portal/user#?env={{env}}&userId={{log['user-name']}}">{{log['user-name']}}</a>
+                                                </div>
+                                                <div class="col-md-2">{{getOperationText(log.operation)}}</div>
+                                                <div class="col-md-1"><b
+                                                        ng-class="log.success?'status-green':'status-red'">{{log.success?'SUCCESS':'FAILED'}}</b>
+                                                </div>
+                                                <div class="col-md-3" ng-if="$last"><a target="_self"
+                                                                                       class="pull-left"
+                                                                                       href="/portal/vs/log#?env={{env}}&vsId={{query.vsId}}">{{resource['vs']['vs_vsInfoApp_basic']['logsmore']}}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row" ng-show="showLogs()==false">
+                                        <div class="col-md-12">
+                                            {{resource['vs']['vs_vsInfoApp_basic']['logsnodata']}}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr ng-show="showLinks('dashboard') || showLinks('hickwall') || showLinks('es')">
+                                <td><b>{{resource['vs']['vs_vsInfoApp_basic']['links']}}:</b></td>
+                                <td>
+                                    <div class="system-link" ng-show="showLinks('dashboard')">
+                                        <a class="dashboard" target="_blank" href="{{generateMonitorUrl('dashboard')}}">Dashboard</a>
+                                    </div>
+
+                                    <div class="system-link" ng-show="showLinks('hickwall')">
+                                        <a class="pull-left hickwall" title="Hickwall" target="_blank"
+                                           href="{{generateMonitorUrl('hickwall')}}">
+                                            Hickwall
+                                        </a>
+                                    </div>
+                                    <div class="system-link" ng-show="showLinks('es')">
+                                        <a class="pull-left es" title="ES" target="_blank"
+                                           href="{{generateMonitorUrl('es')}}">
+                                            ES
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!--VS Summary Area-->
+            <div class="row">
+                <div class="col-lg-3 col-sm-6">
+                    <div class="mini-stat clearfix">
+                        <div class="row">
+                            <div class="col-sm-10">
+                                <div class="row" style="margin-left: 10px;">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('activated')"
+                                         class="col-xs-4 text-center">
+                                        <span class="count-description status-green activate-group-text">{{view.vsstastics['status'].activated}}</span>
+
+                                        <div class="status-green">{{resource['vs']['vs_vsInfoApp_summary']['已激活']}}</div>
+                                    </div>
+                                    <div style="cursor: pointer" ng-click="navigateTo('tobeactivated')"
+                                         class="col-xs-4 text-center">
+                                        <span class="count-description status-yellow tobeactivated-group-text">{{view.vsstastics['status'].tobeactivated}}</span>
+
+                                        <div class="status-yellow">{{resource['vs']['vs_vsInfoApp_summary']['有变更']}}</div>
+                                    </div>
+                                    <div class="col-xs-4 text-center" style="cursor: pointer"
+                                         ng-click="navigateTo('deactivated')">
+                                        <span class="count-description status-gray deactivated-group-text">{{view.vsstastics['status'].deactivated}}</span>
+
+                                        <div class="status-gray">{{resource['vs']['vs_vsInfoApp_summary']['未激活']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-2">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i style="font-size: 40px" class="fa fa-pie-chart text-pink"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                    <div class="mini-stat clearfix">
+                        <div class="row">
+                            <div class="col-sm-10">
+                                <div class="row">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('healthy')"
+                                         class="col-xs-4 text-center">
+                                        <span class="count-description status-green healthy-group-text">{{view.vsstastics['healthy'].healthy}}</span>
+
+                                        <div class="status-green">{{resource['vs']['vs_vsInfoApp_healthy']['healthy']}}</div>
+                                    </div>
+                                    <div style="cursor: pointer" ng-click="navigateTo('unhealthy')"
+                                         class="col-xs-4 text-center">
+                                        <span class="count-description status-yellow unhealthy-group-text">{{view.vsstastics['healthy'].unhealthy}}</span>
+
+                                        <div class="status-yellow">{{resource['vs']['vs_vsInfoApp_healthy']['unhealthy']}}</div>
+                                    </div>
+                                    <div class="col-xs-4 text-center" style="cursor: pointer"
+                                         ng-click="navigateTo('broken')">
+                                        <span class="count-description status-gray broken-group-text">{{view.vsstastics['healthy'].broken}}</span>
+
+                                        <div class="status-gray">{{resource['vs']['vs_vsInfoApp_healthy']['broken']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-2">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i style="font-size: 40px" class="fa fa-heartbeat status-yellow"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-sm-6">
+                    <div class="mini-stat clearfix">
+                        <div class="row">
+                            <div class="col-sm-9">
+                                <div class="row">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('qps')"
+                                         class="col-xs-12 text-center">
+                                        <span class="count-description ">{{view.vsstastics['qps']}}</span>
+
+                                        <div>{{resource['vs']['vs_vsInfoApp_qps']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-3">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i style="font-size: 40px" class="fa fa-line-chart text-info"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-6">
+                    <div class="mini-stat clearfix">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="row">
+
+                                    <div class="col-xs-3 text-center">
+                                        <span class="count-description">{{view.vsstastics['app-count'] || 0}}</span>
+
+                                        <div>{{resource['vs']['vs_vsInfoApp_pass']['apps']}}</div>
+                                    </div>
+                                    <div style="cursor: pointer" ng-click="navigateTo('groups')"
+                                         class="col-xs-3 text-center">
+                                        <span class="count-description">{{view.vsstastics['group-count'] || 0}}</span>
+
+                                        <div>{{resource['vs']['vs_vsInfoApp_pass']['groups']}}</div>
+                                    </div>
+                                    <div class="col-xs-3 text-center">
+                                        <span class="count-description">{{view.vsstastics['group-server-count'] || 0}}</span>
+
+                                        <div>{{resource['vs']['vs_vsInfoApp_pass']['servers']}}</div>
+                                    </div>
+                                    <div class="col-xs-3 text-center">
+                                        <span class="count-description">{{view.vsstastics['member-count'] || 0}}</span>
+
+                                        <div>{{resource['vs']['vs_vsInfoApp_pass']['members']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--VS domains-->
+            <div>
+                <div class="panel panel-default ">
+                    <div class="row panel-heading">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">
+                                {{resource['vs']['vs_vsInfoApp_domains']['title']}}
+                            </h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getVsDomainOperationTitle()}}"
+                                   ng-click="toggleShowVsDomainOperations()" ng-disabled="disableOpenVsDomain()">
+                                    <i ng-class="getVsDomainShowOperation()"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body slb-detail">
+                        <div id="vsInfo-domainList-toolbar" class="table-toolbar row">
+                            <div class="col-md-10">
+                                {{resource['vs']['vs_vsInfoApp_domains']['suffix']}}{{model.extendedvs.domains.length}}{{resource['vs']['vs_vsInfoApp_domains']['prefix']}}
+                            </div>
+                            <div class="col-md-2">
+                                <div class="pull-right" ng-show="showUpdateVsDomainBt()">
+                                    <button type="button" id="addDomain"
+                                            class="btn btn-info" aria-label="Left Align" data-toggle="modal" data-target="#addDomainDialog">
+                                        <span class="fa fa-plus"></span>
+                                    </button>
+                                    <button type="button" id="removeDomain"
+                                            class="btn btn-info"
+                                            disabled>
+                                        <span class="fa fa-minus"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <table id="vs-domains-table"></table>
+                    </div>
+                </div>
+            </div>
+            <!---VS Related Groups showing-->
+            <div>
+                <div class="panel panel-default">
+                    <div class="row panel-heading">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">
+                                {{resource['vs']['vs_vsInfoApp_groups']['title']}}
+                            </h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getVsGroupsShowMoreTitle()}}"
+                                   ng-click="toggleShowMoreVsGroupsColumns()">
+                                    <i ng-class="getVsGroupsShowMore()"></i>
+                                </a>
+                                <a class="op-bar" title="{{getVsGroupsOperationTitle()}}"
+                                   ng-click="toggleShowVsGroupsOperations()" ng-disabled="disableOpenVsGroups()">
+                                    <i ng-class="getVsGroupsShowOperation()"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body slb-detail">
+                        <div id="vsInfo-groupList-toolbar" class="table-toolbar row">
+                            <div class="col-md-9">
+                                  <span class="pull-left"> {{resource['vs']['vs_vsInfoApp_groups']['suffix']}}<b><a target="_blank"
+                                                                                                                    href="/portal/groups#?env={{env}}&vsId={{query.vsId}}">
+                                      {{groupsCount}} </a></b>{{resource['vs']['vs_vsInfoApp_groups']['prefix']}},
+                <span data-ng-repeat="s in summaryInfo.status">
+                    {{s.name}}:<b> {{s.count}} </b>.
+                </span>
+                   {{resource['vs']['vs_vsInfoApp_groups']['prefix_contain']}}<b>{{sCount}}</b>{{resource['vs']['vs_vsInfoApp_groups']['prefix_server']}},<b>{{mCount}}</b>{{resource['vs']['vs_vsInfoApp_groups']['prefix_member']}}。
+                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="pull-right" ng-show="showAddGroupBt()">
+                                    <a target="_blank" href="/portal/group/new#?env={{env}}&vsId={{query.vsId}}"
+                                       class="btn btn-info"
+                                       type="button">{{resource['vs']['vs_vsInfoApp_groups']['table']['newgroup']}}</a>
+                                    <a target="_blank" href="/portal/vgroup/new#?env={{env}}&vsId={{query.vsId}}"
+                                       class="btn btn-info"
+                                       type="button">{{resource['vs']['vs_vsInfoApp_groups']['table']['newvgroup']}}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <table id="vs-groups-table"></table>
+                    </div>
+                </div>
+            </div>
+            <!---VS Related Policy showing-->
+            <div>
+                <div class="panel panel-default">
+                    <div class="row panel-heading">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">
+                                {{resource['vs']['vs_vsInfoApp_policies']['title']}}
+                            </h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getPolicyOperationTitle()}}"
+                                   ng-click="toggleShowMoreVsPolicyColumns()">
+                                    <i ng-class="getVsPolicyShowMore()"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body slb-detail">
+                        <div id="vsInfo-PolicyList-toolbar" class="table-toolbar row">
+                            <div class="col-md-12">
+                                  <span class="pull-left">{{resource['vs']['vs_vsInfoApp_policies']['suffix']}}<b><a target="_blank"
+                                                                                                                     href="/portal/policies#?env={{env}}&vsId={{query.vsId}}">
+                                      {{traffics.length}} </a></b>{{resource['vs']['vs_vsInfoApp_policies']['prefix']}},
+                                  </span>
+                            </div>
+                        </div>
+                        <table id="vs-policy-table"></table>
+                    </div>
+                </div>
+            </div>
+
+            <!---VS Related Policy showing-->
+            <div ng-show="showSslRow()">
+                <div class="panel panel-default">
+                    <div class="row panel-heading">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">
+                                {{resource['vs']['vs_vsInfoApp_certs']['title']}}
+                            </h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getVsCertsOperationTitle()}}"
+                                   ng-click="toggleShowVsCertsOperations()" ng-disabled="disableOpenVsCerts()">
+                                    <i ng-class="getVsCertsShowOperation()"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body slb-detail">
+                        <div id="cookie-List-toolbar" class="table-toolbar row">
+                            <div class="col-md-9">
+                                <span class="pull-left">{{resource['vs']['vs_vsInfoApp_certs']['suffix']}}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="pull-right" ng-show="showAddCertBt()">
+                                    <button target="_blank" class="btn btn-info"
+                                            ng-disabled="disableUploadCert()"
+                                            ng-click="addNewCertificate()">
+                                        {{resource['vs']['vs_vsInfoApp_certs']['newcert']}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table id="certificates-table"></table>
+                    </div>
+                </div>
+            </div>
+            <!---Modal Rows-->
+            <div class="modals">
+                <div id="slbdiffVSDiv" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{resource['vs']['slbdiffVSDiv']['title']}}</h1>
+                        </div>
+                        <form id='slbfileDiffForm'>
+                        </form>
+                        <div class="modal-foot">
+                            <div class="btnDiv">
+                                <button class="btn btn-info" data-dismiss="modal">{{resource['vs']['slbdiffVSDiv']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="output-div" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['output-div']['title']}}</h4>
+                            </div>
+                            <div class="modal-body operation-detail-div" style="word-break: break-all">
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-info" data-dismiss="modal">{{resource['vs']['output-div']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="activateVSModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead' ng-class="activateSlbTitleClass()">{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm'>
+                            <div id="diffOutput"></div>
+                            <div class="btnDiv">
+                                <button class="btn btn-info confirmActivateVs" data-toggle="modal"
+                                        data-target="#confirmActivateVS" data-dismiss="modal"
+                                        ng-show="activateBtShow()">{{resource['vs']['activateVSModal']['ok']}}
+                                </button>
+                                <button class="btn btn-warning" data-dismiss="modal">{{resource['vs']['activateVSModal']['close']}}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="confirmActivateVS" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['confirmActivateVS']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['vs']['confirmActivateVS']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateVs"
+                                        ng-click="activateVS()">
+                                    {{resource['vs']['confirmActivateVS']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['confirmActivateVS']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="confirmActivateSLB" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['confirmActivateSLB']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['vs']['confirmActivateSLB']['title']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="activateSLBClick()">
+                                    {{resource['vs']['confirmActivateSLB']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['confirmActivateSLB']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="compareVsModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['compareVsModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div angucomplete-alt id="targetVSIdSelector"
+                                     placeholder="{{resource['vs']['compareVsModel']['placeholder']}}"
+                                     pause="100"
+                                     selected-object="selectDiffVsId"
+                                     remote-url="{{remoteUrl()}}"
+                                     remote-url-request-formatter="cacheRequestFn"
+                                     search-fields="id,name"
+                                     title-field="id,name"
+                                     minlength="0"
+                                     match-class="highlight"
+                                     input-class="form-control form-control-small">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmSelectVsId()"
+                                        data-dismiss="modal"
+                                        ng-disabled="confirmDiffButtonDisable">{{resource['vs']['compareVsModel']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['compareVsModel']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="diffSeperateVses" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm3'>
+                            <div id="diffOutput3"></div>
+                            <div class="btnDiv">
+                                <button class="btn btn-info" data-dismiss="modal">{{resource['vs']['diffSeperateVses']['close']}}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="operationConfrimModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['operationConfrimModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info closeProgressWindowBt"
+                                        data-dismiss="modal">{{resource['vs']['operationConfrimModel']['ok']}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="allowDeactivateVSModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- has no vses-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['allowDeactivateVSModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deactivatereason"
+                                                               placeholder="{{resource['vs']['allowDeactivateVSModal']['placeholder']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deactivatereason" type="button" class="btn btn-info confirmDeactivateSlb"
+                                        ng-click="deactivateVs()">{{resource['vs']['allowDeactivateVSModal']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['allowDeactivateVSModal']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="discardDeactivateVSModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- has vses -->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['discardDeactivateVSModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body alert-warning">
+                                <p>{{resource['vs']['discardDeactivateVSModal']['tooltip']}}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-dismiss="modal">{{resource['vs']['discardDeactivateVSModal']['ok']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="discardDeleteVSModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['discardDeleteVSModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                <p>{{resource['vs']['discardDeleteVSModal']['tooltip']}}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-dismiss="modal">{{resource['vs']['discardDeleteVSModal']['ok']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="allowDeleteVSModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['allowDeleteVSModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deleteslbreason"
+                                                               placeholder="{{resource['vs']['allowDeleteVSModal']['placeholder']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click='deleteVs()'>{{resource['vs']['allowDeleteVSModal']['ok']}}</button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['allowDeleteVSModal']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deactivateVSModalConfirm" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['deactivateVSModalConfirm']['close']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['vs']['deactivateVSModalConfirm']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmDeactivateVs"
+                                        ng-click="confirmDeactivateVs()"> {{resource['vs']['deactivateVSModalConfirm']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal"> {{resource['vs']['deactivateVSModalConfirm']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deleteVSModalConfirm" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['deleteVSModalConfirm']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['vs']['deleteVSModalConfirm']['tooltip']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info " ng-click="confirmDeleteVs()"> {{resource['vs']['deleteVSModalConfirm']['ok']}}</button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal"> {{resource['vs']['deleteVSModalConfirm']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="historyVersionModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['historyVersionModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                        <span data-ng-repeat="x in view.vshistoryversions"
+                              class="label label-default pull-left version-class" ng-click="toggleVersion(x)"
+                              id="historyVersion{{x}}">
+                            {{x}}
+                        </span>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="diffVsBetweenVersions()" type="button" class="btn btn-info"
+                                        ng-show="view.vshistoryversions.length >= 2"
+                                        ng-disabled="showDiffHistory()">{{resource['vs']['historyVersionModel']['diff']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['historyVersionModel']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="addVSTag" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['addVSTag']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <input type="text" id="tagNameInput" ng-model="tagNameInput"
+                                       class="form-control" data-validator-type="validation"
+                                       data-validator="required" placeholder="{{resource['vs']['addVSTag']['placeholder']}}"><br>
+
+                                <div style="margin-top: 10px">
+                                <textarea id="tagreason" cols="2" rows="5" style="width: 100%;"
+                                          data-ng-model="query.tagreason" placeholder="{{resource['vs']['addVSTag']['reason']}}"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!tagNameInput || !query.tagreason" id="addTagBt" type="button" class="btn btn-info">{{resource['vs']['addVSTag']['ok']}}</button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['addVSTag']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="addVSProp" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['addVSProp']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <label class="prop-label">{{resource['vs']['addVSProp']['name']}}：</label>
+                                <input id="pname" type="text" ng-model="prop.name"
+                                       class="form-control" placeholder="{{resource['vs']['addVSProp']['name_placeholder']}}"><br>
+                                <label class="prop-label">{{resource['vs']['addVSProp']['value']}}：</label>
+                                <input id="pvalue" type="text" ng-model="prop.value"
+                                       class="form-control" placeholder="{{resource['vs']['addVSProp']['value_placeholder']}}">
+                                <div style="margin-top: 15px">
+                                <textarea id="propertyreason" cols="2" rows="5" style="width: 100%;"
+                                          data-ng-model="query.propertyreason" placeholder="{{resource['vs']['addVSProp']['reason']}}"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!prop.name || !prop.value || !query.propertyreason" id="addPropertyBt" type="button" class="btn btn-info">{{resource['vs']['addVSProp']['ok']}}</button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['addVSProp']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deleteVSTag" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['deleteVSTag']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deletetagreason"
+                                                               placeholder="{{resource['vs']['deleteVSTag']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deletetagreason" type="button" class="btn btn-info" ng-click="deleteTag(currentTagName)">{{resource['vs']['deleteVSTag']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['deleteVSTag']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deleteVSProp" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['deleteVSProp']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deletepropertyreason"
+                                                               placeholder="{{resource['vs']['deleteVSProp']['reason']}}"></textarea>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deletepropertyreason" type="button" class="btn btn-info"
+                                        ng-click="deleteProperty(currentProperty)">{{resource['vs']['deleteVSProp']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['deleteVSProp']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="addDomainDialog" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['addDomainDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">{{resource['vs']['addDomainDialog']['tooltip']}}</div>
+                                <table class="table table-bordered table-striped">
+                                    <tr>
+                                        <th>{{resource['vs']['addDomainDialog']['domainname']}}</th>
+                                        <th style="text-align: center">{{resource['vs']['addDomainDialog']['op']}}</th>
+                                    </tr>
+                                    <tr ng-repeat="col in domainsTable.columns">
+                                        <td class="domainName">
+                                            <input class="form-control" ng-model="col.name"
+                                                   data-validator-type="validation"
+                                                   data-validator="required"/>
+                                        </td>
+                                        <td style="text-align: center">
+                                            <button id="removeDomainBtn" class="btn btn-danger btn-xs"
+                                                    ng-click="domainsTable.remove($index)"
+                                                    ng-hide="$index == 0 && domainsTable.columns.length == 1"><i
+                                                    class="fa fa-minus"></i></button>
+                                            <button id="addDomainBtn" class="btn btn-info btn-xs"
+                                                    ng-click="domainsTable.add()"
+                                                    ng-show="$index == domainsTable.columns.length -1"><i
+                                                    class="fa fa-plus"></i></button>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <textarea cols="2" rows="10" style="width: 100%; margin-top: 15px"
+                                          data-ng-model="query.adddomainreason"
+                                          placeholder="{{resource['vs']['addDomainDialog']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.adddomainreason || domainsTable.columns.length==0" type="button" class="btn btn-info" ng-click="addDomainToVs()">{{resource['vs']['addDomainDialog']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['addDomainDialog']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="addDomainResult" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{addDomainResponseResult}}</h4>
+                            </div>
+                            <div class="modal-body alert-info">
+                                <p>{{addDomainResponseInfo}}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="removeDomainDialog" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['removeDomainDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">{{resource['vs']['removeDomainDialog']['tooltip']}}</div>
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>{{resource['vs']['removeDomainDialog']['domainname']}}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="to-be-removed-domains">
+                                    </tbody>
+                                </table>
+                                <textarea cols="2" rows="10" style="width: 100%; margin-top: 15px"
+                                          data-ng-model="query.removedomainreason"
+                                          placeholder="{{resource['vs']['removeDomainDialog']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.removedomainreason" type="button" class="btn btn-info" ng-click="removeDomainFromVs()">{{resource['vs']['removeDomainDialog']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['removeDomainDialog']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="removeDomainResult" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{removeDomainResponseResult}}</h4>
+                            </div>
+                            <div class="modal-body alert-info">
+                                <p>{{removeDomainResponseInfo}}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="revertCertDialog" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['revertCertDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">{{resource['vs']['revertCertDialog']['tooltip']}}</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="revertCertChanges()">{{resource['vs']['revertCertDialog']['ok']}}</button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['vs']['revertCertDialog']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="modal fade" id="uploadCertDialog" role="dialog">
+                    <div class="modal-dialog" id="uploadCertHead">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['vs']['uploadCertDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body query-container" style="padding-bottom: 0px">
+                                <div class="row standard-row">
+                                    <div class="col-md-2 query-label">
+                                        <label>{{resource['vs']['uploadCertDialog']['tooltip']}}:</label>
+                                    </div>
+
+                                    <div class="col-md-10 query-body">
+                                        <input type="text" class="form-control" ng-model="certdog.certName"
+                                               ng-disabled="certdog.uploadCanarySuccess"></div>
+                                </div>
+
+                                <div class="row " style="line-height: 40px; margin-bottom: 0px"
+                                     ng-show="!certdog.uploadCanarySuccess">
+                                    <div class="col-md-2 query-label">
+                                        <label>
+                                            {{resource['vs']['uploadCertDialog']['percent']}}:
+                                        </label>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <div class="pull-left form-group">
+                                            <span>25%</span>
+                                            <input id="exampleInputPassword3"
+                                                   name="ration"
+                                                   ng-model="certificateRange.max"
+                                                   ng-value="25"
+                                                   type="radio"
+                                                   ng-checked="certificateRange.max==25"/>
+                                        </div>
+
+                                        <div class="pull-right form-group">
+                                            <span>50%</span>
+                                            <input id="exampleInputPassword4"
+                                                   name="ration"
+                                                   ng-model="certificateRange.max"
+                                                   ng-value="50"
+                                                   type="radio"
+                                                   ng-checked="certificateRange.max==50"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" ng-show="certdog.uploadCanarySuccess">
+                                    <div class="col-md-2">
+                                        <label>{{resource['vs']['uploadCertDialog']['machines']}}:</label>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div>
+                                            Total machines: {{query.allSlbs.length}}， {{canaryIps.length}} With new certificates
+                                        </div>
+                                        <ul style="margin-left: -40px;list-style: none; max-height: 500px; overflow-y: auto">
+                                            <li data-ng-repeat="k in canaryIps">
+                                                <span><i class="fa fa-desktop"></i> {{k}} <i
+                                                        class="fa fa-check status-green" style="padding-left: 10px">{{getMachineStatus()}}</i></span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <span class="status-red " id="uploadFailSpan"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <div ng-show="!certdog.uploadCanarySuccess" style="">
+                                     <span class="status-red" style="margin-right: 20px; line-height: 35px;">
+                                            <input type="checkbox" ng-model="query.loadCertPassed"/>
+                                         <span>{{resource['vs']['uploadCertDialog']['ok']}}</span>
+                                     </span>
+
+                                    <a ng-click="uploadCertificate()"
+                                       class="btn btn-info pull-right"
+                                       ng-disabled="certificateRange.max==0 || !certdog.certName || !query.loadCertPassed">
+                                        {{resource['vs']['uploadCertDialog']['start']}}
+
+                                    </a>
+                                </div>
+
+
+                                <div ng-show="certdog.uploadCanarySuccess" style="line-height: 30px;">
+                                    <div ng-show="certdog.canarySuccess && !certdog.allUploadCanarySuccess"
+                                         style="line-height: 35px;">
+                                        <span class="status-red" style="margin-right: 20px; line-height: 35px;">
+                                            <input type="checkbox" ng-model="query.allCanaryPassed"/>
+                                            <span> {{resource['vs']['uploadCertDialog']['next']}}</span>
+                                        </span>
+
+                                        <div class="pull-right">
+                                            <a ng-click="activateSlb()" class="btn btn-danger pull-left">{{resource['vs']['uploadCertDialog']['activate']}}</a>
+
+                                            <a ng-click="batchCanary()" ng-disabled="!query.allCanaryPassed"
+                                               class="btn btn-info pull-right">{{resource['vs']['uploadCertDialog']['all']}}</a>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="pull-right"
+                                         ng-show="certdog.allUploadCanarySuccess && certdog.canaryAllSuccess"
+                                         style="line-height: 35px;">
+                                        <a class="btn btn-info" data-dismiss="modal">{{resource['vs']['uploadCertDialog']['complete']}}     </a>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+            <div class="container pull-left">
+                &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                    href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+                SLB Team</a>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+<!--Include Bootstrap-Table-->
+<script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+<script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+<script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+<script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+<!--For diff patch-->
+<script src="/static/lib/diff-match-patch/difflib.js"></script>
+<script src="/static/lib/diff-match-patch/diffview.js"></script>
+<script src="/static/lib/underscore/underscore-min.js"></script>
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+
+
+<script src="/statics/js/services/esService.js"></script>
+<script src="/statics/js/apps/vsApp.js"></script>
+<script src="/static/js/vs.js"></script>
+<script src="/static/js/util.js"></script>
+</html>

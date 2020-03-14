@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SLB 日报</title>
+    <style>
+        .home-container {
+            padding-top: 20px;
+            height: 155px;
+        }
+
+        .body-container {
+            padding-top: 5px;
+        }
+
+        .row {
+            margin-right: -5px;
+            margin-left: -5px;
+        }
+
+        div {
+            display: block;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-size: 14px;
+            line-height: 1.42857143;
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+
+        .col-3 {
+            width: 25%;
+            float: left;
+            position: relative;
+            min-height: 1px;
+            padding-right: 5px;
+            padding-left: 5px;
+        }
+
+        .blue {
+            background-color: #3598dc;
+        }
+
+        .box {
+            display: block;
+            margin-bottom: 25px;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .box .detail {
+            position: absolute;
+            right: 10px;
+            padding-right: 5px;
+        }
+
+        .number {
+            color: #fff;
+            padding-top: 25px;
+            text-align: right;
+            font-size: 34px;
+            line-height: 36px;
+            letter-spacing: -1px;
+            margin-bottom: 0;
+            font-weight: 300;
+        }
+
+        .desc {
+            color: #fff;
+            opacity: 1;
+            padding-top: 5px;
+            text-align: right;
+            font-size: 20px;
+            line-height: 26px;
+            letter-spacing: -1px;
+            margin-bottom: 0;
+            font-weight: 300;
+        }
+
+        .text-red {
+            color: #e7505a;
+        }
+
+        .text-blue {
+            color: #fff;
+        }
+
+        .text-green {
+            color: #32c5d2;
+        }
+
+        .text-purple {
+            color: #8E44AD;
+        }
+
+        .red {
+            background-color: #ff69b4;
+        }
+
+        .green {
+            background-color: #32c5d2;
+        }
+
+        .purple {
+            background-color: #8E44AD;
+        }
+
+        .box.blue .more {
+            color: #fff;
+            background-color: #258fd7;
+        }
+
+        .box.red .more {
+            color: #fff;
+            background-color: #ff69b4;
+        }
+
+        .box.green .more {
+            color: #fff;
+            background-color: #32c5d2;
+        }
+
+        .box.purple .more {
+            color: #fff;
+            background-color: #8E44AD;
+        }
+
+        .box .more {
+            clear: both;
+            display: block;
+            padding: 6px 10px;
+            position: relative;
+            text-transform: uppercase;
+            font-weight: 300;
+            font-size: 11px;
+            opacity: .7;
+        }
+
+        .box .title {
+            width: 80px;
+            height: 80px;
+            display: block;
+            float: left;
+            color: ghostwhite;
+            text-align: center;
+            padding-left: 15px;
+            margin-bottom: 15px;
+            font-size: 35px;
+            line-height: 35px;
+            padding-top: 25px;
+        }
+
+        .panel {
+            padding: 0px 5px;
+            background-color: #fff;
+            border-radius: 4px;
+            border: none;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            margin-left: 5px;
+            box-shadow: 0 0px 8px 0 rgba(0, 0, 0, 0.06), 0 1px 0px 0 rgba(0, 0, 0, 0.02);
+        }
+
+        .panel-default {
+            border-color: #ddd;
+        }
+
+        .panel-default > .panel-heading {
+            background-color: #FFFFFF;
+            border-color: #DDDDDD;
+            color: #797979;
+        }
+
+        .panel-info {
+            border-color: #bce8f1;
+        }
+
+        .panel-info > .panel-heading {
+            color: #31708f;
+            background-color: #d9edf7;
+            border-color: #bce8f1;
+        }
+
+        .panel-heading {
+            font-size: 16px;
+            padding: 0;
+            padding-bottom: 15px;
+            padding: 10px 15px;
+            border-bottom: 1px solid transparent;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            margin-bottom: 0;
+            margin-top: 0;
+            color: #080808;
+        }
+
+        .panel .panel-body {
+            padding: 10px 15px 15px;
+            margin-left: -6px;
+            margin-right: -6px;
+        }
+
+        .table {
+            margin-bottom: 0;
+            border-collapse: collapse;
+            border-radius: 1px;
+            width: 100%;
+            border: 1px;
+            max-width: 100%;
+            background-color: transparent;
+            border-spacing: 0;
+
+            display: table;
+        }
+
+        .table > tbody > tr {
+            border-bottom: #EEE 1px solid;
+            line-height: 35px;
+        }
+
+        .table > thead > tr {
+            text-align: left;
+        }
+
+
+    </style>
+</head>
+<body>
+<div>
+    <div class="row home-container">
+        <div class="col-3">
+            <div class="box blue">
+                <div class="title">
+                    <span>SLB</span>
+                </div>
+                <div class="detail">
+                    <div class="number">
+                        <span>5</span>
+                    </div>
+                    <div class="desc"> Change：+1</div>
+                </div>
+                <a class="more" href="/#"> Details
+                </a>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="box red">
+                <div class="title">
+                    <span>Vs</span>
+                </div>
+                <div class="detail">
+                    <div class="number">
+                        <span>5000</span>
+                    </div>
+                    <div class="desc"> Change: +10</div>
+                </div>
+                <a class="more" href="/#"> Details
+                </a>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="box green">
+                <div class="title">
+                    <span>Group</span>
+                </div>
+                <div class="detail">
+                    <div class="number">
+                        <span>7521</span>
+                    </div>
+                    <div class="desc"> Change: +102</div>
+                </div>
+                <a class="more" href="/#"> Details
+                </a>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="box purple">
+                <div class="title">
+                    <span>Policy</span>
+                </div>
+                <div class="detail">
+                    <div class="number">
+                        <span>200</span>
+                    </div>
+                    <div class="desc"> Change: +10</div>
+                </div>
+                <a class="more" href="/#"> Details
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="row body-container">
+        <div class="panel panel-info">
+            <div class="row panel-heading">
+                <div class="panel-title">模型操作</div>
+            </div>
+            <div class="panel-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>类型</th>
+                        <th>数量</th>
+                        <th>环比</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Group更新</td>
+                        <td>40</td>
+                        <td>+4</td>
+                    </tr>
+                    <tr>
+                        <td>vs更新</td>
+                        <td>40</td>
+                        <td>+4</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">     <div class="modal-dialog">         <!-- Modal content-->         <div class="modal-content">             <div class="modal-header">                 <button type="button" class="close" data-dismiss="modal">&times;</button>                 <h4 class="modal-title">意见反馈</h4>             </div>             <div class="modal-body">                 <div class="tips warning-important"></div>                 <div class="form-group">                     <div class="">                        <i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">请在此填写您对SLB 产品的建议或意见:</span>                     </div>                     <div class="system-padding-top">                                     <textarea  cols="2" rows="10" style="width: 100%"                                                data-validator-type="validation"                                                data-validator="required" id="comment-text" placeholder="意见与建议..."></textarea>                     </div>                 </div>             </div>             <div class="modal-footer">                 <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">确定                 </button>                 <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">取消                 </button>             </div>         </div>          <input type="hidden" value="" class="status-hidden"/>         <input type="hidden" value="" class="op-hidden"/>         <input type="hidden" value="" class="ip-hidden"/>     </div> </div> </body> <link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet"> <script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+</html>

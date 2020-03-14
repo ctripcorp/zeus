@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>.NET-to-Java Traffic Test Tool</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/jquery/jquery.keyvalueeditor.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/angular/angular-sanitize.js"></script>
+
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <!--Code mirror-->
+    <script src="/static/lib/code-mirro/angular-code-mirror.css"></script>
+
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/abtest.css">
+    <link rel="stylesheet" href="/static/css/keyvalueeditor.css">
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('list')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["tools"]["headerInfoController_toolsList"]}}
+</span></a></li>
+
+            <li class=""><a href="{{generateLink('url')}}"><i class="fa fa-tripadvisor"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_URLProbeTool"]}}
+</span></a>
+            </li>
+            <li class="active"><a href="{{generateLink('test')}}"><i class="fa fa-universal-access"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_abtest"]}}</span></a>
+            </li>
+
+
+            <li class="tools-hide"><a href="{{generateLink('slb-sharding')}}"><i class="fa fa-cogs"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_SLBSplitTool"]}}
+</span></a>
+            </li>
+
+            <li class="tools-hide"><a href="{{generateLink('vs-migration')}}"><i class="fa fa-rocket"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMigrationTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-seperate')}}"><i class="fa fa-delicious"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSSplitTool"]}}
+</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('vs-merge')}}"><i class="fa fa-steam"></i> <span
+                    class="nav-label">{{resource["tools"]["headerInfoController_VSMergeTool"]}}
+</span></a>
+            </li>
+
+
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+        <div style="min-height: 800px" class="query-area breadcrumb-follow" id="query-area"
+             ng-app="toolsQueryUrlApp"
+             ng-controller="toolsQueryUrlController" ng-cloak>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="panel-title">{{resource.tools.test.html.msg1}}</div>
+                </div>
+                <div class="panel-body" style="padding-top: 0px">
+                    <div class="bs-callout bs-callout-info col-md-6" id="callout-navs-tabs-plugin"
+                         data-ng-repeat="app in model.controls"
+                         style="border-top: none; border-bottom: none; border-right: none">
+                        <div>
+                            <h4><a target="_blank" href="/portal/group#?env={{env}}&groupId={{app.id}}">App:
+                                {{getAppName(app)}}</a></h4>
+
+                            <p>
+                                Group: <a target="_blank" href="/portal/group#?env={{env}}&groupId={{app.id}}">{{app[id]}}
+                                {{app['name']}}</a>
+                            </p>
+
+                            <p>
+                                IDC: {{getAppIDC(app)}}
+                            </p>
+
+                            <p>
+                                BU: <a target="_blank" href="/portal/bu#?env={{env}}&buName={{getAppBU(app)}}">{{getAppBU(app)}}</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class=" panel panel-default col-md-12">
+                <div class="panel-heading">
+                    <div class="panel-title">
+                        {{resource.tools.test.html.msg2}}
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="input-group row">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-default dropdown-toggle"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                            id="host">
+                                        {{getDropDownItems()}}
+                                        <span class="caret"></span></button>
+                                    <ul class="dropdown-menu">
+                                        <li data-ng-repeat="url in view.urls" ng-click="chooseTarget(url)">
+                                            <a>{{url}}</a></li>
+                                    </ul>
+                                </div>
+                                <input id="uri" data-ng-model="query.uri" type="text" class="form-control"
+                                       aria-label="..." placeholder={{resource.tools.test.html.msg6}}>
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <select id="red" data-ng-model="selectedMethod" class="form-control pull-left"
+                                    ng-change="updateRequestMethod(selectedMethod)"
+                                    data-ng-options="v as v.name for v in data.requestMethods">
+                                <option value="">--{{resource.tools.test.html.msg3}}--</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button ng-click="setHeadersClick()" class="btn" id="headers-keyvaleditor-actions-open"><i
+                                    class="fa fa-edit"></i> Headers({{getRequestHeaderCount()}})
+                            </button>
+                        </div>
+                        <div class="col-md-1">
+                            <div class="btn-group pull-right" role="group">
+                                <button id="submit-request" type="button" class="btn btn-info"
+                                        ng-click="sendQuery()">{{resource.tools.test.html.msg4}}
+                                </button>
+                                <button type="button" class="btn btn-danger">{{resource.tools.test.html.msg5}}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row system-padding-top" ng-show="showRequestBody()">
+                        <div class="">
+
+                            <div class="col-md-12">
+                                <div class="row" id="body-format-area">
+                                    <div id="data-mode-selector" class="btn-group clearfix">
+                                        <a class="btn" ng-click="toggleDefaultBodyFormat(mode)"
+                                           ng-class="isSelectedBodyFormat(mode)"
+                                           data-ng-repeat="mode in data.bodyModes">{{mode}}</a>
+                                    </div>
+                                </div>
+                                <div class="row" id="body-form-area" ng-show="query.defaultBodyFormat=='form-data'">
+                                    <div data-ng-repeat="item in data.requestBodyFormData"
+                                         class="keyvalueeditor-row input-group">
+                                        <input ng-click="addNewBodyPair('form')" type="text" data-ng-model="item.key"
+                                               class="keyvalueeditor-key pull-left" placeholder="Form Key"
+                                               name="keyvalueeditor-key" style="display: inline-block;">
+                                        <input ng-click="addNewBodyPair('form')" type="text" data-ng-model="item.value"
+                                               class="keyvalueeditor-value keyvalueeditor-value-text pull-left"
+                                               placeholder="Form Value" name="keyvalueeditor-value"
+                                               style="display: inline-block;" ng-show="item.type=='text'">
+                                        <input type="file" multiple=""
+                                               class="keyvalueeditor-value keyvalueeditor-value-file pull-left"
+                                               placeholder="Value" name="keyvalueeditor-value"
+                                               ng-show="item.type=='file'" id="form{{item.key}}">
+                                        <select data-ng-model="item.type"
+                                                class="keyvalueeditor-valueTypeSelector pull-left">
+                                            <option value="text">Text</option>
+                                            <option value="file">File</option>
+                                        </select>
+                                        <a tabindex="-1" class="keyvalueeditor-delete"
+                                           ng-click="deletePair($index)"><img
+                                                class="deleteButton pull-left" src="/static/img/delete.png"></a>
+                                    </div>
+                                </div>
+                                <div class="row" id="body-encodeurl-area"
+                                     ng-show="query.defaultBodyFormat=='x-www-form-urlencoded'">
+                                    <div class="keyvalueeditor-row"
+                                         data-ng-repeat="item in data.requestBodyEncodeFormData"><input
+                                            ng-click="addNewBodyPair('encode')" type="text" data-ng-model="item.key"
+                                            class="keyvalueeditor-key" placeholder="Encode Key"
+                                            name="keyvalueeditor-key" style="display: inline-block;">
+                                        <input ng-click="addNewBodyPair('encode')" type="text"
+                                               data-ng-model="item.value"
+                                               class="keyvalueeditor-value keyvalueeditor-value-text"
+                                               placeholder="Encode Value" name="keyvalueeditor-value"
+                                               style="display: inline-block;">
+                                        <a tabindex="-1" class="keyvalueeditor-delete"
+                                           ng-click="deleteEncodePair($index)"><img
+                                                class="deleteButton " src="/static/img/delete.png"></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <div class="col-md-12">
+                                <div class="" id="body-raw" ng-show="query.defaultBodyFormat=='raw'">
+                                    <textarea data-ng-model="operationReason" cols="2" rows="10" id="requestBody"
+                                              style="width: 100%" placeholder={{resource.tools.test.html.msg6}}></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row system-padding-top" ng-show="showRequestHeaders()">
+                        <div class="keyvalueeditor-row" data-ng-repeat="item in data.requestHeaders"><input
+                                ng-click="addNewHeaderPair()" type="text" data-ng-model="item.key"
+                                class="keyvalueeditor-key" placeholder="Header Key" name="keyvalueeditor-key">
+                            <input ng-click="addNewHeaderPair()" type="text" data-ng-model="item.value"
+                                   class="keyvalueeditor-value keyvalueeditor-value-text" placeholder="Header Value"
+                                   name="keyvalueeditor-value">
+                            <a tabindex="-1" class="keyvalueeditor-delete" ng-click="deleteHeaderPair($index)"><img
+                                    class="deleteButton " src="/static/img/delete.png"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class=" response-body-area"></div>
+            <div class="row" ng-show="show.showResponse">
+                <div class="col-md-12">
+                    <div class="result-side response-area{{$index}}" data-ng-repeat="app in data.responseArray">
+                        <div id="response-failed-container{{$index}}" ng-show="showScreen('failed',app)">
+                            <h3>Could not get any response</h3>
+
+                            <p>
+                                This seems to be like an error connecting to <span id="connection-error-url"></span>.
+                                The response status was 0.<br>
+                                Check out the <a href="query.url">{{query.url}}</a> Check:
+                                <a href="http://www.w3.org/TR/XMLHttpRequest/#the-status-attribute" target="_blank">W3C
+                                    XMLHttpRequest Level
+                                    2 spec</a>
+                                for more details about when this happens.
+                            </p>
+                        </div>
+                        <div class="row" ng-show="showScreen('success',app)">
+                            <div class="col-md-12">
+                                <a class="btn-info pull-right fa fa-sitemap" style="padding:4px; font-weight: bold"
+                                   href="/portal/group#?env={{env}}&groupId={{app.groupId}}" target="_blank">{{app.app}}({{app.groupName}})</a>
+                            </div>
+                        </div>
+                        <div class="row" ng-show="showScreen('success',app)">
+                            <div class="col-md-12">
+                                <ul class="nav nav-tabs">
+                                    <li class="active">
+                                        <a href="#body{{$index}}" data-toggle="tab" aria-expanded="false">
+                                            <span class="visible-xs"><i class="fa fa-home"></i></span>
+                                            <span class="hidden-xs">Body</span>
+                                        </a>
+                                    </li>
+                                    <li class="">
+                                        <a href="#header{{$index}}" data-toggle="tab" aria-expanded="true">
+                                            <span class="visible-xs"><i class="fa fa-user"></i></span>
+                                            <span class="hidden-xs">Header</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <div class="pull-left bu-class">
+                                            <span class="label label-default">STATUS</span>
+                                            <span style="font-weight: bold; font-size: 10px">{{app.status}} {{app.statusText}}</span>
+                                        </div>
+                                        <div class="pull-right bu-class">
+                                            <span class="label label-default">TIME</span>
+                                            <span style="font-weight: bold; font-size: 10px">{{app.timecost}} ms</span>
+                                        </div>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" style="padding: 30px 0px 0px 0px">
+                                    <div class="tab-pane active" id="body{{$index}}">
+                                        <div id="response-data-container" class="clearfix">
+                                            <div id="response-data{{$index}}" class="clearfix">
+                                                <div id="response-data-options{{$index}}" class="clearfix">
+                                                    <div id="response-formatting{{$index}}"
+                                                         class="btn-group clearfix pull-left">
+                                                        <a data-ng-repeat="look in data.renderClasses" class="btn"
+                                                           ng-click="toggleRenderClass(look)"
+                                                           ng-class="getRenderClass(look)">{{look}}</a>
+                                                    </div>
+
+                                                    <div id="response-pretty-modifiers" class="clearfix  pull-right"
+                                                         ng-show="defaultClass=='Pretty'">
+                                                        <div id="response-language{{$index}}"
+                                                             class="btn-group clearfix">
+                                                            <a data-ng-repeat="format in data.renderFormats" class="btn"
+                                                               ng-click="toggleRenderFormat(format)"
+                                                               ng-class="getRenderFormat(format)">{{format}}</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div id="response-editors{{$index}}">
+                                                    <div id="response-as-code{{$index}}"
+                                                         ng-show="defaultClass=='Pretty'">
+                                                        <code-mirror lang="cs" line-numbers="true"
+                                                                     ng-bind-html="app.responseText"></code-mirror>
+                                                    </div>
+                                                    <div id="response-as-text{{$index}}" ng-show="defaultClass=='Raw'">
+                                                        <textarea id="code-data-raw{{app.groupId}}"
+                                                                  style="width: 100%; height: 600px;">{{app.responseText}}</textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane " id="header{{$index}}">
+                                        <textarea id="code-header-raw{{app.groupId}}"
+                                                  style="width: 100%; height: 600px;">{{app.resHeaders}}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modals">
+                <div class="modal fade" id="PolicyIdSelectorDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.test.html.msg7}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-1">AppId：</div>
+                                    <div class="col-md-11">
+                                        <div angucomplete-alt id="appIdSelector"
+                                             placeholder={{resource.tools.test.html.msg8}}
+                                             pause="100"
+                                             selected-object="selectAppId"
+                                             remote-url="{{remoteAppsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name,pinyin"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small"
+                                             input-changed="appIdInputChanged">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-6" data-ng-repeat="g in javaGroups">
+                                        <div ng-class="selectedTileClass(g,1,$index)"
+                                             class="panel group-item" tag="{{g.id}}"
+                                             ng-click="clickTile(g, $event,1)">
+                                            <div class="panel-body" style="padding-top: 0;">
+                                                <div class="media-main">
+                                                    <div class="info">
+                                                        <p><span
+                                                                class="">Group:</span><a
+                                                                href="/portal/group#?env={{env}}&groupId={{g.id}}"
+                                                                target="_blank">{{g.name}}</a>
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-black">App: <a
+                                                                href="/portal/app#?env={{env}}&appId={{g.appId}}"
+                                                                target="_blank">{{g.appId}}/{{g.app}}</a>
+                                                        </p>
+
+                                                        <p class="text-black">IDC:
+                                                            <a>{{g.idc}}</a></p>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        <div class="status-red"
+                                             ng-show="!g.available">
+                                            <span ng-bind-html="g.error"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="">{{resource.tools.test.html.msg9}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource.tools.test.html.msg11}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="resultCompareDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.tools.test.html.msg12}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form id='slbfileDiffForm'>
+                                    <div id="diffOutput"></div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource.tools.test.html.msg13}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+
+<script src="/static/lib/diff-match-patch/diff_match_patch_uncompressed.js"></script>
+<script type="text/javascript" src="/static/lib/code-mirro/angular-code-mirror.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/util.js"></script>
+<script src="/static/js/tools-abtest.js"></script>
+
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text" placeholder="{{resource.questionModal.token2}}"></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">{{resource.tools.test.html.msg14}}</button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">{{resource.tools.test.html.msg11}}</button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+</html>

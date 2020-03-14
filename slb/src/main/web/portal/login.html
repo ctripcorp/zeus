@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>登陆</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <style type="text/css">
+        #foot-area {
+            position: fixed;
+            right: 10px;
+            bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="loginArea" ng-controller="loginController" ng-cloak>
+    <div class="wrapper-page animated fadeInDown">
+        <div class="panel panel-color panel-primary">
+            <div class="panel-heading">
+                <h3 class="text-center m-t-10"> 登陆 <strong>SLB</strong></h3>
+            </div>
+
+            <form class="form-horizontal m-t-40">
+
+                <div class="form-group ">
+                    <div class="col-xs-12">
+                        <input class="form-control" type="text" placeholder="用户名" name="username"
+                               data-ng-model="data.user">
+                    </div>
+                </div>
+                <div class="form-group ">
+
+                    <div class="col-xs-12">
+                        <input class="form-control" type="password" placeholder="密码" name="password"
+                               data-ng-model="data.password">
+                    </div>
+                </div>
+
+                <div class="form-group text-right">
+                    <div class="col-xs-12">
+                        <button ng-disabled="!data.user || !data.password" ng-click="loginClick()"
+                                class="btn btn-purple w-md" type="submit">登陆
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group m-t-30">
+                    <div class="col-sm-7">
+                        <a ng-click="forgetPwd()"><i class="fa fa-lock m-r-5"></i> 忘记密码?</a>
+                    </div>
+                    <div class="col-sm-5 text-right">
+                        <a href="register.html">注册新用户</a>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <div id="confirmDialog" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">提示信息</h4>
+                </div>
+                <div class="modal-body" id="message">
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" data-dismiss="modal">确定
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="container-fluid " id="foot-area" ng-controller="footController">
+    <div>
+        &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+            href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+        SLB Team</a>
+    </div>
+</div>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/login.js"></script>
+</body>
+</html>

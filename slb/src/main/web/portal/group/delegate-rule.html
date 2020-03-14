@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delegate Rule Config</title>
+    <script src="/static/lib/sui/jquery.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/sui/sui-append.min.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <link href="/static/lib/velonic-admin/assets/ion-rangeslider/ion.rangeSlider.css" rel="stylesheet" type="text/css"/>
+    <link href="/static/lib/velonic-admin/assets/ion-rangeslider/ion.rangeSlider.skinFlat.css" rel="stylesheet"
+          type="text/css"/>
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <script src="/static/lib/velonic-admin/assets/ion-rangeslider/ion.rangeSlider.min.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+
+    <link rel="stylesheet" href="/static/css/statistics/opslog.css">
+    <style type="text/css">
+        .saving button {
+            margin: 10px;
+        }
+
+        .request-zone {
+            list-style: none;
+            margin-left: -35px;
+        }
+
+        .request-zone li {
+            margin-bottom: 20px;
+        }
+
+        .request-zone li .header {
+            font-size: 15px;
+            font-weight: bold;
+            line-height: 54px;
+        }
+
+    </style>
+</head>
+<body>
+
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu">
+            <li class="dropdown language-menu" id="language-area" ng-app="languageApp"
+                ng-controller="languageController" ng-cloak>
+                <button class="btn btn-default btn-xs language-bt">语言</button>
+                <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)">
+                    <option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option>
+                </select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('basic')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["navs"]["navs_basic"]}}</span></a></li>
+            <li class=""><a href="{{generateLink('rule')}}"><i class="fa fa-pencil-square-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_rule"]}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('intercept')}}"><i class="fa fa-shirtsinbulk"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_intercept"]}}</span></a>
+            </li>
+            <!--<li class=""><a href="{{generateLink('antibot')}}"><i class="fa fa-shirtsinbulk"></i> <span
+                    class="nav-label">反爬规则</span></a>
+            </li>-->
+            <li class="active" ng-show="showDelegate()"><a href="{{generateLink('delegate')}}"><i
+                    class="fa fa-random"></i> <span
+                    class="nav-label">流量回源</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_log"]}}</span></a>
+            </li>
+
+
+            <li class=""><a href="{{generateLink('conf')}}"><i class="fa fa-file-code-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_conf"]}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id,name"
+                                 ng-click="clickTarget()"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wraper info-container" id="operation-log-area" ng-app="operationLogApp"
+             ng-controller="operationLogController">
+
+            <div class="row" style="margin-top: 20px">
+                <div class="col-md-6">
+                    <h5 style="font-weight: bold;">
+                        Group:{{data.group['id']}}({{data.group['name']}})/AppID:{{data.group['app-id']}}
+                    </h5>
+                </div>
+                <div class="col-md-6">
+                    <div class="pull-right">
+                        <h4 ng-class="statusClass()">{{getStatus()}}</h4>
+                    </div>
+                </div>
+
+                <div class="col-md-12" ng-show="showAlert()">
+                    <h6 class="status-red pull-right">当前Group状态为有变更, 暂时不支持配置。请先激活后再操作!</h6>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="alert-warning" style="list-style: none">
+                        <li>
+                            <h3>操作手册</h3>
+                        </li>
+                        <li>
+                            <h5> 第一步: 选择当前应用下哪些流量保留在AWS,系统支持按照Request URI、Request Header、Request Cookie进行设置</h5>
+                        </li>
+                        <li>
+                            <h5> 第二步: 调整流量在AWS和上海两侧的比例。 </h5>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class=" panel panel-default">
+                <div class=" panel-heading">
+                    <h4 class="panel-title">
+                        流量来源
+                    </h4>
+                </div>
+                <div class="panel-body ">
+                    <form role="form" name="myForm" class="form-horizontal">
+                        <ul class="request-zone">
+                            <li>
+                                <span id="uri" class="header table-toolbar">
+                                    Request URI
+                                </span>
+
+                                <div>
+                                    <div class="pull-right" style="margin-top: 20px">
+                                        <button ng-click="addRequestUri()" class="fa fa-plus btn btn-xs btn-info">New
+                                        </button>
+                                    </div>
+                                    <table id="requesturi"></table>
+                                </div>
+
+                            </li>
+                            <li>
+                                  <span id="header" class="header table-toolbar">
+                                    Request Header
+                                </span>
+
+                                <div>
+                                    <div class="pull-right" style="margin-top: 20px">
+                                        <button ng-click="addRequestHeader()" class="fa fa-plus btn btn-xs btn-info">
+                                            New
+                                        </button>
+                                    </div>
+                                    <table id="requestheader"></table>
+                                </div>
+                            </li>
+                            <li>
+                                <span id="cookie" class="header table-toolbar">
+                                    Request Cookie
+                                </span>
+                                <div>
+                                    <div class="pull-right" style="margin-top: 20px">
+                                        <button ng-click="addRequestCookie()" class="fa fa-plus btn btn-xs btn-info">
+                                            New
+                                        </button>
+                                    </div>
+                                    <table id="requestcookie"></table>
+                                </div>
+                            </li>
+
+                            <li>
+                                <span class="header">
+                                    条件关系
+                                </span>
+                                <div>
+                                     <span style="margin: 10px; cursor: pointer"
+                                           ng-class="relationClass(k)"
+                                           class="label label-default pull-left"
+                                           ng-repeat="(k,v) in data.relation"
+                                           ng-click="toggleRelation(k)">{{v}} </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </form>
+                </div>
+            </div>
+
+            <div class=" panel panel-default">
+                <div class=" panel-heading">
+                    <h4 class="panel-title">
+                        灰度比例设定
+                    </h4>
+                </div>
+                <div class="panel-body ">
+                    <div class="row" style="margin-top: 20px">
+                        <div class="col-md-2">
+
+                        </div>
+                        <div class="col-md-3">
+                            <div class="widget-panel widget-style-2 white-bg">
+                                <i class=" status-red" id="shanghai">0%</i>
+                                <h2 class="m-0 counter">上海</h2>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-2">
+                            <input type="text" id="range_02"/>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="widget-panel widget-style-2 white-bg">
+                                <i class=" status-red" id="aws">100%</i>
+                                <h2 class="m-0 counter">AWS</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row saving">
+                <div class="col-md-12">
+                    <button ng-disabled="disableSaving()" type="button" class="btn btn-info pull-right" ng-click="saveRule()">
+                        保存设置
+                    </button>
+                </div>
+            </div>
+
+            <div id="modals">
+                <div class="modal fade" id="uriDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">新增URI</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label class="col-md-1 control-label" style="line-height: 30px">Uri</label>
+                                        <div class="col-md-3 control-label">
+                                            <select class="form-control ng-pristine ng-valid ng-touched"
+                                                    ng-change="changeUriFunction()" ng-model="query.uri.op">
+                                                <option value="=">=</option>
+                                                <option value="!=">!=</option>
+                                                <option value="~" class="ng-binding">
+                                                    正则等于
+                                                </option>
+                                                <option value="~*" class="ng-binding">
+                                                    正则等于(忽略大小写)
+                                                </option>
+                                                <option value="!~" class="ng-binding">
+                                                    正则不等于
+                                                </option>
+                                                <option value="!~*" class="ng-binding">
+                                                    正则不等于(忽略大小写)
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-8 control-label">
+                                            <input type="text" name="uri"
+                                                   class="form-control pull-left ng-pristine ng-untouched ng-valid ng-valid-required"
+                                                   placeholder="" ng-model="query.uri.path">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-dismiss="modal" ng-click="saveUri()"
+                                        ng-disabled="disableUri()">确定
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="headerDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">新增Header</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form class="form-horizontal" role="form">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+                                                <span class="input-group-addon ng-binding">键</span>
+                                                <input type="text" name="headerkey" class="form-control" placeholder=""
+                                                       ng-model="query.header.key">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select class="form-control" ng-model="query.header.op">
+                                                <option value="=">=</option>
+                                                <option value="!=">!=</option>
+                                                <option value="~" class="ng-binding">
+                                                    正则等于
+                                                </option>
+                                                <option value="~*" class="ng-binding">
+                                                    正则等于(忽略大小写)
+                                                </option>
+                                                <option value="!~" class="ng-binding">
+                                                    正则不等于
+                                                </option>
+                                                <option value="!~*" class="ng-binding">
+                                                    正则不等于(忽略大小写)
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-addon ng-binding">值</span>
+                                                <input type="text" name="headervalue" class="form-control"
+                                                       placeholder="" ng-model="query.header.value"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="saveHeader()" type="button" class="btn btn-info" data-dismiss="modal"
+                                        ng-disabled="disableHeader()">确定
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="cookieDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">新增Cookie</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form class="form-horizontal" role="form">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+                                                <span class="input-group-addon ng-binding">键</span>
+                                                <input type="text" name="headerkey" class="form-control" placeholder=""
+                                                       ng-model="query.cookie.key"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <select class="form-control" ng-model="query.cookie.op">
+                                                <option value="=">=</option>
+                                                <option value="!=">!=</option>
+                                                <option value="~" class="ng-binding">
+                                                    正则等于
+                                                </option>
+                                                <option value="~*" class="ng-binding">
+                                                    正则等于(忽略大小写)
+                                                </option>
+                                                <option value="!~" class="ng-binding">
+                                                    正则不等于
+                                                </option>
+                                                <option value="!~*" class="ng-binding">
+                                                    正则不等于(忽略大小写)
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-addon ng-binding">值</span>
+                                                <input type="text" name="cookievalue" class="form-control"
+                                                       placeholder="" ng-model="query.cookie.value"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="saveCookie()" type="button" class="btn btn-info" data-dismiss="modal"
+                                        ng-disabled="disableCookie()">确定
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="/static/lib/sui/sui.min.js"></script>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/group-delegate.js"></script>
+</body>
+</html>

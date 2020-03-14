@@ -1,0 +1,17 @@
+.vses-summarizer{
+    float:right;
+    line-height:20px;
+    widht:500px;
+    padding-left:5px;
+}
+.vip-parent-ul{
+    padding:0;line-height:34px;white-space: nowrap;overflow:hidden;color:#196eaa;font-weight:bold; width: 150px;
+}
+.vip-parent-ul li{
+    float:left;
+    list-style: none;
+}
+.vip-child-ul li{
+    float: left;
+    list-style: none;
+}

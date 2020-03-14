@@ -1,0 +1,42 @@
+{
+     "type" : "GROUP",
+     "version" : 9,
+     "ssl" : false,
+     "app-id" : "100007656",
+     "created-time" : "2019-04-26 10:00:47",
+     "id" : 14818,
+     "group-servers" : [ {
+       "port" : 80,
+       "ip" : "127.0.0.1",
+       "host-name" : "UATD00100374",
+       "weight" : 5,
+       "max-fails" : 0,
+       "fail-timeout" : 30
+     } ],
+     "group-virtual-servers" : [ {
+       "path" : "~* ^/tour($|/|\\?)",
+       "virtual-server" : {
+         "domains" : [ {
+           "name" : "v.ctrip.com"
+         } ],
+         "version" : 3,
+         "port" : "80",
+         "ssl" : false,
+         "id" : 4784,
+         "slb-ids" : [ 138 ],
+         "name" : "v.ctrip.com_80"
+       }
+     } ],
+     "health-check" : {
+       "timeout" : 3000,
+       "uri" : "/tour/slbhealthcheck.html",
+       "intervals" : 5000,
+       "fails" : 3,
+       "passes" : 1
+     },
+     "load-balancing-method" : {
+       "type" : "roundrobin",
+       "value" : "test"
+     },
+     "name" : "sg_ntgxh_uat_tour-onlinenode-application_docker_100007656_related"
+   }

@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Group基本信息</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/group/group.css">
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<aside class="left-panel ">
+    <div id="header-area" ng-controller="headerInfoController" ng-cloak>
+        <div class="row">
+            <div class="col-md-12">
+                <nav class="navigation">
+                    <ul class="list-unstyled">
+                        <li class="active"><a href="{{generateLink('basic')}}"><i
+                                class="ion-ios7-speedometer"></i>
+                            <span class="nav-label">{{resource["navs"]["navs_basic"]}}</span></a></li>
+                        <li><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                            class="nav-label">{{resource["navs"]["navs_log"]}}</span></a>
+                        </li>
+                        <li class=""><a href="{{generateLink('conf')}}"><i class="fa fa-file-code-o"></i> <span
+                                class="nav-label">{{resource["navs"]["navs_conf"]}}</span></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id,name"
+                                 ng-click="clickTarget()"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wraper breadcrumb-follow info-container" id="group-info-area" ng-app="groupInfoApp"
+             ng-controller="groupInfoController" 　ng-cloak>
+            <div class="modals">
+                <!--Row：Group Tag and property -->
+                <div class="modal fade" id="deleteGroupTag" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">确认删除Tag:{{currentTagName}}</h4>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="deleteTag(currentTagName)">确定
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="deleteGroupProperty" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">确认删除Property:
+                                    ({{currentProperty.name}}:{{currentProperty.value}})</h4>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="deleteProperty(currentProperty)">确定
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="addGroupTag" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">请输入Tag的名称：</h4>
+                            </div>
+                            <div class="modal-body">
+                                <input id="tagNameInput" type="text" ng-model="tagname"
+                                       class="form-control" data-validator-type="validation"
+                                       data-validator="required"><br>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="addTagBt" type="button" class="btn btn-info">确定</button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="addGroupProp" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">请输入Property信息：</h4>
+                            </div>
+                            <div class="modal-body property-body">
+                                <div class="form form-group">
+                                    <label>名称：</label>
+                                    <input id="pname" type="text" ng-model="prop.name"
+                                           class="property-name form-control" placeholder="请填写pName"
+                                           data-validator-type="validation" data-validator="required"><br>
+                                </div>
+                                <div class="form form-group">
+                                    <label>值：</label>
+                                    <input id="pvalue" type="text" ng-model="prop.value"
+                                           class="property-value form-control" placeholder="请填写pValue"
+                                           data-validator-type="validation" data-validator="required"><br>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+
+                                <button id="addPropertyBt" type="button" class="btn btn-info">确定</button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--Row:delete activated group confirm-->
+                <div class="modal fade" id="deactivateGroupModal" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">确认是否要下线</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">你确定要下线当前VGroup吗?下线后如果还有流量访问当前VGroup会产生404。</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="deactivateGroup()">确定
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="deactivateGroup" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{deactivateGroupResponseResult}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <p>{{deactivateGroupResponseInfo}}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal fade" id="deleteGroupModal" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">确认是否要删除</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">删除的Group将无法回退，请确认是否真的要删除</span>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-toggle="modal"
+                                        data-target="#doubleConfirmDeleteGroupModal" data-dismiss="modal">确定
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="activateGroupModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead' ng-class="activateGroupTitleClass()">{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm'>
+                            <div id="diffOutput"></div>
+                            <div class="btnDiv">
+                                <button class="btn confirm-bt btn-info" data-toggle="modal"
+                                        data-target="#confirmActivateGroup" data-dismiss="modal"
+                                        ng-show="activateBtShow()">
+                                    确认激活
+                                </button>
+                                <button class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="confirmActivateGroup" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认是否要激活</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">激活Group会使Group的变动生效，生效后对Group的流量产生影响。请谨慎激活!</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="activateGroup()"
+                                        data-dismiss="modal">确认激活
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="deactivateActivatedGroupModal" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content group-traffic-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">在线Group流量确认</h4>
+                            </div>
+                            <div class="modal-body" id="traffic-area">
+                                <div class="row traffic-query-area">
+                                    <div class="date-area">
+                                        <span class="pull-left date-text">时间:  &nbsp;</span>
+
+                                        <p class="input-group pull-left starttime-picker">
+                                            <input type="text" class="form-control" datetime-picker="yyyy-MM-dd HH:mm"
+                                                   ng-model="chart.startTime"
+                                                   is-open="isOpen" readonly/>
+                                            <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="openCalendar($event, prop)">
+                            <i class="fa fa-calendar"></i>
+                        </button>
+                    </span>
+                                        </p>
+                                        <span class="date-text">
+                                        &nbsp;&nbsp;To &nbsp;
+                                        {{chart.endTime | date: "yyyy-MM-dd HH:mm"}}
+                                        &nbsp;&nbsp;
+                                        <a href="javascript:void(0)" class="label label-default" ng-click="queryData()">查询</a>
+                                        <a href="javascript:void(0)" ng-click="setDatePreviousHour()">上一小时</a>
+                                        <a href="javascript:void(0)" ng-click="setDateNextHour()">下一小时</a>
+                                        <a href="javascript:void(0)" ng-click="setDateNow()">Now</a>
+                                    </span>
+
+                                    </div>
+
+                                </div>
+                                <div class="charts-container" style="overflow: hidden; margin-top: 40px">
+                                    <div style="margin: 0 auto; width: 100%" id="chart" class="chart-container row"
+                                         style="overflow: hidden">
+
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" data-toggle="modal" data-target="#deactivateGroupModal"
+                                        class="btn btn-info" data-dismiss="modal" ng-disabled="deactivateBtEnabled">确定下线
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="deleteGroupConfirmModel" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">操作进度</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info closeProgressWindowBt2" data-dismiss="modal">
+                                    确定
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--Row: Virtual server connection ros-->
+                <div class="modal fade" id="askEditVServerModal" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">警告</h4>
+                            </div>
+                            <div class="modal-body">
+
+                            </div>
+                            <input type="hidden" id="selectedVs"/>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="popUpdateVirtualPath()">确定修改
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="addVirtualServerModel" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Group Virtual Server Update</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning row">
+                                    <h4>注意事项:</h4>
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            Virtual Servers ID: 新的Virtual Server, 尽量与当前Group的Virtual
+                                            Server同机房，不同机房可能会造成流量出错.
+                                        </li>
+                                        <li>
+                                            Path: Path 尽量与Group已有的Path相同，不相同可能会不支持.
+                                        </li>
+
+                                        <li>
+                                            Rewrite: Rewrite规则尽量与已有的相同，如果是新加Rewrite，请联系:<a href="mailto:slb@test.com?subject=SLB Rewrite规则设置&body=请添加咨询问题列表:
+        %0A%0A%0A%0A%0AFrom: {{currentUrl}}">框架研发部 SLB Team</a>获取更多支持
+                                        </li>
+                                        <li>
+                                            Priority: 尽量留白，让系统分配一个合适的Priority
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="container">
+                                    <div class="col-md-12 query-container add-vs-dv"
+                                         ng-repeat="col in groupVirtualServersTable.columns">
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                Virtual Server ID:
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div angucomplete-alt id="vsNew{{$index}}"
+                                                     placeholder="请输入Vs Id..."
+                                                     pause="100"
+                                                     selected-object="selectVsId"
+                                                     remote-url="{{remoteVsesUrl()}}"
+                                                     remote-url-request-formatter="cacheRequestFn"
+                                                     search-fields="id,name"
+                                                     title-field="id"
+                                                     description-field="name"
+                                                     minlength="0"
+                                                     match-class="highlight"
+                                                     initial-value="col['vs-id']"
+                                                     disable-input="false"
+                                                     input-class="form-control form-control-small">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                Path:
+                                            </div>
+                                            <div class="col-md-10">
+                                                <div class="row">
+
+                                                    <div class="col-md-1" ng-show="showSuffixText(col.path)"
+                                                         style="margin: 0px -50px">
+                                                        ~* ^
+                                                    </div>
+                                                    <div class="col-md-7">
+                                                        <input ng-focus="focusGField('path')" style=""
+                                                               class="form-control pull-left" ng-model="col.showPath"
+                                                               id="groupNewVsPath{{$index}}"
+                                                               data-validator-type="validation"
+                                                               data-validator="required"/>
+                                                    </div>
+                                                    <div class="col-md-1" ng-show="showSuffixText(col.path)"
+                                                         style="margin: 0px -20px">
+                                                        ($|/|\?)
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                        <b>IsRoot?</b><input ng-click="setAddedPathAsRoot()"
+                                                                             id="pathAddRootSetting{{$index}}"
+                                                                             type="checkbox" value=""/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                Redirect:
+                                            </div>
+                                            <div class="col-md-10">
+                                                <div class="row">
+                                                    <div class="col-md-9">
+                                                        <input ng-focus="focusGField('rewrite')"
+                                                               class="form-control group-rewrite"
+                                                               ng-model="col.redirect"
+                                                               id="groupNewVsRewrite{{$index}}" disabled/>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <button data-toggle="modal"
+                                                                data-target="#doubleConfirmAddRewriteModal"
+                                                                id="newGroupRewrite{{index}}"
+                                                                class="btn btn-xs btn-info col-right"><i
+                                                                class="fa fa-edit"></i></button>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                Priority:
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="row">
+                                                    <div class="col-md-10">
+                                                        <input ng-focus="focusGField('priority')"
+                                                               class="form-control group-priority" data-toggle="tooltip"
+                                                               title="Priority 属性建议使用默认设置，不要设置" ng-model="col.priority"
+                                                               id="groupVsPriority{{$index}}"
+                                                               data-validator-type="validation" data-validator="number"
+                                                               disabled/>
+
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <button data-toggle="modal"
+                                                                data-target="#doubleConfirmAddPriorityModal"
+                                                                id="NewGroupPriority{{index}}"
+                                                                class="btn btn-xs btn-info"><i class="fa fa-edit"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="field-description">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info " id="saveNewVirtualServer">提交
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal fade" id="editVirtualServerModel" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Group Virtual Server Update</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning row">
+                                    <h4>注意事项:</h4>
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            Virtual Servers ID: 新的Virtual Server, 尽量与当前Group的Virtual
+                                            Server同机房，不同机房可能会造成流量出错.
+                                        </li>
+                                        <li>
+                                            Path: Path 尽量与Group已有的Path相同，不相同可能会不支持.
+                                        </li>
+
+                                        <li>
+                                            Rewrite: Rewrite规则尽量与已有的相同，如果是新加Rewrite，请联系:<a href="mailto:slb@test.com?subject=SLB Rewrite规则设置&body=请添加咨询问题列表:
+        %0A%0A%0A%0A%0AFrom: {{currentUrl}}">框架研发部 SLB Team</a>获取更多支持
+                                        </li>
+                                        <li>
+                                            Priority: 尽量留白，让系统分配一个合适的Priority
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="container edit-vs-table">
+                                    <div class="col-md-12 query-container"
+                                         ng-repeat="col in groupVirtualServersTable.columns">
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                Virtual Server ID:
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div angucomplete-alt id="vsEdit{{$index}}"
+                                                     placeholder="请输入Vs Id..."
+                                                     pause="100"
+                                                     selected-object="selectVsId"
+                                                     remote-url="{{remoteVsesUrl()}}"
+                                                     remote-url-request-formatter="cacheRequestFn"
+                                                     search-fields="id,name"
+                                                     title-field="id"
+                                                     description-field="name"
+                                                     minlength="0"
+                                                     match-class="highlight"
+                                                     initial-value="col['vs-id']"
+                                                     disable-input="vsBindingDisabled"
+                                                     input-class="form-control form-control-small">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <button data-target="#doubleConfirmEditVSModal" data-toggle="modal"
+                                                        id="editVsId{{index}}" class="btn btn-xs btn-info short-right">
+                                                    <i class="fa fa-edit"></i></button>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                Path:
+                                            </div>
+                                            <div class="col-md-10">
+                                                <div class="row">
+                                                    <div class="col-md-1" ng-show="showSuffixText(col.path)"
+                                                         style="margin: 0px -50px">
+                                                        ~* ^
+                                                    </div>
+                                                    <div class="col-md-7">
+                                                        <input ng-focus="focusGField('path')" style=""
+                                                               class="form-control pull-left" ng-model="col.showPath"
+                                                               id="groupEditVsPath{{$index}}"
+                                                               data-validator-type="validation"
+                                                               data-validator="required" disabled/>
+                                                    </div>
+                                                    <div class="col-md-1" style="margin: 0px -20px"
+                                                         ng-show="showSuffixText(col.path)">
+                                                        ($|/|\?)
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <b>IsRoot?</b><input ng-click="setEditPathAsRoot(col.path)"
+                                                                             id="pathEditRootSetting{{$index}}"
+                                                                             type="checkbox" value="" disabled/>
+                                                    </div>
+
+                                                    <div class="col-md-1">
+                                                        <button data-toggle="modal"
+                                                                data-target="#doubleConfirmEditPathModal"
+                                                                id="editVsPath{{index}}" class="btn btn-xs btn-info"><i
+                                                                class="fa fa-edit"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                Redirect:
+                                            </div>
+                                            <div class="col-md-10">
+                                                <div class="row">
+                                                    <div class="col-md-7">
+                                                        <input ng-focus="focusGField('redirect')"
+                                                               class="form-control group-rewrite"
+                                                               ng-model="col.redirect"
+                                                               id="groupEditVsRewrite{{$index}}" disabled/>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <button data-toggle="modal" data-toggle="modal"
+                                                                data-target="#doubleConfirmEditRewriteModal"
+                                                                id="editGroupRewrite{{index}}"
+                                                                class="btn btn-xs btn-info col-right"><i
+                                                                class="fa fa-edit" disabled></i></button>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                Priority:
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="row">
+                                                    <div class="col-md-10">
+                                                        <input ng-focus="focusGField('priority')"
+                                                               class="form-control group-priority" data-toggle="tooltip"
+                                                               title="Priority 属性建议使用默认设置，不要设置" ng-model="col.priority"
+                                                               id="groupEditVsPriority{{$index}}"
+                                                               data-validator-type="validation" data-validator="number"
+                                                               disabled/>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <button data-toggle="modal"
+                                                                data-target="#doubleConfirmEditPriorityModal"
+                                                                id="EditGroupPriority{{index}}"
+                                                                class="btn btn-xs btn-info"><i class="fa fa-edit"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field-description">
+
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info " id="saveEditVirtualServer">提交
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal fade" id="removeVirtualServerModal" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">下线Group Virtual Server</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">点击确定，下线以下Group Virtual Server。 下线并激活Group后将无法通过该Virtual
+                                    Server 访问当前Group
+                                </div>
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>Path</th>
+                                        <th>Port</th>
+                                        <th>Redirect</th>
+                                        <th>Priority</th>
+                                        <th>SSL</th>
+                                        <th>SLB</th>
+                                        <th>VS</th>
+                                        <th>Domains</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="to-be-removed-vses">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-dismiss="modal" data-toggle="modal"
+                                        data-target="#doubleConfirmRemoveGroupVirtualServerModal">确定
+                                    <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal fade" id="removeOnlyOneVirtualServerModal" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">下线Group Virtual Server</h4>
+                            </div>
+                            <div class="modal-body">
+                                当前Group只有一个Virtual Server.删掉唯一的Virtual Server相当于下线Group， 请走下线Group流程下线当前Group
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-dismiss="modal">关闭</button>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <!--Row: Double Check -->
+                <div class="modal fade" id="doubleConfirmDeleteGroupModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">注意: 删除Group后，数据将很难恢复。请再次确认是否删除?</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="deleteGroup()"
+                                        data-dismiss="modal">再次确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmAddGroupVirtualServerModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">确认要添加Group Virtual Server吗?</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmAddGroupVirtualServer()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmEditGroupVirtualServerModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">确认要修改当前Group Virtual Server吗?</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmEditGroupVirtualServer()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmRemoveGroupVirtualServerModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">确认删除当前Group Virtual Server吗?</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmRemoveGroupVirtualServer()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmEditHealthCheckModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">确认修改当前Group的HealthCheck信息吗?</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmEditHealthChecker()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmRemoveHealthCheckModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">确认删除当前Group的Healthcheck信息吗?</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmRemoveHealthChecker()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmAddPriorityModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">Priority决定当前域名下Group的访问次序，建议留空让系统分配合理的值。</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmAddPriority()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmAddRewriteModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                        <span class="warning-important">Rewrite信息只有在入口流量与Path不相同时才需要配置，如 http://ctrip.com/huoche，不存在huoche这个Path时需要配置Rewrite。 请联系
+                            <a href="mailto:slb@test.com?subject=SLB产品咨询&body=请添加咨询问题列表:
+        %0A%0A%0A%0A%0AFrom: {{currentUrl}}">框架研发部 SLB Team</a>配置</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmAddRewrite()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmEditPriorityModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">Priority决定当前域名下Group的访问次序，建议留空让系统分配合理的值。</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmEditPriority()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmEditRewriteModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                        <span class="warning-important">Rewrite信息只有在入口流量与Path不相同时才需要配置，如 http://ctrip.com/huoche，不存在huoche这个Path时需要配置Rewrite。 请联系
+                            <a href="mailto:slb@test.com?subject=SLB产品咨询&body=请添加咨询问题列表:
+        %0A%0A%0A%0A%0AFrom: {{currentUrl}}">框架研发部 SLB Team</a>配置</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmEditRewrite()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmEditPathModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">Path决定Group的入口流量，如果 http://www.ctrip.com/booking能访问，域名www.ctrip.com下面必须存在一个Path是booking. 请谨慎填写</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmEditPath()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doubleConfirmEditVSModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">VS Id 决定当前Group所支持的域名，请谨慎选择!</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmEditVs()"
+                                        data-dismiss="modal">确认
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--Row: Diff Groups--->
+                <div class="modal fade" id="historyVersionModel" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">请选择要Diff的版本号：</h4>
+                            </div>
+                            <div class="modal-body">
+                        <span data-ng-repeat="x in groupVersions" class="label label-default pull-left version-class"
+                              ng-click="toggleVersion(x)" id="historyVersion{{x}}">
+                            {{x}}
+                        </span>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="diffGroupBetweenVersions()" type="button" class="btn btn-info"
+                                        ng-show="groupVersions.length >= 2" ng-disabled="showDiffHistory()">Diff
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="diffSeperateGroups" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead' ng-class="activateGroupTitleClass()">{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm3'>
+                            <div id="diffOutput3"></div>
+                            <div class="btnDiv">
+
+                                <button class="btn btn-info" data-dismiss="modal">关闭</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal fade" id="diffGroupErrorModel" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">不存在的GroupId</h4>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-dismiss="modal">确定
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="diffGroupModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>当前Group与目标Group(id:{{diff_groupId}})比较结果</h1>
+                        </div>
+                        <form id='fileDiffForm2'>
+                            <div id="diffOutput2"></div>
+                        </form>
+                    </div>
+                </div>
+                <!---Row: Operation Result -->
+                <div class="modal fade" id="operationConfrimModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">操作进度</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info closeProgressWindowBt" data-dismiss="modal">
+                                    确定
+                                </button>
+                                <button type="button" class="btn btn-default btn-warning" ng-show="showForceUpdate"
+                                        ng-click="forceActivateDismiss()" data-dismiss="modal">强制激活
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="bindNewVSResultDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">进度</h4>
+                            </div>
+                            <div class="modal-body">
+
+                            </div>
+                            <div class="created-group-id" hidden="hidden"></div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default btn-info closeProgressWindowBt"
+                                        data-dismiss="modal">确定
+                                </button>
+                                <button type="button" class="btn btn-default btn-warning" ng-show="showForceUpdate"
+                                        ng-click="forceBindVSDismiss()" data-dismiss="modal">强制更新
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal fade" id="bindingVsConfrimModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">操作进度</h4>
+                            </div>
+                            <div class="modal-body">
+
+                            </div>
+
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info closeProgressWindowBt" data-dismiss="modal">
+                                    确定
+                                </button>
+                                <button type="button" class="btn btn-warning forceUpdateBt" ng-show="showForceUpdate"
+                                        ng-click="forceBindVSDismiss()" data-dismiss="modal">强制更新
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="panel panel-default">
+                    <div class="panel-heading row" style="padding-bottom: 5px">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">{{resource["navs"]["navs_basic"]}}</h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="top-toolbar">
+                                <div class="pull-right">
+                                    <div class="top-toolbar-left pull-left">
+                                        <a class="btn btn-info"
+                                           href="/portal/vgroup/edit#?env={{env}}&groupId={{information.extendedGroup.id}}"
+                                           ng-show="showUpdateBt()"
+                                           role="button">修改</a>
+                                        <a class="btn btn-info activeGroup" role="button"
+                                           ng-show="showActivateBt()"
+                                           ng-click="activateGroupClick()">激活</a>
+                                        <a class="btn btn-info" ng-click="showDialog(p, 'addTag')"
+                                           ng-show="showAddTagBt()">添加Tag</a>
+                                        <a class="btn btn-info" ng-click="showDialog(p, 'addProp')"
+                                           ng-show="showAddProperty()">添加Property</a>
+                                        <a class="btn btn-deactivate deactiveGroup" ng-click="deactivateGroupAction()"
+                                           role="button" ng-disabled="deactivateGroupDisable()"
+                                           ng-show="showDeactivateBt()">下线</a>
+                                        <a class="btn btn-danger deleteGroup" role="button" data-toggle="modal"
+                                           data-target="#deleteGroupModal"
+                                           ng-disabled="deleteGroupDisable()" ng-show="showDeleteBt()">删除</a>
+                                    </div>
+                                    <div class="top-toolbar-right pull-right">
+                                        <span class="pull-right" ng-class="statusClass()">&nbsp;&nbsp;当前状态：{{statusText()}}</span>
+                                        <span ng-class="getFocusCss()"><a
+                                                ng-click="toggleFocus()">{{getFocusText()}}</a></span>
+                                        <span ng-class="getOptionPanelCss()">&nbsp;&nbsp;<a
+                                                ng-click="toggleOptionPanel()">{{getOptionPanelText()}}</a></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body" style="padding-top: 0px">
+                        <div class="clearfix row form-group" ng-cloak>
+                            <table class="table table-condensed">
+                                <tbody>
+                                <tr>
+                                    <td class="model-basic-info"><b>App:</b></td>
+                                    <td><a target="_blank"
+                                           href="/portal/app#?env={{env}}&appId={{information.extendedGroup['app-id']}}">{{information.extendedGroup['app-id']}}(
+                                        {{information.apps[information.extendedGroup['app-id']]?information.apps[information.extendedGroup['app-id']]['chinese-name']:'VGROUPAPPNAME'}}
+                                        )</a></td>
+                                </tr>
+                                <tr>
+                                    <td><b>ID:</b></td>
+                                    <td>{{information.extendedGroup.id}}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Name:</b></td>
+                                    <td>{{information.extendedGroup.name}}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Version:</b></td>
+                                    <td>
+                                        <div class="version-div">
+                                            <div>{{information.extendedGroup.version}}</div>
+                                            <div>
+                                                <span ng-if="getGroupStatusProperty()=='activated'"
+                                                      ng-class="groupVersionClass()">({{groupVersionText()}})</span>
+                                                <a ng-if="getGroupStatusProperty()!='activated'"
+                                                   ng-click="activateGroupClick()"
+                                                   ng-class="groupVersionClass()">({{groupVersionText()}})</a>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div>&nbsp;&nbsp;(<a data-toggle="modal" id="historyVersionBtn">历史版本</a>)
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><b>SSL:</b></td>
+                                    <td ng-if="information.extendedGroup.ssl">Https</td>
+                                    <td ng-if="!information.extendedGroup.ssl">Http</td>
+                                </tr>
+                                <tr>
+                                    <td><b> Last Change Time:</b></td>
+                                    <td>
+                                        {{information.extendedGroup['created-time']}}
+                                    </td>
+                                </tr>
+                                <tr ng-show="showExtendedTag()">
+                                    <td><b>Tags:</b></td>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col-md-11 multi-tags" ng-class="multiTagsClass()">
+                                             <span ng-show="getTagShowProperty(v)"
+                                                   class="label label-default tag-span pull-left"
+                                                   ng-repeat="v in information.extendedGroup.tags"
+                                                   ng-click="showDialog(v, 'deleteTag')">{{v}}&nbsp;<b
+                                                     ng-show="showRemoveTagBt(v)">x</b> </span>
+                                            </div>
+                                            <div class="col-md-1 collapse-btns">
+                                                <a ng-click="toggleShowMoreTags()" class="toggle-show-btn">
+                                                    <span ng-class="collapseTagBtnClass()"></span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr ng-show="showExtendedProperty()">
+                                    <td><b>Properties:</b></td>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col-md-11 multi-tags" ng-class="multiPropertiesClass()">
+                                              <span class="label label-default tag-span pull-left"
+                                                    ng-repeat="item in information.extendedGroup.properties"
+                                                    ng-click="showDialog(item, 'deleteProp')">{{item.name}}:&nbsp;{{item.value}}&nbsp;<b
+                                                      ng-show="showRemoveProperty(item)">x</b> </span>
+                                            </div>
+                                            <div class="col-md-1 collapse-btns">
+                                                <a ng-click="toggleShowMoreProperties()" class="toggle-show-btn">
+                                                    <span ng-class="collapsePropertiesBtnClass()"></span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <b>Traffic Policies:</b>
+                                    </td>
+                                    <td>
+                                        <div class="row" ng-show="showPolicy()">
+                                            <div class="col-md-12 multi-tags">
+                                                <a style="text-decoration: underline; margin-right: 10px"
+                                                   target="_blank" href="{{generatePolicyLink(item.name)}}"
+                                                   class="pull-left" ng-repeat="item in information.policies">{{item.name}}</a>
+                                                <a ng-show="showNewPolicyLink()"
+                                                   href="/portal/policy/new#?env={{env}}&groupId={{information.extendedGroup.id}}"
+                                                   class="status-yellow">
+                                                    (添加)
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="row" ng-show="showPolicy()==false">
+                                            <div class="col-md-12">
+                                                无
+                                                <a ng-show="showNewPolicyLink()"
+                                                   href="/portal/policy/new#?env={{env}}&groupId={{information.extendedGroup.id}}"
+                                                   class="status-yellow">
+                                                    (流量灰度)
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><b>Latest 3 Operation Logs:</b></td>
+                                    <td>
+                                        <div class="row" ng-show="showLogs()">
+                                            <div class="col-md-12">
+                                                <div data-ng-repeat="log in information.currentlogs" class="row">
+                                                    <div class="col-md-3">{{log['date-time']}}</div>
+                                                    <div class="col-md-2"><a
+                                                        href="/portal/user#?env={{env}}&userId={{log['user-name']}}">{{log['user-name']}}</a>
+                                                    </div>
+                                                    <div class="col-md-2">{{getOperationText(log.operation)}}</div>
+                                                    <div class="col-md-1"><b
+                                                        ng-class="log.success?'status-green':'status-red'">{{log.success?'成功':'失败'}}</b>
+                                                    </div>
+                                                    <div class="col-md-3" ng-if="$last"><a target="_self"
+                                                                                           class="pull-left"
+                                                                                           href="/portal/vgroup/log#?env={{env}}&groupId={{information.extendedGroup.id}}">更多...</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row" ng-show="showLogs()==false">
+                                            无
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><b>Links:</b></td>
+                                    <td>
+                                        <div class="system-link" ng-show="showLinks('dashboard')">
+                                            <a class="dashboard" target="_blank"
+                                               href="{{generateMonitorUrl('dashboard')}}">Dashboard</a>
+                                        </div>
+                                        <div class="system-link" ng-show="showLinks('es')">
+                                            <a class="es" target="_blank" href="{{generateMonitorUrl('es')}}">ES</a>
+                                        </div>
+                                        <div class="system-link" ng-show="showLinks('tengine-es')">
+                                            <a class="tengine" target="_blank" href="{{generateMonitorUrl('tengine')}}">NginxLog</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="panel-title">关联的Group</div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="group-redirect-to-toolbar" class="table-toolbar row">
+                            <div class="col-md-12">
+                                <span class="group-summarizer pull-left">当前VGroup Redirect到的Group:</span>
+                            </div>
+
+                        </div>
+                        <table id="group-redirect-to-table"></table>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="panel-title">Virtual Servers</div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="groupInfo-appList-toolbar" class="row table-toolbar">
+                            <div class="col-md-8">
+                                <span class="group-summarizer pull-left">当前Group 挂载了 <b>{{vsCountNumber}}</b> 个 Virtual Server</span>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="pull-right">
+                                    <button title="新建关联" data-toggle="tooltip" ng-show="showNewBindBt()" type="button"
+                                            class="btn btn-info" aria-label="Left Align" ng-click="popNewVirtualPath()">
+                                        <span class="fa fa-plus"></span>
+                                    </button>
+                                    <button title="删除关联" data-toggle="tooltip" ng-show="showRemoveBindBt()"
+                                            id="group-batch-delete-path-bt" class="btn btn-info" title="下线"
+                                            disabled>
+                                        <span class="fa fa-minus"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <table id="group-virtual-server-table"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+            <div class="container pull-left">
+                &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                    href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+                SLB Team</a>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+<script src="/static/js/charts.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/vgroup.js"></script>
+
+</html>

@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="utf-8">
+    <title>Groups</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/groups.css">
+</head>
+
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel-half " style="overflow: hidden; outline: none;">
+
+</aside>
+
+<section class="middle-content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+        <div class="row breadcrumb-follow" id="apps-summary-area" ng-app="groupsSummaryApp"
+             ng-controller="groupsSummaryController" ng-cloak>
+            <div class="row">
+                <div class="col-lg-3 col-sm-6">
+                    <div class="widget-panel widget-style-2 white-bg" style="padding: 40px 10px 0px 0px;height: 130px;">
+                        <div class="row">
+                            <div class="col-sm-9">
+                                <div class="row" style="margin-left: 10px;">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('activated')"
+                                         class="col-xs-3 text-center">
+                                        <h2 class="m-t-0 m-b-0 status-green activate-group-text"></h2>
+
+                                        <div class="status-green">{{resource['groups']['groups_groupsSummaryApp_Activated']}}</div>
+                                    </div>
+                                    <div style="cursor: pointer" ng-click="navigateTo('tobeactivated')"
+                                         class="col-xs-5 text-center">
+                                        <h2 class=" m-b-0 m-t-0 status-yellow tobeactivated-group-text"></h2>
+
+                                        <div class="status-yellow">{{resource['groups']['groups_groupsSummaryApp_ToBeActivated']}}</div>
+                                    </div>
+                                    <div class="col-xs-4 text-center" style="cursor: pointer"
+                                         ng-click="navigateTo('deactivated')">
+                                        <h2 class=" m-b-0 m-t-0 deactivated-group-text status-gray"></h2>
+
+                                        <div class="status-gray">{{resource['groups']['groups_groupsSummaryApp_DeActivated']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-3">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i class="fa fa-pie-chart text-pink"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                    <div class="widget-panel widget-style-2 white-bg" style="padding: 40px 10px 0px 0px;height: 130px;">
+                        <div class="row">
+                            <div class="col-sm-9">
+                                <div class="row" style="margin-left: 10px;">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('healthy')"
+                                         class="col-xs-4 text-center">
+                                        <h2 class="m-t-0 m-b-0 healthy-group-text status-green"></h2>
+
+                                        <div class="status-green">{{resource['groups']['groups_groupsSummaryApp_healthy']}}</div>
+                                    </div>
+                                    <div style="cursor: pointer" ng-click="navigateTo('unhealthy')"
+                                         class="col-xs-4 text-center">
+                                        <h2 class=" m-b-0 m-t-0 status-yellow unhealthy-group-text"></h2>
+
+                                        <div class="status-yellow">{{resource['groups']['groups_groupsSummaryApp_unhealthy']}}</div>
+                                    </div>
+                                    <div class="col-xs-4 text-center" style="cursor: pointer"
+                                         ng-click="navigateTo('broken')">
+                                        <h2 class=" m-b-0 m-t-0 broken-group-text status-gray"></h2>
+
+                                        <div class="status-gray">{{resource['groups']['groups_groupsSummaryApp_broken']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-3">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i class="fa fa-heartbeat status-yellow"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                    <div class="widget-panel widget-style-2 white-bg" style="padding: 40px 10px 0px 0px;height: 130px;">
+                        <div class="row">
+                            <div class="col-sm-10">
+                                <div class="row">
+                                    <div class="col-xs-12 text-center">
+                                        <h2 class=" m-b-0 m-t-0 qps-text"></h2>
+
+                                        <div>{{resource['groups']['groups_groupsSummaryApp_qps']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-2">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i class="fa fa-cloud text-info"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                    <div class="widget-panel widget-style-2 white-bg" style="padding: 40px 10px 0px 0px;height: 130px;">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="row">
+                                    <div class="col-xs-4 text-center">
+                                        <h2 class=" m-b-0 m-t-0 groups-text"></h2>
+
+                                        <div>{{resource['groups']['groups_groupsSummaryApp_groups']}}</div>
+                                    </div>
+
+                                    <div class="col-xs-4 text-center">
+                                        <h2 class=" m-b-0 m-t-0 server-text"></h2>
+
+                                        <div>{{resource['groups']['groups_groupsSummaryApp_servers']}}</div>
+                                    </div>
+                                    <div class="col-xs-4 text-center">
+                                        <h2 class=" m-b-0 m-t-0 member-text"></h2>
+
+                                        <div>{{resource['groups']['groups_groupsSummaryApp_members']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row query-container" id="groups-query-area" ng-app="groupsQueryApp"
+             ng-controller="groupsQueryController" ng-cloak>
+            <div class="col-md-12 panel panel-default">
+                <div class="col-md-10 form-area">
+                    <!--ROW 1-->
+                    <div class="row groupid">
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_id']}}:</div>
+                        <div class="col-md-5 query-body">
+                            <div angucomplete-alt id="groupIdSelector"
+                                 placeholder="{{resource['groups']['groups_groupsQueryApp_id_placehoder']}}"
+                                 pause="100"
+                                 selected-object="selectGroupId"
+                                 remote-url="{{remoteGroupsUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name"
+                                 title-field="id"
+                                 description-field="name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small"
+                                 input-changed="groupIdInputChanged">
+                            </div>
+                        </div>
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_name']}}:</div>
+                        <div class="col-md-5 query-body">
+                            <input class="form-control" type="text" placeholder="{{resource['groups']['groups_groupsQueryApp_name_placehoder']}}"
+                                   ng-model="query.groupname">
+                        </div>
+                    </div>
+                    <!--ROW 2-->
+                    <div class="row slb">
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_slb']}}:</div>
+                        <div class="col-md-5 query-body">
+                            <div angucomplete-alt id="slbIdSelector"
+                                 placeholder="{{resource['groups']['groups_groupsQueryApp_slb_placehoder']}}"
+                                 pause="100"
+                                 selected-object="selectSlbId"
+                                 remote-url="{{remoteSLBsUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name"
+                                 title-field="id"
+                                 description-field="name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small"
+                                 input-changed="slbIdInputChanged">
+                            </div>
+                        </div>
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_vs']}}:</div>
+                        <div class="col-md-5 query-body">
+                            <div angucomplete-alt id="vsIdSelector"
+                                 placeholder="{{resource['groups']['groups_groupsQueryApp_vs_placehoder']}}"
+                                 pause="100"
+                                 selected-object="selectVsId"
+                                 remote-url="{{remoteVsesUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name"
+                                 title-field="id"
+                                 description-field="name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small"
+                                 input-changed="vsIdInputChanged">
+                            </div>
+
+                        </div>
+                    </div>
+                    <!--ROW 3-->
+                    <div class="row app">
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_appid']}}:</div>
+                        <div class="col-md-5 query-body">
+                            <div angucomplete-alt id="appIdSelector"
+                                 placeholder="{{resource['groups']['groups_groupsQueryApp_appid_placehoder']}}"
+                                 pause="100"
+                                 selected-object="selectAppId"
+                                 remote-url="{{remoteAppsUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id"
+                                 description-field="name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small"
+                                 input-changed="appIdInputChanged">
+                            </div>
+                        </div>
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_server']}}:</div>
+                        <div class="col-md-5 query-body">
+                            <div angucomplete-alt id="hostIpSelector"
+                                 placeholder="{{resource['groups']['groups_groupsQueryApp_server_placehoder']}}"
+                                 pause="100"
+                                 selected-object="selectHostIp"
+                                 remote-url="{{remoteServersUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name"
+                                 title-field="id"
+                                 minlength="0"
+                                 description-field="name"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small"
+                                 input-changed="groupServerInputChanged">
+                            </div>
+                        </div>
+                    </div>
+                    <!--ROW 4-->
+                    <div class="row domain">
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_domain']}}:</div>
+                        <div class="col-md-11 query-body">
+                            <div angucomplete-alt id="domainSelector"
+                                 placeholder="{{resource['groups']['groups_groupsQueryApp_domain_placehoder']}}"
+                                 pause="100"
+                                 selected-object="selectDomain"
+                                 remote-url="{{remoteDomainsUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id"
+                                 title-field="id"
+                                 minlength="0"
+                                 clear-selected="true"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+
+                            <div class="selected-domains">
+                        <span class="label label-default pull-left" ng-repeat="(k,v) in query.domains"
+                              ng-click="removeDomain(v)">{{v}} <b>x</b> </span>
+                            </div>
+                        </div>
+                    </div>
+                    <!--Row 5-->
+                    <div class="row tags" ng-show="data.tagArr.length>0">
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_tag']}}:</div>
+                        <div class="col-md-11 query-body">
+                            <div angucomplete-alt id="tagSelector"
+                                 placeholder="{{resource['groups']['groups_groupsQueryApp_tag_placehoder']}}"
+                                 pause="100"
+                                 selected-object="selectTag"
+                                 local-data="data.tagArr"
+                                 search-fields="name"
+                                 title-field="name"
+                                 minlength="0"
+                                 clear-selected="true"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+
+                            <div class="selected-domains">
+                        <span class="label label-default pull-left" ng-repeat="(k,v) in query.tags"
+                              ng-click="removeTag(v)">{{v}} <b>x</b> </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--ROW 6-->
+                    <div class="row bu" ng-show="data.buArr.length>0">
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_bu']}}:</div>
+                        <div class="col-md-11 query-body">
+                            <div class="col-md-11 multi-tags" ng-class="multiTagsClass()">
+                        <span data-ng-repeat="b in data.buArr" class="label label-default pull-left bu-class"
+                              ng-class="isSelectedBu(b)" ng-click="toggleBu(b)">
+                            {{b}}
+                        </span>
+                            </div>
+                            <div class="col-md-1 collapse-btns ">
+                                <div class="pull-right">
+                                    <a ng-click="buClear()" ng-class="showClear('bu')">{{resource['groups']['groups_groupsQueryApp_clean']}}</a>
+                                    <a ng-click="toggleShowMoreBU()" class="toggle-show-btn">
+                                        <span ng-class="collapseBtnClass()"></span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--Row 7-->
+                    <div class="row status" ng-show="data.statusArr.length>0">
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_status']}}:</div>
+                        <div class="col-md-7 query-body">
+                       <span class="label label-default" ng-class="isSelectedStatus(x)"
+                             data-ng-repeat="x in data.statusArr"
+                             ng-click="toggleStatus(x)">
+                        {{getStatusLanguage(x)}}
+                   </span>
+                            <a ng-click="statusClear()" ng-class="showClear('status')">{{resource['groups']['groups_groupsQueryApp_clean']}}</a>
+                        </div>
+
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_ssl']}}:</div>
+                        <div class="col-md-3 query-body">
+                       <span class="label label-default" ng-class="isSelectedSSL(x)" data-ng-repeat="x in data.sslArr"
+                             ng-click="toggleSSL(x)">
+                        {{x}}
+                   </span>
+                            <a ng-click="SSLClear()" ng-class="showClear('ssl')">{{resource['groups']['groups_groupsQueryApp_clean']}}</a>
+                        </div>
+                    </div>
+
+                    <!--Row 8-->
+                    <div class="row language">
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_language']}}:</div>
+                        <div class="col-md-7 query-body">
+                     <span class="label label-default" ng-class="isSelectedLanguage(k)"
+                           data-ng-repeat="k in data.languages"
+                           ng-click="toggleGroupLanguage(k)">
+                        {{k}}
+                   </span>
+                            <a ng-click="GroupLanguageClear()" ng-class="showClear('grouplanguage')">{{resource['groups']['groups_groupsQueryApp_clean']}}</a>
+                        </div>
+
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_soa']}}:</div>
+                        <div class="col-md-3 query-body">
+                    <span class="label label-default" ng-class="isSelectedGroupSOA(x)"
+                          data-ng-repeat="x in data.groupSoaArr"
+                          ng-click="toggleGroupSOA(x)">
+                        {{getSoaLanguage(x)}}
+                   </span>
+                            <a ng-click="GroupSOAClear()" ng-class="showClear('groupSOA')">{{resource['groups']['groups_groupsQueryApp_clean']}}</a>
+                        </div>
+                    </div>
+
+                    <!--Row 9-->
+                    <div class="row groupTypes">
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_healthy']}}:</div>
+                        <div class="col-md-7 query-body">
+                     <span class="label label-default" ng-class="isSelectedHealthy(k,v)"
+                           data-ng-repeat="(k,v) in data.healthArr"
+                           ng-click="toggleGroupHealthy(k,v)">
+                        {{getHealthyLanguage(v)}}
+                   </span>
+                            <a ng-click="GroupHealthyClear()" ng-class="showClear('grouphealth')">{{resource['groups']['groups_groupsQueryApp_clean']}}</a>
+                        </div>
+
+                        <div class="col-md-1 query-label">{{resource['groups']['groups_groupsQueryApp_type']}}:</div>
+                        <div class="col-md-3 query-body">
+                    <span class="label label-default" ng-class="isSelectedGroupType(x)"
+                          data-ng-repeat="x in data.groupTypeArr"
+                          ng-click="toggleGroupType(x)">
+                        {{x}}
+                   </span>
+                            <a ng-click="GroupTypeClear()" ng-class="showClear('groupType')">{{resource['groups']['groups_groupsQueryApp_clean']}}</a>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-2 button-area">
+                    <div class="pull-right">
+                        <button type="button" class="btn btn-default" ng-click="clearQuery()">{{resource['groups']['groups_groupsQueryApp_clear']}}</button>
+                        <button type="button" class="btn btn-info" ng-click="executeQuery()" id="executeQuery">{{resource['groups']['groups_groupsQueryApp_query']}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="row" id="groups-result-area" ng-app="groupsResultApp"
+             ng-controller="groupsResultController" ng-show="showGroupsResult()" ng-cloak>
+            <div id="activateGroupModal" class="modal fade" role="dialog" aria-hidden="true">
+                <div class="span12 modal-dialog fileDiffMainContainer">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h1 class='fileViewHead'>{{confirmActivateText}}</h1>
+                    </div>
+                    <form id='fileDiffForm'>
+                        <div id="diffOutput"></div>
+                        <div class="btnDiv">
+                            <button class="btn confirm-bt btn-info" data-toggle="modal"
+                                    data-target="#confirmActivateGroup" data-dismiss="modal">
+
+                                {{resource['groups']['groups_groupsResultApp_activatedialog']['激活上线']}}
+                            </button>
+                            <button class="btn btn-warning" data-dismiss="modal">{{resource['groups']['groups_groupsResultApp_activatedialog']['close']}}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div id="activateVGroupModal" class="modal fade" role="dialog" aria-hidden="true">
+                <div class="span12 modal-dialog fileDiffMainContainer">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h1 class='fileViewHead'>{{confirmActivateText}}</h1>
+                    </div>
+
+                    <form id='fileDiffFormVGroup'>
+                        <div id="diffOutputVGroup"></div>
+                        <div class="btnDiv">
+                            <button class="btn confirm-bt btn-info" data-toggle="modal"
+                                    data-target="#confirmActivateVGroup" data-dismiss="modal">
+                                {{resource['groups']['groups_groupsResultApp_activatedialog']['激活上线']}}
+                            </button>
+                            <button class="btn btn-warning" data-dismiss="modal">{{resource['groups']['groups_groupsResultApp_activatedialog']['close']}}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmActivateVGroup" role="dialog">
+                <div class="modal-dialog">
+
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">{{resource['groups']['groups_groupsResultApp_activatedialog']['再次确认是否要激活']}}</h4>
+                        </div>
+                        <div class="modal-body">
+                            <span class="warning-important">{{resource['groups']['groups_groupsResultApp_activatedialog']['激活Group会使Group的变动生效。请谨慎激活!']}}</span>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" ng-click="activateVGroup()" data-dismiss="modal">
+                                {{resource['groups']['groups_groupsResultApp_activatedialog']['confirm']}}
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['groups']['groups_groupsResultApp_activatedialog']['close']}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmActivateGroup" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">{{resource['groups']['groups_groupsResultApp_activatedialog']['再次确认是否要激活']}}</h4>
+                        </div>
+                        <div class="modal-body">
+                            <span class="warning-important">{{resource['groups']['groups_groupsResultApp_activatedialog']['激活Group会使Group的变动生效。请谨慎激活!']}}</span>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" ng-click="activateGroup()" data-dismiss="modal">
+                                {{resource['groups']['groups_groupsResultApp_activatedialog']['confirm']}}
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['groups']['groups_groupsResultApp_activatedialog']['close']}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="activateGroupResultConfirmDialog" role="dialog">
+                <div class="modal-dialog">
+
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title"></h4>
+                        </div>
+                        <div class="modal-body">
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" id="closeActivateConfrimBt" data-dismiss="modal">
+                                {{resource['groups']['groups_groupsResultApp_activatedialog']['confirm']}}
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal fade" id="createGroupTagDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">{{resource['groups']['groups_groupsResultApp_createVSTagDialog']['title']}}</h4>
+                        </div>
+                        <div class="modal-body">
+                            <input id="tagNameText" type="text" ng-model="tagName" placeholder="{{resource['groups']['groups_groupsResultApp_createVSTagDialog']['placeholder']}}"
+                                   class="form-control" data-validator-type="validation" data-validator="required">
+                        </div>
+                        <div class="modal-footer">
+
+                            <button type="button" class="btn btn-info" id="addTagBt">{{resource['groups']['groups_groupsResultApp_createVSTagDialog']['ok']}}
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['groups']['groups_groupsResultApp_createVSTagDialog']['close']}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="operationResultModal" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title"></h4>
+                        </div>
+                        <div class="modal-body">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" id="closeNewTagConfrimBt"
+                                    data-dismiss="modal">{{resource['groups']['groups_groupsResultApp_createVSTagDialog']['close']}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="row panel-heading">
+                    <div class="col-md-2">
+                        <h3 class="panel-title">{{resource['groups']['groups_groupsResultApp_list']['title']}}</h3>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="op-tool">
+                            <a class="op-bar" title="{{getGroupsShowMoreTitle()}}"
+                               ng-click="toggleShowMoreGroupsColumns()">
+                                <i ng-class="getGroupsShowMore()"></i>
+                            </a>
+                            <a class="op-bar" title="{{getGroupsOperationTitle()}}"
+                               ng-click="toggleShowGroupsOperations()" ng-disabled="disableOpenGroups()">
+                                <i ng-class="getGroupsShowOperation()"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <div id="toolbar" class="table-toolbar row">
+                        <div class="col-md-10">
+                              <span class="pull-left">
+            Total <b>{{groupsCount}}</b> Groups,
+           <span>{{resource["groups"]["groups_groupsQueryApp_statuses"]["有变更"]}} <a ng-class="countSearchClass(tobeOnline)" ng-click="toggleCountSearch('有变更',tobeOnline)"><b>{{tobeOnline}}</b></a>,</span>
+            <span>{{resource["groups"]["groups_groupsQueryApp_statuses"]["已激活"]}} <a ng-class="countSearchClass(tobeOnline)" ng-click="toggleCountSearch('已激活',online)"><b>{{online}}</b></a>,</span>
+           <span>{{resource["groups"]["groups_groupsQueryApp_statuses"]["未激活"]}} <a ng-class="countSearchClass(tobeOnline)" ng-click="toggleCountSearch('未激活',offline)"><b>{{offline}}</b></a>.</span>
+            <span ng-show="showHealthAndCountSummarize">. Healthy Groups: <b><a
+                    ng-class="countSearchClass(healthStatsticData.healthy)"
+                    ng-click="toggleHealthySearch('healthy',healthStatsticData.healthy)">{{healthStatsticData.healthy}}</a></b>, Unhealthy Groups:<b><a
+                    ng-class="countSearchClass(healthStatsticData.unhealthy)"
+                    ng-click="toggleHealthySearch('unhealthy',healthStatsticData.unhealthy)">{{healthStatsticData.unhealthy}}</a></b>, Broken Groups:<b><a
+                    ng-class="countSearchClass(healthStatsticData.broken)"
+                    ng-click="toggleHealthySearch('broken',healthStatsticData.broken)">{{healthStatsticData.broken}}</a></b>. Contains <b>{{sCount}}</b> Servers,<b>{{mCount}}</b> Members</span>
+        </span>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="pull-right">
+                                <button id="createTag" class="btn btn btn-info" data-toggle="modal"
+                                        data-target="#createGroupTagDialog" ng-show="showAddTagBt()"
+                                        disabled>
+                                    <i class="icon-tag"></i> {{resource['groups']['groups_groupsResultApp_list']['tag']}}
+                                </button>
+                                <button ng-show="showNewGroupBt()" id="createGroup" class="btn btn btn-info">
+                                    <i class="icon-edit"></i> {{resource['groups']['groups_groupsResultApp_list']['new']}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <table id="groups-data-table">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/util.js"></script>
+<script src="/static/js/groups.js"></script>
+</html>

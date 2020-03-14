@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PersonPage</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+</head>
+<body>
+
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li>
+                <a href="{{generateLink('home')}}">
+                    <i class="fa fa-home"></i>
+                    <span class="nav-label">{{resource.userHome.html.title}}</span>
+                </a>
+            </li>
+
+            <li class="active">
+                <a href="{{generateLink('basic')}}"><i
+                        class="ion-ios7-speedometer"></i>
+                    <span class="nav-label">{{resource.userHome.html.headerInfoController.item2}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('policy')}}"><i class="fa fa-map-signs"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item3}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('AB')}}"><i class="fa fa-universal-access"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item4}}</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item6}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('access')}}"><i class="fa fa-user"></i> <span
+                    class="nav-label">{{resource.userHome.html.headerInfoController.item7}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource.userHome.html.title}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin,chinese-name"
+                                 title-field="id,name"
+                                 minlength="0"
+                                 ng-click="clickTarget()"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row breadcrumb-follow" ng-app="breadcrumbFollowApp" ng-controller="defaultController" id="breadcrumbFollowArea" ng-cloak>
+            <div class="col-lg-3 col-sm-6">
+                <div class="widget-panel widget-style-2 white-bg" style="padding: 40px 10px 0px 0px;height: 130px;">
+                    <div class="row">
+                        <div class="col-sm-9">
+                            <div class="row" style="margin-left: 10px;">
+                                <div style="cursor: pointer;" ng-click="navigateTo('activated')"
+                                     class="col-xs-4 text-center">
+                                    <h2 class="m-t-0 m-b-0  "><a class="status-green activate-group-text">0</a></h2>
+
+                                    <div class=" status-green">{{resource.summaryInfoApp.html.token1}}</div>
+                                </div>
+                                <div style="cursor: pointer" ng-click="navigateTo('tobeactivated')"
+                                     class="col-xs-4 text-center">
+                                    <h2 class=" m-b-0 m-t-0  "><a class="status-yellow tobeactivated-group-text">0</a>
+                                    </h2>
+
+                                    <div class="status-yellow">{{resource.summaryInfoApp.html.token2}}</div>
+                                </div>
+                                <div style="cursor: pointer" class="col-xs-4 text-center"
+                                     ng-click="navigateTo('deactivated')">
+                                    <h2 class=" m-b-0 m-t-0  "><a class="status-gray deactivated-group-text">0</a></h2>
+
+                                    <div class="status-gray">{{resource.summaryInfoApp.html.token3}}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="">
+                                <div class="row">
+                                    <div class="col-xs-12 text-center">
+                                        <i class="fa fa-pie-chart text-pink"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="widget-panel widget-style-2 white-bg" style="padding: 40px 10px 0px 0px;height: 130px;">
+                    <div class="row">
+                        <div class="col-sm-9">
+                            <div class="row" style="margin-left: 10px;">
+                                <div style="cursor: pointer;" ng-click="navigateTo('healthy')"
+                                     class="col-xs-4 text-center">
+                                    <h2 class="m-t-0 m-b-0 "><a class="status-green healthy-text">0</a></h2>
+
+                                    <div class="status-green">Healthy</div>
+                                </div>
+                                <div style="cursor: pointer" ng-click="navigateTo('tobeactivated')"
+                                     class="col-xs-4 text-center">
+                                    <h2 class=" m-b-0 m-t-0 "><a class="status-yellow unhealthy-text">0</a></h2>
+
+                                    <div class="status-yellow">Unhealthy</div>
+                                </div>
+                                <div style="cursor: pointer" class="col-xs-4 text-center"
+                                     ng-click="navigateTo('deactivated')">
+                                    <h2 class=" m-b-0 m-t-0 "><a class="status-gray broken-text">0</a></h2>
+
+                                    <div class="status-gray">Broken</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="">
+                                <div class="row">
+                                    <div class="col-xs-12 text-center">
+                                        <i class="fa fa-heartbeat status-yellow"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="widget-panel widget-style-2 white-bg">
+                    <i class="fa fa-line-chart text-info"></i>
+
+                    <div>
+                        <h2 class="m-0 text-center qps-text">
+                            0
+                        </h2>
+
+                        <div class="text-center">QPS</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="widget-panel widget-style-2 white-bg" style="padding: 40px 10px 0px 0px;height: 130px;">
+                    <div class="row">
+                        <div class="col-sm-9">
+                            <div class="row" style="margin-left: 10px;">
+                                <div class="col-xs-3 text-center" 　ng-click="navigateTo('slb')">
+                                    <h2 class="m-t-0 m-b-0"><a class="status-gray my-focus-slb">0</a></h2>
+
+                                    <div>SLBs</div>
+                                </div>
+                                <div style="cursor: pointer" ng-click="navigateTo('vs')" class="col-xs-3 text-center">
+                                    <h2 class=" m-b-0 m-t-0"><a class="status-gray my-focus-vs">0</a></h2>
+
+                                    <div>VSes</div>
+                                </div>
+                                <div class="col-xs-3 text-center" ng-click="navigateTo('app')">
+                                    <h2 class="m-t-0 m-b-0 "><a class="status-gray my-apps-text">0</a></h2>
+
+                                    <div>Apps</div>
+                                </div>
+                                <div style="cursor: pointer" ng-click="navigateTo('group')"
+                                     class="col-xs-3 text-center">
+                                    <h2 class=" m-b-0 m-t-0 "><a class="my-groups-text status-gray">0</a></h2>
+
+                                    <div>Groups</div>
+                                </div>
+                            </div>
+                            <!-- End row -->
+                        </div>
+                        <!-- col-->
+                        <div class="col-sm-3">
+                            <div class="">
+                                <div class="row">
+                                    <div class="col-xs-12 text-center">
+                                        <i class="fa fa-sitemap status-green"></i>
+                                    </div>
+                                </div>
+                                <!-- end row -->
+                            </div>
+                            <!-- weather-widget -->
+                        </div>
+                    </div>
+                </div>
+                <!-- End row -->
+            </div>
+        </div>
+        <div class="" id="self-info-area" ng-app="selfInfoApp"
+             ng-controller="selfInfoController" ng-cloak>
+            <div class="tables">
+                <div class="panel panel-default">
+                    <div class="">
+                        <table class="table table-condensed">
+                            <thead>
+                            <tr>
+                                <th colspan="3"><h3 class="panel-title">{{resource.user.html.msg111}} {{userInfo.name}}</h3></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><b>{{resource.user.html.label1}}</b></td>
+                                <td>
+                                    <a href="/portal/user#?env={{env}}&userId={{userInfo['name']}}" class="ng-binding">
+                                        {{userInfo['chinese-name']}}
+                                    </a></td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource.user.html.label2}}</b></td>
+                                <td class="ng-binding">{{userInfo.employee}}</td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource.user.html.label3}}</b></td>
+                                <td class="ng-binding"><a href="/portal/bu#?env={{env}}&buName={{userInfo.department}}">{{userInfo.department}}</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource.user.html.label4}}</b></td>
+                                <td>
+                                    <a href="" class="ng-binding">
+                                        {{userInfo.mail}}
+                                    </a></td>
+                            </tr>
+                            <tr ng-show="hasApprovalRight()">
+                                <td><b>{{resource.user.html.label5}}</b></td>
+                                <td>
+                                    <a href="/portal/useraccess#?env={{env}}">{{resource.userHome.html.headerInfoController.item7}}</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="panel panel-default" ng-show="userInfo.ownApps.length > 0">
+                    <div class="row panel-heading">
+                        <div class="col-md-3">
+                            <h3 class="panel-title">{{userInfo.name}}{{resource.user.html.label7}}</h3>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getShowMoreTitle('app')}}"
+                                   ng-click="toggleShowMoreColumns('app')">
+                                    <i ng-class="getShowMore('app')"></i>
+                                </a>
+                                <a class="op-bar" title="{{getOperationTitle('app')}}"
+                                   ng-click="toggleShowOperations('app')" ng-disabled="disableOpenPolicy('app')">
+                                    <i ng-class="getShowOperation('app')"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="userInfo-ownApp-toolbar" class="table-toolbar row">
+                            <div class="col-md-10">
+                                {{resource.user.html.msg112}}<b>{{userInfo.ownApps.length}}</b> {{resource.user.html.label8}}
+                            </div>
+                            <div class="col-md-2" ng-show="tableOps.app.showOperations">
+                                <button id="user-focus-own-app" class="btn btn-info"
+                                        ng-click="batchFocusOwnApp()" ng-show="canUserTagging()" disabled>
+                                    {{resource.user.html.label9}}
+                                </button>
+
+                                <button style="margin-left: 5px" id="user-unfocus-own-app" class="btn btn-info"
+                                        ng-click="batchUnFocusOwnApp()"
+                                        ng-show="canUserTagging()" disabled>
+                                    {{resource.userHome.html.modal.msg2}}{{resource.user.html.label9}}
+                                </button>
+                            </div>
+                        </div>
+                        <table id="user-ownApp-table" ng-cloak></table>
+                    </div>
+                </div>
+                <div class="panel panel-default" ng-show="userInfo.ownGroups.length > 0">
+                    <div class="row panel-heading">
+                        <div class="col-md-3">
+                            <h3 class="panel-title">{{userInfo.name}}{{resource.user.html.label12}}</h3>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getShowMoreTitle('group')}}"
+                                   ng-click="toggleShowMoreColumns('group')">
+                                    <i ng-class="getShowMore('group')"></i>
+                                </a>
+                                <a class="op-bar" title="{{getOperationTitle('group')}}"
+                                   ng-click="toggleShowOperations('group')" ng-disabled="disableOpenPolicy('group')">
+                                    <i ng-class="getShowOperation('group')"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="userInfo-ownGroup-toolbar" class="table-toolbar">
+                            <div class="col-md-10">
+                                {{resource.user.html.msg112}} <b>{{userInfo.ownGroups.length}}</b> {{resource.user.html.label13}}
+                            </div>
+                            <div class="col-md-2" ng-show="tableOps.group.showOperations">
+                                <button id="user-focus-own-group" class="btn btn-info"
+                                        ng-click="batchFocusOwnGroup()" ng-show="canUserTagging()" disabled>
+                                    {{resource.user.html.label9}}
+                                </button>
+
+                                <button style="margin-left: 5px" id="user-unfocus-own-group" class="btn btn-info"
+                                        ng-click="batchUnFocusOwnGroup()"
+                                        ng-show="canUserTagging()" disabled>
+                                    {{resource.userHome.html.modal.msg2}}{{resource.user.html.label9}}
+                                </button>
+                            </div>
+                        </div>
+                        <table id="user-ownGroup-table" ng-cloak></table>
+                    </div>
+                </div>
+                <!--User Traffic Policy Area-->
+                <div class="panel panel-default" ng-show="ownedTraffics.length>0">
+                    <div class="row panel-heading">
+                        <div class="col-md-3">
+                            <h3 class="panel-title">{{query.userId}} {{resource.user.html.label14}}</h3>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getShowMoreTitle('policy')}}"
+                                   ng-click="toggleShowMoreColumns('policy')">
+                                    <i ng-class="getShowMore('policy')"></i>
+                                </a>
+                                <a class="op-bar" title="{{getOperationTitle('policy')}}"
+                                   ng-click="toggleShowOperations('policy')" ng-disabled="disableOpenPolicy('policy')">
+                                    <i ng-class="getShowOperation('policy')"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="toolbar" class="table-toolbar row">
+                            <div class="col-md-12">
+                                <div class="col-md-9">
+                                    <span class="traffic-summarizer">{{resource.user.html.msg112}} <b>{{ownedTraffics.length}}</b> {{resource.user.html.label15}}</span>
+                                </div>
+                                <div class="col-md-3" ng-show="tableOps.policy.showOperations">
+                                    <button id="user-own-policy" class="btn btn-info"
+                                            ng-click="batchFocusOwnPolicy()" ng-show="canUserTagging()" disabled>
+                                        {{resource.user.html.label9}}
+                                    </button>
+                                    <button style="margin-left: 5px" id="user-unfocus-own-policy" class="btn btn-info"
+                                            ng-click="batchUnFocusOwnPolicy()"
+                                            ng-show="canUserTagging()" disabled>
+                                        {{resource.userHome.html.modal.msg2}}{{resource.user.html.label9}}
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+                        <table id="owned-traffic-table">
+                        </table>
+                    </div>
+                </div>
+                <div class="panel panel-default" ng-show="focusedTraffics.length>0">
+                    <div class="row panel-heading">
+                        <div class="col-md-3">
+                            <h3 class="panel-title">{{query.userId}} {{resource.user.html.label16}}</h3>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getShowMoreTitle('policy-f')}}"
+                                   ng-click="toggleShowMoreColumns('policy-f')">
+                                    <i ng-class="getShowMore('policy-f')"></i>
+                                </a>
+                                <a class="op-bar" title="{{getOperationTitle('policy-f')}}"
+                                   ng-click="toggleShowOperations('policy-f')" ng-disabled="disableOpen('policy-f')">
+                                    <i ng-class="getShowOperation('policy-f')"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="toolbar2" class="table-toolbar row">
+                            <div class="col-md-12">
+                                <div class="col-md-10">
+<span class="traffic-summarizer">
+            {{resource.user.html.msg112}} <b>{{focusedTraffics.length}}</b> {{resource.user.html.label17}}</b>
+        </span>
+                                </div>
+                                <div class="col-md-2" ng-show="tableOps.policyfocus.showOperations">
+                                    <button id="user-focus-policy" class="btn btn-info"
+                                            ng-click="batchFocusPolicy()" ng-show="canUserTagging()" disabled>
+                                        {{resource.user.html.label9}}
+                                    </button>
+                                    <button style="margin-left: 5px" id="user-unfocus-policy" class="btn btn-info"
+                                            ng-click="batchUnFocusPolicy()"
+                                            ng-show="canUserTagging()" disabled>
+                                        {{resource.userHome.html.modal.msg2}}{{resource.user.html.label9}}
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                        <table id="focused-traffic-table">
+                        </table>
+                    </div>
+                </div>
+
+                <!--User Focused SLB Area-->
+                <div class="panel panel-default"
+                     ng-show="userInfo.focusedSlbs.length > 0">
+                    <div class="row panel-heading">
+                        <div class="col-md-3">
+                            <h3 class="panel-title">{{query.userId}} {{resource.user.html.label18}}</h3>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getShowMoreTitle('slb-f')}}"
+                                   ng-click="toggleShowMoreColumns('slb-f')">
+                                    <i ng-class="getShowMore('slb-f')"></i>
+                                </a>
+                                <a class="op-bar" title="{{getOperationTitle('slb-f')}}"
+                                   ng-click="toggleShowOperations('slb-f')" ng-disabled="disableOpenPolicy('slb-f')">
+                                    <i ng-class="getShowOperation('slb-f')"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="userInfo-focusSlb-toolbar" class="custom-toolbar table-toolbar row"
+                             ng-show="userInfo.focusedSlbs.length > 0" ng-cloak>
+                            <div class="col-md-10">
+                                <span>{{resource.user.html.msg112}}<b>{{userInfo.focusedSlbs.length}} </b>{{resource.user.html.label19}}</span>
+                            </div>
+                            <div class="col-md-2" ng-show="tableOps.slbfocus.showOperations">
+                                <button id="user-focus-slb" class="btn btn-info"
+                                        ng-click="batchFocusSlbs()" ng-show="canUserTagging()" disabled>
+                                    {{resource.user.html.label9}}
+                                </button>
+
+                                <button style="margin-left: 5px" id="user-unfocus-slb" class="btn btn-info"
+                                        ng-click="batchUnFocusSlbs()"
+                                        ng-show="canUserTagging()" disabled>
+                                    {{resource.userHome.html.modal.msg2}}{{resource.user.html.label9}}
+                                </button>
+                            </div>
+                        </div>
+                        <table id="user-focusSlb-table" ng-show="userInfo.focusedSlbs.length > 0" ng-cloak></table>
+                    </div>
+                </div>
+
+                <!--User Focused VS Area-->
+                <div class="panel panel-default"
+                     ng-show="userInfo.focusedVses.length > 0">
+                    <div class="row panel-heading">
+                        <div class="col-md-3">
+                            <h3 class="panel-title">{{resource.user.html.label21}}</h3>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getShowMoreTitle('vs-f')}}"
+                                   ng-click="toggleShowMoreColumns('vs-f')">
+                                    <i ng-class="getShowMore('vs-f')"></i>
+                                </a>
+                                <a class="op-bar" title="{{getOperationTitle('vs-f')}}"
+                                   ng-click="toggleShowOperations('vs-f')" ng-disabled="disableOpenPolicy('vs-f')">
+                                    <i ng-class="getShowOperation('vs-f')"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="userInfo-focusVs-toolbar" class="custom-toolbar table-toolbar row"
+                             ng-show="userInfo.focusedVses.length > 0" ng-cloak>
+                            <div class="col-md-10">
+                                {{resource.user.html.msg112}} <b>{{userInfo.focusedVses.length}} </b>{{resource.user.html.label22}}
+                            </div>
+                            <div class="col-md-2" ng-show="tableOps.vsfocus.showOperations">
+                                <button id="user-focus-vs" class="btn btn-info"
+                                        ng-click="batchFocusVs()" ng-show="canUserTagging()" disabled>
+                                    {{resource.user.html.label9}}
+                                </button>
+
+                                <button style="margin-left: 5px" id="user-unfocus-vs" class="btn btn-info"
+                                        ng-click="batchUnFocusVs()"
+                                        ng-show="canUserTagging()" disabled>
+                                    {{resource.userHome.html.modal.msg2}}{{resource.user.html.label9}}
+                                </button>
+
+                            </div>
+                        </div>
+                        <table id="user-focusVs-table" ng-show="userInfo.focusedVses.length > 0" ng-cloak></table>
+                    </div>
+                </div>
+
+                <!--User Focused Group Area-->
+                <div class="panel panel-default"
+                     ng-show="userInfo.focusedGroups.length > 0">
+                    <div class="row panel-heading">
+                        <div class="col-md-3">
+                            <h3 class="panel-title">{{userInfo.name}}{{resource.user.html.label23}}</h3>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getShowMoreTitle('group-f')}}"
+                                   ng-click="toggleShowMoreColumns('group-f')">
+                                    <i ng-class="getShowMore('group-f')"></i>
+                                </a>
+                                <a class="op-bar" title="{{getOperationTitle('group-f')}}"
+                                   ng-click="toggleShowOperations('group-f')"
+                                   ng-disabled="disableOpenPolicy('group-f')">
+                                    <i ng-class="getShowOperation('group-f')"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="userInfo-focusGroup-toolbar" class="row table-toolbar"
+                             ng-show="userInfo.focusedGroups.length > 0">
+                            <div class="col-md-10">
+                                {{resource.user.html.msg112}} <b>{{userInfo.focusedGroups.length}}</b> {{resource.user.html.label13}}
+                            </div>
+                            <div class="col-md-2" ng-show="tableOps.groupfocus.showOperations">
+                                <button id="user-focus-group" class="btn btn-info"
+                                        ng-click="batchFocusGroup()" ng-show="canUserTagging()" disabled>
+                                    {{resource.user.html.label9}}
+                                </button>
+
+                                <button style="margin-left: 5px" id="user-unfocus-group" class="btn btn-info"
+                                        ng-click="batchUnFocusGroup()"
+                                        ng-show="canUserTagging()" disabled>
+                                    {{resource.userHome.html.modal.msg2}}{{resource.user.html.label9}}
+                                </button>
+                            </div>
+                        </div>
+                        <table id="user-focusGroup-table" ng-show="userInfo.focusedGroups.length > 0"></table>
+                    </div>
+                </div>
+
+                <!--User Focused App Area-->
+                <div class="panel panel-default"
+                     ng-show="userInfo.focusedApps.length > 0">
+                    <div class="row panel-heading">
+                        <div class="col-md-3">
+                            <h3 class="panel-title">{{userInfo.name}}{{resource.user.html.label24}}</h3>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getShowMoreTitle('app-f')}}"
+                                   ng-click="toggleShowMoreColumns('app-f')">
+                                    <i ng-class="getShowMore('app-f')"></i>
+                                </a>
+                                <a class="op-bar" title="{{getOperationTitle('app-f')}}"
+                                   ng-click="toggleShowOperations('app-f')" ng-disabled="disableOpenPolicy('app-f')">
+                                    <i ng-class="getShowOperation('app-f')"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div id="userInfo-focusApp-toolbar" class=" table-toolbar row"
+                             ng-show="userInfo.focusedApps.length > 0">
+                            <div class="col-md-10">
+                                {{resource.user.html.msg112}} <b>{{userInfo.focusedApps.length}} </b>{{resource.user.html.label8}}
+                            </div>
+                            <div class="col-md-2" ng-show="tableOps.appfocus.showOperations">
+                                <button id="user-focus-app" class="btn btn-info"
+                                        ng-click="batchFocusFocusApp()" ng-show="canUserTagging()" disabled>
+                                    {{resource.user.html.label9}}
+                                </button>
+
+                                <button style="margin-left: 5px" id="user-unfocus-app" class="btn btn-info"
+                                        ng-click="batchUnFocusFocusApp()"
+                                        ng-show="canUserTagging()" disabled>
+                                    {{resource.userHome.html.modal.msg2}}{{resource.user.html.label9}}
+                                </button>
+                            </div>
+                        </div>
+                        <table id="user-focusApp-table" ng-show="userInfo.focusedApps.length > 0"></table>
+                    </div>
+                </div>
+            </div>
+            <div class="modals">
+                <div id="diffModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm'>
+                            <div id="diffOutput"></div>
+                            <div class="btnDiv">
+                                <button ng-show="ownGroup" class="btn btn-info confirmActivateGroup">{{resource.user.html.label26}}</button>
+                                <button ng-show="ownGroup" class="btn btn-warning" data-dismiss="modal">{{resource.userHome.html.modal.msg2}}</button>
+
+                                <button ng-show="!ownGroup" class="btn btn-info" data-dismiss="modal">{{resource.userHome.html.modal.msg1}}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal fade" id="confirmActivateGroup" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.user.html.label27}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <span class="warning-important">{{resource.user.html.label28}}</span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="activateGroup()"
+                                        data-dismiss="modal">{{resource.userHome.html.modal.msg1}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource.userHome.html.modal.msg2}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="unFocusDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="">{{resource.userHome.html.modal.msg1}}{{resource.userHome.html.modal.msg2}}{{resource.user.html.label9}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="modal-title"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="unFocusOperation(unFocusType, unFocusIds)" type="button"
+                                        class="btn btn-info">{{resource.userHome.html.modal.msg1}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource.userHome.html.modal.msg2}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="focusDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="">{{resource.userHome.html.modal.msg1}}{{resource.user.html.label9}}</h4>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="modal-title"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="focusOperation(focusType, focusIds)" type="button"
+                                        class="btn btn-info">{{resource.userHome.html.modal.msg1}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource.userHome.html.modal.msg2}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="operationConfrimModel" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource.user.html.label31}}</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" id="closeProgressWindowBt"
+                                        data-dismiss="modal">{{resource.userHome.html.modal.msg1}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">{{resource.footApp.body}}
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text" placeholder="{{resource.questionModal.token2}}"></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">{{resource.userHome.html.modal.msg1}}</button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">{{resource.userHome.html.modal.msg2}}</button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+
+<script src="/statics/js/services/esService.js"></script>
+<script src="/statics/js/apps/userApp.js"></script>
+
+<script src="/static/js/user.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+</html>

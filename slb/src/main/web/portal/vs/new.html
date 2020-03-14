@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VS Create</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/group-edit.css">
+
+</head>
+
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+<aside class="left-panel-half " style="overflow: hidden; outline: none;">
+
+</aside>
+<section class="middle-content">
+    <div class="wraper container-fluid">
+        <div class="row breadcrumb-container" id="breadcrumb-area" ng-app="breadCrumbApp"
+             ng-controller="breadCrumbController" ng-cloak>
+            <ul class="breadcrumb">
+                <li>
+                    <i class="icon-home"></i>
+                    {{resource['bread']['home']}}
+                </li>
+                <li ng-repeat="x in breadlist" ng-cloak>
+                    {{x}}
+                </li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="wraper container-fluid">
+                <!-- Basic Form Wizard -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default" id="inputarea">
+
+                            <div class="panel-body">
+                                <div class="container" id="vs-edit-dropdown-area" ng-app="vsEditDropdownApp"
+                                     ng-controller="vsEditDropdownController">
+                                    <div class="pull-left">
+                                        <button class="btn btn-info" data-toggle="modal" ng-click="cloneVsClick()">
+                                            {{resource['vsnew']['vsnew_vsEditDropdownApp_clone']}}
+                                        </button>
+                                    </div>
+
+                                    <div class="modal fade" id="cloneVSModal" role="dialog">
+                                        <div class="modal-dialog">
+
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title"> {{resource['vsnew']['vsnew_vsEditDropdownApp_vsid']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div angucomplete-alt id="targetSelector"
+                                                         class="target-selector auto-target-selector"
+                                                         placeholder="{{target.name}}"
+                                                         pause="100"
+                                                         selected-object="selectTarget"
+                                                         remote-url="{{remoteUrl()}}"
+                                                         remote-url-request-formatter="cacheRequestFn"
+                                                         search-fields="id,name"
+                                                         title-field="id,name"
+                                                         minlength="0"
+                                                         match-class="highlight"
+                                                         input-class="form-control form-control-small">
+                                                    </div>
+                                                    <div class="hidden selected-target-id">{{target.id}}</div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info" data-dismiss="modal"
+                                                            ng-click="saveTargetVs()">{{resource['vsnew']['vsnew_vsEditDropdownApp_ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal"
+                                                            ng-click="cancelClone()">{{resource['vsnew']['vsnew_vsEditDropdownApp_close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="container vs-edit-container main-container" id="vs-edit-area"
+                                     ng-app="vsEditApp" ng-controller="vsEditController">
+                                    <form class="form-horizontal" role="form" id="newVSForm">
+                                        <div class="alert alert-info" data-class="body-alert">
+                                            <b>{{resource['vsnew']['vsnew_vsEditApp_tooltip']}}</b>
+                                        </div>
+                                        <div class="container query-container edit-container">
+                                            <div class="form-group">
+                                                <div class="col-md-2"><label class="control-label">ID:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="vs-id"
+                                                           ng-model="vsInfo.id" placeholder="{{resource['vsnew']['vsnew_vsEditApp_id_placeholder']}}" disabled>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="col-md-2"><label class="control-label">{{resource['vsnew']['vsnew_vsEditApp_name']}}:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="vs-name"
+                                                           ng-model="view.targetVs.name"
+                                                           placeholder="{{resource['vsnew']['vsnew_vsEditApp_name_placeholder']}}">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="col-md-2"><label class="control-label">{{resource['vsnew']['vsnew_vsEditApp_ssl']}}:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <div class="i-checkbox">
+                                                        <label>
+                                                            <input type="checkbox" id="vs-ssl"
+                                                                   ng-model="view.targetVs.ssl"
+                                                                   ng-change="changeVsName()"/>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="col-md-2"><label class="control-label">{{resource['vsnew']['vsnew_vsEditApp_port']}}:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" id="vs-port"
+                                                           ng-model="view.targetVs.port"
+                                                           placeholder="{{resource['vsnew']['vsnew_vsEditApp_port_placeholder']}}" disabled>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="col-md-2"><label class="control-label">{{resource['vsnew']['vsnew_vsEditApp_slbs']}}:</label></div>
+
+                                                <div class="col-sm-10">
+                                                    <div class="slb-list-tool" style="margin-bottom: 7px">
+                                                        <button title="" data-toggle="tooltip" type="button"
+                                                                class="btn btn-info" aria-label="Left Align"
+                                                                ng-click="popNewSLB()">
+                                                            <span class="fa fa-plus"></span>
+                                                        </button>
+                                                        <button title="" data-toggle="tooltip"
+                                                                ng-click="popDeleteSLB()" id="vs-batch-delete-slb-bt"
+                                                                class="btn"
+                                                                disabled>
+                                                            <span class="fa fa-minus"></span>
+                                                        </button>
+                                                    </div>
+                                                    <table id="vs-target-slbs-table"></table>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="col-md-2"><label class="control-label">{{resource['vsnew']['vsnew_vsEditApp_domains']}}:</label>
+                                                </div>
+
+                                                <div class="col-sm-10">
+                                                    <table class="table table-bordered table-striped ng-scope ng-table">
+                                                        <col/>
+                                                        <col width="150px"/>
+                                                        <tr>
+                                                            <th>{{resource['vsnew']['vsnew_vsEditApp_domainname']}}</th>
+                                                            <th style="text-align: center">{{resource['vsnew']['vsnew_vsEditApp_operation']}}</th>
+                                                        </tr>
+                                                        <tr ng-repeat="col in domainsTable.columns">
+                                                            <td>
+                                                                <input class="form-control" ng-model="col.name"
+                                                                       name="domains" data-validator-type="validation"
+                                                                       data-validator="required"
+                                                                       id="vs-domain{{$index}}"
+                                                                       ng-change="changeVsName()"/>
+                                                            </td>
+                                                            <td style="text-align: center">
+                                                                <button id="removeDomain" class="btn"
+                                                                        ng-click="domainsTable.remove($index)"
+                                                                        ng-hide="$index == 0 && domainsTable.columns.length == 1">
+                                                                    <i class="fa fa-minus"></i></button>
+                                                                <button id="addDomain" class="btn btn-info"
+                                                                        ng-click="domainsTable.add()"
+                                                                        ng-show="$index == domainsTable.columns.length -1">
+                                                                    <i class="fa fa-plus"></i></button>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        <div class="form-group button-group">
+                                            <div class="col-sm-12">
+                                                <button type="button" class="btn btn-warning"
+                                                        ng-click="clearVSInfo('new')">{{resource['vsnew']['vsnew_vsEditApp_reset']}}
+                                                </button>
+                                                <button type="submit" class="btn btn-info" id="validateAddVSBtn">{{resource['vsnew']['vsnew_vsEditApp_submite']}}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </form>
+
+                                    <div class="modal fade" id="confirmAddVS" role="dialog">
+                                        <div class="modal-dialog">
+
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title"><i class="fa fa-lightbulb-o">{{resource['vsnew']['vsnew_vsEditApp_confirmAddVS']['title']}}</i></h4>
+                                                </div>
+
+                                                <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.reason"
+                                                               placeholder="{{resource['vsnew']['vsnew_vsEditApp_confirmAddVS']['reason']}}"></textarea>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button ng-disabled="!query.reason" type="button" class="btn btn-info" ng-click="newVS()">{{resource['vsnew']['vsnew_vsEditApp_confirmAddVS']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['vsnew']['vsnew_vsEditApp_confirmAddVS']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="operationConfrimModel" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title"> {{resource['vsnew']['vsnew_vsEditApp_operationConfrimModel']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                </div>
+                                                <span class="timerspan"></span>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info closeProgressWindowBt"
+                                                            data-dismiss="modal">{{resource['vsnew']['vsnew_vsEditApp_operationConfrimModel']['ok']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="addNewSlbDialog" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['vsnew']['vsnew_vsEditApp_addNewSlbDialog']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div angucomplete-alt id="slbIdSelector"
+                                                         pause="100"
+                                                         placeholder="{{vsInfo['slb-id']}}"
+                                                         selected-object="selectSlbId"
+                                                         remote-url="{{remoteSLBsUrl()}}"
+                                                         remote-url-request-formatter="cacheRequestFn"
+                                                         search-fields="id"
+                                                         title-field="id"
+                                                         description-field="name"
+                                                         minlength="0"
+                                                         match-class="highlight"
+                                                         input-class="form-control form-control-small">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="addNewSlbToVs()">{{resource['vsnew']['vsnew_vsEditApp_addNewSlbDialog']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['vsnew']['vsnew_vsEditApp_addNewSlbDialog']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="updateSlbDialog" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['vsnew']['vsnew_vsEditApp_addNewSlbDialog']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div angucomplete-alt id="slbIdSelector2"
+                                                         pause="100"
+                                                         placeholder="{{vsInfo['slb-id']}}"
+                                                         selected-object="selectSlbId"
+                                                         remote-url="{{remoteSLBsUrl()}}"
+                                                         remote-url-request-formatter="cacheRequestFn"
+                                                         search-fields="id"
+                                                         title-field="id"
+                                                         description-field="name"
+                                                         minlength="0"
+                                                         match-class="highlight"
+                                                         input-class="form-control form-control-small">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="updateSlbForVs()">{{resource['vsnew']['vsnew_vsEditApp_addNewSlbDialog']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['vsnew']['vsnew_vsEditApp_addNewSlbDialog']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="removeSlbConfirmdialog" role="dialog">
+                                        <div class="modal-dialog">
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['vsnew']['vsnew_vsEditApp_removeSlbConfirmdialog']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="alert alert-warning">{{resource['vsnew']['vsnew_vsEditApp_removeSlbConfirmdialog']['tooltip']}}
+                                                    </div>
+                                                    <table class="table table-bordered table-striped">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>SlbId</th>
+                                                            <th>Slb Name</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody class="to-be-removed-slbs">
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info" data-dismiss="modal"
+                                                            data-toggle="modal"
+                                                            data-target="#doubleConfirmRemoveSlbModal">{{resource['vsnew']['vsnew_vsEditApp_removeSlbConfirmdialog']['ok']}}
+                                                        <button type="button" class="btn btn-warning"
+                                                                data-dismiss="modal">{{resource['vsnew']['vsnew_vsEditApp_removeSlbConfirmdialog']['close']}}
+                                                        </button>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="doubleConfirmRemoveSlbModal" role="dialog">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{resource['vsnew']['vsnew_vsEditApp_doubleConfirmRemoveSlbModal']['title']}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="warning-important">{{resource['vsnew']['vsnew_vsEditApp_doubleConfirmRemoveSlbModal']['tooltip']}}?</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info"
+                                                            ng-click="confirmRemoveSlb()" data-dismiss="modal"
+                                                            data-target="#newVsResponseResult">{{resource['vsnew']['vsnew_vsEditApp_doubleConfirmRemoveSlbModal']['ok']}}
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                                        {{resource['vsnew']['vsnew_vsEditApp_doubleConfirmRemoveSlbModal']['close']}}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="newVsDialog" role="dialog">
+                                        <div class="modal-dialog">
+
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{{newVsResponseResult}}</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>{{newVsResponseInfo}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid page-foot" id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/vs-edit.js"></script>
+</html>

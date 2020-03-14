@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Role信息</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/user-edit.css">
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class=""><a href="{{generateLink('user')}}"><i
+                    class="fa fa-user"></i>
+                <span class="nav-label">用户管理</span></a></li>
+            <li class="active"><a href="{{generateLink('role')}}"><i class="fa fa-group"></i> <span
+                    class="">角色管理</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('access')}}"><i class="fa fa-sign-in"></i> <span
+                    class="">权限审批</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<section class="content">
+    <div class="wraper container-fluid">
+        <!--Breadcrumb Area-->
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 ng-click="clickTarget()"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id,name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wraper breadcrumb-follow info-container" id="role-info-area" ng-app="roleEditInfoApp"
+             ng-controller="roleEditInfoController">
+            <!---SLB Rows-->
+            <div class="modal fade" id="newSlbDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的SLB</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="roles-selection">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        SLB:
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="slbIdSelector"
+                                             placeholder="请输入SLB Id..."
+                                             pause="100"
+                                             selected-object="selectSlbId"
+                                             remote-url="{{remoteSLBsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="selectslball">All: <input class="check-all-slbs-bt" type="checkbox"
+                                                                              ng-click="checkAllSlbs()"/></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 add-slb-alert"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="role-selector-toolbar" class="table-toolbar">
+                                            <span>请选择你要开通的权限</span> <span class="add-slb-auth-alert"></span>
+                                        </div>
+                                        <table id="role-selector-table">
+
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewSlbClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal fade" id="confirmRemoveSlbsDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除Slbs</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        Slb 关联删除后，该用户对这些SLB的操作权限将被回收。
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-slbs">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveSlbs" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveSlbs" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 SLB
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveSlb()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!---VS Rows-->
+            <div class="modal fade" id="newVSDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的VS</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class=" roles-selection">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        VS:
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div angucomplete-alt id="vsIdSelector"
+                                             placeholder="请输入VS Id..."
+                                             pause="100"
+                                             selected-object="selectVSId"
+                                             remote-url="{{remoteVSUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="selectslball">All: <input class="check-all-vses-bt" type="checkbox"
+                                                                              ng-click="checkAllVses()"/></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 add-vs-alert"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="vs-role-selector-toolbar" class="table-toolbar">
+                                            <span>请选择你要开通的权限</span> <span class="add-vs-auth-alert"></span>
+                                        </div>
+                                        <table id="vs-role-selector-table">
+
+                                        </table>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewVSClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal fade" id="confirmRemoveVSDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除VS</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        VS 关联删除后，该用户对这些VS的操作权限将被回收。
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-vses">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveVS" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveVS" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 VS
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveVS()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!---Group Rows-->
+            <div class="modal fade" id="newGroupDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的Group</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class=" roles-selection">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        GROUP:
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div angucomplete-alt id="groupIdSelector"
+                                             placeholder="请输入Group Id..."
+                                             pause="100"
+                                             selected-object="selectGroupId"
+                                             remote-url="{{remoteGroupsUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="selectslball">All: <input class="check-all-groups-bt"
+                                                                              type="checkbox"
+                                                                              ng-click="checkAllGroups()"/></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 add-group-alert"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="group-role-selector-toolbar" class="table-toolbar">
+                                            <span>请选择你要开通的权限</span> <span class="add-group-auth-alert"></span>
+                                        </div>
+                                        <table id="group-role-selector-table">
+
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewGroupClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmRemoveGroupDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除Group</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        Group 关联删除后，该用户对这些GROUP的操作权限将被回收。
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-groups">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveGroup" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmRemovePolicyDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除Group</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        Traffic Policy 关联删除后，该用户对这些GROUP的操作权限将被回收。
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-policy">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemovePolicy" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveGroup" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 Group
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveGroup()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemovePolicy" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 Traffic Policy
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemovePolicy()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!---Auth Rows-->
+            <div class="modal fade" id="newAuthDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的AUTH</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class=" roles-selection">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        AUTH:
+                                    </div>
+                                    <div class="col-md-11">
+                                        <input type="text" ng-model="query.auth.id" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 add-auth-alert"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="auth-role-selector-toolbar" class="table-toolbar">
+                                            <span>请选择你要开通的权限</span> <span class="add-auth-auth-alert"></span>
+                                        </div>
+                                        <table id="auth-role-selector-table">
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewAuthClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmRemoveAuthDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除Auth权限</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        Auth 关联删除后，该Role 将不会有赋予他人权限的能力
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-auths">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveAuth" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveAuth" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 Auth权限
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveAuth()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!---Clean Rows-->
+            <div class="modal fade" id="newCleanDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的Clean</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class=" roles-selection">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        Clean Id:
+                                    </div>
+                                    <div class="col-md-10">
+                                        <input type="text" ng-model="query.clean.id" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 add-clean-alert"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="clean-role-selector-toolbar" class="table-toolbar">
+                                            <span>请选择你要开通的权限</span> <span class="add-clean-auth-alert"></span>
+                                        </div>
+                                        <table id="clean-role-selector-table">
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewCleanClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmRemoveCleanDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除Clean权限</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        Clean 关联删除后，该Role 将不会有Clean能力
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-cleans">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveClean" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveClean" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 Clean权限
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveClean()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!---Sync Rows-->
+            <div class="modal fade" id="newSyncDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的SyncError</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class=" roles-selection">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        Sync Id:
+                                    </div>
+                                    <div class="col-md-10">
+                                        <input type="text" ng-model="query.sync.id" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 add-sync-alert"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="sync-role-selector-toolbar" class="table-toolbar">
+                                            <span>请选择你要开通的权限</span> <span class="add-sync-auth-alert"></span>
+                                        </div>
+                                        <table id="sync-role-selector-table">
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewSyncClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmRemoveSyncDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除Sync权限</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        Sync 关联删除后，该Role 将不会有Sync CMS能力
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-syncs">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveSync" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveSync" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 Sync Error 权限
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveSync()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!---IP Rows-->
+            <div class="modal fade" id="newIpDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的Server Ip</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class=" roles-selection">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        IP/Subnet
+                                    </div>
+                                    <div class="col-md-10">
+                                        <input type="text" ng-model="query.ip.id" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 add-ip-alert"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="ip-role-selector-toolbar" class="table-toolbar">
+                                            <span>请选择你要开通的权限</span> <span class="add-ip-auth-alert"></span>
+                                        </div>
+                                        <table id="ip-role-selector-table">
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewIpClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmRemoveIpDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除IP权限</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        IP/Subnet 关联删除后，该Role 将不会有改网段的Server操作权限
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>IP</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-ips">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveIp" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveIp" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 IP/Subnet 的Server权限
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveIp()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!---Traffic Policy Rows-->
+            <div class="modal fade" id="newPolicyDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的 Traffic Policy</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class=" roles-selection">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        Ploicy ID:
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div angucomplete-alt id="policyIdSelector"
+                                             placeholder="请输入Policy Id..."
+                                             pause="100"
+                                             selected-object="selectPolicyId"
+                                             remote-url="{{remotePolicyUrl()}}"
+                                             remote-url-request-formatter="cacheRequestFn"
+                                             search-fields="id,name"
+                                             title-field="id"
+                                             description-field="name"
+                                             minlength="0"
+                                             match-class="highlight"
+                                             input-class="form-control form-control-small">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="selectslball">All: <input class="check-all-policy-bt"
+                                                                              type="checkbox"
+                                                                              ng-click="checkAllPloicy()"/></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="policy-role-selector-toolbar" class="table-toolbar">
+                                            <div class="pull-left">
+                                                请选择你要开通的权限<p class="add-policy-alert"></p>
+
+                                                <p class="add-policy-auth-alert"></p>
+                                            </div>
+                                        </div>
+                                        <table id="policy-role-selector-table">
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewPolicyClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!---CONF Rows-->
+            <div class="modal fade" id="newConfDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的 Conf</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class=" roles-selection">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        Conf Id:
+                                    </div>
+                                    <div class="col-md-10">
+                                        <input type="text" ng-model="query.conf.id" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 add-conf-alert"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="conf-role-selector-toolbar" class="table-toolbar">
+                                            <span>请选择你要开通的权限</span> <span class="add-conf-auth-alert"></span>
+                                        </div>
+                                        <table id="conf-role-selector-table">
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewConfClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmRemoveConfDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除Conf权限</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        Conf 关联删除后，该Role 将不会有Conf 查看功能
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-confs">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveConf" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveConf" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 Conf 权限
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveConf()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!---LOCK Rows-->
+            <div class="modal fade" id="newLockDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">关联新的 Lock</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class=" roles-selection">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        Lock ID：
+                                    </div>
+                                    <div class="col-md-10">
+                                        <input type="text" ng-model="query.lock.id" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 add-lock-alert"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="lock-role-selector-toolbar" class="table-toolbar">
+                                            <span>请选择你要开通的权限</span> <span class="add-lock-auth-alert"></span>
+                                        </div>
+                                        <table id="lock-role-selector-table">
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info " ng-click="saveNewLockClick()">提交
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="confirmRemoveLockDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除Lock权限</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        Lock 关联删除后，该Role的用户将无法同步锁
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Lock ID</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-locks">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveLock" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveLock" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 Lock 权限
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveLock()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!--Remve Role Rows-->
+            <div class="modal fade" id="confirmRemoveRoleDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">确认删除Role</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <h4>注意</h4>
+                                <ul class="operation-warnning-ul">
+                                    <li>
+                                        Role删除后 将无法回退
+                                    </li>
+                                </ul>
+                            </div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                </tr>
+                                </thead>
+                                <tbody class="to-be-removed-roles">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-info" data-toggle="modal"
+                                    data-target="#doubleConfirmRemoveRole" data-dismiss="modal">确定
+                            </button>
+                            <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="doubleConfirmRemoveRole" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">再次确认</h4>
+                        </div>
+                        <div class="modal-body">
+                            请再次确认删除相应 Role
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info confirmRemoveRoleBt"
+                                    ng-click="confirmRemoveRole()" data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal fade" id="operationResultDialog" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">进度</h4>
+                        </div>
+                        <div class="modal-body">
+
+                        </div>
+                        <div class="created-group-id" hidden="hidden"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default btn-info closeProgressWindowBt"
+                                    data-dismiss="modal">确定
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!--Role Basic-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <table class="table table-condensed">
+                                <thead>
+                                <tr>
+                                    <th colspan="2">
+                                        <div class="pull-left">
+                                            <a class="btn btn-danger deleteGroup" role="button" data-toggle="modal"
+                                               ng-click="popRemoveRoleDialog()" ng-show="showDeleteBt()">删除</a>
+                                            <a class="btn btn-info" href="#"
+                                               role="button" ng-show="showCloneBt()">Clone</a>
+                                        </div>
+                                        <div class="pull-right">
+                                            <span ng-class="getOptionPanelCss()">&nbsp;&nbsp;<a
+                                                    ng-click="toggleOptionPanel()">{{getOptionPanelText()}}</a></span>
+                                        </div>
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td class="model-basic-info"><b>Role Name:</b></td>
+                                    <td>
+                                        <a href="#" class="ng-binding">
+                                            {{role['role-name']}}
+                                        </a></td>
+                                </tr>
+                                <tr>
+                                    <td><b>Description:</b></td>
+                                    <td>{{role['discription']}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--SLBs-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                有权限的SLB
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-slb-toolbar" class="row table-toolbar ">
+                                <div class="col-md-10">
+                                    当前Role有权限的SLBs:
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group pull-right">
+                                        <button ng-show="showAddSlbBt()" ng-click="addNewSlbClick()"
+                                                class="btn btn-info" aria-label="Left Align" title="添加SLB"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-slbs" ng-show="showRemoveSlbBt()"
+                                                ng-click="batchRemoveSlbClick()" class="btn btn-info" title="删除slb"
+                                                disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="slb-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Vses-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                有权限的 Virtual Servers
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-vs-toolbar" class="row table-toolbar ">
+                                <div class="col-md-10">
+                                    当前Role有权限的VSes:
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group pull-right">
+                                        <button ng-show="showAddVsBt()" ng-click="addNewVsClick()" class="btn btn-info"
+                                                aria-label="Left Align" title="添加VS"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-veses" ng-show="showRemoveVsBt()"
+                                                ng-click="batchRemoveVsClick()" class="btn btn-info" title="删除VS"
+                                                disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="vs-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Groups-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                有权限的 Groups
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-group-toolbar" class="table-toolbar row">
+                                <div class="col-md-10">当前Role有权限的Groups</div>
+                                <div class="col-md-2">
+                                    <div class="pull-right form-group">
+                                        <button ng-click="addNewGroupClick()" ng-show="showAddGroupBt()"
+                                                class="btn btn-info" aria-label="Left Align" title="添加Group"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-groups" ng-show="showRemoveGroupBt()"
+                                                ng-click="batchRemoveGroupClick()" class="btn btn-info" title="删除Group"
+                                                disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="group-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Traffic Policy-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                有权限的 Traffic Policy
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-policy-toolbar" class="table-toolbar row">
+                                <div class="col-md-10">当前Role有权限的 Traffic Policies</div>
+                                <div class="col-md-2">
+                                    <div class="pull-right form-group">
+                                        <button ng-click="addNewPolicyClick()" ng-show="showAddPolicyBt()"
+                                                class="btn btn-info" aria-label="Left Align" title="添加Policy"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-policy" ng-show="showRemovePolicyBt()"
+                                                ng-click="batchRemovePolicyClick()" class="btn btn-info"
+                                                title="删除 Policy" disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="policy-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Auths-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                Auth 权限
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-auth-toolbar" class="table-toolbar row">
+                                <div class="col-md-10">当前Role的Auth权限</div>
+                                <div class="col-md-2">
+                                    <div class="pull-right">
+                                        <button ng-click="addNewAuthClick()" ng-show="showAddAuthBt()"
+                                                class="btn btn-info" aria-label="Left Align" title="添加Auth"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-auth" ng-show="showRemoveAuthBt()"
+                                                ng-click="batchRemoveAuthClick()" class="btn btn-info" title="删除Auth"
+                                                disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="auth-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Cleans-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                Clean 权限
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-clean-toolbar" class="table-toolbar row">
+                                <div class="col-md-10">当前Role的Clean权限</div>
+                                <div class="col-md-2">
+                                    <div class="form-group pull-right">
+                                        <button ng-click="addNewCleanClick()" ng-show="showAddCleanBt()"
+                                                class="btn btn-info" aria-label="Left Align" title="添加Clean权限"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-clean" ng-show="showRemoveCleanBt()"
+                                                ng-click="batchRemoveCleanClick()" class="btn btn-info" title="删除Clean"
+                                                disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="clean-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Confs-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                Conf 权限
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-conf-toolbar" class="table-toolbar row">
+
+                                <div class="col-md-10">当前Role的Conf权限</div>
+                                <div class="col-md-2">
+                                    <div class="form-group pull-right">
+                                        <button ng-click="addNewConfClick()" ng-show="showAddConfBt()"
+                                                class="btn btn-info" aria-label="Left Align" title="添加Conf权限"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-conf" ng-show="showRemoveConfBt()"
+                                                ng-click="batchRemoveConfClick()" class="btn btn-info" title="删除Conf"
+                                                disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <table id="conf-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Syncs-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                Sync Error 权限
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-sync-toolbar" class="table-toolbar row">
+                                <div class="col-md-10">当前Role的SyncError权限</div>
+                                <div class="col-md-2">
+                                    <div class="form-group pull-right">
+                                        <button ng-click="addNewSyncClick()" ng-show="showAddSyncBt()"
+                                                class="btn btn-info" aria-label="Left Align" title="添加SyncError权限"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-sync" ng-show="showRemoveSyncBt()"
+                                                ng-click="batchRemoveSyncClick()" class="btn btn-info" title="删除Sync"
+                                                disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="sync-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Locks-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                Lock 权限
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-lock-toolbar" class="table-toolbar row">
+                                <div class="col-md-10">当前Role的Lock权限</div>
+                                <div class="col-md-2">
+                                    <div class="form-group pull-right">
+                                        <button ng-click="addNewLockClick()" ng-show="showAddLockBt()"
+                                                class="btn btn-info" aria-label="Left Align" title="添加Lock"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-lock" ng-show="showRemoveLockBt()"
+                                                ng-click="batchRemoveLockClick()" class="btn btn-info" title="删除Lock"
+                                                disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="lock-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Server Ip-->
+            <div class="row form-group">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="panel-title">
+                                Server Ip 权限
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="user-ip-toolbar" class="table-toolbar row">
+                                <div class="col-md-10">当前Role的ServerIp权限:</div>
+                                <div class="col-md-2">
+                                    <div class="form-group pull-right">
+                                        <button ng-click="addNewIpClick()" ng-show="showAddIpBt()" class="btn btn-info"
+                                                aria-label="Left Align" title="添加IP权限"
+                                                data-toggle="modal">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button id="batch-remove-ip" ng-show="showRemoveIpBt()"
+                                                ng-click="batchRemoveIpClick()" class="btn btn-info" title="删除IP"
+                                                disabled>
+                                            <span class="fa fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="ip-table"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/role.js"></script>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+</html>

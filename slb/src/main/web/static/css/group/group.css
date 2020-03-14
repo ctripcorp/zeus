@@ -1,0 +1,164 @@
+.ul-appdomains{
+    list-style: none;
+    margin: 9px 0px 9px -40px;
+}
+.app-status-text, .group-status-text{
+    margin-bottom: 8px;
+}
+
+#group-status-area{
+    padding-left: 0;
+}
+
+.MemberOp, .ServerOp, .PullOp, .HealthState{
+    font-size:15px;
+    cursor: pointer;
+}
+
+.HealthStateFailure{
+    font-size:15px;
+    cursor: pointer;
+}
+
+.health-checker-list{
+    list-style: none; margin-left: -40px
+}
+.link-comment{
+    cursor: default;
+    color: #2e9d50;
+}
+
+.link-comment:hover{
+    text-decoration: none;
+    color: #2e9d50;
+}
+.modal-footer{
+    margin-top: 10px;
+}
+.property-body input{
+    padding: 5px;
+}
+
+.MemberOp, .ServerOp, .PullOp{
+    cursor: pointer;
+}
+#GenerateBindingTestModal .modal-dialog, #addVGroupModel .modal-dialog, #editVGroupModel .modal-dialog, #removeVGroupModal .modal-dialog,#RemoveVirtualServerModal .modal-dialog, #addVirtualServerModel .modal-dialog, #editVirtualServerModel .modal-dialog, #removeVirtualServerModal .modal-dialog, #addHealthCheckModal .modal-dialog{
+    width: 1200px;
+}
+#HealthCheckDialog .modal-dialog{
+    width: 1000px;
+}
+#HealthCheckDialog .modal-dialog div.row{
+    padding:10px 10px 5px 10px;
+    margin: 0 -25px !important;
+}
+.fa-lightbulb-o{
+    font-size: 25px;
+}
+#HealthCheckDialog .modal-dialog ul.SampleUrlCss{
+    float: left;
+    list-style: none;
+    margin-top: 10px;
+}
+#HealthCheckDialog .modal-dialog .SampleUrlSymbo{
+    margin-top: 20px;
+}
+
+
+#HealthCheckerFailResultModal .modal-dialog{
+    width: 700px;
+}
+.health-table-pop{
+    border: none;
+    width: 650px;
+    margin: 10px auto;
+}
+.health-table-pop tbody tr td{
+    border-top: none;
+}
+#GenerateBindingTestModal .modal-dialog{
+    width: 800px;
+}
+ /*#HealthCheckerFailResultModal .modal-dialog div{*/
+     /*padding-top: 5px;*/
+ /*}*/
+
+#addServerModal .modal-dialog, #updateServerModal .modal-dialog{
+    width: 800px;
+}
+
+.groupinfo_diff_div {
+    margin-left: -50px;
+}
+
+.groupinfo_diff_div .groupinfo_diff_input input {
+    width: 150px;
+}
+
+.groupinfo_diff_div .groupinfo_diff_btn {
+    margin-left: 120px;
+}
+.group-traffic-content{
+    width: 820px;
+}
+.traffic-query-area{
+    padding: 15px;
+}
+
+.traffic-query-area .date-area .starttime-picker{
+    width:220px;
+    margin:-10px 1px;
+}
+
+
+.traffic-chart{
+    position: relative;
+    overflow: hidden;
+    width: 800px;
+    height: 432px;
+    cursor: default;
+}
+
+/**health Checker*/
+.start-checker{
+    margin-left: 10px;
+}
+
+.vgroup-basic-section, .health-check-section, .group-virtualserver-section, .group-logs{
+    margin-top: 35px;
+}
+.group-status-section{
+    margin-top: 45px;
+}
+.custom-toolbar{
+    margin-top: 12px;
+}
+.disabledAnchor{
+    pointer-events: none !important;
+    cursor: default;
+    background-color: #fff;
+    border-color: #ccc;
+}
+.group-proprties span{
+    margin: 3px;
+}
+.health-op{
+    cursor: pointer;
+}
+.check-health-url{
+    margin-right: 5px;
+}
+.fa-internet-explorer{
+    color: #31b0d5;
+}
+
+.fa-exchange{
+    color: yellowgreen;
+}
+.fa-terminal{
+    color: darkblue;
+}
+
+table pre {
+    max-width: 700px;
+}

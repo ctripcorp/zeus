@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SLB Basic Information</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <!--Include Bootstrap-Table-->
+    <script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+    <script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-table.css">
+    <link rel="stylesheet" href="/static/lib/bootstrap-table/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!-- Include Bootstrap-Validator -->
+    <script src="/static/lib/bootstrap-validator/bootstrap.validation.js"></script>
+    <link rel="stylesheet" href="/static/lib/bootstrap-validator/bootstrap.validation.css">
+    <script src="/static/lib/jquery-showloading/jquery.showLoading.js"></script>
+    <!--For diff patch-->
+    <script src="/static/lib/diff-match-patch/difflib.js"></script>
+    <script src="/static/lib/diff-match-patch/diffview.js"></script>
+    <link rel="stylesheet" href="/static/lib/diff-match-patch/diffview.css">
+
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/slb.css">
+</head>
+<body>
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<aside class="left-panel " style="overflow: hidden; outline: none;">
+    <nav id="header-area" ng-controller="headerInfoController" class="navigation" ng-cloak>
+        <ul class="list-unstyled">
+            <li class="active"><a href="{{generateLink('basic')}}"><i
+                    class="ion-ios7-speedometer"></i>
+                <span class="nav-label">{{resource["navs"]["navs_basic"]}}</span></a></li>
+
+            <li class=""><a href="{{generateLink('rule')}}"><i class="fa fa-pencil-square-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_rule"]}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('intercept')}}"><i class="fa fa-shirtsinbulk"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_intercept"]}}</span></a>
+            </li>
+            <li class=""><a href="{{generateLink('log')}}"><i class="ion-settings"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_log"]}}</span></a>
+            </li>
+
+            <li class=""><a href="{{generateLink('conf')}}"><i class="fa fa-file-code-o"></i> <span
+                    class="nav-label">{{resource["navs"]["navs_conf"]}}</span></a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<section class="content">
+    <div class="wraper container-fluid">
+        <!--Breadcrumb Area-->
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 ng-click="clickTarget()"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id,name"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wraper breadcrumb-follow info-container" id="slb-info-area" ng-app="slbInfoApp"
+             ng-controller="slbInfoController"
+             ng-cloak>
+
+            <!--SLB Basic Information Area -->
+            <div>
+                <div class="panel panel-default">
+                    <div class="panel-heading row" style="padding-bottom: 0px">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">{{resource['slb']['slb_slbInfoApp_basic_optitle']}}</h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="top-toolbar">
+                                <div class="pull-right">
+                                    <div class="top-toolbar-left pull-left">
+                                        <a class="btn btn-info"
+                                           href="/portal/slb/edit#?env={{env}}&slbId={{query.slbId}}"
+                                           role="button"
+                                           ng-show="showUpdateSlbBt()">{{resource['slb']['slb_slbInfoApp_basic_opupdate']}}</a>
+                                        <a class="btn btn-info activeSLB" role="button" ng-show="showActivateSlbBt()"
+                                           ng-click="activateSlbClick()">{{resource['slb']['slb_slbInfoApp_basic_opactivate']}}</a>
+                                        <a class="btn btn-info" ng-click="showDialog(p, 'addTag')"
+                                           ng-show="showAddSLBTagBt()">{{resource['slb']['slb_slbInfoApp_basic_optag']}}</a>
+                                        <a class="btn btn-info" ng-click="showDialog(p, 'addProp')"
+                                           ng-show="showAddSLBPropertyBt()">{{resource['slb']['slb_slbInfoApp_basic_opproperty']}}</a>
+                                        <a class="btn btn-deactivate" ng-click="deactivateSlbAction()" role="button"
+                                           ng-disabled="disableDeactivateSlb()" ng-show="showDeactivateSlbBt()">{{resource['slb']['slb_slbInfoApp_basic_opdeactivate']}}</a>
+                                        <a ng-show="showDeleteSlbBt()" class="btn btn-danger deleteSLB" role="button"
+                                           ng-click="deleteSlbAction()"
+                                           ng-disabled="disableRemoveSlb()">{{resource['slb']['slb_slbInfoApp_basic_opdelete']}}</a>
+                                        <a class="btn btn-info" role="button" data-toggle="modal"
+                                           data-target="#compareSlbModel">{{resource['slb']['slb_slbInfoApp_basic_opdiffbt']}}</a>
+                                        <a ng-show="showCloneSlbBt()" class="btn btn-info"
+                                           href="/portal/slb/new#?env={{env}}&slbId={{query.slbId}}"
+                                           role="button">{{resource['slb']['slb_slbInfoApp_basic_opclone']}}</a>
+                                    </div>
+                                    <div class="top-toolbar-right pull-right">
+                                        <span ng-class="statusClass()" ng-cloak>{{resource['slb']['slb_slbInfoApp_basic_opstatus']}}：{{statusText()}}</span>
+                                        <span style="float: right"></span>
+                                        <span ng-class="getFocusCss()"><a
+                                                ng-click="toggleFocus($event)">{{getFocusText()}}</a></span>
+                                        <span ng-class="getOptionPanelCss()" ng-cloak>&nbsp;&nbsp;<a
+                                                ng-click="toggleOptionPanel()">{{getOptionPanelText()}}</a></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body" style="padding-top: 0px">
+                        <table class="table table-condensed">
+                            <tbody>
+                            <tr>
+                                <td class="model-basic-info"><b>{{resource['slb']['slb_slbInfoApp_basic_id']}}:</b></td>
+                                <td>
+                                    <a href="#" class="ng-binding">
+                                        {{query.slbId}}
+                                    </a></td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['slb']['slb_slbInfoApp_basic_name']}}:</b></td>
+                                <td class="ng-binding">
+                                    {{view.extendedslb.name}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['slb']['slb_slbInfoApp_basic_version']}}:</b></td>
+                                <td>
+                                    <span class="">{{view.extendedslb.version}}</span>
+                                    <span ng-if="getSlbStatusProperty()=='activated'" ng-class="slbVersionClass()">({{slbVersionText()}})</span>
+                                    <a ng-if="getSlbStatusProperty()!='activated'" ng-click="activateSlbClick()"
+                                       ng-class="slbVersionClass()">({{slbVersionText()}})</a>
+                                    (<a data-toggle="modal" ng-click="getHistoryClick()"
+                                        id="historyVersionBtn">{{resource['slb']['slb_slbInfoApp_versionmap']['历史版本']}}</a>)
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td><b>{{resource['slb']['slb_slbInfoApp_basic_nginxbin']}}:</b></td>
+                                <td class="ng-binding">{{view.extendedslb['nginx-bin']}}</td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['slb']['slb_slbInfoApp_basic_nginxconf']}}:</b></td>
+                                <td class="ng-binding">{{view.extendedslb['nginx-conf']}}</td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['slb']['slb_slbInfoApp_basic_nginxworker']}}:</b></td>
+                                <td class="ng-binding">{{view.extendedslb['nginx-worker-processes']}}</td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['slb']['slb_slbInfoApp_basic_vips']}}:</b></td>
+                                <td class="ng-binding"><a class="pull-left" target="_blank"
+                                                          ng-href="{{generateVIPLink(x.ip)}}"
+                                                          ng-repeat="x in view.extendedslb.vips">{{x.ip}} /</a></td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['slb']['slb_slbInfoApp_basic_cname']}}:</b></td>
+                                <td class="ng-binding"><span class="pull-left">{{getSlbCName(view.extendedslb)}}</span></td>
+                            </tr>
+                            <tr ng-show="showExtendedTag()">
+                                <td><b> {{resource['slb']['slb_slbInfoApp_basic_tags']}}:</b></td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-11 multi-tags" ng-class="multiTagsClass()">
+                                            <span
+                                                    class="label label-default tag-span"
+                                                    ng-repeat="t in view.extendedslb.tags"
+                                                    ng-click="showDialog(t, 'deleteTag')"
+                                                    ng-show="showCurrentTag(t)">{{t}}&nbsp;<b
+                                                    ng-show="showRemoveTagBt(t)">x</b> </span>
+                                        </div>
+                                        <div class="col-md-1 collapse-btns">
+                                            <a ng-click="toggleShowMoreTags()" class="toggle-show-btn">
+                                                <span ng-class="collapseTagBtnClass()"></span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                            <tr ng-show="showExtendedProperty()">
+                                <td><b> {{resource['slb']['slb_slbInfoApp_basic_properties']}}:</b></td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-md-11 multi-tags" ng-class="multiPropertiesClass()">
+ <span class="label label-default tag-span " ng-repeat="p in view.extendedslb.properties"
+       ng-click="showDialog(p, 'deleteProp')">{{p.name}}:&nbsp;{{p.value}}&nbsp;<b
+         ng-show="showRemoveProperty(p)">x</b> </span>
+                                        </div>
+                                        <div class="col-md-1 collapse-btns">
+                                            <a ng-click="toggleShowMoreProperties()" class="toggle-show-btn">
+                                                <span ng-class="collapsePropertiesBtnClass()"></span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['slb']['slb_slbInfoApp_basic_logs']}}:</b></td>
+                                <td>
+                                    <div class="row" ng-show="showLogs()">
+                                        <div class="col-md-12">
+                                            <div data-ng-repeat="log in view.currentLog " class="row">
+                                                <div class="col-md-3">{{log['date-time']}}</div>
+                                                <div class="col-md-2"><a
+                                                        href="/portal/user#?env={{env}}&userId={{log['user-name']}}">{{log['user-name']}}</a>
+                                                </div>
+                                                <div class="col-md-2">{{getOperationText(log.operation)}}</div>
+                                                <div class="col-md-1"><b
+                                                        ng-class="log.success?'status-green':'status-red'">{{log.success?'Success':'Fail'}}</b>
+                                                </div>
+                                                <div class="col-md-3" ng-if="$last"><a target="_self"
+                                                                                       class="pull-left"
+                                                                                       href="/portal/slb/log#?env={{env}}&slbId={{query.slbId}}">{{resource['slb']['slb_slbInfoApp_basic_logsmore']}}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row" ng-show="showLogs()==false">
+                                        {{resource['slb']['slb_slbInfoApp_basic_nologs']}}
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>{{resource['slb']['slb_slbInfoApp_basic_Links']}}:</b></td>
+                                <td>
+                                    <div class="system-link" ng-show="showLinks('dashboard')">
+                                        <a class="dashboard" target="_blank" href="{{generateMonitorUrl('dashboard')}}">Dashboard</a>
+                                    </div>
+                                    <div class="system-link" ng-show="showLinks('hickwall')">
+                                        <a class="pull-left hickwall" title="Hickwall" target="_blank"
+                                           href="{{generateMonitorUrl('hickwall')}}">
+                                            Hickwall
+                                        </a>
+                                    </div>
+                                    <div class="system-link" ng-show="showLinks('webinfo')">
+                                        <a class="webinfo" target="_blank" href="{{generateMonitorUrl('webinfo')}}">WebInfo</a>
+                                    </div>
+                                    <div class="system-link" ng-show="showLinks('cat')">
+                                        <a class="cat" target="_blank" href="{{generateMonitorUrl('cat')}}">CAT</a>
+                                    </div>
+                                    <div class="system-link" ng-show="showLinks('es')">
+                                        <a class="es" target="_blank" href="{{generateMonitorUrl('es')}}">ES</a>
+                                    </div>
+                                    <!--<div class="system-link" ng-show="showLinks('cdng')">-->
+                                    <!--<a class="cdng" target="_blank" href="{{generateMonitorUrl('cdng')}}">CDNG</a>-->
+                                    <!--</div>-->
+                                    <div class="system-link" ng-show="showLinks('cd')">
+                                        <a class="cd" target="_blank" href="{{generateMonitorUrl('cd')}}">CD</a>
+                                    </div>
+
+                                    <div class="system-link" ng-show="showLinks('cd') && isCdNginxValid()">
+                                        <a class="cd" target="_blank"
+                                           href="{{generateMonitorUrl('cd-nginx')}}">CD-NGINX</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!--SLB Summary Information Area -->
+            <div class="row">
+                <div class="col-lg-3 col-sm-6">
+                    <div class="mini-stat clearfix">
+                        <div class="row">
+                            <div class="col-sm-10">
+                                <div class="row" style="margin-left: 10px;">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('activated')"
+                                         class="col-xs-4 text-center">
+                                        <span class="count-description status-green activate-group-text">{{view.slbGroupSummary['activated']}}</span>
+
+                                        <div class="status-green">{{resource['slb']['slb_slbInfoApp_sum_activated']}}</div>
+                                    </div>
+                                    <div style="cursor: pointer" ng-click="navigateTo('tobeactivated')"
+                                         class="col-xs-4 text-center">
+                                        <span class="count-description status-yellow tobeactivated-group-text">{{view.slbGroupSummary['tobeactivated']}}</span>
+
+                                        <div class="status-yellow">{{resource['slb']['slb_slbInfoApp_sum_tobeactivated']}}</div>
+                                    </div>
+                                    <div class="col-xs-4 text-center" style="cursor: pointer"
+                                         ng-click="navigateTo('deactivated')">
+                                        <span class="count-description status-gray deactivated-group-text">{{view.slbGroupSummary['deactivated']}}</span>
+
+                                        <div class="status-gray">{{resource['slb']['slb_slbInfoApp_sum_deactivated']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-2">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i style="font-size: 40px" class="fa fa-pie-chart text-pink"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                    <div class="mini-stat clearfix">
+                        <div class="row">
+                            <div class="col-sm-10">
+                                <div class="row">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('healthy')"
+                                         class="col-xs-4 text-center">
+                                        <span class="count-description status-green healthy-group-text">{{view.slbgroupsHealthySummary['healthy']}}</span>
+
+                                        <div class="status-green">{{resource['slb']['slb_slbInfoApp_sum_healthy']}}</div>
+                                    </div>
+                                    <div style="cursor: pointer" ng-click="navigateTo('unhealthy')"
+                                         class="col-xs-4 text-center">
+                                        <span class="count-description status-yellow unhealthy-group-text">{{view.slbgroupsHealthySummary['unhealthy']}}</span>
+
+                                        <div class="status-yellow">{{resource['slb']['slb_slbInfoApp_sum_unhealthy']}}</div>
+                                    </div>
+                                    <div class="col-xs-4 text-center" style="cursor: pointer"
+                                         ng-click="navigateTo('broken')">
+                                        <span class="count-description status-gray broken-group-text">{{view.slbgroupsHealthySummary['broken']}}</span>
+
+                                        <div class="status-gray">{{resource['slb']['slb_slbInfoApp_sum_broken']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-2">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i style="font-size: 40px" class="fa fa-heartbeat status-yellow"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-sm-6">
+                    <div class="mini-stat clearfix">
+                        <div class="row">
+                            <div class="col-sm-9">
+                                <div class="row">
+                                    <div style="cursor: pointer;" ng-click="navigateTo('qps')"
+                                         class="col-xs-6 text-center">
+                                        <span class="count-description ">{{vsesSummary.q}}</span>
+
+                                        <div>{{resource['slb']['slb_slbInfoApp_sum_qps']}}</div>
+                                    </div>
+                                    <div class="col-xs-6 text-center">
+                                        <span class="count-description">{{vsesSummary.aq}}</span>
+
+                                        <div>{{resource['slb']['slb_slbInfoApp_sum_avg']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <div class="col-sm-3">
+                                <div class="">
+                                    <div class="row">
+                                        <div class="col-xs-12 text-center">
+                                            <i style="font-size: 40px" class="fa fa-line-chart text-info"></i>
+                                        </div>
+                                    </div>
+                                    <!-- end row -->
+                                </div>
+                                <!-- weather-widget -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-6">
+                    <div class="mini-stat clearfix">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="row">
+                                    <div
+                                            class="col-xs-2 text-center">
+                                        <span class="count-description ">{{model.extendedslb['slb-servers'].length}}</span>
+
+                                        <div>{{resource['slb']['slb_slbInfoApp_sum_slbservers']}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center" style="cursor: pointer"
+                                         ng-click="navigateTo('vses')">
+                                        <span class="count-description">{{model.slbvses.length || 0}} </span>
+
+                                        <div>{{resource['slb']['slb_slbInfoApp_sum_vses']}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center">
+                                        <span class="count-description">{{vsesSummary['a']}}</span>
+
+                                        <div>{{resource['slb']['slb_slbInfoApp_sum_apps']}}</div>
+                                    </div>
+                                    <div style="cursor: pointer" ng-click="navigateTo('groups')"
+                                         class="col-xs-2 text-center">
+                                        <span class="count-description">{{vsesSummary['g']}}</span>
+
+                                        <div>{{resource['slb']['slb_slbInfoApp_sum_groups']}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center">
+                                        <span class="count-description">{{vsesSummary['s']}}</span>
+
+                                        <div>{{resource['slb']['slb_slbInfoApp_sum_servers']}}</div>
+                                    </div>
+                                    <div class="col-xs-2 text-center">
+                                        <span class="count-description">{{vsesSummary['m']}}</span>
+
+                                        <div>{{resource['slb']['slb_slbInfoApp_sum_members']}}</div>
+                                    </div>
+                                </div>
+                                <!-- End row -->
+                            </div>
+                            <!-- col-->
+                            <!--      <div class="col-sm-3">
+                                      <div class="">
+                                          <div class="row">
+                                              <div class="col-xs-12 text-center">
+                                                  <i style="font-size: 40px" class="fa fa-line-chart text-info"></i>
+                                              </div>
+                                          </div>
+                                          &lt;!&ndash; end row &ndash;&gt;
+                                      </div>
+                                      &lt;!&ndash; weather-widget &ndash;&gt;
+                                  </div>-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--VSES and Group Servers Row-->
+            <div>
+                <div class="panel panel-default">
+                    <div class="row panel-heading">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">
+                                {{resource['slb']['slb_slbInfoApp_slbserverlist']}}
+                            </h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getSlbServerShowMoreTitle()}}"
+                                   ng-click="toggleShowMoreSlbServerColumns()">
+                                    <i ng-class="getSlbServerShowMore()"></i>
+                                </a>
+                                <a class="op-bar" title="{{getSlbServerOperationTitle()}}"
+                                   ng-click="toggleShowSlbServerOperations()" ng-disabled="disableOpenSlbServer()">
+                                    <i ng-class="getSlbServerShowOperation()"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-body slb-detail">
+                        <div id="slbInfo-serverList-toolbar" class="table-toolbar row">
+                            <div class="col-md-10">
+                                <span class="pull-left">Total <b>{{model.extendedslb['slb-servers'].length}}</b> Slb Servers</span>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="pull-right">
+                                    <div class=" btn-group" ng-show="showUpdateSlbServerBt()">
+                                        <button type="button" id="addSlbServer" class="btn btn-info"
+                                                aria-label="Left Align" title="{{resource['slb']['slb_slbInfoApp_tooltipaddserver']}}">
+                                            <span class="fa fa-plus"></span>
+                                        </button>
+                                        <button type="button" class="btn btn-info dropdown-toggle"
+                                                data-toggle="dropdown">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a data-toggle="modal"
+                                                   data-target="#addSlbServerDialog">{{resource['slb']['slb_slbInfoApp_opaddserver']}}</a></li>
+                                            <li><a data-target="#addBatchServerModal" data-toggle="modal">{{resource['slb']['slb_slbInfoApp_opbatchaddserver']}}</a></li>
+
+                                            <li><a ng-show="showSyncCms()" ng-click="startCmsSyncing()"
+                                                   data-target="#addServerFromCms" data-toggle="modal">{{resource['slb']['slb_slbInfoApp_synccms']}}</a></li>
+                                        </ul>
+                                    </div>
+                                    <button ng-show="showUpdateSlbServerBt()" type="button" id="removeSlbServer"
+                                            class="btn btn-info"
+                                            title="删除slb server" disabled>
+                                        <span class="fa fa-minus"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <table id="slb-servers-table"></table>
+                    </div>
+                </div>
+            </div>
+
+            <!---SLB Related Vses showing-->
+            <div>
+                <div class="panel panel-default">
+                    <div class="row panel-heading">
+                        <div class="col-md-2">
+                            <h3 class="panel-title">
+                                {{resource['slb']['slb_slbInfoApp_vslist']}}
+                            </h3>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="op-tool">
+                                <a class="op-bar" title="{{getSlbVsShowMoreTitle()}}"
+                                   ng-click="toggleShowMoreSlbVsColumns()">
+                                    <i ng-class="getSlbVsShowMore()"></i>
+                                </a>
+                                <a class="op-bar" title="{{getSlbVsOperationTitle()}}"
+                                   ng-click="toggleShowSlbVsOperations()" ng-disabled="disableOpenSlbVs()">
+                                    <i ng-class="getSlbVsShowOperation()"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body slb-detail">
+                        <div id="slbInfo-vsList-toolbar" class="table-toolbar row">
+                            <div class="col-md-10">
+                                  <span class="pull-left"> <b><a target="_blank"
+                                                                 href="/portal/vses#?env={{env}}&slbId={{query.slbId}}">
+                                      {{model.slbvses.length}} </a></b> VS,
+               <span data-ng-repeat="s in summaryInfo.status">
+                   {{s.name}}:<b> {{s.count}} </b>.
+               </span><b><a target="_blank" href="/portal/groups#?env={{env}}&slbId={{query.slbId}}">
+                                          {{vsesSummary['g']}} </a></b> Group,
+                   <b> {{vsesSummary['s']}} </b> Server,
+                   <b> {{vsesSummary['m']}} </b> Member
+               </span>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="pull-right">
+                                    <a target="_blank" href="/portal/vs/new#?env={{env}}&slbId={{query.slbId}}"
+                                       class="btn btn-info"
+                                       ng-show="showAddVsBt()" type="button">{{resource['slb']['slb_slbInfoApp_newvs']}}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <table id="slb-vses-table"></table>
+                    </div>
+                </div>
+            </div>
+
+            <!---Modal Rows-->
+            <div class="modal-rows">
+                <div class="modal fade" id="addServerFromCms" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_addServerFromCms']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <table class="table table-bordered">
+                                    <thead>
+                                    <tr>
+                                        <th>{{resource['slb']['slb_slbInfoApp_addServerFromCms']['table']['类型']}}</th>
+                                        <th>{{resource['slb']['slb_slbInfoApp_addServerFromCms']['table']['机器列表']}}</th>
+                                    </tr>
+
+                                    <tr>
+                                        <td>{{resource['slb']['slb_slbInfoApp_addServerFromCms']['table']['新上机器']}}</td>
+                                        <td>
+                                            <div data-ng-repeat="r in data.syncing['added']">
+                                                {{r.ip}}({{r.name}})
+                                            </div>
+                                        </td>
+
+                                    </tr>
+
+                                    <tr>
+                                        <td>{{resource['slb']['slb_slbInfoApp_addServerFromCms']['table']['被缩容机器']}}</td>
+                                        <td>
+                                            <div data-ng-repeat="r in data.syncing['added']">
+                                                {{r.ip}}({{r.name}})
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </thead>
+                                    <tfoot>
+                                    <tr>
+                                        <td class="status-red" colspan="2">
+                                            <div class="pull-right">
+                                                {{resource['slb']['slb_slbInfoApp_addServerFromCms']['table']['当前SLB数据发生变更，请及时激活上线']}}。 <a class="status-blue" style="color: blue;"
+                                                                        ng-click="activateSlbClick()">{{resource['slb']['slb_slbInfoApp_addServerFromCms']['table']['点此激活']}}</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_addServerFromCms']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="slbdiffVSDiv" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{resource['slb']['slb_slbInfoApp_slbdiffVSDiv']['title']}}</h1>
+                        </div>
+                        <form id='slbfileDiffForm'>
+                        </form>
+                        <div class="modal-foot">
+                            <div class="btnDiv">
+                                <button class="btn btn-info" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_slbdiffVSDiv']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="output-div" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Log 详情</h4>
+                            </div>
+                            <div class="modal-body operation-detail-div" style="word-break: break-all">
+
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-info" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_output-div']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="activateSLBModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead' ng-class="activateSlbTitleClass()">{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm'>
+                            <div id="diffOutput"></div>
+                            <div class="btnDiv">
+                                <button class="btn btn-info confirmActivateSlb" data-toggle="modal"
+                                        data-target="#confirmActivateSLB" data-dismiss="modal"
+                                        ng-show="activateBtShow()">
+                                    {{resource['slb']['slb_slbInfoApp_activateSLBModal']['激活上线']}}
+                                </button>
+                                <button class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_activateSLBModal']['close']}}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="confirmActivateSLB" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_confirmActivateSLB']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['slb']['slb_slbInfoApp_confirmActivateSLB']['body']}}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateSlb"
+                                        ng-click="activateSLB()">
+                                    {{resource['slb']['slb_slbInfoApp_confirmActivateSLB']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_confirmActivateSLB']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="compareSlbModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_compareSlbModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div angucomplete-alt id="targetSlbIdSelector"
+                                     placeholder="{{resource['slb']['slb_slbInfoApp_compareSlbModel']['slbid_placeholder']}}"
+                                     pause="100"
+                                     selected-object="selectDiffSlbId"
+                                     remote-url="{{remoteUrl()}}"
+                                     remote-url-request-formatter="cacheRequestFn"
+                                     search-fields="id,name"
+                                     title-field="id,name"
+                                     minlength="0"
+                                     match-class="highlight"
+                                     input-class="form-control form-control-small">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-click="confirmSelectSlbId()"
+                                        data-dismiss="modal"
+                                        ng-disabled="confirmDiffButtonDisable">
+
+                                    {{resource['slb']['slb_slbInfoApp_compareSlbModel']['ok']}}
+
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_compareSlbModel']['ok']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="diffSeperateSlbs" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form id='fileDiffForm3'>
+                            <div id="diffOutput3"></div>
+                            <div class="btnDiv">
+                                <button class="btn btn-info" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_diffSeperateSlbs']['ok']}}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="operationConfrimModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_operationConfrimModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info closeProgressWindowBt" data-dismiss="modal">
+                                    {{resource['slb']['slb_slbInfoApp_operationConfrimModel']['ok']}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deleteGroupConfirmModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_operationConfrimModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <span class="timerspan"></span>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info closeProgressWindowBt2" data-dismiss="modal">
+                                    {{resource['slb']['slb_slbInfoApp_operationConfrimModel']['ok']}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="allowDeactivateSLBModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- has no vses-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_allowDeactivateSLBModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deactivatereason"
+                                                               placeholder="{{resource['slb']['slb_slbInfoApp_allowDeactivateSLBModal']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deactivatereason" type="button"
+                                        class="btn btn-info confirmDeactivateSlb"
+                                        ng-click="deactivateSlb()">
+                                    {{resource['slb']['slb_slbInfoApp_allowDeactivateSLBModal']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_allowDeactivateSLBModal']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="discardDeactivateSLBModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- has vses -->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_discardDeactivateSLBModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body alert-warning">
+                                <p>1. {{resource['slb']['slb_slbInfoApp_discardDeactivateSLBModal']['line1']}}</p>
+
+                                <p>2. {{resource['slb']['slb_slbInfoApp_discardDeactivateSLBModal']['line2']}}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_discardDeactivateSLBModal']['ok']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="discardDeleteSLBModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_discardDeleteSLBModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                <p>1. {{resource['slb']['slb_slbInfoApp_discardDeleteSLBModal']['line1']}}</p>
+
+                                <p>2. {{resource['slb']['slb_slbInfoApp_discardDeleteSLBModal']['line2']}}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_discardDeleteSLBModal']['ok']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="allowDeleteSLBModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header"   >
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_allowDeleteSLBModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deleteslbreason"
+                                                               placeholder="{{resource['slb']['slb_slbInfoApp_allowDeleteSLBModal']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deleteslbreason" type="button" class="btn btn-info"
+                                        ng-click='deleteSlb()'>{{resource['slb']['slb_slbInfoApp_allowDeleteSLBModal']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_allowDeleteSLBModal']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deactivateSLBModalConfirm" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_deactivateSLBModalConfirm']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['slb']['slb_slbInfoApp_deactivateSLBModalConfirm']['body']}}
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmDeactivateSlb"
+                                        ng-click="confirmDeactivateSlb()">
+                                    {{resource['slb']['slb_slbInfoApp_deactivateSLBModalConfirm']['ok']}}
+
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                    {{resource['slb']['slb_slbInfoApp_deactivateSLBModalConfirm']['close']}}
+                                    </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deleteSLBModalConfirm" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_deleteSLBModalConfirm']['title']}}</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                {{resource['slb']['slb_slbInfoApp_deleteSLBModalConfirm']['body']}}
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info " ng-click="confirmDeleteSlb()">
+                                    {{resource['slb']['slb_slbInfoApp_deleteSLBModalConfirm']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                    {{resource['slb']['slb_slbInfoApp_deleteSLBModalConfirm']['close']}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="historyVersionModel" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_historyVersionModel']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                        <span data-ng-repeat="x in view.slbhistoryversions"
+                              class="label label-default pull-left version-class" ng-click="toggleVersion(x)"
+                              id="historyVersion{{x}}">
+                            {{x}}
+                        </span>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-click="diffSlbBetweenVersions()" type="button" class="btn btn-info"
+                                        ng-show="view.slbhistoryversions.length >= 2" ng-disabled="showDiffHistory()">
+                                    {{resource['slb']['slb_slbInfoApp_historyVersionModel']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_historyVersionModel']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="addSLBTag" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_addSLBTag']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <input type="text" id="tagNameInput" ng-model="tagNameInput"
+                                       class="form-control" data-validator-type="validation"
+                                       placeholder="{{resource['slb']['slb_slbInfoApp_addSLBTag']['placeholder']}}"
+                                       data-validator="required"><br>
+                                <div style="margin-top: 10px">
+                                <textarea id="tagreason" cols="2" rows="5" style="width: 100%;"
+                                          data-ng-model="query.tagreason" placeholder="{{resource['slb']['slb_slbInfoApp_addSLBTag']['reason']}}"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="addTagBt" type="button" class="btn btn-info"
+                                        ng-disabled="!tagNameInput || !query.tagreason">{{resource['slb']['slb_slbInfoApp_addSLBTag']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_addSLBTag']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="addSLBProp" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_addSLBProp']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <label class="prop-label">{{resource['slb']['slb_slbInfoApp_addSLBProp']['name']}}：</label>
+                                <input id="pname" type="text" ng-model="prop.name"
+                                       class="form-control" placeholder="{{resource['slb']['slb_slbInfoApp_addSLBProp']['name_placehoder']}}"><br>
+                                <label class="prop-label">{{resource['slb']['slb_slbInfoApp_addSLBProp']['value']}}：</label>
+                                <input id="pvalue" type="text" ng-model="prop.value"
+                                       class="form-control" placeholder="{{resource['slb']['slb_slbInfoApp_addSLBProp']['value_placehoder']}}">
+
+                                <div style="margin-top: 15px">
+                                <textarea id="propertyreason" cols="2" rows="5" style="width: 100%;"
+                                          data-ng-model="query.propertyreason" placeholder="{{resource['slb']['slb_slbInfoApp_addSLBProp']['reason']}}"></textarea>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!prop.name || !prop.value || !query.propertyreason"
+                                        id="addPropertyBt" type="button" class="btn btn-info">{{resource['slb']['slb_slbInfoApp_addSLBProp']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_addSLBProp']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deleteSLBTag" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_deleteSLBTag']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deletetagreason"
+                                                               placeholder="{{resource['slb']['slb_slbInfoApp_deleteSLBTag']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deletetagreason" type="button" class="btn btn-info"
+                                        ng-click="deleteTag(currentTagName)">{{resource['slb']['slb_slbInfoApp_deleteSLBTag']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_deleteSLBTag']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="deleteSLBProp" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_deleteSLBProp']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                                     <textarea cols="2" rows="10" style="width: 100%"
+                                                               data-ng-model="query.deletepropertyreason"
+                                                               placeholder="{{resource['slb']['slb_slbInfoApp_deleteSLBProp']['reason']}}"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deletepropertyreason" type="button" class="btn btn-info" ng-click="deleteProperty(currentProperty)">
+                                    {{resource['slb']['slb_slbInfoApp_deleteSLBProp']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">
+                                    {{resource['slb']['slb_slbInfoApp_deleteSLBProp']['close']}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="addBatchServerModal" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_addBatchServerModal']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <h4>
+
+                                        {{resource['slb']['slb_slbInfoApp_addBatchServerModal']['alert']}}
+                                    </h4>
+                                    <ul class="operation-warnning-ul">
+                                        <li>
+                                            {{resource['slb']['slb_slbInfoApp_addBatchServerModal']['line1']}}
+                                            <br/>
+                                            {{resource['slb']['slb_slbInfoApp_addBatchServerModal']['line2']}}
+                                             <br>
+                                            {{resource['slb']['slb_slbInfoApp_addBatchServerModal']['line3']}} <br>
+
+                                        </li>
+                                        <li>{{resource['slb']['slb_slbInfoApp_addBatchServerModal']['line4']}}: <b class="status-red">VMS10101/127.0.0.1</b>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div>
+                            <textarea id="code"
+                                      rows="10"
+                                      class="machines-textarea"
+                                      style="width: 100%"
+                                      placeholder="{{resource['slb']['slb_slbInfoApp_addBatchServerModal']['placeholder']}}"
+                                      data-validator-type="validation" data-validator="required">
+                            </textarea>
+
+                                    <textarea cols="2" rows="5" style="width: 100%"
+                                              data-ng-model="query.batchaddserverreason"
+                                              placeholder="{{resource['slb']['slb_slbInfoApp_addBatchServerModal']['reason']}}"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" ng-disabled="!query.batchaddserverreason" id="saveBatchMember">
+                                    {{resource['slb']['slb_slbInfoApp_addBatchServerModal']['ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_addBatchServerModal']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="addServerFromCms" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">从CMS上同步Server</h4>
+                            </div>
+                            <div class="modal-body">
+                                <table class="table table-bordered">
+                                    <thead>
+                                    <tr>
+                                        <th>类型</th>
+                                        <th>机器列表</th>
+                                    </tr>
+
+                                    <tr>
+                                        <td>新上机器</td>
+                                        <td>
+                                            <div data-ng-repeat="r in data.syncing['added']">
+                                                {{r.ip}}({{r.name}})
+                                            </div>
+                                        </td>
+
+                                    </tr>
+
+                                    <tr>
+                                        <td>被缩容机器</td>
+                                        <td>
+                                        <td>
+                                            <div data-ng-repeat="r in data.syncing['added']">
+                                                {{r.ip}}({{r.name}})
+                                            </div>
+                                        </td>
+                                        </td>
+                                    </tr>
+                                    </thead>
+                                    <tfoot>
+                                    <tr>
+                                        <td class="status-red" colspan="2">
+                                            <div class="pull-right">
+                                                当前SLB数据发生变更，请及时激活上线。 <a class="status-blue" style="color: blue;"
+                                                                        ng-click="activateSlbClick()">点此激活</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="addSlbServerDialog" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_addServer']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">{{resource['slb']['slb_slbInfoApp_addServer']['tooltip']}}</div>
+                                <table class="table table-bordered ">
+                                    <tr>
+                                        <th>{{resource['slb']['slb_slbInfoApp_addServer']['ip']}}</th>
+                                        <th>{{resource['slb']['slb_slbInfoApp_addServer']['host']}}</th>
+                                        <th style="text-align: center">{{resource['slb']['slb_slbInfoApp_addServer']['op']}}</th>
+                                    </tr>
+                                    <tr ng-repeat="col in slbServersTable.columns">
+                                        <td class="ip">
+                                            <input class="form-control" ng-model="col.ip"
+                                                   data-validator-type="validation"
+                                                   data-validator="required ip"/>
+                                        </td>
+                                        <td class="host-name">
+                                            <input class="form-control" ng-model="col['host-name']"
+                                                   data-validator-type="validation" data-validator="required"/>
+                                        </td>
+                                        <td style="text-align: center;vertical-align: middle">
+                                            <button id="removeSlbServerBtn" class="btn btn-xs btn-danger"
+                                                    ng-click="slbServersTable.remove($index)"
+                                                    ng-hide="$index == 0 && slbServersTable.columns.length == 1"><i
+                                                    class="fa fa-minus"></i></button>
+                                            <button id="addSlbServerBtn" class="btn btn-xs btn-info"
+                                                    ng-click="slbServersTable.add()"
+                                                    ng-show="$index == slbServersTable.columns.length -1"><i
+                                                    class="fa fa-plus"></i></button>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <textarea cols="2" rows="4" style="width: 100%; margin-top: 20px"
+                                          data-ng-model="query.addserverreason"
+                                          placeholder="{{resource['slb']['slb_slbInfoApp_addServer']['placeholder']}}"></textarea>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.addserverreason || slbServersTable.columns.length==0"
+                                        type="button" class="btn btn-info" ng-click="addSlbServerToSlb()"
+                                        data-dismiss="modal">
+                                    {{resource['slb']['slb_slbInfoApp_addServer']['Ok']}}
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_addServer']['Cancel']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="addServerErrorDialog" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_addServerErrorDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_addServerErrorDialog']['close']}}</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div id="discardRemoveSlbServerDialog" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_discardRemoveSlbServerDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    {{resource['slb']['slb_slbInfoApp_discardRemoveSlbServerDialog']['body']}}
+                                    </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info" data-dismiss="modal"> {{resource['slb']['slb_slbInfoApp_discardRemoveSlbServerDialog']['ok']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="removeSlbServerDialog" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">{{resource['slb']['slb_slbInfoApp_removeSlbServerDialog']['title']}}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">{{resource['slb']['slb_slbInfoApp_removeSlbServerDialog']['body']}}</div>
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>{{resource['slb']['slb_slbInfoApp_removeSlbServerDialog']['ip']}}</th>
+                                        <th>{{resource['slb']['slb_slbInfoApp_removeSlbServerDialog']['host']}}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="to-be-removed-slbServers">
+                                    </tbody>
+                                </table>
+
+                                <textarea cols="2" rows="5" style="width: 100%; margin-top: 15px"
+                                          data-ng-model="query.deleteserverreason"
+                                          placeholder="{{resource['slb']['slb_slbInfoApp_removeSlbServerDialog']['reason']}}"></textarea>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button ng-disabled="!query.deleteserverreason" type="button" class="btn btn-info" ng-click="removeSlbServerFromSlb()">{{resource['slb']['slb_slbInfoApp_removeSlbServerDialog']['ok']}}
+                                        ng-click="removeSlbServerFromSlb()">确定
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">{{resource['slb']['slb_slbInfoApp_removeSlbServerDialog']['close']}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="activateVSModal" class="modal fade" role="dialog" aria-hidden="true">
+                    <div class="span12 modal-dialog fileDiffMainContainer">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h1 class='fileViewHead'>{{confirmActivateText}}</h1>
+                        </div>
+
+                        <form class='fileDiffForm'>
+                            <div id="info_diffOutput"></div>
+                            <div class="btnDiv">
+                                <button class="btn btn-info confirmActivateVs">激活上线</button>
+                                <button class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="confirmActivateVS" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">再次确认是否要激活</h4>
+                            </div>
+                            <div class="modal-body warning-important">
+                                激活VS会使VS的变动生效，生效后对VS的流量产生影响。请谨慎激活!
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-info doubleConfirmActivateVs"
+                                        ng-click="activateVS()">
+                                    确定
+                                </button>
+                                <button type="button" class="btn btn-warning" data-dismiss="modal">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="questionModal" role="dialog" ng-app="questionModalApp" ng-controller="questionModalCtrl">
+    <div class="modal-dialog">         <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{resource.languageApp.languageController.feedback}}</h4></div>
+            <div class="modal-body">
+                <div class="tips warning-important"></div>
+                <div class="form-group">
+                    <div class=""><i class="fa fa-lightbulb-o" style="font-size: 20px"></i> <span class="op-bar">{{resource.questionModal.token1}}</span>
+                    </div>
+                    <div class="system-padding-top"><textarea cols="2" rows="10" style="width: 100%"
+
+                                                              id="comment-text"
+                                                              placeholder="{{resource.questionModal.token2}}"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submmit-question" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg1}}
+                </button>
+                <button type="button" class="btn btn-warning deny-operator" data-dismiss="modal">
+                    {{resource.userHome.html.modal.msg2}}
+                </button>
+            </div>
+        </div>
+        <input type="hidden" value="" class="status-hidden"/> <input type="hidden" value="" class="op-hidden"/> <input
+                type="hidden" value="" class="ip-hidden"/></div>
+</div>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular/angular-cookies.js"></script>
+<script src="/static/js/http-auth-interceptor.js"></script>
+<script src="/static/lib/angular/angular-sanitize.js"></script>
+<script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+<link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+<!--Include Bootstrap-Table-->
+<script src="/static/lib/bootstrap-table/bootstrap-table.js"></script>
+<script src="/static/lib/bootstrap-table/bootstrap-table-zh-CN.js"></script>
+<script src="/static/lib/bootstrap-table/bootstrap-table-editable.js"></script>
+<script src="/static/lib/bootstrap-table/bootstrap-editable.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+<!--For diff patch-->
+<script src="/static/lib/diff-match-patch/difflib.js"></script>
+<script src="/static/lib/diff-match-patch/diffview.js"></script>
+<script src="/static/lib/underscore/underscore-min.js"></script>
+
+
+<script src="/statics/js/model/protocol.js"></script>
+
+<script src="/statics/js/repository/paramCommand.js"></script>
+<script src="/statics/js/repository/queryCommand.js"></script>
+<script src="/statics/js/repository/apiCommand.js"></script>
+
+<script src="/statics/js/services/paramService.js"></script>
+<script src="/statics/js/services/queryService.js"></script>
+<script src="/statics/js/services/apiService.js"></script>
+<script src="/statics/js/services/esService.js"></script>
+
+<script src="/statics/js/apps/app.js"></script>
+<script src="/statics/js/apps/slbApp.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/slb.js"></script>
+</html>

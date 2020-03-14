@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>联合监控</title>
+    <script src="/static/lib/jquery/jquery-2.2.1.min.js"></script>
+    <script src="/static/lib/jquery/jquery.cookie.js"></script>
+    <script src="/static/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/lib/angular/angular.js"></script>
+    <script src="/static/lib/angular/angular-cookies.js"></script>
+    <script src="/static-new/http-auth-interceptor.js"></script>
+    <script src="/static/lib/jquery/jquery.ba-hashchange.js"></script>
+
+    <script src="/static-new/model/Class.js"></script>
+    <script src="/static-new/repository/unitwork/command.js"></script>
+    <script src="/static-new/repository/unitwork/repository.js"></script>
+    <script src="/static-new/util/Constants.js"></script>
+
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="/static/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/lib/velonic-admin/css/bootstrap-reset.css">
+    <link rel="stylesheet" href="/static/lib/font-awesome-4.6.3/css/font-awesome.min.css">
+    <!--Animation css-->
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link href="/static/lib/velonic-admin/css/animate.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/assets/ionicon/css/ionicons.min.css" rel="stylesheet"/>
+    <!-- Custom styles for this template -->
+    <link href="/static/lib/velonic-admin/css/style.css" rel="stylesheet">
+    <link href="/static/lib/velonic-admin/css/helper.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/global-new.css">
+    <link rel="stylesheet" href="/static/css/formatter.css">
+    <link rel="stylesheet" href="/static/css/traffic.css">
+    <script src="/static/lib/angular-autocomplete/angucomplete-alt.min.js"></script>
+    <link rel="stylesheet" href="/static/lib/angular-autocomplete/angucomplete-alt.css">
+    <!--Underscore-->
+    <script src="/static/lib/underscore/underscore-min.js"></script>
+    <!--<script src="/static/lib/velonic-admin/js/jquery.js"></script>-->
+    <script src="/static/lib/velonic-admin/js/modernizr.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/pace.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/wow.min.js"></script>
+    <script src="/static/lib/velonic-admin/js/jquery.app.js"></script>
+    <style type="text/css">
+        .tab-content {
+            width: 100%;
+        }
+
+        .portlet .portlet-body {
+            border: 1px solid;
+        }
+
+        .portlet-body div:nth-child(2) {
+            top: 0px !important;
+        }
+
+        .active {
+            background-color: #fff
+        }
+
+        .chart-body {
+            background-color: #f1f4f5 !important;
+        }
+
+        .domain {
+            padding-top: 15px;
+        }
+
+        .query-label {
+            line-height: 30px;
+        }
+
+        .SLB {
+            float: right;
+        }
+
+        .time a {
+            padding-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="am-topbar admin-header page-head">
+
+    <div class="am-topbar-brand ">
+        <a href="/portal" class="logo-expanded">
+            <span class="nav-label fa fa-road">SLB Portal</span>
+        </a>
+    </div>
+
+    <div class="am-topbar-collapse">
+        <button type="button" class="navbar-toggle pull-left">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div id="top-brand" class="navbar-left pull-left hidden-xs" ng-app="brandApp" ng-controller="brandController"
+             ng-cloak>
+
+        </div>
+    </div>
+
+    <nav class="navbar-default" role="navigation">
+        <ul class="nav navbar-nav hidden-xs" id="top-links" ng-app="topLinksApp" ng-controller="topLinksController"
+            ng-cloak>
+            <li class="dropdown" ng-class="isSelectedLink(x.url)" data-ng-repeat="x in data.members">
+                <a href="{{generateTopLink(x)}}"><span ng-class="iconClass(x)"></span>{{x.name}}</a>
+            </li>
+        </ul>
+
+       <ul class="nav navbar-nav navbar-right top-menu top-right-menu"><li class="dropdown language-menu" id="language-area" ng-app="languageApp" ng-controller="languageController" ng-cloak> <button class="btn btn-default btn-xs language-bt">语言</button> <select class="language-choose" ng-model="selected" ng-change="changeLanguage(selected)"><option style="color: white" data-ng-repeat="lan in data.languages">{{lan}}</option></select></li>
+            <li class="dropdown diagnose-menu"><a class="diagnose-menu-item" data-toggle="modal"
+                                                  data-target="#questionModal" data-dismiss="modal"><span><i
+                    class="fa fa-comment-o"></i> <span>Feedback</span></span></a></li>
+
+            <li class="dropdown text-center" id="user-info" ng-app="userInfoApp" ng-controller="userInfoController"
+                ng-cloak>
+                <a data-toggle="dropdown" class="dropdown-toggle naviList" href="#">
+                    <i class="fa fa-user username"></i>
+                    <span class="username">{{query.user}} </span> <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pro-menu fadeInUp animated user-ops-div" tabindex="5003"
+                    style="overflow: hidden; outline: none;">
+                    <li><a href="/portal/user#?env={{env}}"><span>&nbsp;{{resource['userinfo']['home']}}</span></a></li>
+                    <li ng-show="showSuperAdmin()"><a href="/portal/backend/users#?env={{env}}"><span>&nbsp;{{resource['userinfo']['auth']}}</span></a>
+                    </li>
+                    <li><a href="/api/auth/user/logout"><span>&nbsp;{{resource['userinfo']['logout']}}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<section class="">
+    <div class="wraper container-fluid">
+        <!--Breadcrumb Area-->
+        <div class="row breadcrumb-container">
+            <div class="">
+                <div class="pull-left" id="breadcrumb-area" ng-app="breadCrumbApp"
+                     ng-controller="breadCrumbController" ng-cloak>
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home"></i>
+                            {{resource['bread']['home']}}
+                        </li>
+                        <li ng-repeat="x in breadlist" ng-cloak>
+                            {{x}}
+                        </li>
+                    </ul>
+                </div>
+                <div class="summary-area" id="summary-area" ng-app="summaryInfoApp"
+                     ng-controller="summaryController"
+                     ng-cloak>
+                    <div class="page-title">
+                        <div>
+                            <div angucomplete-alt id="targetSelector" class="pull-right target-selector"
+                                 placeholder="{{target.name}}"
+                                 pause="100"
+                                 selected-object="selectTarget"
+                                 remote-url="{{remoteUrl()}}"
+                                 remote-url-request-formatter="cacheRequestFn"
+                                 search-fields="id,name,pinyin"
+                                 title-field="id,name"
+                                 ng-click="clickTarget()"
+                                 minlength="0"
+                                 match-class="highlight"
+                                 input-class="form-control form-control-small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="query-area" class="breadcrumb-follow" ng-app="trafficQueryApp" ng-controller="trafficQueryController">
+            <div class="panel panel-default">
+
+                <div class="panel-body">
+                    <div class="row ">
+                        <div class="col-md-10">
+                            <div class="row domain">
+                                <div class="col-md-1 query-label"><label class="SLB">SLB:</label></div>
+                                <div class="col-md-3 query-body">
+                                    <div angucomplete-alt id="slbSelector"
+                                         placeholder="请输入SLB ID..."
+                                         pause="100"
+                                         selected-object="selectSlbId"
+                                         remote-url="{{remoteSLBsUrl()}}"
+                                         remote-url-request-formatter="cacheRequestFn"
+                                         search-fields="id"
+                                         title-field="id"
+                                         minlength="0"
+                                         clear-selected="true"
+                                         match-class="highlight"
+                                         input-class="form-control form-control-small">
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-1 query-label"><label class="SLB">VS:</label></div>
+                                <div class="col-md-3 query-body">
+                                    <div angucomplete-alt id="vsIdSelector"
+                                         placeholder="请输入VS ID..."
+                                         pause="100"
+                                         selected-object="selectVSId"
+                                         remote-url="{{remoteVsesUrl()}}"
+                                         remote-url-request-formatter="cacheRequestFn"
+                                         search-fields="id,name"
+                                         title-field="id"
+                                         description-field="name"
+                                         minlength="0"
+                                         match-class="highlight"
+                                         input-class="form-control form-control-small"
+                                         input-changed="vsIdInputChanged">
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-1 query-label"><label class="SLB">Group:</label></div>
+                                <div class="col-md-3 query-body">
+                                    <div angucomplete-alt id="groupIdSelector"
+                                         placeholder="请输入Group ID..."
+                                         pause="100"
+                                         selected-object="selectGroupId"
+                                         remote-url="{{remoteGroupsUrl()}}"
+                                         remote-url-request-formatter="cacheRequestFn"
+                                         search-fields="id,name"
+                                         title-field="id"
+                                         description-field="name"
+                                         minlength="0"
+                                         match-class="highlight"
+                                         input-class="form-control form-control-small"
+                                         input-changed="groupIdInputChanged">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2" style="line-height: 58px">
+                            <div class="pull-right">
+                                <button type="button" class="btn btn-default" ng-click="clearQuery()">清空</button>
+                                <button type="button" class="btn btn-info" ng-click="executeQuery()" id="executeQuery">
+                                    查询
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row domain" ng-show="query.slbs && query.slbs.length>0">
+                        <div class="col-md-10">
+
+                            <div class="row ">
+                                <div class="col-md-1 query-label" style="margin-right: 10px"><label
+                                        class="SLB">当前选中SLB:</label></div>
+
+                                <div class="com-md-11 query-body" style="padding-left: 10px">
+                                    <div class="selected-slbs">
+                        <span class="label label-default pull-left" ng-repeat="(k,v) in query.slbs"
+                              style="margin-right: 10px; cursor: pointer"
+                              ng-click="removeSlb(v)">{{getSlbName(v)}} <b>x</b> </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="row domain" ng-show="query.vses && query.vses.length">
+                        <div class="col-md-10">
+
+                            <div class="row ">
+                                <div class="col-md-1 query-label" style="margin-right: 10px"><label
+                                        class="SLB">当前选中VS:</label></div>
+
+                                <div class="com-md-11 query-body">
+                                    <div class="selected-slbs">
+                        <span class="label label-default pull-left" style="margin-right: 10px; cursor: pointer"
+                              ng-repeat="(k,v) in query.vses"
+                              ng-click="removeVs(v)">{{getVsName(v)}} <b>x</b> </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="row domain" ng-show="query.groups && query.groups.length">
+                        <div class="col-md-10">
+
+                            <div class="row ">
+                                <div class="col-md-1 query-label" style="margin-right: 10px"><label
+                                        class="SLB">当前Group:</label></div>
+
+                                <div class="com-md-11 query-body">
+                                    <div class="selected-slbs">
+                        <span class="label label-default pull-left" style="margin-right: 10px; cursor: pointer"
+                              ng-repeat="(k,v) in query.groups"
+                              ng-click="removeGroup(v)">{{getGroupName(v)}} <b>x</b> </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="row domain">
+                        <div class="col-md-10">
+                            <div class="row ">
+                                <div class="col-md-1 query-label"><label class="SLB">时间:</label></div>
+                                <div class="col-md-7 query-body">
+                                    <div class="input-group  pull-left col-md-5">
+                                        <input type="text" class="form-control" datetime-picker="yyyy-MM-dd HH:mm"
+                                               ng-model="queryDate.startTime"
+                                               is-open="isOpen" readonly/>
+                                        <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="openCalendar($event, prop)">
+                            <i class="fa fa-calendar"></i>
+                        </button>
+                    </span>
+                                    </div>
+                                    <div class="pull-right col-md-7 time" style="line-height: 35px;">
+                                        To<a style="padding-left: 10px">{{getDecodedTime(queryDate.endTime) | date:
+                                        "yyyy-MM-dd HH:mm"}}</a>
+                                        <a href="javascript:void(0)" ng-click="setDatePreviousHour()">上一小时</a>
+                                        <a href="javascript:void(0)" ng-click="setDateNextHour()">下一小时</a>
+                                        <a href="javascript:void(0)" ng-click="setDateNow()">Now</a>
+                                        <a id="refreshBt" href="javascript:void(0)" ng-click="refreshCharts()">刷新</a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+        </div>
+        <div id="traffic-area" class="" ng-app="trafficApp" ng-controller="trafficController">
+            <div class="row traffic-query-area" style="margin: 0px;">
+            </div>
+            <div class="tabs-vertical-env">
+                <div class="tab-content">
+                    <div class="tab-pane" ng-class="isActivePanel('slb')" id="slbs"
+                         ng-show="query.slbs && query.slbs.length>0">
+                        <div class="traffic-types-area">
+                            <ul class="traffic-types nav nav-pills" style="padding-bottom: 20px;">
+                                <li ng-class="isSlbCurrentTrafficPage(x)"
+                                    data-ng-repeat="x in trafficTypes.links">
+                                    <a href="javascript:void(0)" ng-click="setSlbTrafficType(x)"> {{x}} </a>
+                                </li>
+                            </ul>
+                            <div class="panel panel-default chart-body" data-ng-repeat="slb in query.slbs">
+                                <div class="panel-heading chart-body">
+                                    <div class="panel-title">
+                                        SLB: <a style="color: blue" href="/portal/slb#?env={{env}}&slbId={{slb}}"
+                                                target="_blank"> {{slb}}:{{data.objs['slbs'][slb].name || 'N/A'}}</a>
+                                    </div>
+                                </div>
+                                <div class="panel-body ">
+                                    <div class="slb-charts-container" style="overflow: hidden">
+                                        <div id="slb-chart-{{x}}-{{slb}}" style="width: 100%;"
+                                             ng-class="types['slb']==x?'':'traffic-hide'"
+                                             class="slb-chart-container row"
+                                             data-ng-repeat="x in trafficTypes.links">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" ng-class="isActivePanel('vs')" id="vses"
+                         ng-show="query.vses && query.vses.length>0">
+                        <div class="traffic-types-area">
+                            <ul class="traffic-types nav nav-pills" style="padding-bottom: 20px;">
+                                <li ng-class="isVsCurrentTrafficPage(x)"
+                                    data-ng-repeat="x in trafficTypes.links">
+                                    <a href="javascript:void(0)" ng-click="setVsTrafficType(x)"> {{x}} </a>
+                                </li>
+                            </ul>
+
+
+                            <div class="panel panel-default chart-body" data-ng-repeat="vs in query.vses">
+                                <div class="panel-heading chart-body">
+                                    <div class="panel-title">
+                                        VS: <a style="color: blue" href="/portal/vs#?env={{env}}&vsId={{vs}}"
+                                               target="_blank"> {{vs}}:{{data.objs['vses'][vs].name || 'N/A'}}</a>
+                                    </div>
+                                </div>
+                                <div class="panel-body ">
+                                    <div class="vs-charts-container" style="overflow: hidden">
+                                        <div id="vs-chart-{{x}}-{{vs}}" style="width: 100%;"
+                                             class="vs-chart-container row"
+                                             ng-class="types['vs']==x?'':'traffic-hide'"
+                                             data-ng-repeat="x in trafficTypes.links">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" ng-class="isActivePanel('group')" id="groups"
+                         ng-show="query.groups && query.groups.length>0">
+                        <div class="traffic-types-area">
+                            <ul class="traffic-types nav nav-pills" style="padding-bottom: 20px;">
+                                <li ng-class="isGroupCurrentTrafficPage(x)"
+                                    data-ng-repeat="x in trafficTypes.links">
+                                    <a href="javascript:void(0)" ng-click="setGroupTrafficType(x)"> {{x}} </a>
+                                </li>
+                            </ul>
+
+
+                            <div class="panel panel-default chart-body" data-ng-repeat="group in query.groups">
+                                <div class="panel-heading chart-body">
+                                    <div class="panel-title">
+                                        Group: <a style="color: blue"
+                                                  href="/portal/group#?env={{env}}&groupId={{group}}" target="_blank">
+                                        {{group}}:{{data.objs['groups'][group].name || 'N/A'}}</a>
+                                    </div>
+                                </div>
+                                <div class="panel-body ">
+                                    <div class="group-charts-container" style="overflow: hidden">
+                                        <div id="group-chart-{{x}}-{{group}}" style="width: 100%;"
+                                             class="group-chart-container row"
+                                             ng-class="types['group']==x?'':'traffic-hide'"
+                                             data-ng-repeat="x in trafficTypes.links">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-click="clickPanel('domain')" class="tab-pane" ng-class="isActivePanel('domain')"
+                         id="domains" ng-show="query.domains && query.domains.length>0">
+                        <div class="traffic-types-area">
+                            <!--<ul class="traffic-types nav nav-pills  pull-right">-->
+                            <!--<li ng-class="isSlbCurrentTrafficPage(x)"-->
+                            <!--data-ng-repeat="x in trafficTypes.links">-->
+                            <!--<a href="javascript:void(0)" ng-click="setSlbTrafficType(x)"> {{x}} </a>-->
+                            <!--</li>-->
+                            <!--</ul>-->
+                        </div>
+                    </div>
+                    <div ng-click="clickPanel('dr')" class="tab-pane" ng-class="isActivePanel('dr')" id="drs"
+                         ng-show="query.drs && query.drs.length>0">
+                        <div class="traffic-types-area">
+                            <!---->
+                            <!--<ul class="traffic-types nav nav-pills  pull-right">-->
+                            <!--<li ng-class="isSlbCurrentTrafficPage(x)"-->
+                            <!--data-ng-repeat="x in trafficTypes.links">-->
+                            <!--<a href="javascript:void(0)" ng-click="setSlbTrafficType(x)"> {{x}} </a>-->
+                            <!--</li>-->
+                            <!--</ul>-->
+                        </div>
+                    </div>
+                    <div ng-click="clickPanel('policy')" class="tab-pane" ng-class="isActivePanel('policy')"
+                         id="policies" ng-show="query.policies && query.policies.length>0">
+                        <div class="traffic-types-area">
+                            <!--<ul class="traffic-types nav nav-pills  pull-right">-->
+                            <!--<li ng-class="isSlbCurrentTrafficPage(x)"-->
+                            <!--data-ng-repeat="x in trafficTypes.links">-->
+                            <!--<a href="javascript:void(0)" ng-click="setSlbTrafficType(x)"> {{x}} </a>-->
+                            <!--</li>-->
+                            <!--</ul>-->
+                        </div>
+                    </div>
+                </div>
+                <ul class="nav tabs-vertical">
+                    <li ng-click="clickPanel('slb')" ng-class="isActivePanel('slb')"
+                        ng-show="query.slbs && query.slbs.length>0">
+                        <a href="#slbs" data-toggle="tab" aria-expanded="true">SLBs</a>
+                    </li>
+                    <li ng-click="clickPanel('vs')" ng-class="isActivePanel('vs')"
+                        ng-show="query.vses && query.vses.length>0">
+                        <a href="#vses" data-toggle="tab" aria-expanded="false">Virtual Servers</a>
+                    </li>
+                    <li ng-click="clickPanel('group')" ng-class="isActivePanel('group')"
+                        ng-show="query.groups && query.groups.length>0">
+                        <a href="#groups" data-toggle="tab" aria-expanded="false">Groups</a>
+                    </li>
+                    <li ng-class="isActivePanel('app')" ng-show="query.apps && query.apps.length>0">
+                        <a href="#apps" data-toggle="tab" aria-expanded="false">Applications</a>
+                    </li>
+                    <li ng-class="isActivePanel('domain')" ng-show="query.domains && query.domains.length>0">
+                        <a href="#domains" data-toggle="tab" aria-expanded="false">Domains</a>
+                    </li>
+                    <li ng-class="isActivePanel('dr')" ng-show="query.drs && query.drs.length>0">
+                        <a href="#drs" data-toggle="tab" aria-expanded="false">DRs</a>
+                    </li>
+                    <li ng-class="isActivePanel('policy')" ng-show="query.policies && query.policies.length>0">
+                        <a href="#policies" data-toggle="tab" aria-expanded="false">Traffic Policies</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid " id="foot-area" ng-app="footApp" ng-controller="footController">
+        <div class="container pull-left">
+            &copy;2016 Framework, ctrip.com, all rights reserved; Support:<a
+                href="mailto:slb@test.com?subject=SLB%b2%fa%c6%b7%d7%c9%d1%af&body=%c7%eb%cc%ed%bc%d3%d7%c9%d1%af%ce%ca%cc%e2%c1%d0%b1%ed, %b5%b1%c7%b0%d2%b3%c3%e6%3a: {{getFullUrl()}}">框架研发部
+            SLB Team</a>
+        </div>
+    </div>
+</section>
+</body>
+<link href="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.css" rel="stylesheet">
+<script src="/static/lib/velonic-admin/assets/sweet-alert/sweet-alert.min.js"></script>
+<script src="/static/lib/angular-ui-bootstrap/ui-bootstrap-tpls-2.0.0.js"></script>
+<script src="/static/lib/bootstrap-notify/bootstrap-notify.min.js"></script>
+<script src="/static/lib/bootstrap-ui-datetime-picker/datetime-picker.js"></script>
+<script src="/static/lib/jquery/jquery-dateFormat.js"></script>
+<script src="/static/lib/echarts3.2.2/echarts.min.js"></script>
+
+<script src="/static/lib/encoder/gbk.js"></script>
+<script src="/static/js/global.js"></script>
+<script src="/static/js/charts.js"></script>
+
+<script src="/static-new/viewmodel/traffic.js"></script>
+
+<script src="/static-new/repository/traffic/traffic-repository.js"></script>
+<script src="/static-new/service/traffic/traffic-interface.js"></script>
+<script src="/static-new/service/traffic/impl/dr-traffic-service.js"></script>
+<script src="/static-new/service/traffic/impl/slb-traffic-service.js"></script>
+<script src="/static-new/service/traffic/impl/vs-traffic-service.js"></script>
+<script src="/static-new/service/traffic/impl/group-traffic-service.js"></script>
+
+<script src="/static-new/repository/dr/drs-repository.js"></script>
+<script src="/static-new/service/dr/drs-interface.js"></script>
+<script src="/static-new/service/dr/impl/drs-simple-service.js"></script>
+
+<script src="/static-new/main/traffic/traffic.js"></script>
+</html>

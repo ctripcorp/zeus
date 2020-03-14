@@ -1,0 +1,65 @@
+.shortCol{
+    width: 15%;
+}
+.shortCol .operation-bts{
+    margin: 8px 0px;
+}
+#editVirtualServerModel .modal-dialog, #addVirtualServerModel .modal-dialog{
+    width: 1000px;
+}
+.edit-vs-table {
+    margin: 0 auto;
+}
+.paths-row{
+    width:auto;
+    list-style: none;
+     margin-left: -75px
+}
+.paths-row li{
+    float: left;
+    margin-right: 3px;
+}
+
+.name-row{
+    width:auto;
+    list-style: none;
+    margin-left: -40px
+}
+.name-row li{
+    float: left;
+    margin-right: 10px;
+}
+
+.redirect-row{
+    width:auto;
+    list-style: none;
+    line-height: 30px;
+    margin-left: -40px
+}
+.redirect-row li{
+    float: left;
+    line-height: 30px;
+    margin-right: 10px;
+}
+
+.radio-inline, .checkbox-inline{
+    padding-left: 0px;
+}
+.path-row-illegal{
+    width: auto;
+    list-style: none;
+    margin-left: -40px;
+}
+.path-row-illegal li{
+    float: left;
+    margin-right: 3px;
+}
+
+.show-text{
+    margin-top: 5px !important;
+}
+
+table pre {
+    max-width: 700px;
+}
+
