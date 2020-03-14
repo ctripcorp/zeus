@@ -19,7 +19,7 @@
     <!--Ctrip Parent End-->
 
     <properties>
-        <spring.version>4.3.4.RELEASE</spring.version>
+        <spring.version>5.2.4.RELEASE</spring.version>
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
         <jetty.version>9.2.3.v20140905</jetty.version>
         <jersey.version>2.23.2</jersey.version>
